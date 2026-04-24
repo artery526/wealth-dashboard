@@ -167,6 +167,14 @@ select:focus,input:focus{border-color:var(--gold)}
 .data-table tr:last-child td{font-weight:700;color:var(--gold)}
 .data-table .td-in{color:var(--teal)}.data-table .td-out{color:var(--coral)}
 .data-table .td-pos{color:var(--teal)}.data-table .td-neg{color:var(--coral)}
+.data-table .td-transfer{color:var(--purple)}
+
+/* ── Snapshot query ── */
+.filter-row{display:flex;align-items:end;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.filter-row .form-group{min-width:140px;flex:1}
+.filter-row .form-group.actions{flex:0 0 auto;min-width:auto}
+.table-wrap{overflow:auto}
+.table-note{font-size:12px;color:var(--ink3)}
 
 /* ── Reservoir / Bills widget ── */
 .bills-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
@@ -308,6 +316,9 @@ select:focus,input:focus{border-color:var(--gold)}
     <div class="nav-item" onclick="goto('yearly')">
       <span class="nav-icon">📅</span>年度戰情室
     </div>
+    <div class="nav-item" onclick="goto('snapshots')">
+      <span class="nav-icon">🧾</span>快照查詢
+    </div>
     <div class="nav-section">操作</div>
     <div class="nav-item" onclick="goto('booking')">
       <span class="nav-icon">✏️</span>快速記帳
@@ -437,6 +448,68 @@ select:focus,input:focus{border-color:var(--gold)}
     <div class="card">
       <div class="card-hd"><span class="card-title">歷年概覽</span></div>
       <div class="hist-row" id="hist-row"><div class="skel-line skel"></div></div>
+    </div>
+  </section>
+
+  <!-- 快照查詢 -->
+  <section class="page" id="page-snapshots">
+    <div class="page-header">
+      <div>
+        <div class="page-title">快照查詢</div>
+        <div class="page-sub">查詢每次記帳後的帳戶餘額快照</div>
+      </div>
+      <div class="controls">
+        <button class="card-action" onclick="loadSnapshots()">重新整理</button>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px">
+      <div class="filter-row">
+        <div class="form-group">
+          <label class="form-label">起始日期</label>
+          <input type="date" id="snap-from">
+        </div>
+        <div class="form-group">
+          <label class="form-label">結束日期</label>
+          <input type="date" id="snap-to">
+        </div>
+        <div class="form-group">
+          <label class="form-label">類型</label>
+          <select id="snap-type">
+            <option value="">全部類型</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">帳戶</label>
+          <select id="snap-account">
+            <option value="">全部帳戶</option>
+          </select>
+        </div>
+        <div class="form-group actions">
+          <button class="submit-btn" style="background:var(--gold);color:#fff" onclick="loadSnapshots()">查詢快照</button>
+        </div>
+      </div>
+      <div class="table-note" id="snap-summary">請先設定 API，然後查詢帳戶快照。</div>
+    </div>
+
+    <div class="card">
+      <div class="card-hd"><span class="card-title">快照結果</span></div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>快照時間</th>
+              <th>類型</th>
+              <th>交易摘要</th>
+              <th>帳戶名稱</th>
+              <th>快照餘額</th>
+            </tr>
+          </thead>
+          <tbody id="snap-tbody">
+            <tr><td colspan="5" style="color:var(--ink3);text-align:center">尚未載入快照資料</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </section>
 
@@ -597,6 +670,7 @@ var API_URL   = localStorage.getItem('wealth_api_url') || '';
 var WRITE_TOKEN = localStorage.getItem('wealth_write_token') || '';
 var cfg = { categories: [], sources: [], accounts: [] };
 var yearlyChartInst = null;
+var snapshotMetaLoaded = false;
 
 // ── Utils ─────────────────────────────────────────────────────
 function fmtN(n) {
@@ -1054,6 +1128,57 @@ function renderHistory(data) {
   }).join('');
 }
 
+function fillSnapshotSelect(id, items, placeholder) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  var current = el.value;
+  el.innerHTML = '<option value="">' + placeholder + '</option>' +
+    (items || []).map(function(v) {
+      return '<option value="' + esc(v) + '">' + esc(v) + '</option>';
+    }).join('');
+  if (current && (items || []).indexOf(current) >= 0) el.value = current;
+}
+
+async function loadSnapshots() {
+  if (!API_URL) return;
+  var params = {
+    action: 'snapshots',
+    from: document.getElementById('snap-from').value.replace(/-/g, '/'),
+    to: document.getElementById('snap-to').value.replace(/-/g, '/'),
+    type: document.getElementById('snap-type').value,
+    account: document.getElementById('snap-account').value,
+    limit: 500
+  };
+
+  try {
+    var data = await apiGet(params);
+    fillSnapshotSelect('snap-type', data.types || [], '全部類型');
+    fillSnapshotSelect('snap-account', data.accounts || [], '全部帳戶');
+    snapshotMetaLoaded = true;
+    renderSnapshots(data.rows || []);
+  } catch(e) {
+    console.error(e);
+  }
+}
+
+function renderSnapshots(rows) {
+  var tbody = document.getElementById('snap-tbody');
+  var summary = document.getElementById('snap-summary');
+  if (!tbody || !summary) return;
+
+  summary.textContent = '共找到 ' + (rows || []).length + ' 筆快照列。';
+  tbody.innerHTML = (rows || []).map(function(r) {
+    var cls = r.type === '收入' ? 'td-in' : (r.type === '轉帳' ? 'td-transfer' : 'td-out');
+    return '<tr>' +
+      '<td>' + esc(r.snapshotTime) + '</td>' +
+      '<td class="' + cls + '">' + esc(r.type) + '</td>' +
+      '<td>' + esc(r.summary) + '</td>' +
+      '<td>' + esc(r.account) + '</td>' +
+      '<td class="' + (r.balance >= 0 ? 'td-pos' : 'td-neg') + '">' + fmtN(r.balance) + '</td>' +
+      '</tr>';
+  }).join('') || '<tr><td colspan="5" style="color:var(--ink3);text-align:center">查無符合條件的快照資料</td></tr>';
+}
+
 // ── Booking ───────────────────────────────────────────────────
 function switchBTab(tab) {
   document.querySelectorAll('.btab').forEach(function(b){ b.classList.remove('active'); });
@@ -1157,10 +1282,11 @@ function goto(page) {
   document.querySelectorAll('.nav-item').forEach(function(n){ n.classList.remove('active'); });
   document.getElementById('page-' + page).classList.add('active');
   var items = document.querySelectorAll('.nav-item');
-  var pages = ['monthly','yearly','booking'];
+  var pages = ['monthly','yearly','snapshots','booking'];
   var idx = pages.indexOf(page);
   if (idx >= 0) items[idx].classList.add('active');
   if (page === 'yearly') loadYearly();
+  if (page === 'snapshots') loadSnapshots();
   if (page === 'booking') loadRecentTxns();
   document.getElementById('sidebar').classList.remove('open');
 }
