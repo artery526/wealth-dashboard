@@ -493,6 +493,31 @@ body::after{
 .pain-chip.active{background:rgba(184,137,46,.22);border-color:rgba(232,192,80,.72);color:var(--gold);box-shadow:0 0 6px rgba(232,192,80,.15)}
 .pain-chip.nopain{border-color:rgba(29,158,117,.38);color:#4a8e70}
 .pain-chip.nopain.active{background:rgba(29,158,117,.18);border-color:rgba(29,158,117,.72);color:var(--teal);box-shadow:0 0 6px rgba(29,158,117,.15)}
+/* ── 牌卡統計分頁 ── */
+.mcs-stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.mcs-stat-box{border:1px solid rgba(184,137,46,.28);border-radius:8px;background:rgba(10,8,4,.72);padding:13px 10px;text-align:center}
+.mcs-stat-num{font-family:var(--mono);font-size:26px;font-weight:700;color:var(--gold);line-height:1}
+.mcs-stat-lbl{font-family:var(--sans);font-size:11px;color:#7a6030;margin-top:5px;letter-spacing:.5px}
+.mcs-month-sel{width:100%;border:1px solid rgba(184,137,46,.38);border-radius:6px;background:rgba(10,8,4,.72);color:var(--gold);font-family:var(--sans);font-size:13px;padding:8px 10px;outline:none;margin-bottom:14px;cursor:pointer}
+.mcs-month-sel:focus{border-color:rgba(232,192,80,.58)}
+.mcs-card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:12px;margin-top:6px}
+.mcs-card-item{background:rgba(16,11,5,.82);border:1px solid rgba(184,137,46,.26);border-radius:10px;padding:10px 7px 12px;display:flex;flex-direction:column;align-items:center;gap:7px;transition:border-color .2s,box-shadow .2s}
+.mcs-card-item:hover{border-color:rgba(232,192,80,.52);box-shadow:0 0 14px rgba(232,192,80,.1)}
+.mcs-card-thumb{width:72px;height:110px;border-radius:6px;object-fit:cover;border:1px solid rgba(184,137,46,.3);background:rgba(10,8,4,.8);flex-shrink:0}
+.mcs-card-thumb-ph{width:72px;height:110px;border-radius:6px;border:1px dashed rgba(184,137,46,.3);background:rgba(10,8,4,.6);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+.mcs-card-name{font-family:var(--sans);font-size:12px;font-weight:700;color:#e0cfa0;text-align:center;line-height:1.35;word-break:break-all;max-width:86px}
+.mcs-card-count{font-family:var(--mono);font-size:22px;font-weight:700;color:var(--teal);line-height:1}
+.mcs-card-count-lbl{font-family:var(--sans);font-size:11px;color:#5a7060;margin-top:-3px}
+.mcs-bar-wrap{width:100%;padding:0 3px}
+.mcs-bar-track{width:100%;height:5px;background:rgba(184,137,46,.15);border-radius:3px;overflow:hidden}
+.mcs-bar-fill{height:100%;background:linear-gradient(90deg,var(--teal),#6ddbbf);border-radius:3px;transition:width .5s ease}
+.mcs-osho-list{display:grid;gap:9px;margin-top:8px}
+.mcs-osho-item{display:grid;grid-template-columns:110px minmax(100px,.5fr) minmax(0,1fr);gap:10px;align-items:start;background:rgba(14,10,4,.75);border:1px solid rgba(184,137,46,.22);border-radius:8px;padding:11px 12px}
+.mcs-osho-date{font-family:var(--mono);font-size:12px;color:var(--gold2);line-height:1.45}
+.mcs-osho-card{font-size:13px;font-weight:900;color:#f0dfa0;line-height:1.45;overflow-wrap:anywhere}
+.mcs-osho-note{font-family:var(--sans);font-size:12px;color:#c09a50;line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere}
+.mcs-empty{font-family:var(--sans);font-size:13px;color:#5a4028;text-align:center;padding:14px 6px}
+@media(max-width:540px){.mcs-stat-row{grid-template-columns:1fr 1fr}.mcs-osho-item{grid-template-columns:1fr;gap:5px}}
 .tarot-mode-switch{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .tarot-mode-btn{border:1px solid rgba(184,137,46,.42);border-radius:6px;background:rgba(10,8,4,.58);color:#9a7430;padding:9px 10px;font-family:var(--sans);font-size:13px;font-weight:800;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
 .tarot-mode-btn.active{border-color:rgba(232,192,80,.74);background:rgba(184,137,46,.22);color:var(--gold)}
@@ -2051,11 +2076,12 @@ function switchTab(btn,key){
   else if(key==='council-payback')loadCouncilPayback();
   else if(key==='div-calc')initDivCalc();
   else if(key==='medical-tarot')initMedicalTarotForm();
+  else if(key==='medical-stats')initMedicalCardStats();
 }
 
 function renderMedicalPanel(){
   setPanelHead('✚','Clinic · Recovery','醫館');
-  setTabs([{key:'medical-quick',label:'快速紀錄'},{key:'medical-tarot',label:'🃏 抽牌紀錄'}]);
+  setTabs([{key:'medical-quick',label:'快速紀錄'},{key:'medical-tarot',label:'🃏 抽牌紀錄'},{key:'medical-stats',label:'📊 牌卡統計'}]);
   var el=document.getElementById('p-body');
   if(!HEALTH_API_URL){
     el.innerHTML=`<div class="setup-notice">
@@ -2174,6 +2200,23 @@ function renderMedicalPanel(){
           <span class="medical-status" id="tarot-status"></span>
         </div>
       </form>
+    </div>
+    <div class="pane" id="pane-medical-stats">
+      <div class="council-army-title">📊 牌卡統計</div>
+      <select class="mcs-month-sel" id="mcs-month-sel" onchange="onMcsMonthChange()">
+        <option value="">⏳ 載入中…</option>
+      </select>
+      <div class="mcs-stat-row">
+        <div class="mcs-stat-box"><div class="mcs-stat-num" id="mcs-osho-total">—</div><div class="mcs-stat-lbl" id="mcs-osho-lbl">奧修牌數</div></div>
+        <div class="mcs-stat-box"><div class="mcs-stat-num" id="mcs-tarot-total">—</div><div class="mcs-stat-lbl" id="mcs-tarot-lbl">塔羅牌數</div></div>
+        <div class="mcs-stat-box"><div class="mcs-stat-num" id="mcs-days-total">—</div><div class="mcs-stat-lbl" id="mcs-days-lbl">抽牌天數</div></div>
+      </div>
+      <div class="council-army-title" style="font-size:13px;margin-bottom:8px">禪｜奧修牌卡統計</div>
+      <div id="mcs-osho-chart"><div class="mcs-empty">⏳ 載入中…</div></div>
+      <div class="council-army-title" style="font-size:13px;margin:16px 0 8px">記｜奧修抽牌紀錄</div>
+      <div id="mcs-osho-records"><div class="mcs-empty">⏳ 載入中…</div></div>
+      <div class="council-army-title" style="font-size:13px;margin:16px 0 8px">塔｜塔羅卡牌統計</div>
+      <div id="mcs-tarot-chart"><div class="mcs-empty">⏳ 載入中…</div></div>
     </div>`;
   initMedicalQuickForm();
 }
@@ -4570,6 +4613,173 @@ function renderLordPanel(d){
       }).join('')}
     </div>
   `;
+}
+
+// ══════════════════════════════════════════════════════════════
+// ── 牌卡統計分頁 (醫館第三頁) ────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+var _mcsCache=null; // 全域快取，避免重複 fetch
+var _mcsCardImages={};
+var _mcsOracleImages={};
+
+function mcsEsc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function mcsConvertDriveUrl(url){
+  if(!url)return url;
+  var m1=url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if(m1)return 'https://drive.google.com/thumbnail?id='+m1[1]+'&sz=w400';
+  var m2=url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  if(m2)return 'https://drive.google.com/thumbnail?id='+m2[1]+'&sz=w400';
+  return url;
+}
+
+function mcsStripNumPrefix(s){return String(s||'').replace(/^\d+\./,'').trim();}
+function mcsStripPosition(s){return String(s||'').replace(/(正位|逆位)$/,'').trim();}
+
+function mcsLookupImage(label,cardName,map){
+  if(!map||!Object.keys(map).length)return '';
+  var tries=[label,cardName,mcsStripPosition(label),mcsStripNumPrefix(label),mcsStripNumPrefix(cardName),mcsStripNumPrefix(mcsStripPosition(label))];
+  for(var i=0;i<tries.length;i++){if(tries[i]&&map[tries[i]])return map[tries[i]];}
+  var ls=mcsStripNumPrefix(mcsStripPosition(label));
+  var keys=Object.keys(map);
+  for(var j=0;j<keys.length;j++){if(mcsStripNumPrefix(keys[j])===ls)return map[keys[j]];}
+  return '';
+}
+
+function mcsFormatMonth(m){
+  var p=String(m).split('-');
+  return p.length===2?p[0]+'年'+parseInt(p[1])+'月':m;
+}
+
+async function initMedicalCardStats(){
+  // 載入卡片圖案（若尚未載入）
+  if(!Object.keys(_mcsCardImages).length||!Object.keys(_mcsOracleImages).length){
+    try{
+      var optData=await medicalPost({_action:'getOptions'});
+      var opts=optData.options||{};
+      if(opts.cardImages&&typeof opts.cardImages==='object')_mcsCardImages=opts.cardImages;
+      if(opts.oracleImages&&typeof opts.oracleImages==='object')_mcsOracleImages=opts.oracleImages;
+    }catch(e){console.warn('mcs: getOptions failed',e);}
+  }
+  // 若已有快取直接渲染
+  if(_mcsCache){mcsPopulateMonthSel(_mcsCache);return;}
+  // 顯示載入狀態
+  var charts=['mcs-osho-chart','mcs-tarot-chart','mcs-osho-records'];
+  charts.forEach(function(id){var el=document.getElementById(id);if(el)el.innerHTML='<div class="mcs-empty">⏳ 載入中…</div>';});
+  try{
+    var result=await medicalPost({_action:'getCardStats'});
+    _mcsCache=result.cardStats||{tarot:[],osho:[]};
+    mcsPopulateMonthSel(_mcsCache);
+  }catch(err){
+    console.error('mcs: getCardStats failed',err);
+    charts.forEach(function(id){
+      var el=document.getElementById(id);
+      if(el)el.innerHTML='<div class="mcs-empty" style="color:var(--coral)">⚠️ 統計讀取失敗：'+mcsEsc(err.message)+'</div>';
+    });
+  }
+}
+
+function mcsPopulateMonthSel(stats){
+  var sel=document.getElementById('mcs-month-sel');
+  if(!sel)return;
+  var allRows=(stats.tarot||[]).concat(stats.osho||[]);
+  var months=[...new Set(allRows.map(function(r){return String(r['月份']||'').trim();}).filter(Boolean))].sort().reverse();
+  var now=new Date();
+  var thisMonth=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  sel.innerHTML=months.length
+    ?months.map(function(m){
+        var lbl=mcsFormatMonth(m)+(m===thisMonth?'（本月）':'');
+        return '<option value="'+mcsEsc(m)+'">'+mcsEsc(lbl)+'</option>';
+      }).join('')
+    :'<option value="'+mcsEsc(thisMonth)+'">'+mcsEsc(mcsFormatMonth(thisMonth))+'（本月）</option>';
+  if(months.length&&!months.includes(sel.value))sel.value=months[0];
+  mcRenderByMonth(sel.value||thisMonth);
+}
+
+function onMcsMonthChange(){
+  var sel=document.getElementById('mcs-month-sel');
+  if(sel&&_mcsCache)mcRenderByMonth(sel.value);
+}
+
+function mcRenderByMonth(month){
+  if(!_mcsCache)return;
+  var tarotRows=(_mcsCache.tarot||[]).filter(function(r){return String(r['月份']||'').trim()===month;});
+  var oshoRows=(_mcsCache.osho||[]).filter(function(r){return String(r['月份']||'').trim()===month;});
+  var days=new Set();
+  tarotRows.concat(oshoRows).forEach(function(r){var d=String(r['抽牌日期']||'').trim();if(d)days.add(d);});
+  var lbl=mcsFormatMonth(month);
+
+  // 摘要數字
+  function setText(id,v){var el=document.getElementById(id);if(el)el.textContent=v;}
+  setText('mcs-osho-total',oshoRows.length);
+  setText('mcs-tarot-total',tarotRows.length);
+  setText('mcs-days-total',days.size);
+  setText('mcs-osho-lbl',lbl+' 奧修牌數');
+  setText('mcs-tarot-lbl',lbl+' 塔羅牌數');
+  setText('mcs-days-lbl',lbl+' 抽牌天數');
+
+  // 渲染圖表
+  mcsRenderChart('mcs-osho-chart',oshoRows,lbl+'尚無奧修禪卡紀錄',_mcsOracleImages,'time');
+  mcsRenderChart('mcs-tarot-chart',tarotRows,lbl+'尚無塔羅牌卡紀錄',_mcsCardImages,'count');
+  mcsRenderOshoList('mcs-osho-records',oshoRows,lbl+'尚無奧修抽牌紀錄');
+}
+
+function mcsRenderChart(containerId,rows,emptyText,imagesMap,sortMode){
+  var el=document.getElementById(containerId);
+  if(!el)return;
+  var counts={};
+  rows.forEach(function(row){
+    var label=String(row['顯示牌名']||row['牌卡名稱']||'').trim();
+    var cardName=String(row['牌卡名稱']||'').trim();
+    var recTime=String(row['紀錄時間']||row['抽牌日期']||'').trim();
+    if(label&&label!=='未抽取'&&label!=='❌'){
+      if(!counts[label])counts[label]={count:0,cardName:cardName,latestTime:''};
+      counts[label].count++;
+      if(recTime>counts[label].latestTime)counts[label].latestTime=recTime;
+    }
+  });
+  var entries=Object.entries(counts);
+  if(!entries.length){el.innerHTML='<div class="mcs-empty">'+mcsEsc(emptyText)+'</div>';return;}
+  entries=sortMode==='time'
+    ?entries.sort(function(a,b){return b[1].latestTime.localeCompare(a[1].latestTime)||a[0].localeCompare(b[0],'zh-Hant');})
+    :entries.sort(function(a,b){return b[1].count-a[1].count||a[0].localeCompare(b[0],'zh-Hant');});
+  var max=Math.max.apply(null,entries.map(function(e){return e[1].count;}));
+  el.innerHTML='<div class="mcs-card-grid">'+entries.map(function(entry){
+    var label=entry[0],info=entry[1];
+    var rawUrl=mcsLookupImage(label,info.cardName,imagesMap||{});
+    var url=rawUrl?mcsConvertDriveUrl(rawUrl):'';
+    var pct=Math.round(info.count/max*100);
+    var imgHtml=url
+      ?'<img class="mcs-card-thumb" src="'+mcsEsc(url)+'" alt="'+mcsEsc(label)+'" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">'
+        +'<div class="mcs-card-thumb-ph" style="display:none">🃏</div>'
+      :'<div class="mcs-card-thumb-ph">🃏</div>';
+    return '<div class="mcs-card-item">'
+      +imgHtml
+      +'<div class="mcs-card-name">'+mcsEsc(label)+'</div>'
+      +'<div class="mcs-card-count">'+info.count+'</div>'
+      +'<div class="mcs-card-count-lbl">次</div>'
+      +'<div class="mcs-bar-wrap"><div class="mcs-bar-track"><div class="mcs-bar-fill" style="width:'+pct+'%"></div></div></div>'
+      +'</div>';
+  }).join('')+'</div>';
+}
+
+function mcsRenderOshoList(containerId,rows,emptyText){
+  var el=document.getElementById(containerId);
+  if(!el)return;
+  var list=(rows||[])
+    .filter(function(r){return String(r['紀錄時間']||r['顯示牌名']||r['解讀/備註']||'').trim();})
+    .slice().sort(function(a,b){return String(b['紀錄時間']||'').localeCompare(String(a['紀錄時間']||''));});
+  if(!list.length){el.innerHTML='<div class="mcs-empty">'+mcsEsc(emptyText)+'</div>';return;}
+  el.innerHTML='<div class="mcs-osho-list">'+list.map(function(r){
+    var recTime=String(r['紀錄時間']||'').trim()||String(r['抽牌日期']||'').trim()||'未記錄時間';
+    var cardName=String(r['顯示牌名']||'').trim()||String(r['牌卡名稱']||'').trim()||'未抽取';
+    var note=String(r['解讀/備註']||'').trim()||'尚未填寫解讀。';
+    return '<div class="mcs-osho-item">'
+      +'<div class="mcs-osho-date">'+mcsEsc(recTime)+'</div>'
+      +'<div class="mcs-osho-card">'+mcsEsc(cardName)+'</div>'
+      +'<div class="mcs-osho-note">'+mcsEsc(note)+'</div>'
+      +'</div>';
+  }).join('')+'</div>';
 }
 </script>
 </body>
