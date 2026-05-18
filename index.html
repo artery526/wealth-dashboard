@@ -1046,7 +1046,7 @@ body::after{
 /* ── Top Status Bar ── */
 .top-status-bar{
   position:fixed;top:58px;left:50%;z-index:65;
-  width:calc(100vw - 24px);max-width:720px;box-sizing:border-box;
+  width:calc(100vw - 24px);max-width:920px;box-sizing:border-box;
   background:rgba(5,4,3,.82);
   backdrop-filter:blur(6px);
   border:1px solid rgba(212,160,55,.65);
@@ -1069,10 +1069,10 @@ body::after{
   pointer-events:none;
 }
 .top-status-bar::after{top:-5px;border-bottom-color:rgba(5,4,3,.9)}
-.top-status-inner{min-width:max-content;display:flex;align-items:center;justify-content:center;flex-wrap:nowrap;white-space:nowrap;padding:22px 28px;position:relative}
+.top-status-inner{min-width:max-content;display:flex;align-items:center;justify-content:center;flex-wrap:nowrap;white-space:nowrap;padding:18px 18px;position:relative}
 .top-status-inner::before,.top-status-inner::after{content:none}
 .top-status-item{
-  display:flex;align-items:center;gap:9px;padding:3px 22px;
+  display:flex;align-items:center;gap:7px;padding:3px 14px;
   position:relative;border-radius:8px;flex:0 0 auto;
   transition:background .24s,box-shadow .24s,filter .24s;
 }
@@ -1083,8 +1083,8 @@ body::after{
 }
 .top-status-item:hover{background:rgba(232,192,80,.075);box-shadow:inset 0 0 18px rgba(232,192,80,.13),0 0 16px rgba(232,192,80,.12);filter:brightness(1.06)}
 .top-status-icon{font-size:16px;filter:drop-shadow(0 0 7px rgba(232,192,80,.48))}
-.top-status-label{font-family:var(--serif);font-size:12px;font-weight:950;color:#d3b36f;letter-spacing:1px;white-space:nowrap;text-shadow:0 0 9px rgba(232,192,80,.14)}
-.top-status-value{font-family:var(--mono);font-size:15px;font-weight:950;color:#ffd96a;font-variant-numeric:tabular-nums;white-space:nowrap;text-shadow:0 0 13px rgba(232,192,80,.32)}
+.top-status-label{font-family:var(--serif);font-size:11px;font-weight:950;color:#d3b36f;letter-spacing:.6px;white-space:nowrap;text-shadow:0 0 9px rgba(232,192,80,.14)}
+.top-status-value{font-family:var(--mono);font-size:14px;font-weight:950;color:#ffd96a;font-variant-numeric:tabular-nums;white-space:nowrap;text-shadow:0 0 13px rgba(232,192,80,.32)}
 .gold-bars-icon{position:relative;display:inline-block;width:20px;height:16px;filter:drop-shadow(0 0 7px rgba(232,192,80,.5))}
 .gold-bars-icon::before,.gold-bars-icon::after,.gold-bars-icon i{
   content:"";position:absolute;height:6px;border-radius:2px;transform:skewX(-14deg);
@@ -1308,13 +1308,13 @@ body::after{
     height:clamp(214px,56vw,280px)!important;
   }
   /* ── 手機版 top-nav 兩行佈局 ── */
-  .top-status-bar{top:54px;width:calc(100vw - 20px);max-width:720px}
-  .top-status-inner{justify-content:flex-start;padding:14px 16px}
-  .top-status-item{gap:6px;padding:3px 12px}
-  .top-status-icon{font-size:13px}
-  .top-status-label{font-size:10px;letter-spacing:.4px}
-  .top-status-value{font-size:12px}
-  .gold-bars-icon{width:16px;height:13px}
+  .top-status-bar{top:54px;width:calc(100vw - 20px);max-width:920px}
+  .top-status-inner{justify-content:flex-start;padding:12px 12px}
+  .top-status-item{gap:5px;padding:3px 10px}
+  .top-status-icon{font-size:12px}
+  .top-status-label{font-size:9px;letter-spacing:.2px}
+  .top-status-value{font-size:11px}
+  .gold-bars-icon{width:15px;height:12px}
   .top-nav{
     top:0;
     flex-direction:column;
