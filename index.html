@@ -3586,7 +3586,22 @@ function toggleDivFields(){
 function syncDivNote(){
   var s=document.getElementById('i-div-sym');
   var n=document.getElementById('i-note');
-  if(s&&n&&s.value)n.value=s.value;
+  if(s&&n&&s.value)n.value=formatIncomeStockNote(s.value,n.value);
+}
+
+function stripIncomeStockNotePrefix(note){
+  var s=String(note||'').trim();
+  s=s.replace(/^股票[:：]\s*[^｜|]+[｜|]\s*/,'').trim();
+  s=s.replace(/^股票[:：]\s*[^｜|]+\s*$/,'').trim();
+  return s;
+}
+
+function formatIncomeStockNote(symbol,note){
+  var key=normalizeKey(symbol);
+  var clean=stripIncomeStockNotePrefix(note);
+  if(!key)return clean;
+  if(!clean||clean===key||clean===String(symbol||'').trim())clean='配息';
+  return '股票:'+key+'｜'+clean;
 }
 
 function setBookingDividendExpanded(expanded){
@@ -3652,7 +3667,7 @@ function latestPendingDividendFor(symbol,data){
 
 function dividendNoteText(row){
   if(!row)return '';
-  return (row.symbol||'')+' '+(row.note||'配息');
+  return formatIncomeStockNote(row.symbol,row.note||'配息');
 }
 
 async function onIncomeAccountChange(){
