@@ -1082,7 +1082,7 @@ body::after{
 .ziwei-layout{display:block;min-height:260px}
 .ziwei-overview{display:grid;grid-template-columns:minmax(132px,180px) minmax(0,1fr);gap:0;border:1px solid rgba(232,192,80,.64);border-radius:10px;background:rgba(14,14,13,.86);overflow:hidden;min-height:220px}
 .ziwei-sidebar{border-right:1px solid rgba(232,192,80,.62);padding:14px 12px;min-width:0}
-.ziwei-main{position:relative;display:flex;align-items:center;justify-content:center;padding:22px 18px;min-width:0}
+.ziwei-main{position:relative;display:flex;align-items:stretch;justify-content:center;padding:0;min-width:0;min-height:360px}
 .ziwei-main:before{content:"";position:absolute;inset:0;border-left:1px solid rgba(78,217,255,.75);pointer-events:none}
 .ziwei-controls{display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:10px}
 .ziwei-search{width:100%;background:#0a0804;border:1px solid #2a1c08;border-radius:6px;color:var(--ink);font-family:var(--sans);font-size:12px;padding:8px 9px;outline:none}
@@ -1094,11 +1094,15 @@ body::after{
 .ziwei-person:hover,.ziwei-person.active{border-left-color:var(--gold);background:rgba(184,137,46,.12)}
 .ziwei-person-name{font-size:13px;font-weight:900;color:var(--ink);line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ziwei-person-meta{font-size:10px;color:#8a6a30;line-height:1.55;margin-top:2px}
-.ziwei-preview{text-align:center;font-family:var(--sans);color:var(--ink);max-width:420px}
+.ziwei-preview{width:100%;min-width:0;text-align:center;font-family:var(--sans);color:var(--ink);display:flex;flex-direction:column}
+.ziwei-preview-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-bottom:1px solid rgba(184,137,46,.2);background:rgba(10,8,4,.5)}
 .ziwei-preview-kicker{font-size:12px;font-weight:900;color:#e7f9ff;text-shadow:0 0 10px rgba(78,217,255,.5);letter-spacing:1px;margin-bottom:18px}
 .ziwei-preview-title{font-size:18px;font-weight:900;color:var(--gold);letter-spacing:1px;margin-bottom:8px}
 .ziwei-preview-meta{font-size:12px;color:#c09a50;line-height:1.7;margin-bottom:14px}
 .ziwei-preview-note{font-size:12px;color:#8a6a30;line-height:1.7;white-space:pre-wrap;margin-top:10px}
+.ziwei-preview-stage{flex:1;min-height:300px;overflow:auto;display:flex;align-items:flex-start;justify-content:center;padding:12px;background:#050403}
+.ziwei-preview-img{display:block;width:min(100%,1080px);height:auto;border:1px solid rgba(232,192,80,.22);border-radius:6px;box-shadow:0 10px 34px rgba(0,0,0,.48)}
+.ziwei-preview-empty{margin:auto;padding:18px;font-size:12px;color:#8a6a30;line-height:1.7}
 .ziwei-open-btn{display:inline-flex;align-items:center;justify-content:center;border:1px solid rgba(184,137,46,.4);border-radius:6px;background:rgba(184,137,46,.12);color:var(--gold);font-family:var(--sans);font-size:12px;font-weight:800;padding:8px 10px;cursor:pointer;text-decoration:none;white-space:nowrap}
 .ziwei-open-btn:hover{border-color:rgba(232,192,80,.68);background:rgba(184,137,46,.2)}
 .ziwei-viewer{border:1px solid rgba(184,137,46,.32);border-radius:8px;background:rgba(6,5,3,.76);min-width:0;overflow:hidden;display:flex;flex-direction:column}
@@ -2549,10 +2553,16 @@ function renderZiweiPreview(){
   var original=ziweiOriginalUrl(row);
   var meta=ziweiBirthMeta(row);
   preview.innerHTML=`
-    <div class="ziwei-preview-kicker">\u547d\u76e4\u9810\u89bd\u5340</div>
-    <div class="ziwei-preview-title">${esc(row.name)}</div>
-    <div class="ziwei-preview-meta">${esc(meta||'\u672a\u586b\u51fa\u751f\u8cc7\u6599')}${row.updatedAt?' \u00b7 '+esc(row.updatedAt):''}</div>
-    ${original?`<a class="ziwei-open-btn" href="${esc(original)}" target="_blank" rel="noopener">\u958b\u539f\u5716</a>`:(img?`<a class="ziwei-open-btn" href="${esc(img)}" target="_blank" rel="noopener">\u958b\u5716\u7247</a>`:'<div class="ziwei-preview-meta">\u672a\u586b\u5716\u7247</div>')}
+    <div class="ziwei-preview-head">
+      <div>
+        <div class="ziwei-preview-title">${esc(row.name)}</div>
+        <div class="ziwei-preview-meta">${esc(meta||'\u672a\u586b\u51fa\u751f\u8cc7\u6599')}${row.updatedAt?' \u00b7 '+esc(row.updatedAt):''}</div>
+      </div>
+      ${original?`<a class="ziwei-open-btn" href="${esc(original)}" target="_blank" rel="noopener">\u958b\u539f\u5716</a>`:(img?`<a class="ziwei-open-btn" href="${esc(img)}" target="_blank" rel="noopener">\u958b\u5716\u7247</a>`:'')}
+    </div>
+    <div class="ziwei-preview-stage">
+      ${img?`<img class="ziwei-preview-img" src="${esc(img)}" alt="${esc(row.name)} \u7d2b\u5fae\u547d\u76e4">`:'<div class="ziwei-preview-empty">\u9019\u7b46\u8cc7\u6599\u5c1a\u672a\u586b\u5165\u5716\u7247\u9023\u7d50\u3002</div>'}
+    </div>
     ${row.note?`<div class="ziwei-preview-note">${esc(row.note)}</div>`:''}
   `;
 }
