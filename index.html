@@ -775,11 +775,12 @@ body::after{
 .acc-total-label{font-family:var(--sans);font-size:11px;font-weight:700;color:var(--ink2)}
 .acc-total-val{font-family:var(--mono);font-size:22px;font-weight:700;color:var(--gold)}
 
-.kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.kpi-row{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-bottom:14px}
 .kpi{background:#0a0804;border:1px solid #2a1c08;border-radius:7px;padding:10px 10px}
 .kpi-label{font-family:var(--sans);font-size:9px;color:#5a4018;letter-spacing:.5px;margin-bottom:5px;text-transform:uppercase}
 .kpi-val{font-family:var(--mono);font-size:15px;font-weight:400;color:var(--ink)}
 .kpi-val.up{color:var(--teal)}.kpi-val.down{color:var(--coral)}.kpi-val.gold{color:var(--gold)}
+@media(max-width:680px){.kpi-row{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
 /* ── Quick Booking ── */
 .btabs{display:flex;gap:0;margin-bottom:14px;background:#0a0804;border:1px solid #2a1c08;border-radius:6px;overflow:hidden}
@@ -3372,6 +3373,8 @@ function renderAccounts(accs,monthly,bills,el,financeStatus){
   var statusHtml=renderFinanceStatusHud(financeStatus);
   var kpisHtml=`
     <div class="kpi-row">
+      <div class="kpi"><div class="kpi-label">今日收入</div><div class="kpi-val up">${fmtFull(monthly.todayIncome||0)}</div></div>
+      <div class="kpi"><div class="kpi-label">今日支出</div><div class="kpi-val down">${fmtFull(monthly.todayExpense||0)}</div></div>
       <div class="kpi"><div class="kpi-label">本月收入</div><div class="kpi-val up">${fmtFull(monthly.income)}</div></div>
       <div class="kpi"><div class="kpi-label">本月支出</div><div class="kpi-val down">${fmtFull(monthly.expense)}</div></div>
       <div class="kpi"><div class="kpi-label">儲蓄率</div><div class="kpi-val gold">${monthly.savingRate||'—'}</div></div>
