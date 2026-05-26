@@ -2068,13 +2068,14 @@ var currentPanel = null;
 var currentTab = null;
 var COMMAND_SHEET_ID = '1MTPLhPA9j4kb2pllDDL1z7xaCD1UmIZutT0eVOHZd30';
 var COMMAND_SETTING_GID = '1479341396';
-var MONTHLY_HOLDINGS_SHEET_NAME = '月度戰情室';
-var MONTHLY_HOLDINGS_RANGE = 'A13:N23';
+var MONTHLY_HOLDINGS_SHEET_NAME = '\u6708\u5EA6\u6230\u60C5\u5BA4';
+var MONTHLY_HOLDINGS_RANGE = 'A12:N23';
 var TASK_SHEET_FALLBACK_OPTIONS = ['月度戰情室','轉帳資料庫','設定','資料庫','收入流水帳','支出流水帳','市場儀表板','配息試算','年度財報','武將資料','類型設定','帳戶基準'];
 var taskSheetOptionsCache = null;
 var advisorDraftInFlight = false;
 var advisorTaskInFlight = false;
 var lastAdvisorDraftKey = '';
+var gvizJsonpQueue = Promise.resolve();
 var HERO_SHEET_ID = COMMAND_SHEET_ID;
 var HERO_SHEET_NAME = '武將資料';
 var HEALTH_API_URL = localStorage.getItem('health_api_url') || '';
@@ -2216,35 +2217,72 @@ function hexToRgba(hex,alpha){
   var r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16);
   return 'rgba('+r+','+g+','+b+','+alpha+')';
 }
-function readSheetRows(sheetName){
-  var url='https://docs.google.com/spreadsheets/d/'+HERO_SHEET_ID+'/gviz/tq?tqx=out:json&sheet='+encodeURIComponent(sheetName)+'&t=' + Date.now();
-  return fetch(url).then(function(r){
-    if(!r.ok)throw new Error(sheetName+'讀取失敗');
-    return r.text();
-  }).then(function(text){
-    var json=JSON.parse(text.slice(text.indexOf('{'),text.lastIndexOf('}')+1));
-    var headers=(json.table.cols||[]).map(function(c){return c.label||'';});
-    return (json.table.rows||[]).map(function(row){
-      var obj={};
-      (row.c||[]).forEach(function(cell,i){obj[headers[i]]=cell?(cell.f!=null?cell.f:cell.v):'';});
-      return obj;
+function parseGvizText(text){
+  return JSON.parse(text.slice(text.indexOf('{'),text.lastIndexOf('}')+1));
+}
+function readGvizJsonp(url){
+  var run=function(){
+    return new Promise(function(resolve,reject){
+      var script=document.createElement('script');
+      var timer=null;
+      var previousGoogle=window.google;
+      var previousSetResponse=previousGoogle&&previousGoogle.visualization&&previousGoogle.visualization.Query&&previousGoogle.visualization.Query.setResponse;
+      function cleanup(){
+        clearTimeout(timer);
+        script.remove();
+        if(previousSetResponse){
+          window.google.visualization.Query.setResponse=previousSetResponse;
+        }else if(previousGoogle){
+          if(previousGoogle.visualization&&previousGoogle.visualization.Query)delete previousGoogle.visualization.Query.setResponse;
+        }else{
+          delete window.google;
+        }
+      }
+      window.google=window.google||{};
+      window.google.visualization=window.google.visualization||{};
+      window.google.visualization.Query=window.google.visualization.Query||{};
+      window.google.visualization.Query.setResponse=function(json){
+        cleanup();
+        resolve(json);
+      };
+      script.onerror=function(){
+        cleanup();
+        reject(new Error('Google Sheet JSONP read failed'));
+      };
+      timer=setTimeout(function(){
+        cleanup();
+        reject(new Error('Google Sheet JSONP timeout'));
+      },12000);
+      script.src=url+(url.indexOf('?')>=0?'&':'?')+'t='+Date.now();
+      document.head.appendChild(script);
     });
+  };
+  gvizJsonpQueue=gvizJsonpQueue.then(run,run);
+  return gvizJsonpQueue;
+}
+function readGvizJson(url){
+  return fetch(url+(url.indexOf('?')>=0?'&':'?')+'t='+Date.now()).then(function(r){
+    if(!r.ok)throw new Error('Google Sheet read failed');
+    return r.text();
+  }).then(parseGvizText).catch(function(){
+    return readGvizJsonp(url);
   });
+}
+function gvizRowsToObjects(json){
+  var headers=(json.table.cols||[]).map(function(c){return c.label||'';});
+  return (json.table.rows||[]).map(function(row){
+    var obj={};
+    (row.c||[]).forEach(function(cell,i){obj[headers[i]]=cell?(cell.f!=null?cell.f:cell.v):'';});
+    return obj;
+  });
+}
+function readSheetRows(sheetName){
+  var url='https://docs.google.com/spreadsheets/d/'+HERO_SHEET_ID+'/gviz/tq?tqx=out:json&sheet='+encodeURIComponent(sheetName);
+  return readGvizJson(url).then(gvizRowsToObjects);
 }
 function readCommandSheetRows(sheetName){
   var url='https://docs.google.com/spreadsheets/d/'+COMMAND_SHEET_ID+'/gviz/tq?tqx=out:json&sheet='+encodeURIComponent(sheetName);
-  return fetch(url).then(function(r){
-    if(!r.ok)throw new Error(sheetName+'讀取失敗');
-    return r.text();
-  }).then(function(text){
-    var json=JSON.parse(text.slice(text.indexOf('{'),text.lastIndexOf('}')+1));
-    var headers=(json.table.cols||[]).map(function(c){return c.label||'';});
-    return (json.table.rows||[]).map(function(row){
-      var obj={};
-      (row.c||[]).forEach(function(cell,i){obj[headers[i]]=cell?(cell.f!=null?cell.f:cell.v):'';});
-      return obj;
-    });
-  });
+  return readGvizJson(url).then(gvizRowsToObjects);
 }
 function normalizeImageUrl(url){
   var s=String(url||'').trim();
@@ -4831,10 +4869,7 @@ async function loadArmySettingsSheet(){
   if(armySettingCache)return armySettingCache;
     var url='https://docs.google.com/spreadsheets/d/'+COMMAND_SHEET_ID+'/gviz/tq?tqx=out:json&gid='+COMMAND_SETTING_GID+'&range='+encodeURIComponent('H11:K21');
   try{
-    var r=await fetch(url);
-    if(!r.ok)throw new Error('設定分頁讀取失敗');
-    var text=await r.text();
-    var json=JSON.parse(text.slice(text.indexOf('{'),text.lastIndexOf('}')+1));
+    var json=await readGvizJson(url);
     var map={};
     (json.table.rows||[]).forEach(function(row){
       var cells=row.c||[];
@@ -5095,10 +5130,7 @@ function normalizeHoldingOverviewRow(row){
 
 async function loadMonthlyHoldingsSheet(){
   var url='https://docs.google.com/spreadsheets/d/'+COMMAND_SHEET_ID+'/gviz/tq?tqx=out:json&sheet='+encodeURIComponent(MONTHLY_HOLDINGS_SHEET_NAME)+'&range='+encodeURIComponent(MONTHLY_HOLDINGS_RANGE);
-  var r=await fetch(url);
-  if(!r.ok)throw new Error('Monthly holdings sheet read failed');
-  var text=await r.text();
-  var json=JSON.parse(text.slice(text.indexOf('{'),text.lastIndexOf('}')+1));
+  var json=await readGvizJson(url);
   return (json.table.rows||[]).map(function(row){
     var c=row.c||[];
     return normalizeHoldingOverviewRow({
