@@ -2068,6 +2068,8 @@ var currentPanel = null;
 var currentTab = null;
 var COMMAND_SHEET_ID = '1MTPLhPA9j4kb2pllDDL1z7xaCD1UmIZutT0eVOHZd30';
 var COMMAND_SETTING_GID = '1479341396';
+var MONTHLY_HOLDINGS_SHEET_NAME = '月度戰情室';
+var MONTHLY_HOLDINGS_RANGE = 'A13:N23';
 var TASK_SHEET_FALLBACK_OPTIONS = ['月度戰情室','轉帳資料庫','設定','資料庫','收入流水帳','支出流水帳','市場儀表板','配息試算','年度財報','武將資料','類型設定','帳戶基準'];
 var taskSheetOptionsCache = null;
 var advisorDraftInFlight = false;
@@ -4445,9 +4447,8 @@ function annualHistoryRows(history){
 async function loadHoldings(){
   var el=document.getElementById('holdings-content');
   if(!el)return;
-  if(!API_URL){el.innerHTML=setupNotice();return}
   try{
-    var rows=await apiGet({action:'holdingsOverview'});
+    var rows=await loadCouncilHoldingsOverview();
     holdingsCache=rows||[];
     renderHoldings(holdingsCache,el);
     var dot=document.getElementById('mil-dot');
@@ -4465,23 +4466,23 @@ function renderHoldings(rows,el){
     el.innerHTML='<div style="color:#5a4018;font-family:var(--sans);font-size:12px;padding:16px 0;text-align:center">目前沒有持股資料</div>';
     return;
   }
-  holdings.sort((a,b)=>(parseFloat(b.marketValue)||0)-(parseFloat(a.marketValue)||0));
+  holdings.sort((a,b)=>toNum(b.marketValue)-toNum(a.marketValue));
 
   el.innerHTML=`
     <div class="sec-title">各標的明細</div>
     ${holdings.map(r=>{
       var sym=String(r.symbol||'').trim();
       var meta=holdingMeta(sym,r.name);
-      var shares=parseFloat(r.shares)||0;
-      var cost=parseFloat(r.cost)||0;
-      var mktVal=parseFloat(r.marketValue)||0;
-      var ret=parseFloat(r.totalReturn)||0;
-      var roi=parseFloat(r.roi)||0;
-      var price=parseFloat(r.price)||0;
-      var avgCost=parseFloat(r.avgCost)||0;
-      var unrealized=parseFloat(r.unrealized)||0;
-      var received=parseFloat(r.totalDiv)||0;
-      var monthly=parseFloat(r.monthlyDiv)||0;
+      var shares=toNum(r.shares);
+      var cost=toNum(r.cost);
+      var mktVal=toNum(r.marketValue);
+      var ret=toNum(r.totalReturn);
+      var roi=percentNum(r.roi);
+      var price=toNum(r.price);
+      var avgCost=toNum(r.avgCost);
+      var unrealized=toNum(r.unrealized);
+      var received=toNum(r.totalDiv);
+      var monthly=toNum(r.monthlyDiv);
       var remaining=Math.max(0,cost-received);
       var paybackPct=cost>0?Math.min(100,received/cost*100):0;
       var months=remaining>0&&monthly>0?Math.ceil(remaining/monthly):0;
@@ -4602,7 +4603,7 @@ async function loadCouncilDashboard(){
   try{
     var results=await Promise.allSettled([
       loadHeroSheet(true),
-      API_URL?apiGet({action:'holdingsOverview'}):Promise.resolve([]),
+      loadCouncilHoldingsOverview(),
       loadArmySettingsSheet(),
       API_URL?apiGet({action:'councilPantry'}):Promise.resolve([])
     ]);
@@ -5053,6 +5054,84 @@ function pantryPercentValue(item){
   var text=String(item&&item.displayValue||'').replace(/,/g,'');
   var match=text.match(/-?\d+(?:\.\d+)?/);
   return match?Number(match[0]):0;
+}
+
+function gvizCellValue(cell){
+  if(!cell)return '';
+  if(typeof cell.v==='number')return cell.v;
+  if(cell.f!==null&&cell.f!==undefined)return cell.f;
+  return cell.v!==null&&cell.v!==undefined?cell.v:'';
+}
+
+function percentNum(v){
+  var n=toNum(v);
+  if(typeof v==='string'&&v.indexOf('%')>=0)return n;
+  return Math.abs(n)>0&&Math.abs(n)<=1?n*100:n;
+}
+
+function normalizeHoldingOverviewRow(row){
+  row=row||{};
+  var rawSymbol=row.symbol||row.name||row.assetName||row.account||'';
+  var key=normalizeKey(rawSymbol);
+  var meta=holdingMeta(key||rawSymbol,stripIconText(rawSymbol));
+  return Object.assign({},row,{
+    symbol:key||String(rawSymbol||'').trim(),
+    name:row.name||meta.name||stripIconText(rawSymbol),
+    shares:toNum(row.shares||row.units),
+    cost:toNum(row.cost),
+    marketValue:toNum(row.marketValue||row.mktVal),
+    monthlyDiv:toNum(row.monthlyDiv),
+    totalDiv:toNum(row.totalDiv||row.div),
+    unrealized:toNum(row.unrealized),
+    totalReturn:toNum(row.totalReturn),
+    avgCost:toNum(row.avgCost),
+    price:toNum(row.price),
+    roi:percentNum(row.roi),
+    formationDate:row.formationDate||'',
+    elapsedDays:toNum(row.elapsedDays),
+    yuanPerDay:toNum(row.yuanPerDay)
+  });
+}
+
+async function loadMonthlyHoldingsSheet(){
+  var url='https://docs.google.com/spreadsheets/d/'+COMMAND_SHEET_ID+'/gviz/tq?tqx=out:json&sheet='+encodeURIComponent(MONTHLY_HOLDINGS_SHEET_NAME)+'&range='+encodeURIComponent(MONTHLY_HOLDINGS_RANGE);
+  var r=await fetch(url);
+  if(!r.ok)throw new Error('Monthly holdings sheet read failed');
+  var text=await r.text();
+  var json=JSON.parse(text.slice(text.indexOf('{'),text.lastIndexOf('}')+1));
+  return (json.table.rows||[]).map(function(row){
+    var c=row.c||[];
+    return normalizeHoldingOverviewRow({
+      symbol:gvizCellValue(c[0]),
+      cost:gvizCellValue(c[1]),
+      marketValue:gvizCellValue(c[2]),
+      monthlyDiv:gvizCellValue(c[3]),
+      shares:gvizCellValue(c[4]),
+      price:gvizCellValue(c[5]),
+      totalDiv:gvizCellValue(c[6]),
+      unrealized:gvizCellValue(c[7]),
+      totalReturn:gvizCellValue(c[8]),
+      avgCost:gvizCellValue(c[9]),
+      roi:gvizCellValue(c[10]),
+      formationDate:gvizCellValue(c[11]),
+      elapsedDays:gvizCellValue(c[12]),
+      yuanPerDay:gvizCellValue(c[13])
+    });
+  }).filter(function(row){
+    return row.symbol&&(row.shares>0||row.cost>0||row.marketValue>0);
+  });
+}
+
+async function loadCouncilHoldingsOverview(){
+  try{
+    var sheetRows=await loadMonthlyHoldingsSheet();
+    if(sheetRows.length)return sheetRows;
+  }catch(e){
+    console.warn(e);
+  }
+  if(!API_URL)return [];
+  var rows=await apiGet({action:'holdingsOverview'});
+  return (rows||[]).map(normalizeHoldingOverviewRow);
 }
 
 function renderHeroCard(row,totalCost){
