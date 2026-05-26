@@ -6108,31 +6108,71 @@ function setupNotice(){
       85:'🌨️',86:'❄️',
       95:'⛈️',96:'⛈️',99:'⛈️'
     };
+    var WEATHER_CACHE_KEY='nav_weather_cache_v2';
+    var WTTR_DESC={
+      'Sunny':'晴朗','Clear':'晴朗','Partly cloudy':'部分多雲','Cloudy':'多雲','Overcast':'陰天',
+      'Mist':'薄霧','Patchy rain nearby':'局部降雨','Light rain':'小雨','Moderate rain':'中雨',
+      'Heavy rain':'大雨','Thundery outbreaks in nearby':'雷雨'
+    };
+    function setWeatherView(payload,stale){
+      var iconEl=document.getElementById('nav-weather-icon');
+      var tempEl=document.getElementById('nav-weather-temp');
+      var descEl=document.getElementById('nav-weather-desc');
+      if(iconEl)iconEl.textContent=payload.icon||'🌡️';
+      if(tempEl)tempEl.textContent=Number.isFinite(payload.temp)?Math.round(payload.temp)+'°C':'--°C';
+      if(descEl)descEl.textContent=(payload.desc||'天氣暫時離線')+(payload.hum!=null?' · 濕度'+payload.hum+'%':'')+(stale?' · 快取':'');
+    }
+    function cacheWeather(payload){
+      try{localStorage.setItem(WEATHER_CACHE_KEY,JSON.stringify(Object.assign({savedAt:Date.now()},payload)));}catch(e){}
+    }
+    function readCachedWeather(){
+      try{
+        var cached=JSON.parse(localStorage.getItem(WEATHER_CACHE_KEY)||'null');
+        if(cached&&Date.now()-Number(cached.savedAt||0)<21600000)return cached;
+      }catch(e){}
+      return null;
+    }
+    function fetchJsonWithTimeout(url,ms){
+      return Promise.race([
+        fetch(url,{cache:'no-store'}).then(function(r){
+          if(!r.ok)throw new Error('weather http '+r.status);
+          return r.json();
+        }),
+        new Promise(function(_,reject){setTimeout(function(){reject(new Error('weather timeout'));},ms);})
+      ]);
+    }
+    function fromOpenMeteo(data){
+      var c=data&&data.current;
+      if(!c||!Number.isFinite(Number(c.temperature_2m)))throw new Error('weather payload');
+      var code=Number(c.weathercode);
+      return {icon:ICON[code]||'🌡️',temp:Number(c.temperature_2m),hum:c.relative_humidity_2m,desc:WMO[code]||'—'};
+    }
+    function fromWttr(data){
+      var c=data&&data.current_condition&&data.current_condition[0];
+      if(!c)throw new Error('weather fallback payload');
+      var raw=(c.weatherDesc&&c.weatherDesc[0]&&c.weatherDesc[0].value)||'';
+      return {icon:'🌡️',temp:Number(c.temp_C),hum:c.humidity,desc:WTTR_DESC[raw]||raw||'彰化天氣'};
+    }
+    function applyWeatherFailure(){
+      var cached=readCachedWeather();
+      if(cached)return setWeatherView(cached,true);
+      setWeatherView({icon:'🌡️',temp:NaN,desc:'天氣稍後回報'},false);
+    }
     // 彰化市座標
     var LAT=24.0800,LON=120.5360;
     var url='https://api.open-meteo.com/v1/forecast?latitude='+LAT+'&longitude='+LON+
       '&current=temperature_2m,weathercode,relative_humidity_2m'+
       '&timezone=Asia%2FTaipei';
-    fetch(url)
-      .then(function(r){return r.json();})
-      .then(function(data){
-        var c=data.current;
-        var code=c.weathercode;
-        var temp=Math.round(c.temperature_2m);
-        var hum=c.relative_humidity_2m;
-        var icon=ICON[code]||'🌡️';
-        var desc=WMO[code]||'—';
-        var iconEl=document.getElementById('nav-weather-icon');
-        var tempEl=document.getElementById('nav-weather-temp');
-        var descEl=document.getElementById('nav-weather-desc');
-        if(iconEl)iconEl.textContent=icon;
-        if(tempEl)tempEl.textContent=temp+'°C';
-        if(descEl)descEl.textContent=desc+' · 濕度'+hum+'%';
-      })
+    fetchJsonWithTimeout(url,6000)
+      .then(fromOpenMeteo)
       .catch(function(){
-        var descEl=document.getElementById('nav-weather-desc');
-        if(descEl)descEl.textContent='天氣讀取失敗';
-      });
+        return fetchJsonWithTimeout('https://wttr.in/Changhua?format=j1',8000).then(fromWttr);
+      })
+      .then(function(payload){
+        cacheWeather(payload);
+        setWeatherView(payload,false);
+      })
+      .catch(applyWeatherFailure);
   })();
 })();
 
