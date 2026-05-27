@@ -3474,7 +3474,7 @@ function renderAccounts(accs,monthly,bills,el,financeStatus){
 // ══════════════════════════════════════════
 function renderDomesticPanel(){
   setPanelHead('⚖️','Domestic · Policy','內政');
-  setTabs([{key:'booking-form',label:'快速記帳'},{key:'booking-recent',label:'最近記錄'},{key:'dividend-center',label:'配息中心'}]);
+  setTabs([{key:'booking-form',label:'快速記帳'},{key:'booking-recent',label:'最近記錄'},{key:'dividend-center',label:'持股備忘錄'}]);
   document.getElementById('p-body').innerHTML=`
     <div class="pane active" id="pane-booking-form"></div>
     <div class="pane" id="pane-booking-recent">
@@ -4047,41 +4047,41 @@ function renderBookingDividendPending(data){
   var total=pending.reduce(function(sum,row){return sum+(Number(row.estimatedTwd)||0);},0);
   var expanded=bookingDividendExpanded||bookingDividendPickerOpen;
   var list=expanded?pending.map(function(row){return renderDividendPendingRow(row,true);}).join(''):'';
-  var cleanSummary=`<div class="booking-dividend-summary">${pending.length} &#31558;&#24453;&#20837;&#24115; · NT${fmtFull(total)}</div>`;
-  var cleanPickerHint=bookingDividendPickerOpen?'<div class="booking-dividend-summary">&#40670;&#36984;&#19968;&#31558;&#37197;&#24687;&#24460;&#26371;&#33258;&#21205;&#24118;&#20837;&#20006;&#38364;&#38281;&#28014;&#31383;</div>':'';
+  var cleanSummary=`<div class="booking-dividend-summary">${pending.length} 筆待記帳持股紀錄 · NT${fmtFull(total)}</div>`;
+  var cleanPickerHint=bookingDividendPickerOpen?'<div class="booking-dividend-summary">點選一筆持股紀錄後會自動帶入並關閉浮窗</div>':'';
   return `${bookingDividendPickerOpen?'<div class="booking-dividend-backdrop" onclick="closeBookingDividendPicker()"></div>':''}
     <div class="booking-dividend-panel${bookingDividendPickerOpen?' is-floating':''}">
       <div class="booking-dividend-head">
-        <div class="booking-dividend-title">&#24453;&#20837;&#24115;&#37197;&#24687;</div>
+        <div class="booking-dividend-title">待記帳持股紀錄</div>
         <button class="booking-dividend-toggle" type="button" onclick="setBookingDividendExpanded(!bookingDividendExpanded)">${expanded?'&#25910;&#21512;':'&#23637;&#38283;'}</button>
       </div>
       ${expanded?cleanPickerHint+list:cleanSummary}
     </div>`;
-  var summary=`<div class="booking-dividend-summary">${pending.length} 筆待入帳 · NT${fmtFull(total)}</div>`;
-  var pickerHint=bookingDividendPickerOpen?'<div class="booking-dividend-summary">點選一筆配息後會自動帶入並關閉浮窗</div>':'';
+  var summary=`<div class="booking-dividend-summary">${pending.length} 筆待記帳持股紀錄 · NT${fmtFull(total)}</div>`;
+  var pickerHint=bookingDividendPickerOpen?'<div class="booking-dividend-summary">點選一筆持股紀錄後會自動帶入並關閉浮窗</div>':'';
   return `${bookingDividendPickerOpen?'<div class="booking-dividend-backdrop" onclick="closeBookingDividendPicker()"></div>':''}
     <div class="booking-dividend-panel${bookingDividendPickerOpen?' is-floating':''}">
       <div class="booking-dividend-head">
-        <div class="booking-dividend-title">待入帳配息</div>
+        <div class="booking-dividend-title">待記帳持股紀錄</div>
         <button class="booking-dividend-toggle" type="button" onclick="setBookingDividendExpanded(!bookingDividendExpanded)">${expanded?'收合':'展開'}</button>
       </div>
       ${expanded?pickerHint+list:summary}
     </div>`;
-  return `<div class="dividend-section-title">待入帳配息</div>`+
+  return `<div class="dividend-section-title">待記帳持股紀錄</div>`+
     pending.map(function(row){return renderDividendPendingRow(row,true);}).join('');
 }
 
 function renderDividendCenter(data,includeArchitecture){
   data=data||{};
   var pending=dividendPendingDisplayRows(data.pending||[]).filter(function(row){return !isDividendPendingHidden(row);});
-  var pendingRows=pending.map(function(row){return renderDividendPendingRow(row,'center');}).join('')||'<div class="dividend-empty">目前沒有待入帳配息。</div>';
+  var pendingRows=pending.map(function(row){return renderDividendPendingRow(row,'center');}).join('')||'<div class="dividend-empty">目前沒有待記帳持股紀錄。</div>';
   return `
     ${includeArchitecture?renderDividendEntryForm():''}
     <div style="display:flex;gap:8px;margin-bottom:12px">
       <button class="dividend-use-btn" style="width:auto;margin:0" onclick="loadDividendCenterPanel(true)">重新整理</button>
       <span class="result-msg" id="dividend-center-msg"></span>
     </div>
-    <div class="dividend-section-title">待入帳區</div>
+    <div class="dividend-section-title">待記帳持股紀錄</div>
     ${pendingRows}`;
 }
 
@@ -4096,42 +4096,31 @@ function renderDividendEntryForm(){
   var source=(data.dividendHoldings&&data.dividendHoldings.length)?data.dividendHoldings:DIVIDEND_AUTOFILL_SYMBOLS.map(function(sym){return {symbol:sym,displaySymbol:sym,shares:0};});
   var symbolOptions=source.map(function(row){return '<option value="'+esc(row.symbol)+'">'+esc(row.displaySymbol||row.symbol)+'</option>';}).join('');
   return `<form class="dividend-entry-form" onsubmit="submitDividendEntry(event)">
-    <div class="dividend-entry-title">手動登錄配息資料</div>
+    <div class="dividend-entry-title">手動登錄買賣持股資料</div>
     <div class="dividend-entry-grid">
       <div class="form-group">
         <label class="form-label">ETF代號</label>
         <select class="form-control" id="div-entry-symbol" onchange="onDividendEntrySymbolChange()">${symbolOptions}</select>
       </div>
-      <div class="form-group">
-        <label class="form-label">每股配息USD</label>
-        <input class="form-control" id="div-entry-usd" type="number" step="0.0001" min="0" placeholder="0.644" oninput="calcDividendEntryEstimate(true)">
-      </div>
+      <input id="div-entry-usd" type="hidden">
       <div class="form-group">
         <label class="form-label">匯率</label>
         <input class="form-control" id="div-entry-fx" type="number" step="0.01" min="0" placeholder="32.50" oninput="this.dataset.autoFilled='0';calcDividendEntryEstimate(true)">
       </div>
       <div class="form-group">
-        <label class="form-label">公布日</label>
+        <label class="form-label">購買日期</label>
         <input class="form-control" id="div-entry-announce" type="date" value="${today()}">
       </div>
       <div class="form-group">
-        <label class="form-label">預估入帳日</label>
-        <input class="form-control" id="div-entry-paydate" type="date" value="${today()}">
-      </div>
-      <div class="form-group">
-        <label class="form-label">持股數</label>
-        <input class="form-control" id="div-entry-shares" type="number" step="0.01" min="0" placeholder="自動帶入" oninput="calcDividendEntryEstimate(true)">
+        <label class="form-label">購買(賣出)股數</label>
+        <input class="form-control" id="div-entry-shares" type="number" step="0.01" placeholder="買入為正，賣出為負" oninput="calcDividendEntryEstimate(true)">
       </div>
       <div class="form-group">
         <label class="form-label">預估台幣</label>
-        <input class="form-control" id="div-entry-twd" type="number" min="0" placeholder="自動估算，可修改">
-      </div>
-      <div class="form-group wide">
-        <label class="form-label">備註</label>
-        <input class="form-control" id="div-entry-note" type="text" placeholder="五月配息">
+        <input class="form-control" id="div-entry-twd" type="number" min="0" placeholder="自動計算，可手動修改">
       </div>
     </div>
-    <button class="dividend-use-btn" id="div-entry-submit" type="submit">記錄配息</button>
+    <button class="dividend-use-btn" id="div-entry-submit" type="submit">登錄持股紀錄</button>
     <span class="result-msg" id="div-entry-msg"></span>
   </form>`;
 }
@@ -4165,7 +4154,7 @@ function refreshDividendEntrySymbols(holdings){
   if(!options.length){
     (holdings||[]).forEach(function(row){
       var k=normalizeKey(row.symbol||row.name);
-      if(k)options.push({symbol:k,displaySymbol:row.symbol||row.name,shares:Number(row.shares)||0});
+      if(k)options.push({symbol:k,displaySymbol:row.symbol||row.name,shares:Number(row.shares)||0,price:Number(row.price)||0});
     });
   }
   if(!options.length){
@@ -4196,25 +4185,17 @@ function applyDividendEntryDefaults(data){
 
 function onDividendEntrySymbolChange(){
   var sel=document.getElementById('div-entry-symbol');
-  var sharesEl=document.getElementById('div-entry-shares');
   var fxEl=document.getElementById('div-entry-fx');
-  var noteEl=document.getElementById('div-entry-note');
+  var priceEl=document.getElementById('div-entry-usd');
   var form=document.querySelector('.dividend-entry-form');
   var data=(form&&form._dividendCenterData)||dividendCenterCache||{};
   var symbol=sel?sel.value:'';
   var holding=findDividendHolding(symbol);
-  if(sharesEl&&holding&&Number(holding.shares)>0){
-    sharesEl.value=Number(holding.shares);
-    sharesEl.dataset.autoFilled='1';
-  }
+  if(priceEl)priceEl.value=holding&&Number(holding.price)>0?Number(holding.price):'';
   if(fxEl&&(!fxEl.value||fxEl.dataset.autoFilled==='1')){
     fxEl.value=getDividendDefaultFx(symbol,data);
     fxEl.dataset.autoFilled='1';
     fxEl.readOnly=true;
-  }
-  if(noteEl&&!noteEl.value){
-    var month=new Date().getMonth()+1;
-    noteEl.value=month+'月配息';
   }
   calcDividendEntryEstimate(true);
 }
@@ -4242,12 +4223,11 @@ function dividendTaxFactor(symbol){
 }
 
 function calcDividendEntryEstimate(force){
-  var symbol=(document.getElementById('div-entry-symbol')||{}).value||'';
   var usd=parseFloat((document.getElementById('div-entry-usd')||{}).value)||0;
   var fx=parseFloat((document.getElementById('div-entry-fx')||{}).value)||0;
   var shares=parseFloat((document.getElementById('div-entry-shares')||{}).value)||0;
   var twd=document.getElementById('div-entry-twd');
-  if(twd&&usd>0&&fx>0&&shares>0&&(force||!twd.value))twd.value=Math.round(usd*fx*shares*dividendTaxFactor(symbol));
+  if(twd&&usd>0&&fx>0&&shares!==0&&(force||!twd.value))twd.value=Math.round(Math.abs(usd*fx*shares));
 }
 
 async function submitDividendEntry(e){
@@ -4257,20 +4237,18 @@ async function submitDividendEntry(e){
   var symbol=(document.getElementById('div-entry-symbol')||{}).value||'';
   var dividendUsd=parseFloat((document.getElementById('div-entry-usd')||{}).value)||0;
   var announceDate=(document.getElementById('div-entry-announce')||{}).value||'';
-  var estimatedPayDate=(document.getElementById('div-entry-paydate')||{}).value||'';
   var fx=parseFloat((document.getElementById('div-entry-fx')||{}).value)||0;
   var shares=parseFloat((document.getElementById('div-entry-shares')||{}).value)||0;
   var estimatedTwd=parseFloat((document.getElementById('div-entry-twd')||{}).value)||0;
-  var note=(document.getElementById('div-entry-note')||{}).value||'';
-  if(!symbol||dividendUsd<=0||!announceDate||!estimatedPayDate||fx<=0||shares<=0){
-    showMsg('div-entry-msg','請填 ETF、每股配息、日期、匯率與持股數','err');
+  if(!symbol||dividendUsd<=0||!announceDate||fx<=0||shares===0){
+    showMsg('div-entry-msg','請填 ETF、匯率、購買日期與購買(賣出)股數；系統需能帶入該 ETF 股價','err');
     return;
   }
   try{
     if(btn){btn.disabled=true;btn.textContent='寫入中…';}
-    await apiPost({action:'dividendEntry',symbol,dividendUsd,announceDate:announceDate.replace(/-/g,'/'),estimatedPayDate:estimatedPayDate.replace(/-/g,'/'),fx,shares,estimatedTwd,note});
-    showMsg('div-entry-msg','✓ 已記錄配息','ok');
-    ['div-entry-usd','div-entry-shares','div-entry-twd','div-entry-note'].forEach(function(id){
+    await apiPost({action:'dividendEntry',symbol,dividendUsd,tradeDate:announceDate.replace(/-/g,'/'),fx,shares,estimatedTwd});
+    showMsg('div-entry-msg','✓ 已登錄持股紀錄','ok');
+    ['div-entry-shares','div-entry-twd'].forEach(function(id){
       var el=document.getElementById(id);
       if(el)el.value='';
     });
@@ -4278,7 +4256,7 @@ async function submitDividendEntry(e){
   }catch(err){
     showMsg('div-entry-msg','✗ '+(err.message||'寫入失敗'),'err');
   }finally{
-    if(btn){btn.disabled=false;btn.textContent='記錄配息';}
+    if(btn){btn.disabled=false;btn.textContent='登錄持股紀錄';}
   }
 }
 
@@ -4303,7 +4281,7 @@ async function deleteDividendPending(key,btn){
   var rows=((dividendCenterCache&&dividendCenterCache.pending)||[]).filter(Boolean);
   var row=rows.find(function(item){return dividendPendingKey(item)===String(key);});
   if(!row)return;
-  if(!confirm('確定刪除這筆待入帳配息？刪除後不會再自動帶入收入。'))return;
+  if(!confirm('確定刪除這筆待記帳持股紀錄？'))return;
   var oldText=btn?btn.textContent:'';
   try{
     if(btn){btn.disabled=true;btn.textContent='...';}
@@ -4317,7 +4295,7 @@ async function deleteDividendPending(key,btn){
       initDividendEntryForm(data);
     }
     refreshBookingDividendPendingView();
-    showMsg('dividend-center-msg','已刪除待入帳配息','ok');
+    showMsg('dividend-center-msg','已刪除待記帳持股紀錄','ok');
   }catch(err){
     showMsg('dividend-center-msg',(err&&err.message)||'刪除失敗','err');
   }finally{
@@ -4338,8 +4316,8 @@ function renderDividendPendingRow(row,allowDismiss){
   var pickAttrs=allowDismiss===true?` is-selectable" data-dividend-pick-id="${esc(dismissKey)}" onclick="selectBookingDividendPending(this.dataset.dividendPickId)"`:'"';
   return `<div class="dividend-pending-row${pickAttrs}">
     <div>
-      <div class="dividend-pending-name">${esc(row.displaySymbol||row.symbol)} · ${esc(row.note||'配息')}</div>
-        <div class="dividend-pending-meta">每股配息 USD ${esc(row.dividendUsd||'--')} · 預估入帳 ${esc(row.estimatedPayDate||'--')}</div>
+      <div class="dividend-pending-name">${esc(row.displaySymbol||row.symbol)} · ${Number(row.shares)<0?'賣出':'買入'} ${esc(row.shares||'--')} 股</div>
+        <div class="dividend-pending-meta">購買日期 ${esc(row.tradeDate||row.estimatedPayDate||'--')} · 匯率 ${esc(row.fx||'--')}</div>
     </div>
     <div class="dividend-pending-amt">${fmtFull(row.estimatedTwd)}</div>
     ${dismissBtn}
@@ -6253,7 +6231,7 @@ initHeaderVideoPlayback();
       <div class="advisor-greeting">主公，今日要做什麼？</div>
       <div class="advisor-btn-grid">
         <button class="advisor-btn" onclick="advisorGo('finance','finance-accs')"><span class="advisor-btn-tag">財</span>帳戶餘額</button>
-        <button class="advisor-btn" onclick="advisorGo('domestic','dividend-center')"><span class="advisor-btn-tag">息</span>配息中心</button>
+      <button class="advisor-btn" onclick="advisorGo('domestic','dividend-center')"><span class="advisor-btn-tag">股</span>持股備忘錄</button>
         <button class="advisor-btn" onclick="advisorGo('council','council-holdings')"><span class="advisor-btn-tag">軍</span>軍團概覽</button>
         <button class="advisor-btn" onclick="advisorGo('finance','div-calc')"><span class="advisor-btn-tag">財</span>配息試算</button>
         <button class="advisor-btn" onclick="advisorGo('market','market-watch')"><span class="advisor-btn-tag">市</span>市場快報</button>
