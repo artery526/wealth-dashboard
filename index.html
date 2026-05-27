@@ -1054,12 +1054,6 @@ body::after{
 .macro-indicator-status.watch{color:var(--gold);background:rgba(232,192,80,.12)}
 .macro-indicator-status.defense{color:var(--coral);background:rgba(216,90,48,.12)}
 .macro-threshold{font-family:var(--sans);font-size:10px;color:#7a6030;line-height:1.7;margin-top:7px}
-.intel-hero{border:1px solid #2a1c08;border-radius:10px;background:rgba(10,8,4,.72);padding:14px;margin-bottom:12px}
-.intel-title{font-family:var(--sans);font-size:17px;font-weight:900;color:var(--gold);line-height:1.5}
-.intel-meta{font-family:var(--sans);font-size:11px;color:#7a6030;margin-top:5px;line-height:1.6}
-.intel-summary{font-family:var(--sans);font-size:13px;color:#b89452;line-height:1.8;margin-top:10px;white-space:pre-wrap}
-.intel-report{border:1px solid #2a1c08;border-radius:10px;background:#0a0804;padding:16px;font-family:var(--sans);font-size:15px;color:var(--ink);line-height:1.95;white-space:pre-wrap;max-height:62vh;overflow:auto}
-.intel-limitation{font-family:var(--sans);font-size:11px;color:#7a6030;line-height:1.7;margin-top:10px}
 .battle-report-head{
   display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
   border:1px solid rgba(184,137,46,.34);border-radius:8px;background:rgba(10,8,4,.72);
@@ -2424,7 +2418,6 @@ function switchTab(btn,key){
   else if(key==='council-holdings')loadHoldings();
   else if(key==='market-watch')loadMarketDashboard();
   else if(key==='macro-overview')loadMacroOverview();
-  else if(key==='us-close-report')loadUsCloseReport();
   else if(key==='finance-pledge')loadPledgePanel();
   else if(key==='council-roster')loadCouncilDashboard();
   else if(key==='council-task')resetAdvisorTaskStatus();
@@ -4574,8 +4567,7 @@ function renderMarketPanel(){
   setPanelHead('🏮','Market · Dashboard','市集');
   setTabs([
     {key:'market-watch',label:'市場快報'},
-    {key:'macro-overview',label:'總經戰情'},
-    {key:'us-close-report',label:'美股日報'}
+    {key:'macro-overview',label:'總經戰情'}
   ]);
   document.getElementById('p-body').innerHTML=`
     <div class="pane active" id="pane-market-watch">
@@ -4593,14 +4585,6 @@ function renderMarketPanel(){
         <span class="api-action">⚙ 設定</span>
       </div>
       <div id="macro-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:82%"></div><div class="skel-line skel" style="width:68%"></div></div>
-    </div>
-    <div class="pane" id="pane-us-close-report">
-      <div class="api-bar" onclick="openCfg()">
-        <div class="api-dot ${API_URL?'ok':'err'}" id="intel-dot"></div>
-        <span class="api-label" id="intel-label">${API_URL?'載入美股日報…':'尚未設定 API'}</span>
-        <span class="api-action">⚙ 設定</span>
-      </div>
-      <div id="intel-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:82%"></div><div class="skel-line skel" style="width:68%"></div></div>
     </div>`;
   if(API_URL)loadMarketDashboard();
 }
@@ -5646,44 +5630,6 @@ async function loadMacroOverview(){
   }
 }
 
-async function loadUsCloseReport(){
-  var el=document.getElementById('intel-content');
-  if(!el)return;
-  if(!API_URL){el.innerHTML=setupNotice();return}
-  el.innerHTML='<div class="skel-line skel"></div><div class="skel-line skel" style="width:82%"></div><div class="skel-line skel" style="width:68%"></div>';
-  try{
-    var data=await apiGet({action:'usCloseReport'});
-    renderUsCloseReport(data,el);
-    var dot=document.getElementById('intel-dot');
-    var lbl=document.getElementById('intel-label');
-    if(dot)dot.className='api-dot ok';
-    if(lbl)lbl.textContent=data&&data.hasData?'已連線 · 美股日報':'已連線 · 尚未建立美股日報';
-  }catch(e){
-    el.innerHTML=`<div style="color:var(--coral);font-family:var(--sans);font-size:12px;padding:12px 0">${esc(e.message)}</div>`;
-    var dot=document.getElementById('intel-dot');
-    var lbl=document.getElementById('intel-label');
-    if(dot)dot.className='api-dot err';
-    if(lbl)lbl.textContent='美股日報讀取失敗';
-  }
-}
-
-function renderUsCloseReport(data,el){
-  data=data||{};
-  var missing=!data.hasData;
-  if(missing){
-    el.innerHTML=`<div class="battle-empty">${esc(data.summary||'尚未建立《美股收盤日報》。請先執行 dailyUsCloseReport() 或安裝每日 09:00 觸發器。')}</div>`;
-    return;
-  }
-  el.innerHTML=`
-    <div class="intel-hero">
-      <div class="intel-title">${esc(data.title||'美股日報')}</div>
-      <div class="intel-meta">日期 ${esc(data.date||'--')} · 狀態 ${esc(data.status||'--')} · 更新 ${esc(data.updatedAt||'--')}</div>
-      <div class="intel-summary">${esc(data.summary||'')}</div>
-      ${data.limitation?`<div class="intel-limitation">${esc(data.limitation)}</div>`:''}
-    </div>
-    <div class="intel-report">${esc(data.content||'')}</div>`;
-}
-
 async function createMacroSample(){
   var el=document.getElementById('macro-content');
   if(!API_URL){if(el)el.innerHTML=setupNotice();return;}
@@ -6223,7 +6169,6 @@ function setupNotice(){
         <button class="advisor-btn" onclick="advisorGo('finance','div-calc')"><span class="advisor-btn-tag">財</span>配息試算</button>
         <button class="advisor-btn" onclick="advisorGo('market','market-watch')"><span class="advisor-btn-tag">市</span>市場快報</button>
         <button class="advisor-btn" onclick="advisorGo('market','macro-overview')"><span class="advisor-btn-tag">市</span>總經戰情</button>
-        <button class="advisor-btn" onclick="advisorGo('market','us-close-report')"><span class="advisor-btn-tag">報</span>美股日報</button>
         <button class="advisor-btn" onclick="advisorGo('finance','finance-pledge')"><span class="advisor-btn-tag">財</span>質押信貸</button>
         <button class="advisor-btn" onclick="advisorGo('council','council-roster')"><span class="advisor-btn-tag">軍</span>部隊陣容</button>
         <button class="advisor-btn" onclick="advisorGo('council','council-task')"><span class="advisor-btn-tag">軍</span>軍師工單</button>
