@@ -4075,12 +4075,16 @@ function renderDividendCenter(data,includeArchitecture){
   data=data||{};
   var pending=dividendPendingDisplayRows(data.pending||[]).filter(function(row){return !isDividendPendingHidden(row);});
   var pendingRows=pending.map(function(row){return renderDividendPendingRow(row,'center');}).join('')||'<div class="dividend-empty">目前沒有待入帳配息。</div>';
+  var tradePending=dividendPendingDisplayRows(data.holdingTradePending||[]);
+  var tradeRows=tradePending.map(renderHoldingTradePendingRow).join('')||'<div class="dividend-empty">目前沒有待入帳持股紀錄。</div>';
   return `
     ${includeArchitecture?renderDividendEntryForm()+renderHoldingTradeEntryForm():''}
     <div style="display:flex;gap:8px;margin-bottom:12px">
       <button class="dividend-use-btn" style="width:auto;margin:0" onclick="loadDividendCenterPanel(true)">重新整理</button>
       <span class="result-msg" id="dividend-center-msg"></span>
     </div>
+    <div class="dividend-section-title">待入帳持股紀錄</div>
+    ${tradeRows}
     <div class="dividend-section-title">待入帳配息</div>
     ${pendingRows}`;
 }
@@ -4418,11 +4422,23 @@ async function submitHoldingTradeEntry(e){
       var el=document.getElementById(id);
       if(el)el.value='';
     });
+    refreshDividendViewsAfterEntry();
   }catch(err){
     showMsg('trade-entry-msg','✗ '+(err.message||'寫入失敗'),'err');
   }finally{
     if(btn){btn.disabled=false;btn.textContent='登錄持股紀錄';}
   }
+}
+
+function renderHoldingTradePendingRow(row){
+  var direction=Number(row.shares)<0?'賣出':'買入';
+  return `<div class="dividend-pending-row">
+    <div>
+      <div class="dividend-pending-name">${esc(row.displaySymbol||row.symbol)} · ${direction} ${esc(row.shares||'--')} 股</div>
+      <div class="dividend-pending-meta">股價 USD ${esc(row.priceUsd||'--')} · 匯率 ${esc(row.fx||'--')} · 手續費 USD ${esc(row.feeUsd||3)} · 日期 ${esc(row.tradeDate||'--')}</div>
+    </div>
+    <div class="dividend-pending-amt">${fmtFull(row.estimatedTwd)}</div>
+  </div>`;
 }
 
 function dividendPendingKey(row){
