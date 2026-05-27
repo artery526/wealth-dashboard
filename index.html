@@ -1818,7 +1818,7 @@ body::after{
       <div class="hdr-char-wrap" onclick="openAdvisorDialog()">
         <video class="hdr-char"
           src="e_a_f_b_d_e_fmp_.mp4"
-          autoplay loop muted playsinline>
+          loop muted playsinline preload="metadata">
         </video>
         <div class="hdr-char-vignette"></div>
       </div>
@@ -6152,6 +6152,36 @@ function initCardVideoPlayback(){
   });
 }
 initCardVideoPlayback();
+
+function initHeaderVideoPlayback(){
+  var wrap=document.querySelector('.hdr-char-wrap');
+  if(!wrap)return;
+  var video=wrap.querySelector('video.hdr-char');
+  if(!video)return;
+  try{
+    video.pause();
+    video.currentTime=0;
+  }catch(e){}
+  function playHeaderVideo(){
+    try{
+      video.currentTime=0;
+      var result=video.play();
+      if(result&&result.catch)result.catch(function(){});
+    }catch(e){}
+  }
+  function stopHeaderVideo(){
+    try{
+      video.pause();
+      video.currentTime=0;
+    }catch(e){}
+  }
+  wrap.addEventListener('mouseenter',playHeaderVideo);
+  wrap.addEventListener('mouseleave',stopHeaderVideo);
+  wrap.addEventListener('focusin',playHeaderVideo);
+  wrap.addEventListener('focusout',stopHeaderVideo);
+  wrap.addEventListener('pointerdown',playHeaderVideo);
+}
+initHeaderVideoPlayback();
 
 // ══════════════════════════════════════════
 //  Particles
