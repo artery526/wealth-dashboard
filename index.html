@@ -1850,12 +1850,12 @@ body::after{
         <div class="gem">⚱️</div>
         <div class="art" style="position:relative;overflow:hidden;height:427px;border-bottom:none;">
           <video
+            class="card-video"
             src="finance-card.mp4"
-            autoplay
             loop
             muted
             playsinline
-            preload="auto"
+            preload="metadata"
             style="width:100%;height:auto;display:block;"
           ></video>
           <!-- 底部漸層 + 小字標籤 -->
@@ -1876,12 +1876,12 @@ body::after{
         <div class="gem">⚖️</div>
         <div class="art" style="position:relative;overflow:hidden;height:427px;border-bottom:none;">
           <video
+            class="card-video"
             src="domestic-card.mp4"
-            autoplay
             loop
             muted
             playsinline
-            preload="auto"
+            preload="metadata"
             style="width:100%;height:auto;display:block;"
           ></video>
           <div style="position:absolute;bottom:0;left:0;right:0;z-index:4;
@@ -1901,12 +1901,12 @@ body::after{
         <div class="gem">🏮</div>
         <div class="art" style="position:relative;overflow:hidden;height:427px;border-bottom:none;">
           <video
+            class="card-video"
             src="market-card.mp4"
-            autoplay
             loop
             muted
             playsinline
-            preload="auto"
+            preload="metadata"
             style="width:100%;height:auto;display:block;"
           ></video>
           <div style="position:absolute;bottom:0;left:0;right:0;z-index:4;
@@ -1926,12 +1926,12 @@ body::after{
         <div class="gem">📜</div>
         <div class="art" style="position:relative;overflow:hidden;height:427px;border-bottom:none;">
           <video
+            class="card-video"
             src="military-control.mp4"
-            autoplay
             loop
             muted
             playsinline
-            preload="auto"
+            preload="metadata"
             style="width:100%;height:100%;display:block;object-fit:cover;object-position:center center;"
           ></video>
           <div style="position:absolute;bottom:0;left:0;right:0;z-index:4;
@@ -1951,12 +1951,12 @@ body::after{
         <div class="gem">✚</div>
         <div class="art" style="position:relative;overflow:hidden;height:427px;border-bottom:none;">
           <video
+            class="card-video"
             src="medical-card.mp4"
-            autoplay
             loop
             muted
             playsinline
-            preload="auto"
+            preload="metadata"
             style="width:100%;height:100%;display:block;object-fit:cover;object-position:center center;"
           ></video>
           <div style="position:absolute;bottom:0;left:0;right:0;z-index:4;
@@ -1976,8 +1976,8 @@ body::after{
         <div class="gem">★</div>
         <div class="art" style="position:relative;overflow:hidden;height:427px;border-bottom:none;">
           <video
+            class="card-video"
             src="stars.mp4"
-            autoplay
             loop
             muted
             playsinline
@@ -6121,6 +6121,37 @@ function setupNotice(){
       .catch(applyWeatherFailure);
   })();
 })();
+
+function initCardVideoPlayback(){
+  document.querySelectorAll('.card').forEach(function(card){
+    var video=card.querySelector('video.card-video');
+    if(!video)return;
+    try{
+      video.pause();
+      video.currentTime=0;
+    }catch(e){}
+    video.dataset.cardVideoReady='1';
+    function playCardVideo(){
+      try{
+        video.currentTime=0;
+        var result=video.play();
+        if(result&&result.catch)result.catch(function(){});
+      }catch(e){}
+    }
+    function stopCardVideo(){
+      try{
+        video.pause();
+        video.currentTime=0;
+      }catch(e){}
+    }
+    card.addEventListener('mouseenter',playCardVideo);
+    card.addEventListener('mouseleave',stopCardVideo);
+    card.addEventListener('focusin',playCardVideo);
+    card.addEventListener('focusout',stopCardVideo);
+    card.addEventListener('pointerdown',playCardVideo);
+  });
+}
+initCardVideoPlayback();
 
 // ══════════════════════════════════════════
 //  Particles
