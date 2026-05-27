@@ -4143,7 +4143,10 @@ function renderHoldingTradeEntryForm(){
         <label class="form-label">ETF代號</label>
         <select class="form-control" id="trade-entry-symbol" onchange="onHoldingTradeSymbolChange()">${symbolOptions}</select>
       </div>
-      <input id="trade-entry-price" type="hidden">
+      <div class="form-group">
+        <label class="form-label">股價</label>
+        <input class="form-control" id="trade-entry-price" type="number" step="0.0001" min="0" placeholder="自動帶入，可修改" oninput="calcHoldingTradeEstimate(true)">
+      </div>
       <div class="form-group">
         <label class="form-label">匯率</label>
         <input class="form-control" id="trade-entry-fx" type="number" step="0.01" min="0" placeholder="32.50" oninput="this.dataset.autoFilled='0';calcHoldingTradeEstimate(true)">
@@ -4306,7 +4309,10 @@ function onHoldingTradeSymbolChange(){
   var data=(form&&form._dividendCenterData)||dividendCenterCache||{};
   var symbol=sel?sel.value:'';
   var holding=findDividendHolding(symbol);
-  if(priceEl)priceEl.value=holding&&Number(holding.price)>0?Number(holding.price):'';
+  if(priceEl&&(!priceEl.value||priceEl.dataset.autoFilled==='1')){
+    priceEl.value=holding&&Number(holding.price)>0?Number(holding.price):'';
+    priceEl.dataset.autoFilled='1';
+  }
   if(fxEl&&(!fxEl.value||fxEl.dataset.autoFilled==='1')){
     fxEl.value=getDividendDefaultFx(symbol,data);
     fxEl.dataset.autoFilled='1';
