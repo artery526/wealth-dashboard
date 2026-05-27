@@ -4432,13 +4432,38 @@ async function submitHoldingTradeEntry(e){
 
 function renderHoldingTradePendingRow(row){
   var direction=Number(row.shares)<0?'賣出':'買入';
+  var rowId=String(row.rowId||'');
   return `<div class="dividend-pending-row">
     <div>
       <div class="dividend-pending-name">${esc(row.displaySymbol||row.symbol)} · ${direction} ${esc(row.shares||'--')} 股</div>
       <div class="dividend-pending-meta">股價 USD ${esc(row.priceUsd||'--')} · 匯率 ${esc(row.fx||'--')} · 手續費 USD ${esc(row.feeUsd||3)} · 日期 ${esc(row.tradeDate||'--')}</div>
     </div>
     <div class="dividend-pending-amt">${fmtFull(row.estimatedTwd)}</div>
+    <div class="dividend-pending-actions"><button class="dividend-dismiss-btn" type="button" data-holding-trade-row-id="${esc(rowId)}" onclick="event.stopPropagation();deleteHoldingTradePending(this.dataset.holdingTradeRowId,this)">刪除</button></div>
   </div>`;
+}
+
+async function deleteHoldingTradePending(rowId,btn){
+  if(!rowId)return;
+  if(!confirm('確定刪除這筆待入帳持股紀錄？'))return;
+  var oldText=btn?btn.textContent:'';
+  try{
+    if(btn){btn.disabled=true;btn.textContent='...';}
+    await apiPost({action:'holdingTradeDelete',rowId:rowId});
+    invalidateDividendCenter();
+    var data=await loadDividendCenter(true);
+    var center=document.getElementById('dividend-center-content');
+    if(center){
+      center.innerHTML=renderDividendCenter(data,true);
+      initDividendEntryForm(data);
+    }
+    refreshBookingDividendPendingView();
+    showMsg('dividend-center-msg','已刪除待入帳持股紀錄','ok');
+  }catch(err){
+    showMsg('dividend-center-msg',(err&&err.message)||'刪除失敗','err');
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent=oldText||'刪除';}
+  }
 }
 
 function dividendPendingKey(row){
