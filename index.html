@@ -4115,10 +4115,6 @@ function renderDividendEntryForm(){
         <input class="form-control" id="div-entry-announce" type="date" value="${today()}">
       </div>
       <div class="form-group">
-        <label class="form-label">預估入帳日</label>
-        <input class="form-control" id="div-entry-paydate" type="date" value="${today()}">
-      </div>
-      <div class="form-group">
         <label class="form-label">持股數</label>
         <input class="form-control" id="div-entry-shares" type="number" step="0.01" min="0" placeholder="自動帶入" oninput="calcDividendEntryEstimate(true)">
       </div>
@@ -4141,7 +4137,7 @@ function renderHoldingTradeEntryForm(){
   var source=(data.dividendHoldings&&data.dividendHoldings.length)?data.dividendHoldings:DIVIDEND_AUTOFILL_SYMBOLS.map(function(sym){return {symbol:sym,displaySymbol:sym,shares:0,price:0};});
   var symbolOptions=source.map(function(row){return '<option value="'+esc(row.symbol)+'">'+esc(row.displaySymbol||row.symbol)+'</option>';}).join('');
   return `<form class="dividend-entry-form" onsubmit="submitHoldingTradeEntry(event)">
-    <div class="dividend-entry-title">手動登錄買賣持股資料</div>
+    <div class="dividend-entry-title">待入帳持股紀錄</div>
     <div class="dividend-entry-grid">
       <div class="form-group">
         <label class="form-label">ETF代號</label>
@@ -4358,7 +4354,7 @@ function calcHoldingTradeEstimate(force){
   var fx=parseFloat((document.getElementById('trade-entry-fx')||{}).value)||0;
   var shares=parseFloat((document.getElementById('trade-entry-shares')||{}).value)||0;
   var twd=document.getElementById('trade-entry-twd');
-  if(twd&&price>0&&fx>0&&shares!==0&&(force||!twd.value))twd.value=Math.round(Math.abs(price*fx*shares));
+  if(twd&&price>0&&fx>0&&shares!==0&&(force||!twd.value))twd.value=Math.round((Math.abs(price*shares)+3)*fx);
 }
 
 async function submitDividendEntry(e){
@@ -4368,7 +4364,7 @@ async function submitDividendEntry(e){
   var symbol=(document.getElementById('div-entry-symbol')||{}).value||'';
   var dividendUsd=parseFloat((document.getElementById('div-entry-usd')||{}).value)||0;
   var announceDate=(document.getElementById('div-entry-announce')||{}).value||'';
-  var estimatedPayDate=(document.getElementById('div-entry-paydate')||{}).value||'';
+  var estimatedPayDate=announceDate;
   var fx=parseFloat((document.getElementById('div-entry-fx')||{}).value)||0;
   var shares=parseFloat((document.getElementById('div-entry-shares')||{}).value)||0;
   var estimatedTwd=parseFloat((document.getElementById('div-entry-twd')||{}).value)||0;
@@ -4403,6 +4399,7 @@ async function submitHoldingTradeEntry(e){
   var fx=parseFloat((document.getElementById('trade-entry-fx')||{}).value)||0;
   var shares=parseFloat((document.getElementById('trade-entry-shares')||{}).value)||0;
   var estimatedTwd=parseFloat((document.getElementById('trade-entry-twd')||{}).value)||0;
+  if(estimatedTwd<=0&&priceUsd>0&&fx>0&&shares!==0)estimatedTwd=Math.round((Math.abs(priceUsd*shares)+3)*fx);
   if(!symbol||priceUsd<=0||!tradeDate||fx<=0||shares===0){
     showMsg('trade-entry-msg','請填 ETF、匯率、購買日期與購買(賣出)股數；系統需能帶入該 ETF 股價','err');
     return;
