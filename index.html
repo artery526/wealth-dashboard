@@ -3966,16 +3966,17 @@ async function loadRecentBooking(){
           var isT=type==='轉帳'||type==='股票交易';
           var tone=isT?'transfer':(isIn?'in':'out');
           var main=[t.primaryAccount,fmtPlainAmount(t.primaryBefore),'->',fmtPlainAmount(t.primaryAfter)].filter(Boolean).join(' ');
-          var sub=t.secondaryAccount
-            ? `${esc(t.secondaryAccount)} <strong>${fmtDeltaAmount(t.secondaryDelta)}</strong> → ${fmtPlainAmount(t.secondaryAfter)}`
+          var transferRight=t.secondaryAccount
+            ? `${esc(t.secondaryAccount)} ${fmtDeltaAmount(t.secondaryDelta)} → ${fmtPlainAmount(t.secondaryAfter)}`
             : '';
           var label=t.label?` · ${esc(t.label)}`:'';
+          var right=isT&&transferRight?transferRight:fmtDeltaAmount(t.primaryDelta);
           return `<div class="txn-item">
             <span class="txn-badge ${tone}">${esc(type||'交易')}</span>
             <span class="txn-date">${esc(t.date)}</span>
             <span class="txn-cat">${esc(main)}${label}</span>
-            <span class="txn-amt ${tone}">${fmtDeltaAmount(t.primaryDelta)}</span>
-          </div>${sub?`<div class="txn-balance">${sub}</div>`:''}`;
+            <span class="txn-amt ${tone}">${right}</span>
+          </div>`;
         }).join('');
       return;
     }
