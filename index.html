@@ -4076,11 +4076,13 @@ async function loadRecentBooking(){
         var direction=isSell?'賣出':'買入';
         var route=[t.from,t.to].filter(Boolean).join(' → ');
         var amount=Math.abs(Number(t.stockAmount)||Number(t.cashAmount)||0);
+        var rowId=String(t.rowId||'');
         return `<div class="txn-item">
           <span class="txn-badge transfer">${direction}</span>
           <span class="txn-date">${esc(t.date)}</span>
           <span class="txn-cat">${esc(t.displaySymbol||t.symbol)} · ${esc(Math.abs(shares)||'--')} 股${route?' · '+esc(route):''}</span>
           <span class="txn-amt ${tone}">${isSell?'-':'+'}${fmtN(amount)}</span>
+          <span class="dividend-pending-actions"><button class="dividend-dismiss-btn" type="button" data-stock-trade-row-id="${esc(rowId)}" onclick="event.stopPropagation();voidStockTrade(this.dataset.stockTradeRowId,this)">沖銷</button></span>
         </div>`;
       }).join(''):'';
     if(changes&&changes.length){
@@ -4120,6 +4122,23 @@ async function loadRecentBooking(){
         </div>`;
       }).join('')+stockTradeHtml;
   }catch(e){el.innerHTML=`<div style="color:var(--coral);font-family:var(--sans);font-size:12px;padding:12px 0">${esc(e.message)}</div>`}
+}
+
+async function voidStockTrade(rowId,btn){
+  if(!rowId)return;
+  if(!confirm('確定沖銷這筆股票交易？系統會回補資金帳戶，並刪除轉帳資料庫中的股票交易列。'))return;
+  var oldText=btn?btn.textContent:'';
+  try{
+    if(btn){btn.disabled=true;btn.textContent='...';}
+    await apiPost({action:'stockTradeVoid',rowId:rowId});
+    await loadRecentBooking();
+  }catch(err){
+    var recent=document.getElementById('recent-content');
+    if(recent)recent.insertAdjacentHTML('afterbegin','<div style="color:var(--coral);font-family:var(--sans);font-size:12px;padding:8px 0">✗ '+esc((err&&err.message)||'沖銷失敗')+'</div>');
+    alert((err&&err.message)||'沖銷失敗');
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent=oldText||'沖銷';}
+  }
 }
 
 async function loadDividendCenterPanel(force){
