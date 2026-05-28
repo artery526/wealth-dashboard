@@ -3613,8 +3613,14 @@ async function initBookingForm(){
   loadBookingDividendPending();
   (function(){
     var fromEl=document.getElementById('t-from');
+    var toEl=document.getElementById('t-to');
     var stockEl=document.getElementById('t-stock-sym');
-    if(stockEl)stockEl.addEventListener('change',applyTransferHoldingTradeAutofill);
+    var typeEl=document.getElementById('t-stock-type');
+    if(stockEl)stockEl.addEventListener('change',function(){
+      applyTransferHoldingTradeAutofill();
+      syncTransferStockDirection();
+    });
+    if(typeEl)typeEl.addEventListener('change',syncTransferStockDirection);
     if(!fromEl||!stockEl)return;
     var stockValues=new Set(stockSymbols.map(function(s){return String(s.value||'').trim();}).filter(Boolean));
     fromEl.addEventListener('change',function(){
@@ -3624,10 +3630,20 @@ async function initBookingForm(){
         stockEl.value=selected;
         stockEl.dataset.autoFromAccount=selected;
         applyTransferHoldingTradeAutofill();
+        syncTransferStockDirection();
       }else if(previousAuto&&stockEl.value===previousAuto){
         stockEl.value='';
         stockEl.dataset.autoFromAccount='';
         clearTransferDividendAutofill();
+      }
+    });
+    if(toEl)toEl.addEventListener('change',function(){
+      var selected=String(toEl.value||'').trim();
+      if(stockValues.has(selected)){
+        stockEl.value=selected;
+        stockEl.dataset.autoFromAccount=selected;
+        applyTransferHoldingTradeAutofill();
+        syncTransferStockDirection();
       }
     });
   })();
@@ -3656,6 +3672,7 @@ function setTransferStockFromAccount(source){
   stockEl.value=value;
   stockEl.dataset.autoFromAccount=value;
   applyTransferHoldingTradeAutofill();
+  syncTransferStockDirection();
   showMsg('msg-transfer','已帶入持股標的','ok');
 }
 
@@ -3878,6 +3895,7 @@ function applyTransferHoldingTradeRow(row){
   if(shares&&absShares>0)shares.value=String(absShares);
   if(type)type.value=signedShares<0?'sell':'buy';
   if(note&&!note.value)note.value='待入帳持股紀錄 '+(row.displaySymbol||row.symbol);
+  syncTransferStockDirection();
   if(auto){
     auto.classList.remove('hidden');
     auto.dataset.holdingTradeRowId=row.rowId||'';
@@ -3899,6 +3917,44 @@ function getDividendDisplayValue(symbol,selectEl){
   var opts=Array.from((selectEl&&selectEl.options)||[]);
   var match=opts.find(function(o){return normalizeKey(o.value)===k;});
   return match?match.value:'';
+}
+
+function getTransferStockOptionValue(symbol){
+  var stockEl=document.getElementById('t-stock-sym');
+  return getDividendDisplayValue(symbol,stockEl)||symbol||'';
+}
+
+function isTransferStockValue(value){
+  var stockEl=document.getElementById('t-stock-sym');
+  var k=normalizeKey(value);
+  return !!(k&&stockEl&&Array.from(stockEl.options||[]).some(function(o){
+    return normalizeKey(o.value)===k||normalizeKey(o.textContent)===k;
+  }));
+}
+
+function findPreferredStockCashAccount(){
+  var fromEl=document.getElementById('t-from');
+  var opts=Array.from((fromEl&&fromEl.options)||[]);
+  var preferred=opts.find(function(o){return String(o.value||'').indexOf('國泰Stock')>=0;})||
+    opts.find(function(o){return !o.disabled&&!isTransferStockValue(o.value);});
+  return preferred?preferred.value:'';
+}
+
+function syncTransferStockDirection(){
+  var stockEl=document.getElementById('t-stock-sym');
+  var typeEl=document.getElementById('t-stock-type');
+  var fromEl=document.getElementById('t-from');
+  var toEl=document.getElementById('t-to');
+  if(!stockEl||!typeEl||!fromEl||!toEl||!stockEl.value)return;
+  var stockValue=getTransferStockOptionValue(stockEl.value);
+  var cashValue=findPreferredStockCashAccount();
+  if(typeEl.value==='sell'){
+    fromEl.value=stockValue;
+    if((!toEl.value||isTransferStockValue(toEl.value))&&cashValue)toEl.value=cashValue;
+  }else{
+    if((!fromEl.value||isTransferStockValue(fromEl.value))&&cashValue)fromEl.value=cashValue;
+    toEl.value=stockValue;
+  }
 }
 
 function toggleStockMode(){
