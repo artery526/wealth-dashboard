@@ -3510,6 +3510,7 @@ async function initBookingForm(){
   var accOpts=accs.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('')+
     `<option disabled>── 持股標的 ──</option>`+
     stockSymbols.map(s=>`<option value="${esc(s.value)}">${esc(s.label)}</option>`).join('');
+  var transferAccOpts=accs.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('');
   var stockOpts=`<option value="">無（純轉帳）</option>`+stockSymbols.map(s=>`<option value="${esc(s.value)}">${esc(s.label)}</option>`).join('');
   var divOpts=`<option value="">選擇配息標的</option>`+dividendSymbols.map(s=>`<option value="${esc(s.value)}">${esc(s.label)}</option>`).join('');
 
@@ -3561,8 +3562,8 @@ async function initBookingForm(){
         <div class="booking-transfer-title">純網銀轉帳</div>
         <div class="form-grid booking-transfer-grid">
           <div class="form-group"><label class="form-label">日期</label><input class="form-control" type="date" id="t-date" value="${today()}"></div>
-          <div class="form-group"><label class="form-label">從帳戶（轉出）</label><select class="form-control" id="t-from">${accOpts}</select></div>
-          <div class="form-group"><label class="form-label">到帳戶（轉入）</label><select class="form-control" id="t-to">${accOpts}</select></div>
+          <div class="form-group"><label class="form-label">從帳戶（轉出）</label><select class="form-control" id="t-from">${transferAccOpts}</select></div>
+          <div class="form-group"><label class="form-label">到帳戶（轉入）</label><select class="form-control" id="t-to">${transferAccOpts}</select></div>
           <div class="form-group"><label class="form-label">金額 (TWD)</label><input class="form-control" type="number" id="t-amount" placeholder="0" min="1"></div>
           <input type="hidden" id="t-label" value="">
         </div>
