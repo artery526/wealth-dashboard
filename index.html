@@ -3614,6 +3614,7 @@ async function initBookingForm(){
   (function(){
     var fromEl=document.getElementById('t-from');
     var stockEl=document.getElementById('t-stock-sym');
+    if(stockEl)stockEl.addEventListener('change',applyTransferHoldingTradeAutofill);
     if(!fromEl||!stockEl)return;
     var stockValues=new Set(stockSymbols.map(function(s){return String(s.value||'').trim();}).filter(Boolean));
     fromEl.addEventListener('change',function(){
@@ -3622,9 +3623,11 @@ async function initBookingForm(){
       if(stockValues.has(selected)){
         stockEl.value=selected;
         stockEl.dataset.autoFromAccount=selected;
+        applyTransferHoldingTradeAutofill();
       }else if(previousAuto&&stockEl.value===previousAuto){
         stockEl.value='';
         stockEl.dataset.autoFromAccount='';
+        clearTransferDividendAutofill();
       }
     });
   })();
@@ -3652,6 +3655,7 @@ function setTransferStockFromAccount(source){
   }
   stockEl.value=value;
   stockEl.dataset.autoFromAccount=value;
+  applyTransferHoldingTradeAutofill();
   showMsg('msg-transfer','已帶入持股標的','ok');
 }
 
@@ -3755,7 +3759,7 @@ async function loadDividendCenter(force){
   var now=Date.now();
   if(!force&&dividendCenterCache&&(now-dividendCenterFetchedAt)<DIVIDEND_CACHE_TTL)return dividendCenterCache;
   var data=await apiGet({action:'dividendCenter'});
-  dividendCenterCache=data||{rows:[],pending:[],monthlyTotal:0,settingFx:32.5,dividendHoldings:[]};
+  dividendCenterCache=data||{rows:[],pending:[],holdingTradePending:[],monthlyTotal:0,settingFx:32.5,dividendHoldings:[]};
   dividendCenterFetchedAt=now;
   return dividendCenterCache;
 }
@@ -3771,6 +3775,19 @@ function latestPendingDividendFor(symbol,data){
   return pending.filter(function(row){
     return normalizeKey(row.symbol)===k&&!isDividendPendingHidden(row);
   })[0]||null;
+}
+
+function latestPendingHoldingTradeFor(symbol,data,type){
+  var k=normalizeKey(symbol);
+  var pending=(data&&data.holdingTradePending)||[];
+  var candidates=pending.filter(function(row){
+    if(normalizeKey(row.symbol)!==k)return false;
+    var shares=Number(row.shares)||0;
+    if(type==='buy')return shares>0;
+    if(type==='sell')return shares<0;
+    return true;
+  });
+  return candidates[0]||null;
 }
 
 function dividendNoteText(row){
@@ -3833,12 +3850,47 @@ function onTransferToAccountChange(){
   clearTransferDividendAutofill();
 }
 
+async function applyTransferHoldingTradeAutofill(){
+  var stockEl=document.getElementById('t-stock-sym');
+  if(!stockEl||!stockEl.value)return clearTransferDividendAutofill();
+  try{
+    var data=await loadDividendCenter(false);
+    var typeEl=document.getElementById('t-stock-type');
+    var type=typeEl?typeEl.value:'';
+    var row=latestPendingHoldingTradeFor(stockEl.value,data,type)||latestPendingHoldingTradeFor(stockEl.value,data,'');
+    if(row)applyTransferHoldingTradeRow(row);
+    else clearTransferDividendAutofill();
+  }catch(e){console.warn(e)}
+}
+
+function applyTransferHoldingTradeRow(row){
+  var amount=document.getElementById('t-amount');
+  var stockAmount=document.getElementById('t-stock-amount');
+  var shares=document.getElementById('t-stock-shares');
+  var type=document.getElementById('t-stock-type');
+  var note=document.getElementById('t-note');
+  var auto=document.getElementById('t-dividend-autofill');
+  var signedShares=Number(row.shares)||0;
+  var absShares=Math.abs(signedShares);
+  var twd=Math.round(Number(row.estimatedTwd)||0);
+  if(amount){amount.value=twd;amount.dataset.holdingTradeRowId=row.rowId||'';}
+  if(stockAmount){stockAmount.value=twd;stockAmount.dataset.holdingTradeRowId=row.rowId||'';}
+  if(shares&&absShares>0)shares.value=String(absShares);
+  if(type)type.value=signedShares<0?'sell':'buy';
+  if(note&&!note.value)note.value='待入帳持股紀錄 '+(row.displaySymbol||row.symbol);
+  if(auto){
+    auto.classList.remove('hidden');
+    auto.dataset.holdingTradeRowId=row.rowId||'';
+    auto.innerHTML='已帶入 '+esc(row.displaySymbol||row.symbol)+' 待入帳持股紀錄：'+fmtFull(twd)+' · '+(signedShares<0?'賣出':'買入')+' '+esc(absShares)+' 股。';
+  }
+}
+
 function clearTransferDividendAutofill(){
   var auto=document.getElementById('t-dividend-autofill');
-  if(auto){auto.classList.add('hidden');auto.textContent='';auto.dataset.dividendRowId='';}
+  if(auto){auto.classList.add('hidden');auto.textContent='';auto.dataset.dividendRowId='';auto.dataset.holdingTradeRowId='';}
   ['t-amount','t-stock-amount'].forEach(function(id){
     var el=document.getElementById(id);
-    if(el)el.dataset.dividendRowId='';
+    if(el){el.dataset.dividendRowId='';el.dataset.holdingTradeRowId='';}
   });
 }
 
@@ -3930,6 +3982,7 @@ async function submitTransfer(e){
   var stockType=document.getElementById('t-stock-type')?document.getElementById('t-stock-type').value:'buy';
   var stockAmt=document.getElementById('t-stock-amount')?parseFloat(document.getElementById('t-stock-amount').value)||0:0;
   var dividendRowId='';
+  var holdingTradeRowId=(document.getElementById('t-stock-amount')&&document.getElementById('t-stock-amount').dataset.holdingTradeRowId)||'';
   var hasStock=!!(stockSym&&stockSym.trim());
   if(!date||!from||!to||amt<=0){showMsg('msg-transfer','請填寫所有必填欄位','err');return}
   if(from===to){showMsg('msg-transfer','轉出和轉入帳戶不能相同','err');return}
@@ -3938,8 +3991,8 @@ async function submitTransfer(e){
   try{
     await apiPost({action:'transfer',date:date.replace(/-/g,'/'),from,to,amount:amt,label,note,
       stockMode:hasStock?'1':'',stockType,stockSymbol:stockSym,stockShares,
-      stockAmount:stockAmt||amt,dividendRowId});
-    if(dividendRowId)invalidateDividendCenter();
+      stockAmount:stockAmt||amt,dividendRowId,holdingTradeRowId});
+    if(dividendRowId||holdingTradeRowId)invalidateDividendCenter();
     showMsg('msg-transfer','✓ 已記錄！','ok');
     document.getElementById('t-amount').value='';
     document.getElementById('t-label').value='';
