@@ -3894,12 +3894,12 @@ function applyTransferHoldingTradeRow(row){
   if(stockAmount){stockAmount.value=twd;stockAmount.dataset.holdingTradeRowId=row.rowId||'';}
   if(shares&&absShares>0)shares.value=String(absShares);
   if(type)type.value=signedShares<0?'sell':'buy';
-  if(note&&!note.value)note.value='待入帳持股紀錄 '+(row.displaySymbol||row.symbol);
+  if(note&&!note.value)note.value='待入帳持股記錄 '+(row.displaySymbol||row.symbol);
   syncTransferStockDirection();
   if(auto){
     auto.classList.remove('hidden');
     auto.dataset.holdingTradeRowId=row.rowId||'';
-    auto.innerHTML='已帶入 '+esc(row.displaySymbol||row.symbol)+' 待入帳持股紀錄：'+fmtFull(twd)+' · '+(signedShares<0?'賣出':'買入')+' '+esc(absShares)+' 股。';
+    auto.innerHTML='已帶入 '+esc(row.displaySymbol||row.symbol)+' 待入帳持股記錄：'+fmtFull(twd)+' · '+(signedShares<0?'賣出':'買入')+' '+esc(absShares)+' 股。';
   }
 }
 
@@ -4185,14 +4185,14 @@ function renderDividendCenter(data,includeArchitecture){
   var pending=dividendPendingDisplayRows(data.pending||[]).filter(function(row){return !isDividendPendingHidden(row);});
   var pendingRows=pending.map(function(row){return renderDividendPendingRow(row,'center');}).join('')||'<div class="dividend-empty">目前沒有待入帳配息。</div>';
   var tradePending=dividendPendingDisplayRows(data.holdingTradePending||[]);
-  var tradeRows=tradePending.map(renderHoldingTradePendingRow).join('')||'<div class="dividend-empty">目前沒有待入帳持股紀錄。</div>';
+  var tradeRows=tradePending.map(renderHoldingTradePendingRow).join('')||'<div class="dividend-empty">目前沒有待入帳持股記錄。</div>';
   return `
     ${includeArchitecture?renderDividendEntryForm()+renderHoldingTradeEntryForm():''}
     <div style="display:flex;gap:8px;margin-bottom:12px">
       <button class="dividend-use-btn" style="width:auto;margin:0" onclick="loadDividendCenterPanel(true)">重新整理</button>
       <span class="result-msg" id="dividend-center-msg"></span>
     </div>
-    <div class="dividend-section-title">待入帳持股紀錄</div>
+    <div class="dividend-section-title">待入帳持股記錄</div>
     ${tradeRows}
     <div class="dividend-section-title">待入帳配息</div>
     ${pendingRows}`;
@@ -4250,7 +4250,7 @@ function renderHoldingTradeEntryForm(){
   var source=(data.dividendHoldings&&data.dividendHoldings.length)?data.dividendHoldings:DIVIDEND_AUTOFILL_SYMBOLS.map(function(sym){return {symbol:sym,displaySymbol:sym,shares:0,price:0};});
   var symbolOptions=source.map(function(row){return '<option value="'+esc(row.symbol)+'">'+esc(row.displaySymbol||row.symbol)+'</option>';}).join('');
   return `<form class="dividend-entry-form" onsubmit="submitHoldingTradeEntry(event)">
-    <div class="dividend-entry-title">待入帳持股紀錄</div>
+    <div class="dividend-entry-title">待入帳持股記錄</div>
     <div class="dividend-entry-grid">
       <div class="form-group">
         <label class="form-label">ETF代號</label>
@@ -4263,6 +4263,10 @@ function renderHoldingTradeEntryForm(){
       <div class="form-group">
         <label class="form-label">匯率</label>
         <input class="form-control" id="trade-entry-fx" type="number" step="0.01" min="0" placeholder="32.50" oninput="this.dataset.autoFilled='0';calcHoldingTradeEstimate(true)">
+        <label class="form-label" style="display:flex;align-items:center;gap:7px;margin-top:7px;font-weight:700;color:#c09a50">
+          <input id="trade-entry-fx-apply" type="checkbox" checked onchange="calcHoldingTradeEstimate(true)">
+          匯率加入計算
+        </label>
       </div>
       <div class="form-group">
         <label class="form-label">購買日期</label>
@@ -4277,7 +4281,7 @@ function renderHoldingTradeEntryForm(){
         <input class="form-control" id="trade-entry-twd" type="number" min="0" placeholder="自動計算，可手動修改">
       </div>
     </div>
-    <button class="dividend-use-btn" id="trade-entry-submit" type="submit">登錄持股紀錄</button>
+    <button class="dividend-use-btn" id="trade-entry-submit" type="submit">登錄持股記錄</button>
     <span class="result-msg" id="trade-entry-msg"></span>
   </form>`;
 }
@@ -4472,8 +4476,12 @@ function calcHoldingTradeEstimate(force){
   var price=parseFloat((document.getElementById('trade-entry-price')||{}).value)||0;
   var fx=parseFloat((document.getElementById('trade-entry-fx')||{}).value)||0;
   var shares=parseFloat((document.getElementById('trade-entry-shares')||{}).value)||0;
+  var applyFx=(document.getElementById('trade-entry-fx-apply')||{}).checked!==false;
   var twd=document.getElementById('trade-entry-twd');
-  if(twd&&price>0&&fx>0&&shares!==0&&(force||!twd.value))twd.value=Math.round((Math.abs(price*shares)+3)*fx);
+  if(twd&&price>0&&shares!==0&&(!applyFx||fx>0)&&(force||!twd.value)){
+    var base=Math.abs(price*shares)+3;
+    twd.value=Math.round(applyFx?base*fx:base);
+  }
 }
 
 async function submitDividendEntry(e){
@@ -4516,17 +4524,21 @@ async function submitHoldingTradeEntry(e){
   var priceUsd=parseFloat((document.getElementById('trade-entry-price')||{}).value)||0;
   var tradeDate=(document.getElementById('trade-entry-date')||{}).value||'';
   var fx=parseFloat((document.getElementById('trade-entry-fx')||{}).value)||0;
+  var fxIncluded=(document.getElementById('trade-entry-fx-apply')||{}).checked!==false;
   var shares=parseFloat((document.getElementById('trade-entry-shares')||{}).value)||0;
   var estimatedTwd=parseFloat((document.getElementById('trade-entry-twd')||{}).value)||0;
-  if(estimatedTwd<=0&&priceUsd>0&&fx>0&&shares!==0)estimatedTwd=Math.round((Math.abs(priceUsd*shares)+3)*fx);
-  if(!symbol||priceUsd<=0||!tradeDate||fx<=0||shares===0){
+  if(estimatedTwd<=0&&priceUsd>0&&shares!==0&&(!fxIncluded||fx>0)){
+    var base=Math.abs(priceUsd*shares)+3;
+    estimatedTwd=Math.round(fxIncluded?base*fx:base);
+  }
+  if(!symbol||priceUsd<=0||!tradeDate||shares===0||(fxIncluded&&fx<=0)){
     showMsg('trade-entry-msg','請填 ETF、匯率、購買日期與購買(賣出)股數；系統需能帶入該 ETF 股價','err');
     return;
   }
   try{
     if(btn){btn.disabled=true;btn.textContent='寫入中…';}
-    await apiPost({action:'holdingTradeEntry',symbol,priceUsd,tradeDate:tradeDate.replace(/-/g,'/'),fx,shares,estimatedTwd});
-    showMsg('trade-entry-msg','✓ 已登錄持股紀錄','ok');
+    await apiPost({action:'holdingTradeEntry',symbol,priceUsd,tradeDate:tradeDate.replace(/-/g,'/'),fx,fxIncluded:fxIncluded?'1':'0',shares,estimatedTwd});
+    showMsg('trade-entry-msg','✓ 已登錄持股記錄','ok');
     ['trade-entry-shares','trade-entry-twd'].forEach(function(id){
       var el=document.getElementById(id);
       if(el)el.value='';
@@ -4535,17 +4547,18 @@ async function submitHoldingTradeEntry(e){
   }catch(err){
     showMsg('trade-entry-msg','✗ '+(err.message||'寫入失敗'),'err');
   }finally{
-    if(btn){btn.disabled=false;btn.textContent='登錄持股紀錄';}
+    if(btn){btn.disabled=false;btn.textContent='登錄持股記錄';}
   }
 }
 
 function renderHoldingTradePendingRow(row){
   var direction=Number(row.shares)<0?'賣出':'買入';
+  var fxText=row.fxIncluded===false?'匯率未計':'匯率 '+esc(row.fx||'--');
   var rowId=String(row.rowId||'');
   return `<div class="dividend-pending-row">
     <div>
       <div class="dividend-pending-name">${esc(row.displaySymbol||row.symbol)} · ${direction} ${esc(row.shares||'--')} 股</div>
-      <div class="dividend-pending-meta">股價 USD ${esc(row.priceUsd||'--')} · 匯率 ${esc(row.fx||'--')} · 手續費 USD ${esc(row.feeUsd||3)} · 日期 ${esc(row.tradeDate||'--')}</div>
+      <div class="dividend-pending-meta">股價 ${esc(row.priceUsd||'--')} · ${fxText} · 手續費 ${esc(row.feeUsd||3)} · 日期 ${esc(row.tradeDate||'--')}</div>
     </div>
     <div class="dividend-pending-amt">${fmtFull(row.estimatedTwd)}</div>
     <div class="dividend-pending-actions"><button class="dividend-dismiss-btn" type="button" data-holding-trade-row-id="${esc(rowId)}" onclick="event.stopPropagation();deleteHoldingTradePending(this.dataset.holdingTradeRowId,this)">刪除</button></div>
@@ -4554,7 +4567,7 @@ function renderHoldingTradePendingRow(row){
 
 async function deleteHoldingTradePending(rowId,btn){
   if(!rowId)return;
-  if(!confirm('確定刪除這筆待入帳持股紀錄？'))return;
+  if(!confirm('確定刪除這筆待入帳持股記錄？'))return;
   var oldText=btn?btn.textContent:'';
   try{
     if(btn){btn.disabled=true;btn.textContent='...';}
@@ -4567,7 +4580,7 @@ async function deleteHoldingTradePending(rowId,btn){
       initDividendEntryForm(data);
     }
     refreshBookingDividendPendingView();
-    showMsg('dividend-center-msg','已刪除待入帳持股紀錄','ok');
+    showMsg('dividend-center-msg','已刪除待入帳持股記錄','ok');
   }catch(err){
     showMsg('dividend-center-msg',(err&&err.message)||'刪除失敗','err');
   }finally{
