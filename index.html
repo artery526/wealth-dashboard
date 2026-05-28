@@ -4067,6 +4067,22 @@ async function loadRecentBooking(){
   if(!API_URL){el.innerHTML=setupNotice();return}
   try{
     var changes=await apiGet({action:'accountChanges',ym:currentYM()}).catch(function(){return []});
+    var stockTrades=await apiGet({action:'stockTrades',ym:currentYM()}).catch(function(){return []});
+    var stockTradeHtml=(stockTrades&&stockTrades.length)?'<div class="txn-list-title">股票交易買賣｜'+currentYM()+'</div>'+
+      stockTrades.map(function(t){
+        var shares=Number(t.shares)||0;
+        var isSell=shares<0||String(t.type||'').indexOf('賣')>=0;
+        var tone=isSell?'out':'in';
+        var direction=isSell?'賣出':'買入';
+        var route=[t.from,t.to].filter(Boolean).join(' → ');
+        var amount=Math.abs(Number(t.stockAmount)||Number(t.cashAmount)||0);
+        return `<div class="txn-item">
+          <span class="txn-badge transfer">${direction}</span>
+          <span class="txn-date">${esc(t.date)}</span>
+          <span class="txn-cat">${esc(t.displaySymbol||t.symbol)} · ${esc(Math.abs(shares)||'--')} 股${route?' · '+esc(route):''}</span>
+          <span class="txn-amt ${tone}">${isSell?'-':'+'}${fmtN(amount)}</span>
+        </div>`;
+      }).join(''):'';
     if(changes&&changes.length){
       el.innerHTML='<div class="txn-list-title">帳戶變化｜'+currentYM()+'</div>'+
         changes.map(function(t){
@@ -4086,13 +4102,13 @@ async function loadRecentBooking(){
             <span class="txn-cat">${esc(main)}${label}</span>
             <span class="txn-amt ${tone}">${right}</span>
           </div>`;
-        }).join('');
+        }).join('')+stockTradeHtml;
       return;
     }
     var txns=await apiGet({action:'transactions',ym:currentYM()});
-    if(!txns||!txns.length){el.innerHTML='<div style="color:#5a4018;font-family:var(--sans);font-size:12px;padding:20px 0;text-align:center">本月尚無記錄</div>';return}
+    if((!txns||!txns.length)&&!stockTradeHtml){el.innerHTML='<div style="color:#5a4018;font-family:var(--sans);font-size:12px;padding:20px 0;text-align:center">本月尚無記錄</div>';return}
     el.innerHTML='<div class="txn-list-title">本月記錄（'+currentYM()+'）</div>'+
-      txns.map(t=>{
+      (txns||[]).map(t=>{
         var isIn=t.type==='收入';var isT=t.type==='轉帳';
         var tone=isT?'transfer':(isIn?'in':'out');
         var sign=isT?'':(isIn?'+':'-');
@@ -4102,7 +4118,7 @@ async function loadRecentBooking(){
           <span class="txn-cat">${esc(t.cat)}</span>
           <span class="txn-amt ${tone}">${sign}${fmtN(t.amount)}</span>
         </div>`;
-      }).join('');
+      }).join('')+stockTradeHtml;
   }catch(e){el.innerHTML=`<div style="color:var(--coral);font-family:var(--sans);font-size:12px;padding:12px 0">${esc(e.message)}</div>`}
 }
 
