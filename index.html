@@ -3510,7 +3510,12 @@ async function initBookingForm(){
   var dividendSymbols=normalizeBookingSymbolList(apiDividendSymbols.length?apiDividendSymbols:DIVIDEND_SYMBOLS);
 
   var catOpts=cats.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('');
-  var srcOpts=sources.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('');
+  var orderedSources=sources.slice().sort(function(a,b){
+    if(String(a).trim()==='投資理財')return -1;
+    if(String(b).trim()==='投資理財')return 1;
+    return 0;
+  });
+  var srcOpts=orderedSources.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('');
   var accOpts=accs.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('')+
     `<option disabled>── 持股標的 ──</option>`+
     stockSymbols.map(s=>`<option value="${esc(s.value)}">${esc(s.label)}</option>`).join('');
@@ -3560,7 +3565,7 @@ async function initBookingForm(){
         <div class="form-group hidden" id="i-div-rate-grp"><label class="form-label">配息比例</label><input class="form-control" type="number" id="i-div-rate" placeholder="例：0.35" step="0.001" min="0"></div>
         <div class="form-group hidden" id="i-div-sym-grp"><label class="form-label">配息標的</label><select class="form-control" id="i-div-sym" onclick="openBookingDividendPicker()" onfocus="openBookingDividendPicker()" onchange="syncDivNote()">${divOpts}</select></div>
         <div class="dividend-autofill-note hidden" id="i-dividend-autofill"></div>
-        <div class="form-group full"><label class="form-label">備註（選填）</label><input class="form-control" type="text" id="i-note" placeholder="備註..."></div>
+        <div class="form-group full"><label class="form-label">備註</label><input class="form-control" type="text" id="i-note" placeholder="配息標的" readonly></div>
       </div>
       <button class="submit-btn income" id="btn-income" type="button" onclick="submitIncome(event)">記錄收入</button>
       <span class="result-msg" id="msg-income"></span>
@@ -3759,11 +3764,17 @@ function toggleDivFields(){
   var isInv=src&&isInvestSrc(src.value);
   document.getElementById('i-div-rate-grp').classList.toggle('hidden',!isInv);
   document.getElementById('i-div-sym-grp').classList.toggle('hidden',!isInv);
+  syncDivNote();
 }
 function syncDivNote(){
   var s=document.getElementById('i-div-sym');
   var n=document.getElementById('i-note');
-  if(s&&n&&s.value)n.value=formatIncomeStockNote(s.value,n.value);
+  if(!n)return '';
+  var src=document.getElementById('i-source');
+  var isInv=src&&isInvestSrc(src.value);
+  var value=(isInv&&s)?String(s.value||'').trim():'';
+  n.value=value;
+  return value;
 }
 
 function stripIncomeStockNotePrefix(note){
@@ -3901,7 +3912,7 @@ function applyIncomeDividendAutofill(row){
   }
   if(divSym)divSym.value=getDividendDisplayValue(row.symbol,divSym) || row.symbol;
   if(divRate)divRate.value=formatDividendUsdForInput(row.dividendUsd);
-  if(note)note.value=dividendNoteText(row);
+  syncDivNote();
   if(amount){amount.value=Math.round(Number(row.estimatedTwd)||0);amount.dataset.dividendRowId=row.rowId||'';}
   if(auto){
     auto.classList.remove('hidden');
@@ -4055,6 +4066,7 @@ async function submitIncome(e){
   var note=document.getElementById('i-note').value;
   var divRate=document.getElementById('i-div-rate')?document.getElementById('i-div-rate').value:'';
   var divSym=document.getElementById('i-div-sym')?document.getElementById('i-div-sym').value:'';
+  if(isInvestSrc(src))note=syncDivNote();
   var dividendRowId=(document.getElementById('i-amount')&&document.getElementById('i-amount').dataset.dividendRowId)||'';
   if(!date||!src||!acc||amt<=0){showMsg('msg-income','請填寫所有必填欄位','err');return}
   if(isInvestSrc(src)&&!divSym){showMsg('msg-income','請選擇配息標的','err');return}
@@ -4065,7 +4077,7 @@ async function submitIncome(e){
     if(dividendRowId)invalidateDividendCenter();
     showMsg('msg-income','✓ 已記錄！','ok');
     document.getElementById('i-amount').value='';
-    document.getElementById('i-note').value='';
+    syncDivNote();
     clearIncomeDividendAutofill();
   }catch(e){showMsg('msg-income','✗ '+e.message,'err')}
   btn.disabled=false;btn.textContent='記錄收入';
