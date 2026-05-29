@@ -4244,7 +4244,7 @@ function renderDividendEntryForm(){
   var source=(data.dividendHoldings&&data.dividendHoldings.length)?data.dividendHoldings:DIVIDEND_AUTOFILL_SYMBOLS.map(function(sym){return {symbol:sym,displaySymbol:sym,shares:0};});
   var symbolOptions=source.map(function(row){return '<option value="'+esc(row.symbol)+'">'+esc(row.displaySymbol||row.symbol)+'</option>';}).join('');
   return `<form class="dividend-entry-form" onsubmit="submitDividendEntry(event)">
-    <div class="dividend-entry-title">配息紀錄</div>
+    <div class="dividend-entry-title">配息記錄</div>
     <div class="dividend-entry-grid">
       <div class="form-group">
         <label class="form-label">ETF代號</label>
@@ -4257,6 +4257,10 @@ function renderDividendEntryForm(){
       <div class="form-group">
         <label class="form-label">匯率</label>
         <input class="form-control" id="div-entry-fx" type="number" step="0.01" min="0" placeholder="32.50" oninput="this.dataset.autoFilled='0';calcDividendEntryEstimate(true)">
+        <label class="form-label" style="display:flex;align-items:center;gap:7px;margin-top:7px;font-weight:700;color:#c09a50">
+          <input id="div-entry-fx-apply" type="checkbox" checked onchange="calcDividendEntryEstimate(true)">
+          匯率加入計算
+        </label>
       </div>
       <div class="form-group">
         <label class="form-label">公布日</label>
@@ -4503,8 +4507,12 @@ function calcDividendEntryEstimate(force){
   var usd=parseFloat((document.getElementById('div-entry-usd')||{}).value)||0;
   var fx=parseFloat((document.getElementById('div-entry-fx')||{}).value)||0;
   var shares=parseFloat((document.getElementById('div-entry-shares')||{}).value)||0;
+  var applyFx=(document.getElementById('div-entry-fx-apply')||{}).checked!==false;
   var twd=document.getElementById('div-entry-twd');
-  if(twd&&usd>0&&fx>0&&shares>0&&(force||!twd.value))twd.value=Math.round(usd*fx*shares*dividendTaxFactor(symbol));
+  if(twd&&usd>0&&shares>0&&(!applyFx||fx>0)&&(force||!twd.value)){
+    var base=usd*shares*dividendTaxFactor(symbol);
+    twd.value=Math.round(applyFx?base*fx:base);
+  }
 }
 
 function calcHoldingTradeEstimate(force){
@@ -4528,16 +4536,21 @@ async function submitDividendEntry(e){
   var announceDate=(document.getElementById('div-entry-announce')||{}).value||'';
   var estimatedPayDate=announceDate;
   var fx=parseFloat((document.getElementById('div-entry-fx')||{}).value)||0;
+  var fxIncluded=(document.getElementById('div-entry-fx-apply')||{}).checked!==false;
   var shares=parseFloat((document.getElementById('div-entry-shares')||{}).value)||0;
   var estimatedTwd=parseFloat((document.getElementById('div-entry-twd')||{}).value)||0;
   var note=(document.getElementById('div-entry-note')||{}).value||'';
-  if(!symbol||dividendUsd<=0||!announceDate||!estimatedPayDate||fx<=0||shares<=0){
+  if(estimatedTwd<=0&&dividendUsd>0&&shares>0&&(!fxIncluded||fx>0)){
+    var base=dividendUsd*shares*dividendTaxFactor(symbol);
+    estimatedTwd=Math.round(fxIncluded?base*fx:base);
+  }
+  if(!symbol||dividendUsd<=0||!announceDate||!estimatedPayDate||(fxIncluded&&fx<=0)||shares<=0){
     showMsg('div-entry-msg','請填 ETF、每股配息、日期、匯率與持股數','err');
     return;
   }
   try{
     if(btn){btn.disabled=true;btn.textContent='寫入中…';}
-    await apiPost({action:'dividendEntry',symbol,dividendUsd,announceDate:announceDate.replace(/-/g,'/'),estimatedPayDate:estimatedPayDate.replace(/-/g,'/'),fx,shares,estimatedTwd,note});
+    await apiPost({action:'dividendEntry',symbol,dividendUsd,announceDate:announceDate.replace(/-/g,'/'),estimatedPayDate:estimatedPayDate.replace(/-/g,'/'),fx,fxIncluded:fxIncluded?'1':'0',shares,estimatedTwd,note});
     showMsg('div-entry-msg','✓ 已記錄配息','ok');
     ['div-entry-usd','div-entry-shares','div-entry-twd','div-entry-note'].forEach(function(id){
       var el=document.getElementById(id);
