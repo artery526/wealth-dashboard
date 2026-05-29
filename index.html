@@ -798,6 +798,7 @@ body::after{
 .booking-mode-btn{border:1px solid rgba(184,137,46,.38);border-radius:6px;background:rgba(10,8,4,.62);color:#9a7430;padding:9px 10px;font-family:var(--sans);font-size:12px;font-weight:900;cursor:pointer;transition:background .15s,color .15s,border-color .15s,box-shadow .15s}
 .booking-mode-btn.expense.active{border-color:rgba(216,90,48,.65);background:var(--coral-l);color:var(--coral);box-shadow:0 0 12px rgba(216,90,48,.16)}
 .booking-mode-btn.income.active{border-color:rgba(29,158,117,.62);background:var(--teal-l);color:var(--teal);box-shadow:0 0 12px rgba(29,158,117,.16)}
+.booking-mode-btn.transfer.active{border-color:rgba(124,111,192,.62);background:rgba(124,111,192,.12);color:var(--purple);box-shadow:0 0 12px rgba(124,111,192,.16)}
 
 .form-group{margin-bottom:10px}
 .form-label{font-family:var(--sans);font-size:10px;color:#7a5c28;letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:5px}
@@ -825,10 +826,9 @@ body::after{
   font-family:var(--sans);font-size:11px;font-weight:800;color:#7a5c28;letter-spacing:1px;
 }
 .booking-transfer-section.stock .booking-transfer-title{color:#4fa985}
+.booking-transfer-pane{display:none}
+.booking-transfer-pane.active{display:block}
 .stock-symbol-label{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.stock-symbol-actions{display:flex;align-items:center;gap:6px}
-.stock-copy-btn{border:1px solid rgba(29,158,117,.36);border-radius:6px;background:rgba(29,158,117,.08);color:#8fd9be;font-family:var(--sans);font-size:10px;font-weight:900;padding:4px 7px;cursor:pointer;white-space:nowrap}
-.stock-copy-btn:hover{background:rgba(29,158,117,.16);box-shadow:0 0 12px rgba(29,158,117,.18)}
 @media(max-width:560px){
   .booking-entry-grid,.booking-transfer-grid{grid-template-columns:1fr}
   .stock-symbol-label{align-items:flex-start;flex-direction:column}
@@ -3588,60 +3588,44 @@ async function initBookingForm(){
 
     <!-- 轉帳 -->
     <div class="bform" id="bf-transfer">
-      <div class="booking-transfer-section bank">
-        <div class="booking-transfer-title">純網銀轉帳</div>
-        <div class="form-grid booking-transfer-grid">
-          <div class="form-group"><label class="form-label">日期</label><input class="form-control" type="date" id="t-date" value="${today()}"></div>
-          <div class="form-group"><label class="form-label">從帳戶（轉出）</label><select class="form-control" id="t-from">${accOpts}</select></div>
-          <div class="form-group"><label class="form-label">到帳戶（轉入）</label><select class="form-control" id="t-to">${accOpts}</select></div>
-          <div class="form-group"><label class="form-label">金額 (TWD)</label><input class="form-control" type="number" id="t-amount" placeholder="0" min="1"></div>
-          <input type="hidden" id="t-label" value="">
-        </div>
+      <div class="booking-mode-switch">
+        <button class="booking-mode-btn transfer active" type="button" onclick="setTransferEntryMode('account')">帳戶轉帳</button>
+        <button class="booking-mode-btn transfer" type="button" onclick="setTransferEntryMode('stock')">股票交易</button>
       </div>
-      <div class="booking-transfer-section stock">
-        <div class="booking-transfer-title">股票交易買賣</div>
+      <div class="booking-transfer-section bank booking-transfer-pane active" id="transfer-account-pane">
+        <div class="booking-transfer-title">帳戶轉帳</div>
         <div class="form-grid booking-transfer-grid">
+          <div class="form-group"><label class="form-label">轉帳日期</label><input class="form-control" type="date" id="a-date" value="${today()}"></div>
+          <div class="form-group"><label class="form-label">轉出帳戶</label><select class="form-control" id="a-from">${accOpts}</select></div>
+          <div class="form-group"><label class="form-label">轉入帳戶</label><select class="form-control" id="a-to">${accOpts}</select></div>
+          <div class="form-group"><label class="form-label">金額 (TWD)</label><input class="form-control" type="number" id="a-amount" placeholder="0" min="1"></div>
+          <div class="form-group full"><label class="form-label">備註（選填）</label><input class="form-control" type="text" id="a-note" placeholder="備註..."></div>
+        </div>
+        <button class="submit-btn transfer" id="btn-transfer" type="button" onclick="submitAccountTransfer(event)">記錄轉帳</button>
+        <span class="result-msg" id="msg-transfer"></span>
+      </div>
+      <div class="booking-transfer-section stock booking-transfer-pane" id="transfer-stock-pane">
+        <div class="booking-transfer-title">股票交易</div>
+        <div class="form-grid booking-transfer-grid">
+          <div class="form-group"><label class="form-label">交易日期</label><input class="form-control" type="date" id="t-date" value="${today()}"></div>
+          <div class="form-group"><label class="form-label">轉出帳戶</label><select class="form-control" id="t-from">${accOpts}</select></div>
+          <div class="form-group"><label class="form-label">轉入帳戶</label><select class="form-control" id="t-to">${accOpts}</select></div>
           <div class="form-group">
-            <label class="form-label stock-symbol-label">
-              <span>持股標的</span>
-              <span class="stock-symbol-actions">
-                <button class="stock-copy-btn" type="button" onclick="setTransferStockFromAccount('from')">轉出帳戶</button>
-                <button class="stock-copy-btn" type="button" onclick="setTransferStockFromAccount('to')">轉入帳戶</button>
-              </span>
-            </label>
+            <label class="form-label stock-symbol-label"><span>持股標的</span></label>
             <select class="form-control" id="t-stock-sym"><option value="">無（純轉帳）</option>${stockOpts}</select>
           </div>
           <div class="form-group"><label class="form-label">交易類型</label><select class="form-control" id="t-stock-type"><option value="buy">買入</option><option value="sell">賣出</option></select></div>
-          <div class="form-group"><label class="form-label">股數</label><input class="form-control" type="number" id="t-stock-shares" placeholder="0" step="0.01" min="0"></div>
+          <div class="form-group"><label class="form-label">交易股數</label><input class="form-control" type="number" id="t-stock-shares" placeholder="0" step="0.01" min="0"></div>
           <div class="form-group"><label class="form-label">交易金額 (TWD)</label><input class="form-control" type="number" id="t-stock-amount" placeholder="可與上方金額相同" min="0"></div>
           <div class="form-group full"><label class="form-label">備註（選填）</label><input class="form-control" type="text" id="t-note" placeholder="備註..."></div>
           <div class="dividend-autofill-note hidden" id="t-dividend-autofill"></div>
         </div>
+        <button class="submit-btn transfer" id="btn-stock-transfer" type="button" onclick="submitStockTransfer(event)">記錄交易</button>
+        <span class="result-msg" id="msg-stock-transfer"></span>
       </div>
-      <button class="submit-btn transfer" id="btn-transfer" type="button" onclick="submitTransfer(event)">記錄轉帳</button>
-      <span class="result-msg" id="msg-transfer"></span>
     </div>`;
   initBookingDateInputs(true);
   applyBookingEntryDefaults();
-  // 轉帳金額自動帶入交易金額
-  (function(){
-    var tAmt=document.getElementById('t-amount');
-    var sAmt=document.getElementById('t-stock-amount');
-    if(!tAmt||!sAmt)return;
-    tAmt.addEventListener('input',function(){
-      // 只在交易金額為空、或與轉帳金額相同時才自動帶入
-      if(!sAmt.value||sAmt.value===tAmt._lastVal){
-        sAmt.value=tAmt.value;
-      }
-      tAmt._lastVal=tAmt.value;
-    });
-    tAmt.addEventListener('change',function(){
-      if(!sAmt.value||sAmt.value===tAmt._lastVal){
-        sAmt.value=tAmt.value;
-      }
-      tAmt._lastVal=tAmt.value;
-    });
-  })();
   loadBookingDividendPending();
   (function(){
     var fromEl=document.getElementById('t-from');
@@ -3692,25 +3676,9 @@ function findTransferStockOptionValue(accountValue,stockEl){
   return match?match.value:'';
 }
 
-function setTransferStockFromAccount(source){
-  var accountEl=document.getElementById(source==='to'?'t-to':'t-from');
-  var stockEl=document.getElementById('t-stock-sym');
-  if(!accountEl||!stockEl)return;
-  var value=findTransferStockOptionValue(accountEl.value,stockEl);
-  if(!value){
-    showMsg('msg-transfer',(source==='to'?'轉入帳戶':'轉出帳戶')+'不是可用的持股標的','err');
-    return;
-  }
-  stockEl.value=value;
-  stockEl.dataset.autoFromAccount=value;
-  applyTransferHoldingTradeAutofill();
-  syncTransferStockDirection();
-  showMsg('msg-transfer','已帶入持股標的','ok');
-}
-
 function initBookingDateInputs(force){
   var current=today();
-  ['e-date','i-date','t-date'].forEach(function(id){
+  ['e-date','i-date','a-date','t-date'].forEach(function(id){
     var el=document.getElementById(id);
     if(!el)return;
     if(force||!el.value||el.value===bookingAutoDate)el.value=current;
@@ -3769,6 +3737,18 @@ function setBookingEntryMode(key){
   if(key==='income')selectBookingOptionByText('i-source','投資理財');
 }
 
+function setTransferEntryMode(key){
+  var isStock=key==='stock';
+  var accountPane=document.getElementById('transfer-account-pane');
+  var stockPane=document.getElementById('transfer-stock-pane');
+  if(accountPane)accountPane.classList.toggle('active',!isStock);
+  if(stockPane)stockPane.classList.toggle('active',isStock);
+  document.querySelectorAll('#bf-transfer .booking-mode-btn.transfer').forEach(function(btn,i){
+    btn.classList.toggle('active',isStock?i===1:i===0);
+  });
+  initBookingDateInputs(false);
+}
+
 function switchBTab(btn,key){
   document.querySelectorAll('.btab').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
@@ -3776,6 +3756,7 @@ function switchBTab(btn,key){
   document.getElementById('bf-'+key).classList.add('active');
   initBookingDateInputs(false);
   if(key==='expense')setBookingEntryMode('expense');
+  if(key==='transfer')setTransferEntryMode('account');
 }
 
 function toggleDivFields(){
@@ -3960,7 +3941,6 @@ async function applyTransferHoldingTradeAutofill(){
 }
 
 function applyTransferHoldingTradeRow(row){
-  var amount=document.getElementById('t-amount');
   var stockAmount=document.getElementById('t-stock-amount');
   var shares=document.getElementById('t-stock-shares');
   var type=document.getElementById('t-stock-type');
@@ -3969,7 +3949,6 @@ function applyTransferHoldingTradeRow(row){
   var signedShares=Number(row.shares)||0;
   var absShares=Math.abs(signedShares);
   var twd=Math.round(Number(row.estimatedTwd)||0);
-  if(amount){amount.value=twd;amount.dataset.holdingTradeRowId=row.rowId||'';}
   if(stockAmount){stockAmount.value=twd;stockAmount.dataset.holdingTradeRowId=row.rowId||'';}
   if(shares&&absShares>0)shares.value=String(absShares);
   if(type)type.value=signedShares<0?'sell':'buy';
@@ -3985,7 +3964,7 @@ function applyTransferHoldingTradeRow(row){
 function clearTransferDividendAutofill(){
   var auto=document.getElementById('t-dividend-autofill');
   if(auto){auto.classList.add('hidden');auto.textContent='';auto.dataset.dividendRowId='';auto.dataset.holdingTradeRowId='';}
-  ['t-amount','t-stock-amount'].forEach(function(id){
+  ['t-stock-amount'].forEach(function(id){
     var el=document.getElementById(id);
     if(el){el.dataset.dividendRowId='';el.dataset.holdingTradeRowId='';}
   });
@@ -4103,42 +4082,63 @@ async function submitIncome(e){
   btn.disabled=false;btn.textContent='記錄收入';
 }
 
-async function submitTransfer(e){
+async function submitAccountTransfer(e){
   stopBookingSubmitEvent(e);
   var btn=document.getElementById('btn-transfer');
+  if(btn&&btn.disabled)return;
+  var date=document.getElementById('a-date').value;
+  var from=document.getElementById('a-from').value;
+  var to=document.getElementById('a-to').value;
+  var amt=parseFloat(document.getElementById('a-amount').value)||0;
+  var note=document.getElementById('a-note').value;
+  if(!date||!from||!to||amt<=0){showMsg('msg-transfer','請填寫所有必填欄位','err');return}
+  if(from===to){showMsg('msg-transfer','轉出和轉入帳戶不能相同','err');return}
+  btn.disabled=true;btn.textContent='記錄中…';
+  try{
+    await apiPost({action:'transfer',date:date.replace(/-/g,'/'),from,to,amount:amt,label:'',note});
+    showMsg('msg-transfer','✓ 已記錄！','ok');
+    document.getElementById('a-amount').value='';
+    document.getElementById('a-note').value='';
+  }catch(e){showMsg('msg-transfer','✗ '+e.message,'err')}
+  btn.disabled=false;btn.textContent='記錄轉帳';
+}
+
+async function submitStockTransfer(e){
+  stopBookingSubmitEvent(e);
+  var btn=document.getElementById('btn-stock-transfer');
   if(btn&&btn.disabled)return;
   var date=document.getElementById('t-date').value;
   var from=document.getElementById('t-from').value;
   var to=document.getElementById('t-to').value;
-  var amt=parseFloat(document.getElementById('t-amount').value)||0;
-  var label=document.getElementById('t-label').value;
+  var stockAmt=parseFloat(document.getElementById('t-stock-amount').value)||0;
   var note=document.getElementById('t-note').value;
   var stockSym=document.getElementById('t-stock-sym')?document.getElementById('t-stock-sym').value:'';
   var stockShares=document.getElementById('t-stock-shares')?parseFloat(document.getElementById('t-stock-shares').value)||0:0;
   var stockType=document.getElementById('t-stock-type')?document.getElementById('t-stock-type').value:'buy';
-  var stockAmt=document.getElementById('t-stock-amount')?parseFloat(document.getElementById('t-stock-amount').value)||0:0;
   var dividendRowId='';
   var holdingTradeRowId=(document.getElementById('t-stock-amount')&&document.getElementById('t-stock-amount').dataset.holdingTradeRowId)||'';
-  var hasStock=!!(stockSym&&stockSym.trim());
-  if(!date||!from||!to||amt<=0){showMsg('msg-transfer','請填寫所有必填欄位','err');return}
-  if(from===to){showMsg('msg-transfer','轉出和轉入帳戶不能相同','err');return}
-  if(hasStock&&stockShares<=0){showMsg('msg-transfer','已選擇股票標的，請填寫股數','err');return}
+  stockShares=Math.abs(stockShares);
+  if(!date||!from||!to||!stockSym||stockAmt<=0){showMsg('msg-stock-transfer','請填寫所有必填欄位','err');return}
+  if(from===to){showMsg('msg-stock-transfer','轉出和轉入帳戶不能相同','err');return}
+  if(stockShares<=0){showMsg('msg-stock-transfer','請填寫交易股數','err');return}
   btn.disabled=true;btn.textContent='記錄中…';
   try{
-    await apiPost({action:'transfer',date:date.replace(/-/g,'/'),from,to,amount:amt,label,note,
-      stockMode:hasStock?'1':'',stockType,stockSymbol:stockSym,stockShares,
-      stockAmount:stockAmt||amt,dividendRowId,holdingTradeRowId});
+    await apiPost({action:'transfer',date:date.replace(/-/g,'/'),from,to,amount:stockAmt,label:stockSym,note,
+      stockMode:'1',stockType,stockSymbol:stockSym,stockShares,
+      stockAmount:stockAmt,dividendRowId,holdingTradeRowId});
     if(dividendRowId||holdingTradeRowId)invalidateDividendCenter();
-    showMsg('msg-transfer','✓ 已記錄！','ok');
-    document.getElementById('t-amount').value='';
-    document.getElementById('t-label').value='';
+    showMsg('msg-stock-transfer','✓ 已記錄！','ok');
     document.getElementById('t-note').value='';
     document.getElementById('t-stock-sym').value='';
     document.getElementById('t-stock-shares').value='';
     document.getElementById('t-stock-amount').value='';
     clearTransferDividendAutofill();
-  }catch(e){showMsg('msg-transfer','✗ '+e.message,'err')}
-  btn.disabled=false;btn.textContent='記錄轉帳';
+  }catch(e){showMsg('msg-stock-transfer','✗ '+e.message,'err')}
+  btn.disabled=false;btn.textContent='記錄交易';
+}
+
+async function submitTransfer(e){
+  return submitAccountTransfer(e);
 }
 
 async function loadRecentBooking(){
