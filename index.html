@@ -794,6 +794,10 @@ body::after{
 .btab.income.active{background:var(--teal-l);color:var(--teal)}
 .btab.transfer.active{background:rgba(124,111,192,.12);color:var(--purple)}
 .bform{display:none}.bform.active{display:block}
+.booking-mode-switch{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0 0 10px}
+.booking-mode-btn{border:1px solid rgba(184,137,46,.38);border-radius:6px;background:rgba(10,8,4,.62);color:#9a7430;padding:9px 10px;font-family:var(--sans);font-size:12px;font-weight:900;cursor:pointer;transition:background .15s,color .15s,border-color .15s,box-shadow .15s}
+.booking-mode-btn.expense.active{border-color:rgba(216,90,48,.65);background:var(--coral-l);color:var(--coral);box-shadow:0 0 12px rgba(216,90,48,.16)}
+.booking-mode-btn.income.active{border-color:rgba(29,158,117,.62);background:var(--teal-l);color:var(--teal);box-shadow:0 0 12px rgba(29,158,117,.16)}
 
 .form-group{margin-bottom:10px}
 .form-label{font-family:var(--sans);font-size:10px;color:#7a5c28;letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:5px}
@@ -3521,17 +3525,20 @@ async function initBookingForm(){
     </div>
     <div class="booking-dividend-pending" id="booking-dividend-pending"></div>
     <div class="btabs">
-      <button class="btab expense active" type="button" onclick="switchBTab(this,'expense')">支出</button>
-      <button class="btab income" type="button" onclick="switchBTab(this,'income')">收入</button>
+      <button class="btab expense active" type="button" onclick="switchBTab(this,'expense')">收入支出</button>
       <button class="btab transfer" type="button" onclick="switchBTab(this,'transfer')">轉帳</button>
     </div>
 
-    <!-- 支出 -->
+    <!-- 收入支出：支出模式 -->
     <div class="bform active" id="bf-expense">
+      <div class="booking-mode-switch">
+        <button class="booking-mode-btn expense active" type="button" onclick="setBookingEntryMode('expense')">💸 支出</button>
+        <button class="booking-mode-btn income" type="button" onclick="setBookingEntryMode('income')">💰 收入</button>
+      </div>
       <div class="form-grid booking-entry-grid">
-        <div class="form-group"><label class="form-label">日期</label><input class="form-control" type="date" id="e-date" value="${today()}"></div>
-        <div class="form-group"><label class="form-label">支出類別</label><select class="form-control" id="e-cat">${catOpts}</select></div>
-        <div class="form-group"><label class="form-label">帳戶</label><select class="form-control" id="e-account">${accOpts}</select></div>
+        <div class="form-group"><label class="form-label">記帳日期</label><input class="form-control" type="date" id="e-date" value="${today()}"></div>
+        <div class="form-group"><label class="form-label">消費項目</label><select class="form-control" id="e-cat">${catOpts}</select></div>
+        <div class="form-group"><label class="form-label">支出帳戶</label><select class="form-control" id="e-account">${accOpts}</select></div>
         <div class="form-group"><label class="form-label">金額 (TWD)</label><input class="form-control" type="number" id="e-amount" placeholder="0" min="1"></div>
         <div class="form-group full"><label class="form-label">備註（選填）</label><input class="form-control" type="text" id="e-note" placeholder="備註..."></div>
       </div>
@@ -3539,10 +3546,14 @@ async function initBookingForm(){
       <span class="result-msg" id="msg-expense"></span>
     </div>
 
-    <!-- 收入 -->
+    <!-- 收入支出：收入模式 -->
     <div class="bform" id="bf-income">
+      <div class="booking-mode-switch">
+        <button class="booking-mode-btn expense" type="button" onclick="setBookingEntryMode('expense')">💸 支出</button>
+        <button class="booking-mode-btn income active" type="button" onclick="setBookingEntryMode('income')">💰 收入</button>
+      </div>
       <div class="form-grid booking-entry-grid">
-        <div class="form-group"><label class="form-label">日期</label><input class="form-control" type="date" id="i-date" value="${today()}"></div>
+        <div class="form-group"><label class="form-label">記帳日期</label><input class="form-control" type="date" id="i-date" value="${today()}"></div>
         <div class="form-group"><label class="form-label">收入來源</label><select class="form-control" id="i-source" onchange="toggleDivFields()">${srcOpts}</select></div>
         <div class="form-group"><label class="form-label">入帳帳戶</label><select class="form-control" id="i-account" onchange="onIncomeAccountChange()">${accOpts}</select></div>
         <div class="form-group"><label class="form-label">金額 (TWD)</label><input class="form-control" type="number" id="i-amount" placeholder="0" min="1"></div>
@@ -3591,6 +3602,7 @@ async function initBookingForm(){
       <span class="result-msg" id="msg-transfer"></span>
     </div>`;
   initBookingDateInputs(true);
+  applyBookingEntryDefaults();
   // 轉帳金額自動帶入交易金額
   (function(){
     var tAmt=document.getElementById('t-amount');
@@ -3698,12 +3710,48 @@ function initBookingDateInputs(force){
   bookingAutoDate=current;
 }
 
+function selectBookingOptionByText(selectId,text){
+  var el=document.getElementById(selectId);
+  if(!el)return false;
+  var target=String(text||'').trim();
+  var opt=Array.from(el.options||[]).find(function(o){
+    return String(o.value||'').trim()===target||String(o.textContent||'').trim()===target;
+  });
+  if(!opt)return false;
+  el.value=opt.value;
+  el.dispatchEvent(new Event('change',{bubbles:true}));
+  return true;
+}
+
+function applyBookingEntryDefaults(){
+  selectBookingOptionByText('e-cat','超商外食');
+  selectBookingOptionByText('i-source','投資理財');
+  toggleDivFields();
+}
+
+function setBookingEntryMode(key){
+  var tab=Array.from(document.querySelectorAll('.btab')).find(function(btn){
+    return btn.getAttribute('onclick')&&btn.getAttribute('onclick').indexOf("'expense'")>=0;
+  });
+  if(tab)tab.classList.add('active');
+  document.querySelectorAll('.btab.transfer').forEach(function(btn){btn.classList.remove('active');});
+  document.querySelectorAll('.bform').forEach(function(form){form.classList.remove('active');});
+  var pane=document.getElementById(key==='income'?'bf-income':'bf-expense');
+  if(pane)pane.classList.add('active');
+  document.querySelectorAll('.booking-mode-btn').forEach(function(btn){btn.classList.remove('active');});
+  document.querySelectorAll('.booking-mode-btn.'+(key==='income'?'income':'expense')).forEach(function(btn){btn.classList.add('active');});
+  initBookingDateInputs(false);
+  if(key==='expense')selectBookingOptionByText('e-cat','超商外食');
+  if(key==='income')selectBookingOptionByText('i-source','投資理財');
+}
+
 function switchBTab(btn,key){
   document.querySelectorAll('.btab').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   document.querySelectorAll('.bform').forEach(f=>f.classList.remove('active'));
   document.getElementById('bf-'+key).classList.add('active');
   initBookingDateInputs(false);
+  if(key==='expense')setBookingEntryMode('expense');
 }
 
 function toggleDivFields(){
