@@ -2192,6 +2192,23 @@ function uniqueBookingOptions(values){
     return true;
   });
 }
+function bookingOptionMatches(value,target){
+  var raw=String(value||'');
+  var clean=stripIconText(raw).replace(/\s+/g,'');
+  var wanted=stripIconText(target).replace(/\s+/g,'');
+  return !!wanted&&(clean===wanted||clean.indexOf(wanted)>=0||raw.indexOf(target)>=0);
+}
+function prioritizeBookingOption(values,target){
+  var first=[],rest=[];
+  (values||[]).forEach(function(v){
+    (bookingOptionMatches(v,target)?first:rest).push(v);
+  });
+  return first.concat(rest);
+}
+function bookingOptionHtml(value,selectedTarget){
+  var selected=selectedTarget&&bookingOptionMatches(value,selectedTarget)?' selected':'';
+  return `<option value="${esc(value)}"${selected}>${esc(value)}</option>`;
+}
 function normalizeBookingSymbolList(list){
   var seen={};
   return (list||[]).map(function(item){
@@ -3501,22 +3518,20 @@ async function initBookingForm(){
   if(!el)return;
   if(!API_URL){el.innerHTML=setupNotice();return}
   try{cfg=await apiGet({action:'config'})}catch(e){console.error(e)}
-  var cats=cfg.categories||[];
-  var sources=cfg.sources||[];
+  var cats=prioritizeBookingOption(cfg.categories||[],'超商外食');
+  var sources=prioritizeBookingOption(cfg.sources||[],'投資理財');
   var accs=uniqueBookingOptions(cfg.accounts||[]);
   var apiHoldings=(cfg.holdings&&cfg.holdings.length)?cfg.holdings:[];
   var apiDividendSymbols=(cfg.dividendSymbols&&cfg.dividendSymbols.length)?cfg.dividendSymbols:apiHoldings;
   var stockSymbols=normalizeBookingSymbolList(apiHoldings.length?apiHoldings:STOCK_SYMBOLS);
   var dividendSymbols=normalizeBookingSymbolList(apiDividendSymbols.length?apiDividendSymbols:DIVIDEND_SYMBOLS);
 
-  var catOpts=cats.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('');
-  var orderedSources=sources.slice().sort(function(a,b){
-    if(String(a).trim()==='投資理財')return -1;
-    if(String(b).trim()==='投資理財')return 1;
-    return 0;
-  });
-  var srcOpts=orderedSources.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('');
-  var accOpts=accs.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('')+
+  var catOpts=cats.map(v=>bookingOptionHtml(v)).join('');
+  var srcOpts=sources.map(v=>bookingOptionHtml(v)).join('');
+  var accOpts=accs.map(v=>bookingOptionHtml(v)).join('')+
+    `<option disabled>── 持股標的 ──</option>`+
+    stockSymbols.map(s=>`<option value="${esc(s.value)}">${esc(s.label)}</option>`).join('');
+  var incomeAccOpts=accs.map(v=>bookingOptionHtml(v,'國泰Stock')).join('')+
     `<option disabled>── 持股標的 ──</option>`+
     stockSymbols.map(s=>`<option value="${esc(s.value)}">${esc(s.label)}</option>`).join('');
   var stockOpts=`<option value="">無（純轉帳）</option>`+stockSymbols.map(s=>`<option value="${esc(s.value)}">${esc(s.label)}</option>`).join('');
@@ -3560,7 +3575,7 @@ async function initBookingForm(){
       <div class="form-grid booking-entry-grid">
         <div class="form-group"><label class="form-label">記帳日期</label><input class="form-control" type="date" id="i-date" value="${today()}"></div>
         <div class="form-group"><label class="form-label">收入來源</label><select class="form-control" id="i-source" onchange="toggleDivFields()">${srcOpts}</select></div>
-        <div class="form-group"><label class="form-label">入帳帳戶</label><select class="form-control" id="i-account" onchange="onIncomeAccountChange()">${accOpts}</select></div>
+        <div class="form-group"><label class="form-label">入帳帳戶</label><select class="form-control" id="i-account" onchange="onIncomeAccountChange()">${incomeAccOpts}</select></div>
         <div class="form-group"><label class="form-label">金額 (TWD)</label><input class="form-control" type="number" id="i-amount" placeholder="0" min="1"></div>
         <div class="form-group hidden" id="i-div-rate-grp"><label class="form-label">配息比例</label><input class="form-control" type="number" id="i-div-rate" placeholder="例：0.35" step="0.001" min="0"></div>
         <div class="form-group hidden" id="i-div-sym-grp"><label class="form-label">配息標的</label><select class="form-control" id="i-div-sym" onclick="openBookingDividendPicker()" onfocus="openBookingDividendPicker()" onchange="syncDivNote()">${divOpts}</select></div>
@@ -3720,7 +3735,10 @@ function selectBookingOptionByText(selectId,text){
   if(!el)return false;
   var target=String(text||'').trim();
   var opt=Array.from(el.options||[]).find(function(o){
-    return String(o.value||'').trim()===target||String(o.textContent||'').trim()===target;
+    return String(o.value||'').trim()===target||
+      String(o.textContent||'').trim()===target||
+      bookingOptionMatches(o.value,target)||
+      bookingOptionMatches(o.textContent,target);
   });
   if(!opt)return false;
   el.value=opt.value;
@@ -3731,6 +3749,7 @@ function selectBookingOptionByText(selectId,text){
 function applyBookingEntryDefaults(){
   selectBookingOptionByText('e-cat','超商外食');
   selectBookingOptionByText('i-source','投資理財');
+  selectBookingOptionByText('i-account','國泰Stock');
   toggleDivFields();
 }
 
@@ -3772,7 +3791,8 @@ function syncDivNote(){
   if(!n)return '';
   var src=document.getElementById('i-source');
   var isInv=src&&isInvestSrc(src.value);
-  var value=(isInv&&s)?String(s.value||'').trim():'';
+  var selected=s&&s.selectedOptions&&s.selectedOptions[0];
+  var value=(isInv&&selected)?String(selected.textContent||selected.value||'').trim():'';
   n.value=value;
   return value;
 }
