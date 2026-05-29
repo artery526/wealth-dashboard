@@ -3534,7 +3534,6 @@ async function initBookingForm(){
   var incomeAccOpts=accs.map(v=>bookingOptionHtml(v,'國泰Stock')).join('')+
     `<option disabled>── 持股標的 ──</option>`+
     stockSymbols.map(s=>`<option value="${esc(s.value)}">${esc(s.label)}</option>`).join('');
-  var stockOpts=`<option value="">無（純轉帳）</option>`+stockSymbols.map(s=>`<option value="${esc(s.value)}">${esc(s.label)}</option>`).join('');
   var divOpts=`<option value="">選擇配息標的</option>`+dividendSymbols.map(s=>`<option value="${esc(s.value)}">${esc(s.label)}</option>`).join('');
 
   el.innerHTML=`
@@ -3610,13 +3609,9 @@ async function initBookingForm(){
           <div class="form-group"><label class="form-label">交易日期</label><input class="form-control" type="date" id="t-date" value="${today()}"></div>
           <div class="form-group"><label class="form-label">轉出帳戶</label><select class="form-control" id="t-from">${accOpts}</select></div>
           <div class="form-group"><label class="form-label">轉入帳戶</label><select class="form-control" id="t-to">${accOpts}</select></div>
-          <div class="form-group">
-            <label class="form-label stock-symbol-label"><span>持股標的</span></label>
-            <select class="form-control" id="t-stock-sym"><option value="">無（純轉帳）</option>${stockOpts}</select>
-          </div>
           <div class="form-group"><label class="form-label">交易類型</label><select class="form-control" id="t-stock-type"><option value="buy">買入</option><option value="sell">賣出</option></select></div>
           <div class="form-group"><label class="form-label">交易股數</label><input class="form-control" type="number" id="t-stock-shares" placeholder="0" step="0.01" min="0"></div>
-          <div class="form-group"><label class="form-label">交易金額 (TWD)</label><input class="form-control" type="number" id="t-stock-amount" placeholder="可與上方金額相同" min="0"></div>
+          <div class="form-group"><label class="form-label">交易金額 (TWD)</label><input class="form-control" type="number" id="t-stock-amount" placeholder="手動輸入" min="0"></div>
           <div class="form-group full"><label class="form-label">備註（選填）</label><input class="form-control" type="text" id="t-note" placeholder="備註..."></div>
           <div class="dividend-autofill-note hidden" id="t-dividend-autofill"></div>
         </div>
@@ -3628,40 +3623,8 @@ async function initBookingForm(){
   applyBookingEntryDefaults();
   loadBookingDividendPending();
   (function(){
-    var fromEl=document.getElementById('t-from');
-    var toEl=document.getElementById('t-to');
-    var stockEl=document.getElementById('t-stock-sym');
     var typeEl=document.getElementById('t-stock-type');
-    if(stockEl)stockEl.addEventListener('change',function(){
-      applyTransferHoldingTradeAutofill();
-      syncTransferStockDirection();
-    });
-    if(typeEl)typeEl.addEventListener('change',syncTransferStockDirection);
-    if(!fromEl||!stockEl)return;
-    var stockValues=new Set(stockSymbols.map(function(s){return String(s.value||'').trim();}).filter(Boolean));
-    fromEl.addEventListener('change',function(){
-      var selected=String(fromEl.value||'').trim();
-      var previousAuto=stockEl.dataset.autoFromAccount||'';
-      if(stockValues.has(selected)){
-        stockEl.value=selected;
-        stockEl.dataset.autoFromAccount=selected;
-        applyTransferHoldingTradeAutofill();
-        syncTransferStockDirection();
-      }else if(previousAuto&&stockEl.value===previousAuto){
-        stockEl.value='';
-        stockEl.dataset.autoFromAccount='';
-        clearTransferDividendAutofill();
-      }
-    });
-    if(toEl)toEl.addEventListener('change',function(){
-      var selected=String(toEl.value||'').trim();
-      if(stockValues.has(selected)){
-        stockEl.value=selected;
-        stockEl.dataset.autoFromAccount=selected;
-        applyTransferHoldingTradeAutofill();
-        syncTransferStockDirection();
-      }
-    });
+    if(typeEl)typeEl.addEventListener('change',clearTransferDividendAutofill);
   })();
 }
 
@@ -3854,19 +3817,6 @@ function latestPendingDividendFor(symbol,data){
   })[0]||null;
 }
 
-function latestPendingHoldingTradeFor(symbol,data,type){
-  var k=normalizeKey(symbol);
-  var pending=(data&&data.holdingTradePending)||[];
-  var candidates=pending.filter(function(row){
-    if(normalizeKey(row.symbol)!==k)return false;
-    var shares=Number(row.shares)||0;
-    if(type==='buy')return shares>0;
-    if(type==='sell')return shares<0;
-    return true;
-  });
-  return candidates[0]||null;
-}
-
 function dividendNoteText(row){
   if(!row)return '';
   return formatIncomeStockNote(row.symbol,row.note||'配息');
@@ -3923,44 +3873,6 @@ function applyIncomeDividendAutofill(row){
   closeBookingDividendPicker();
 }
 
-function onTransferToAccountChange(){
-  clearTransferDividendAutofill();
-}
-
-async function applyTransferHoldingTradeAutofill(){
-  var stockEl=document.getElementById('t-stock-sym');
-  if(!stockEl||!stockEl.value)return clearTransferDividendAutofill();
-  try{
-    var data=await loadDividendCenter(false);
-    var typeEl=document.getElementById('t-stock-type');
-    var type=typeEl?typeEl.value:'';
-    var row=latestPendingHoldingTradeFor(stockEl.value,data,type)||latestPendingHoldingTradeFor(stockEl.value,data,'');
-    if(row)applyTransferHoldingTradeRow(row);
-    else clearTransferDividendAutofill();
-  }catch(e){console.warn(e)}
-}
-
-function applyTransferHoldingTradeRow(row){
-  var stockAmount=document.getElementById('t-stock-amount');
-  var shares=document.getElementById('t-stock-shares');
-  var type=document.getElementById('t-stock-type');
-  var note=document.getElementById('t-note');
-  var auto=document.getElementById('t-dividend-autofill');
-  var signedShares=Number(row.shares)||0;
-  var absShares=Math.abs(signedShares);
-  var twd=Math.round(Number(row.estimatedTwd)||0);
-  if(stockAmount){stockAmount.value=twd;stockAmount.dataset.holdingTradeRowId=row.rowId||'';}
-  if(shares&&absShares>0)shares.value=String(absShares);
-  if(type)type.value=signedShares<0?'sell':'buy';
-  if(note&&!note.value)note.value='待入帳持股記錄 '+(row.displaySymbol||row.symbol);
-  syncTransferStockDirection();
-  if(auto){
-    auto.classList.remove('hidden');
-    auto.dataset.holdingTradeRowId=row.rowId||'';
-    auto.innerHTML='已帶入 '+esc(row.displaySymbol||row.symbol)+' 待入帳持股記錄：'+fmtFull(twd)+' · '+(signedShares<0?'賣出':'買入')+' '+esc(absShares)+' 股。';
-  }
-}
-
 function clearTransferDividendAutofill(){
   var auto=document.getElementById('t-dividend-autofill');
   if(auto){auto.classList.add('hidden');auto.textContent='';auto.dataset.dividendRowId='';auto.dataset.holdingTradeRowId='';}
@@ -3970,49 +3882,8 @@ function clearTransferDividendAutofill(){
   });
 }
 
-function getDividendDisplayValue(symbol,selectEl){
-  var k=normalizeKey(symbol);
-  var opts=Array.from((selectEl&&selectEl.options)||[]);
-  var match=opts.find(function(o){return normalizeKey(o.value)===k;});
-  return match?match.value:'';
-}
-
-function getTransferStockOptionValue(symbol){
-  var stockEl=document.getElementById('t-stock-sym');
-  return getDividendDisplayValue(symbol,stockEl)||symbol||'';
-}
-
-function isTransferStockValue(value){
-  var stockEl=document.getElementById('t-stock-sym');
-  var k=normalizeKey(value);
-  return !!(k&&stockEl&&Array.from(stockEl.options||[]).some(function(o){
-    return normalizeKey(o.value)===k||normalizeKey(o.textContent)===k;
-  }));
-}
-
-function findPreferredStockCashAccount(){
-  var fromEl=document.getElementById('t-from');
-  var opts=Array.from((fromEl&&fromEl.options)||[]);
-  var preferred=opts.find(function(o){return String(o.value||'').indexOf('國泰Stock')>=0;})||
-    opts.find(function(o){return !o.disabled&&!isTransferStockValue(o.value);});
-  return preferred?preferred.value:'';
-}
-
-function syncTransferStockDirection(){
-  var stockEl=document.getElementById('t-stock-sym');
-  var typeEl=document.getElementById('t-stock-type');
-  var fromEl=document.getElementById('t-from');
-  var toEl=document.getElementById('t-to');
-  if(!stockEl||!typeEl||!fromEl||!toEl||!stockEl.value)return;
-  var stockValue=getTransferStockOptionValue(stockEl.value);
-  var cashValue=findPreferredStockCashAccount();
-  if(typeEl.value==='sell'){
-    fromEl.value=stockValue;
-    if((!toEl.value||isTransferStockValue(toEl.value))&&cashValue)toEl.value=cashValue;
-  }else{
-    if((!fromEl.value||isTransferStockValue(fromEl.value))&&cashValue)fromEl.value=cashValue;
-    toEl.value=stockValue;
-  }
+function inferStockTransferSymbol(stockType,from,to){
+  return stockType==='sell'?String(from||'').trim():String(to||'').trim();
 }
 
 function toggleStockMode(){
@@ -4112,9 +3983,9 @@ async function submitStockTransfer(e){
   var to=document.getElementById('t-to').value;
   var stockAmt=parseFloat(document.getElementById('t-stock-amount').value)||0;
   var note=document.getElementById('t-note').value;
-  var stockSym=document.getElementById('t-stock-sym')?document.getElementById('t-stock-sym').value:'';
   var stockShares=document.getElementById('t-stock-shares')?parseFloat(document.getElementById('t-stock-shares').value)||0:0;
   var stockType=document.getElementById('t-stock-type')?document.getElementById('t-stock-type').value:'buy';
+  var stockSym=inferStockTransferSymbol(stockType,from,to);
   var dividendRowId='';
   var holdingTradeRowId=(document.getElementById('t-stock-amount')&&document.getElementById('t-stock-amount').dataset.holdingTradeRowId)||'';
   stockShares=Math.abs(stockShares);
@@ -4129,7 +4000,6 @@ async function submitStockTransfer(e){
     if(dividendRowId||holdingTradeRowId)invalidateDividendCenter();
     showMsg('msg-stock-transfer','✓ 已記錄！','ok');
     document.getElementById('t-note').value='';
-    document.getElementById('t-stock-sym').value='';
     document.getElementById('t-stock-shares').value='';
     document.getElementById('t-stock-amount').value='';
     clearTransferDividendAutofill();
