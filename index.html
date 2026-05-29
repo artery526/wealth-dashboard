@@ -4324,7 +4324,7 @@ function renderDividendEntryForm(){
       </div>
       <div class="form-group wide">
         <label class="form-label">備註</label>
-        <input class="form-control" id="div-entry-note" type="text" placeholder="五月配息">
+        <input class="form-control" id="div-entry-note" type="text" placeholder="ETF代號" readonly>
       </div>
     </div>
     <button class="dividend-use-btn" id="div-entry-submit" type="submit">記錄配息</button>
@@ -4469,6 +4469,15 @@ function applyDividendEntryDefaults(data){
   onDividendEntrySymbolChange();
 }
 
+function syncDividendEntryNote(){
+  var sel=document.getElementById('div-entry-symbol');
+  var noteEl=document.getElementById('div-entry-note');
+  if(!noteEl)return '';
+  var symbol=sel?String(sel.value||'').trim():'';
+  noteEl.value=symbol;
+  return symbol;
+}
+
 function applyHoldingTradeDefaults(data){
   var symbolEl=document.getElementById('trade-entry-symbol');
   var fxEl=document.getElementById('trade-entry-fx');
@@ -4498,10 +4507,7 @@ function onDividendEntrySymbolChange(){
     fxEl.dataset.autoFilled='1';
     fxEl.readOnly=true;
   }
-  if(noteEl&&!noteEl.value){
-    var month=new Date().getMonth()+1;
-    noteEl.value=month+'月配息';
-  }
+  syncDividendEntryNote();
   calcDividendEntryEstimate(true);
 }
 
@@ -4587,7 +4593,7 @@ async function submitDividendEntry(e){
   var fxIncluded=(document.getElementById('div-entry-fx-apply')||{}).checked!==false;
   var shares=parseFloat((document.getElementById('div-entry-shares')||{}).value)||0;
   var estimatedTwd=parseFloat((document.getElementById('div-entry-twd')||{}).value)||0;
-  var note=(document.getElementById('div-entry-note')||{}).value||'';
+  var note=syncDividendEntryNote();
   if(estimatedTwd<=0&&dividendUsd>0&&shares>0&&(!fxIncluded||fx>0)){
     var base=dividendUsd*shares*dividendTaxFactor(symbol);
     estimatedTwd=Math.round(fxIncluded?base*fx:base);
@@ -4600,10 +4606,11 @@ async function submitDividendEntry(e){
     if(btn){btn.disabled=true;btn.textContent='寫入中…';}
     await apiPost({action:'dividendEntry',symbol,dividendUsd,announceDate:announceDate.replace(/-/g,'/'),estimatedPayDate:estimatedPayDate.replace(/-/g,'/'),fx,fxIncluded:fxIncluded?'1':'0',shares,estimatedTwd,note});
     showMsg('div-entry-msg','✓ 已記錄配息','ok');
-    ['div-entry-usd','div-entry-shares','div-entry-twd','div-entry-note'].forEach(function(id){
+    ['div-entry-usd','div-entry-shares','div-entry-twd'].forEach(function(id){
       var el=document.getElementById(id);
       if(el)el.value='';
     });
+    syncDividendEntryNote();
     refreshDividendViewsAfterEntry();
   }catch(err){
     showMsg('div-entry-msg','✗ '+(err.message||'寫入失敗'),'err');
