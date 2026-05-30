@@ -3631,17 +3631,6 @@ async function initBookingForm(){
   })();
 }
 
-function findTransferStockOptionValue(accountValue,stockEl){
-  var raw=String(accountValue||'').trim();
-  if(!raw||!stockEl)return '';
-  var rawKey=normalizeKey(raw);
-  var opts=Array.from(stockEl.options||[]);
-  var match=opts.find(function(o){return String(o.value||'').trim()===raw;})||
-    opts.find(function(o){return normalizeKey(o.value)===rawKey;})||
-    opts.find(function(o){return normalizeKey(o.textContent)===rawKey;});
-  return match?match.value:'';
-}
-
 function initBookingDateInputs(force){
   var current=today();
   ['e-date','i-date','a-date','t-date'].forEach(function(id){
@@ -3992,13 +3981,14 @@ async function submitStockTransfer(e){
   var dividendRowId='';
   var holdingTradeRowId=(document.getElementById('t-stock-amount')&&document.getElementById('t-stock-amount').dataset.holdingTradeRowId)||'';
   stockShares=Math.abs(stockShares);
+  var signedStockShares=stockType==='sell'?-stockShares:stockShares;
   if(!date||!from||!to||!stockSym||stockAmt<=0){showMsg('msg-stock-transfer','請填寫所有必填欄位','err');return}
   if(from===to){showMsg('msg-stock-transfer','轉出和轉入帳戶不能相同','err');return}
   if(stockShares<=0){showMsg('msg-stock-transfer','請填寫交易股數','err');return}
   btn.disabled=true;btn.textContent='記錄中…';
   try{
     await apiPost({action:'transfer',date:date.replace(/-/g,'/'),from,to,amount:stockAmt,label:stockSym,note,
-      stockMode:'1',stockType,stockSymbol:stockSym,stockShares,
+      stockMode:'1',stockType,stockSymbol:stockSym,stockShares:signedStockShares,
       stockAmount:stockAmt,dividendRowId,holdingTradeRowId});
     if(dividendRowId||holdingTradeRowId)invalidateDividendCenter();
     showMsg('msg-stock-transfer','✓ 已記錄！','ok');
