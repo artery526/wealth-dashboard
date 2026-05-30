@@ -2328,7 +2328,7 @@ async function apiPost(body){
   if(!API_URL)throw new Error('未設定 API 網址');
   WRITE_TOKEN=cleanToken(WRITE_TOKEN);
   if(!WRITE_TOKEN)throw new Error('未設定記帳密鑰');
-  if(body&&/^(advisorTask|advisorDraft|expense|income|transfer)$/.test(body.action||'')){
+  if(body&&/^(advisorTask|advisorDraft|income|transfer)$/.test(body.action||'')){
     return apiPostJson(body);
   }
   var params=Object.assign({},body,{token:WRITE_TOKEN});
