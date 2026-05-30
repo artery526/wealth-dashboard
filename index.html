@@ -4369,8 +4369,16 @@ function syncDividendEntryNote(){
   var noteEl=document.getElementById('div-entry-note');
   if(!noteEl)return '';
   var symbol=sel?String(sel.value||'').trim():'';
-  noteEl.value=symbol;
-  return symbol;
+  var display='';
+  if(sel&&sel.selectedOptions&&sel.selectedOptions[0]){
+    display=String(sel.selectedOptions[0].textContent||'').trim();
+  }
+  if(!display){
+    var meta=holdingMeta(symbol,symbol);
+    display=((meta.emoji?meta.emoji+' ':'')+(meta.name||symbol)).trim();
+  }
+  noteEl.value=display||symbol;
+  return noteEl.value;
 }
 
 function applyHoldingTradeDefaults(data){
