@@ -931,6 +931,9 @@ body::after{
 .txn-cat{flex:1;font-family:var(--sans);font-size:12px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .txn-amt{font-family:var(--mono);font-size:12px;font-weight:700;flex-shrink:0}
 .txn-amt.out{color:var(--coral)}.txn-amt.in{color:var(--teal)}.txn-amt.transfer{color:var(--purple)}
+.txn-undo{border:1px solid rgba(216,90,48,.38);border-radius:6px;background:rgba(216,90,48,.08);color:var(--coral);font-family:var(--sans);font-size:10px;font-weight:900;padding:4px 7px;cursor:pointer;flex-shrink:0}
+.txn-undo:hover{background:rgba(216,90,48,.16);box-shadow:0 0 10px rgba(216,90,48,.14)}
+.txn-undo[disabled]{opacity:.45;cursor:not-allowed;box-shadow:none}
 .txn-balance{font-family:var(--sans);font-size:10px;color:#7a5c28;margin:-3px 0 7px 72px;line-height:1.5}
 .txn-balance strong{font-family:var(--mono);font-size:10px;color:var(--gold);font-weight:800}
 
@@ -4016,62 +4019,52 @@ async function loadRecentBooking(){
   if(!el)return;
   if(!API_URL){el.innerHTML=setupNotice();return}
   try{
-    var changes=await apiGet({action:'accountChanges',ym:currentYM()}).catch(function(){return []});
-    var stockTrades=await apiGet({action:'stockTrades',ym:currentYM()}).catch(function(){return []});
-    var stockTradeHtml=(stockTrades&&stockTrades.length)?'<div class="txn-list-title">股票交易買賣｜'+currentYM()+'</div>'+
-      stockTrades.map(function(t){
-        var shares=Number(t.shares)||0;
-        var isSell=shares<0||String(t.type||'').indexOf('賣')>=0;
-        var tone=isSell?'out':'in';
-        var direction=isSell?'賣出':'買入';
-        var route=[t.from,t.to].filter(Boolean).join(' → ');
-        var amount=Math.abs(Number(t.stockAmount)||Number(t.cashAmount)||0);
-        var rowId=String(t.rowId||'');
-        return `<div class="txn-item">
-          <span class="txn-badge transfer">${direction}</span>
-          <span class="txn-date">${esc(t.date)}</span>
-          <span class="txn-cat">${esc(t.displaySymbol||t.symbol)} · ${esc(Math.abs(shares)||'--')} 股${route?' · '+esc(route):''}</span>
-          <span class="txn-amt ${tone}">${isSell?'-':'+'}${fmtN(amount)}</span>
-          <span class="dividend-pending-actions"><button class="dividend-dismiss-btn" type="button" data-stock-trade-row-id="${esc(rowId)}" onclick="event.stopPropagation();voidStockTrade(this.dataset.stockTradeRowId,this)">沖銷</button></span>
-        </div>`;
-      }).join(''):'';
-    if(changes&&changes.length){
-      el.innerHTML='<div class="txn-list-title">帳戶變化｜'+currentYM()+'</div>'+
-        changes.map(function(t){
+    var txns=await apiGet({action:'transactions',ym:currentYM()});
+    if(txns&&txns.length){
+      el.innerHTML='<div class="txn-list-title">最近紀錄｜'+currentYM()+'</div>'+
+        txns.map(function(t){
           var type=String(t.type||'');
           var isIn=type==='收入';
-          var isT=type==='轉帳'||type==='股票交易';
+          var isT=type==='轉帳'||type.indexOf('股票')>=0||type==='配息收入';
           var tone=isT?'transfer':(isIn?'in':'out');
-          var main=[t.primaryAccount,fmtPlainAmount(t.primaryBefore),'->',fmtPlainAmount(t.primaryAfter)].filter(Boolean).join(' ');
-          var transferRight=t.secondaryAccount
-            ? `${esc(t.secondaryAccount)} ${fmtDeltaAmount(t.secondaryDelta)} → ${fmtPlainAmount(t.secondaryAfter)}`
-            : '';
-          var label=t.label?` · ${esc(t.label)}`:'';
-          var right=isT&&transferRight?transferRight:fmtDeltaAmount(t.primaryDelta);
-          return `<div class="txn-item">
-            <span class="txn-badge ${tone}">${esc(type||'交易')}</span>
-            <span class="txn-date">${esc(t.date)}</span>
-            <span class="txn-cat">${esc(main)}${label}</span>
-            <span class="txn-amt ${tone}">${right}</span>
-          </div>`;
-        }).join('')+stockTradeHtml;
+          var sign=isT?'':(isIn?'+':'-');
+          var undo=t.undoable?
+            '<button class="txn-undo" type="button" title="撤銷這筆紀錄" onclick="undoRecentTxn(\''+encodeURIComponent(t.source||'')+'\','+(Number(t.rowId)||0)+',\''+encodeURIComponent(type)+'\',this)">撤銷</button>':'';
+          return '<div class="txn-item">'+
+            '<span class="txn-badge '+tone+'">'+esc(type)+'</span>'+
+            '<span class="txn-date">'+esc(t.date)+'</span>'+
+            '<span class="txn-cat">'+esc(t.cat)+'</span>'+
+            '<span class="txn-amt '+tone+'">'+sign+fmtN(t.amount)+'</span>'+
+            undo+
+          '</div>';
+        }).join('');
       return;
     }
-    var txns=await apiGet({action:'transactions',ym:currentYM()});
-    if((!txns||!txns.length)&&!stockTradeHtml){el.innerHTML='<div style="color:#5a4018;font-family:var(--sans);font-size:12px;padding:20px 0;text-align:center">本月尚無記錄</div>';return}
-    el.innerHTML='<div class="txn-list-title">本月記錄（'+currentYM()+'）</div>'+
-      (txns||[]).map(t=>{
-        var isIn=t.type==='收入';var isT=t.type==='轉帳';
-        var tone=isT?'transfer':(isIn?'in':'out');
-        var sign=isT?'':(isIn?'+':'-');
-        return `<div class="txn-item">
-          <span class="txn-badge ${tone}">${t.type}</span>
-          <span class="txn-date">${esc(t.date)}</span>
-          <span class="txn-cat">${esc(t.cat)}</span>
-          <span class="txn-amt ${tone}">${sign}${fmtN(t.amount)}</span>
-        </div>`;
-      }).join('')+stockTradeHtml;
-  }catch(e){el.innerHTML=`<div style="color:var(--coral);font-family:var(--sans);font-size:12px;padding:12px 0">${esc(e.message)}</div>`}
+    el.innerHTML='<div style="color:#5a4018;font-family:var(--sans);font-size:12px;padding:20px 0;text-align:center">本月沒有最近紀錄</div>';
+  }catch(e){
+    el.innerHTML='<div style="color:var(--coral);font-family:var(--sans);font-size:12px;padding:12px 0">'+esc(e.message)+'</div>';
+  }
+}
+
+async function undoRecentTxn(source,rowId,type,btn){
+  source=decodeURIComponent(source||'');
+  type=decodeURIComponent(type||'');
+  rowId=Number(rowId)||0;
+  if(!rowId)return;
+  if(!confirm('確定撤銷這筆最近紀錄？月度戰情室數值會回補，資料庫原始列會刪除。'))return;
+  var el=document.getElementById('recent-content');
+  var oldText=btn?btn.textContent:'';
+  try{
+    if(btn){btn.disabled=true;btn.textContent='...';}
+    if(el)el.style.opacity='.55';
+    await apiPost({action:'transactionUndo',source:source,rowId:rowId,type:type});
+    await loadRecentBooking();
+  }catch(e){
+    alert(e.message||'撤銷失敗');
+  }finally{
+    if(el)el.style.opacity='';
+    if(btn){btn.disabled=false;btn.textContent=oldText||'撤銷';}
+  }
 }
 
 async function voidStockTrade(rowId,btn){
