@@ -2065,6 +2065,8 @@ var heroCache = [];
 var armySettingCache = null;
 var stockTradeMode = false;
 var bookingAutoDate = '';
+var bookingFormInitPromise = null;
+var bookingFormInitSeq = 0;
 var currentPanel = null;
 var currentTab = null;
 var COMMAND_SHEET_ID = '1MTPLhPA9j4kb2pllDDL1z7xaCD1UmIZutT0eVOHZd30';
@@ -3520,7 +3522,13 @@ async function initBookingForm(){
   var el=document.getElementById('pane-booking-form');
   if(!el)return;
   if(!API_URL){el.innerHTML=setupNotice();return}
+  if(el.dataset.bookingReady==='1')return;
+  if(el.dataset.bookingLoading==='1'&&bookingFormInitPromise)return bookingFormInitPromise;
+  var initSeq=++bookingFormInitSeq;
+  el.dataset.bookingLoading='1';
+  bookingFormInitPromise=(async function(){
   try{cfg=await apiGet({action:'config'})}catch(e){console.error(e)}
+  if(initSeq!==bookingFormInitSeq||el!==document.getElementById('pane-booking-form'))return;
   var cats=prioritizeBookingOption(cfg.categories||[],'超商外食');
   var sources=prioritizeBookingOption(cfg.sources||[],'投資理財');
   var accs=uniqueBookingOptions(cfg.accounts||[]);
@@ -3548,7 +3556,7 @@ async function initBookingForm(){
     <div class="booking-dividend-pending" id="booking-dividend-pending"></div>
     <div class="btabs">
       <button class="btab expense active" type="button" onclick="switchBTab(this,'expense')">收入支出</button>
-      <button class="btab transfer" type="button" onclick="switchBTab(this,'transfer')">轉帳</button>
+      <button class="btab transfer" type="button" onclick="switchBTab(this,'transfer')">網銀股票</button>
     </div>
 
     <!-- 收入支出：支出模式 -->
@@ -3629,6 +3637,18 @@ async function initBookingForm(){
     var typeEl=document.getElementById('t-stock-type');
     if(typeEl)typeEl.addEventListener('change',clearTransferDividendAutofill);
   })();
+  el.dataset.bookingReady='1';
+  delete el.dataset.bookingLoading;
+  })();
+  try{
+    await bookingFormInitPromise;
+  }finally{
+    if(initSeq===bookingFormInitSeq){
+      bookingFormInitPromise=null;
+      var currentEl=document.getElementById('pane-booking-form');
+      if(currentEl)delete currentEl.dataset.bookingLoading;
+    }
+  }
 }
 
 function initBookingDateInputs(force){
