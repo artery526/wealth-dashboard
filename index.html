@@ -1348,16 +1348,16 @@ body::after{
 }
 .nav-quick-booking{
   position:fixed;top:82px;left:clamp(72px,7vw,104px);z-index:49;
-  width:148px;height:236px;margin:0;padding:0;border:1px solid rgba(184,137,46,.28);border-radius:12px;
-  background:rgba(10,7,4,.18);cursor:pointer;display:flex;align-items:center;justify-content:center;
-  box-shadow:0 18px 38px rgba(0,0,0,.28),inset 0 0 18px rgba(232,192,80,.04);
+  width:148px;height:236px;margin:0;padding:0;border:0;border-radius:0;
+  background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  box-shadow:none;
   transition:border-color .2s,background .2s,transform .2s,filter .2s;
 }
 .nav-quick-booking:hover{
-  border-color:var(--gold3);background:rgba(232,192,80,.08);transform:translateY(-2px);filter:brightness(1.08);
+  background:transparent;transform:translateY(-2px);filter:brightness(1.08);
 }
 .nav-quick-booking video{
-  width:100%;height:100%;object-fit:contain;display:block;filter:drop-shadow(0 0 14px rgba(232,192,80,.32));pointer-events:none;
+  width:100%;height:100%;object-fit:contain;display:block;filter:drop-shadow(0 0 10px rgba(232,192,80,.22));pointer-events:none;
 }
 .nav-date-row{
   display:flex;align-items:center;gap:8px;
@@ -1552,7 +1552,7 @@ body::after{
     display:flex;align-items:center;justify-content:space-between;
   }
   .top-nav-logo{gap:1px}
-  .nav-quick-booking{top:92px;left:12px;width:82px;height:128px;border-radius:10px}
+  .nav-quick-booking{top:92px;left:12px;width:82px;height:128px}
   .nav-quick-booking video{width:100%;height:100%}
   .nav-date-day{font-size:20px}
   .nav-date-sep{font-size:13px}
