@@ -1049,8 +1049,9 @@ body::after{
 .txn-undo{border:1px solid rgba(216,90,48,.38);border-radius:6px;background:rgba(216,90,48,.08);color:var(--coral);font-family:var(--sans);font-size:10px;font-weight:900;padding:4px 7px;cursor:pointer;flex-shrink:0}
 .txn-undo:hover{background:rgba(216,90,48,.16);box-shadow:0 0 10px rgba(216,90,48,.14)}
 .txn-undo[disabled]{opacity:.45;cursor:not-allowed;box-shadow:none}
-.txn-balance{font-family:var(--sans);font-size:10px;color:#7a5c28;margin:-3px 0 7px 72px;line-height:1.5}
-.txn-balance strong{font-family:var(--mono);font-size:10px;color:var(--gold);font-weight:800}
+.txn-balance{min-width:190px;max-width:38%;font-family:var(--sans);font-size:10px;color:#7a5c28;line-height:1.35;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0}
+.txn-balance-path{display:block;overflow:hidden;text-overflow:ellipsis}
+.txn-balance strong{display:block;font-family:var(--mono);font-size:10px;color:var(--gold);font-weight:800;overflow:hidden;text-overflow:ellipsis}
 
 /* ── Annual battle room ── */
 .annual-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
@@ -4183,11 +4184,13 @@ async function loadRecentBooking(){
           var sign=isT?'':(isIn?'+':'-');
           var undo=t.undoable?
             '<button class="txn-undo" type="button" title="撤銷這筆紀錄" onclick="undoRecentTxn(\''+encodeURIComponent(t.source||'')+'\','+(Number(t.rowId)||0)+',\''+encodeURIComponent(type)+'\',this)">撤銷</button>':'';
+          var balance=renderTxnAccountChange(t.accountChange);
           return '<div class="txn-item">'+
             '<span class="txn-badge '+tone+'">'+esc(type)+'</span>'+
             '<span class="txn-date">'+esc(t.date)+'</span>'+
             '<span class="txn-cat">'+esc(t.cat)+'</span>'+
             '<span class="txn-amt '+tone+'">'+sign+fmtN(t.amount)+'</span>'+
+            balance+
             undo+
           '</div>';
         }).join('');
@@ -4197,6 +4200,23 @@ async function loadRecentBooking(){
   }catch(e){
     el.innerHTML='<div style="color:var(--coral);font-family:var(--sans);font-size:12px;padding:12px 0">'+esc(e.message)+'</div>';
   }
+}
+
+function formatTxnChangeValue(after,delta){
+  var nAfter=Number(after)||0;
+  var nDelta=Number(delta)||0;
+  var sign=nDelta>0?'+':(nDelta<0?'-':'');
+  return fmtN(nAfter)+sign+(nDelta?fmtN(Math.abs(nDelta)):'');
+}
+
+function renderTxnAccountChange(change){
+  if(!change||!change.primaryAccount)return '';
+  var primary=esc(change.primaryAccount||'');
+  var secondary=esc(change.secondaryAccount||'');
+  var path=secondary?primary+' → '+secondary:primary;
+  var value=formatTxnChangeValue(change.primaryAfter,change.primaryDelta);
+  if(secondary)value+=' → '+fmtN(Number(change.secondaryAfter)||0);
+  return '<span class="txn-balance"><span class="txn-balance-path">'+path+'</span><strong>'+esc(value)+'</strong></span>';
 }
 
 async function undoRecentTxn(source,rowId,type,btn){
