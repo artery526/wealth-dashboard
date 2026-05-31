@@ -4138,10 +4138,10 @@ async function refreshDividendViewsAfterEntry(){
 
 function renderBookingDividendPending(data){
   var expanded=bookingDividendExpanded||bookingDividendPickerOpen;
+  var pending=dividendPendingDisplayRows((data&&data.pending)||[]).filter(function(row){
+    return !bookingDividendHiddenRows[dividendPendingKey(row)];
+  });
   if(bookingDividendPickerOpen){
-    var pending=dividendPendingDisplayRows((data&&data.pending)||[]).filter(function(row){
-      return !bookingDividendHiddenRows[dividendPendingKey(row)];
-    });
     var pickerList=pending.map(function(row){return renderDividendPendingRow(row,true);}).join('')||'<div class="dividend-empty">目前沒有待入帳配息。</div>';
     return `<div class="booking-dividend-backdrop" onclick="closeBookingDividendPicker()"></div>
     <div class="booking-dividend-panel${bookingDividendPickerOpen?' is-floating':''}">
@@ -4154,16 +4154,21 @@ function renderBookingDividendPending(data){
     </div>`;
   }
   var tradePending=dividendPendingDisplayRows((data&&data.holdingTradePending)||[]);
-  if(!tradePending.length)return '';
-  var total=tradePending.reduce(function(sum,row){return sum+(Number(row.estimatedTwd)||0);},0);
-  var list=expanded?tradePending.map(renderHoldingTradePendingRow).join(''):'';
-  var summary=`<div class="booking-dividend-summary">${tradePending.length} 筆待入帳持股記錄 · NT${fmtFull(total)}</div>`;
+  if(!tradePending.length&&!pending.length)return '';
+  var tradeTotal=tradePending.reduce(function(sum,row){return sum+(Number(row.estimatedTwd)||0);},0);
+  var dividendTotal=pending.reduce(function(sum,row){return sum+(Number(row.estimatedTwd)||0);},0);
+  var tradeList=tradePending.length?'<div class="dividend-section-title">待入帳持股記錄</div>'+tradePending.map(renderHoldingTradePendingRow).join(''):'';
+  var dividendList=pending.length?'<div class="dividend-section-title">待入帳配息</div>'+pending.map(function(row){return renderDividendPendingRow(row,true);}).join(''):'';
+  var summary=[
+    tradePending.length?`<div class="booking-dividend-summary">${tradePending.length} 筆待入帳持股記錄 · NT${fmtFull(tradeTotal)}</div>`:'',
+    pending.length?`<div class="booking-dividend-summary">${pending.length} 筆待入帳配息 · NT${fmtFull(dividendTotal)}</div>`:''
+  ].join('');
   return `<div class="booking-dividend-panel">
       <div class="booking-dividend-head">
-        <div class="booking-dividend-title">待入帳持股記錄</div>
+        <div class="booking-dividend-title">待入帳提醒</div>
         <button class="booking-dividend-toggle" type="button" onclick="setBookingDividendExpanded(!bookingDividendExpanded)">${expanded?'收合':'展開'}</button>
       </div>
-      ${expanded?list:summary}
+      ${expanded?tradeList+dividendList:summary}
     </div>`;
 }
 
