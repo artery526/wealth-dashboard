@@ -2192,9 +2192,13 @@ var bookingFormInitSeq = 0;
 var currentPanel = null;
 var currentTab = null;
 var COMMAND_SHEET_ID = '1MTPLhPA9j4kb2pllDDL1z7xaCD1UmIZutT0eVOHZd30';
+var MACRO_SHEET_ID = '1BPnjwZKlBmxMkHmLDk6MSV28kfcAtQhGuZdufv5T7FY';
 var COMMAND_SETTING_GID = '1479341396';
 var MONTHLY_HOLDINGS_SHEET_NAME = '\u6708\u5EA6\u6230\u60C5\u5BA4';
 var MONTHLY_HOLDINGS_RANGE = 'A12:N23';
+var ASSET_SNAPSHOT_SHEET_NAME = '\u6BCF\u65E5\u8CC7\u7522\u5FEB\u7167';
+var ASSET_SNAPSHOT_GID = '2000002006';
+var ASSET_SNAPSHOT_RANGE = 'A2:F1000';
 var TASK_SHEET_FALLBACK_OPTIONS = ['月度戰情室','轉帳資料庫','設定','資料庫','收入流水帳','支出流水帳','市場儀表板','配息試算','年度財報','武將資料','類型設定','帳戶基準'];
 var taskSheetOptionsCache = null;
 var advisorDraftInFlight = false;
@@ -5137,7 +5141,7 @@ async function loadCouncilDashboard(){
       loadCouncilHoldingsOverview(),
       loadArmySettingsSheet(),
       API_URL?apiGet({action:'councilPantry'}):Promise.resolve([]),
-      API_URL?apiGet({action:'assetSnapshot'}):Promise.resolve(null)
+      loadAssetSnapshot()
     ]);
     var heroes=results[0].status==='fulfilled'?results[0].value:[];
     var holdings=results[1].status==='fulfilled'?(results[1].value||[]):[];
@@ -5472,7 +5476,8 @@ function snapshotMarketValue(snapshot,fallbackValue){
   var latest=snapshot&&snapshot.latest;
   var value=latest&&(latest.investmentMarketValue!=null?latest.investmentMarketValue:latest.marketValue);
   value=Number(value);
-  return !isNaN(value)&&isFinite(value)?value:fallbackValue;
+  if(!isNaN(value)&&isFinite(value)&&value>0)return value;
+  return fallbackValue;
 }
 
 function renderCouncilMarketDelta(snapshot){
@@ -5639,6 +5644,13 @@ function gvizCellValue(cell){
   return cell.v!==null&&cell.v!==undefined?cell.v:'';
 }
 
+function gvizCellSortValue(cell,rowIndex){
+  if(cell&&typeof cell.v==='number')return cell.v;
+  var value=gvizCellValue(cell);
+  var time=new Date(String(value||'').replace(/-/g,'/')).getTime();
+  return isNaN(time)?rowIndex:time;
+}
+
 function percentNum(v){
   var n=toNum(v);
   if(typeof v==='string'&&v.indexOf('%')>=0)return n;
@@ -5693,6 +5705,64 @@ async function loadMonthlyHoldingsSheet(){
   }).filter(function(row){
     return row.symbol&&(row.shares>0||row.cost>0||row.marketValue>0);
   });
+}
+
+async function loadDailyAssetSnapshotSheet(){
+  var url='https://docs.google.com/spreadsheets/d/'+MACRO_SHEET_ID+'/gviz/tq?tqx=out:json&gid='+encodeURIComponent(ASSET_SNAPSHOT_GID)+'&range='+encodeURIComponent(ASSET_SNAPSHOT_RANGE);
+  var json=await readGvizJson(url);
+  var rows=(json.table.rows||[]).map(function(row,index){
+    var c=row.c||[];
+    var marketValue=toNum(gvizCellValue(c[1]));
+    if(!marketValue)return null;
+    return {
+      rowNumber:index+2,
+      date:gvizCellValue(c[0]),
+      dateValue:gvizCellSortValue(c[0],index+2),
+      investmentMarketValue:marketValue,
+      marketValue:marketValue,
+      totalCost:toNum(gvizCellValue(c[2])),
+      totalReturn:toNum(gvizCellValue(c[3])),
+      monthlyDiv:toNum(gvizCellValue(c[4])),
+      note:String(gvizCellValue(c[5])||'')
+    };
+  }).filter(Boolean);
+  rows.sort(function(a,b){
+    if(a.dateValue!==b.dateValue)return a.dateValue-b.dateValue;
+    return a.rowNumber-b.rowNumber;
+  });
+  var latest=rows.length?rows[rows.length-1]:null;
+  var previous=rows.length>1?rows[rows.length-2]:null;
+  var dailyChangeAmount=null;
+  var dailyChangePct=null;
+  if(latest&&previous){
+    dailyChangeAmount=latest.investmentMarketValue-previous.investmentMarketValue;
+    if(previous.investmentMarketValue)dailyChangePct=dailyChangeAmount/previous.investmentMarketValue*100;
+  }
+  return {
+    sheetName:ASSET_SNAPSHOT_SHEET_NAME,
+    latest:latest,
+    previous:previous,
+    latestMarketValue:latest?latest.investmentMarketValue:null,
+    previousMarketValue:previous?previous.investmentMarketValue:null,
+    dailyChangeAmount:dailyChangeAmount,
+    dailyChangePct:dailyChangePct
+  };
+}
+
+async function loadAssetSnapshot(){
+  try{
+    var sheetSnapshot=await loadDailyAssetSnapshotSheet();
+    if(sheetSnapshot&&sheetSnapshot.latest)return sheetSnapshot;
+  }catch(e){
+    console.warn('asset snapshot sheet fallback:',e);
+  }
+  if(!API_URL)return null;
+  try{
+    return await apiGet({action:'assetSnapshot'});
+  }catch(e){
+    console.warn('asset snapshot api fallback:',e);
+    return null;
+  }
 }
 
 async function loadCouncilHoldingsOverview(){
