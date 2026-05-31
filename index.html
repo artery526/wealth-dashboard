@@ -130,53 +130,126 @@ body::after{
 
 /* ── Today Agenda ── */
 .today-agenda{
-  width:100%;max-width:720px;margin:-12px auto 30px;
-  border:1px solid rgba(184,137,46,.34);border-radius:8px;
-  background:rgba(10,8,4,.68);
-  box-shadow:0 18px 42px rgba(0,0,0,.24),inset 0 0 28px rgba(232,192,80,.03);
-  overflow:hidden;
+  position:relative;
+  width:min(360px,calc(100vw - 32px));
+  min-height:430px;
+  align-self:flex-end;
+  margin:-274px clamp(18px,5vw,84px) 62px auto;
+  padding:44px 24px 42px;
+  border:1px solid rgba(232,192,80,.72);
+  border-left-color:rgba(128,82,21,.78);
+  border-right-color:rgba(128,82,21,.78);
+  border-radius:5px;
+  background:
+    radial-gradient(circle at 50% 18%, rgba(255,246,204,.38), transparent 34%),
+    radial-gradient(circle at 22% 78%, rgba(143,92,24,.14), transparent 28%),
+    linear-gradient(90deg, rgba(71,40,10,.16), transparent 12%, transparent 88%, rgba(71,40,10,.18)),
+    repeating-linear-gradient(135deg, rgba(121,83,28,.07) 0 1px, transparent 1px 14px),
+    linear-gradient(180deg,#e6d2a6 0%,#d1b881 48%,#c49f62 100%);
+  box-shadow:
+    0 24px 58px rgba(0,0,0,.52),
+    0 0 34px rgba(232,192,80,.18),
+    inset 0 0 0 1px rgba(255,246,204,.28),
+    inset 0 0 42px rgba(67,39,12,.22);
+  overflow:visible;
+  color:#25170a;
+  isolation:isolate;
+}
+.today-agenda::before,
+.today-agenda::after{
+  content:"";
+  position:absolute;
+  left:-18px;
+  right:-18px;
+  height:34px;
+  border:1px solid rgba(93,55,12,.8);
+  border-radius:999px;
+  background:
+    radial-gradient(circle at 6% 50%, #3c2208 0 8px, transparent 9px),
+    radial-gradient(circle at 94% 50%, #3c2208 0 8px, transparent 9px),
+    linear-gradient(90deg,#4d2d09 0 4%,#c79b50 7%,#f0d599 17%,#a5722c 50%,#f1d796 83%,#c79b50 93%,#4d2d09 96% 100%);
+  box-shadow:
+    0 8px 18px rgba(0,0,0,.38),
+    inset 0 1px 0 rgba(255,244,194,.45),
+    inset 0 -8px 18px rgba(45,24,6,.24);
+  z-index:2;
+}
+.today-agenda::before{top:-18px}
+.today-agenda::after{bottom:-18px}
+.today-agenda:focus-within{
+  box-shadow:
+    0 24px 58px rgba(0,0,0,.52),
+    0 0 42px rgba(232,192,80,.32),
+    inset 0 0 0 1px rgba(255,246,204,.3),
+    inset 0 0 42px rgba(67,39,12,.22);
 }
 .today-agenda-head{
+  position:relative;z-index:3;
   display:flex;align-items:center;justify-content:space-between;gap:12px;
-  padding:12px 14px;border-bottom:1px solid rgba(184,137,46,.22);
+  padding:2px 0 20px;margin-bottom:6px;
+  border-bottom:1px solid rgba(87,58,19,.24);
 }
 .today-agenda-title{
   display:flex;align-items:center;gap:8px;
-  font-family:var(--sans);font-size:14px;font-weight:900;color:var(--gold);letter-spacing:2px;
+  font-family:var(--font);font-size:36px;font-weight:900;color:#1f150c;letter-spacing:4px;line-height:1.1;
+  text-shadow:0 1px 0 rgba(255,239,192,.28),0 0 13px rgba(232,192,80,.28);
 }
 .today-agenda-sub{
-  font-family:var(--mono);font-size:10px;color:#7a6030;letter-spacing:1px;margin-top:2px;
+  font-family:var(--sans);font-size:13px;color:#513413;letter-spacing:1px;margin-top:12px;
 }
 .today-agenda-refresh{
-  border:1px solid rgba(184,137,46,.42);border-radius:6px;background:rgba(184,137,46,.12);
-  color:var(--gold);font-family:var(--sans);font-size:12px;font-weight:800;
-  padding:7px 10px;cursor:pointer;white-space:nowrap;
+  position:relative;
+  border:1px solid rgba(196,151,61,.72);border-radius:4px;
+  background:linear-gradient(180deg,#33240e,#171007);
+  color:#f4d783;font-family:var(--sans);font-size:13px;font-weight:900;
+  padding:9px 18px;cursor:pointer;white-space:nowrap;
+  box-shadow:0 0 0 1px rgba(71,44,10,.72),0 6px 14px rgba(52,31,8,.28),inset 0 1px 0 rgba(255,241,187,.16);
+  text-shadow:0 0 9px rgba(232,192,80,.4);
 }
 .today-agenda-refresh:disabled{opacity:.55;cursor:wait}
-.today-agenda-list{display:grid;gap:8px;padding:12px 14px 14px}
+.today-agenda-list{position:relative;z-index:3;display:grid;gap:10px;padding:14px 0 0}
 .today-agenda-empty,.today-agenda-loading,.today-agenda-error{
-  font-family:var(--sans);font-size:13px;line-height:1.7;color:#9a7430;text-align:center;padding:10px 6px;
+  font-family:var(--font);font-size:22px;font-weight:700;line-height:1.9;color:#2f1e0c;text-align:center;padding:22px 10px 10px;
+  text-shadow:0 0 9px rgba(232,192,80,.16);
 }
 .today-agenda-error{color:var(--coral)}
 .agenda-item{
-  display:grid;grid-template-columns:94px minmax(0,1fr);gap:10px;align-items:start;
-  padding:10px 11px;border:1px solid rgba(184,137,46,.24);border-radius:7px;
-  background:rgba(20,14,6,.58);
+  display:grid;grid-template-columns:76px minmax(0,1fr);gap:12px;align-items:start;
+  padding:12px 0 13px;border-bottom:1px solid rgba(88,57,18,.18);
+  background:linear-gradient(90deg,rgba(255,246,204,.14),transparent 44%,rgba(92,56,16,.06));
 }
 .agenda-time{
-  font-family:var(--mono);font-size:12px;color:var(--gold2);line-height:1.45;
+  display:flex;align-items:center;justify-content:center;
+  min-height:42px;padding:6px 7px;border:1px solid rgba(110,35,19,.5);border-radius:4px;
+  font-family:var(--mono);font-size:11px;color:#6f2516;line-height:1.35;text-align:center;
+  background:rgba(117,37,21,.07);
+  box-shadow:inset 0 0 12px rgba(92,29,16,.08);
   word-break:break-word;
 }
 .agenda-title{
-  font-family:var(--sans);font-size:14px;font-weight:800;color:#f0dfa0;line-height:1.45;
+  font-family:var(--font);font-size:17px;font-weight:900;color:#25170a;line-height:1.5;
 }
 .agenda-meta{
-  margin-top:4px;font-family:var(--sans);font-size:12px;color:#8c7a58;line-height:1.5;
+  margin-top:5px;font-family:var(--sans);font-size:12px;color:#69501f;line-height:1.55;
+}
+@media(max-width:960px){
+  .today-agenda{
+    align-self:center;
+    width:min(520px,calc(100vw - 28px));
+    min-height:0;
+    margin:-12px auto 30px;
+    padding:42px 22px 38px;
+  }
 }
 @media(max-width:540px){
-  .today-agenda{margin-top:-2px}
-  .today-agenda-head{align-items:flex-start}
+  .today-agenda{margin-top:-2px;padding:38px 16px 34px}
+  .today-agenda::before,.today-agenda::after{left:-10px;right:-10px;height:28px}
+  .today-agenda::before{top:-14px}
+  .today-agenda::after{bottom:-14px}
+  .today-agenda-head{align-items:flex-start;flex-direction:column}
+  .today-agenda-title{font-size:30px}
   .agenda-item{grid-template-columns:1fr}
+  .agenda-time{width:max-content;max-width:100%;min-height:0}
 }
 
 /* 中央：標題 + 日期橫排 */
