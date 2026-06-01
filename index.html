@@ -130,11 +130,10 @@ body::after{
 
 /* ── Today Agenda ── */
 .today-agenda{
-  position:fixed;
-  top:88px;
-  right:clamp(28px,5vw,72px);
-  z-index:60;
-  width:min(216px,calc(100vw - 32px));
+  position:relative;
+  z-index:1;
+  width:100%;
+  margin:0 0 12px;
   isolation:isolate;
 }
 .today-agenda-tab{
@@ -169,11 +168,9 @@ body::after{
 }
 .today-agenda-tab:hover{filter:brightness(1.05);box-shadow:0 14px 28px rgba(0,0,0,.42),0 0 24px rgba(216,198,154,.14),inset 0 1px 0 rgba(255,246,216,.32)}
 .today-agenda-sheet{
-  position:absolute;
-  top:58px;
-  right:0;
-  width:min(292px,calc(100vw - 32px));
-  min-height:268px;
+  position:relative;
+  width:100%;
+  min-height:0;
   padding:26px 18px 22px;
   border:1px solid rgba(205,190,150,.38);
   border-radius:5px;
@@ -184,22 +181,32 @@ body::after{
     repeating-linear-gradient(135deg, rgba(52,45,32,.045) 0 1px, transparent 1px 12px),
     linear-gradient(180deg,rgba(224,211,177,.9) 0%,rgba(198,178,133,.86) 100%);
   box-shadow:
-    0 22px 44px rgba(0,0,0,.54),
+    0 12px 26px rgba(0,0,0,.34),
     0 0 24px rgba(214,198,160,.08),
     inset 0 0 0 1px rgba(255,248,220,.18),
     inset 0 0 34px rgba(35,28,20,.2);
   color:#25170a;
-  transform:translateY(-8px) scale(.96);
-  transform-origin:top right;
+  max-height:0;
+  margin-top:0;
+  padding-top:0;
+  padding-bottom:0;
+  overflow:hidden;
+  transform:translateY(-4px);
+  transform-origin:top center;
   opacity:0;
   pointer-events:none;
-  transition:opacity .22s ease,transform .22s ease;
+  transition:opacity .22s ease,transform .22s ease,max-height .24s ease,margin-top .24s ease,padding-top .24s ease,padding-bottom .24s ease;
   z-index:20;
 }
 .today-agenda.is-open .today-agenda-sheet{
   opacity:1;
   pointer-events:auto;
-  transform:translateY(0) scale(1);
+  max-height:360px;
+  margin-top:8px;
+  padding-top:26px;
+  padding-bottom:22px;
+  overflow:auto;
+  transform:translateY(0);
 }
 .today-agenda-close{
   position:absolute;
@@ -266,25 +273,14 @@ body::after{
 }
 @media(max-width:960px){
   .today-agenda{
-    position:relative;
-    top:auto;
-    right:auto;
-    align-self:center;
-    margin:-12px auto 34px;
+    margin:0 0 10px;
   }
-  .today-agenda-sheet{
-    left:50%;
-    right:auto;
-    transform:translate(-50%,-8px) scale(.96);
-    transform-origin:top center;
-  }
-  .today-agenda.is-open .today-agenda-sheet{transform:translate(-50%,0) scale(1)}
 }
 @media(max-width:540px){
-  .today-agenda{width:min(210px,calc(100vw - 24px));margin-top:-2px}
+  .today-agenda{width:100%;margin-top:0}
   .today-agenda-tab{min-height:50px;font-size:18px}
   .today-agenda-tab small{display:none}
-  .today-agenda-sheet{width:calc(100vw - 24px);padding:26px 16px 22px}
+  .today-agenda-sheet{padding-left:16px;padding-right:16px}
   .today-agenda-head{align-items:flex-start;flex-direction:column}
   .today-agenda-title{font-size:22px}
   .agenda-item{grid-template-columns:1fr}
@@ -422,7 +418,7 @@ body::after{
 .advisor-wrap{display:flex;align-items:flex-start;gap:0;transform:translateY(-140%);transition:transform .45s cubic-bezier(.22,1,.36,1)}
 .advisor-overlay.open .advisor-wrap{transform:translateY(0)}
 .advisor-img{width:clamp(140px,28vw,220px);flex-shrink:0;display:block;object-fit:contain;object-position:bottom;background:transparent;filter:drop-shadow(0 0 24px rgba(232,192,80,.25));cursor:pointer}
-.advisor-dialog{margin-top:34px;margin-left:-8px;background:linear-gradient(145deg,#1a1005,#0f0a03);border:1.5px solid rgba(232,192,80,.55);border-radius:0 16px 16px 16px;box-shadow:0 8px 40px rgba(0,0,0,.7),inset 0 1px 0 rgba(232,192,80,.15);padding:18px 20px 14px;max-width:min(340px,calc(100vw - 190px));position:relative}
+.advisor-dialog{margin-top:34px;margin-left:-8px;background:linear-gradient(145deg,#1a1005,#0f0a03);border:1.5px solid rgba(232,192,80,.55);border-radius:0 16px 16px 16px;box-shadow:0 8px 40px rgba(0,0,0,.7),inset 0 1px 0 rgba(232,192,80,.15);padding:18px 20px 14px;max-width:min(340px,calc(100vw - 190px));max-height:calc(100vh - 86px);overflow-y:auto;position:relative}
 .advisor-dialog::before{content:'';position:absolute;left:-10px;top:40px;border:5px solid transparent;border-right-color:rgba(232,192,80,.55)}
 .advisor-dialog::after{content:'';position:absolute;left:-8px;top:41px;border:4px solid transparent;border-right-color:#1a1005}
 .advisor-greeting{font-family:'Noto Serif TC',serif;font-size:15px;font-weight:700;color:var(--gold);letter-spacing:2px;margin-bottom:14px;line-height:1.6}
@@ -1949,26 +1945,6 @@ body::after{
 
 
   </div>
-
-  <section class="today-agenda" id="today-agenda" aria-label="今日行程">
-    <button class="today-agenda-tab" id="today-agenda-toggle" type="button" onclick="toggleTodayAgenda()" aria-expanded="false" aria-controls="today-agenda-sheet">
-      <span>今日政務</span>
-      <small>點卷展開</small>
-    </button>
-    <div class="today-agenda-sheet" id="today-agenda-sheet" aria-hidden="true">
-      <button class="today-agenda-close" type="button" onclick="toggleTodayAgenda(false)" aria-label="收合今日政務">x</button>
-      <div class="today-agenda-head">
-        <div>
-          <div class="today-agenda-title">今日政務</div>
-          <div class="today-agenda-sub" id="today-agenda-date">讀取 Google 行事曆</div>
-        </div>
-        <button class="today-agenda-refresh" id="today-agenda-refresh" type="button" onclick="loadTodayCalendar()">更新</button>
-      </div>
-      <div class="today-agenda-list" id="today-calendar-list">
-        <div class="today-agenda-loading">軍師正在調閱今日行程…</div>
-      </div>
-    </div>
-  </section>
 
   <div class="cards">
 
@@ -6937,6 +6913,25 @@ initHeaderVideoPlayback();
     <div class="advisor-dialog">
       <button class="advisor-close" onclick="closeAdvisorDialog()">✕</button>
       <div class="advisor-greeting">主公，今日要做什麼？</div>
+      <section class="today-agenda" id="today-agenda" aria-label="今日行程">
+        <button class="today-agenda-tab" id="today-agenda-toggle" type="button" onclick="toggleTodayAgenda()" aria-expanded="false" aria-controls="today-agenda-sheet">
+          <span>今日政務</span>
+          <small>點卷展開</small>
+        </button>
+        <div class="today-agenda-sheet" id="today-agenda-sheet" aria-hidden="true">
+          <button class="today-agenda-close" type="button" onclick="toggleTodayAgenda(false)" aria-label="收合今日政務">x</button>
+          <div class="today-agenda-head">
+            <div>
+              <div class="today-agenda-title">今日政務</div>
+              <div class="today-agenda-sub" id="today-agenda-date">讀取 Google 行事曆</div>
+            </div>
+            <button class="today-agenda-refresh" id="today-agenda-refresh" type="button" onclick="loadTodayCalendar()">更新</button>
+          </div>
+          <div class="today-agenda-list" id="today-calendar-list">
+            <div class="today-agenda-loading">軍師正在調閱今日行程…</div>
+          </div>
+        </div>
+      </section>
       <div class="advisor-btn-grid">
         <button class="advisor-btn" onclick="advisorGo('finance','finance-accs')"><span class="advisor-btn-tag">財</span>帳戶餘額</button>
       <button class="advisor-btn" onclick="advisorGo('domestic','dividend-center')"><span class="advisor-btn-tag">股</span>持股備忘錄</button>
@@ -6963,6 +6958,7 @@ function openAdvisorDialog(){
 }
 function closeAdvisorDialog(){
   document.getElementById('advisor-overlay').classList.remove('open');
+  toggleTodayAgenda(false);
 }
 function advisorOverlayClick(e){
   if(e.target===document.getElementById('advisor-overlay'))closeAdvisorDialog();
