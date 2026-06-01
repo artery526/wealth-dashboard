@@ -4174,7 +4174,7 @@ async function loadRecentBooking(){
             '<span class="txn-badge '+tone+'">'+esc(type)+'</span>'+
             '<span class="txn-date">'+esc(t.date)+'</span>'+
             '<span class="txn-cat">'+esc(t.cat)+'</span>'+
-            '<span class="txn-amt '+tone+'">'+sign+fmtN(t.amount)+'</span>'+
+            '<span class="txn-amt '+tone+'">'+sign+fmtFull(t.amount)+'</span>'+
             balance+
             undo+
           '</div>';
@@ -4191,7 +4191,7 @@ function formatTxnChangeValue(after,delta){
   var nAfter=Number(after)||0;
   var nDelta=Number(delta)||0;
   var sign=nDelta>0?'+':(nDelta<0?'-':'');
-  return fmtN(nAfter)+sign+(nDelta?fmtN(Math.abs(nDelta)):'');
+  return fmtFull(nAfter)+sign+(nDelta?fmtFull(Math.abs(nDelta)):'');
 }
 
 function renderTxnAccountChange(change){
@@ -4200,7 +4200,7 @@ function renderTxnAccountChange(change){
   var secondary=esc(change.secondaryAccount||'');
   var path=secondary?primary+' → '+secondary:primary;
   var value=formatTxnChangeValue(change.primaryAfter,change.primaryDelta);
-  if(secondary)value+=' → '+fmtN(Number(change.secondaryAfter)||0);
+  if(secondary)value+=' → '+fmtFull(Number(change.secondaryAfter)||0);
   return '<span class="txn-balance"><span class="txn-balance-path">'+path+'</span><strong>'+esc(value)+'</strong></span>';
 }
 
