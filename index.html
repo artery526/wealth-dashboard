@@ -418,18 +418,20 @@ body::after{
 .advisor-wrap{display:flex;align-items:flex-start;gap:0;transform:translateY(-140%);transition:transform .45s cubic-bezier(.22,1,.36,1)}
 .advisor-overlay.open .advisor-wrap{transform:translateY(0)}
 .advisor-img{width:clamp(140px,28vw,220px);flex-shrink:0;display:block;object-fit:contain;object-position:bottom;background:transparent;filter:drop-shadow(0 0 24px rgba(232,192,80,.25));cursor:pointer}
-.advisor-dialog{margin-top:34px;margin-left:-8px;background:linear-gradient(145deg,#1a1005,#0f0a03);border:1.5px solid rgba(232,192,80,.55);border-radius:0 16px 16px 16px;box-shadow:0 8px 40px rgba(0,0,0,.7),inset 0 1px 0 rgba(232,192,80,.15);padding:18px 20px 14px;max-width:min(340px,calc(100vw - 190px));max-height:calc(100vh - 86px);overflow-y:auto;position:relative}
+.advisor-dialog{margin-top:34px;margin-left:-8px;background:linear-gradient(145deg,#1a1005,#0f0a03);border:1.5px solid rgba(232,192,80,.55);border-radius:0 16px 16px 16px;box-shadow:0 8px 40px rgba(0,0,0,.7),inset 0 1px 0 rgba(232,192,80,.15);padding:18px 20px 14px;max-width:min(380px,calc(100vw - 190px));max-height:calc(100vh - 86px);overflow-y:auto;position:relative}
 .advisor-dialog::before{content:'';position:absolute;left:-10px;top:40px;border:5px solid transparent;border-right-color:rgba(232,192,80,.55)}
 .advisor-dialog::after{content:'';position:absolute;left:-8px;top:41px;border:4px solid transparent;border-right-color:#1a1005}
 .advisor-greeting{font-family:'Noto Serif TC',serif;font-size:15px;font-weight:700;color:var(--gold);letter-spacing:2px;margin-bottom:14px;line-height:1.6}
-.advisor-btn-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.advisor-btn-grid{display:flex;flex-direction:column;gap:10px}
+.advisor-btn-group{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:9px;border:1px solid rgba(247,218,146,.34);border-radius:8px;background:rgba(255,248,220,.04);box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+.advisor-btn-spacer{min-height:38px}
 .advisor-btn{font-family:'Noto Serif TC',serif;font-size:13px;font-weight:700;color:#fff;letter-spacing:1px;background:linear-gradient(145deg,#8b6914,#6b4f0e);border:1px solid rgba(232,192,80,.45);border-radius:6px;padding:10px 8px;cursor:pointer;text-align:center;transition:background .18s,box-shadow .18s,transform .12s;box-shadow:0 2px 8px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.08);white-space:nowrap;display:flex;align-items:center;justify-content:center;gap:5px}
 .advisor-btn-tag{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:rgba(12,8,3,.42);border:1px solid rgba(232,192,80,.42);font-family:'Noto Sans TC',sans-serif;font-size:10px;font-weight:900;line-height:1;color:var(--gold);letter-spacing:0;box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
 .advisor-btn:hover{background:linear-gradient(145deg,#a07a1a,#7d5e10);box-shadow:0 4px 16px rgba(184,137,46,.35);transform:translateY(-1px)}
 .advisor-btn:active{transform:translateY(0)}
 .advisor-close{position:absolute;top:10px;right:12px;background:none;border:none;color:#5a4018;font-size:14px;cursor:pointer;transition:color .2s;line-height:1;padding:2px}
 .advisor-close:hover{color:var(--gold)}
-@media(max-width:480px){.advisor-overlay{padding:52px 0 0 8px}.advisor-img{width:clamp(104px,28vw,142px)}.advisor-dialog{margin-top:26px;max-width:calc(100vw - 136px);padding:12px 12px 10px}.advisor-btn{font-size:11px;padding:8px 4px;letter-spacing:0;gap:3px}.advisor-btn-tag{width:14px;height:14px;font-size:9px}}
+@media(max-width:480px){.advisor-overlay{padding:52px 0 0 8px}.advisor-img{width:clamp(104px,28vw,142px)}.advisor-dialog{margin-top:26px;max-width:calc(100vw - 136px);padding:12px 12px 10px}.advisor-btn-grid{gap:8px}.advisor-btn-group{gap:6px;padding:7px;border-radius:7px}.advisor-btn{font-size:11px;padding:8px 4px;letter-spacing:0;gap:3px}.advisor-btn-tag{width:14px;height:14px;font-size:9px}.advisor-btn-spacer{min-height:32px}}
 
 .military-lord{
   position:absolute;
@@ -6933,19 +6935,28 @@ initHeaderVideoPlayback();
         </div>
       </section>
       <div class="advisor-btn-grid">
-        <button class="advisor-btn" onclick="advisorGo('finance','finance-accs')"><span class="advisor-btn-tag">財</span>帳戶餘額</button>
-      <button class="advisor-btn" onclick="advisorGo('domestic','dividend-center')"><span class="advisor-btn-tag">股</span>持股備忘錄</button>
-        <button class="advisor-btn" onclick="advisorGo('council','council-holdings')"><span class="advisor-btn-tag">軍</span>軍團概覽</button>
-        <button class="advisor-btn" onclick="advisorGo('finance','div-calc')"><span class="advisor-btn-tag">財</span>配息試算</button>
-        <button class="advisor-btn" onclick="advisorGo('market','market-watch')"><span class="advisor-btn-tag">市</span>市場快報</button>
-        <button class="advisor-btn" onclick="advisorGo('market','macro-overview')"><span class="advisor-btn-tag">市</span>總經戰情</button>
-        <button class="advisor-btn" onclick="advisorGo('finance','finance-pledge')"><span class="advisor-btn-tag">財</span>質押信貸</button>
-        <button class="advisor-btn" onclick="advisorGo('council','council-roster')"><span class="advisor-btn-tag">軍</span>部隊陣容</button>
-        <button class="advisor-btn" onclick="advisorGo('council','council-task')"><span class="advisor-btn-tag">軍</span>軍師工單</button>
-        <button class="advisor-btn" onclick="advisorGo('medical','medical-quick')"><span class="advisor-btn-tag">醫</span>身體紀錄</button>
-        <button class="advisor-btn" onclick="advisorGo('medical','medical-tarot')"><span class="advisor-btn-tag">醫</span>抽牌紀錄</button>
-        <button class="advisor-btn" onclick="advisorGo('medical','medical-stats')"><span class="advisor-btn-tag">醫</span>牌卡統計</button>
-        <button class="advisor-btn" onclick="advisorGo('medical','medical-painmap')"><span class="advisor-btn-tag">醫</span>疼痛地圖</button>
+        <div class="advisor-btn-group">
+          <button class="advisor-btn" onclick="advisorGo('finance','finance-accs')"><span class="advisor-btn-tag">財</span>帳戶餘額</button>
+          <button class="advisor-btn" onclick="advisorGo('finance','div-calc')"><span class="advisor-btn-tag">財</span>配息試算</button>
+          <button class="advisor-btn" onclick="advisorGo('finance','finance-pledge')"><span class="advisor-btn-tag">財</span>質押信貸</button>
+          <span class="advisor-btn-spacer" aria-hidden="true"></span>
+        </div>
+        <div class="advisor-btn-group">
+          <button class="advisor-btn" onclick="advisorGo('council','council-roster')"><span class="advisor-btn-tag">軍</span>部隊陣容</button>
+          <button class="advisor-btn" onclick="advisorGo('council','council-holdings')"><span class="advisor-btn-tag">軍</span>軍團概覽</button>
+          <button class="advisor-btn" onclick="advisorGo('council','council-task')"><span class="advisor-btn-tag">軍</span>軍師工單</button>
+          <span class="advisor-btn-spacer" aria-hidden="true"></span>
+        </div>
+        <div class="advisor-btn-group">
+          <button class="advisor-btn" onclick="advisorGo('market','market-watch')"><span class="advisor-btn-tag">市</span>市場快報</button>
+          <button class="advisor-btn" onclick="advisorGo('market','macro-overview')"><span class="advisor-btn-tag">市</span>總經戰情</button>
+        </div>
+        <div class="advisor-btn-group">
+          <button class="advisor-btn" onclick="advisorGo('medical','medical-quick')"><span class="advisor-btn-tag">醫</span>身體記錄</button>
+          <button class="advisor-btn" onclick="advisorGo('medical','medical-tarot')"><span class="advisor-btn-tag">醫</span>抽牌記錄</button>
+          <button class="advisor-btn" onclick="advisorGo('medical','medical-stats')"><span class="advisor-btn-tag">醫</span>牌卡統計</button>
+          <button class="advisor-btn" onclick="advisorGo('medical','medical-painmap')"><span class="advisor-btn-tag">醫</span>疼痛地圖</button>
+        </div>
       </div>
     </div>
   </div>
