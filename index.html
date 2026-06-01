@@ -1351,18 +1351,6 @@ body::after{
 .nav-bottom-row{
   display:contents; /* 桌面版：子元素直接參與 top-nav 的 flex 排列 */
 }
-.nav-quick-booking{
-  width:64px;height:44px;margin-left:14px;padding:0;border:1px solid rgba(184,137,46,.28);border-radius:10px;
-  background:rgba(232,192,80,.06);cursor:pointer;display:flex;align-items:center;justify-content:center;
-  box-shadow:0 0 18px rgba(0,0,0,.22),inset 0 0 12px rgba(232,192,80,.04);
-  transition:border-color .2s,background .2s,transform .2s,filter .2s;
-}
-.nav-quick-booking:hover{
-  border-color:var(--gold3);background:rgba(232,192,80,.12);transform:translateY(-1px);filter:brightness(1.08);
-}
-.nav-quick-booking img{
-  width:58px;height:36px;object-fit:contain;display:block;filter:drop-shadow(0 0 8px rgba(232,192,80,.24));
-}
 .nav-date-row{
   display:flex;align-items:center;gap:8px;
   justify-content:flex-end;
@@ -1556,8 +1544,6 @@ body::after{
     display:flex;align-items:center;justify-content:space-between;
   }
   .top-nav-logo{gap:1px}
-  .nav-quick-booking{width:56px;height:36px;margin-left:8px;border-radius:8px}
-  .nav-quick-booking img{width:50px;height:28px}
   .nav-date-day{font-size:20px}
   .nav-date-sep{font-size:13px}
   .nav-date-ym{font-size:12px;letter-spacing:1px}
@@ -1918,11 +1904,8 @@ body::after{
 </svg>
 
 <div class="top-nav">
-  
+
   <div class="nav-bottom-row">
-    <button class="nav-quick-booking" type="button" onclick="advisorGo('domestic','booking-form')" aria-label="快速記帳">
-      <img src="Goldpack.png" alt="">
-    </button>
     <div class="top-nav-logo" id="nav-date-display">
       <div class="nav-date-row">
         <span class="nav-date-day" id="nav-day">--</span>
