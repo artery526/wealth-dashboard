@@ -685,10 +685,11 @@ body::after{
 .tarot-ta{width:100%;min-width:0;border:1px solid #2a1c08;border-radius:6px;background:rgba(10,8,4,.78);color:var(--ink);padding:9px 10px;font-family:var(--sans);font-size:13px;outline:none;resize:vertical;min-height:90px}
 .tarot-ta:focus{border-color:rgba(232,192,80,.58);box-shadow:0 0 0 2px rgba(232,192,80,.1)}
 @media(max-width:540px){.tarot-form-grid,.tarot-card-row,.tarot-oracle-row{grid-template-columns:1fr}.tarot-card-row-label{text-align:left;padding-bottom:0}.medical-card-preview{align-items:flex-start}.medical-card-name{text-align:left;max-width:100%}}
-.council-summary{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:18px}
+.council-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
 .council-stat{border:1px solid #2a1c08;border-radius:8px;background:rgba(10,8,4,.72);padding:13px 14px}
 .council-stat-l{font-family:var(--sans);font-size:11px;color:#9a7430;letter-spacing:1px;margin-bottom:6px}
 .council-stat-v{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--ink);line-height:1.18;overflow-wrap:anywhere}
+.council-stat-sub{margin-top:7px;font-family:var(--mono);font-size:13px;font-weight:800;line-height:1.35;color:var(--gold);overflow-wrap:anywhere}
 .council-stat-v.up{color:var(--teal)}.council-stat-v.down{color:var(--coral)}
 .council-stat-delta{margin-top:7px;font-family:var(--sans);font-size:12px;font-weight:800;line-height:1.45;color:#8f7441}
 .council-stat-delta.up{color:var(--teal)}.council-stat-delta.down{color:var(--coral)}.council-stat-delta.flat{color:#9a7430}
@@ -5503,8 +5504,7 @@ function renderCouncilRoster(rows,el,pantry,assetSnapshot){
   el.innerHTML=`
     ${renderCouncilPantry(pantry)}
     <div class="council-summary">
-      <div class="council-stat"><div class="council-stat-l">持有數</div><div class="council-stat-v">${holdings.length||active.length} 檔</div></div>
-      <div class="council-stat"><div class="council-stat-l">月總配息</div><div class="council-stat-v">${fmtFull(totalMonthly)}</div></div>
+      <div class="council-stat"><div class="council-stat-l">持有數</div><div class="council-stat-v">${holdings.length||active.length} 檔</div><div class="council-stat-sub">月總配息 ${fmtFull(totalMonthly)}</div></div>
       <div class="council-stat"><div class="council-stat-l">總投資成本</div><div class="council-stat-v">${fmtFull(totalCost)}</div></div>
       <div class="council-stat"><div class="council-stat-l">投資市值</div><div class="council-stat-v">${fmtFull(totalMarket)}</div>${renderCouncilMarketDelta(assetSnapshot)}</div>
       <div class="council-stat"><div class="council-stat-l">含息報酬</div><div class="council-stat-v ${totalReturn>=0?'up':'down'}">${totalReturn>=0?'+':'-'}${fmtFull(Math.abs(totalReturn))}</div></div>
