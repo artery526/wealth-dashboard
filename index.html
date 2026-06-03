@@ -1493,17 +1493,30 @@ body::after{
 .travel-mark{width:38px;height:38px;border-radius:8px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(232,192,80,.38);background:rgba(232,192,80,.1);font-size:21px}
 .travel-title-wrap{min-width:0;flex:1}
 .travel-title{font-family:var(--font);font-size:22px;font-weight:900;color:var(--gold);letter-spacing:2px;line-height:1.3}
-.travel-date{font-family:var(--mono);font-size:12px;color:#9a7430;margin-top:3px}
+.travel-head-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+.travel-map-btn{border:1px solid rgba(78,217,255,.3);border-radius:8px;background:rgba(78,217,255,.08);color:#aeefff;font-family:var(--sans);font-size:12px;font-weight:800;padding:7px 9px;cursor:pointer;transition:border-color .2s,background .2s}
+.travel-map-btn:hover{border-color:rgba(78,217,255,.62);background:rgba(78,217,255,.14)}
 .travel-close{width:34px;height:34px;border:1px solid rgba(184,137,46,.28);border-radius:8px;background:rgba(10,8,4,.6);color:#c09a50;font-family:var(--sans);font-size:18px;cursor:pointer}
 .travel-close:hover{border-color:rgba(232,192,80,.55);color:var(--gold)}
 .travel-body{padding:16px 18px 18px;overflow:auto}
 .travel-status{font-family:var(--sans);font-size:13px;line-height:1.8;color:#9a7430;text-align:center;padding:26px 8px}
+.travel-map-view{display:none;margin:0 0 14px;border:1px solid rgba(78,217,255,.28);border-radius:8px;background:rgba(5,13,16,.72);overflow:hidden}
+.travel-map-view.open{display:block}
+.travel-map-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 11px;border-bottom:1px solid rgba(78,217,255,.18)}
+.travel-map-title{font-family:var(--sans);font-size:13px;font-weight:900;color:#aeefff}
+.travel-map-close{border:0;background:transparent;color:#7bcfe0;font-family:var(--sans);font-size:14px;cursor:pointer;padding:2px 4px}
+.travel-map-img{display:block;width:100%;max-height:62vh;object-fit:contain;background:#05090b}
 .travel-card-list{display:grid;gap:12px}
 .travel-card{border:1px solid rgba(184,137,46,.34);border-radius:8px;background:rgba(10,8,4,.74);padding:13px 14px;position:relative;overflow:hidden}
 .travel-card:before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(#e8c050,#1d9e75)}
 .travel-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px}
+.travel-title-line{display:flex;align-items:center;gap:7px;flex-wrap:wrap;min-width:0}
 .travel-card-title{font-family:var(--sans);font-size:17px;font-weight:900;color:#f0dfa0;line-height:1.45;overflow-wrap:anywhere}
 .travel-card-no{font-family:var(--mono);font-size:11px;color:#6f5422;border:1px solid rgba(184,137,46,.24);border-radius:999px;padding:3px 8px;white-space:nowrap}
+.travel-card-date{font-family:var(--sans);font-size:11px;font-weight:900;color:#aeefff;border:1px solid rgba(78,217,255,.24);border-radius:999px;background:rgba(78,217,255,.08);padding:3px 8px;white-space:nowrap}
+.travel-card-actions{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.travel-hide-btn{border:1px solid rgba(216,90,48,.34);border-radius:7px;background:rgba(216,90,48,.08);color:#ef9a77;font-family:var(--sans);font-size:12px;font-weight:900;padding:5px 8px;cursor:pointer;transition:background .2s,border-color .2s}
+.travel-hide-btn:hover{background:rgba(216,90,48,.16);border-color:rgba(216,90,48,.56)}
 .travel-time{font-family:var(--mono);font-size:13px;color:var(--teal);margin-bottom:8px}
 .travel-route{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;margin:8px 0}
 .travel-point{border:1px solid rgba(184,137,46,.22);border-radius:7px;background:rgba(255,255,255,.03);padding:8px 9px;min-width:0}
@@ -1513,7 +1526,7 @@ body::after{
 .travel-meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .travel-pill{font-family:var(--sans);font-size:11px;font-weight:800;color:#c09a50;border:1px solid rgba(184,137,46,.28);border-radius:999px;background:rgba(184,137,46,.08);padding:4px 8px;overflow-wrap:anywhere}
 .travel-note{font-family:var(--sans);font-size:12px;line-height:1.7;color:#9a7430;margin-top:9px;overflow-wrap:anywhere}
-@media(max-width:560px){.travel-overlay{padding:10px;align-items:flex-end}.travel-panel{max-height:86vh;border-radius:12px 12px 0 0}.travel-head{padding:13px 14px 10px}.travel-title{font-size:19px}.travel-body{padding:13px}.travel-route{grid-template-columns:1fr}.travel-arrow{display:none}}
+@media(max-width:560px){.travel-overlay{padding:10px;align-items:flex-end}.travel-panel{max-height:86vh;border-radius:12px 12px 0 0}.travel-head{padding:13px 14px 10px;align-items:flex-start}.travel-title{font-size:19px}.travel-head-actions{justify-content:flex-start}.travel-body{padding:13px}.travel-route{grid-template-columns:1fr}.travel-arrow{display:none}.travel-card-head{flex-direction:column}.travel-card-actions{width:100%;justify-content:space-between}}
 
 @media(max-width:768px){
   .wrap{padding:76px 12px 44px}
@@ -2173,10 +2186,13 @@ body::after{
 <div class="travel-overlay" id="travel-overlay" onclick="travelOverlayClick(event)">
   <div class="travel-panel" role="dialog" aria-modal="true" aria-labelledby="travel-title">
     <div class="travel-head">
-      <div class="travel-mark">行</div>
+      <div class="travel-mark">🚆</div>
       <div class="travel-title-wrap">
-        <div class="travel-title" id="travel-title">旅途備忘</div>
-        <div class="travel-date" id="travel-date-label">--</div>
+        <div class="travel-title" id="travel-title">📖人生遠征錄</div>
+      </div>
+      <div class="travel-head-actions">
+        <button class="travel-map-btn" type="button" onclick="showTravelMap('kaohsiung')">高雄捷運圖</button>
+        <button class="travel-map-btn" type="button" onclick="showTravelMap('taipei')">台北捷運圖</button>
       </div>
       <button class="travel-close" type="button" onclick="closeTravelMemo()" aria-label="關閉旅途備忘">x</button>
     </div>
@@ -2239,6 +2255,7 @@ var COMMAND_SHEET_ID = '1MTPLhPA9j4kb2pllDDL1z7xaCD1UmIZutT0eVOHZd30';
 var COMMAND_MONTHLY_GID = '1525278727';
 var MACRO_SHEET_ID = '1BPnjwZKlBmxMkHmLDk6MSV28kfcAtQhGuZdufv5T7FY';
 var TRAVEL_MEMO_SHEET_ID = '1hGTWtPniX9J6DX6I3WX0mQwkOcVNRXwMyf7Q17MQUP0';
+var TRAVEL_MAP_GID = '652889684';
 var COMMAND_SETTING_GID = '1479341396';
 var MONTHLY_HOLDINGS_SHEET_NAME = '\u6708\u5EA6\u6230\u60C5\u5BA4';
 var MONTHLY_HOLDINGS_RANGE = 'A12:N23';
@@ -2247,6 +2264,8 @@ var ASSET_SNAPSHOT_SHEET_NAME = '\u6BCF\u65E5\u8CC7\u7522\u5FEB\u7167';
 var ASSET_SNAPSHOT_GID = '2000002006';
 var ASSET_SNAPSHOT_RANGE = 'A2:F1000';
 var travelMemoCache = null;
+var travelMapsCache = null;
+var currentTravelMemoKey = '';
 var TASK_SHEET_FALLBACK_OPTIONS = ['月度戰情室','轉帳資料庫','設定','資料庫','收入流水帳','支出流水帳','市場儀表板','配息試算','年度財報','武將資料','類型設定','帳戶基準'];
 var taskSheetOptionsCache = null;
 var advisorDraftInFlight = false;
@@ -4045,6 +4064,12 @@ function travelDateKey(value){
   if(!m)return '';
   return m[1]+'/'+String(Number(m[2])).padStart(2,'0')+'/'+String(Number(m[3])).padStart(2,'0');
 }
+function travelDateDisplay(value){
+  var s=String(value||'').trim();
+  var key=travelDateKey(s);
+  var wk=s.replace(/\s/g,'').match(/\d{4}[\/-]\d{1,2}[\/-]\d{1,2}([日一二三四五六])$/);
+  return key ? key+(wk&&wk[1]?'（'+wk[1]+'）':'') : s;
+}
 function travelDateValue(key){
   var m=String(key||'').match(/^(\d{4})\/(\d{2})\/(\d{2})$/);
   if(!m)return 0;
@@ -4070,6 +4095,7 @@ function loadTravelMemoRows(){
         cardNo:travelCell(row,1),
         date:date,
         dateKey:travelDateKey(date),
+        dateDisplay:travelDateDisplay(date),
         title:travelCell(row,3),
         start:travelCell(row,4),
         end:travelCell(row,5),
@@ -4081,7 +4107,7 @@ function loadTravelMemoRows(){
         rowIndex:index+2
       };
     }).filter(function(row){
-      return String(row.active||'').toUpperCase()!=='N'&&row.dateKey&&(row.title||row.from||row.to||row.info||row.note);
+      return String(row.active||'').toUpperCase()==='Y'&&row.dateKey&&(row.title||row.from||row.to||row.info||row.note);
     });
     rows.sort(function(a,b){
       if(a.dateKey!==b.dateKey)return travelDateValue(a.dateKey)-travelDateValue(b.dateKey);
@@ -4092,6 +4118,75 @@ function loadTravelMemoRows(){
     travelMemoCache=rows;
     return rows;
   });
+}
+function loadTravelMapLinks(){
+  if(travelMapsCache)return Promise.resolve(travelMapsCache);
+  var url='https://docs.google.com/spreadsheets/d/'+TRAVEL_MEMO_SHEET_ID+'/gviz/tq?tqx=out:csv&gid='+TRAVEL_MAP_GID;
+  return fetch(url+'&t='+Date.now()).then(function(r){
+    if(!r.ok)throw new Error('map sheet read failed');
+    return r.text();
+  }).then(function(text){
+    var rows=parseTravelCsv(text);
+    travelMapsCache={
+      kaohsiung: normalizeImageUrl(rows[0]&&rows[0][1]),
+      taipei: normalizeImageUrl(rows[1]&&rows[1][1])
+    };
+    return travelMapsCache;
+  });
+}
+function parseTravelCsv(text){
+  var rows=[],row=[],value='',inQuotes=false;
+  for(var i=0;i<String(text||'').length;i++){
+    var ch=text[i],next=text[i+1];
+    if(ch==='"'){
+      if(inQuotes&&next==='"'){value+='"';i++;}
+      else inQuotes=!inQuotes;
+    }else if(ch===','&&!inQuotes){
+      row.push(value);value='';
+    }else if((ch==='\n'||ch==='\r')&&!inQuotes){
+      if(ch==='\r'&&next==='\n')i++;
+      row.push(value);value='';
+      if(row.some(function(cell){return String(cell).trim();}))rows.push(row);
+      row=[];
+    }else{
+      value+=ch;
+    }
+  }
+  row.push(value);
+  if(row.some(function(cell){return String(cell).trim();}))rows.push(row);
+  return rows;
+}
+function travelMapViewHtml(){
+  return '<div class="travel-map-view" id="travel-map-view">'
+    +'<div class="travel-map-head"><div class="travel-map-title" id="travel-map-title">捷運地圖</div><button class="travel-map-close" type="button" onclick="hideTravelMap()">x</button></div>'
+    +'<img class="travel-map-img" id="travel-map-img" alt="捷運地圖">'
+    +'</div>';
+}
+function showTravelMap(kind){
+  var view=document.getElementById('travel-map-view');
+  var img=document.getElementById('travel-map-img');
+  var title=document.getElementById('travel-map-title');
+  if(!view||!img||!title)return;
+  view.classList.add('open');
+  title.textContent=kind==='taipei'?'台北捷運圖':'高雄捷運圖';
+  img.removeAttribute('src');
+  img.alt=title.textContent;
+  loadTravelMapLinks().then(function(maps){
+    var url=maps[kind]||'';
+    if(!url){
+      view.classList.remove('open');
+      alert('尚未讀到地圖連結');
+      return;
+    }
+    img.src=url;
+  }).catch(function(){
+    view.classList.remove('open');
+    alert('地圖讀取失敗');
+  });
+}
+function hideTravelMap(){
+  var view=document.getElementById('travel-map-view');
+  if(view)view.classList.remove('open');
 }
 function travelCardHtml(row){
   var time=[row.start,row.end].filter(Boolean).join(' - ');
@@ -4104,7 +4199,7 @@ function travelCardHtml(row){
   if(row.shift)pills+='<span class="travel-pill">班次 '+esc(row.shift)+'</span>';
   if(row.info)pills+='<span class="travel-pill">'+esc(row.info)+'</span>';
   return '<article class="travel-card">'
-    +'<div class="travel-card-head"><div class="travel-card-title">'+esc(row.title||'旅途事項')+'</div><div class="travel-card-no">#'+esc(row.cardNo||row.rowIndex)+'</div></div>'
+    +'<div class="travel-card-head"><div class="travel-title-line"><div class="travel-card-title">'+esc(row.title||'旅途事項')+'</div><div class="travel-card-date">'+esc(row.dateDisplay||row.dateKey)+'</div></div><div class="travel-card-actions"><div class="travel-card-no">#'+esc(row.cardNo||row.rowIndex)+'</div><button class="travel-hide-btn" type="button" data-travel-row-id="'+esc(row.rowIndex)+'" onclick="hideTravelMemoCard(this)">關閉</button></div></div>'
     +(time?'<div class="travel-time">'+esc(time)+'</div>':'')
     +route
     +(pills?'<div class="travel-meta">'+pills+'</div>':'')
@@ -4112,7 +4207,6 @@ function travelCardHtml(row){
     +'</article>';
 }
 function renderTravelMemo(selectedKey,rows){
-  var dateLabel=document.getElementById('travel-date-label');
   var title=document.getElementById('travel-title');
   var body=document.getElementById('travel-body');
   if(!body)return;
@@ -4127,28 +4221,47 @@ function renderTravelMemo(selectedKey,rows){
       shown=shown.filter(function(row){return row.dateKey===shownKey;});
     }
   }
-  if(title)title.textContent=exact.length?'旅途備忘':'最近旅途備忘';
-  if(dateLabel)dateLabel.textContent=shown.length?shownKey:(selectedKey||'--');
+  if(title)title.textContent='📖人生遠征錄';
   if(!shown.length){
-    body.innerHTML='<div class="travel-status">這個日期目前沒有啟用中的旅途備忘卡片。</div>';
+    body.innerHTML=travelMapViewHtml()+'<div class="travel-status">這個日期目前沒有啟用中的旅途備忘卡片。</div>';
     return;
   }
-  body.innerHTML=(exact.length?'':'<div class="travel-status" style="padding:0 0 12px">本日尚無卡片，先呈上最近一趟旅程。</div>')
+  body.innerHTML=travelMapViewHtml()
+    +(exact.length?'':'<div class="travel-status" style="padding:0 0 12px">本日尚無卡片，先呈上最近一趟旅程。</div>')
     +'<div class="travel-card-list">'+shown.map(travelCardHtml).join('')+'</div>';
 }
 function openTravelMemoForDate(value){
   var key=travelDateKey(value||new Date());
   var overlay=document.getElementById('travel-overlay');
   var body=document.getElementById('travel-body');
-  var dateLabel=document.getElementById('travel-date-label');
-  if(dateLabel)dateLabel.textContent=key||'--';
+  currentTravelMemoKey=key;
   if(body)body.innerHTML='<div class="travel-status">正在調閱旅途遠征記錄...</div>';
   if(overlay)overlay.classList.add('open');
-  loadTravelMemoRows().then(function(rows){
+  Promise.all([loadTravelMemoRows(),loadTravelMapLinks().catch(function(){return null;})]).then(function(results){
+    var rows=results[0];
     renderTravelMemo(key,rows);
   }).catch(function(err){
     if(body)body.innerHTML='<div class="travel-status">旅途遠征記錄讀取失敗：'+esc(err.message||err)+'</div>';
   });
+}
+async function hideTravelMemoCard(btn){
+  var rowId=btn&&btn.dataset?btn.dataset.travelRowId:'';
+  if(!rowId)return;
+  if(!hasMainApiCredentials()){
+    alert('請先設定 API URL 與 WRITE_TOKEN，才能寫回旅途遠征記錄。');
+    return;
+  }
+  btn.disabled=true;
+  btn.textContent='關閉中';
+  try{
+    await apiPost({action:'travelMemoHide',rowId:rowId});
+    travelMemoCache=(travelMemoCache||[]).filter(function(row){return String(row.rowIndex)!==String(rowId);});
+    renderTravelMemo(currentTravelMemoKey||travelDateKey(new Date()),travelMemoCache);
+  }catch(err){
+    btn.disabled=false;
+    btn.textContent='關閉';
+    alert('關閉失敗：'+(err.message||err));
+  }
 }
 function closeTravelMemo(){
   var overlay=document.getElementById('travel-overlay');

@@ -13,6 +13,7 @@ var ZIWEI_SPREADSHEET_ID = '1Z8cW96qqk5J7LL0mGg12GxmdZc_5elwDe4rEcGq-P-M';
 var ZIWEI_SHEET_NAME = '紫微星盤';
 var ZIWEI_HEADERS = ['啟用', '名稱', '出生年月日', '出生時辰', '性別', '雲端硬碟檔案ID', '圖片連結', '備註', '更新時間'];
 var EVENT_CHRONICLE_SHEET_NAME = '事件編年史';
+var TRAVEL_MEMO_SPREADSHEET_ID = '1hGTWtPniX9J6DX6I3WX0mQwkOcVNRXwMyf7Q17MQUP0';
 
 // ── 月度戰情室座標（核心區已由 E18:O41 搬到 A1:K24）──
 var MOON_ACCOUNT_START_ROW = 3;  // A3:D11
@@ -125,7 +126,7 @@ function doGet(e) {
     if (action === 'advisorDraft') return ok(createAdvisorDraft(p));
     if (action === 'advisorTask') return ok(writeAdvisorTask(ss, p));
     // ── 寫入路由（需要 token）──
-    if (action === 'expense' || action === 'income' || action === 'transfer' || action === 'transactionUndo' || action === 'stockTradeVoid' || action === 'divCalc' || action === 'dividendEntry' || action === 'dividendDelete' || action === 'holdingTradeEntry' || action === 'holdingTradeDelete' || action === 'macroWebhook' || action === 'verifyWriteToken') {
+    if (action === 'expense' || action === 'income' || action === 'transfer' || action === 'transactionUndo' || action === 'stockTradeVoid' || action === 'divCalc' || action === 'dividendEntry' || action === 'dividendDelete' || action === 'holdingTradeEntry' || action === 'holdingTradeDelete' || action === 'macroWebhook' || action === 'travelMemoHide' || action === 'verifyWriteToken') {
       verifyWriteToken(p);
       if (action === 'verifyWriteToken') return ok({ message: 'WRITE_TOKEN 驗證成功' });
       if (action === 'expense')  return ok(writeExpense(ss, p));
@@ -139,6 +140,7 @@ function doGet(e) {
       if (action === 'holdingTradeEntry') return ok(writeHoldingTradeEntry(ss, p));
       if (action === 'holdingTradeDelete') return ok(deleteHoldingTradeEntry(ss, p));
       if (action === 'macroWebhook') return ok(writeMacroWebhook(getExternalDbSpreadsheet_(), p));
+      if (action === 'travelMemoHide') return ok(writeTravelMemoVisibility(p));
     }
 
     return err('未知的 action: ' + action);
@@ -173,11 +175,27 @@ function doPost(e) {
     if (action === 'holdingTradeEntry') return ok(writeHoldingTradeEntry(ss, body));
     if (action === 'holdingTradeDelete') return ok(deleteHoldingTradeEntry(ss, body));
     if (action === 'macroWebhook') return ok(writeMacroWebhook(getExternalDbSpreadsheet_(), body));
+    if (action === 'travelMemoHide') return ok(writeTravelMemoVisibility(body));
 
     return err('未知的 action: ' + action);
   } catch(ex) {
     return err(ex.message);
   }
+}
+
+function writeTravelMemoVisibility(body) {
+  var rowId = parseInt(body.rowId || body.row || '', 10);
+  if (!rowId || rowId < 2) throw new Error('旅途卡片列號不正確');
+  var ss = SpreadsheetApp.openById(TRAVEL_MEMO_SPREADSHEET_ID);
+  var sheet = ss.getSheets()[0];
+  if (rowId > sheet.getLastRow()) throw new Error('旅途卡片列號超出範圍');
+  sheet.getRange(rowId, 1).setValue('N');
+  SpreadsheetApp.flush();
+  return {
+    message: '旅途卡片已關閉',
+    rowId: rowId,
+    active: 'N'
+  };
 }
 
 // ── 取得設定（類別/來源/帳戶） ────────────────────────────────
