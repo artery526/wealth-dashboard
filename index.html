@@ -1371,7 +1371,10 @@ body::after{
 .nav-date-row{
   display:flex;align-items:center;gap:8px;
   justify-content:flex-end;
+  border:1px solid transparent;border-radius:8px;padding:3px 7px;
+  cursor:pointer;transition:border-color .2s,background .2s,box-shadow .2s;
 }
+.nav-date-row:hover,.nav-date-row:focus-visible{border-color:rgba(232,192,80,.38);background:rgba(232,192,80,.06);box-shadow:0 0 16px rgba(232,192,80,.12);outline:none}
 .nav-weather-row{
   display:flex;align-items:center;gap:5px;
   justify-content:flex-end;
@@ -1472,6 +1475,45 @@ body::after{
 .lord-holding-right{text-align:right}
 .lord-holding-val{font-family:var(--mono);font-size:12px;color:var(--gold)}
 .lord-holding-sub{font-family:var(--sans);font-size:10px;color:#5a4018;margin-top:1px}
+
+.travel-overlay{
+  position:fixed;inset:0;z-index:2600;background:rgba(0,0,0,.72);
+  display:flex;align-items:flex-end;justify-content:center;
+  padding:18px;opacity:0;pointer-events:none;transition:opacity .24s;
+}
+.travel-overlay.open{opacity:1;pointer-events:auto}
+.travel-panel{
+  width:min(760px,100%);max-height:min(82vh,760px);overflow:hidden;
+  border:1px solid rgba(232,192,80,.52);border-radius:12px;
+  background:linear-gradient(160deg,#171006,#080604 68%,#120d06);
+  box-shadow:0 22px 70px rgba(0,0,0,.72),inset 0 1px 0 rgba(255,255,255,.06);
+  display:flex;flex-direction:column;
+}
+.travel-head{display:flex;align-items:center;gap:12px;padding:16px 18px 12px;border-bottom:1px solid rgba(184,137,46,.26)}
+.travel-mark{width:38px;height:38px;border-radius:8px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(232,192,80,.38);background:rgba(232,192,80,.1);font-size:21px}
+.travel-title-wrap{min-width:0;flex:1}
+.travel-title{font-family:var(--font);font-size:22px;font-weight:900;color:var(--gold);letter-spacing:2px;line-height:1.3}
+.travel-date{font-family:var(--mono);font-size:12px;color:#9a7430;margin-top:3px}
+.travel-close{width:34px;height:34px;border:1px solid rgba(184,137,46,.28);border-radius:8px;background:rgba(10,8,4,.6);color:#c09a50;font-family:var(--sans);font-size:18px;cursor:pointer}
+.travel-close:hover{border-color:rgba(232,192,80,.55);color:var(--gold)}
+.travel-body{padding:16px 18px 18px;overflow:auto}
+.travel-status{font-family:var(--sans);font-size:13px;line-height:1.8;color:#9a7430;text-align:center;padding:26px 8px}
+.travel-card-list{display:grid;gap:12px}
+.travel-card{border:1px solid rgba(184,137,46,.34);border-radius:8px;background:rgba(10,8,4,.74);padding:13px 14px;position:relative;overflow:hidden}
+.travel-card:before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(#e8c050,#1d9e75)}
+.travel-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px}
+.travel-card-title{font-family:var(--sans);font-size:17px;font-weight:900;color:#f0dfa0;line-height:1.45;overflow-wrap:anywhere}
+.travel-card-no{font-family:var(--mono);font-size:11px;color:#6f5422;border:1px solid rgba(184,137,46,.24);border-radius:999px;padding:3px 8px;white-space:nowrap}
+.travel-time{font-family:var(--mono);font-size:13px;color:var(--teal);margin-bottom:8px}
+.travel-route{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;margin:8px 0}
+.travel-point{border:1px solid rgba(184,137,46,.22);border-radius:7px;background:rgba(255,255,255,.03);padding:8px 9px;min-width:0}
+.travel-point-label{font-family:var(--sans);font-size:10px;color:#6f5422;margin-bottom:3px}
+.travel-point-value{font-family:var(--sans);font-size:13px;font-weight:800;color:#d8c18a;line-height:1.45;overflow-wrap:anywhere}
+.travel-arrow{font-family:var(--mono);color:#7a6030}
+.travel-meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.travel-pill{font-family:var(--sans);font-size:11px;font-weight:800;color:#c09a50;border:1px solid rgba(184,137,46,.28);border-radius:999px;background:rgba(184,137,46,.08);padding:4px 8px;overflow-wrap:anywhere}
+.travel-note{font-family:var(--sans);font-size:12px;line-height:1.7;color:#9a7430;margin-top:9px;overflow-wrap:anywhere}
+@media(max-width:560px){.travel-overlay{padding:10px;align-items:flex-end}.travel-panel{max-height:86vh;border-radius:12px 12px 0 0}.travel-head{padding:13px 14px 10px}.travel-title{font-size:19px}.travel-body{padding:13px}.travel-route{grid-template-columns:1fr}.travel-arrow{display:none}}
 
 @media(max-width:768px){
   .wrap{padding:76px 12px 44px}
@@ -1924,7 +1966,7 @@ body::after{
 
   <div class="nav-bottom-row">
     <div class="top-nav-logo" id="nav-date-display">
-      <div class="nav-date-row">
+      <div class="nav-date-row" role="button" tabindex="0" title="查看旅途備忘" onclick="openTravelMemoForDate(new Date())" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openTravelMemoForDate(new Date());}">
         <span class="nav-date-day" id="nav-day">--</span>
         <span class="nav-date-sep">·</span>
         <span class="nav-date-ym" id="nav-ym">----/--</span>
@@ -2128,6 +2170,22 @@ body::after{
 </div>
 
 <!-- ══ Config Modal ══ -->
+<div class="travel-overlay" id="travel-overlay" onclick="travelOverlayClick(event)">
+  <div class="travel-panel" role="dialog" aria-modal="true" aria-labelledby="travel-title">
+    <div class="travel-head">
+      <div class="travel-mark">行</div>
+      <div class="travel-title-wrap">
+        <div class="travel-title" id="travel-title">旅途備忘</div>
+        <div class="travel-date" id="travel-date-label">--</div>
+      </div>
+      <button class="travel-close" type="button" onclick="closeTravelMemo()" aria-label="關閉旅途備忘">x</button>
+    </div>
+    <div class="travel-body" id="travel-body">
+      <div class="travel-status">正在調閱旅途遠征記錄...</div>
+    </div>
+  </div>
+</div>
+
 <div class="cfg-overlay" id="cfg-overlay" onclick="cfgOverlayClick(event)">
   <div class="cfg-box" id="cfg-box">
     <div class="cfg-title">⚙ API 設定</div>
@@ -2180,6 +2238,7 @@ var currentTab = null;
 var COMMAND_SHEET_ID = '1MTPLhPA9j4kb2pllDDL1z7xaCD1UmIZutT0eVOHZd30';
 var COMMAND_MONTHLY_GID = '1525278727';
 var MACRO_SHEET_ID = '1BPnjwZKlBmxMkHmLDk6MSV28kfcAtQhGuZdufv5T7FY';
+var TRAVEL_MEMO_SHEET_ID = '1hGTWtPniX9J6DX6I3WX0mQwkOcVNRXwMyf7Q17MQUP0';
 var COMMAND_SETTING_GID = '1479341396';
 var MONTHLY_HOLDINGS_SHEET_NAME = '\u6708\u5EA6\u6230\u60C5\u5BA4';
 var MONTHLY_HOLDINGS_RANGE = 'A12:N23';
@@ -2187,6 +2246,7 @@ var COMMAND_MARKET_VALUE_RANGE = 'I2:I2';
 var ASSET_SNAPSHOT_SHEET_NAME = '\u6BCF\u65E5\u8CC7\u7522\u5FEB\u7167';
 var ASSET_SNAPSHOT_GID = '2000002006';
 var ASSET_SNAPSHOT_RANGE = 'A2:F1000';
+var travelMemoCache = null;
 var TASK_SHEET_FALLBACK_OPTIONS = ['月度戰情室','轉帳資料庫','設定','資料庫','收入流水帳','支出流水帳','市場儀表板','配息試算','年度財報','武將資料','類型設定','帳戶基準'];
 var taskSheetOptionsCache = null;
 var advisorDraftInFlight = false;
@@ -3969,6 +4029,133 @@ function stripIncomeStockNotePrefix(note){
   s=s.replace(/^股票[:：]\s*[^｜|]+[｜|]\s*/,'').trim();
   s=s.replace(/^股票[:：]\s*[^｜|]+\s*$/,'').trim();
   return s;
+}
+
+function travelCell(row,index){
+  var cell=row&&row.c&&row.c[index];
+  if(!cell)return '';
+  return String(cell.f!=null?cell.f:(cell.v!=null?cell.v:'')).trim();
+}
+function travelDateKey(value){
+  if(Object.prototype.toString.call(value)==='[object Date]'&&!isNaN(value.getTime())){
+    return value.getFullYear()+'/'+String(value.getMonth()+1).padStart(2,'0')+'/'+String(value.getDate()).padStart(2,'0');
+  }
+  var s=String(value||'').trim();
+  var m=s.match(/(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})/);
+  if(!m)return '';
+  return m[1]+'/'+String(Number(m[2])).padStart(2,'0')+'/'+String(Number(m[3])).padStart(2,'0');
+}
+function travelDateValue(key){
+  var m=String(key||'').match(/^(\d{4})\/(\d{2})\/(\d{2})$/);
+  if(!m)return 0;
+  return new Date(Number(m[1]),Number(m[2])-1,Number(m[3])).getTime();
+}
+function travelTimeSortValue(text){
+  var s=String(text||'').toUpperCase();
+  var m=s.match(/(AM|PM)?\s*(\d{1,2})[:：](\d{2})/);
+  if(!m)return 9999;
+  var h=Number(m[2]),min=Number(m[3]);
+  if(m[1]==='PM'&&h<12)h+=12;
+  if(m[1]==='AM'&&h===12)h=0;
+  return h*60+min;
+}
+function loadTravelMemoRows(){
+  if(travelMemoCache)return Promise.resolve(travelMemoCache);
+  var url='https://docs.google.com/spreadsheets/d/'+TRAVEL_MEMO_SHEET_ID+'/gviz/tq?tqx=out:json';
+  return readGvizJson(url).then(function(json){
+    var rows=(json.table.rows||[]).map(function(row,index){
+      var date=travelCell(row,2);
+      return {
+        active:travelCell(row,0),
+        cardNo:travelCell(row,1),
+        date:date,
+        dateKey:travelDateKey(date),
+        title:travelCell(row,3),
+        start:travelCell(row,4),
+        end:travelCell(row,5),
+        shift:travelCell(row,6),
+        from:travelCell(row,7),
+        to:travelCell(row,8),
+        info:travelCell(row,9),
+        note:travelCell(row,10),
+        rowIndex:index+2
+      };
+    }).filter(function(row){
+      return String(row.active||'').toUpperCase()!=='N'&&row.dateKey&&(row.title||row.from||row.to||row.info||row.note);
+    });
+    rows.sort(function(a,b){
+      if(a.dateKey!==b.dateKey)return travelDateValue(a.dateKey)-travelDateValue(b.dateKey);
+      var ta=travelTimeSortValue(a.start),tb=travelTimeSortValue(b.start);
+      if(ta!==tb)return ta-tb;
+      return Number(a.cardNo||a.rowIndex)-Number(b.cardNo||b.rowIndex);
+    });
+    travelMemoCache=rows;
+    return rows;
+  });
+}
+function travelCardHtml(row){
+  var time=[row.start,row.end].filter(Boolean).join(' - ');
+  var route=(row.from||row.to)?'<div class="travel-route">'
+    +'<div class="travel-point"><div class="travel-point-label">出發 / 住宿</div><div class="travel-point-value">'+esc(row.from||'--')+'</div></div>'
+    +'<div class="travel-arrow">-></div>'
+    +'<div class="travel-point"><div class="travel-point-label">抵達 / 地點</div><div class="travel-point-value">'+esc(row.to||'--')+'</div></div>'
+    +'</div>':'';
+  var pills='';
+  if(row.shift)pills+='<span class="travel-pill">班次 '+esc(row.shift)+'</span>';
+  if(row.info)pills+='<span class="travel-pill">'+esc(row.info)+'</span>';
+  return '<article class="travel-card">'
+    +'<div class="travel-card-head"><div class="travel-card-title">'+esc(row.title||'旅途事項')+'</div><div class="travel-card-no">#'+esc(row.cardNo||row.rowIndex)+'</div></div>'
+    +(time?'<div class="travel-time">'+esc(time)+'</div>':'')
+    +route
+    +(pills?'<div class="travel-meta">'+pills+'</div>':'')
+    +(row.note?'<div class="travel-note">'+esc(row.note)+'</div>':'')
+    +'</article>';
+}
+function renderTravelMemo(selectedKey,rows){
+  var dateLabel=document.getElementById('travel-date-label');
+  var title=document.getElementById('travel-title');
+  var body=document.getElementById('travel-body');
+  if(!body)return;
+  var exact=rows.filter(function(row){return row.dateKey===selectedKey;});
+  var shown=exact;
+  var shownKey=selectedKey;
+  if(!shown.length){
+    var todayValue=travelDateValue(selectedKey);
+    shown=rows.filter(function(row){return travelDateValue(row.dateKey)>=todayValue;});
+    if(shown.length){
+      shownKey=shown[0].dateKey;
+      shown=shown.filter(function(row){return row.dateKey===shownKey;});
+    }
+  }
+  if(title)title.textContent=exact.length?'旅途備忘':'最近旅途備忘';
+  if(dateLabel)dateLabel.textContent=shown.length?shownKey:(selectedKey||'--');
+  if(!shown.length){
+    body.innerHTML='<div class="travel-status">這個日期目前沒有啟用中的旅途備忘卡片。</div>';
+    return;
+  }
+  body.innerHTML=(exact.length?'':'<div class="travel-status" style="padding:0 0 12px">本日尚無卡片，先呈上最近一趟旅程。</div>')
+    +'<div class="travel-card-list">'+shown.map(travelCardHtml).join('')+'</div>';
+}
+function openTravelMemoForDate(value){
+  var key=travelDateKey(value||new Date());
+  var overlay=document.getElementById('travel-overlay');
+  var body=document.getElementById('travel-body');
+  var dateLabel=document.getElementById('travel-date-label');
+  if(dateLabel)dateLabel.textContent=key||'--';
+  if(body)body.innerHTML='<div class="travel-status">正在調閱旅途遠征記錄...</div>';
+  if(overlay)overlay.classList.add('open');
+  loadTravelMemoRows().then(function(rows){
+    renderTravelMemo(key,rows);
+  }).catch(function(err){
+    if(body)body.innerHTML='<div class="travel-status">旅途遠征記錄讀取失敗：'+esc(err.message||err)+'</div>';
+  });
+}
+function closeTravelMemo(){
+  var overlay=document.getElementById('travel-overlay');
+  if(overlay)overlay.classList.remove('open');
+}
+function travelOverlayClick(e){
+  if(e.target===document.getElementById('travel-overlay'))closeTravelMemo();
 }
 
 function formatIncomeStockNote(symbol,note){
