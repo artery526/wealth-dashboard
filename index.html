@@ -1509,8 +1509,8 @@ body::after{
 .travel-map-zoom:hover{border-color:rgba(78,217,255,.58);background:rgba(78,217,255,.14)}
 .travel-map-scale{font-family:var(--mono);font-size:11px;color:#7bcfe0;min-width:42px;text-align:center}
 .travel-map-close{border:0;background:transparent;color:#7bcfe0;font-family:var(--sans);font-size:14px;cursor:pointer;padding:2px 4px}
-.travel-map-scroll{max-height:62vh;overflow:auto;background:#05090b;text-align:center}
-.travel-map-img{display:block;width:100%;max-width:none;height:auto;margin:0 auto;background:#05090b}
+.travel-map-scroll{max-height:62vh;overflow:auto;background:#05090b;text-align:left}
+.travel-map-img{display:block;width:100%;max-width:none;height:auto;margin:0;background:#05090b;transform-origin:top left}
 .travel-map-frame{display:block;width:100%;min-width:100%;height:62vh;border:0;background:#05090b;margin:0 auto}
 .travel-card-list{display:grid;gap:12px}
 .travel-card{border:1px solid rgba(184,137,46,.34);border-radius:8px;background:rgba(10,8,4,.74);padding:13px 14px;position:relative;overflow:hidden}
@@ -4287,6 +4287,7 @@ function zoomTravelMap(delta){
 }
 function resetTravelMapZoom(){
   setTravelMapZoom(1);
+  resetTravelMapScroll();
 }
 function travelMapWheel(event){
   if(!event)return;
@@ -4308,6 +4309,7 @@ function showTravelMap(kind){
   img.alt=title.textContent;
   frame.title=title.textContent;
   setTravelMapZoom(1);
+  resetTravelMapScroll();
   loadTravelMapLinks().then(function(maps){
     var map=maps[kind]||{};
     if(!map.url){
@@ -4326,6 +4328,13 @@ function showTravelMap(kind){
     view.classList.remove('open');
     alert('地圖讀取失敗');
   });
+}
+function resetTravelMapScroll(){
+  var scroll=document.getElementById('travel-map-scroll');
+  if(scroll){
+    scroll.scrollLeft=0;
+    scroll.scrollTop=0;
+  }
 }
 function hideTravelMap(){
   var view=document.getElementById('travel-map-view');
