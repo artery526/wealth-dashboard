@@ -7059,6 +7059,13 @@ initHeaderVideoPlayback();
           </div>
         </section>
         <section class="advisor-menu-section">
+          <button class="advisor-menu-toggle" type="button" onclick="toggleAdvisorMenuGroup(this)" aria-expanded="false"><span class="advisor-menu-mark">卷</span>司天監<span class="advisor-menu-caret">▼</span></button>
+          <div class="advisor-btn-group">
+          <button class="advisor-btn" onclick="advisorGo('stars','stars-home')"><span class="advisor-btn-tag">卷</span>命盤總覽</button>
+          <button class="advisor-btn" onclick="advisorGo('stars','stars-chronicle')"><span class="advisor-btn-tag">卷</span>事件編年史</button>
+          </div>
+        </section>
+        <section class="advisor-menu-section">
           <button class="advisor-menu-toggle" type="button" onclick="toggleAdvisorMenuGroup(this)" aria-expanded="false"><span class="advisor-menu-mark">醫</span>醫館<span class="advisor-menu-caret">▼</span></button>
           <div class="advisor-btn-group">
           <button class="advisor-btn" onclick="advisorGo('medical','medical-quick')"><span class="advisor-btn-tag">醫</span>身體記錄</button>
