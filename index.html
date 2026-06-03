@@ -1241,7 +1241,19 @@ body::after{
 .ziwei-stage{flex:1;min-height:320px;overflow:auto;display:flex;align-items:flex-start;justify-content:center;padding:16px;background:radial-gradient(circle at 50% 18%,rgba(184,137,46,.10),transparent 38%),#050403}
 .ziwei-img{max-width:none;width:min(100%,980px);height:auto;display:block;border:1px solid rgba(232,192,80,.22);border-radius:6px;box-shadow:0 10px 38px rgba(0,0,0,.55);transform-origin:top center}
 .ziwei-note{border-top:1px solid #1e1408;padding:10px 14px;font-family:var(--sans);font-size:12px;color:#8a6a30;line-height:1.7;white-space:pre-wrap}
-@media(max-width:760px){.ziwei-overview{grid-template-columns:1fr}.ziwei-sidebar{border-right:0;border-bottom:1px solid rgba(232,192,80,.62)}.ziwei-main:before{border-left:0;border-top:1px solid rgba(78,217,255,.75)}.ziwei-list{max-height:220px}.ziwei-viewer-head{flex-direction:column}.ziwei-tools{justify-content:flex-start}.ziwei-stage{min-height:260px;padding:10px}}
+.chronicle-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 12px}
+.chronicle-search{width:min(320px,100%);background:#0a0804;border:1px solid #2a1c08;border-radius:6px;color:var(--ink);font-family:var(--sans);font-size:12px;padding:8px 10px;outline:none}
+.chronicle-search:focus{border-color:rgba(232,192,80,.55)}
+.chronicle-count{font-family:var(--mono);font-size:11px;color:#8a6a30;white-space:nowrap}
+.chronicle-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.chronicle-card{border:1px solid rgba(184,137,46,.32);border-radius:8px;background:rgba(10,8,4,.76);padding:12px;min-width:0}
+.chronicle-name{font-family:var(--sans);font-size:15px;font-weight:900;color:var(--gold);line-height:1.45;margin-bottom:8px;overflow-wrap:anywhere}
+.chronicle-meta{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.chronicle-pill{border:1px solid rgba(184,137,46,.28);border-radius:999px;background:rgba(184,137,46,.10);color:#c09a50;font-family:var(--sans);font-size:11px;font-weight:800;padding:4px 8px}
+.chronicle-cost{border-top:1px solid #1e1408;padding-top:9px}
+.chronicle-cost-label{font-family:var(--sans);font-size:10px;color:#5a4018;letter-spacing:1px;margin-bottom:3px}
+.chronicle-cost-value{font-family:var(--mono);font-size:20px;font-weight:800;color:#e7f9ff;text-shadow:0 0 10px rgba(78,217,255,.3);line-height:1.25;overflow-wrap:anywhere}
+@media(max-width:760px){.ziwei-overview{grid-template-columns:1fr}.ziwei-sidebar{border-right:0;border-bottom:1px solid rgba(232,192,80,.62)}.ziwei-main:before{border-left:0;border-top:1px solid rgba(78,217,255,.75)}.ziwei-list{max-height:220px}.ziwei-viewer-head{flex-direction:column}.ziwei-tools{justify-content:flex-start}.ziwei-stage{min-height:260px;padding:10px}.chronicle-toolbar{align-items:stretch;flex-direction:column}.chronicle-search{width:100%}.chronicle-count{white-space:normal}}
 @media(max-width:540px){.market-command{grid-template-columns:1fr}.market-counts{justify-content:flex-start}.market-metrics{grid-template-columns:1fr 1fr}.macro-actions,.macro-grid{grid-template-columns:1fr}.macro-scenario{font-size:24px}}
 @media(max-width:640px){.battle-report-grid{grid-template-columns:1fr}.battle-report-head{flex-direction:column}.battle-report-refresh{width:100%}}
 
@@ -2189,6 +2201,7 @@ var ziweiChartsCache = [];
 var ziweiSelectedId = '';
 var ziweiZoom = 1;
 var ziweiBirthVisible = false;
+var eventChronicleCache = [];
 
 var DEFAULT_MEDICAL_OPTIONS = {
   emotions: ['😎開心','🤔思考疑惑','🤕頭痛','😴想睡疲累','🥲難過','😡生氣','😮‍💨無奈','🫶感恩','😁豁然開朗'],
@@ -2560,11 +2573,12 @@ function switchTab(btn,key){
   else if(key==='medical-tarot')initMedicalTarotForm();
   else if(key==='medical-stats')initMedicalCardStats();
   else if(key==='medical-painmap')initMedicalPainMap();
+  else if(key==='stars-chronicle')loadEventChronicle();
 }
 
 function renderStarsPanel(){
   setPanelHead('★','Zi Wei · Star Chart','司天監');
-  setTabs([{key:'stars-home',label:'命盤總覽'}]);
+  setTabs([{key:'stars-home',label:'命盤總覽'},{key:'stars-chronicle',label:'事件編年史'}]);
   document.getElementById('p-body').innerHTML=`
     <div class="pane active" id="pane-stars-home">
       <div class="api-bar" onclick="openCfg()">
@@ -2573,6 +2587,14 @@ function renderStarsPanel(){
         <span class="api-action">⚙ 設定</span>
       </div>
       <div id="ziwei-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:78%"></div></div>
+    </div>
+    <div class="pane" id="pane-stars-chronicle">
+      <div class="api-bar" onclick="openCfg()">
+        <div class="api-dot ${API_URL?'ok':'err'}" id="chronicle-dot"></div>
+        <span class="api-label" id="chronicle-label">${API_URL?'讀取事件編年史…':'尚未設定 API'}</span>
+        <span class="api-action">⚙ 設定</span>
+      </div>
+      <div id="chronicle-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:72%"></div></div>
     </div>`;
   if(API_URL)loadZiweiCharts();
   else document.getElementById('ziwei-content').innerHTML=setupNotice();
@@ -2595,6 +2617,78 @@ async function loadZiweiCharts(){
     if(label)label.textContent='讀取失敗';
     content.innerHTML='<div class="battle-empty" style="color:var(--coral)">讀取紫微星盤失敗：'+esc(e.message)+'</div>';
   }
+}
+
+async function loadEventChronicle(){
+  var content=document.getElementById('chronicle-content');
+  var label=document.getElementById('chronicle-label');
+  var dot=document.getElementById('chronicle-dot');
+  if(!content)return;
+  if(!API_URL){
+    content.innerHTML=setupNotice();
+    if(dot)dot.className='api-dot err';
+    if(label)label.textContent='尚未設定 API';
+    return;
+  }
+  try{
+    content.innerHTML='<div class="skel-line skel"></div><div class="skel-line skel" style="width:72%"></div><div class="skel-line skel" style="width:54%"></div>';
+    var data=await apiGet({action:'eventChronicle'});
+    eventChronicleCache=data.rows||[];
+    if(dot)dot.className='api-dot ok';
+    if(label)label.textContent='已連線 · '+eventChronicleCache.length+' 筆事件';
+    renderEventChronicle();
+  }catch(e){
+    if(dot)dot.className='api-dot err';
+    if(label)label.textContent='讀取失敗';
+    content.innerHTML='<div class="battle-empty" style="color:var(--coral)">讀取事件編年史失敗：'+esc(e.message)+'</div>';
+  }
+}
+
+function renderEventChronicle(){
+  var content=document.getElementById('chronicle-content');
+  if(!content)return;
+  if(!eventChronicleCache.length){
+    content.innerHTML='<div class="battle-empty">事件編年史目前沒有資料。請先在試算表填入項目名稱、經歷日數、經歷月數與每日花費。</div>';
+    return;
+  }
+  content.innerHTML=`
+    <div class="chronicle-toolbar">
+      <input class="chronicle-search" id="chronicle-search" type="search" placeholder="搜尋項目" oninput="renderEventChronicleList()">
+      <div class="chronicle-count" id="chronicle-count"></div>
+    </div>
+    <div class="chronicle-list" id="chronicle-list"></div>`;
+  renderEventChronicleList();
+}
+
+function renderEventChronicleList(){
+  var list=document.getElementById('chronicle-list');
+  var count=document.getElementById('chronicle-count');
+  if(!list)return;
+  var q=String((document.getElementById('chronicle-search')||{}).value||'').trim().toLowerCase();
+  var rows=eventChronicleCache.filter(function(row){
+    return !q||String(row.name||'').toLowerCase().indexOf(q)>=0;
+  });
+  if(count)count.textContent=rows.length+' / '+eventChronicleCache.length+' 筆';
+  if(!rows.length){
+    list.innerHTML='<div class="battle-empty">查無符合的事件</div>';
+    return;
+  }
+  list.innerHTML=rows.map(function(row){
+    var months=String(row.months||'').trim()||'--';
+    var days=String(row.days||'').trim()||'--';
+    var dailyCost=String(row.dailyCost||'').trim()||'--';
+    return `<div class="chronicle-card">
+      <div class="chronicle-name">${esc(row.name||'未命名')}</div>
+      <div class="chronicle-meta">
+        <span class="chronicle-pill">經歷 ${esc(months)} 月</span>
+        <span class="chronicle-pill">${esc(days)} 日</span>
+      </div>
+      <div class="chronicle-cost">
+        <div class="chronicle-cost-label">每日花費</div>
+        <div class="chronicle-cost-value">${esc(dailyCost)}</div>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 function renderZiweiLayout(){
