@@ -1531,7 +1531,22 @@ body::after{
 .travel-meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .travel-pill{font-family:var(--sans);font-size:11px;font-weight:800;color:#c09a50;border:1px solid rgba(184,137,46,.28);border-radius:999px;background:rgba(184,137,46,.08);padding:4px 8px;overflow-wrap:anywhere}
 .travel-note{font-family:var(--sans);font-size:12px;line-height:1.7;color:#9a7430;margin-top:9px;overflow-wrap:anywhere}
-@media(max-width:560px){.travel-overlay{padding:10px;align-items:flex-end}.travel-panel{max-height:86vh;border-radius:12px 12px 0 0}.travel-head{padding:13px 14px 10px;align-items:flex-start}.travel-title{font-size:19px}.travel-head-actions{justify-content:flex-start}.travel-body{padding:13px}.travel-route{grid-template-columns:1fr}.travel-arrow{display:none}.travel-card-head{flex-direction:column}.travel-card-actions{width:100%;justify-content:space-between}}
+.travel-add-card{margin-top:14px;border:1px solid rgba(29,158,117,.28);border-radius:8px;background:rgba(4,18,14,.56);padding:13px}
+.travel-add-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.travel-add-title{font-family:var(--sans);font-size:15px;font-weight:900;color:#a8f1d6;letter-spacing:1px}
+.travel-add-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.travel-add-field.wide{grid-column:1/-1}
+.travel-add-field label{display:block;margin-bottom:5px;font-family:var(--sans);font-size:11px;font-weight:900;color:#8fd0b8}
+.travel-add-input,.travel-add-select{width:100%;min-height:38px;border:1px solid rgba(184,137,46,.28);border-radius:7px;background:#0a0804;color:#eadcae;font-family:var(--sans);font-size:13px;padding:8px 10px;outline:none}
+.travel-add-input:focus,.travel-add-select:focus{border-color:rgba(232,192,80,.58);box-shadow:0 0 0 2px rgba(232,192,80,.1)}
+.travel-time-pair{display:grid;grid-template-columns:76px minmax(0,1fr);gap:7px}
+.travel-add-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px}
+.travel-add-submit{border:1px solid rgba(29,158,117,.58);border-radius:8px;background:rgba(29,158,117,.16);color:#a8f1d6;font-family:var(--sans);font-size:13px;font-weight:900;padding:9px 12px;cursor:pointer}
+.travel-add-submit:hover{background:rgba(29,158,117,.24)}
+.travel-add-submit:disabled{opacity:.58;cursor:wait}
+.travel-add-msg{font-family:var(--sans);font-size:12px;color:#9a7430;min-height:18px}
+.travel-add-msg.ok{color:#8fd0b8}.travel-add-msg.err{color:#ef9a77}
+@media(max-width:560px){.travel-overlay{padding:10px;align-items:flex-end}.travel-panel{max-height:86vh;border-radius:12px 12px 0 0}.travel-head{padding:13px 14px 10px;align-items:flex-start}.travel-title{font-size:19px}.travel-head-actions{justify-content:flex-start}.travel-body{padding:13px}.travel-route{grid-template-columns:1fr}.travel-arrow{display:none}.travel-card-head{flex-direction:column}.travel-card-actions{width:100%;justify-content:space-between}.travel-add-grid{grid-template-columns:1fr}.travel-time-pair{grid-template-columns:72px minmax(0,1fr)}}
 
 @media(max-width:768px){
   .wrap{padding:76px 12px 44px}
@@ -2261,6 +2276,7 @@ var COMMAND_MONTHLY_GID = '1525278727';
 var MACRO_SHEET_ID = '1BPnjwZKlBmxMkHmLDk6MSV28kfcAtQhGuZdufv5T7FY';
 var TRAVEL_MEMO_SHEET_ID = '1hGTWtPniX9J6DX6I3WX0mQwkOcVNRXwMyf7Q17MQUP0';
 var TRAVEL_MAP_GID = '652889684';
+var TRAVEL_SET_GID = '340830404';
 var COMMAND_SETTING_GID = '1479341396';
 var MONTHLY_HOLDINGS_SHEET_NAME = '\u6708\u5EA6\u6230\u60C5\u5BA4';
 var MONTHLY_HOLDINGS_RANGE = 'A12:N23';
@@ -2270,6 +2286,7 @@ var ASSET_SNAPSHOT_GID = '2000002006';
 var ASSET_SNAPSHOT_RANGE = 'A2:F1000';
 var travelMemoCache = null;
 var travelMapsCache = null;
+var travelMemoOptionsCache = null;
 var currentTravelMemoKey = '';
 var travelMapZoom = 1;
 var TASK_SHEET_FALLBACK_OPTIONS = ['月度戰情室','轉帳資料庫','設定','資料庫','收入流水帳','支出流水帳','市場儀表板','配息試算','年度財報','武將資料','類型設定','帳戶基準'];
@@ -4140,6 +4157,19 @@ function loadTravelMapLinks(){
     return travelMapsCache;
   });
 }
+function loadTravelMemoOptions(){
+  if(travelMemoOptionsCache)return Promise.resolve(travelMemoOptionsCache);
+  var url='https://docs.google.com/spreadsheets/d/'+TRAVEL_MEMO_SHEET_ID+'/gviz/tq?tqx=out:csv&gid='+TRAVEL_SET_GID;
+  return fetch(url+'&t='+Date.now()).then(function(r){
+    if(!r.ok)throw new Error('option sheet read failed');
+    return r.text();
+  }).then(function(text){
+    var rows=parseTravelCsv(text);
+    travelMemoOptionsCache=rows.map(function(row){return String(row&&row[0]||'').trim();})
+      .filter(function(value,index){return value&&index>0;});
+    return travelMemoOptionsCache;
+  });
+}
 function parseTravelCsv(text){
   var rows=[],row=[],value='',inQuotes=false;
   for(var i=0;i<String(text||'').length;i++){
@@ -4161,6 +4191,58 @@ function parseTravelCsv(text){
   row.push(value);
   if(row.some(function(cell){return String(cell).trim();}))rows.push(row);
   return rows;
+}
+function travelAddFormHtml(){
+  return '<form class="travel-add-card" id="travel-add-form" onsubmit="submitTravelMemoCard(event)">'
+    +'<div class="travel-add-head"><div class="travel-add-title">加入卡片</div></div>'
+    +'<div class="travel-add-grid">'
+    +'<div class="travel-add-field"><label>日期</label><input class="travel-add-input" id="travel-add-date" type="date" required></div>'
+    +'<div class="travel-add-field"><label>注意事項</label><select class="travel-add-select" id="travel-add-title" required><option value="">讀取選項中...</option></select></div>'
+    +'<div class="travel-add-field"><label>開始時間</label><div class="travel-time-pair"><select class="travel-add-select" id="travel-start-period"><option>AM</option><option>PM</option></select><input class="travel-add-input" id="travel-start-time" type="time" required></div></div>'
+    +'<div class="travel-add-field"><label>結束時間</label><div class="travel-time-pair"><select class="travel-add-select" id="travel-end-period"><option>AM</option><option>PM</option></select><input class="travel-add-input" id="travel-end-time" type="time" required></div></div>'
+    +'<div class="travel-add-field"><label>上車/下車站名/住宿地點</label><input class="travel-add-input" id="travel-add-from" type="text" required></div>'
+    +'<div class="travel-add-field"><label>上車/下車站名/住宿地點</label><input class="travel-add-input" id="travel-add-to" type="text" required></div>'
+    +'<div class="travel-add-field"><label>班次/住宿鄰近交通</label><input class="travel-add-input" id="travel-add-shift" type="text" required></div>'
+    +'<div class="travel-add-field"><label>交通/地址資訊</label><input class="travel-add-input" id="travel-add-info" type="text"></div>'
+    +'<div class="travel-add-field wide"><label>備註</label><input class="travel-add-input" id="travel-add-note" type="text"></div>'
+    +'</div>'
+    +'<div class="travel-add-actions"><button class="travel-add-submit" id="travel-add-submit" type="submit">加入卡片</button><div class="travel-add-msg" id="travel-add-msg"></div></div>'
+    +'</form>';
+}
+function setTravelAddMsg(text,type){
+  var msg=document.getElementById('travel-add-msg');
+  if(!msg)return;
+  msg.textContent=text||'';
+  msg.className='travel-add-msg '+(type||'');
+}
+function initTravelAddForm(){
+  var dateEl=document.getElementById('travel-add-date');
+  if(dateEl&&!dateEl.value)dateEl.value=today();
+  var select=document.getElementById('travel-add-title');
+  if(!select)return;
+  loadTravelMemoOptions().then(function(options){
+    select.innerHTML='<option value="">請選擇</option>'+options.map(function(opt){
+      return '<option value="'+esc(opt)+'">'+esc(opt)+'</option>';
+    }).join('');
+  }).catch(function(){
+    select.innerHTML='<option value="">選項讀取失敗</option>';
+  });
+}
+function travelSheetDate(value){
+  var parts=String(value||'').split('-');
+  if(parts.length!==3)return '';
+  var d=new Date(Number(parts[0]),Number(parts[1])-1,Number(parts[2]));
+  var weeks=['日','一','二','三','四','五','六'];
+  return parts[0]+'/'+parts[1]+'/'+parts[2]+weeks[d.getDay()];
+}
+function travelSheetTime(period,timeValue){
+  if(!timeValue)return '';
+  var parts=String(timeValue).split(':');
+  var h=Number(parts[0]),m=parts[1]||'00';
+  if(!Number.isFinite(h))return '';
+  h=h%12;
+  if(h===0)h=12;
+  return String(period||'AM').toUpperCase()+String(h).padStart(2,'0')+':'+m;
 }
 function travelMapViewHtml(){
   return '<div class="travel-map-view" id="travel-map-view">'
@@ -4253,12 +4335,15 @@ function renderTravelMemo(selectedKey,rows){
   }
   if(title)title.textContent='📖人生遠征錄';
   if(!shown.length){
-    body.innerHTML=travelMapViewHtml()+'<div class="travel-status">這個日期目前沒有啟用中的旅途備忘卡片。</div>';
+    body.innerHTML=travelMapViewHtml()+'<div class="travel-status">這個日期目前沒有啟用中的旅途備忘卡片。</div>'+travelAddFormHtml();
+    initTravelAddForm();
     return;
   }
   body.innerHTML=travelMapViewHtml()
     +(exact.length?'':'<div class="travel-status" style="padding:0 0 12px">本日尚無卡片，先呈上最近一趟旅程。</div>')
-    +'<div class="travel-card-list">'+shown.map(travelCardHtml).join('')+'</div>';
+    +'<div class="travel-card-list">'+shown.map(travelCardHtml).join('')+'</div>'
+    +travelAddFormHtml();
+  initTravelAddForm();
 }
 function openTravelMemoForDate(value){
   var key=travelDateKey(value||new Date());
@@ -4291,6 +4376,42 @@ async function hideTravelMemoCard(btn){
     btn.disabled=false;
     btn.textContent='關閉';
     alert('關閉失敗：'+(err.message||err));
+  }
+}
+async function submitTravelMemoCard(event){
+  if(event&&event.preventDefault)event.preventDefault();
+  if(!hasMainApiCredentials()){
+    setTravelAddMsg('請先設定 API URL 與 WRITE_TOKEN，才能寫入旅途遠征記錄。','err');
+    return;
+  }
+  var submit=document.getElementById('travel-add-submit');
+  var payload={
+    action:'travelMemoAdd',
+    date:travelSheetDate((document.getElementById('travel-add-date')||{}).value),
+    title:(document.getElementById('travel-add-title')||{}).value||'',
+    start:travelSheetTime((document.getElementById('travel-start-period')||{}).value,(document.getElementById('travel-start-time')||{}).value),
+    end:travelSheetTime((document.getElementById('travel-end-period')||{}).value,(document.getElementById('travel-end-time')||{}).value),
+    from:(document.getElementById('travel-add-from')||{}).value||'',
+    to:(document.getElementById('travel-add-to')||{}).value||'',
+    shift:(document.getElementById('travel-add-shift')||{}).value||'',
+    info:(document.getElementById('travel-add-info')||{}).value||'',
+    note:(document.getElementById('travel-add-note')||{}).value||''
+  };
+  if(!payload.date||!payload.title||!payload.start||!payload.end||!payload.from||!payload.to||!payload.shift){
+    setTravelAddMsg('請填寫日期、注意事項、時間、站名/地點與班次/鄰近交通。','err');
+    return;
+  }
+  if(submit)submit.disabled=true;
+  setTravelAddMsg('寫入中...','');
+  try{
+    await apiPost(payload);
+    travelMemoCache=null;
+    var rows=await loadTravelMemoRows();
+    renderTravelMemo(currentTravelMemoKey||travelDateKey(new Date()),rows);
+    setTravelAddMsg('已加入卡片。','ok');
+  }catch(err){
+    if(submit)submit.disabled=false;
+    setTravelAddMsg('加入失敗：'+(err.message||err),'err');
   }
 }
 function closeTravelMemo(){

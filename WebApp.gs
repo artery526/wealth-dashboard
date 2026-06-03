@@ -126,7 +126,7 @@ function doGet(e) {
     if (action === 'advisorDraft') return ok(createAdvisorDraft(p));
     if (action === 'advisorTask') return ok(writeAdvisorTask(ss, p));
     // ── 寫入路由（需要 token）──
-    if (action === 'expense' || action === 'income' || action === 'transfer' || action === 'transactionUndo' || action === 'stockTradeVoid' || action === 'divCalc' || action === 'dividendEntry' || action === 'dividendDelete' || action === 'holdingTradeEntry' || action === 'holdingTradeDelete' || action === 'macroWebhook' || action === 'travelMemoHide' || action === 'verifyWriteToken') {
+    if (action === 'expense' || action === 'income' || action === 'transfer' || action === 'transactionUndo' || action === 'stockTradeVoid' || action === 'divCalc' || action === 'dividendEntry' || action === 'dividendDelete' || action === 'holdingTradeEntry' || action === 'holdingTradeDelete' || action === 'macroWebhook' || action === 'travelMemoHide' || action === 'travelMemoAdd' || action === 'verifyWriteToken') {
       verifyWriteToken(p);
       if (action === 'verifyWriteToken') return ok({ message: 'WRITE_TOKEN 驗證成功' });
       if (action === 'expense')  return ok(writeExpense(ss, p));
@@ -141,6 +141,7 @@ function doGet(e) {
       if (action === 'holdingTradeDelete') return ok(deleteHoldingTradeEntry(ss, p));
       if (action === 'macroWebhook') return ok(writeMacroWebhook(getExternalDbSpreadsheet_(), p));
       if (action === 'travelMemoHide') return ok(writeTravelMemoVisibility(p));
+      if (action === 'travelMemoAdd') return ok(writeTravelMemoCard(p));
     }
 
     return err('未知的 action: ' + action);
@@ -176,6 +177,7 @@ function doPost(e) {
     if (action === 'holdingTradeDelete') return ok(deleteHoldingTradeEntry(ss, body));
     if (action === 'macroWebhook') return ok(writeMacroWebhook(getExternalDbSpreadsheet_(), body));
     if (action === 'travelMemoHide') return ok(writeTravelMemoVisibility(body));
+    if (action === 'travelMemoAdd') return ok(writeTravelMemoCard(body));
 
     return err('未知的 action: ' + action);
   } catch(ex) {
@@ -187,7 +189,7 @@ function writeTravelMemoVisibility(body) {
   var rowId = parseInt(body.rowId || body.row || '', 10);
   if (!rowId || rowId < 2) throw new Error('旅途卡片列號不正確');
   var ss = SpreadsheetApp.openById(TRAVEL_MEMO_SPREADSHEET_ID);
-  var sheet = ss.getSheets()[0];
+  var sheet = ss.getSheetByName('Plan') || ss.getSheets()[0];
   if (rowId > sheet.getLastRow()) throw new Error('旅途卡片列號超出範圍');
   sheet.getRange(rowId, 1).setValue('N');
   SpreadsheetApp.flush();
@@ -195,6 +197,48 @@ function writeTravelMemoVisibility(body) {
     message: '旅途卡片已關閉',
     rowId: rowId,
     active: 'N'
+  };
+}
+
+function writeTravelMemoCard(body) {
+  var date = String(body.date || '').trim();
+  var title = String(body.title || '').trim();
+  var start = String(body.start || '').trim();
+  var end = String(body.end || '').trim();
+  var from = String(body.from || '').trim();
+  var to = String(body.to || '').trim();
+  var shift = String(body.shift || '').trim();
+  var info = String(body.info || '').trim();
+  var note = String(body.note || '').trim();
+  if (!date) throw new Error('日期必填');
+  if (!title) throw new Error('注意事項必填');
+  if (!start) throw new Error('開始時間必填');
+  if (!end) throw new Error('結束時間必填');
+  if (!from) throw new Error('第一個站名/地點必填');
+  if (!to) throw new Error('第二個站名/地點必填');
+  if (!shift) throw new Error('班次/住宿鄰近交通必填');
+  var ss = SpreadsheetApp.openById(TRAVEL_MEMO_SPREADSHEET_ID);
+  var sheet = ss.getSheetByName('Plan') || ss.getSheets()[0];
+  var lastRow = sheet.getLastRow();
+  var nextCardNo = 1;
+  if (lastRow >= 2) {
+    var values = sheet.getRange(2, 2, lastRow - 1, 1).getValues();
+    values.forEach(function(row) {
+      var n = parseInt(row[0], 10);
+      if (n >= nextCardNo) nextCardNo = n + 1;
+    });
+  }
+  var targetRow = lastRow + 1;
+  sheet.getRange(targetRow, 1, 1, 11).setValues([[
+    'Y', nextCardNo, date, title, start, end, shift, from, to, info, note
+  ]]);
+  sheet.getRange(targetRow, 1, 1, 11).setNumberFormat('@');
+  SpreadsheetApp.flush();
+  return {
+    message: '旅途卡片已加入',
+    rowId: targetRow,
+    cardNo: nextCardNo,
+    active: 'Y'
   };
 }
 
