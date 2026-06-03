@@ -4216,8 +4216,8 @@ function travelAddFormHtml(){
     +'<div class="travel-add-grid">'
     +'<div class="travel-add-field"><label>日期</label><input class="travel-add-input" id="travel-add-date" type="date" required></div>'
     +'<div class="travel-add-field"><label>注意事項</label><select class="travel-add-select" id="travel-add-title" required><option value="">讀取選項中...</option></select></div>'
-    +'<div class="travel-add-field"><label>開始時間</label><div class="travel-time-pair"><select class="travel-add-select" id="travel-start-period"><option>AM</option><option>PM</option></select><input class="travel-add-input" id="travel-start-time" type="time" required></div></div>'
-    +'<div class="travel-add-field"><label>結束時間</label><div class="travel-time-pair"><select class="travel-add-select" id="travel-end-period"><option>AM</option><option>PM</option></select><input class="travel-add-input" id="travel-end-time" type="time" required></div></div>'
+    +'<div class="travel-add-field"><label>開始時間</label><div class="travel-time-pair"><select class="travel-add-select" id="travel-start-period"><option>AM</option><option>PM</option></select><input class="travel-add-input" id="travel-start-time" type="time" step="60" required></div></div>'
+    +'<div class="travel-add-field"><label>結束時間</label><div class="travel-time-pair"><select class="travel-add-select" id="travel-end-period"><option>AM</option><option>PM</option></select><input class="travel-add-input" id="travel-end-time" type="time" step="60" required></div></div>'
     +'<div class="travel-add-field"><label>上車/下車站名/住宿地點</label><input class="travel-add-input" id="travel-add-from" type="text" required></div>'
     +'<div class="travel-add-field"><label>上車/下車站名/住宿地點</label><input class="travel-add-input" id="travel-add-to" type="text" required></div>'
     +'<div class="travel-add-field"><label>班次/住宿鄰近交通</label><input class="travel-add-input" id="travel-add-shift" type="text" required></div>'
@@ -4233,9 +4233,28 @@ function setTravelAddMsg(text,type){
   msg.textContent=text||'';
   msg.className='travel-add-msg '+(type||'');
 }
+function currentTravelFormTime(){
+  var now=new Date();
+  var hours=now.getHours();
+  var minutes=String(now.getMinutes()).padStart(2,'0');
+  var period=hours>=12?'PM':'AM';
+  var hour12=hours%12;
+  if(hour12===0)hour12=12;
+  return {period:period,time:String(hour12).padStart(2,'0')+':'+minutes};
+}
+function setTravelFormDefaultTime(prefix){
+  var periodEl=document.getElementById('travel-'+prefix+'-period');
+  var timeEl=document.getElementById('travel-'+prefix+'-time');
+  if(!periodEl||!timeEl||timeEl.value)return;
+  var value=currentTravelFormTime();
+  periodEl.value=value.period;
+  timeEl.value=value.time;
+}
 function initTravelAddForm(){
   var dateEl=document.getElementById('travel-add-date');
   if(dateEl&&!dateEl.value)dateEl.value=today();
+  setTravelFormDefaultTime('start');
+  setTravelFormDefaultTime('end');
   var select=document.getElementById('travel-add-title');
   if(!select)return;
   loadTravelMemoOptions().then(function(options){
