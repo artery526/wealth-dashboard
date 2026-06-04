@@ -1533,7 +1533,7 @@ body::after{
 .travel-card-title{font-family:var(--sans);font-size:17px;font-weight:900;color:#f0dfa0;line-height:1.45;overflow-wrap:anywhere}
 .travel-card-subdate{font-family:var(--sans);font-size:12px;font-weight:900;color:#aeefff;margin-top:3px;line-height:1.35}
 .travel-time-badge{font-family:var(--mono);font-size:15px;font-weight:900;color:#a8f1d6;border:1px solid rgba(29,158,117,.52);border-radius:8px;background:linear-gradient(180deg,rgba(29,158,117,.18),rgba(10,8,4,.82));padding:5px 9px;box-shadow:0 0 14px rgba(29,158,117,.16),inset 0 1px 0 rgba(255,255,255,.06);white-space:nowrap}
-.travel-card-no{font-family:var(--mono);font-size:11px;color:#6f5422;border:1px solid rgba(184,137,46,.24);border-radius:999px;padding:3px 8px;white-space:nowrap}
+.travel-transport-badge{font-family:var(--sans);font-size:12px;font-weight:950;color:#f0dfa0;border:1px solid rgba(232,192,80,.48);border-radius:8px;background:linear-gradient(180deg,rgba(232,192,80,.18),rgba(58,38,8,.38));padding:5px 8px;white-space:nowrap;box-shadow:0 0 12px rgba(232,192,80,.12)}
 .travel-card-date{font-family:var(--sans);font-size:11px;font-weight:900;color:#aeefff;border:1px solid rgba(78,217,255,.24);border-radius:999px;background:rgba(78,217,255,.08);padding:3px 8px;white-space:nowrap}
 .travel-card-actions{display:flex;align-items:center;gap:6px;flex-shrink:0}
 .travel-hide-btn{border:1px solid rgba(216,90,48,.34);border-radius:7px;background:rgba(216,90,48,.08);color:#ef9a77;font-family:var(--sans);font-size:12px;font-weight:900;padding:5px 8px;cursor:pointer;transition:background .2s,border-color .2s}
@@ -4552,8 +4552,8 @@ function travelAddressDetailHtml(label,value){
 function travelCardHtml(row){
   var time=[row.start,row.end].filter(Boolean).join(' - ');
   var details='';
+  var actionBadge=row.cardType==='交通卡'&&travelHasValue(row.transport)?'<div class="travel-transport-badge">'+esc(row.transport)+'</div>':'';
   if(row.cardType==='交通卡'){
-    details+=travelDetailHtml('交通工具',row.transport);
     details+=travelRouteDetailHtml(row.from,row.to,row.line);
     details+=travelDirectionDetailHtml(row.direction,row.transfers);
     details+=travelDetailHtml('目的地',row.destination);
@@ -4566,7 +4566,7 @@ function travelCardHtml(row){
     details+=travelAddressDetailHtml('住宿地址',row.address);
   }
   return '<article class="travel-card">'
-    +'<div class="travel-card-head"><div><div class="travel-title-line">'+(time?'<div class="travel-time-badge">'+esc(time)+'</div>':'')+'</div><div class="travel-card-subdate">'+esc(row.dateDisplay||row.dateKey)+'</div></div><div class="travel-card-actions"><div class="travel-card-no">#'+esc(row.rowIndex)+'</div><button class="travel-hide-btn" type="button" data-travel-row-id="'+esc(row.rowIndex)+'" data-travel-sheet="'+esc(row.sourceSheet||'')+'" onclick="hideTravelMemoCard(this)">關閉</button></div></div>'
+    +'<div class="travel-card-head"><div><div class="travel-title-line">'+(time?'<div class="travel-time-badge">'+esc(time)+'</div>':'')+'</div><div class="travel-card-subdate">'+esc(row.dateDisplay||row.dateKey)+'</div></div><div class="travel-card-actions">'+actionBadge+'<button class="travel-hide-btn" type="button" data-travel-row-id="'+esc(row.rowIndex)+'" data-travel-sheet="'+esc(row.sourceSheet||'')+'" onclick="hideTravelMemoCard(this)">關閉</button></div></div>'
     +'<div class="travel-detail-list">'+details+'</div>'
     +'</article>';
 }
