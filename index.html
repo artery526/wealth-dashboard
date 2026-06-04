@@ -2338,6 +2338,8 @@ var travelMemoCache = null;
 var travelMapsCache = null;
 var travelMemoOptionsCache = null;
 var currentTravelMemoKey = '';
+var currentTravelMemoShownKey = '';
+var currentTravelMemoAddDateKey = '';
 var travelMapZoom = 1;
 var TASK_SHEET_FALLBACK_OPTIONS = ['月度戰情室','轉帳資料庫','設定','資料庫','收入流水帳','支出流水帳','市場儀表板','配息試算','年度財報','武將資料','類型設定','帳戶基準'];
 var taskSheetOptionsCache = null;
@@ -4435,7 +4437,7 @@ function initTravelAddDefaults(type){
   var prefixes=type?[type]:['traffic','stay'];
   prefixes.forEach(function(prefix){
     var dateEl=document.getElementById('travel-'+prefix+'-date');
-    if(dateEl&&!dateEl.value)dateEl.value=today();
+    if(dateEl&&!dateEl.value)dateEl.value=travelInputDateFromKey(currentTravelMemoAddDateKey||currentTravelMemoShownKey||currentTravelMemoKey)||today();
     setTravelFormDefaultTime(prefix+'-start');
     setTravelFormDefaultTime(prefix+'-end');
   });
@@ -4451,6 +4453,10 @@ function travelSheetDate(value){
   var d=new Date(Number(parts[0]),Number(parts[1])-1,Number(parts[2]));
   var weeks=['日','一','二','三','四','五','六'];
   return parts[0]+'/'+parts[1]+'/'+parts[2]+weeks[d.getDay()];
+}
+function travelInputDateFromKey(key){
+  var m=String(key||'').match(/^(\d{4})\/(\d{2})\/(\d{2})$/);
+  return m?m[1]+'-'+m[2]+'-'+m[3]:'';
 }
 function travelSheetTime(period,timeValue){
   if(!timeValue)return '';
@@ -4594,14 +4600,33 @@ function renderTravelMemo(selectedKey,rows){
   var exact=rows.filter(function(row){return row.dateKey===selectedKey;});
   var shown=exact;
   var shownKey=selectedKey;
+  var selectedValue=travelDateValue(selectedKey);
+  var todayKey=travelDateKey(new Date());
+  var nextRows=[];
+  var nextKey='';
+  function findNextRows(){
+    if(nextKey)return;
+    nextRows=rows.filter(function(row){return travelDateValue(row.dateKey)>selectedValue;});
+    if(nextRows.length){
+      nextKey=nextRows[0].dateKey;
+      nextRows=nextRows.filter(function(row){return row.dateKey===nextKey;});
+    }
+  }
   if(!shown.length){
-    var todayValue=travelDateValue(selectedKey);
-    shown=rows.filter(function(row){return travelDateValue(row.dateKey)>=todayValue;});
+    shown=rows.filter(function(row){return travelDateValue(row.dateKey)>=selectedValue;});
     if(shown.length){
       shownKey=shown[0].dateKey;
       shown=shown.filter(function(row){return row.dateKey===shownKey;});
     }
+  }else if(selectedKey===todayKey){
+    findNextRows();
+    if(nextRows.length){
+      shown=exact.concat(nextRows);
+      shownKey=selectedKey;
+    }
   }
+  currentTravelMemoShownKey=shownKey;
+  currentTravelMemoAddDateKey=(selectedKey===todayKey&&nextRows.length)?nextKey:shownKey;
   if(title)title.textContent='📖遠征錄';
   if(!shown.length){
     body.innerHTML=travelMapViewHtml()+'<div class="travel-status">這個日期目前沒有啟用中的旅途備忘卡片。</div>'+travelAddFormHtml();
