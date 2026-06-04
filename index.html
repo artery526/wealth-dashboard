@@ -1545,6 +1545,7 @@ body::after{
 .travel-detail-value{font-family:var(--sans);font-size:14px;font-weight:850;color:#d8c18a;line-height:1.45;overflow-wrap:anywhere}
 .travel-route-value{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
 .travel-line-badge{display:inline-flex;align-items:center;justify-content:center;border:1px solid rgba(232,192,80,.55);border-radius:7px;background:linear-gradient(180deg,rgba(232,192,80,.22),rgba(87,58,12,.34));color:#f0dfa0;font-family:var(--mono);font-size:12px;font-weight:950;line-height:1;padding:5px 8px;box-shadow:0 0 12px rgba(232,192,80,.14);white-space:nowrap}
+.travel-transfer-badge{display:inline-flex;align-items:center;justify-content:center;border:1px solid rgba(29,158,117,.62);border-radius:7px;background:linear-gradient(180deg,rgba(29,158,117,.24),rgba(4,35,25,.42));color:#a8f1d6;font-family:var(--sans);font-size:12px;font-weight:950;line-height:1;padding:5px 8px;box-shadow:0 0 12px rgba(29,158,117,.18);white-space:nowrap}
 .travel-address-value{display:flex;align-items:flex-start;gap:7px}
 .travel-address-text{min-width:0;flex:1;overflow-wrap:anywhere}
 .travel-map-search{width:30px;height:30px;border:1px solid rgba(78,217,255,.34);border-radius:8px;background:rgba(78,217,255,.08);color:#aeefff;font-family:var(--sans);font-size:15px;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;transition:border-color .2s,box-shadow .2s,background .2s}
@@ -4535,6 +4536,10 @@ function travelRouteDetailHtml(from,to,line){
   if(!String(from||'').trim()&&!String(to||'').trim())return '';
   return '<div class="travel-detail-row"><div class="travel-detail-label">上車⮕下車</div><div class="travel-detail-value travel-route-value"><span>'+esc((from||'--')+'⮕'+(to||'--'))+'</span>'+(line?'<span class="travel-line-badge">'+esc(line)+'</span>':'')+'</div></div>';
 }
+function travelDirectionDetailHtml(direction,transfers){
+  if(!String(direction||'').trim()&&String(transfers||'').trim()==='')return '';
+  return '<div class="travel-detail-row"><div class="travel-detail-label">往返方向</div><div class="travel-detail-value travel-route-value"><span>'+esc(direction||'--')+'</span>'+(String(transfers||'').trim()!==''?'<span class="travel-transfer-badge">轉乘 '+esc(transfers)+'</span>':'')+'</div></div>';
+}
 function travelAddressDetailHtml(label,value){
   if(value==null||String(value).trim()==='')return '';
   var address=String(value).trim();
@@ -4547,8 +4552,7 @@ function travelCardHtml(row){
   if(row.cardType==='交通卡'){
     details+=travelDetailHtml('交通工具',row.transport);
     details+=travelRouteDetailHtml(row.from,row.to,row.line);
-    details+=travelDetailHtml('往返方向',row.direction);
-    details+=travelDetailHtml('轉乘次數',row.transfers);
+    details+=travelDirectionDetailHtml(row.direction,row.transfers);
     details+=travelDetailHtml('目的地',row.destination);
     details+=travelDetailHtml('備註',row.note);
   }else{
