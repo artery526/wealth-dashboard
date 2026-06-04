@@ -4532,13 +4532,16 @@ function travelDetailHtml(label,value){
   if(value==null||String(value).trim()==='')return '';
   return '<div class="travel-detail-row"><div class="travel-detail-label">'+esc(label)+'</div><div class="travel-detail-value">'+esc(value)+'</div></div>';
 }
+function travelHasValue(value){
+  return value!==null&&value!==undefined&&String(value).trim()!=='';
+}
 function travelRouteDetailHtml(from,to,line){
   if(!String(from||'').trim()&&!String(to||'').trim())return '';
-  return '<div class="travel-detail-row"><div class="travel-detail-label">上車⮕下車</div><div class="travel-detail-value travel-route-value"><span>'+esc((from||'--')+'⮕'+(to||'--'))+'</span>'+(line?'<span class="travel-line-badge">'+esc(line)+'</span>':'')+'</div></div>';
+  return '<div class="travel-detail-row"><div class="travel-detail-label">上車⮕下車</div><div class="travel-detail-value travel-route-value"><span>'+esc((from||'--')+'⮕'+(to||'--'))+'</span>'+(travelHasValue(line)?'<span class="travel-line-badge">'+esc(line)+'</span>':'')+'</div></div>';
 }
 function travelDirectionDetailHtml(direction,transfers){
-  if(!String(direction||'').trim()&&String(transfers||'').trim()==='')return '';
-  return '<div class="travel-detail-row"><div class="travel-detail-label">往返方向</div><div class="travel-detail-value travel-route-value"><span>'+esc(direction||'--')+'</span>'+(String(transfers||'').trim()!==''?'<span class="travel-transfer-badge">轉乘 '+esc(transfers)+'</span>':'')+'</div></div>';
+  if(!travelHasValue(direction)&&!travelHasValue(transfers))return '';
+  return '<div class="travel-detail-row"><div class="travel-detail-label">往返方向</div><div class="travel-detail-value travel-route-value"><span>'+esc(direction||'--')+'</span>'+(travelHasValue(transfers)?'<span class="travel-transfer-badge">轉乘 '+esc(transfers)+'</span>':'')+'</div></div>';
 }
 function travelAddressDetailHtml(label,value){
   if(value==null||String(value).trim()==='')return '';
