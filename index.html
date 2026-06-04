@@ -4211,6 +4211,7 @@ function parseTravelCsv(text){
   return rows;
 }
 function travelAddFormHtml(){
+  if(!hasMainApiCredentials())return travelAddLockedHtml();
   return '<form class="travel-add-card" id="travel-add-form" onsubmit="submitTravelMemoCard(event)">'
     +'<div class="travel-add-head"><div class="travel-add-title">加入卡片</div></div>'
     +'<div class="travel-add-grid">'
@@ -4226,6 +4227,15 @@ function travelAddFormHtml(){
     +'</div>'
     +'<div class="travel-add-actions"><button class="travel-add-submit" id="travel-add-submit" type="submit">加入卡片</button><div class="travel-add-msg" id="travel-add-msg"></div></div>'
     +'</form>';
+}
+function travelAddLockedHtml(){
+  return '<section class="travel-add-card">'
+    +'<div class="travel-add-head"><div class="travel-add-title">加入卡片</div></div>'
+    +'<div class="setup-notice">'
+    +'<p>請先完成 API URL 與 WRITE_TOKEN 驗證，才能寫入旅途遠征記錄。</p>'
+    +'<button class="setup-btn" type="button" onclick="openCfg()">⚙ 立即設定</button>'
+    +'</div>'
+    +'</section>';
 }
 function setTravelAddMsg(text,type){
   var msg=document.getElementById('travel-add-msg');
@@ -4251,6 +4261,7 @@ function setTravelFormDefaultTime(prefix){
   timeEl.value=value.time;
 }
 function initTravelAddForm(){
+  if(!hasMainApiCredentials())return;
   var dateEl=document.getElementById('travel-add-date');
   if(dateEl&&!dateEl.value)dateEl.value=today();
   setTravelFormDefaultTime('start');
