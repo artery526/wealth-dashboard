@@ -4529,6 +4529,10 @@ function travelDetailHtml(label,value){
   if(value==null||String(value).trim()==='')return '';
   return '<div class="travel-detail-row"><div class="travel-detail-label">'+esc(label)+'</div><div class="travel-detail-value">'+esc(value)+'</div></div>';
 }
+function travelRouteDetailHtml(from,to){
+  if(!String(from||'').trim()&&!String(to||'').trim())return '';
+  return travelDetailHtml('上車⮕下車',(from||'--')+'⮕'+(to||'--'));
+}
 function travelAddressDetailHtml(label,value){
   if(value==null||String(value).trim()==='')return '';
   var address=String(value).trim();
@@ -4540,8 +4544,7 @@ function travelCardHtml(row){
   var details='';
   if(row.cardType==='交通卡'){
     details+=travelDetailHtml('交通工具',row.transport);
-    details+=travelDetailHtml('上車站名',row.from);
-    details+=travelDetailHtml('下車站名',row.to);
+    details+=travelRouteDetailHtml(row.from,row.to);
     details+=travelDetailHtml('線路/班次',row.line);
     details+=travelDetailHtml('往返方向',row.direction);
     details+=travelDetailHtml('轉乘次數',row.transfers);
