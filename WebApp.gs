@@ -50,6 +50,12 @@ var MACRO_JOLTS_OPENINGS_COL = MACRO_DATA_HEADERS.indexOf('joltsOpenings') + 1;
 function verifyWriteToken(body) {
   var token = normalizeToken_(body.token);
   var expected = getWriteToken_();
+  if (!expected) {
+    throw new Error('驗證失敗：後端尚未設定 WRITE_TOKEN，無法寫入');
+  }
+  if (!token) {
+    throw new Error('驗證失敗：請提供 WRITE_TOKEN，無法寫入');
+  }
   if (token !== expected) {
     throw new Error('驗證失敗：密鑰不正確，無法寫入');
   }
