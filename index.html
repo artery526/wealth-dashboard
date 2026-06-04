@@ -4173,46 +4173,50 @@ function travelTimeSortValue(text){
   return h*60+min;
 }
 function loadTravelMemoSheetRows(sheetName,type){
-  var url='https://docs.google.com/spreadsheets/d/'+TRAVEL_MEMO_SHEET_ID+'/gviz/tq?tqx=out:json&sheet='+encodeURIComponent(sheetName);
-  return readGvizJson(url).then(function(json){
-    var rows=(json.table.rows||[]).map(function(row,index){
+  var url='https://docs.google.com/spreadsheets/d/'+TRAVEL_MEMO_SHEET_ID+'/export?format=csv&sheet='+encodeURIComponent(sheetName);
+  return fetch(url+'&t='+Date.now()).then(function(r){
+    if(!r.ok)throw new Error(sheetName+' sheet read failed');
+    return r.text();
+  }).then(function(text){
+    var sourceRows=parseTravelCsv(text).slice(1);
+    var rows=sourceRows.map(function(row,index){
       if(type==='traffic'){
-        var trafficDate=travelCell(row,1);
+        var trafficDate=row[1];
         return {
           sourceSheet:sheetName,
           cardType:'交通卡',
-          active:travelCell(row,0),
+          active:row[0],
           date:trafficDate,
           dateKey:travelDateKey(trafficDate),
           dateDisplay:travelDateDisplay(trafficDate),
-          start:travelCell(row,3),
-          end:travelCell(row,4),
-          transport:travelCell(row,2),
-          from:travelCell(row,5),
-          to:travelCell(row,6),
-          line:travelCell(row,7),
-          direction:travelCell(row,8),
-          transfers:travelCell(row,9),
-          destination:travelCell(row,10),
-          note:travelCell(row,11),
+          start:row[3],
+          end:row[4],
+          transport:row[2],
+          from:row[5],
+          to:row[6],
+          line:row[7],
+          direction:row[8],
+          transfers:row[9],
+          destination:row[10],
+          note:row[11],
           rowIndex:index+2
         };
       }
-      var stayDate=travelCell(row,1);
+      var stayDate=row[1];
       return {
         sourceSheet:sheetName,
         cardType:'住宿卡',
-        active:travelCell(row,0),
+        active:row[0],
         date:stayDate,
         dateKey:travelDateKey(stayDate),
         dateDisplay:travelDateDisplay(stayDate),
-        stayPlace:travelCell(row,2),
-        title:travelCell(row,3),
-        start:travelCell(row,4),
-        end:travelCell(row,5),
-        nearTraffic:travelCell(row,6),
-        address:travelCell(row,7),
-        note:travelCell(row,8),
+        stayPlace:row[2],
+        title:row[3],
+        start:row[4],
+        end:row[5],
+        nearTraffic:row[6],
+        address:row[7],
+        note:row[8],
         rowIndex:index+2
       };
     }).filter(function(row){
