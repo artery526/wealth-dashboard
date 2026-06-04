@@ -1557,6 +1557,11 @@ body::after{
 .travel-add-card{margin-top:14px;border:1px solid rgba(29,158,117,.28);border-radius:8px;background:rgba(4,18,14,.56);padding:13px}
 .travel-add-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
 .travel-add-title{font-family:var(--sans);font-size:15px;font-weight:900;color:#a8f1d6;letter-spacing:1px}
+.travel-add-modes{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.travel-add-mode{border:1px solid rgba(184,137,46,.34);border-radius:8px;background:rgba(10,8,4,.66);color:#c09a50;font-family:var(--sans);font-size:13px;font-weight:900;padding:8px 10px;cursor:pointer;transition:border-color .2s,background .2s,color .2s}
+.travel-add-mode.active{border-color:rgba(29,158,117,.62);background:rgba(29,158,117,.16);color:#a8f1d6;box-shadow:0 0 14px rgba(29,158,117,.12)}
+.travel-add-section{display:none}
+.travel-add-section.active{display:block}
 .travel-add-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .travel-add-field.wide{grid-column:1/-1}
 .travel-add-field label{display:block;margin-bottom:5px;font-family:var(--sans);font-size:11px;font-weight:900;color:#8fd0b8}
@@ -4335,17 +4340,31 @@ function travelAddFormHtml(){
   if(!hasMainApiCredentials())return travelAddLockedHtml();
   return '<form class="travel-add-card" id="travel-add-form" onsubmit="submitTravelMemoCard(event)">'
     +'<div class="travel-add-head"><div class="travel-add-title">加入卡片</div></div>'
-    +'<div class="travel-add-grid">'
-    +'<div class="travel-add-field"><label>日期</label><input class="travel-add-input" id="travel-add-date" type="date" required></div>'
-    +'<div class="travel-add-field"><label>注意事項</label><select class="travel-add-select" id="travel-add-title" required><option value="">讀取選項中...</option></select></div>'
-    +'<div class="travel-add-field"><label>開始時間</label><div class="travel-time-pair"><select class="travel-add-select" id="travel-start-period"><option>AM</option><option>PM</option></select><input class="travel-add-input" id="travel-start-time" type="time" step="60" required></div></div>'
-    +'<div class="travel-add-field"><label>結束時間</label><div class="travel-time-pair"><select class="travel-add-select" id="travel-end-period"><option>AM</option><option>PM</option></select><input class="travel-add-input" id="travel-end-time" type="time" step="60" required></div></div>'
-    +'<div class="travel-add-field"><label>上車/下車站名/住宿地點</label><input class="travel-add-input" id="travel-add-from" type="text" required></div>'
-    +'<div class="travel-add-field"><label>上車/下車站名/住宿地點</label><input class="travel-add-input" id="travel-add-to" type="text" required></div>'
-    +'<div class="travel-add-field"><label>班次/住宿鄰近交通</label><input class="travel-add-input" id="travel-add-shift" type="text" required></div>'
-    +'<div class="travel-add-field"><label>交通/地址資訊</label><input class="travel-add-input" id="travel-add-info" type="text"></div>'
-    +'<div class="travel-add-field wide"><label>備註</label><input class="travel-add-input" id="travel-add-note" type="text"></div>'
-    +'</div>'
+    +'<input id="travel-add-type" type="hidden" value="traffic">'
+    +'<div class="travel-add-modes"><button class="travel-add-mode active" id="travel-mode-traffic" type="button" onclick="switchTravelAddType(\'traffic\')">加入交通卡</button><button class="travel-add-mode" id="travel-mode-stay" type="button" onclick="switchTravelAddType(\'stay\')">加入住宿卡</button></div>'
+    +'<div class="travel-add-section active" id="travel-add-section-traffic"><div class="travel-add-grid">'
+    +'<div class="travel-add-field"><label>日期</label><input class="travel-add-input" id="travel-traffic-date" type="date" required></div>'
+    +'<div class="travel-add-field"><label>交通工具</label><select class="travel-add-select" id="travel-traffic-transport" required><option>台鐵</option><option>高鐵</option><option>捷運</option><option>巴士</option></select></div>'
+    +'<div class="travel-add-field"><label>開始時間(AM/PM)</label><div class="travel-time-pair"><select class="travel-add-select" id="travel-traffic-start-period"><option>AM</option><option>PM</option></select><input class="travel-add-input" id="travel-traffic-start-time" type="time" step="60" required></div></div>'
+    +'<div class="travel-add-field"><label>結束時間(AM/PM)</label><div class="travel-time-pair"><select class="travel-add-select" id="travel-traffic-end-period"><option>AM</option><option>PM</option></select><input class="travel-add-input" id="travel-traffic-end-time" type="time" step="60" required></div></div>'
+    +'<div class="travel-add-field"><label>上車站名</label><input class="travel-add-input" id="travel-traffic-from" type="text" required></div>'
+    +'<div class="travel-add-field"><label>下車站名</label><input class="travel-add-input" id="travel-traffic-to" type="text" required></div>'
+    +'<div class="travel-add-field"><label>線路/班次</label><input class="travel-add-input" id="travel-traffic-line" type="text" required></div>'
+    +'<div class="travel-add-field"><label>往返方向</label><input class="travel-add-input" id="travel-traffic-direction" type="text" required></div>'
+    +'<div class="travel-add-field"><label>轉乘次數</label><input class="travel-add-input" id="travel-traffic-transfers" type="number" min="0" step="1" required></div>'
+    +'<div class="travel-add-field"><label>目的地</label><input class="travel-add-input" id="travel-traffic-destination" type="text" required></div>'
+    +'<div class="travel-add-field wide"><label>備註</label><input class="travel-add-input" id="travel-traffic-note" type="text"></div>'
+    +'</div></div>'
+    +'<div class="travel-add-section" id="travel-add-section-stay"><div class="travel-add-grid">'
+    +'<div class="travel-add-field"><label>日期</label><input class="travel-add-input" id="travel-stay-date" type="date" required></div>'
+    +'<div class="travel-add-field"><label>住宿地點</label><input class="travel-add-input" id="travel-stay-place" type="text" required></div>'
+    +'<div class="travel-add-field"><label>注意事項</label><select class="travel-add-select" id="travel-stay-title" required><option>Check In</option><option>Check Out</option></select></div>'
+    +'<div class="travel-add-field"><label>開始時間(AM/PM)</label><div class="travel-time-pair"><select class="travel-add-select" id="travel-stay-start-period"><option>AM</option><option>PM</option></select><input class="travel-add-input" id="travel-stay-start-time" type="time" step="60" required></div></div>'
+    +'<div class="travel-add-field"><label>結束時間(AM/PM)</label><div class="travel-time-pair"><select class="travel-add-select" id="travel-stay-end-period"><option>AM</option><option>PM</option></select><input class="travel-add-input" id="travel-stay-end-time" type="time" step="60" required></div></div>'
+    +'<div class="travel-add-field"><label>鄰近交通</label><input class="travel-add-input" id="travel-stay-near" type="text" required></div>'
+    +'<div class="travel-add-field"><label>住宿地址</label><input class="travel-add-input" id="travel-stay-address" type="text" required></div>'
+    +'<div class="travel-add-field wide"><label>備註</label><input class="travel-add-input" id="travel-stay-note" type="text"></div>'
+    +'</div></div>'
     +'<div class="travel-add-actions"><button class="travel-add-submit" id="travel-add-submit" type="submit">加入卡片</button><div class="travel-add-msg" id="travel-add-msg"></div></div>'
     +'</form>';
 }
@@ -4381,21 +4400,32 @@ function setTravelFormDefaultTime(prefix){
   periodEl.value=value.period;
   timeEl.value=value.time;
 }
+function switchTravelAddType(type){
+  var clean=type==='stay'?'stay':'traffic';
+  var typeEl=document.getElementById('travel-add-type');
+  if(typeEl)typeEl.value=clean;
+  ['traffic','stay'].forEach(function(name){
+    var section=document.getElementById('travel-add-section-'+name);
+    var btn=document.getElementById('travel-mode-'+name);
+    if(section)section.classList.toggle('active',name===clean);
+    if(btn)btn.classList.toggle('active',name===clean);
+  });
+  initTravelAddDefaults(clean);
+  setTravelAddMsg('', '');
+}
+function initTravelAddDefaults(type){
+  var prefixes=type?[type]:['traffic','stay'];
+  prefixes.forEach(function(prefix){
+    var dateEl=document.getElementById('travel-'+prefix+'-date');
+    if(dateEl&&!dateEl.value)dateEl.value=today();
+    setTravelFormDefaultTime(prefix+'-start');
+    setTravelFormDefaultTime(prefix+'-end');
+  });
+}
 function initTravelAddForm(){
   if(!hasMainApiCredentials())return;
-  var dateEl=document.getElementById('travel-add-date');
-  if(dateEl&&!dateEl.value)dateEl.value=today();
-  setTravelFormDefaultTime('start');
-  setTravelFormDefaultTime('end');
-  var select=document.getElementById('travel-add-title');
-  if(!select)return;
-  loadTravelMemoOptions().then(function(options){
-    select.innerHTML='<option value="">請選擇</option>'+options.map(function(opt){
-      return '<option value="'+esc(opt)+'">'+esc(opt)+'</option>';
-    }).join('');
-  }).catch(function(){
-    select.innerHTML='<option value="">選項讀取失敗</option>';
-  });
+  initTravelAddDefaults();
+  switchTravelAddType((document.getElementById('travel-add-type')||{}).value||'traffic');
 }
 function travelSheetDate(value){
   var parts=String(value||'').split('-');
@@ -4602,25 +4632,41 @@ async function hideTravelMemoCard(btn){
 async function submitTravelMemoCard(event){
   if(event&&event.preventDefault)event.preventDefault();
   if(!hasMainApiCredentials()){
-    setTravelAddMsg('請先設定 API URL 與 WRITE_TOKEN，才能寫入旅途遠征記錄。','err');
+    setTravelAddMsg('請先設定 API URL 與 WRITE_TOKEN，才能寫入遠征錄。','err');
     return;
   }
   var submit=document.getElementById('travel-add-submit');
-  var payload={
-    action:'travelMemoAdd',
-    date:travelSheetDate((document.getElementById('travel-add-date')||{}).value),
-    title:(document.getElementById('travel-add-title')||{}).value||'',
-    start:travelSheetTime((document.getElementById('travel-start-period')||{}).value,(document.getElementById('travel-start-time')||{}).value),
-    end:travelSheetTime((document.getElementById('travel-end-period')||{}).value,(document.getElementById('travel-end-time')||{}).value),
-    from:(document.getElementById('travel-add-from')||{}).value||'',
-    to:(document.getElementById('travel-add-to')||{}).value||'',
-    shift:(document.getElementById('travel-add-shift')||{}).value||'',
-    info:(document.getElementById('travel-add-info')||{}).value||'',
-    note:(document.getElementById('travel-add-note')||{}).value||''
-  };
-  if(!payload.date||!payload.title||!payload.start||!payload.end||!payload.from||!payload.to||!payload.shift){
-    setTravelAddMsg('請填寫日期、注意事項、時間、站名/地點與班次/鄰近交通。','err');
-    return;
+  var type=(document.getElementById('travel-add-type')||{}).value==='stay'?'stay':'traffic';
+  var payload={action:'travelMemoAdd',cardType:type};
+  if(type==='traffic'){
+    payload.date=travelSheetDate((document.getElementById('travel-traffic-date')||{}).value);
+    payload.transport=(document.getElementById('travel-traffic-transport')||{}).value||'';
+    payload.start=travelSheetTime((document.getElementById('travel-traffic-start-period')||{}).value,(document.getElementById('travel-traffic-start-time')||{}).value);
+    payload.end=travelSheetTime((document.getElementById('travel-traffic-end-period')||{}).value,(document.getElementById('travel-traffic-end-time')||{}).value);
+    payload.from=(document.getElementById('travel-traffic-from')||{}).value||'';
+    payload.to=(document.getElementById('travel-traffic-to')||{}).value||'';
+    payload.line=(document.getElementById('travel-traffic-line')||{}).value||'';
+    payload.direction=(document.getElementById('travel-traffic-direction')||{}).value||'';
+    payload.transfers=(document.getElementById('travel-traffic-transfers')||{}).value||'';
+    payload.destination=(document.getElementById('travel-traffic-destination')||{}).value||'';
+    payload.note=(document.getElementById('travel-traffic-note')||{}).value||'';
+    if(!payload.date||!payload.transport||!payload.start||!payload.end||!payload.from||!payload.to||!payload.line||!payload.direction||payload.transfers===''||!payload.destination){
+      setTravelAddMsg('請完整填寫交通卡必填欄位。','err');
+      return;
+    }
+  }else{
+    payload.date=travelSheetDate((document.getElementById('travel-stay-date')||{}).value);
+    payload.place=(document.getElementById('travel-stay-place')||{}).value||'';
+    payload.title=(document.getElementById('travel-stay-title')||{}).value||'';
+    payload.start=travelSheetTime((document.getElementById('travel-stay-start-period')||{}).value,(document.getElementById('travel-stay-start-time')||{}).value);
+    payload.end=travelSheetTime((document.getElementById('travel-stay-end-period')||{}).value,(document.getElementById('travel-stay-end-time')||{}).value);
+    payload.nearTraffic=(document.getElementById('travel-stay-near')||{}).value||'';
+    payload.address=(document.getElementById('travel-stay-address')||{}).value||'';
+    payload.note=(document.getElementById('travel-stay-note')||{}).value||'';
+    if(!payload.date||!payload.place||!payload.title||!payload.start||!payload.end||!payload.nearTraffic||!payload.address){
+      setTravelAddMsg('請完整填寫住宿卡必填欄位。','err');
+      return;
+    }
   }
   if(submit)submit.disabled=true;
   setTravelAddMsg('寫入中...','');
@@ -4629,7 +4675,7 @@ async function submitTravelMemoCard(event){
     travelMemoCache=null;
     var rows=await loadTravelMemoRows();
     renderTravelMemo(currentTravelMemoKey||travelDateKey(new Date()),rows);
-    setTravelAddMsg('已加入卡片。','ok');
+    setTravelAddMsg((type==='traffic'?'交通卡':'住宿卡')+'已加入。','ok');
   }catch(err){
     if(submit)submit.disabled=false;
     setTravelAddMsg('加入失敗：'+(err.message||err),'err');
