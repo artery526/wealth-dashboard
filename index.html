@@ -4344,7 +4344,7 @@ function travelAddFormHtml(){
   return '<form class="travel-add-card" id="travel-add-form" onsubmit="submitTravelMemoCard(event)">'
     +'<div class="travel-add-head"><div class="travel-add-title">加入卡片</div></div>'
     +'<input id="travel-add-type" type="hidden" value="traffic">'
-    +'<div class="travel-add-modes"><button class="travel-add-mode active" id="travel-mode-traffic" type="button" onclick="switchTravelAddType(\'traffic\')">加入交通卡</button><button class="travel-add-mode" id="travel-mode-stay" type="button" onclick="switchTravelAddType(\'stay\')">加入住宿卡</button></div>'
+    +'<div class="travel-add-modes"><button class="travel-add-mode active" id="travel-mode-traffic" type="button" onclick="switchTravelAddType(\'traffic\')">交通卡</button><button class="travel-add-mode" id="travel-mode-stay" type="button" onclick="switchTravelAddType(\'stay\')">住宿卡</button></div>'
     +'<div class="travel-add-section active" id="travel-add-section-traffic"><div class="travel-add-grid">'
     +'<div class="travel-add-field"><label>日期</label><input class="travel-add-input" id="travel-traffic-date" type="date" required></div>'
     +'<div class="travel-add-field"><label>交通工具</label><select class="travel-add-select" id="travel-traffic-transport" required><option>台鐵</option><option>高鐵</option><option>捷運</option><option>巴士</option></select></div>'
@@ -4545,6 +4545,7 @@ function travelCardHtml(row){
     details+=travelDetailHtml('往返方向',row.direction);
     details+=travelDetailHtml('轉乘次數',row.transfers);
     details+=travelDetailHtml('目的地',row.destination);
+    details+=travelDetailHtml('備註',row.note);
   }else{
     details+=travelDetailHtml('住宿地點',row.stayPlace);
     details+=travelDetailHtml('注意事項',row.title);
@@ -4553,7 +4554,7 @@ function travelCardHtml(row){
     details+=travelDetailHtml('備註',row.note);
   }
   return '<article class="travel-card">'
-    +'<div class="travel-card-head"><div><div class="travel-title-line"><div class="travel-card-title">'+esc(row.cardType||'遠征卡')+'</div>'+(time?'<div class="travel-time-badge">'+esc(time)+'</div>':'')+'</div><div class="travel-card-subdate">'+esc(row.dateDisplay||row.dateKey)+'</div></div><div class="travel-card-actions"><div class="travel-card-no">#'+esc(row.rowIndex)+'</div><button class="travel-hide-btn" type="button" data-travel-row-id="'+esc(row.rowIndex)+'" data-travel-sheet="'+esc(row.sourceSheet||'')+'" onclick="hideTravelMemoCard(this)">關閉</button></div></div>'
+    +'<div class="travel-card-head"><div><div class="travel-title-line">'+(time?'<div class="travel-time-badge">'+esc(time)+'</div>':'')+'</div><div class="travel-card-subdate">'+esc(row.dateDisplay||row.dateKey)+'</div></div><div class="travel-card-actions"><div class="travel-card-no">#'+esc(row.rowIndex)+'</div><button class="travel-hide-btn" type="button" data-travel-row-id="'+esc(row.rowIndex)+'" data-travel-sheet="'+esc(row.sourceSheet||'')+'" onclick="hideTravelMemoCard(this)">關閉</button></div></div>'
     +'<div class="travel-detail-list">'+details+'</div>'
     +'</article>';
 }
