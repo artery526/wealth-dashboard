@@ -2323,6 +2323,8 @@ var MACRO_SHEET_ID = '1BPnjwZKlBmxMkHmLDk6MSV28kfcAtQhGuZdufv5T7FY';
 var TRAVEL_MEMO_SHEET_ID = '1hGTWtPniX9J6DX6I3WX0mQwkOcVNRXwMyf7Q17MQUP0';
 var TRAVEL_TRAFFIC_SHEET = '交通卡';
 var TRAVEL_STAY_SHEET = '住宿卡';
+var TRAVEL_TRAFFIC_GID = '0';
+var TRAVEL_STAY_GID = '2020493061';
 var TRAVEL_MAP_GID = '652889684';
 var TRAVEL_SET_GID = '340830404';
 var COMMAND_SETTING_GID = '1479341396';
@@ -4172,8 +4174,8 @@ function travelTimeSortValue(text){
   if(m[1]==='AM'&&h===12)h=0;
   return h*60+min;
 }
-function loadTravelMemoSheetRows(sheetName,type){
-  var url='https://docs.google.com/spreadsheets/d/'+TRAVEL_MEMO_SHEET_ID+'/export?format=csv&sheet='+encodeURIComponent(sheetName);
+function loadTravelMemoSheetRows(sheetName,type,gid){
+  var url='https://docs.google.com/spreadsheets/d/'+TRAVEL_MEMO_SHEET_ID+'/export?format=csv&gid='+encodeURIComponent(gid);
   return fetch(url+'&t='+Date.now()).then(function(r){
     if(!r.ok)throw new Error(sheetName+' sheet read failed');
     return r.text();
@@ -4228,8 +4230,8 @@ function loadTravelMemoSheetRows(sheetName,type){
 function loadTravelMemoRows(){
   if(travelMemoCache)return Promise.resolve(travelMemoCache);
   return Promise.all([
-    loadTravelMemoSheetRows(TRAVEL_TRAFFIC_SHEET,'traffic'),
-    loadTravelMemoSheetRows(TRAVEL_STAY_SHEET,'stay')
+    loadTravelMemoSheetRows(TRAVEL_TRAFFIC_SHEET,'traffic',TRAVEL_TRAFFIC_GID),
+    loadTravelMemoSheetRows(TRAVEL_STAY_SHEET,'stay',TRAVEL_STAY_GID)
   ]).then(function(results){
     var rows=results[0].concat(results[1]);
     rows.sort(function(a,b){
