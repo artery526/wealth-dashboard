@@ -1543,6 +1543,8 @@ body::after{
 .travel-detail-row{display:grid;grid-template-columns:92px minmax(0,1fr);gap:9px;align-items:start;border:1px solid rgba(184,137,46,.2);border-radius:7px;background:rgba(255,255,255,.025);padding:8px 9px}
 .travel-detail-label{font-family:var(--sans);font-size:11px;font-weight:900;color:#8a6a30;line-height:1.45}
 .travel-detail-value{font-family:var(--sans);font-size:14px;font-weight:850;color:#d8c18a;line-height:1.45;overflow-wrap:anywhere}
+.travel-route-value{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.travel-line-badge{display:inline-flex;align-items:center;justify-content:center;border:1px solid rgba(232,192,80,.55);border-radius:7px;background:linear-gradient(180deg,rgba(232,192,80,.22),rgba(87,58,12,.34));color:#f0dfa0;font-family:var(--mono);font-size:12px;font-weight:950;line-height:1;padding:5px 8px;box-shadow:0 0 12px rgba(232,192,80,.14);white-space:nowrap}
 .travel-address-value{display:flex;align-items:flex-start;gap:7px}
 .travel-address-text{min-width:0;flex:1;overflow-wrap:anywhere}
 .travel-map-search{width:30px;height:30px;border:1px solid rgba(78,217,255,.34);border-radius:8px;background:rgba(78,217,255,.08);color:#aeefff;font-family:var(--sans);font-size:15px;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;transition:border-color .2s,box-shadow .2s,background .2s}
@@ -4529,9 +4531,9 @@ function travelDetailHtml(label,value){
   if(value==null||String(value).trim()==='')return '';
   return '<div class="travel-detail-row"><div class="travel-detail-label">'+esc(label)+'</div><div class="travel-detail-value">'+esc(value)+'</div></div>';
 }
-function travelRouteDetailHtml(from,to){
+function travelRouteDetailHtml(from,to,line){
   if(!String(from||'').trim()&&!String(to||'').trim())return '';
-  return travelDetailHtml('上車⮕下車',(from||'--')+'⮕'+(to||'--'));
+  return '<div class="travel-detail-row"><div class="travel-detail-label">上車⮕下車</div><div class="travel-detail-value travel-route-value"><span>'+esc((from||'--')+'⮕'+(to||'--'))+'</span>'+(line?'<span class="travel-line-badge">'+esc(line)+'</span>':'')+'</div></div>';
 }
 function travelAddressDetailHtml(label,value){
   if(value==null||String(value).trim()==='')return '';
@@ -4544,8 +4546,7 @@ function travelCardHtml(row){
   var details='';
   if(row.cardType==='交通卡'){
     details+=travelDetailHtml('交通工具',row.transport);
-    details+=travelRouteDetailHtml(row.from,row.to);
-    details+=travelDetailHtml('線路/班次',row.line);
+    details+=travelRouteDetailHtml(row.from,row.to,row.line);
     details+=travelDetailHtml('往返方向',row.direction);
     details+=travelDetailHtml('轉乘次數',row.transfers);
     details+=travelDetailHtml('目的地',row.destination);
