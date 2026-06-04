@@ -4604,22 +4604,23 @@ function renderTravelMemo(selectedKey,rows){
   var todayKey=travelDateKey(new Date());
   var nextRows=[];
   var nextKey='';
-  function findNextRows(){
+  function findFutureRows(){
     if(nextKey)return;
     nextRows=rows.filter(function(row){return travelDateValue(row.dateKey)>selectedValue;});
     if(nextRows.length){
       nextKey=nextRows[0].dateKey;
-      nextRows=nextRows.filter(function(row){return row.dateKey===nextKey;});
     }
   }
   if(!shown.length){
     shown=rows.filter(function(row){return travelDateValue(row.dateKey)>=selectedValue;});
-    if(shown.length){
+    if(shown.length&&selectedKey!==todayKey){
       shownKey=shown[0].dateKey;
       shown=shown.filter(function(row){return row.dateKey===shownKey;});
+    }else if(shown.length){
+      shownKey=shown[0].dateKey;
     }
   }else if(selectedKey===todayKey){
-    findNextRows();
+    findFutureRows();
     if(nextRows.length){
       shown=exact.concat(nextRows);
       shownKey=selectedKey;
