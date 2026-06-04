@@ -4388,6 +4388,12 @@ function travelCardHtml(row){
     +(row.note?'<div class="travel-note">'+esc(row.note)+'</div>':'')
     +'</article>';
 }
+function travelMemoLockedHtml(message){
+  return '<div class="setup-notice">'
+    +'<p>'+esc(message||'請先完成 API URL 與 WRITE_TOKEN 驗證，才能查看人生遠征錄。')+'</p>'
+    +'<button class="setup-btn" type="button" onclick="openCfg()">⚙ 立即設定</button>'
+    +'</div>';
+}
 function renderTravelMemo(selectedKey,rows){
   var title=document.getElementById('travel-title');
   var body=document.getElementById('travel-body');
@@ -4420,13 +4426,19 @@ function openTravelMemoForDate(value){
   var overlay=document.getElementById('travel-overlay');
   var body=document.getElementById('travel-body');
   currentTravelMemoKey=key;
-  if(body)body.innerHTML='<div class="travel-status">正在調閱旅途遠征記錄...</div>';
   if(overlay)overlay.classList.add('open');
-  Promise.all([loadTravelMemoRows(),loadTravelMapLinks().catch(function(){return null;})]).then(function(results){
+  if(!hasMainApiCredentials()){
+    if(body)body.innerHTML=travelMemoLockedHtml('請先完成 API URL 與 WRITE_TOKEN 驗證，才能查看人生遠征錄。');
+    return;
+  }
+  if(body)body.innerHTML='<div class="travel-status">驗證密鑰並讀取人生遠征錄中...</div>';
+  apiPost({action:'verifyWriteToken'}).then(function(){
+    return Promise.all([loadTravelMemoRows(),loadTravelMapLinks().catch(function(){return null;})]);
+  }).then(function(results){
     var rows=results[0];
     renderTravelMemo(key,rows);
   }).catch(function(err){
-    if(body)body.innerHTML='<div class="travel-status">旅途遠征記錄讀取失敗：'+esc(err.message||err)+'</div>';
+    if(body)body.innerHTML=travelMemoLockedHtml('驗證失敗，無法查看人生遠征錄：'+(err.message||err));
   });
 }
 async function hideTravelMemoCard(btn){
