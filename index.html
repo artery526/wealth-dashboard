@@ -4191,6 +4191,7 @@ function loadTravelMemoSheetRows(sheetName,type){
           direction:travelCell(row,8),
           transfers:travelCell(row,9),
           destination:travelCell(row,10),
+          note:travelCell(row,11),
           rowIndex:index+2
         };
       }
@@ -4548,10 +4549,10 @@ function travelCardHtml(row){
     details+=travelDetailHtml('備註',row.note);
   }else{
     details+=travelDetailHtml('住宿地點',row.stayPlace);
+    details+=travelDetailHtml('備註',row.note);
     details+=travelDetailHtml('注意事項',row.title);
     details+=travelDetailHtml('鄰近交通',row.nearTraffic);
     details+=travelAddressDetailHtml('住宿地址',row.address);
-    details+=travelDetailHtml('備註',row.note);
   }
   return '<article class="travel-card">'
     +'<div class="travel-card-head"><div><div class="travel-title-line">'+(time?'<div class="travel-time-badge">'+esc(time)+'</div>':'')+'</div><div class="travel-card-subdate">'+esc(row.dateDisplay||row.dateKey)+'</div></div><div class="travel-card-actions"><div class="travel-card-no">#'+esc(row.rowIndex)+'</div><button class="travel-hide-btn" type="button" data-travel-row-id="'+esc(row.rowIndex)+'" data-travel-sheet="'+esc(row.sourceSheet||'')+'" onclick="hideTravelMemoCard(this)">關閉</button></div></div>'
