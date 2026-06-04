@@ -4420,7 +4420,12 @@ function switchTravelAddType(type){
   ['traffic','stay'].forEach(function(name){
     var section=document.getElementById('travel-add-section-'+name);
     var btn=document.getElementById('travel-mode-'+name);
-    if(section)section.classList.toggle('active',name===clean);
+    if(section){
+      section.classList.toggle('active',name===clean);
+      section.querySelectorAll('input,select,textarea').forEach(function(field){
+        field.disabled=name!==clean;
+      });
+    }
     if(btn)btn.classList.toggle('active',name===clean);
   });
   initTravelAddDefaults(clean);
