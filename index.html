@@ -1497,6 +1497,9 @@ body::after{
 .travel-copy-btn{border:1px solid rgba(232,192,80,.38);border-radius:8px;background:linear-gradient(180deg,rgba(64,43,10,.82),rgba(22,15,5,.78));color:#f0dfa0;font-family:var(--sans);font-size:12px;font-weight:900;padding:6px 9px;cursor:pointer;white-space:nowrap;transition:border-color .2s,box-shadow .2s,background .2s;color-scheme:dark}
 .travel-copy-btn:hover{border-color:rgba(232,192,80,.7);box-shadow:0 0 13px rgba(232,192,80,.2);background:linear-gradient(180deg,rgba(82,55,12,.9),rgba(31,21,6,.86))}
 .travel-copy-btn:disabled{opacity:.78;cursor:default}
+.travel-carrier-link{height:32px;max-width:92px;border:1px solid rgba(232,192,80,.38);border-radius:8px;background:rgba(10,8,4,.72);padding:3px 6px;display:inline-flex;align-items:center;justify-content:center;transition:border-color .2s,box-shadow .2s,background .2s}
+.travel-carrier-link:hover{border-color:rgba(232,192,80,.7);box-shadow:0 0 13px rgba(232,192,80,.2);background:rgba(35,24,8,.86)}
+.travel-carrier-img{display:block;max-width:78px;max-height:24px;width:auto;height:auto;object-fit:contain}
 .travel-head-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap;justify-content:flex-end}
 .travel-map-btn{border:1px solid rgba(78,217,255,.3);border-radius:8px;background:rgba(78,217,255,.08);color:#aeefff;font-family:var(--sans);font-size:12px;font-weight:800;padding:7px 9px;cursor:pointer;transition:border-color .2s,background .2s}
 .travel-map-btn:hover{border-color:rgba(78,217,255,.62);background:rgba(78,217,255,.14)}
@@ -1551,7 +1554,7 @@ body::after{
 .travel-add-submit:disabled{opacity:.58;cursor:wait}
 .travel-add-msg{font-family:var(--sans);font-size:12px;color:#9a7430;min-height:18px}
 .travel-add-msg.ok{color:#8fd0b8}.travel-add-msg.err{color:#ef9a77}
-@media(max-width:560px){.travel-overlay{padding:10px;align-items:flex-end}.travel-panel{max-height:86vh;border-radius:12px 12px 0 0}.travel-head{padding:13px 14px 10px;align-items:flex-start}.travel-title{font-size:19px}.travel-copy-btn{font-size:11px;padding:6px 8px}.travel-head-actions{justify-content:flex-start}.travel-body{padding:13px}.travel-route{grid-template-columns:1fr}.travel-arrow{display:none}.travel-card-head{flex-direction:column}.travel-card-actions{width:100%;justify-content:space-between}.travel-add-grid{grid-template-columns:1fr}.travel-time-pair{grid-template-columns:72px minmax(0,1fr)}}
+@media(max-width:560px){.travel-overlay{padding:10px;align-items:flex-end}.travel-panel{max-height:86vh;border-radius:12px 12px 0 0}.travel-head{padding:13px 14px 10px;align-items:flex-start}.travel-title{font-size:19px}.travel-copy-btn{font-size:11px;padding:6px 8px}.travel-carrier-link{height:30px;max-width:84px}.travel-carrier-img{max-width:70px;max-height:22px}.travel-head-actions{justify-content:flex-start}.travel-body{padding:13px}.travel-route{grid-template-columns:1fr}.travel-arrow{display:none}.travel-card-head{flex-direction:column}.travel-card-actions{width:100%;justify-content:space-between}.travel-add-grid{grid-template-columns:1fr}.travel-time-pair{grid-template-columns:72px minmax(0,1fr)}}
 
 @media(max-width:768px){
   .wrap{padding:76px 12px 44px}
@@ -2216,6 +2219,9 @@ body::after{
         <div class="travel-title-row">
           <div class="travel-title" id="travel-title">📖人生遠征錄</div>
           <button class="travel-copy-btn" id="travel-invoice-copy" type="button" onclick="copyInvoiceCarrier(this)">📋 複製載具</button>
+          <a class="travel-carrier-link" href="+EGWGSR.png" target="_blank" rel="noopener" title="顯示載具條碼" aria-label="顯示載具條碼">
+            <img class="travel-carrier-img" src="+EGWGSR.png" alt="電子發票載具條碼 /+EGWGSR">
+          </a>
         </div>
       </div>
       <div class="travel-head-actions">
