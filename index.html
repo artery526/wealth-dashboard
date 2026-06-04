@@ -1524,12 +1524,13 @@ body::after{
 .travel-map-scroll{max-height:62vh;overflow:auto;background:#05090b;text-align:left}
 .travel-map-img{display:block;width:100%;max-width:none;height:auto;margin:0;background:#05090b;transform-origin:top left}
 .travel-map-frame{display:block;width:100%;min-width:100%;height:62vh;border:0;background:#05090b;margin:0 auto}
-.travel-card-list{display:grid;gap:12px}
+.travel-card-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .travel-card{border:1px solid rgba(184,137,46,.34);border-radius:8px;background:rgba(10,8,4,.74);padding:13px 14px;position:relative;overflow:hidden}
 .travel-card:before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(#e8c050,#1d9e75)}
 .travel-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px}
 .travel-title-line{display:flex;align-items:center;gap:7px;flex-wrap:wrap;min-width:0}
 .travel-card-title{font-family:var(--sans);font-size:17px;font-weight:900;color:#f0dfa0;line-height:1.45;overflow-wrap:anywhere}
+.travel-card-subdate{font-family:var(--sans);font-size:12px;font-weight:900;color:#aeefff;margin-top:3px;line-height:1.35}
 .travel-time-badge{font-family:var(--mono);font-size:15px;font-weight:900;color:#a8f1d6;border:1px solid rgba(29,158,117,.52);border-radius:8px;background:linear-gradient(180deg,rgba(29,158,117,.18),rgba(10,8,4,.82));padding:5px 9px;box-shadow:0 0 14px rgba(29,158,117,.16),inset 0 1px 0 rgba(255,255,255,.06);white-space:nowrap}
 .travel-card-no{font-family:var(--mono);font-size:11px;color:#6f5422;border:1px solid rgba(184,137,46,.24);border-radius:999px;padding:3px 8px;white-space:nowrap}
 .travel-card-date{font-family:var(--sans);font-size:11px;font-weight:900;color:#aeefff;border:1px solid rgba(78,217,255,.24);border-radius:999px;background:rgba(78,217,255,.08);padding:3px 8px;white-space:nowrap}
@@ -1564,6 +1565,7 @@ body::after{
 .travel-add-submit:disabled{opacity:.58;cursor:wait}
 .travel-add-msg{font-family:var(--sans);font-size:12px;color:#9a7430;min-height:18px}
 .travel-add-msg.ok{color:#8fd0b8}.travel-add-msg.err{color:#ef9a77}
+@media(max-width:760px){.travel-card-list{grid-template-columns:1fr}}
 @media(max-width:560px){.travel-overlay{padding:10px;align-items:flex-end}.travel-panel{max-height:86vh;border-radius:12px 12px 0 0}.travel-head{padding:13px 14px 10px;align-items:flex-start}.travel-title{font-size:19px}.travel-copy-btn,.travel-carrier-show{font-size:11px;padding:6px 8px}.carrier-box{width:94vw;padding:42px 14px 18px}.carrier-img{padding:12px}.travel-head-actions{justify-content:flex-start}.travel-body{padding:13px}.travel-detail-row{grid-template-columns:76px minmax(0,1fr);gap:7px}.travel-route{grid-template-columns:1fr}.travel-arrow{display:none}.travel-card-head{flex-direction:column}.travel-card-actions{width:100%;justify-content:space-between}.travel-time-badge{font-size:14px;padding:5px 8px}.travel-add-grid{grid-template-columns:1fr}.travel-time-pair{grid-template-columns:72px minmax(0,1fr)}}
 
 @media(max-width:768px){
@@ -4508,7 +4510,7 @@ function travelCardHtml(row){
     details+=travelDetailHtml('備註',row.note);
   }
   return '<article class="travel-card">'
-    +'<div class="travel-card-head"><div class="travel-title-line"><div class="travel-card-title">'+esc(row.cardType||'遠征卡')+'</div>'+(time?'<div class="travel-time-badge">'+esc(time)+'</div>':'')+'<div class="travel-card-date">'+esc(row.dateDisplay||row.dateKey)+'</div></div><div class="travel-card-actions"><div class="travel-card-no">#'+esc(row.rowIndex)+'</div><button class="travel-hide-btn" type="button" data-travel-row-id="'+esc(row.rowIndex)+'" data-travel-sheet="'+esc(row.sourceSheet||'')+'" onclick="hideTravelMemoCard(this)">關閉</button></div></div>'
+    +'<div class="travel-card-head"><div><div class="travel-title-line"><div class="travel-card-title">'+esc(row.cardType||'遠征卡')+'</div>'+(time?'<div class="travel-time-badge">'+esc(time)+'</div>':'')+'</div><div class="travel-card-subdate">'+esc(row.dateDisplay||row.dateKey)+'</div></div><div class="travel-card-actions"><div class="travel-card-no">#'+esc(row.rowIndex)+'</div><button class="travel-hide-btn" type="button" data-travel-row-id="'+esc(row.rowIndex)+'" data-travel-sheet="'+esc(row.sourceSheet||'')+'" onclick="hideTravelMemoCard(this)">關閉</button></div></div>'
     +'<div class="travel-detail-list">'+details+'</div>'
     +'</article>';
 }
