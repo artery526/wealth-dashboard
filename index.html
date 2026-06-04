@@ -1542,6 +1542,10 @@ body::after{
 .travel-detail-row{display:grid;grid-template-columns:92px minmax(0,1fr);gap:9px;align-items:start;border:1px solid rgba(184,137,46,.2);border-radius:7px;background:rgba(255,255,255,.025);padding:8px 9px}
 .travel-detail-label{font-family:var(--sans);font-size:11px;font-weight:900;color:#8a6a30;line-height:1.45}
 .travel-detail-value{font-family:var(--sans);font-size:14px;font-weight:850;color:#d8c18a;line-height:1.45;overflow-wrap:anywhere}
+.travel-address-value{display:flex;align-items:flex-start;gap:7px}
+.travel-address-text{min-width:0;flex:1;overflow-wrap:anywhere}
+.travel-map-search{width:30px;height:30px;border:1px solid rgba(78,217,255,.34);border-radius:8px;background:rgba(78,217,255,.08);color:#aeefff;font-family:var(--sans);font-size:15px;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;transition:border-color .2s,box-shadow .2s,background .2s}
+.travel-map-search:hover{border-color:rgba(78,217,255,.68);box-shadow:0 0 13px rgba(78,217,255,.18);background:rgba(78,217,255,.15)}
 .travel-route{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;margin:8px 0}
 .travel-point{border:1px solid rgba(184,137,46,.22);border-radius:7px;background:rgba(255,255,255,.03);padding:8px 9px;min-width:0}
 .travel-point-label{font-family:var(--sans);font-size:10px;color:#6f5422;margin-bottom:3px}
@@ -4491,6 +4495,12 @@ function travelDetailHtml(label,value){
   if(value==null||String(value).trim()==='')return '';
   return '<div class="travel-detail-row"><div class="travel-detail-label">'+esc(label)+'</div><div class="travel-detail-value">'+esc(value)+'</div></div>';
 }
+function travelAddressDetailHtml(label,value){
+  if(value==null||String(value).trim()==='')return '';
+  var address=String(value).trim();
+  var url='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(address);
+  return '<div class="travel-detail-row"><div class="travel-detail-label">'+esc(label)+'</div><div class="travel-detail-value travel-address-value"><span class="travel-address-text">'+esc(address)+'</span><a class="travel-map-search" href="'+esc(url)+'" target="_blank" rel="noopener" title="在 Google 地圖查看" aria-label="在 Google 地圖查看">🔍</a></div></div>';
+}
 function travelCardHtml(row){
   var time=[row.start,row.end].filter(Boolean).join(' - ');
   var details='';
@@ -4506,7 +4516,7 @@ function travelCardHtml(row){
     details+=travelDetailHtml('住宿地點',row.stayPlace);
     details+=travelDetailHtml('注意事項',row.title);
     details+=travelDetailHtml('鄰近交通',row.nearTraffic);
-    details+=travelDetailHtml('住宿地址',row.address);
+    details+=travelAddressDetailHtml('住宿地址',row.address);
     details+=travelDetailHtml('備註',row.note);
   }
   return '<article class="travel-card">'
