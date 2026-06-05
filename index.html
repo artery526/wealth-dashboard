@@ -6054,21 +6054,11 @@ function renderAdvisorTaskForm(){
     <div class="advisor-task-note">把想交給軍師處理的需求寫成工單，會送到 Google Sheet 的「軍師工單」。之後在這裡下令讀工單，我會依序處理。</div>
     <div class="form-grid">
       <div class="form-group">
-        <label class="form-label">任務類型</label>
+        <label class="form-label">工單類別</label>
         <select class="form-control" id="task-type">
-          <option>網頁修改</option>
-          <option>試算表公式</option>
-          <option>新增持股/帳戶</option>
-          <option>資料核對</option>
-          <option>副軍師草稿</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label class="form-label">優先度</label>
-        <select class="form-control" id="task-priority">
-          <option>一般</option>
-          <option>高</option>
-          <option>低</option>
+          <option>報錯</option>
+          <option>新增功能</option>
+          <option>修改內容</option>
         </select>
       </div>
       <div class="form-group">
@@ -6083,12 +6073,32 @@ function renderAdvisorTaskForm(){
         <select class="form-control" id="task-target-sheet"></select>
       </div>
       <div class="form-group full">
-        <label class="form-label">相關區域</label>
-        <input class="form-control" id="task-area" type="text" maxlength="80" placeholder="例如：軍機處 > 部隊陣容、月度戰情室 D22">
+        <label class="form-label">位置</label>
+        <input class="form-control" id="task-area" type="text" maxlength="120" placeholder="例如：網頁端 > 內政 > 快速記帳 > 收入">
       </div>
       <div class="form-group full">
-        <label class="form-label">需求內容</label>
-        <textarea class="form-control" id="task-detail" maxlength="1500" rows="8" placeholder="請寫下要新增、修改、檢查或同步的內容..."></textarea>
+        <label class="form-label">改動方向/動作</label>
+        <textarea class="form-control" id="task-action" maxlength="700" rows="3" placeholder="例如：選「🐦‍🔥CHPY」後送出收入 7843"></textarea>
+      </div>
+      <div class="form-group full">
+        <label class="form-label">預期效果</label>
+        <textarea class="form-control" id="task-expected" maxlength="700" rows="3" placeholder="例如：試算表「⚔️帝國指揮所」>「資料庫」F 欄備註應顯示「🐦‍🔥CHPY」"></textarea>
+      </div>
+      <div class="form-group full">
+        <label class="form-label">實際效果</label>
+        <textarea class="form-control" id="task-actual" maxlength="700" rows="3" placeholder="例如：F 欄只顯示「CHPY」"></textarea>
+      </div>
+      <div class="form-group full">
+        <label class="form-label">時間/最新資料</label>
+        <input class="form-control" id="task-latest" type="text" maxlength="160" placeholder="例如：剛剛 16:05 測的，最新一筆是 7843">
+      </div>
+      <div class="form-group full">
+        <label class="form-label">是否已重整</label>
+        <select class="form-control" id="task-refresh">
+          <option>已 Ctrl+F5</option>
+          <option>未重整</option>
+          <option>不確定</option>
+        </select>
       </div>
       <div class="form-group full hidden" id="task-draft-wrap">
         <label class="form-label">副軍師草稿</label>
@@ -6146,11 +6156,12 @@ async function onTaskTargetChange(){
 function advisorTaskPayload(){
   var targetType=(document.getElementById('task-target-type')||{}).value||'網頁端';
   var targetSheet=targetType==='試算表'?((document.getElementById('task-target-sheet')||{}).value||''):'';
+  var detail=buildAdvisorTaskDetail();
   return {
-    detail:(document.getElementById('task-detail').value||'').trim(),
+    detail:detail,
     area:(document.getElementById('task-area').value||'').trim(),
     taskType:document.getElementById('task-type').value,
-    priority:document.getElementById('task-priority').value,
+    priority:document.getElementById('task-type').value,
     targetType:targetType,
     targetSheet:targetSheet
   };
@@ -6158,6 +6169,47 @@ function advisorTaskPayload(){
 
 function advisorDraftKey(payload){
   return [payload.detail,payload.area,payload.taskType,payload.priority,payload.targetType,payload.targetSheet].join('\n---\n');
+}
+
+function advisorFieldValue(id){
+  var el=document.getElementById(id);
+  return (el&&el.value||'').trim();
+}
+
+function buildAdvisorTaskDetail(){
+  return [
+    ['位置：',advisorFieldValue('task-area')],
+    ['改動方向/動作：',advisorFieldValue('task-action')],
+    ['預期效果：',advisorFieldValue('task-expected')],
+    ['實際效果：',advisorFieldValue('task-actual')],
+    ['時間/最新資料：',advisorFieldValue('task-latest')],
+    ['是否已重整：',advisorFieldValue('task-refresh')]
+  ].map(function(pair){return pair[0]+'\n'+pair[1];}).join('\n\n').trim();
+}
+
+function hasAdvisorTaskBody(){
+  return [
+    'task-area',
+    'task-action',
+    'task-expected',
+    'task-actual',
+    'task-latest'
+  ].some(function(id){return !!advisorFieldValue(id);});
+}
+
+function clearAdvisorTaskFields(){
+  [
+    'task-area',
+    'task-action',
+    'task-expected',
+    'task-actual',
+    'task-latest'
+  ].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el)el.value='';
+  });
+  var refresh=document.getElementById('task-refresh');
+  if(refresh)refresh.value='已 Ctrl+F5';
 }
 
 async function submitAdvisorTask(){
@@ -6173,8 +6225,8 @@ async function submitAdvisorTask(){
   }
   var payload=advisorTaskPayload();
   var draft=limitTaskDraft((document.getElementById('task-draft').value||'').trim());
-  if(!payload.detail){
-    msg.textContent='請先輸入需求內容';
+  if(!hasAdvisorTaskBody()){
+    msg.textContent='請先填寫工單內容';
     msg.className='result-msg err';
     return;
   }
@@ -6191,8 +6243,7 @@ async function submitAdvisorTask(){
     var res=await apiPost(Object.assign({action:'advisorTask',draft},payload));
     msg.textContent='已送出：軍師工單第 '+res.row+' 列，狀態 '+res.status;
     msg.className='result-msg ok';
-    document.getElementById('task-detail').value='';
-    document.getElementById('task-area').value='';
+    clearAdvisorTaskFields();
     document.getElementById('task-draft').value='';
     document.getElementById('task-draft-wrap').classList.add('hidden');
     lastAdvisorDraftKey='';
@@ -6226,8 +6277,8 @@ async function requestAdvisorDraft(){
   var payload=advisorTaskPayload();
   var key=advisorDraftKey(payload);
   var existing=(document.getElementById('task-draft').value||'').trim();
-  if(!payload.detail){
-    msg.textContent='請先輸入需求內容';
+  if(!hasAdvisorTaskBody()){
+    msg.textContent='請先填寫工單內容';
     msg.className='result-msg err';
     return;
   }
