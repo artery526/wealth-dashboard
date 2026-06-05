@@ -4115,8 +4115,7 @@ function syncDivNote(){
   var src=document.getElementById('i-source');
   var isInv=src&&isInvestSrc(src.value);
   var selected=s&&s.selectedOptions&&s.selectedOptions[0];
-  var rawValue=selected?String(selected.value||selected.textContent||'').trim():'';
-  var value=(isInv&&selected)?(normalizeKey(rawValue)||rawValue):'';
+  var value=(isInv&&selected)?String(selected.textContent||selected.value||'').trim():'';
   n.value=value;
   return value;
 }
