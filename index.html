@@ -136,6 +136,15 @@ body::after{
   margin:-18px auto 24px;
   isolation:isolate;
 }
+.court-agenda{
+  position:absolute;
+  left:50%;
+  top:9px;
+  transform:translateX(-50%);
+  width:min(260px,34vw);
+  margin:0;
+  z-index:2;
+}
 .today-agenda-tab{
   width:100%;
   min-height:48px;
@@ -161,6 +170,20 @@ body::after{
   box-shadow:0 12px 26px rgba(0,0,0,.34),0 0 18px rgba(216,198,154,.08),inset 0 1px 0 rgba(255,246,216,.24);
   text-shadow:0 1px 0 rgba(244,235,207,.34);
 }
+.court-agenda .today-agenda-tab{
+  min-height:34px;
+  gap:7px;
+  border-color:rgba(232,192,80,.46);
+  border-radius:999px;
+  background:
+    radial-gradient(ellipse 80% 180% at 50% 0%,rgba(255,242,184,.34),transparent 58%),
+    linear-gradient(90deg,rgba(38,26,8,.82),rgba(182,135,36,.52) 28%,rgba(232,192,80,.66) 50%,rgba(182,135,36,.52) 72%,rgba(38,26,8,.82));
+  color:#fff0b8;
+  font-size:14px;
+  letter-spacing:2px;
+  box-shadow:0 0 18px rgba(232,192,80,.18),0 8px 20px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,246,216,.24);
+  text-shadow:0 0 12px rgba(232,192,80,.42),0 1px 0 rgba(0,0,0,.55);
+}
 .today-agenda-tab small{
   font-family:var(--sans);
   font-size:10px;
@@ -168,7 +191,9 @@ body::after{
   letter-spacing:1px;
   color:#5a4930;
 }
+.court-agenda .today-agenda-tab small{display:none}
 .today-agenda-tab:hover{filter:brightness(1.05);box-shadow:0 14px 28px rgba(0,0,0,.42),0 0 24px rgba(216,198,154,.14),inset 0 1px 0 rgba(255,246,216,.32)}
+.court-agenda .today-agenda-tab:hover{box-shadow:0 0 24px rgba(232,192,80,.28),0 10px 24px rgba(0,0,0,.36),inset 0 1px 0 rgba(255,246,216,.28)}
 .today-agenda-sheet{
   position:relative;
   width:100%;
@@ -201,6 +226,11 @@ body::after{
   transition:opacity .22s ease,transform .22s ease,max-height .24s ease,margin-top .24s ease,padding-top .24s ease,padding-bottom .24s ease;
   z-index:20;
 }
+.court-agenda .today-agenda-sheet{
+  width:min(560px,calc(100vw - 28px));
+  left:50%;
+  transform:translate(-50%,-4px);
+}
 .today-agenda.is-open .today-agenda-sheet{
   opacity:1;
   pointer-events:auto;
@@ -210,6 +240,9 @@ body::after{
   padding-bottom:22px;
   overflow:auto;
   transform:translateY(0);
+}
+.court-agenda.is-open .today-agenda-sheet{
+  transform:translate(-50%,0);
 }
 .today-agenda-close{
   position:absolute;
@@ -278,12 +311,20 @@ body::after{
   .today-agenda{
     margin:0 0 10px;
   }
+  .court-agenda{
+    width:min(220px,38vw);
+    margin:0;
+  }
 }
 @media(max-width:540px){
   .today-agenda{width:100%;margin-top:0}
+  .court-agenda{position:relative;left:auto;top:auto;transform:none;width:100%;order:2}
   .today-agenda-tab{min-height:50px;font-size:18px}
+  .court-agenda .today-agenda-tab{min-height:34px;font-size:13px}
   .today-agenda-tab small{display:none}
   .today-agenda-sheet{padding-left:16px;padding-right:16px}
+  .court-agenda .today-agenda-sheet{left:auto;width:100%;transform:translateY(-4px)}
+  .court-agenda.is-open .today-agenda-sheet{transform:translateY(0)}
   .today-agenda-head{align-items:flex-start;flex-direction:column}
   .today-agenda-title{font-size:22px}
   .agenda-item{grid-template-columns:1fr}
@@ -2050,25 +2091,7 @@ body::after{
       </div>
     </div>
   </div>
-</div>
-
-<div class="wrap">
-  <div class="hdr">
-    <!-- 左側：主公圖 -->
-    <div class="hdr-left">
-      <div class="hdr-char-wrap" onclick="openAdvisorDialog()">
-        <video class="hdr-char"
-          src="e_a_f_b_d_e_fmp_.mp4"
-          loop muted playsinline preload="metadata">
-        </video>
-        <div class="hdr-char-vignette"></div>
-      </div>
-    </div>
-
-
-  </div>
-
-  <section class="today-agenda" id="today-agenda" aria-label="朝中政務">
+  <section class="today-agenda court-agenda" id="today-agenda" aria-label="朝中政務">
     <button class="today-agenda-tab" id="today-agenda-toggle" type="button" onclick="toggleTodayAgenda()" aria-expanded="false" aria-controls="today-agenda-sheet">
       <span>📜 朝中政務</span>
       <small>點卷展開</small>
@@ -2087,6 +2110,23 @@ body::after{
       </div>
     </div>
   </section>
+</div>
+
+<div class="wrap">
+  <div class="hdr">
+    <!-- 左側：主公圖 -->
+    <div class="hdr-left">
+      <div class="hdr-char-wrap" onclick="openAdvisorDialog()">
+        <video class="hdr-char"
+          src="e_a_f_b_d_e_fmp_.mp4"
+          loop muted playsinline preload="metadata">
+        </video>
+        <div class="hdr-char-vignette"></div>
+      </div>
+    </div>
+
+
+  </div>
 
   <div class="cards">
 
