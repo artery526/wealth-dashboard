@@ -1022,6 +1022,8 @@ body::after{
 .booking-dividend-pending .dividend-pending-name{font-size:11px}
 .booking-dividend-pending .dividend-pending-meta{font-size:13px;color:var(--gold);text-shadow:0 0 8px rgba(232,192,80,.16)}
 .booking-dividend-head{display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:1px solid #1e1408;padding-bottom:7px;margin:0 0 8px}
+.booking-dividend-head{cursor:pointer}
+.booking-dividend-section-toggle{cursor:pointer}
 .booking-dividend-title{font-family:var(--sans);font-size:10px;letter-spacing:3px;color:#7a6030;text-transform:uppercase}
 .booking-dividend-toggle{border:1px solid rgba(232,192,80,.32);border-radius:999px;background:rgba(232,192,80,.06);color:var(--gold);font-family:var(--sans);font-size:10px;font-weight:900;padding:4px 9px;cursor:pointer;white-space:nowrap}
 .booking-dividend-toggle:hover{box-shadow:0 0 12px rgba(232,192,80,.16)}
@@ -4755,6 +4757,16 @@ function setBookingDividendExpanded(expanded){
   refreshBookingDividendPendingView();
 }
 
+function toggleBookingDividendExpanded(){
+  if(bookingDividendPickerOpen){
+    bookingDividendPickerOpen=false;
+    bookingDividendExpanded=false;
+  }else{
+    bookingDividendExpanded=!bookingDividendExpanded;
+  }
+  refreshBookingDividendPendingView();
+}
+
 function openBookingDividendPicker(){
   bookingDividendPickerOpen=true;
   bookingDividendExpanded=true;
@@ -5146,9 +5158,9 @@ function renderBookingDividendPending(data){
     var pickerList=pending.map(function(row){return renderDividendPendingRow(row,true);}).join('')||'<div class="dividend-empty">目前沒有待入帳配息。</div>';
     return `<div class="booking-dividend-backdrop" onclick="closeBookingDividendPicker()"></div>
     <div class="booking-dividend-panel${bookingDividendPickerOpen?' is-floating':''}">
-      <div class="booking-dividend-head">
+      <div class="booking-dividend-head" onclick="toggleBookingDividendExpanded()">
         <div class="booking-dividend-title">待入帳配息</div>
-        <button class="booking-dividend-toggle" type="button" onclick="setBookingDividendExpanded(!bookingDividendExpanded)">${expanded?'收合':'展開'}</button>
+        <button class="booking-dividend-toggle" type="button" onclick="event.stopPropagation();toggleBookingDividendExpanded()">${expanded?'收合':'展開'}</button>
       </div>
       <div class="booking-dividend-summary">點選一筆配息紀錄後會自動帶入並關閉浮窗</div>
       ${pickerList}
@@ -5159,15 +5171,15 @@ function renderBookingDividendPending(data){
   var tradeTotal=tradePending.reduce(function(sum,row){return sum+(Number(row.estimatedTwd)||0);},0);
   var dividendTotal=pending.reduce(function(sum,row){return sum+(Number(row.estimatedTwd)||0);},0);
   var tradeList=tradePending.length?'<div class="dividend-section-title">待入帳持股記錄</div>'+tradePending.map(renderHoldingTradePendingRow).join(''):'';
-  var dividendList=pending.length?'<div class="dividend-section-title">待入帳配息</div>'+pending.map(function(row){return renderDividendPendingRow(row,true);}).join(''):'';
+  var dividendList=pending.length?'<div class="dividend-section-title booking-dividend-section-toggle" onclick="toggleBookingDividendExpanded()">待入帳配息</div>'+pending.map(function(row){return renderDividendPendingRow(row,true);}).join(''):'';
   var summary=[
     tradePending.length?`<div class="booking-dividend-summary">${tradePending.length} 筆待入帳持股記錄 · NT${fmtFull(tradeTotal)}</div>`:'',
     pending.length?`<div class="booking-dividend-summary">${pending.length} 筆待入帳配息 · NT${fmtFull(dividendTotal)}</div>`:''
   ].join('');
   return `<div class="booking-dividend-panel">
-      <div class="booking-dividend-head">
+      <div class="booking-dividend-head" onclick="toggleBookingDividendExpanded()">
         <div class="booking-dividend-title">待入帳提醒</div>
-        <button class="booking-dividend-toggle" type="button" onclick="setBookingDividendExpanded(!bookingDividendExpanded)">${expanded?'收合':'展開'}</button>
+        <button class="booking-dividend-toggle" type="button" onclick="event.stopPropagation();toggleBookingDividendExpanded()">${expanded?'收合':'展開'}</button>
       </div>
       ${expanded?tradeList+dividendList:summary}
     </div>`;
