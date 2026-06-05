@@ -4126,6 +4126,10 @@ function stripIncomeStockNotePrefix(note){
   s=s.replace(/^股票[:：]\s*[^｜|]+\s*$/,'').trim();
   return s;
 }
+
+function stripLeadingEmojiNote(note){
+  return String(note||'').trim().replace(/^(?:[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}][\uFE0E\uFE0F]?(?:\u200D[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}][\uFE0E\uFE0F]?)*\s*)+/u,'').trim();
+}
 function normalizeTravelMapUrl(url){
   var s=String(url||'').trim();
   if(!s)return { url:'', mode:'image' };
@@ -4952,6 +4956,7 @@ async function submitIncome(e){
   var divRate=document.getElementById('i-div-rate')?document.getElementById('i-div-rate').value:'';
   var divSym=document.getElementById('i-div-sym')?document.getElementById('i-div-sym').value:'';
   if(isInvestSrc(src))note=syncDivNote();
+  note=stripLeadingEmojiNote(note);
   var dividendRowId=(document.getElementById('i-amount')&&document.getElementById('i-amount').dataset.dividendRowId)||'';
   if(!date||!src||!acc||amt<=0){showMsg('msg-income','請填寫所有必填欄位','err');return}
   if(isInvestSrc(src)&&!divSym){showMsg('msg-income','請選擇配息標的','err');return}
