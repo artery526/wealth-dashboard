@@ -283,6 +283,9 @@ body::after{
 }
 .today-agenda-refresh:disabled{opacity:.55;cursor:wait}
 .today-agenda-list{position:relative;z-index:3;display:grid;gap:8px;padding:12px 0 0}
+.agenda-section{display:grid;gap:8px}
+.agenda-section+.agenda-section{margin-top:16px;padding-top:14px;border-top:1px solid rgba(232,192,80,.2)}
+.agenda-section-title{font-family:var(--sans);font-size:12px;font-weight:900;letter-spacing:2px;color:#f0dfa0;text-shadow:0 0 10px rgba(232,192,80,.18)}
 .today-agenda-empty,.today-agenda-loading,.today-agenda-error{
   font-family:var(--font);font-size:16px;font-weight:700;line-height:1.9;color:#f0e1b4;text-align:center;padding:18px 8px 8px;
   text-shadow:0 0 8px rgba(232,192,80,.12);
@@ -307,6 +310,18 @@ body::after{
 .agenda-meta{
   margin-top:4px;font-family:var(--sans);font-size:11px;color:#bda36d;line-height:1.55;
 }
+.task-item{
+  display:grid;grid-template-columns:24px minmax(0,1fr);gap:10px;align-items:start;
+  padding:9px 0 10px;border-bottom:1px solid rgba(232,192,80,.14);
+  background:linear-gradient(90deg,rgba(232,192,80,.07),transparent 42%,rgba(255,246,204,.04));
+}
+.task-mark{
+  display:flex;align-items:center;justify-content:center;width:20px;height:20px;margin-top:2px;
+  border:1px solid rgba(232,192,80,.42);border-radius:50%;color:#f0d894;font-size:11px;
+  box-shadow:inset 0 0 10px rgba(232,192,80,.08);
+}
+.task-title{font-family:var(--font);font-size:15px;font-weight:900;color:#fff2c4;line-height:1.5}
+.task-meta{margin-top:4px;font-family:var(--sans);font-size:11px;color:#bda36d;line-height:1.55}
 @media(max-width:960px){
   .today-agenda{
     margin:0 0 10px;
@@ -3402,33 +3417,66 @@ async function loadTodayCalendar(){
   }
   try{
     if(btn)btn.disabled=true;
-    setAgendaState('軍師正在調閱今日行程…','loading');
-    var data=HEALTH_API_URL?await medicalPost({_action:'getTodayCalendar'}):await apiGet({action:'todayCalendar'});
-    var events=data.events||[];
+    setAgendaState('軍師正在調閱朝中政務…','loading');
+    var results=await Promise.allSettled([
+      HEALTH_API_URL?medicalPost({_action:'getTodayCalendar'}):apiGet({action:'todayCalendar'}),
+      API_URL?apiGet({action:'todayTasks'}):Promise.reject(new Error('尚未設定 Web App API，無法讀取 Google Tasks'))
+    ]);
     var box=document.getElementById('today-calendar-list');
     if(!box)return;
-    if(!events.length){
-      setAgendaState('今日無政務，主公可安心調息。','empty');
-      return;
-    }
-    box.innerHTML=events.map(function(ev){
-      var meta=[];
-      if(ev.location)meta.push('📍 '+esc(ev.location));
-      if(ev.calendarName)meta.push('📒 '+esc(ev.calendarName));
-      if(ev.description)meta.push(esc(ev.description));
-      return `<div class="agenda-item">
-        <div class="agenda-time">${esc(ev.timeText||'整日')}</div>
-        <div>
-          <div class="agenda-title">${esc(ev.title||'未命名行程')}</div>
-          ${meta.length?`<div class="agenda-meta">${meta.join('<br>')}</div>`:''}
-        </div>
-      </div>`;
-    }).join('');
+    var calendarHtml=results[0].status==='fulfilled'
+      ? renderCalendarAgenda(results[0].value.events||[])
+      : `<div class="today-agenda-error">${esc(results[0].reason&&results[0].reason.message||'今日行程讀取失敗')}</div>`;
+    var taskHtml=results[1].status==='fulfilled'
+      ? renderGoogleTasks(results[1].value.tasks||[])
+      : `<div class="today-agenda-error">${esc(results[1].reason&&results[1].reason.message||'Google Tasks 讀取失敗')}</div>`;
+    box.innerHTML=`<section class="agenda-section">
+      <div class="agenda-section-title">今日行程</div>
+      ${calendarHtml}
+    </section>
+    <section class="agenda-section">
+      <div class="agenda-section-title">待辦事項</div>
+      ${taskHtml}
+    </section>`;
   }catch(err){
     setAgendaState((err.message||'朝中政務讀取失敗')+'<br>優先使用醫館 API 授權；若改用主 Web App，才需要 Calendar 授權。','error');
   }finally{
     if(btn)btn.disabled=false;
   }
+}
+
+function renderCalendarAgenda(events){
+  if(!events.length)return '<div class="today-agenda-empty">今日無行程。</div>';
+  return events.map(function(ev){
+    var meta=[];
+    if(ev.location)meta.push('📍 '+esc(ev.location));
+    if(ev.calendarName)meta.push('📒 '+esc(ev.calendarName));
+    if(ev.description)meta.push(esc(ev.description));
+    return `<div class="agenda-item">
+      <div class="agenda-time">${esc(ev.timeText||'整日')}</div>
+      <div>
+        <div class="agenda-title">${esc(ev.title||'未命名行程')}</div>
+        ${meta.length?`<div class="agenda-meta">${meta.join('<br>')}</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderGoogleTasks(tasks){
+  if(!tasks.length)return '<div class="today-agenda-empty">目前沒有未完成待辦。</div>';
+  return tasks.map(function(task){
+    var meta=[];
+    if(task.dueText)meta.push('期限 '+esc(task.dueText));
+    if(task.taskListName)meta.push('清單 '+esc(task.taskListName));
+    if(task.notes)meta.push(esc(task.notes));
+    return `<div class="task-item">
+      <div class="task-mark">□</div>
+      <div>
+        <div class="task-title">${esc(task.title||'未命名待辦')}</div>
+        ${meta.length?`<div class="task-meta">${meta.join('<br>')}</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
 }
 
 async function loadMedicalOptions(){
