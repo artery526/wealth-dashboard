@@ -4115,7 +4115,8 @@ function syncDivNote(){
   var src=document.getElementById('i-source');
   var isInv=src&&isInvestSrc(src.value);
   var selected=s&&s.selectedOptions&&s.selectedOptions[0];
-  var value=(isInv&&selected)?String(selected.textContent||selected.value||'').trim():'';
+  var rawValue=selected?String(selected.value||selected.textContent||'').trim():'';
+  var value=(isInv&&selected)?(normalizeKey(rawValue)||rawValue):'';
   n.value=value;
   return value;
 }
@@ -4799,6 +4800,15 @@ function findInvestmentIncomeSource(){
   var opts=Array.from(src.options||[]);
   var found=opts.find(function(o){return isInvestSrc(o.value);});
   return found?found.value:(opts[0]?opts[0].value:'');
+}
+
+function getDividendDisplayValue(symbol,selectEl){
+  var key=normalizeKey(symbol);
+  if(!key||!selectEl)return String(symbol||'').trim();
+  var opt=Array.from(selectEl.options||[]).find(function(option){
+    return normalizeKey(option.value)===key||normalizeKey(option.textContent)===key;
+  });
+  return opt?opt.value:key;
 }
 
 async function loadDividendCenter(force){
@@ -5667,7 +5677,10 @@ async function deleteDividendPending(key,btn){
 function selectBookingDividendPending(key){
   var rows=((dividendCenterCache&&dividendCenterCache.pending)||[]).filter(Boolean);
   var row=rows.find(function(item){return dividendPendingKey(item)===String(key);});
-  if(row)applyIncomeDividendAutofill(row);
+  if(row){
+    setBookingEntryMode('income');
+    applyIncomeDividendAutofill(row);
+  }
 }
 
 function renderDividendPendingRow(row,allowDismiss){
