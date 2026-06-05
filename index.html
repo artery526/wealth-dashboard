@@ -4115,7 +4115,9 @@ function syncDivNote(){
   var src=document.getElementById('i-source');
   var isInv=src&&isInvestSrc(src.value);
   var selected=s&&s.selectedOptions&&s.selectedOptions[0];
-  var value=(isInv&&selected)?String(selected.textContent||selected.value||'').trim():'';
+  var raw=(selected?String(selected.value||selected.textContent||'').trim():'');
+  var meta=holdingMeta(raw,raw);
+  var value=(isInv&&selected)?((meta.emoji?meta.emoji:'')+(meta.name||raw)).trim():'';
   n.value=value;
   return value;
 }
