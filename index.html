@@ -1308,17 +1308,17 @@ body::after{
 .chronicle-search{width:min(320px,100%);background:#0a0804;border:1px solid #2a1c08;border-radius:6px;color:var(--ink);font-family:var(--sans);font-size:12px;padding:8px 10px;outline:none}
 .chronicle-search:focus{border-color:rgba(232,192,80,.55)}
 .chronicle-count{font-family:var(--mono);font-size:11px;color:#8a6a30;white-space:nowrap}
-.chronicle-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
-.chronicle-card{border:1px solid rgba(184,137,46,.32);border-radius:8px;background:rgba(10,8,4,.76);padding:12px;min-width:0}
-.chronicle-name{font-family:var(--sans);font-size:15px;font-weight:900;color:var(--gold);line-height:1.45;margin-bottom:8px;overflow-wrap:anywhere}
-.chronicle-meta{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
-.chronicle-pill{border:1px solid rgba(184,137,46,.28);border-radius:999px;background:rgba(184,137,46,.10);color:#c09a50;font-family:var(--sans);font-size:11px;font-weight:800;padding:4px 8px}
-.chronicle-cost{border-top:1px solid #1e1408;padding-top:9px}
-.chronicle-cost-label{font-family:var(--sans);font-size:10px;color:#5a4018;letter-spacing:1px;margin-bottom:3px}
-.chronicle-cost-value{font-family:var(--mono);font-size:20px;font-weight:800;color:#e7f9ff;text-shadow:0 0 10px rgba(78,217,255,.3);line-height:1.25;overflow-wrap:anywhere}
+.chronicle-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.chronicle-row{display:grid;grid-template-columns:minmax(120px,1.35fr) minmax(86px,.9fr) minmax(62px,.6fr) minmax(62px,.6fr) minmax(86px,.8fr);align-items:center;gap:8px;border:1px solid rgba(184,137,46,.32);border-radius:8px;background:rgba(10,8,4,.76);padding:10px 12px;min-width:0}
+.chronicle-cell{min-width:0;font-family:var(--sans);font-size:12px;font-weight:800;color:#c09a50;line-height:1.35;overflow-wrap:anywhere}
+.chronicle-cell:before{content:attr(data-label);display:block;font-family:var(--sans);font-size:9px;font-weight:900;color:#5a4018;letter-spacing:1px;margin-bottom:3px}
+.chronicle-name{font-size:14px;font-weight:900;color:var(--gold)}
+.chronicle-date{font-family:var(--mono);color:#d8b45d}
+.chronicle-cost-value{font-family:var(--mono);font-size:15px;font-weight:900;color:#e7f9ff;text-shadow:0 0 10px rgba(78,217,255,.3)}
 @media(max-width:760px){.ziwei-overview{grid-template-columns:1fr}.ziwei-sidebar{border-right:0;border-bottom:1px solid rgba(232,192,80,.62)}.ziwei-main:before{border-left:0;border-top:1px solid rgba(78,217,255,.75)}.ziwei-list{max-height:220px}.ziwei-viewer-head{flex-direction:column}.ziwei-tools{justify-content:flex-start}.ziwei-stage{min-height:260px;padding:10px}.chronicle-toolbar{align-items:stretch;flex-direction:column}.chronicle-search{width:100%}.chronicle-count{white-space:normal}}
-@media(max-width:540px){.chronicle-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.chronicle-card{aspect-ratio:1/1;display:flex;flex-direction:column;justify-content:space-between;padding:9px;border-color:rgba(232,192,80,.38);box-shadow:0 0 14px rgba(184,137,46,.12),inset 0 1px 0 rgba(255,255,255,.05)}.chronicle-name{font-size:12px;line-height:1.35;margin-bottom:5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.chronicle-meta{display:grid;grid-template-columns:1fr;gap:4px;margin-bottom:6px}.chronicle-pill{font-size:9px;line-height:1.2;padding:3px 5px;text-align:center;white-space:normal}.chronicle-cost{padding-top:6px}.chronicle-cost-label{font-size:8px;letter-spacing:.5px;margin-bottom:2px}.chronicle-cost-value{font-size:14px;line-height:1.15}}
-@media(max-width:360px){.chronicle-list{gap:7px}.chronicle-card{padding:7px}.chronicle-name{font-size:11px}.chronicle-pill{font-size:8px;padding:3px 4px}.chronicle-cost-value{font-size:12px}}
+@media(max-width:980px){.chronicle-list{grid-template-columns:1fr}}
+@media(max-width:540px){.chronicle-list{gap:9px}.chronicle-row{grid-template-columns:1fr 1fr;padding:9px}.chronicle-name{grid-column:1/-1;font-size:13px}.chronicle-cell{font-size:11px}.chronicle-cost-value{font-size:13px}}
+@media(max-width:360px){.chronicle-row{gap:7px;padding:7px}.chronicle-cell{font-size:10px}.chronicle-cell:before{font-size:8px}.chronicle-cost-value{font-size:12px}}
 @media(max-width:540px){.market-command{grid-template-columns:1fr}.market-counts{justify-content:flex-start}.market-metrics{grid-template-columns:1fr 1fr}.macro-actions,.macro-grid{grid-template-columns:1fr}.macro-scenario{font-size:24px}}
 @media(max-width:640px){.battle-report-grid{grid-template-columns:1fr}.battle-report-head{flex-direction:column}.battle-report-refresh{width:100%}}
 
@@ -2908,6 +2908,11 @@ function renderEventChronicleList(){
   var q=String((document.getElementById('chronicle-search')||{}).value||'').trim().toLowerCase();
   var rows=eventChronicleCache.filter(function(row){
     return !q||String(row.name||'').toLowerCase().indexOf(q)>=0;
+  }).slice().sort(function(a,b){
+    var ad=Date.parse(String(a.date||'').replace(/\//g,'-'));
+    var bd=Date.parse(String(b.date||'').replace(/\//g,'-'));
+    if(!isNaN(ad)||!isNaN(bd))return (isNaN(bd)?0:bd)-(isNaN(ad)?0:ad);
+    return (Number(b.rowNumber)||0)-(Number(a.rowNumber)||0);
   });
   if(count)count.textContent=rows.length+' / '+eventChronicleCache.length+' 筆';
   if(!rows.length){
@@ -2915,19 +2920,16 @@ function renderEventChronicleList(){
     return;
   }
   list.innerHTML=rows.map(function(row){
+    var date=String(row.date||'').trim()||'--';
     var months=String(row.months||'').trim()||'--';
     var days=String(row.days||'').trim()||'--';
     var dailyCost=String(row.dailyCost||'').trim()||'--';
-    return `<div class="chronicle-card">
-      <div class="chronicle-name">${esc(row.name||'未命名')}</div>
-      <div class="chronicle-meta">
-        <span class="chronicle-pill">經歷 ${esc(months)} 月</span>
-        <span class="chronicle-pill">${esc(days)} 日</span>
-      </div>
-      <div class="chronicle-cost">
-        <div class="chronicle-cost-label">每日花費</div>
-        <div class="chronicle-cost-value">${esc(dailyCost)}</div>
-      </div>
+    return `<div class="chronicle-row">
+      <div class="chronicle-cell chronicle-name" data-label="項目名稱">${esc(row.name||'未命名')}</div>
+      <div class="chronicle-cell chronicle-date" data-label="日期記錄">${esc(date)}</div>
+      <div class="chronicle-cell" data-label="經歷月">${esc(months)}</div>
+      <div class="chronicle-cell" data-label="經歷日">${esc(days)}</div>
+      <div class="chronicle-cell chronicle-cost-value" data-label="每日花費">${esc(dailyCost)}</div>
     </div>`;
   }).join('');
 }
