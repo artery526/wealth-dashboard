@@ -481,6 +481,15 @@ body::after{
 .advisor-dialog::before{content:'';position:absolute;left:-10px;top:40px;border:5px solid transparent;border-right-color:rgba(232,192,80,.55)}
 .advisor-dialog::after{content:'';position:absolute;left:-8px;top:41px;border:4px solid transparent;border-right-color:#1a1005}
 .advisor-greeting{font-family:'Noto Serif TC',serif;font-size:15px;font-weight:700;color:var(--gold);letter-spacing:2px;margin-bottom:14px;line-height:1.6}
+.advisor-reminder-slot{margin-bottom:11px}
+.advisor-reminder-card{position:relative;overflow:hidden;border:1px solid rgba(232,192,80,.44);border-radius:8px;background:linear-gradient(135deg,rgba(45,30,10,.92),rgba(15,10,4,.92) 62%,rgba(37,21,8,.9));box-shadow:0 9px 24px rgba(0,0,0,.38),inset 0 1px 0 rgba(255,238,190,.12);padding:12px 13px 13px}
+.advisor-reminder-card::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 12% 0,rgba(232,192,80,.2),transparent 34%),linear-gradient(90deg,transparent,rgba(255,238,190,.05),transparent);pointer-events:none}
+.advisor-reminder-head{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px}
+.advisor-reminder-title{font-family:'Noto Serif TC',serif;font-size:13px;font-weight:900;color:#f0dfa0;letter-spacing:1px}
+.advisor-reminder-date{font-family:var(--mono);font-size:11px;font-weight:800;color:#d8b45d;border:1px solid rgba(216,180,93,.42);border-radius:5px;padding:2px 6px;background:rgba(0,0,0,.18);white-space:nowrap}
+.advisor-reminder-text{position:relative;z-index:1;font-family:'Noto Sans TC',sans-serif;font-size:13px;font-weight:700;line-height:1.75;color:#ead9a8;letter-spacing:.4px}
+.advisor-reminder-card.loading .advisor-reminder-text,.advisor-reminder-card.error .advisor-reminder-text{color:#9a7430;font-weight:700}
+.finance-reminder-wrap{margin:0 0 12px}
 .advisor-btn-grid{display:flex;flex-direction:column;gap:9px}
 .advisor-menu-section{position:relative}
 .advisor-menu-toggle{width:100%;min-height:46px;display:flex;align-items:center;justify-content:center;gap:10px;border:1px solid rgba(210,188,138,.42);border-radius:4px;background:radial-gradient(circle at 9% 50%,rgba(34,24,13,.88) 0 5px,transparent 6px),radial-gradient(circle at 91% 50%,rgba(34,24,13,.86) 0 5px,transparent 6px),linear-gradient(90deg,rgba(28,24,17,.78),rgba(216,198,154,.82) 18%,rgba(234,224,194,.74) 50%,rgba(172,145,92,.76) 82%,rgba(28,24,17,.8));color:#21180d;font-family:'Noto Serif TC',serif;font-size:18px;font-weight:900;letter-spacing:3px;cursor:pointer;box-shadow:0 9px 20px rgba(0,0,0,.34),inset 0 1px 0 rgba(255,246,216,.24);text-shadow:0 1px 0 rgba(244,235,207,.34);transition:filter .18s,box-shadow .18s}
@@ -497,7 +506,7 @@ body::after{
 .advisor-btn:active{transform:translateY(0)}
 .advisor-close{position:absolute;top:10px;right:12px;background:none;border:none;color:#5a4018;font-size:14px;cursor:pointer;transition:color .2s;line-height:1;padding:2px}
 .advisor-close:hover{color:var(--gold)}
-@media(max-width:480px){.advisor-overlay{padding:52px 0 0 6px}.advisor-img{width:clamp(98px,25vw,120px)}.advisor-dialog{margin-top:26px;margin-left:-14px;width:calc(100vw - 98px);padding:12px 12px 10px}.advisor-btn-grid{gap:8px}.advisor-menu-toggle{min-height:42px;font-size:16px;letter-spacing:2px}.advisor-menu-mark{width:20px;height:20px;font-size:11px}.advisor-btn-group{gap:6px;border-radius:7px}.advisor-menu-section.is-open .advisor-btn-group{padding:7px;max-height:220px}.advisor-btn{font-size:12px;padding:8px 4px;letter-spacing:0;gap:3px}.advisor-btn-tag{width:14px;height:14px;font-size:9px}.advisor-btn-spacer{min-height:32px}}
+@media(max-width:480px){.advisor-overlay{padding:52px 0 0 6px}.advisor-img{width:clamp(98px,25vw,120px)}.advisor-dialog{margin-top:26px;margin-left:-14px;width:calc(100vw - 98px);padding:12px 12px 10px}.advisor-reminder-card{padding:10px 11px 11px}.advisor-reminder-head{align-items:flex-start;flex-direction:column;gap:4px}.advisor-reminder-title{font-size:12px}.advisor-reminder-text{font-size:12px;line-height:1.68}.advisor-btn-grid{gap:8px}.advisor-menu-toggle{min-height:42px;font-size:16px;letter-spacing:2px}.advisor-menu-mark{width:20px;height:20px;font-size:11px}.advisor-btn-group{gap:6px;border-radius:7px}.advisor-menu-section.is-open .advisor-btn-group{padding:7px;max-height:220px}.advisor-btn{font-size:12px;padding:8px 4px;letter-spacing:0;gap:3px}.advisor-btn-tag{width:14px;height:14px;font-size:9px}.advisor-btn-spacer{min-height:32px}}
 
 .military-lord{
   position:absolute;
@@ -2716,6 +2725,80 @@ async function apiPostJson(body){
   return d.data;
 }
 
+var ADVISOR_REMINDER_CACHE_KEY='empire_today_advisor_reminder_v1';
+var advisorReminderPromise=null;
+function advisorReminderCacheDate(value){
+  return String(value||'').trim().replace(/\//g,'-');
+}
+function advisorReminderLocalFallback(){
+  var pool=[
+    '主公，今日不必急著攻下每一座城。先巡糧倉、整軍心，能穩穩前進一小步，帝國就仍在長大。',
+    '主公，市場若像城門緊閉，就先不硬闖。喝口茶、看好糧草，等待風向清楚，也是將軍的本事。',
+    '主公，今日若精神只夠守城，也算勝利。長期投資靠的不是天天衝鋒，而是糧倉、睡眠與耐心同時在線。'
+  ];
+  var d=today().replace(/\D/g,'');
+  var idx=parseInt(d.slice(-4),10)%pool.length;
+  return {date:today(),displayDate:today().replace(/-/g,'/'),message:pool[idx],source:'local'};
+}
+function getCachedAdvisorReminder(){
+  try{
+    var data=JSON.parse(localStorage.getItem(ADVISOR_REMINDER_CACHE_KEY)||'null');
+    if(data&&advisorReminderCacheDate(data.date)===today()&&data.message)return data;
+  }catch(e){}
+  return null;
+}
+function setCachedAdvisorReminder(data){
+  if(!data||!data.message)return;
+  try{localStorage.setItem(ADVISOR_REMINDER_CACHE_KEY,JSON.stringify(data));}catch(e){}
+}
+function advisorReminderHtml(data,state){
+  data=data||{};
+  var date=data.displayDate||String(data.date||today()).replace(/-/g,'/');
+  var message=data.message||'軍師正在磨墨，稍候呈上今日提醒…';
+  return `<article class="advisor-reminder-card ${state||''}">
+    <div class="advisor-reminder-head">
+      <div class="advisor-reminder-title">⚔️ 今日軍師提醒</div>
+      <div class="advisor-reminder-date">${esc(date)}</div>
+    </div>
+    <div class="advisor-reminder-text">${esc(message)}</div>
+  </article>`;
+}
+function renderAdvisorReminder(data,state){
+  document.querySelectorAll('.advisor-reminder-slot').forEach(function(slot){
+    slot.innerHTML=advisorReminderHtml(data,state);
+  });
+}
+async function loadTodayAdvisorReminder(){
+  var cached=getCachedAdvisorReminder();
+  if(cached){
+    renderAdvisorReminder(cached);
+    return cached;
+  }
+  renderAdvisorReminder(null,'loading');
+  if(!API_URL){
+    var fallback=advisorReminderLocalFallback();
+    renderAdvisorReminder(fallback);
+    return fallback;
+  }
+  if(!advisorReminderPromise){
+    advisorReminderPromise=apiGet({action:'todayAdvisorReminder'}).then(function(data){
+      setCachedAdvisorReminder(data);
+      return data;
+    }).finally(function(){
+      advisorReminderPromise=null;
+    });
+  }
+  try{
+    var data=await advisorReminderPromise;
+    renderAdvisorReminder(data);
+    return data;
+  }catch(e){
+    var local=advisorReminderLocalFallback();
+    renderAdvisorReminder(local,'error');
+    return local;
+  }
+}
+
 // ══════════════════════════════════════════
 //  Config
 // ══════════════════════════════════════════
@@ -3810,6 +3893,7 @@ function renderFinancePanel(){
   setTabs([{key:'finance-accs',label:'帳戶餘額'},{key:'domestic-yearly',label:'年度財報'},{key:'div-calc',label:'配息試算'},{key:'finance-pledge',label:'質押信貸'}]);
   document.getElementById('p-body').innerHTML=`
     <div class="pane active" id="pane-finance-accs">
+      <div class="advisor-reminder-slot finance-reminder-wrap" id="finance-reminder-slot"></div>
       <div class="api-bar" onclick="openCfg()">
         <div class="api-dot ${API_URL?'ok':'err'}" id="acc-dot"></div>
         <span class="api-label" id="acc-label">${API_URL?'API 已連線，載入中…':'尚未設定 API'}</span>
@@ -3836,6 +3920,7 @@ function renderFinancePanel(){
       </div>
       <div id="pledge-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:75%"></div></div>
     </div>`;
+  loadTodayAdvisorReminder();
   if(API_URL)loadAccounts();
 }
 
@@ -7991,6 +8076,7 @@ initHeaderVideoPlayback();
     <div class="advisor-dialog">
       <button class="advisor-close" onclick="closeAdvisorDialog()">✕</button>
       <div class="advisor-greeting">主公，今日要做什麼？</div>
+      <div class="advisor-reminder-slot" id="advisor-reminder-slot"></div>
       <div class="advisor-btn-grid">
         <section class="advisor-menu-section">
           <button class="advisor-menu-toggle" type="button" onclick="toggleAdvisorMenuGroup(this)" aria-expanded="false"><span class="advisor-menu-mark">內</span>內政<span class="advisor-menu-caret">▼</span></button>
@@ -8051,6 +8137,7 @@ initHeaderVideoPlayback();
 // ══ Advisor Dialog ══════════════════════════════════════════
 function openAdvisorDialog(){
   document.getElementById('advisor-overlay').classList.add('open');
+  loadTodayAdvisorReminder();
 }
 function closeAdvisorDialog(){
   document.getElementById('advisor-overlay').classList.remove('open');
