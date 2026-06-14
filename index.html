@@ -3900,7 +3900,6 @@ function renderFinancePanel(){
   setTabs([{key:'finance-accs',label:'帳戶餘額'},{key:'domestic-yearly',label:'年度財報'},{key:'div-calc',label:'配息試算'},{key:'finance-pledge',label:'質押信貸'}]);
   document.getElementById('p-body').innerHTML=`
     <div class="pane active" id="pane-finance-accs">
-      <div class="advisor-reminder-slot finance-reminder-wrap" id="finance-reminder-slot"></div>
       <div class="api-bar" onclick="openCfg()">
         <div class="api-dot ${API_URL?'ok':'err'}" id="acc-dot"></div>
         <span class="api-label" id="acc-label">${API_URL?'API 已連線，載入中…':'尚未設定 API'}</span>
@@ -3927,7 +3926,6 @@ function renderFinancePanel(){
       </div>
       <div id="pledge-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:75%"></div></div>
     </div>`;
-  loadTodayAdvisorReminder();
   if(API_URL)loadAccounts();
 }
 
