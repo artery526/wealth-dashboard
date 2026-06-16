@@ -6371,22 +6371,6 @@ function renderAdvisorTaskForm(){
         <label class="form-label">預期效果</label>
         <textarea class="form-control" id="task-expected" maxlength="700" rows="3" placeholder="例如：試算表「⚔️帝國指揮所」>「資料庫」F 欄備註應顯示「🐦‍🔥CHPY」"></textarea>
       </div>
-      <div class="form-group full">
-        <label class="form-label">實際效果</label>
-        <textarea class="form-control" id="task-actual" maxlength="700" rows="3" placeholder="例如：F 欄只顯示「CHPY」"></textarea>
-      </div>
-      <div class="form-group full">
-        <label class="form-label">時間/最新資料</label>
-        <input class="form-control" id="task-latest" type="text" maxlength="160" placeholder="例如：剛剛 16:05 測的，最新一筆是 7843">
-      </div>
-      <div class="form-group full">
-        <label class="form-label">是否已重整</label>
-        <select class="form-control" id="task-refresh">
-          <option>已 Ctrl+F5</option>
-          <option>未重整</option>
-          <option>不確定</option>
-        </select>
-      </div>
       <div class="form-group full hidden" id="task-draft-wrap">
         <label class="form-label">副軍師草稿</label>
         <textarea class="form-control" id="task-draft" rows="8" readonly></textarea>
@@ -6467,10 +6451,7 @@ function buildAdvisorTaskDetail(){
   return [
     ['位置：',advisorFieldValue('task-area')],
     ['改動方向/動作：',advisorFieldValue('task-action')],
-    ['預期效果：',advisorFieldValue('task-expected')],
-    ['實際效果：',advisorFieldValue('task-actual')],
-    ['時間/最新資料：',advisorFieldValue('task-latest')],
-    ['是否已重整：',advisorFieldValue('task-refresh')]
+    ['預期效果：',advisorFieldValue('task-expected')]
   ].map(function(pair){return pair[0]+'\n'+pair[1];}).join('\n\n').trim();
 }
 
@@ -6478,9 +6459,7 @@ function hasAdvisorTaskBody(){
   return [
     'task-area',
     'task-action',
-    'task-expected',
-    'task-actual',
-    'task-latest'
+    'task-expected'
   ].some(function(id){return !!advisorFieldValue(id);});
 }
 
@@ -6488,15 +6467,11 @@ function clearAdvisorTaskFields(){
   [
     'task-area',
     'task-action',
-    'task-expected',
-    'task-actual',
-    'task-latest'
+    'task-expected'
   ].forEach(function(id){
     var el=document.getElementById(id);
     if(el)el.value='';
   });
-  var refresh=document.getElementById('task-refresh');
-  if(refresh)refresh.value='已 Ctrl+F5';
 }
 
 async function submitAdvisorTask(){
