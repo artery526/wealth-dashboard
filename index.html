@@ -274,6 +274,9 @@ body::after{
 }
 .today-agenda-refresh{
   position:relative;
+  display:block;
+  width:max-content;
+  margin:14px 0 0 auto;
   border:1px solid rgba(196,151,61,.72);border-radius:4px;
   background:linear-gradient(180deg,#33240e,#171007);
   color:#f4d783;font-family:var(--sans);font-size:11px;font-weight:900;
@@ -2124,16 +2127,10 @@ body::after{
     </button>
     <div class="today-agenda-sheet" id="today-agenda-sheet" aria-hidden="true">
       <button class="today-agenda-close" type="button" onclick="toggleTodayAgenda(false)" aria-label="收合朝中政務">x</button>
-      <div class="today-agenda-head">
-        <div>
-          <div class="today-agenda-title">📜 朝中政務</div>
-          <div class="today-agenda-sub" id="today-agenda-date">讀取 Google 今日行程</div>
-        </div>
-        <button class="today-agenda-refresh" id="today-agenda-refresh" type="button" onclick="loadTodayCalendar()">更新</button>
-      </div>
       <div class="today-agenda-list" id="today-calendar-list">
         <div class="today-agenda-loading">軍師正在調閱今日行程…</div>
       </div>
+      <button class="today-agenda-refresh" id="today-agenda-refresh" type="button" onclick="loadTodayCalendar()">更新</button>
     </div>
   </section>
 </div>
@@ -7893,6 +7890,7 @@ function setupNotice(){
   if(navDay)navDay.textContent=d;
   if(navYm)navYm.textContent=y+'/'+m;
   if(navWk)navWk.textContent='星期'+w;
+  toggleTodayAgenda(true);
   loadTodayCalendar();
   // 彰化天氣（Open-Meteo，無需 API key）
   (function(){
