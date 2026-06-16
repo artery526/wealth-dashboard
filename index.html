@@ -285,10 +285,14 @@ body::after{
   text-shadow:0 0 9px rgba(232,192,80,.4);
 }
 .today-agenda-refresh:disabled{opacity:.55;cursor:wait}
+.agenda-mode-row{position:relative;z-index:3;display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:4px 34px 8px 0}
+.agenda-mode-btn{border:1px solid rgba(232,192,80,.32);border-radius:5px;background:rgba(0,0,0,.18);color:#bda36d;font-family:var(--sans);font-size:12px;font-weight:900;letter-spacing:1px;padding:7px 8px;cursor:pointer}
+.agenda-mode-btn.active{border-color:rgba(232,192,80,.68);background:rgba(184,137,46,.2);color:#f0dfa0;box-shadow:0 0 12px rgba(232,192,80,.12)}
 .today-agenda-list{position:relative;z-index:3;display:grid;gap:8px;padding:12px 0 0}
 .agenda-section{display:grid;gap:8px}
 .agenda-section+.agenda-section{margin-top:16px;padding-top:14px;border-top:1px solid rgba(232,192,80,.2)}
 .agenda-section-title{font-family:var(--sans);font-size:12px;font-weight:900;letter-spacing:2px;color:#f0dfa0;text-shadow:0 0 10px rgba(232,192,80,.18)}
+.agenda-day-title{font-family:var(--sans);font-size:12px;font-weight:900;letter-spacing:1.5px;color:#d8b45d;margin-top:6px;padding:7px 0 2px;border-bottom:1px solid rgba(232,192,80,.14)}
 .today-agenda-empty,.today-agenda-loading,.today-agenda-error{
   font-family:var(--font);font-size:16px;font-weight:700;line-height:1.9;color:#f0e1b4;text-align:center;padding:18px 8px 8px;
   text-shadow:0 0 8px rgba(232,192,80,.12);
@@ -341,6 +345,7 @@ body::after{
   .court-agenda .today-agenda-tab{min-height:34px;font-size:13px}
   .today-agenda-tab small{display:none}
   .today-agenda-sheet{padding-left:16px;padding-right:16px}
+  .agenda-mode-row{padding-right:34px}
   .court-agenda .today-agenda-sheet{left:auto;width:100%;transform:translateY(-4px)}
   .court-agenda.is-open .today-agenda-sheet{transform:translateY(0)}
   .today-agenda-head{align-items:flex-start;flex-direction:column}
@@ -2132,10 +2137,14 @@ body::after{
     </button>
     <div class="today-agenda-sheet" id="today-agenda-sheet" aria-hidden="true">
       <button class="today-agenda-close" type="button" onclick="toggleTodayAgenda(false)" aria-label="收合朝中政務">x</button>
-      <div class="today-agenda-list" id="today-calendar-list">
-        <div class="today-agenda-loading">軍師正在調閱今日行程…</div>
+      <div class="agenda-mode-row">
+        <button class="agenda-mode-btn active" id="agenda-mode-tomorrow" type="button" onclick="setAgendaMode('tomorrow')">明日</button>
+        <button class="agenda-mode-btn" id="agenda-mode-week" type="button" onclick="setAgendaMode('week')">七日</button>
       </div>
-      <button class="today-agenda-refresh" id="today-agenda-refresh" type="button" onclick="loadTodayCalendar()">更新</button>
+      <div class="today-agenda-list" id="today-calendar-list">
+        <div class="today-agenda-loading">軍師正在調閱明日行程…</div>
+      </div>
+      <button class="today-agenda-refresh" id="today-agenda-refresh" type="button" onclick="loadTodayCalendar(currentAgendaMode)">更新</button>
     </div>
   </section>
 </div>
@@ -3511,10 +3520,29 @@ async function medicalPost(body){
   return data;
 }
 
-function agendaDateLabel(){
+var currentAgendaMode='tomorrow';
+function agendaDateLabel(mode){
   var d=new Date();
+  d.setDate(d.getDate()+(mode==='week'?1:1));
   var weeks=['日','一','二','三','四','五','六'];
+  if(mode==='week'){
+    var end=new Date(d.getFullYear(),d.getMonth(),d.getDate()+6);
+    return (d.getMonth()+1)+'/'+d.getDate()+' - '+(end.getMonth()+1)+'/'+end.getDate();
+  }
   return d.getFullYear()+'年'+(d.getMonth()+1)+'月'+d.getDate()+'日 星期'+weeks[d.getDay()];
+}
+
+function updateAgendaModeButtons(){
+  ['tomorrow','week'].forEach(function(mode){
+    var btn=document.getElementById('agenda-mode-'+mode);
+    if(btn)btn.classList.toggle('active',mode===currentAgendaMode);
+  });
+}
+
+function setAgendaMode(mode){
+  currentAgendaMode=mode==='week'?'week':'tomorrow';
+  updateAgendaModeButtons();
+  loadTodayCalendar(currentAgendaMode);
 }
 
 function toggleTodayAgenda(force){
@@ -3534,31 +3562,33 @@ function setAgendaState(html,type){
   box.innerHTML='<div class="today-agenda-'+(type||'empty')+'">'+html+'</div>';
 }
 
-async function loadTodayCalendar(){
+async function loadTodayCalendar(mode){
+  currentAgendaMode=mode==='week'?'week':'tomorrow';
+  updateAgendaModeButtons();
   var dateEl=document.getElementById('today-agenda-date');
   var btn=document.getElementById('today-agenda-refresh');
-  if(dateEl)dateEl.textContent=agendaDateLabel();
-  if(!HEALTH_API_URL&&!API_URL){
-    setAgendaState('尚未設定醫館 API 或 Web App API，無法調閱朝中政務。<br><button class="setup-btn" style="margin-top:10px" onclick="openCfg()">⚙ 立即設定</button>','empty');
+  if(dateEl)dateEl.textContent=agendaDateLabel(currentAgendaMode);
+  if(!API_URL){
+    setAgendaState('尚未設定 Web App API，無法調閱朝中政務。<br><button class="setup-btn" style="margin-top:10px" onclick="openCfg()">⚙ 立即設定</button>','empty');
     return;
   }
   try{
     if(btn)btn.disabled=true;
-    setAgendaState('軍師正在調閱朝中政務…','loading');
+    setAgendaState('軍師正在調閱'+(currentAgendaMode==='week'?'七日':'明日')+'行程…','loading');
     var results=await Promise.allSettled([
-      HEALTH_API_URL?medicalPost({_action:'getTodayCalendar'}):apiGet({action:'todayCalendar'}),
+      apiGet({action:'todayCalendar',mode:currentAgendaMode}),
       API_URL?apiGet({action:'todayTasks'}):Promise.reject(new Error('尚未設定 Web App API，無法讀取 Google Tasks'))
     ]);
     var box=document.getElementById('today-calendar-list');
     if(!box)return;
     var calendarHtml=results[0].status==='fulfilled'
-      ? renderCalendarAgenda(results[0].value.events||[])
-      : `<div class="today-agenda-error">${esc(results[0].reason&&results[0].reason.message||'今日行程讀取失敗')}</div>`;
+      ? renderCalendarAgenda(results[0].value.events||[],currentAgendaMode)
+      : `<div class="today-agenda-error">${esc(results[0].reason&&results[0].reason.message||'行程讀取失敗')}</div>`;
     var taskHtml=results[1].status==='fulfilled'
       ? renderGoogleTasks(results[1].value.tasks||[])
       : `<div class="today-agenda-error">${esc(results[1].reason&&results[1].reason.message||'Google Tasks 讀取失敗')}</div>`;
     box.innerHTML=`<section class="agenda-section">
-      <div class="agenda-section-title">今日行程</div>
+      <div class="agenda-section-title">${currentAgendaMode==='week'?'七日行程':'明日行程'}</div>
       ${calendarHtml}
     </section>
     <section class="agenda-section">
@@ -3566,15 +3596,34 @@ async function loadTodayCalendar(){
       ${taskHtml}
     </section>`;
   }catch(err){
-    setAgendaState((err.message||'朝中政務讀取失敗')+'<br>優先使用醫館 API 授權；若改用主 Web App，才需要 Calendar 授權。','error');
+    setAgendaState((err.message||'朝中政務讀取失敗')+'<br>請確認主 Web App 已完成 Calendar 授權。','error');
   }finally{
     if(btn)btn.disabled=false;
   }
 }
 
-function renderCalendarAgenda(events){
-  if(!events.length)return '<div class="today-agenda-empty">今日無行程。</div>';
-  return events.map(function(ev){
+function renderCalendarAgenda(events,mode){
+  if(!events.length)return '<div class="today-agenda-empty">'+(mode==='week'?'七日內無行程。':'明日無行程。')+'</div>';
+  if(mode==='week'){
+    var grouped={};
+    var order=[];
+    events.forEach(function(ev){
+      var key=ev.dateKey||ev.dateText||'未分日期';
+      if(!grouped[key]){
+        grouped[key]={label:ev.dateLabel||ev.dateText||key,events:[]};
+        order.push(key);
+      }
+      grouped[key].events.push(ev);
+    });
+    return order.map(function(key){
+      return '<div class="agenda-day-title">'+esc(grouped[key].label)+'</div>'+
+        grouped[key].events.map(renderCalendarEvent).join('');
+    }).join('');
+  }
+  return events.map(renderCalendarEvent).join('');
+}
+
+function renderCalendarEvent(ev){
     var meta=[];
     if(ev.location)meta.push('📍 '+esc(ev.location));
     if(ev.calendarName)meta.push('📒 '+esc(ev.calendarName));
@@ -3586,7 +3635,6 @@ function renderCalendarAgenda(events){
         ${meta.length?`<div class="agenda-meta">${meta.join('<br>')}</div>`:''}
       </div>
     </div>`;
-  }).join('');
 }
 
 function renderGoogleTasks(tasks){
