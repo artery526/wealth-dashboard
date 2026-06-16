@@ -285,7 +285,7 @@ body::after{
   text-shadow:0 0 9px rgba(232,192,80,.4);
 }
 .today-agenda-refresh:disabled{opacity:.55;cursor:wait}
-.agenda-mode-row{position:relative;z-index:3;display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:4px 34px 8px 0}
+.agenda-mode-row{position:relative;z-index:3;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:4px 34px 8px 0}
 .agenda-mode-btn{border:1px solid rgba(232,192,80,.32);border-radius:5px;background:rgba(0,0,0,.18);color:#bda36d;font-family:var(--sans);font-size:12px;font-weight:900;letter-spacing:1px;padding:7px 8px;cursor:pointer}
 .agenda-mode-btn.active{border-color:rgba(232,192,80,.68);background:rgba(184,137,46,.2);color:#f0dfa0;box-shadow:0 0 12px rgba(232,192,80,.12)}
 .today-agenda-list{position:relative;z-index:3;display:grid;gap:8px;padding:12px 0 0}
@@ -2138,11 +2138,12 @@ body::after{
     <div class="today-agenda-sheet" id="today-agenda-sheet" aria-hidden="true">
       <button class="today-agenda-close" type="button" onclick="toggleTodayAgenda(false)" aria-label="收合朝中政務">x</button>
       <div class="agenda-mode-row">
-        <button class="agenda-mode-btn active" id="agenda-mode-tomorrow" type="button" onclick="setAgendaMode('tomorrow')">明日</button>
+        <button class="agenda-mode-btn active" id="agenda-mode-today" type="button" onclick="setAgendaMode('today')">今日</button>
+        <button class="agenda-mode-btn" id="agenda-mode-tomorrow" type="button" onclick="setAgendaMode('tomorrow')">明日</button>
         <button class="agenda-mode-btn" id="agenda-mode-week" type="button" onclick="setAgendaMode('week')">七日</button>
       </div>
       <div class="today-agenda-list" id="today-calendar-list">
-        <div class="today-agenda-loading">軍師正在調閱明日行程…</div>
+        <div class="today-agenda-loading">軍師正在調閱今日行程…</div>
       </div>
       <button class="today-agenda-refresh" id="today-agenda-refresh" type="button" onclick="loadTodayCalendar(currentAgendaMode)">更新</button>
     </div>
@@ -3520,10 +3521,10 @@ async function medicalPost(body){
   return data;
 }
 
-var currentAgendaMode='tomorrow';
+var currentAgendaMode='today';
 function agendaDateLabel(mode){
   var d=new Date();
-  d.setDate(d.getDate()+(mode==='week'?1:1));
+  d.setDate(d.getDate()+(mode==='today'?0:1));
   var weeks=['日','一','二','三','四','五','六'];
   if(mode==='week'){
     var end=new Date(d.getFullYear(),d.getMonth(),d.getDate()+6);
@@ -3533,14 +3534,14 @@ function agendaDateLabel(mode){
 }
 
 function updateAgendaModeButtons(){
-  ['tomorrow','week'].forEach(function(mode){
+  ['today','tomorrow','week'].forEach(function(mode){
     var btn=document.getElementById('agenda-mode-'+mode);
     if(btn)btn.classList.toggle('active',mode===currentAgendaMode);
   });
 }
 
 function setAgendaMode(mode){
-  currentAgendaMode=mode==='week'?'week':'tomorrow';
+  currentAgendaMode=mode==='tomorrow'||mode==='week'?mode:'today';
   updateAgendaModeButtons();
   loadTodayCalendar(currentAgendaMode);
 }
@@ -3563,7 +3564,7 @@ function setAgendaState(html,type){
 }
 
 async function loadTodayCalendar(mode){
-  currentAgendaMode=mode==='week'?'week':'tomorrow';
+  currentAgendaMode=mode==='tomorrow'||mode==='week'?mode:'today';
   updateAgendaModeButtons();
   var dateEl=document.getElementById('today-agenda-date');
   var btn=document.getElementById('today-agenda-refresh');
@@ -3574,7 +3575,7 @@ async function loadTodayCalendar(mode){
   }
   try{
     if(btn)btn.disabled=true;
-    setAgendaState('軍師正在調閱'+(currentAgendaMode==='week'?'七日':'明日')+'行程…','loading');
+    setAgendaState('軍師正在調閱'+(currentAgendaMode==='week'?'七日':(currentAgendaMode==='tomorrow'?'明日':'今日'))+'行程…','loading');
     var results=await Promise.allSettled([
       apiGet({action:'todayCalendar',mode:currentAgendaMode}),
       API_URL?apiGet({action:'todayTasks'}):Promise.reject(new Error('尚未設定 Web App API，無法讀取 Google Tasks'))
@@ -3588,7 +3589,7 @@ async function loadTodayCalendar(mode){
       ? renderGoogleTasks(results[1].value.tasks||[])
       : `<div class="today-agenda-error">${esc(results[1].reason&&results[1].reason.message||'Google Tasks 讀取失敗')}</div>`;
     box.innerHTML=`<section class="agenda-section">
-      <div class="agenda-section-title">${currentAgendaMode==='week'?'七日行程':'明日行程'}</div>
+      <div class="agenda-section-title">${currentAgendaMode==='week'?'七日行程':(currentAgendaMode==='tomorrow'?'明日行程':'今日行程')}</div>
       ${calendarHtml}
     </section>
     <section class="agenda-section">
@@ -3603,7 +3604,7 @@ async function loadTodayCalendar(mode){
 }
 
 function renderCalendarAgenda(events,mode){
-  if(!events.length)return '<div class="today-agenda-empty">'+(mode==='week'?'七日內無行程。':'明日無行程。')+'</div>';
+  if(!events.length)return '<div class="today-agenda-empty">'+(mode==='week'?'七日內無行程。':(mode==='tomorrow'?'明日無行程。':'今日無行程。'))+'</div>';
   if(mode==='week'){
     var grouped={};
     var order=[];
