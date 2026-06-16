@@ -492,6 +492,13 @@ body::after{
 .advisor-reminder-date{font-family:var(--mono);font-size:11px;font-weight:800;color:#d8b45d;border:1px solid rgba(216,180,93,.42);border-radius:5px;padding:2px 6px;background:rgba(0,0,0,.18);white-space:nowrap}
 .advisor-reminder-text{position:relative;z-index:1;font-family:'Noto Sans TC',sans-serif;font-size:13px;font-weight:700;line-height:1.75;color:#ead9a8;letter-spacing:.4px}
 .advisor-reminder-card.loading .advisor-reminder-text,.advisor-reminder-card.error .advisor-reminder-text{color:#9a7430;font-weight:700}
+.advisor-summary-grid{position:relative;z-index:1;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.advisor-summary-item{min-width:0;border:1px solid rgba(232,192,80,.22);border-radius:6px;background:rgba(0,0,0,.16);padding:8px 9px}
+.advisor-summary-label{font-family:var(--sans);font-size:10px;font-weight:900;line-height:1.35;color:#bda36d;letter-spacing:.6px}
+.advisor-summary-value{margin-top:4px;font-family:var(--mono);font-size:14px;font-weight:900;line-height:1.25;color:#f3df9a;white-space:normal;word-break:break-word}
+.advisor-summary-value.up{color:var(--teal)}
+.advisor-summary-value.down{color:var(--coral)}
+.advisor-summary-sub{margin-top:3px;font-family:var(--sans);font-size:10px;font-weight:800;line-height:1.35;color:#9a7430}
 .finance-reminder-wrap{margin:0 0 12px}
 .advisor-btn-grid{display:flex;flex-direction:column;gap:9px}
 .advisor-menu-section{position:relative}
@@ -2731,40 +2738,67 @@ async function apiPostJson(body){
 
 var ADVISOR_REMINDER_CACHE_KEY='empire_today_advisor_reminder_v1';
 var advisorReminderPromise=null;
-function advisorReminderCacheDate(value){
-  return String(value||'').trim().replace(/\//g,'-');
+function clearLegacyAdvisorReminderCache(){
+  try{localStorage.removeItem(ADVISOR_REMINDER_CACHE_KEY);}catch(e){}
 }
-function advisorReminderLocalFallback(){
-  var pool=[
-    '主公，今日不必急著攻下每一座城。先巡糧倉、整軍心，能穩穩前進一小步，帝國就仍在長大。',
-    '主公，市場若像城門緊閉，就先不硬闖。喝口茶、看好糧草，等待風向清楚，也是將軍的本事。',
-    '主公，今日若精神只夠守城，也算勝利。長期投資靠的不是天天衝鋒，而是糧倉、睡眠與耐心同時在線。'
-  ];
-  var d=today().replace(/\D/g,'');
-  var idx=parseInt(d.slice(-4),10)%pool.length;
-  return {date:today(),displayDate:today().replace(/-/g,'/'),message:pool[idx],source:'local'};
+function advisorMetricValueClass(value){
+  var n=Number(value);
+  if(isNaN(n)||!isFinite(n)||n===0)return '';
+  return n>0?'up':'down';
 }
-function getCachedAdvisorReminder(){
-  try{
-    var data=JSON.parse(localStorage.getItem(ADVISOR_REMINDER_CACHE_KEY)||'null');
-    if(data&&advisorReminderCacheDate(data.date)===today()&&data.message)return data;
-  }catch(e){}
-  return null;
+function advisorSignedCurrency(value){
+  var n=Number(value);
+  if(isNaN(n)||!isFinite(n))return '--';
+  return (n>0?'+':(n<0?'-':''))+fmtFull(Math.abs(n));
 }
-function setCachedAdvisorReminder(data){
-  if(!data||!data.message)return;
-  try{localStorage.setItem(ADVISOR_REMINDER_CACHE_KEY,JSON.stringify(data));}catch(e){}
+function advisorMarketDelta(snapshot){
+  var amount=Number(snapshot&&snapshot.dailyChangeAmount);
+  if(!isNaN(amount)&&isFinite(amount))return amount;
+  var latest=snapshot&&snapshot.latest;
+  var previous=snapshot&&snapshot.previous;
+  var latestValue=Number(latest&&(latest.investmentMarketValue!=null?latest.investmentMarketValue:latest.marketValue));
+  var previousValue=Number(previous&&(previous.investmentMarketValue!=null?previous.investmentMarketValue:previous.marketValue));
+  if(isNaN(latestValue)||isNaN(previousValue)||!isFinite(latestValue)||!isFinite(previousValue))return null;
+  return latestValue-previousValue;
+}
+function advisorFinanceSummaryHtml(items){
+  return `<div class="advisor-summary-grid">
+    ${items.map(function(item){
+      return `<div class="advisor-summary-item">
+        <div class="advisor-summary-label">${esc(item.label)}</div>
+        <div class="advisor-summary-value ${advisorMetricValueClass(item.toneValue)}">${esc(item.value)}</div>
+        ${item.sub?`<div class="advisor-summary-sub">${esc(item.sub)}</div>`:''}
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+function buildAdvisorFinanceSummary(monthly,holdings,assetSnapshot){
+  monthly=monthly||{};
+  holdings=holdings||[];
+  var totalReturn=holdings.reduce(function(s,h){return s+toNum(h.totalReturn);},0);
+  var totalMonthly=holdings.reduce(function(s,h){return s+toNum(h.monthlyDiv);},0);
+  var marketDelta=advisorMarketDelta(assetSnapshot);
+  return {
+    date:today(),
+    displayDate:today().replace(/-/g,'/'),
+    metrics:[
+      {label:'本月收入支出',value:fmtFull(monthly.income||0)+' / '+fmtFull(monthly.expense||0),sub:'收入 / 支出',toneValue:(Number(monthly.income)||0)-(Number(monthly.expense)||0)},
+      {label:'投資市值較昨增加金額',value:advisorSignedCurrency(marketDelta),sub:'較昨日變化',toneValue:marketDelta},
+      {label:'含息報酬',value:advisorSignedCurrency(totalReturn),sub:'持倉累計',toneValue:totalReturn},
+      {label:'月總配息',value:fmtFull(totalMonthly),sub:'預估月配',toneValue:totalMonthly}
+    ]
+  };
 }
 function advisorReminderHtml(data,state){
   data=data||{};
   var date=data.displayDate||String(data.date||today()).replace(/-/g,'/');
-  var message=data.message||'軍師正在磨墨，稍候呈上今日提醒…';
+  var message=data.message||'軍師正在整理今日財務摘要，請主公稍候。';
   return `<article class="advisor-reminder-card ${state||''}">
     <div class="advisor-reminder-head">
       <div class="advisor-reminder-title">⚔️ 今日軍師提醒</div>
       <div class="advisor-reminder-date">${esc(date)}</div>
     </div>
-    <div class="advisor-reminder-text">${esc(message)}</div>
+    ${data.metrics?advisorFinanceSummaryHtml(data.metrics):`<div class="advisor-reminder-text">${esc(message)}</div>`}
   </article>`;
 }
 function renderAdvisorReminder(data,state){
@@ -2773,21 +2807,26 @@ function renderAdvisorReminder(data,state){
   });
 }
 async function loadTodayAdvisorReminder(){
-  var cached=getCachedAdvisorReminder();
-  if(cached){
-    renderAdvisorReminder(cached);
-    return cached;
-  }
+  clearLegacyAdvisorReminderCache();
   renderAdvisorReminder(null,'loading');
   if(!API_URL){
-    var fallback=advisorReminderLocalFallback();
-    renderAdvisorReminder(fallback);
-    return fallback;
+    var missing={date:today(),displayDate:today().replace(/-/g,'/'),message:'請先設定 API URL，才能顯示本月收支與投資摘要。'};
+    renderAdvisorReminder(missing,'error');
+    return missing;
   }
   if(!advisorReminderPromise){
-    advisorReminderPromise=apiGet({action:'todayAdvisorReminder'}).then(function(data){
-      setCachedAdvisorReminder(data);
-      return data;
+    advisorReminderPromise=Promise.allSettled([
+      apiGet({action:'monthly',ym:currentYM()}),
+      loadCouncilHoldingsOverview(),
+      loadAssetSnapshot()
+    ]).then(function(results){
+      var monthly=results[0].status==='fulfilled'?results[0].value:{};
+      var holdings=results[1].status==='fulfilled'?results[1].value:[];
+      var assetSnapshot=results[2].status==='fulfilled'?results[2].value:null;
+      if(results[0].status!=='fulfilled'&&results[1].status!=='fulfilled'&&!assetSnapshot){
+        throw results[0].reason||results[1].reason||new Error('財務摘要讀取失敗');
+      }
+      return buildAdvisorFinanceSummary(monthly,holdings,assetSnapshot);
     }).finally(function(){
       advisorReminderPromise=null;
     });
@@ -2797,9 +2836,9 @@ async function loadTodayAdvisorReminder(){
     renderAdvisorReminder(data);
     return data;
   }catch(e){
-    var local=advisorReminderLocalFallback();
-    renderAdvisorReminder(local,'error');
-    return local;
+    var failed={date:today(),displayDate:today().replace(/-/g,'/'),message:e.message||'財務摘要讀取失敗'};
+    renderAdvisorReminder(failed,'error');
+    return failed;
   }
 }
 
