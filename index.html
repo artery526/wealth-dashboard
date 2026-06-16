@@ -483,13 +483,11 @@ body::after{
 .advisor-dialog{margin-top:34px;margin-left:-8px;background:linear-gradient(145deg,#1a1005,#0f0a03);border:1.5px solid rgba(232,192,80,.55);border-radius:0 16px 16px 16px;box-shadow:0 8px 40px rgba(0,0,0,.7),inset 0 1px 0 rgba(232,192,80,.15);padding:18px 20px 14px;width:min(420px,calc(100vw - 178px));max-height:calc(100vh - 86px);overflow-y:auto;position:relative}
 .advisor-dialog::before{content:'';position:absolute;left:-10px;top:40px;border:5px solid transparent;border-right-color:rgba(232,192,80,.55)}
 .advisor-dialog::after{content:'';position:absolute;left:-8px;top:41px;border:4px solid transparent;border-right-color:#1a1005}
-.advisor-greeting{font-family:'Noto Serif TC',serif;font-size:15px;font-weight:700;color:var(--gold);letter-spacing:2px;margin-bottom:14px;line-height:1.6}
 .advisor-reminder-slot{margin-bottom:11px}
 .advisor-reminder-card{position:relative;overflow:hidden;border:1px solid rgba(232,192,80,.44);border-radius:8px;background:linear-gradient(135deg,rgba(45,30,10,.92),rgba(15,10,4,.92) 62%,rgba(37,21,8,.9));box-shadow:0 9px 24px rgba(0,0,0,.38),inset 0 1px 0 rgba(255,238,190,.12);padding:12px 13px 13px}
 .advisor-reminder-card::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 12% 0,rgba(232,192,80,.2),transparent 34%),linear-gradient(90deg,transparent,rgba(255,238,190,.05),transparent);pointer-events:none}
-.advisor-reminder-head{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px}
+.advisor-reminder-head{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:7px;text-align:center}
 .advisor-reminder-title{font-family:'Noto Serif TC',serif;font-size:13px;font-weight:900;color:#f0dfa0;letter-spacing:1px}
-.advisor-reminder-date{font-family:var(--mono);font-size:11px;font-weight:800;color:#d8b45d;border:1px solid rgba(216,180,93,.42);border-radius:5px;padding:2px 6px;background:rgba(0,0,0,.18);white-space:nowrap}
 .advisor-reminder-text{position:relative;z-index:1;font-family:'Noto Sans TC',sans-serif;font-size:13px;font-weight:700;line-height:1.75;color:#ead9a8;letter-spacing:.4px}
 .advisor-reminder-card.loading .advisor-reminder-text,.advisor-reminder-card.error .advisor-reminder-text{color:#9a7430;font-weight:700}
 .advisor-summary-grid{position:relative;z-index:1;display:grid;grid-template-columns:1fr 1fr;gap:8px}
@@ -516,7 +514,7 @@ body::after{
 .advisor-btn:active{transform:translateY(0)}
 .advisor-close{position:absolute;top:10px;right:12px;background:none;border:none;color:#5a4018;font-size:14px;cursor:pointer;transition:color .2s;line-height:1;padding:2px}
 .advisor-close:hover{color:var(--gold)}
-@media(max-width:480px){.advisor-overlay{padding:52px 0 0 6px}.advisor-img{width:clamp(98px,25vw,120px)}.advisor-dialog{margin-top:26px;margin-left:-14px;width:calc(100vw - 98px);padding:12px 12px 10px}.advisor-reminder-card{padding:10px 11px 11px}.advisor-reminder-head{align-items:flex-start;flex-direction:column;gap:4px}.advisor-reminder-title{font-size:12px}.advisor-reminder-text{font-size:12px;line-height:1.68}.advisor-btn-grid{gap:8px}.advisor-menu-toggle{min-height:42px;font-size:16px;letter-spacing:2px}.advisor-menu-mark{width:20px;height:20px;font-size:11px}.advisor-btn-group{gap:6px;border-radius:7px}.advisor-menu-section.is-open .advisor-btn-group{padding:7px;max-height:220px}.advisor-btn{font-size:12px;padding:8px 4px;letter-spacing:0;gap:3px}.advisor-btn-tag{width:14px;height:14px;font-size:9px}.advisor-btn-spacer{min-height:32px}}
+@media(max-width:480px){.advisor-overlay{padding:52px 0 0 6px}.advisor-img{width:clamp(98px,25vw,120px)}.advisor-dialog{margin-top:26px;margin-left:-14px;width:calc(100vw - 98px);padding:12px 12px 10px}.advisor-reminder-card{padding:10px 11px 11px}.advisor-reminder-title{font-size:12px}.advisor-reminder-text{font-size:12px;line-height:1.68}.advisor-btn-grid{gap:8px}.advisor-menu-toggle{min-height:42px;font-size:16px;letter-spacing:2px}.advisor-menu-mark{width:20px;height:20px;font-size:11px}.advisor-btn-group{gap:6px;border-radius:7px}.advisor-menu-section.is-open .advisor-btn-group{padding:7px;max-height:220px}.advisor-btn{font-size:12px;padding:8px 4px;letter-spacing:0;gap:3px}.advisor-btn-tag{width:14px;height:14px;font-size:9px}.advisor-btn-spacer{min-height:32px}}
 
 .military-lord{
   position:absolute;
@@ -2795,8 +2793,7 @@ function advisorReminderHtml(data,state){
   var message=data.message||'軍師正在整理今日財務摘要，請主公稍候。';
   return `<article class="advisor-reminder-card ${state||''}">
     <div class="advisor-reminder-head">
-      <div class="advisor-reminder-title">⚔️ 今日軍師提醒</div>
-      <div class="advisor-reminder-date">${esc(date)}</div>
+      <div class="advisor-reminder-title">🗡️ 軍師簡報</div>
     </div>
     ${data.metrics?advisorFinanceSummaryHtml(data.metrics):`<div class="advisor-reminder-text">${esc(message)}</div>`}
   </article>`;
@@ -8121,7 +8118,6 @@ initHeaderVideoPlayback();
     <img class="advisor-img" src="advisor-zhuge.png" alt="軍師" onclick="closeAdvisorDialog()">
     <div class="advisor-dialog">
       <button class="advisor-close" onclick="closeAdvisorDialog()">✕</button>
-      <div class="advisor-greeting">主公，今日要做什麼？</div>
       <div class="advisor-reminder-slot" id="advisor-reminder-slot"></div>
       <div class="advisor-btn-grid">
         <section class="advisor-menu-section">
