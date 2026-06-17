@@ -2183,7 +2183,14 @@ body::after{
         <button class="agenda-mode-btn" id="agenda-mode-week" type="button" onclick="setAgendaMode('week')">七日</button>
       </div>
       <div class="today-agenda-list" id="today-calendar-list">
-        <div class="today-agenda-loading">軍師正在調閱今日行程…</div>
+        <section class="agenda-section">
+          <div class="agenda-section-title">待辦事項</div>
+          <div class="today-agenda-loading">軍師正在調閱待辦事項…</div>
+        </section>
+        <section class="agenda-section">
+          <div class="agenda-section-title">今日行程</div>
+          <div class="today-agenda-loading">軍師正在調閱今日行程…</div>
+        </section>
       </div>
       <button class="today-agenda-refresh" id="today-agenda-refresh" type="button" onclick="loadTodayCalendar(currentAgendaMode)">更新</button>
     </div>
@@ -3816,10 +3823,30 @@ function toggleTodayAgenda(force){
   if(sheet)sheet.setAttribute('aria-hidden',open?'false':'true');
 }
 
+function agendaLoadingHtml(){
+  var title=currentAgendaMode==='week'?'七日行程':(currentAgendaMode==='tomorrow'?'明日行程':'今日行程');
+  var scope=currentAgendaMode==='week'?'七日':(currentAgendaMode==='tomorrow'?'明日':'今日');
+  return `<section class="agenda-section">
+    <div class="agenda-section-title">待辦事項</div>
+    <div class="today-agenda-loading">軍師正在調閱待辦事項…</div>
+  </section>
+  <section class="agenda-section">
+    <div class="agenda-section-title">${title}</div>
+    <div class="today-agenda-loading">軍師正在調閱${scope}行程…</div>
+  </section>`;
+}
+
 function setAgendaState(html,type){
   var box=document.getElementById('today-calendar-list');
   if(!box)return;
   box.innerHTML='<div class="today-agenda-'+(type||'empty')+'">'+html+'</div>';
+}
+
+function initTodayAgenda(){
+  currentAgendaMode='today';
+  updateAgendaModeButtons();
+  toggleTodayAgenda(false);
+  loadTodayCalendar(currentAgendaMode);
 }
 
 async function loadTodayCalendar(mode){
@@ -3834,7 +3861,8 @@ async function loadTodayCalendar(mode){
   }
   try{
     if(btn)btn.disabled=true;
-    setAgendaState('軍師正在調閱'+(currentAgendaMode==='week'?'七日':(currentAgendaMode==='tomorrow'?'明日':'今日'))+'行程…','loading');
+    var loadingBox=document.getElementById('today-calendar-list');
+    if(loadingBox)loadingBox.innerHTML=agendaLoadingHtml();
     var results=await Promise.allSettled([
       apiGet({action:'todayCalendar',mode:currentAgendaMode}),
       API_URL?apiGet({action:'todayTasks'}):Promise.reject(new Error('尚未設定 Web App API，無法讀取 Google Tasks'))
@@ -8203,7 +8231,7 @@ function setupNotice(){
   if(navDay)navDay.textContent=d;
   if(navYm)navYm.textContent=y+'/'+m;
   if(navWk)navWk.textContent='星期'+w;
-  loadTodayCalendar();
+  initTodayAgenda();
   // 彰化天氣（Open-Meteo，無需 API key）
   (function(){
     var WMO={
