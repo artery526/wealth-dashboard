@@ -2171,6 +2171,31 @@ body::after{
 
   <div class="cards">
 
+    <!-- 糧倉 -->
+    <div class="card" id="c-foodhouse" onclick="openPanel('foodhouse')">
+      <div class="frame">
+        <div class="corner tl"></div><div class="corner tr"></div>
+        <div class="corner bl"></div><div class="corner br"></div>
+        <div class="gem">🌾</div>
+        <div class="art" style="position:relative;overflow:hidden;height:427px;border-bottom:none;">
+          <video
+            class="card-video"
+            src="foodhouse.mp4"
+            loop
+            muted
+            playsinline
+            preload="metadata"
+            style="width:100%;height:100%;display:block;object-fit:cover;object-position:center center;"
+          ></video>
+          <div style="position:absolute;bottom:0;left:0;right:0;z-index:4;
+            background:linear-gradient(to top,rgba(8,5,3,.95) 0%,rgba(8,5,3,.5) 50%,transparent 100%);
+            padding:16px 12px 12px;text-align:center;pointer-events:none;">
+            <span style="font-family:'Noto Sans TC',sans-serif;font-size:11px;color:#c09a50;letter-spacing:3px;">糧倉</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- 財政 -->
     <div class="card" id="c-finance" onclick="openPanel('finance')">
       <div class="frame">
@@ -2292,31 +2317,6 @@ body::after{
             background:linear-gradient(to top,rgba(8,5,3,.95) 0%,rgba(8,5,3,.5) 50%,transparent 100%);
             padding:16px 12px 12px;text-align:center;pointer-events:none;">
             <span style="font-family:'Noto Sans TC',sans-serif;font-size:11px;color:#c09a50;letter-spacing:3px;">醫館</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 糧倉 -->
-    <div class="card" id="c-foodhouse" onclick="openPanel('foodhouse')">
-      <div class="frame">
-        <div class="corner tl"></div><div class="corner tr"></div>
-        <div class="corner bl"></div><div class="corner br"></div>
-        <div class="gem">🌾</div>
-        <div class="art" style="position:relative;overflow:hidden;height:427px;border-bottom:none;">
-          <video
-            class="card-video"
-            src="foodhouse.mp4"
-            loop
-            muted
-            playsinline
-            preload="metadata"
-            style="width:100%;height:100%;display:block;object-fit:cover;object-position:center center;"
-          ></video>
-          <div style="position:absolute;bottom:0;left:0;right:0;z-index:4;
-            background:linear-gradient(to top,rgba(8,5,3,.95) 0%,rgba(8,5,3,.5) 50%,transparent 100%);
-            padding:16px 12px 12px;text-align:center;pointer-events:none;">
-            <span style="font-family:'Noto Sans TC',sans-serif;font-size:11px;color:#c09a50;letter-spacing:3px;">糧倉</span>
           </div>
         </div>
       </div>
