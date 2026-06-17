@@ -512,6 +512,7 @@ body::after{
 .foodhouse-advisor-reminder .advisor-summary-value{font-size:19px}
 .foodhouse-advisor-reminder .advisor-summary-sub{font-size:12px}
 .finance-reminder-wrap{margin:0 0 12px}
+.advisor-command-title{margin:0 20px 13px 0;text-align:center;font-family:'Noto Serif TC',serif;font-size:18px;font-weight:900;line-height:1.35;color:#f0dfa0;letter-spacing:1.5px;text-shadow:0 0 14px rgba(232,192,80,.22)}
 .advisor-btn-grid{display:flex;flex-direction:column;gap:9px}
 .advisor-menu-section{position:relative}
 .advisor-menu-toggle{width:100%;min-height:46px;display:flex;align-items:center;justify-content:center;gap:10px;border:1px solid rgba(210,188,138,.42);border-radius:4px;background:radial-gradient(circle at 9% 50%,rgba(34,24,13,.88) 0 5px,transparent 6px),radial-gradient(circle at 91% 50%,rgba(34,24,13,.86) 0 5px,transparent 6px),linear-gradient(90deg,rgba(28,24,17,.78),rgba(216,198,154,.82) 18%,rgba(234,224,194,.74) 50%,rgba(172,145,92,.76) 82%,rgba(28,24,17,.8));color:#21180d;font-family:'Noto Serif TC',serif;font-size:18px;font-weight:900;letter-spacing:3px;cursor:pointer;box-shadow:0 9px 20px rgba(0,0,0,.34),inset 0 1px 0 rgba(255,246,216,.24);text-shadow:0 1px 0 rgba(244,235,207,.34);transition:filter .18s,box-shadow .18s}
@@ -8210,6 +8211,7 @@ initHeaderVideoPlayback();
     <img class="advisor-img" src="advisor-zhuge.png" alt="軍師" onclick="closeAdvisorDialog()">
     <div class="advisor-dialog">
       <button class="advisor-close" onclick="closeAdvisorDialog()">✕</button>
+      <div class="advisor-command-title">主公，請下令🏹</div>
       <div class="advisor-btn-grid">
         <section class="advisor-menu-section">
           <button class="advisor-menu-toggle" type="button" onclick="toggleAdvisorMenuGroup(this)" aria-expanded="false"><span class="advisor-menu-mark">內</span>內政<span class="advisor-menu-caret">▼</span></button>
