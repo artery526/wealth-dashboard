@@ -525,8 +525,16 @@ body::after{
 .foodhouse-cash-amt{flex-shrink:0;font-family:var(--mono);color:#f3df9a}
 .foodhouse-cash-rate{font-family:var(--mono);font-size:15px;color:var(--teal)}
 .foodhouse-supply-extra{margin-top:10px;padding-top:9px;border-top:1px solid rgba(232,192,80,.16)}
+.foodhouse-roster-wrap{margin-top:12px}
+.foodhouse-roster-title{font-family:var(--sans);font-size:12px;font-weight:900;line-height:1.35;color:var(--gold2);letter-spacing:1px;margin:0 0 9px;display:flex;align-items:center;gap:8px}
+.foodhouse-roster-title::after{content:"";height:1px;flex:1;background:linear-gradient(90deg,rgba(184,137,46,.45),transparent)}
+.foodhouse-roster-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.foodhouse-roster-item{border:1px solid rgba(184,137,46,.26);border-radius:6px;background:rgba(10,8,4,.38);padding:10px 11px}
+.foodhouse-roster-label{font-family:var(--sans);font-size:12px;font-weight:900;line-height:1.35;color:#f0dfa0;letter-spacing:.7px}
+.foodhouse-roster-meta{margin-top:6px;display:grid;gap:4px;font-family:var(--sans);font-size:11px;font-weight:800;line-height:1.45;color:#bda36d}
+.foodhouse-roster-meta strong{font-family:var(--mono);font-size:13px;color:#f3df9a}
 .foodhouse-bills-wrap{margin-top:12px}
-@media(max-width:540px){.foodhouse-warroom-grid{grid-template-columns:1fr}}
+@media(max-width:540px){.foodhouse-warroom-grid,.foodhouse-roster-grid{grid-template-columns:1fr}}
 .finance-reminder-wrap{margin:0 0 12px}
 .advisor-command-title{margin:0 20px 13px 0;text-align:center;font-family:'Noto Serif TC',serif;font-size:18px;font-weight:900;line-height:1.35;color:#f0dfa0;letter-spacing:1.5px;text-shadow:0 0 14px rgba(232,192,80,.22)}
 .advisor-btn-grid{display:flex;flex-direction:column;gap:9px}
@@ -3058,6 +3066,7 @@ function renderFoodhousePanel(){
       </div>
       <div class="advisor-reminder-slot foodhouse-advisor-reminder" id="foodhouse-advisor-reminder"></div>
       <div id="foodhouse-warroom-content">${apiReady?'<div class="skel-line skel"></div><div class="skel-line skel" style="width:72%"></div>':''}</div>
+      <div class="foodhouse-roster-wrap" id="foodhouse-roster-content">${apiReady?'<div class="skel-line skel"></div><div class="skel-line skel" style="width:74%"></div>':''}</div>
       <div class="foodhouse-bills-wrap" id="foodhouse-bills-content">${apiReady?'<div class="skel-line skel"></div><div class="skel-line skel" style="width:66%"></div>':''}</div>
     </div>`;
   loadTodayAdvisorReminder().then(function(){
@@ -3066,6 +3075,7 @@ function renderFoodhousePanel(){
   });
   if(apiReady){
     loadFoodhouseWarRoom();
+    loadFoodhouseCouncilRoster();
     loadFoodhouseBills();
   }
 }
@@ -3124,6 +3134,79 @@ async function loadFoodhouseWarRoom(){
       apiGet({action:'monthly',ym:currentYM()}).catch(function(){return {};})
     ]);
     content.innerHTML=renderFoodhouseWarRoom(results[0],results[1]);
+  }catch(e){
+    content.innerHTML='';
+  }
+}
+
+function buildCouncilRosterGroupSummaries(active,totalCost){
+  var used=[];
+  var groups=councilRosterGroups().map(function(group){
+    var rows=(active||[]).filter(function(row){
+      if(used.indexOf(row)>=0)return false;
+      return councilRowInGroup(row,group);
+    });
+    rows.forEach(function(row){used.push(row);});
+    return Object.assign({},group,{rows:rows});
+  });
+  groups.forEach(function(group){
+    if(!group.useRemaining)return;
+    var existing=group.rows||[];
+    (active||[]).forEach(function(row){
+      if(used.indexOf(row)>=0)return;
+      existing.push(row);
+      used.push(row);
+    });
+    group.rows=existing;
+  });
+  return groups.map(function(group){
+    var holdings=(group.rows||[]).filter(function(row){return row.holding;}).map(function(row){return row.holding;});
+    var market=holdings.reduce(function(s,row){return s+toNum(row.marketValue);},0);
+    var cost=holdings.reduce(function(s,row){return s+toNum(row.cost);},0);
+    return {
+      label:group.label,
+      rows:group.rows||[],
+      market:market,
+      cost:cost,
+      costPct:totalCost>0?cost/totalCost*100:0
+    };
+  });
+}
+
+function renderFoodhouseCouncilRosterSummary(rows){
+  var active=(rows||[]).filter(function(r){return r.holding||r.enabled;});
+  var holdings=active.filter(function(r){return r.holding;}).map(function(r){return r.holding;});
+  var totalCost=holdings.reduce(function(s,r){return s+toNum(r.cost);},0);
+  var groups=buildCouncilRosterGroupSummaries(active,totalCost);
+  if(!groups.length)return '';
+  return `<div class="foodhouse-roster-title">軍機處 · 部隊陣容</div>
+    <div class="foodhouse-roster-grid">
+      ${groups.map(function(group){
+        return `<div class="foodhouse-roster-item">
+          <div class="foodhouse-roster-label">${esc(group.label)}</div>
+          <div class="foodhouse-roster-meta">
+            <div>加總現值 <strong>${fmtFull(group.market)}</strong></div>
+            <div>成本加總佔比 <strong>${group.costPct.toFixed(1)}%</strong></div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
+async function loadFoodhouseCouncilRoster(){
+  var content=document.getElementById('foodhouse-roster-content');
+  if(!content)return;
+  try{
+    var results=await Promise.allSettled([
+      loadHeroSheet(true),
+      loadCouncilHoldingsOverview(),
+      loadArmySettingsSheet()
+    ]);
+    var heroes=results[0].status==='fulfilled'?results[0].value:[];
+    var holdings=results[1].status==='fulfilled'?(results[1].value||[]):[];
+    var armySettings=results[2].status==='fulfilled'?(results[2].value||{}):{};
+    holdingsCache=holdings.length?holdings:holdingsCache;
+    content.innerHTML=renderFoodhouseCouncilRosterSummary(mergeCouncilRows(holdings,heroes,armySettings));
   }catch(e){
     content.innerHTML='';
   }
