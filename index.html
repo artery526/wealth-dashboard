@@ -3179,7 +3179,7 @@ function renderFoodhouseCouncilRosterSummary(rows){
   var totalCost=holdings.reduce(function(s,r){return s+toNum(r.cost);},0);
   var groups=buildCouncilRosterGroupSummaries(active,totalCost);
   if(!groups.length)return '';
-  return `<div class="foodhouse-roster-title">軍機處 · 部隊陣容</div>
+  return `<div class="foodhouse-roster-title">部隊陣容</div>
     <div class="foodhouse-roster-grid">
       ${groups.map(function(group){
         return `<div class="foodhouse-roster-item">
