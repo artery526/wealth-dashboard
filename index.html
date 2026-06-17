@@ -3826,14 +3826,16 @@ function toggleTodayAgenda(force){
 function agendaLoadingHtml(){
   var title=currentAgendaMode==='week'?'七日行程':(currentAgendaMode==='tomorrow'?'明日行程':'今日行程');
   var scope=currentAgendaMode==='week'?'七日':(currentAgendaMode==='tomorrow'?'明日':'今日');
+  var calendarSection=`<section class="agenda-section">
+    <div class="agenda-section-title">${title}</div>
+    <div class="today-agenda-loading">軍師正在調閱${scope}行程…</div>
+  </section>`;
+  if(currentAgendaMode!=='today')return calendarSection;
   return `<section class="agenda-section">
     <div class="agenda-section-title">待辦事項</div>
     <div class="today-agenda-loading">軍師正在調閱待辦事項…</div>
   </section>
-  <section class="agenda-section">
-    <div class="agenda-section-title">${title}</div>
-    <div class="today-agenda-loading">軍師正在調閱${scope}行程…</div>
-  </section>`;
+  ${calendarSection}`;
 }
 
 function setAgendaState(html,type){
@@ -3863,15 +3865,23 @@ async function loadTodayCalendar(mode){
     if(btn)btn.disabled=true;
     var loadingBox=document.getElementById('today-calendar-list');
     if(loadingBox)loadingBox.innerHTML=agendaLoadingHtml();
-    var results=await Promise.allSettled([
-      apiGet({action:'todayCalendar',mode:currentAgendaMode}),
-      API_URL?apiGet({action:'todayTasks'}):Promise.reject(new Error('尚未設定 Web App API，無法讀取 Google Tasks'))
-    ]);
+    var showTasks=currentAgendaMode==='today';
+    var requests=[apiGet({action:'todayCalendar',mode:currentAgendaMode})];
+    if(showTasks)requests.push(apiGet({action:'todayTasks'}));
+    var results=await Promise.allSettled(requests);
     var box=document.getElementById('today-calendar-list');
     if(!box)return;
     var calendarHtml=results[0].status==='fulfilled'
       ? renderCalendarAgenda(results[0].value.events||[],currentAgendaMode)
       : `<div class="today-agenda-error">${esc(results[0].reason&&results[0].reason.message||'行程讀取失敗')}</div>`;
+    var calendarSection=`<section class="agenda-section">
+      <div class="agenda-section-title">${currentAgendaMode==='week'?'七日行程':(currentAgendaMode==='tomorrow'?'明日行程':'今日行程')}</div>
+      ${calendarHtml}
+    </section>`;
+    if(!showTasks){
+      box.innerHTML=calendarSection;
+      return;
+    }
     var taskHtml=results[1].status==='fulfilled'
       ? renderGoogleTasks(results[1].value.tasks||[])
       : `<div class="today-agenda-error">${esc(results[1].reason&&results[1].reason.message||'Google Tasks 讀取失敗')}</div>`;
@@ -3879,10 +3889,7 @@ async function loadTodayCalendar(mode){
       <div class="agenda-section-title">待辦事項</div>
       ${taskHtml}
     </section>
-    <section class="agenda-section">
-      <div class="agenda-section-title">${currentAgendaMode==='week'?'七日行程':(currentAgendaMode==='tomorrow'?'明日行程':'今日行程')}</div>
-      ${calendarHtml}
-    </section>`;
+    ${calendarSection}`;
   }catch(err){
     setAgendaState((err.message||'朝中政務讀取失敗')+'<br>請確認主 Web App 已完成 Calendar 授權。','error');
   }finally{
