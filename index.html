@@ -510,14 +510,21 @@ body::after{
 .foodhouse-advisor-reminder .advisor-reminder-text{font-size:16px;line-height:1.85}
 .foodhouse-advisor-reminder .advisor-summary-grid{gap:10px}
 .foodhouse-advisor-reminder .advisor-summary-item{padding:11px 12px}
-.foodhouse-advisor-reminder .advisor-summary-item:nth-child(2){grid-column:1/-1}
 .foodhouse-advisor-reminder .advisor-summary-label{font-size:13px}
 .foodhouse-advisor-reminder .advisor-summary-value{font-size:19px}
+.foodhouse-advisor-reminder .advisor-summary-item:nth-child(2) .advisor-summary-value{font-size:14px;line-height:1.45}
 .foodhouse-advisor-reminder .advisor-summary-sub{font-size:12px}
 .foodhouse-warroom-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px}
 .foodhouse-warroom-item{border:1px solid rgba(232,192,80,.22);border-radius:6px;background:rgba(0,0,0,.16);padding:11px 12px}
 .foodhouse-warroom-label{font-family:var(--sans);font-size:13px;font-weight:900;line-height:1.35;color:#bda36d;letter-spacing:.6px}
 .foodhouse-warroom-value{margin-top:4px;font-family:var(--mono);font-size:19px;font-weight:900;line-height:1.25;color:#f3df9a;white-space:normal;word-break:break-word}
+.foodhouse-cash-meta{margin-top:10px;padding-top:9px;border-top:1px solid rgba(232,192,80,.16)}
+.foodhouse-cash-line{display:flex;align-items:center;justify-content:space-between;gap:10px;font-family:var(--sans);font-size:12px;font-weight:900;line-height:1.45;color:#d8c18a}
+.foodhouse-cash-line+.foodhouse-cash-line{margin-top:5px}
+.foodhouse-cash-name{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#bda36d}
+.foodhouse-cash-amt{flex-shrink:0;font-family:var(--mono);color:#f3df9a}
+.foodhouse-cash-rate{font-family:var(--mono);font-size:15px;color:var(--teal)}
+.foodhouse-bills-wrap{margin-top:12px}
 @media(max-width:540px){.foodhouse-warroom-grid{grid-template-columns:1fr}}
 .finance-reminder-wrap{margin:0 0 12px}
 .advisor-command-title{margin:0 20px 13px 0;text-align:center;font-family:'Noto Serif TC',serif;font-size:18px;font-weight:900;line-height:1.35;color:#f0dfa0;letter-spacing:1.5px;text-shadow:0 0 14px rgba(232,192,80,.22)}
@@ -3050,22 +3057,45 @@ function renderFoodhousePanel(){
       </div>
       <div class="advisor-reminder-slot foodhouse-advisor-reminder" id="foodhouse-advisor-reminder"></div>
       <div id="foodhouse-warroom-content">${apiReady?'<div class="skel-line skel"></div><div class="skel-line skel" style="width:72%"></div>':''}</div>
+      <div class="foodhouse-bills-wrap" id="foodhouse-bills-content">${apiReady?'<div class="skel-line skel"></div><div class="skel-line skel" style="width:66%"></div>':''}</div>
     </div>`;
   loadTodayAdvisorReminder().then(function(){
     var label=document.getElementById('foodhouse-label');
     if(label&&apiReady)label.textContent='已連線 · 戰情摘要';
   });
-  if(apiReady)loadFoodhouseWarRoom();
+  if(apiReady){
+    loadFoodhouseWarRoom();
+    loadFoodhouseBills();
+  }
 }
 
-function renderFoodhouseWarRoom(items){
+function foodhouseMonthlyMetaHtml(monthly){
+  monthly=monthly||{};
+  var categories=(monthly.categories||[]).filter(function(item){return item&&item.name&&Number(item.amount)>0;}).slice(0,2);
+  var topHtml=categories.length?categories.map(function(item,idx){
+    return `<div class="foodhouse-cash-line">
+      <span class="foodhouse-cash-name">${idx+1}. ${esc(item.name)}</span>
+      <span class="foodhouse-cash-amt">${fmtFull(item.amount)}</span>
+    </div>`;
+  }).join(''):`<div class="foodhouse-cash-line"><span class="foodhouse-cash-name">本月支出項目</span><span class="foodhouse-cash-amt">--</span></div>`;
+  return `<div class="foodhouse-cash-meta">
+    <div class="foodhouse-cash-line">
+      <span class="foodhouse-cash-name">本月儲蓄率</span>
+      <span class="foodhouse-cash-rate">${esc(monthly.savingRate||'--')}</span>
+    </div>
+    ${topHtml}
+  </div>`;
+}
+
+function renderFoodhouseWarRoom(items,monthly){
   items=(items||[]).filter(function(item){return item&&item.label&&item.displayValue;}).slice(0,2);
   if(!items.length)return '';
   return `<div class="foodhouse-warroom-grid">
-    ${items.map(function(item){
+    ${items.map(function(item,idx){
       return `<div class="foodhouse-warroom-item">
         <div class="foodhouse-warroom-label">${esc(item.label)}</div>
         <div class="foodhouse-warroom-value">${esc(item.displayValue)}</div>
+        ${idx===0?foodhouseMonthlyMetaHtml(monthly):''}
       </div>`;
     }).join('')}
   </div>`;
@@ -3075,8 +3105,22 @@ async function loadFoodhouseWarRoom(){
   var content=document.getElementById('foodhouse-warroom-content');
   if(!content)return;
   try{
-    var items=await apiGet({action:'councilPantry'});
-    content.innerHTML=renderFoodhouseWarRoom(items);
+    var results=await Promise.all([
+      apiGet({action:'councilPantry'}),
+      apiGet({action:'monthly',ym:currentYM()}).catch(function(){return {};})
+    ]);
+    content.innerHTML=renderFoodhouseWarRoom(results[0],results[1]);
+  }catch(e){
+    content.innerHTML='';
+  }
+}
+
+async function loadFoodhouseBills(){
+  var content=document.getElementById('foodhouse-bills-content');
+  if(!content)return;
+  try{
+    var bills=await apiGet({action:'bills'});
+    content.innerHTML=renderBillReservoirHtml(bills);
   }catch(e){
     content.innerHTML='';
   }
@@ -4126,13 +4170,12 @@ async function loadAccounts(){
     el.innerHTML=setupNotice();return;
   }
   try{
-    var [accs,monthly,bills,financeStatus]=await Promise.all([
+    var [accs,monthly,financeStatus]=await Promise.all([
       apiGet({action:'accounts'}),
       apiGet({action:'monthly',ym:currentYM()}),
-      apiGet({action:'bills'}),
       apiGet({action:'financeStatus'}).catch(function(){return null;})
     ]);
-    renderAccounts(accs,monthly,bills,el,financeStatus);
+    renderAccounts(accs,monthly,el,financeStatus);
   }catch(e){
     el.innerHTML=`<div style="color:var(--coral);font-family:var(--sans);font-size:12px;padding:12px 0">${esc(e.message)}</div>`;
   }
@@ -4189,7 +4232,33 @@ function renderFinanceStatusHud(data){
   </div>`;
 }
 
-function renderAccounts(accs,monthly,bills,el,financeStatus){
+function renderBillReservoirHtml(bills){
+  if(!bills||!bills.bills||!bills.bills.length)return '';
+  var cards=bills.bills.map(function(b){
+    var pct=b.pct||0;
+    var fillH=Math.min(100,pct);
+    var cls=pct>=80?'blue':pct>=40?'yellow':'red';
+    var label=pct>=80?'💧 蓄水充足':pct>=40?'⚠️ 安全水位':'🚨 紅色警戒';
+    var overflow=pct>100?'<div style="position:absolute;top:0;left:0;right:0;height:3px;background:repeating-linear-gradient(90deg,rgba(255,255,255,.9) 0 3px,transparent 3px 6px);border-radius:5px 5px 0 0"></div>':'';
+    return `<div class="res-card">
+      <div class="res-icon">${b.icon||'💰'}</div>
+      <div class="res-name">${esc(b.name)}</div>
+      <div class="res-body">
+        <div class="res-fill ${cls}" style="height:${fillH}%">
+          ${overflow}<div class="res-waves"></div>
+        </div>
+        <div class="res-pct">${pct}%</div>
+      </div>
+      <div class="res-amt">月繳 ${fmtN(b.monthly)}</div>
+      <div class="res-badge ${cls}">${label}</div>
+    </div>`;
+  }).join('');
+  return `
+    <div class="res-section-title">💧 固定帳單水庫水位</div>
+    <div class="res-grid">${cards}</div>`;
+}
+
+function renderAccounts(accs,monthly,el,financeStatus){
   var all=accs||[];
   var totalRow=all.find(a=>a.name==='總資產'||a.name==='總資產/總計')||null;
   var filtered=all.filter(a=>a.name!=='總資產'&&a.name!=='總資產/總計');
@@ -4215,33 +4284,6 @@ function renderAccounts(accs,monthly,bills,el,financeStatus){
   var totalInvested=totalRow&&!isNaN(totalRow.value)?totalRow.value:filtered.reduce((s,a)=>s+(parseFloat(a.value)||0),0);
   var totalMarket=totalRow&&totalRow.stockValue!=null&&!isNaN(totalRow.stockValue)?totalRow.stockValue:filtered.reduce((s,a)=>s+(parseFloat(a.stockValue)||0),0);
 
-  // 水庫水位
-  var reservoirHtml='';
-  if(bills&&bills.bills&&bills.bills.length>0){
-    var cards=bills.bills.map(function(b){
-      var pct=b.pct||0;
-      var fillH=Math.min(100,pct);
-      var cls=pct>=80?'blue':pct>=40?'yellow':'red';
-      var label=pct>=80?'💧 蓄水充足':pct>=40?'⚠️ 安全水位':'🚨 紅色警戒';
-      var overflow=pct>100?'<div style="position:absolute;top:0;left:0;right:0;height:3px;background:repeating-linear-gradient(90deg,rgba(255,255,255,.9) 0 3px,transparent 3px 6px);border-radius:5px 5px 0 0"></div>':'';
-      return `<div class="res-card">
-        <div class="res-icon">${b.icon||'💰'}</div>
-        <div class="res-name">${esc(b.name)}</div>
-        <div class="res-body">
-          <div class="res-fill ${cls}" style="height:${fillH}%">
-            ${overflow}<div class="res-waves"></div>
-          </div>
-          <div class="res-pct">${pct}%</div>
-        </div>
-        <div class="res-amt">月繳 ${fmtN(b.monthly)}</div>
-        <div class="res-badge ${cls}">${label}</div>
-      </div>`;
-    }).join('');
-    reservoirHtml=`
-      <div class="res-section-title">💧 固定帳單水庫水位</div>
-      <div class="res-grid">${cards}</div>`;
-  }
-
   el.innerHTML=statusHtml+kpisHtml+`
     <div class="sec-title">帳戶一覽</div>
     <div class="acc-grid">${accHtml}</div>
@@ -4252,8 +4294,7 @@ function renderAccounts(accs,monthly,bills,el,financeStatus){
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
       <div class="acc-item"><div class="acc-name">投入總資產</div><div class="acc-val">${fmtFull(totalInvested)}</div></div>
       <div class="acc-item"><div class="acc-name">市值總資產</div><div class="acc-val">${fmtFull(totalMarket)}</div></div>
-    </div>
-    ${reservoirHtml}`;
+    </div>`;
   var dot=document.getElementById('acc-dot');
   var lbl=document.getElementById('acc-label');
   if(dot)dot.className='api-dot ok';
