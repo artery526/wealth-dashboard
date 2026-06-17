@@ -2805,6 +2805,18 @@ function advisorMarketDelta(snapshot){
   if(isNaN(latestValue)||isNaN(previousValue)||!isFinite(latestValue)||!isFinite(previousValue))return null;
   return latestValue-previousValue;
 }
+function advisorMarketDeltaPercentText(snapshot){
+  var latest=snapshot&&snapshot.latest;
+  var previous=snapshot&&snapshot.previous;
+  if(!latest||!previous)return '--%';
+  var latestValue=Number(latest.investmentMarketValue!=null?latest.investmentMarketValue:latest.marketValue);
+  var previousValue=Number(previous.investmentMarketValue!=null?previous.investmentMarketValue:previous.marketValue);
+  if(isNaN(latestValue)||isNaN(previousValue)||!isFinite(latestValue)||!isFinite(previousValue)||previousValue===0)return '--%';
+  var diff=latestValue-previousValue;
+  var pct=diff/previousValue*100;
+  var arrow=diff>0?'▲':(diff<0?'▼':'');
+  return (diff>0?'+':'')+pct.toFixed(2)+'%'+(arrow?' '+arrow:'');
+}
 function advisorFinanceSummaryHtml(items){
   return `<div class="advisor-summary-grid">
     ${items.map(function(item){
@@ -2822,12 +2834,13 @@ function buildAdvisorFinanceSummary(monthly,holdings,assetSnapshot){
   var totalReturn=holdings.reduce(function(s,h){return s+toNum(h.totalReturn);},0);
   var totalMonthly=holdings.reduce(function(s,h){return s+toNum(h.monthlyDiv);},0);
   var marketDelta=advisorMarketDelta(assetSnapshot);
+  var marketDeltaPct=advisorMarketDeltaPercentText(assetSnapshot);
   return {
     date:today(),
     displayDate:today().replace(/-/g,'/'),
     metrics:[
       {label:'本月收入支出',value:fmtFull(monthly.income||0)+' / '+fmtFull(monthly.expense||0),sub:'收入 / 支出',toneValue:(Number(monthly.income)||0)-(Number(monthly.expense)||0)},
-      {label:'投資市值較昨增加金額',value:advisorSignedCurrency(marketDelta),sub:'較昨日變化 (%)',toneValue:marketDelta},
+      {label:'投資市值較昨增加金額',value:marketDeltaPct,sub:'投資市值日漲跌',toneValue:marketDelta},
       {label:'含息報酬',value:advisorSignedCurrency(totalReturn),sub:'持倉累計',toneValue:totalReturn},
       {label:'月總配息',value:fmtFull(totalMonthly),sub:'預估月配',toneValue:totalMonthly}
     ]
