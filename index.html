@@ -503,14 +503,22 @@ body::after{
 .advisor-summary-value.up{color:var(--teal)}
 .advisor-summary-value.down{color:var(--coral)}
 .advisor-summary-sub{margin-top:3px;font-family:var(--sans);font-size:10px;font-weight:800;line-height:1.35;color:#9a7430}
-.foodhouse-advisor-reminder .advisor-reminder-card{padding:16px 17px 17px}
+.foodhouse-advisor-reminder .advisor-reminder-card{border:0;background:transparent;box-shadow:none;padding:0}
+.foodhouse-advisor-reminder .advisor-reminder-card::before{display:none}
+.foodhouse-advisor-reminder .advisor-reminder-head{display:none}
 .foodhouse-advisor-reminder .advisor-reminder-title{font-size:17px}
 .foodhouse-advisor-reminder .advisor-reminder-text{font-size:16px;line-height:1.85}
 .foodhouse-advisor-reminder .advisor-summary-grid{gap:10px}
 .foodhouse-advisor-reminder .advisor-summary-item{padding:11px 12px}
+.foodhouse-advisor-reminder .advisor-summary-item:nth-child(2){grid-column:1/-1}
 .foodhouse-advisor-reminder .advisor-summary-label{font-size:13px}
 .foodhouse-advisor-reminder .advisor-summary-value{font-size:19px}
 .foodhouse-advisor-reminder .advisor-summary-sub{font-size:12px}
+.foodhouse-warroom-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px}
+.foodhouse-warroom-item{border:1px solid rgba(232,192,80,.22);border-radius:6px;background:rgba(0,0,0,.16);padding:11px 12px}
+.foodhouse-warroom-label{font-family:var(--sans);font-size:13px;font-weight:900;line-height:1.35;color:#bda36d;letter-spacing:.6px}
+.foodhouse-warroom-value{margin-top:4px;font-family:var(--mono);font-size:19px;font-weight:900;line-height:1.25;color:#f3df9a;white-space:normal;word-break:break-word}
+@media(max-width:540px){.foodhouse-warroom-grid{grid-template-columns:1fr}}
 .finance-reminder-wrap{margin:0 0 12px}
 .advisor-command-title{margin:0 20px 13px 0;text-align:center;font-family:'Noto Serif TC',serif;font-size:18px;font-weight:900;line-height:1.35;color:#f0dfa0;letter-spacing:1.5px;text-shadow:0 0 14px rgba(232,192,80,.22)}
 .advisor-btn-grid{display:flex;flex-direction:column;gap:9px}
@@ -2806,17 +2814,19 @@ function advisorMarketDelta(snapshot){
   if(isNaN(latestValue)||isNaN(previousValue)||!isFinite(latestValue)||!isFinite(previousValue))return null;
   return latestValue-previousValue;
 }
-function advisorMarketDeltaPercentText(snapshot){
+function advisorMarketDeltaFullText(snapshot){
   var latest=snapshot&&snapshot.latest;
   var previous=snapshot&&snapshot.previous;
-  if(!latest||!previous)return '--%';
+  if(!latest||!previous)return '較昨 --(日漲跌 --%)';
   var latestValue=Number(latest.investmentMarketValue!=null?latest.investmentMarketValue:latest.marketValue);
   var previousValue=Number(previous.investmentMarketValue!=null?previous.investmentMarketValue:previous.marketValue);
-  if(isNaN(latestValue)||isNaN(previousValue)||!isFinite(latestValue)||!isFinite(previousValue)||previousValue===0)return '--%';
+  if(isNaN(latestValue)||isNaN(previousValue)||!isFinite(latestValue)||!isFinite(previousValue)||previousValue===0)return '較昨 --(日漲跌 --%)';
   var diff=latestValue-previousValue;
   var pct=diff/previousValue*100;
+  var verb=diff>0?'增':(diff<0?'減':'持平');
   var arrow=diff>0?'▲':(diff<0?'▼':'');
-  return (diff>0?'+':'')+pct.toFixed(2)+'%'+(arrow?' '+arrow:'');
+  var pctText=(diff>0?'+':'')+pct.toFixed(2)+'%'+(arrow?' '+arrow:'');
+  return '較昨'+verb+' '+fmtFull(Math.abs(diff))+'(日漲跌 '+pctText+')';
 }
 function advisorFinanceSummaryHtml(items){
   return `<div class="advisor-summary-grid">
@@ -2835,13 +2845,13 @@ function buildAdvisorFinanceSummary(monthly,holdings,assetSnapshot){
   var totalReturn=holdings.reduce(function(s,h){return s+toNum(h.totalReturn);},0);
   var totalMonthly=holdings.reduce(function(s,h){return s+toNum(h.monthlyDiv);},0);
   var marketDelta=advisorMarketDelta(assetSnapshot);
-  var marketDeltaPct=advisorMarketDeltaPercentText(assetSnapshot);
+  var marketDeltaText=advisorMarketDeltaFullText(assetSnapshot);
   return {
     date:today(),
     displayDate:today().replace(/-/g,'/'),
     metrics:[
       {label:'本月收入支出',value:fmtFull(monthly.income||0)+' / '+fmtFull(monthly.expense||0),sub:'收入 / 支出',toneValue:(Number(monthly.income)||0)-(Number(monthly.expense)||0)},
-      {label:'投資市值較昨增加金額',value:marketDeltaPct,sub:'投資市值日漲跌',toneValue:marketDelta},
+      {label:'投資市值較昨增加金額',value:marketDeltaText,sub:'投資市值',toneValue:marketDelta},
       {label:'含息報酬',value:advisorSignedCurrency(totalReturn),sub:'持倉累計',toneValue:totalReturn},
       {label:'月總配息',value:fmtFull(totalMonthly),sub:'預估月配',toneValue:totalMonthly}
     ]
@@ -3035,15 +3045,41 @@ function renderFoodhousePanel(){
     <div class="pane active" id="pane-foodhouse">
       <div class="api-bar" onclick="openCfg()">
         <div class="api-dot ${apiReady?'ok':'err'}" id="foodhouse-dot"></div>
-        <span class="api-label" id="foodhouse-label">${apiReady?'讀取軍師簡報…':'尚未設定 API'}</span>
+        <span class="api-label" id="foodhouse-label">${apiReady?'讀取戰情摘要…':'尚未設定 API'}</span>
         <span class="api-action">⚙ 設定</span>
       </div>
       <div class="advisor-reminder-slot foodhouse-advisor-reminder" id="foodhouse-advisor-reminder"></div>
+      <div id="foodhouse-warroom-content">${apiReady?'<div class="skel-line skel"></div><div class="skel-line skel" style="width:72%"></div>':''}</div>
     </div>`;
   loadTodayAdvisorReminder().then(function(){
     var label=document.getElementById('foodhouse-label');
-    if(label&&apiReady)label.textContent='已連線 · 軍師簡報';
+    if(label&&apiReady)label.textContent='已連線 · 戰情摘要';
   });
+  if(apiReady)loadFoodhouseWarRoom();
+}
+
+function renderFoodhouseWarRoom(items){
+  items=(items||[]).filter(function(item){return item&&item.label&&item.displayValue;}).slice(0,2);
+  if(!items.length)return '';
+  return `<div class="foodhouse-warroom-grid">
+    ${items.map(function(item){
+      return `<div class="foodhouse-warroom-item">
+        <div class="foodhouse-warroom-label">${esc(item.label)}</div>
+        <div class="foodhouse-warroom-value">${esc(item.displayValue)}</div>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+async function loadFoodhouseWarRoom(){
+  var content=document.getElementById('foodhouse-warroom-content');
+  if(!content)return;
+  try{
+    var items=await apiGet({action:'councilPantry'});
+    content.innerHTML=renderFoodhouseWarRoom(items);
+  }catch(e){
+    content.innerHTML='';
+  }
 }
 
 async function loadZiweiCharts(){
