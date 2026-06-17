@@ -3016,8 +3016,10 @@ function renderFoodhousePanel(){
         <span class="api-label" id="foodhouse-label">${apiReady?'讀取糧倉資料…':'尚未設定 API'}</span>
         <span class="api-action">⚙ 設定</span>
       </div>
+      <div class="advisor-reminder-slot" id="foodhouse-advisor-reminder"></div>
       <div id="foodhouse-content">${apiReady?'<div class="skel-line skel"></div><div class="skel-line skel" style="width:78%"></div><div class="skel-line skel" style="width:64%"></div>':setupNotice()}</div>
     </div>`;
+  loadTodayAdvisorReminder();
   if(apiReady)loadFoodhousePanel();
 }
 
@@ -8207,7 +8209,6 @@ initHeaderVideoPlayback();
     <img class="advisor-img" src="advisor-zhuge.png" alt="軍師" onclick="closeAdvisorDialog()">
     <div class="advisor-dialog">
       <button class="advisor-close" onclick="closeAdvisorDialog()">✕</button>
-      <div class="advisor-reminder-slot" id="advisor-reminder-slot"></div>
       <div class="advisor-btn-grid">
         <section class="advisor-menu-section">
           <button class="advisor-menu-toggle" type="button" onclick="toggleAdvisorMenuGroup(this)" aria-expanded="false"><span class="advisor-menu-mark">內</span>內政<span class="advisor-menu-caret">▼</span></button>
@@ -8268,7 +8269,6 @@ initHeaderVideoPlayback();
 // ══ Advisor Dialog ══════════════════════════════════════════
 function openAdvisorDialog(){
   document.getElementById('advisor-overlay').classList.add('open');
-  loadTodayAdvisorReminder();
 }
 function closeAdvisorDialog(){
   document.getElementById('advisor-overlay').classList.remove('open');
