@@ -6384,16 +6384,14 @@ async function loadCouncilDashboard(){
       loadHeroSheet(true),
       loadCouncilHoldingsOverview(),
       loadArmySettingsSheet(),
-      API_URL?apiGet({action:'councilPantry'}):Promise.resolve([]),
       loadAssetSnapshot()
     ]);
     var heroes=results[0].status==='fulfilled'?results[0].value:[];
     var holdings=results[1].status==='fulfilled'?(results[1].value||[]):[];
     var armySettings=results[2].status==='fulfilled'?(results[2].value||{}):{};
-    var pantry=results[3].status==='fulfilled'?(results[3].value||[]):[];
-    var assetSnapshot=results[4].status==='fulfilled'?results[4].value:null;
+    var assetSnapshot=results[3].status==='fulfilled'?results[3].value:null;
     holdingsCache=holdings.length?holdings:holdingsCache;
-    renderCouncilRoster(mergeCouncilRows(holdings,heroes,armySettings),el,pantry,assetSnapshot);
+    renderCouncilRoster(mergeCouncilRows(holdings,heroes,armySettings),el,assetSnapshot);
     var dot=document.getElementById('council-dot');
     var lbl=document.getElementById('council-label');
     if(dot)dot.className='api-dot '+(results[1].status==='fulfilled'&&API_URL?'ok':'err');
@@ -6771,7 +6769,7 @@ function renderCouncilMarketDelta(snapshot){
   return `<div class="council-stat-delta ${tone}">日漲跌 ${pctText}${arrow?' '+arrow:''}</div><div class="council-stat-note">較昨${verb} ${amountText}</div>`;
 }
 
-function renderCouncilRoster(rows,el,pantry,assetSnapshot){
+function renderCouncilRoster(rows,el,assetSnapshot){
   var active=rows.filter(function(r){return r.holding||r.enabled;});
   var holdings=active.filter(function(r){return r.holding;}).map(function(r){return r.holding;});
   var totalCost=holdings.reduce(function(s,r){return s+toNum(r.cost);},0);
@@ -6782,7 +6780,6 @@ function renderCouncilRoster(rows,el,pantry,assetSnapshot){
   var totalMonthly=holdings.reduce(function(s,r){return s+toNum(r.monthlyDiv);},0);
   var totalReturn=holdings.reduce(function(s,r){return s+toNum(r.totalReturn);},0);
   el.innerHTML=`
-    ${renderCouncilPantry(pantry)}
     <div class="council-summary">
       <div class="council-stat"><div class="council-stat-l">持有數</div><div class="council-stat-v">${holdings.length||active.length} 檔</div><div class="council-stat-sub">月總配息 ${fmtFull(totalMonthly)}</div></div>
       <div class="council-stat"><div class="council-stat-l">總投資成本</div><div class="council-stat-v">${fmtFull(totalCost)}</div><div class="council-stat-sub ${totalReturn>=0?'up':'down'}">含息報酬 ${totalReturn>=0?'+':'-'}${fmtFull(Math.abs(totalReturn))}</div></div>
