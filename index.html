@@ -3848,12 +3848,12 @@ async function loadTodayCalendar(mode){
       ? renderGoogleTasks(results[1].value.tasks||[])
       : `<div class="today-agenda-error">${esc(results[1].reason&&results[1].reason.message||'Google Tasks 讀取失敗')}</div>`;
     box.innerHTML=`<section class="agenda-section">
-      <div class="agenda-section-title">${currentAgendaMode==='week'?'七日行程':(currentAgendaMode==='tomorrow'?'明日行程':'今日行程')}</div>
-      ${calendarHtml}
-    </section>
-    <section class="agenda-section">
       <div class="agenda-section-title">待辦事項</div>
       ${taskHtml}
+    </section>
+    <section class="agenda-section">
+      <div class="agenda-section-title">${currentAgendaMode==='week'?'七日行程':(currentAgendaMode==='tomorrow'?'明日行程':'今日行程')}</div>
+      ${calendarHtml}
     </section>`;
   }catch(err){
     setAgendaState((err.message||'朝中政務讀取失敗')+'<br>請確認主 Web App 已完成 Calendar 授權。','error');
@@ -8203,7 +8203,6 @@ function setupNotice(){
   if(navDay)navDay.textContent=d;
   if(navYm)navYm.textContent=y+'/'+m;
   if(navWk)navWk.textContent='星期'+w;
-  toggleTodayAgenda(true);
   loadTodayCalendar();
   // 彰化天氣（Open-Meteo，無需 API key）
   (function(){
