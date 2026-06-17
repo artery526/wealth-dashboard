@@ -533,9 +533,10 @@ body::after{
 .foodhouse-roster-label{font-family:var(--sans);font-size:12px;font-weight:900;line-height:1.35;color:#f0dfa0;letter-spacing:.7px}
 .foodhouse-roster-meta{margin-top:6px;display:grid;gap:4px;font-family:var(--sans);font-size:11px;font-weight:800;line-height:1.45;color:#bda36d}
 .foodhouse-roster-meta strong{font-family:var(--mono);font-size:13px;color:#f3df9a}
-.foodhouse-roster-pct{display:grid;grid-template-columns:auto minmax(72px,1fr);align-items:center;gap:8px}
-.foodhouse-roster-bar{height:8px;border:1px solid rgba(184,137,46,.3);border-radius:999px;background:rgba(0,0,0,.24);overflow:hidden;box-shadow:inset 0 1px 2px rgba(0,0,0,.42)}
-.foodhouse-roster-fill{height:100%;width:var(--pct,0%);border-radius:999px;background:linear-gradient(90deg,rgba(74,199,167,.86),rgba(232,192,80,.94));box-shadow:0 0 10px rgba(232,192,80,.18)}
+.foodhouse-roster-pct{display:grid;grid-template-columns:minmax(0,1fr) 46px;align-items:center;gap:9px}
+.foodhouse-roster-reservoir{position:relative;width:42px;height:54px;border-radius:7px;background:rgba(0,0,0,.35);overflow:hidden;box-shadow:inset 0 0 0 1px rgba(232,192,80,.12)}
+.foodhouse-roster-reservoir .res-fill{border-radius:0 0 5px 5px}
+.foodhouse-roster-reservoir .res-pct{font-size:11px}
 .foodhouse-bills-wrap{margin-top:12px}
 @media(max-width:540px){.foodhouse-warroom-grid,.foodhouse-roster-grid{grid-template-columns:1fr}}
 .finance-reminder-wrap{margin:0 0 12px}
@@ -3186,13 +3187,17 @@ function renderFoodhouseCouncilRosterSummary(rows){
     <div class="foodhouse-roster-grid">
       ${groups.map(function(group){
         var pct=Math.max(0,Math.min(100,group.costPct||0));
+        var cls=pct>=30?'blue':pct>=15?'yellow':'red';
         return `<div class="foodhouse-roster-item">
           <div class="foodhouse-roster-label">${esc(group.label)}</div>
           <div class="foodhouse-roster-meta">
             <div>加總現值 <strong>${fmtFull(group.market)}</strong></div>
             <div class="foodhouse-roster-pct">
               <span>成本加總佔比 <strong>${group.costPct.toFixed(1)}%</strong></span>
-              <span class="foodhouse-roster-bar" aria-hidden="true"><span class="foodhouse-roster-fill" style="--pct:${pct.toFixed(1)}%"></span></span>
+              <span class="foodhouse-roster-reservoir" aria-hidden="true">
+                <span class="res-fill ${cls}" style="height:${pct.toFixed(1)}%"><span class="res-waves"></span></span>
+                <span class="res-pct">${group.costPct.toFixed(1)}%</span>
+              </span>
             </div>
           </div>
         </div>`;
