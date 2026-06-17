@@ -524,6 +524,7 @@ body::after{
 .foodhouse-cash-name{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#bda36d}
 .foodhouse-cash-amt{flex-shrink:0;font-family:var(--mono);color:#f3df9a}
 .foodhouse-cash-rate{font-family:var(--mono);font-size:15px;color:var(--teal)}
+.foodhouse-supply-extra{margin-top:10px;padding-top:9px;border-top:1px solid rgba(232,192,80,.16)}
 .foodhouse-bills-wrap{margin-top:12px}
 @media(max-width:540px){.foodhouse-warroom-grid{grid-template-columns:1fr}}
 .finance-reminder-wrap{margin:0 0 12px}
@@ -3087,15 +3088,28 @@ function foodhouseMonthlyMetaHtml(monthly){
   </div>`;
 }
 
+function foodhouseSupplyExtraHtml(item){
+  if(!item||!item.label||!item.displayValue)return '';
+  return `<div class="foodhouse-supply-extra">
+    <div class="foodhouse-cash-line">
+      <span class="foodhouse-cash-name">${esc(item.label)}</span>
+      <span class="foodhouse-cash-amt">${esc(item.displayValue)}</span>
+    </div>
+  </div>`;
+}
+
 function renderFoodhouseWarRoom(items,monthly){
-  items=(items||[]).filter(function(item){return item&&item.label&&item.displayValue;}).slice(0,2);
-  if(!items.length)return '';
+  items=(items||[]).filter(function(item){return item&&item.label&&item.displayValue;});
+  var mainItems=items.slice(0,2);
+  var supplyExtra=items[2]||null;
+  if(!mainItems.length)return '';
   return `<div class="foodhouse-warroom-grid">
-    ${items.map(function(item,idx){
+    ${mainItems.map(function(item,idx){
       return `<div class="foodhouse-warroom-item">
         <div class="foodhouse-warroom-label">${esc(item.label)}</div>
         <div class="foodhouse-warroom-value">${esc(item.displayValue)}</div>
         ${idx===0?foodhouseMonthlyMetaHtml(monthly):''}
+        ${idx===1?foodhouseSupplyExtraHtml(supplyExtra):''}
       </div>`;
     }).join('')}
   </div>`;
