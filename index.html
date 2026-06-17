@@ -3788,6 +3788,7 @@ async function medicalPost(body){
 }
 
 var currentAgendaMode='today';
+var agendaLoadSeq=0;
 function agendaDateLabel(mode){
   var d=new Date();
   d.setDate(d.getDate()+(mode==='today'?0:1));
@@ -3823,14 +3824,15 @@ function toggleTodayAgenda(force){
   if(sheet)sheet.setAttribute('aria-hidden',open?'false':'true');
 }
 
-function agendaLoadingHtml(){
-  var title=currentAgendaMode==='week'?'七日行程':(currentAgendaMode==='tomorrow'?'明日行程':'今日行程');
-  var scope=currentAgendaMode==='week'?'七日':(currentAgendaMode==='tomorrow'?'明日':'今日');
+function agendaLoadingHtml(mode){
+  mode=mode==='tomorrow'||mode==='week'?mode:'today';
+  var title=mode==='week'?'七日行程':(mode==='tomorrow'?'明日行程':'今日行程');
+  var scope=mode==='week'?'七日':(mode==='tomorrow'?'明日':'今日');
   var calendarSection=`<section class="agenda-section">
     <div class="agenda-section-title">${title}</div>
     <div class="today-agenda-loading">軍師正在調閱${scope}行程…</div>
   </section>`;
-  if(currentAgendaMode!=='today')return calendarSection;
+  if(mode!=='today')return calendarSection;
   return `<section class="agenda-section">
     <div class="agenda-section-title">待辦事項</div>
     <div class="today-agenda-loading">軍師正在調閱待辦事項…</div>
@@ -3852,11 +3854,13 @@ function initTodayAgenda(){
 }
 
 async function loadTodayCalendar(mode){
-  currentAgendaMode=mode==='tomorrow'||mode==='week'?mode:'today';
+  var agendaMode=mode==='tomorrow'||mode==='week'?mode:'today';
+  var loadSeq=++agendaLoadSeq;
+  currentAgendaMode=agendaMode;
   updateAgendaModeButtons();
   var dateEl=document.getElementById('today-agenda-date');
   var btn=document.getElementById('today-agenda-refresh');
-  if(dateEl)dateEl.textContent=agendaDateLabel(currentAgendaMode);
+  if(dateEl)dateEl.textContent=agendaDateLabel(agendaMode);
   if(!API_URL){
     setAgendaState('尚未設定 Web App API，無法調閱朝中政務。<br><button class="setup-btn" style="margin-top:10px" onclick="openCfg()">⚙ 立即設定</button>','empty');
     return;
@@ -3864,18 +3868,19 @@ async function loadTodayCalendar(mode){
   try{
     if(btn)btn.disabled=true;
     var loadingBox=document.getElementById('today-calendar-list');
-    if(loadingBox)loadingBox.innerHTML=agendaLoadingHtml();
-    var showTasks=currentAgendaMode==='today';
-    var requests=[apiGet({action:'todayCalendar',mode:currentAgendaMode})];
+    if(loadingBox)loadingBox.innerHTML=agendaLoadingHtml(agendaMode);
+    var showTasks=agendaMode==='today';
+    var requests=[apiGet({action:'todayCalendar',mode:agendaMode})];
     if(showTasks)requests.push(apiGet({action:'todayTasks'}));
     var results=await Promise.allSettled(requests);
+    if(loadSeq!==agendaLoadSeq||agendaMode!==currentAgendaMode)return;
     var box=document.getElementById('today-calendar-list');
     if(!box)return;
     var calendarHtml=results[0].status==='fulfilled'
-      ? renderCalendarAgenda(results[0].value.events||[],currentAgendaMode)
+      ? renderCalendarAgenda(results[0].value.events||[],agendaMode)
       : `<div class="today-agenda-error">${esc(results[0].reason&&results[0].reason.message||'行程讀取失敗')}</div>`;
     var calendarSection=`<section class="agenda-section">
-      <div class="agenda-section-title">${currentAgendaMode==='week'?'七日行程':(currentAgendaMode==='tomorrow'?'明日行程':'今日行程')}</div>
+      <div class="agenda-section-title">${agendaMode==='week'?'七日行程':(agendaMode==='tomorrow'?'明日行程':'今日行程')}</div>
       ${calendarHtml}
     </section>`;
     if(!showTasks){
@@ -3891,9 +3896,10 @@ async function loadTodayCalendar(mode){
     </section>
     ${calendarSection}`;
   }catch(err){
+    if(loadSeq!==agendaLoadSeq||agendaMode!==currentAgendaMode)return;
     setAgendaState((err.message||'朝中政務讀取失敗')+'<br>請確認主 Web App 已完成 Calendar 授權。','error');
   }finally{
-    if(btn)btn.disabled=false;
+    if(loadSeq===agendaLoadSeq&&btn)btn.disabled=false;
   }
 }
 
