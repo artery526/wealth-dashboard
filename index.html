@@ -503,6 +503,14 @@ body::after{
 .advisor-summary-value.up{color:var(--teal)}
 .advisor-summary-value.down{color:var(--coral)}
 .advisor-summary-sub{margin-top:3px;font-family:var(--sans);font-size:10px;font-weight:800;line-height:1.35;color:#9a7430}
+.foodhouse-advisor-reminder .advisor-reminder-card{padding:16px 17px 17px}
+.foodhouse-advisor-reminder .advisor-reminder-title{font-size:17px}
+.foodhouse-advisor-reminder .advisor-reminder-text{font-size:16px;line-height:1.85}
+.foodhouse-advisor-reminder .advisor-summary-grid{gap:10px}
+.foodhouse-advisor-reminder .advisor-summary-item{padding:11px 12px}
+.foodhouse-advisor-reminder .advisor-summary-label{font-size:13px}
+.foodhouse-advisor-reminder .advisor-summary-value{font-size:19px}
+.foodhouse-advisor-reminder .advisor-summary-sub{font-size:12px}
 .finance-reminder-wrap{margin:0 0 12px}
 .advisor-btn-grid{display:flex;flex-direction:column;gap:9px}
 .advisor-menu-section{position:relative}
@@ -2819,7 +2827,7 @@ function buildAdvisorFinanceSummary(monthly,holdings,assetSnapshot){
     displayDate:today().replace(/-/g,'/'),
     metrics:[
       {label:'本月收入支出',value:fmtFull(monthly.income||0)+' / '+fmtFull(monthly.expense||0),sub:'收入 / 支出',toneValue:(Number(monthly.income)||0)-(Number(monthly.expense)||0)},
-      {label:'投資市值較昨增加金額',value:advisorSignedCurrency(marketDelta),sub:'較昨日變化',toneValue:marketDelta},
+      {label:'投資市值較昨增加金額',value:advisorSignedCurrency(marketDelta),sub:'較昨日變化 (%)',toneValue:marketDelta},
       {label:'含息報酬',value:advisorSignedCurrency(totalReturn),sub:'持倉累計',toneValue:totalReturn},
       {label:'月總配息',value:fmtFull(totalMonthly),sub:'預估月配',toneValue:totalMonthly}
     ]
@@ -3013,32 +3021,15 @@ function renderFoodhousePanel(){
     <div class="pane active" id="pane-foodhouse">
       <div class="api-bar" onclick="openCfg()">
         <div class="api-dot ${apiReady?'ok':'err'}" id="foodhouse-dot"></div>
-        <span class="api-label" id="foodhouse-label">${apiReady?'讀取糧倉資料…':'尚未設定 API'}</span>
+        <span class="api-label" id="foodhouse-label">${apiReady?'讀取軍師簡報…':'尚未設定 API'}</span>
         <span class="api-action">⚙ 設定</span>
       </div>
-      <div class="advisor-reminder-slot" id="foodhouse-advisor-reminder"></div>
-      <div id="foodhouse-content">${apiReady?'<div class="skel-line skel"></div><div class="skel-line skel" style="width:78%"></div><div class="skel-line skel" style="width:64%"></div>':setupNotice()}</div>
+      <div class="advisor-reminder-slot foodhouse-advisor-reminder" id="foodhouse-advisor-reminder"></div>
     </div>`;
-  loadTodayAdvisorReminder();
-  if(apiReady)loadFoodhousePanel();
-}
-
-async function loadFoodhousePanel(){
-  var content=document.getElementById('foodhouse-content');
-  var dot=document.getElementById('foodhouse-dot');
-  var label=document.getElementById('foodhouse-label');
-  if(!content)return;
-  try{
-    var pantry=await apiGet({action:'councilPantry'});
-    var html=renderCouncilPantry(pantry);
-    content.innerHTML=html||'<div class="battle-empty">糧倉資料尚未建立，等待試算表補齊。</div>';
-    if(dot)dot.className='api-dot ok';
-    if(label)label.textContent='已連線 · 糧倉同步';
-  }catch(e){
-    content.innerHTML=`<div style="color:var(--coral);font-family:var(--sans);font-size:12px;padding:12px 0">${esc(e.message)}</div>`;
-    if(dot)dot.className='api-dot err';
-    if(label)label.textContent='糧倉讀取失敗';
-  }
+  loadTodayAdvisorReminder().then(function(){
+    var label=document.getElementById('foodhouse-label');
+    if(label&&apiReady)label.textContent='已連線 · 軍師簡報';
+  });
 }
 
 async function loadZiweiCharts(){
