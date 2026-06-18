@@ -505,6 +505,21 @@ body::after{
 .advisor-summary-sub{margin-top:3px;font-family:var(--sans);font-size:10px;font-weight:800;line-height:1.35;color:#9a7430}
 .advisor-summary-sub.up{color:var(--teal)}
 .advisor-summary-sub.down{color:var(--coral)}
+.advisor-summary-visual{margin-top:9px;padding-top:8px;border-top:1px solid rgba(232,192,80,.12)}
+.foodhouse-spark-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px;font-family:var(--sans);font-size:9px;font-weight:800;color:#84652d}
+.foodhouse-spark-head strong{font-family:var(--mono);font-size:10px;color:#bda36d}
+.foodhouse-sparkline{display:block;width:100%;height:42px;overflow:visible}
+.foodhouse-sparkline .spark-guide{stroke:rgba(232,192,80,.12);stroke-width:1;stroke-dasharray:3 4}
+.foodhouse-sparkline .spark-path{fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.foodhouse-sparkline .spark-path.up,.foodhouse-sparkline .spark-dot.up{stroke:var(--teal)}
+.foodhouse-sparkline .spark-path.down,.foodhouse-sparkline .spark-dot.down{stroke:var(--coral)}
+.foodhouse-sparkline .spark-dot{fill:#140e06;stroke-width:2.5}
+.foodhouse-cashflow-viz{display:grid;gap:6px}
+.foodhouse-cashflow-row{display:grid;grid-template-columns:24px minmax(0,1fr);align-items:center;gap:7px;font-family:var(--sans);font-size:10px;font-weight:900;color:#bda36d}
+.foodhouse-cashflow-track,.foodhouse-expense-track{height:7px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden}
+.foodhouse-cashflow-fill,.foodhouse-expense-fill{display:block;height:100%;border-radius:2px}
+.foodhouse-cashflow-fill.income{background:var(--teal)}
+.foodhouse-cashflow-fill.expense{background:var(--coral)}
 .foodhouse-advisor-reminder .advisor-reminder-card{border:0;background:transparent;box-shadow:none;padding:0}
 .foodhouse-advisor-reminder .advisor-reminder-card::before{display:none}
 .foodhouse-advisor-reminder .advisor-reminder-head{display:none}
@@ -526,6 +541,22 @@ body::after{
 .foodhouse-cash-name{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#bda36d}
 .foodhouse-cash-amt{flex-shrink:0;font-family:var(--mono);color:#f3df9a}
 .foodhouse-cash-rate{font-family:var(--mono);font-size:15px;color:var(--teal)}
+.foodhouse-monthly-viz{display:grid;grid-template-columns:116px minmax(0,1fr);align-items:center;gap:12px}
+.foodhouse-savings-gauge{position:relative;width:116px;height:72px}
+.foodhouse-savings-gauge svg{display:block;width:116px;height:66px;overflow:visible}
+.foodhouse-savings-gauge .gauge-track,.foodhouse-savings-gauge .gauge-value{fill:none;stroke-width:10;stroke-linecap:round}
+.foodhouse-savings-gauge .gauge-track{stroke:rgba(255,255,255,.07)}
+.foodhouse-savings-gauge .gauge-value{stroke:var(--teal)}
+.foodhouse-savings-gauge.down .gauge-value{stroke:var(--coral)}
+.foodhouse-savings-number{position:absolute;left:0;right:0;top:27px;text-align:center;font-family:var(--mono);font-size:16px;font-weight:900;color:var(--teal)}
+.foodhouse-savings-gauge.down .foodhouse-savings-number{color:var(--coral)}
+.foodhouse-savings-label{position:absolute;left:0;right:0;top:49px;text-align:center;font-family:var(--sans);font-size:9px;font-weight:800;color:#84652d}
+.foodhouse-expense-rank{min-width:0;display:grid;gap:8px}
+.foodhouse-expense-row{min-width:0}
+.foodhouse-expense-head{display:flex;align-items:center;justify-content:space-between;gap:7px;margin-bottom:3px;font-family:var(--sans);font-size:10px;font-weight:900;line-height:1.3;color:#bda36d}
+.foodhouse-expense-head span:first-child{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.foodhouse-expense-head strong{flex-shrink:0;font-family:var(--mono);font-size:10px;color:#f3df9a}
+.foodhouse-expense-fill{background:#b8892e}
 .foodhouse-supply-extra{margin-top:10px;padding-top:9px;border-top:1px solid rgba(232,192,80,.16)}
 .foodhouse-roster-wrap{margin-top:12px}
 .foodhouse-roster-title{font-family:var(--sans);font-size:12px;font-weight:900;line-height:1.35;color:var(--gold2);letter-spacing:1px;margin:0 0 9px;display:flex;align-items:center;gap:8px}
@@ -539,7 +570,7 @@ body::after{
 .foodhouse-roster-reservoir .res-fill{border-radius:0 0 5px 5px}
 .foodhouse-roster-reservoir .res-pct{font-size:11px}
 .foodhouse-bills-wrap{margin-top:12px}
-@media(max-width:540px){.foodhouse-warroom-grid,.foodhouse-roster-grid{grid-template-columns:1fr}}
+@media(max-width:540px){.foodhouse-warroom-grid,.foodhouse-roster-grid{grid-template-columns:1fr}.foodhouse-monthly-viz{grid-template-columns:104px minmax(0,1fr);gap:9px}.foodhouse-savings-gauge,.foodhouse-savings-gauge svg{width:104px}}
 .finance-reminder-wrap{margin:0 0 12px}
 .advisor-command-title{margin:0 20px 13px 0;text-align:center;font-family:'Noto Serif TC',serif;font-size:18px;font-weight:900;line-height:1.35;color:#f0dfa0;letter-spacing:1.5px;text-shadow:0 0 14px rgba(232,192,80,.22)}
 .advisor-btn-grid{display:flex;flex-direction:column;gap:9px}
@@ -2879,6 +2910,45 @@ function advisorTotalReturnDelta(snapshot){
   if(rows.length<2)return null;
   return Number(rows[rows.length-1].totalReturn)-Number(rows[rows.length-2].totalReturn);
 }
+function advisorSnapshotSparkline(snapshot,key,label){
+  var rows=(snapshot&&snapshot.rows||[]).filter(function(row){
+    var value=row&&row[key];
+    return value!==null&&value!==undefined&&isFinite(Number(value));
+  }).slice(-7);
+  if(rows.length<2)return '';
+  var values=rows.map(function(row){return Number(row[key]);});
+  var min=Math.min.apply(null,values);
+  var max=Math.max.apply(null,values);
+  var span=max-min;
+  var width=180;
+  var height=38;
+  var pad=4;
+  var points=values.map(function(value,index){
+    var x=pad+(width-pad*2)*(index/Math.max(1,values.length-1));
+    var y=span?pad+(height-pad*2)*(1-(value-min)/span):height/2;
+    return {x:x,y:y};
+  });
+  var latest=values[values.length-1];
+  var previous=values[values.length-2];
+  var cls=latest>=previous?'up':'down';
+  var lastPoint=points[points.length-1];
+  var pointText=points.map(function(point){return point.x.toFixed(1)+','+point.y.toFixed(1);}).join(' ');
+  return `<div class="foodhouse-spark-head"><span>近 7 日</span><strong>${rows.length} 筆快照</strong></div>
+    <svg class="foodhouse-sparkline" viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(label)}近 7 日趨勢">
+      <line class="spark-guide" x1="${pad}" y1="${height/2}" x2="${width-pad}" y2="${height/2}"></line>
+      <polyline class="spark-path ${cls}" points="${pointText}"></polyline>
+      <circle class="spark-dot ${cls}" cx="${lastPoint.x.toFixed(1)}" cy="${lastPoint.y.toFixed(1)}" r="3.2"></circle>
+    </svg>`;
+}
+function advisorCashflowVisual(monthly){
+  var income=Math.max(0,toNum(monthly&&monthly.income));
+  var expense=Math.max(0,toNum(monthly&&monthly.expense));
+  var max=Math.max(income,expense,1);
+  return `<div class="foodhouse-cashflow-viz" aria-label="本月收入支出比較">
+    <div class="foodhouse-cashflow-row"><span>收入</span><span class="foodhouse-cashflow-track"><span class="foodhouse-cashflow-fill income" style="width:${(income/max*100).toFixed(1)}%"></span></span></div>
+    <div class="foodhouse-cashflow-row"><span>支出</span><span class="foodhouse-cashflow-track"><span class="foodhouse-cashflow-fill expense" style="width:${(expense/max*100).toFixed(1)}%"></span></span></div>
+  </div>`;
+}
 function advisorFinanceSummaryHtml(items){
   return `<div class="advisor-summary-grid">
     ${items.map(function(item){
@@ -2886,6 +2956,7 @@ function advisorFinanceSummaryHtml(items){
         <div class="advisor-summary-label">${esc(item.label)}</div>
         <div class="advisor-summary-value ${advisorMetricValueClass(item.toneValue)}">${esc(item.value)}</div>
         ${item.sub?`<div class="advisor-summary-sub ${advisorMetricValueClass(item.subToneValue)}">${esc(item.sub)}</div>`:''}
+        ${item.visual?`<div class="advisor-summary-visual">${item.visual}</div>`:''}
       </div>`;
     }).join('')}
   </div>`;
@@ -2901,9 +2972,9 @@ function buildAdvisorFinanceSummary(monthly,holdings,assetSnapshot){
     date:today(),
     displayDate:today().replace(/-/g,'/'),
     metrics:[
-      {label:'本月收入支出',value:fmtFull(monthly.income||0)+' / '+fmtFull(monthly.expense||0),sub:'收入 / 支出',toneValue:(Number(monthly.income)||0)-(Number(monthly.expense)||0)},
-      {label:'投資市值較昨增加金額',value:marketDeltaText,sub:'投資市值',toneValue:marketDelta},
-      {label:'含息報酬',value:advisorSignedCurrency(totalReturn),sub:advisorTotalReturnDeltaFullText(assetSnapshot),toneValue:totalReturn,subToneValue:advisorTotalReturnDelta(assetSnapshot)},
+      {label:'本月收入支出',value:fmtFull(monthly.income||0)+' / '+fmtFull(monthly.expense||0),sub:'收入 / 支出',toneValue:(Number(monthly.income)||0)-(Number(monthly.expense)||0),visual:advisorCashflowVisual(monthly)},
+      {label:'投資市值較昨增加金額',value:marketDeltaText,sub:'投資市值',toneValue:marketDelta,visual:advisorSnapshotSparkline(assetSnapshot,'investmentMarketValue','投資市值')},
+      {label:'含息報酬',value:advisorSignedCurrency(totalReturn),sub:advisorTotalReturnDeltaFullText(assetSnapshot),toneValue:totalReturn,subToneValue:advisorTotalReturnDelta(assetSnapshot),visual:advisorSnapshotSparkline(assetSnapshot,'totalReturn','含息報酬')},
       {label:'月總配息',value:fmtFull(totalMonthly),sub:'預估月配',toneValue:totalMonthly}
     ]
   };
@@ -3118,18 +3189,29 @@ function renderFoodhousePanel(){
 function foodhouseMonthlyMetaHtml(monthly){
   monthly=monthly||{};
   var categories=(monthly.categories||[]).filter(function(item){return item&&item.name&&Number(item.amount)>0;}).slice(0,2);
+  var maxExpense=categories.reduce(function(max,item){return Math.max(max,Number(item.amount)||0);},0)||1;
   var topHtml=categories.length?categories.map(function(item,idx){
-    return `<div class="foodhouse-cash-line">
-      <span class="foodhouse-cash-name">${idx+1}. ${esc(item.name)}</span>
-      <span class="foodhouse-cash-amt">${fmtFull(item.amount)}</span>
+    var width=Math.max(4,Math.min(100,(Number(item.amount)||0)/maxExpense*100));
+    return `<div class="foodhouse-expense-row">
+      <div class="foodhouse-expense-head"><span>${idx+1}. ${esc(item.name)}</span><strong>${fmtFull(item.amount)}</strong></div>
+      <div class="foodhouse-expense-track"><span class="foodhouse-expense-fill" style="width:${width.toFixed(1)}%"></span></div>
     </div>`;
-  }).join(''):`<div class="foodhouse-cash-line"><span class="foodhouse-cash-name">本月支出項目</span><span class="foodhouse-cash-amt">--</span></div>`;
+  }).join(''):`<div class="foodhouse-expense-head"><span>本月支出項目</span><strong>--</strong></div>`;
+  var savingRate=percentNum(monthly.savingRate||0);
+  var gaugeRate=Math.max(0,Math.min(100,savingRate));
+  var gaugeClass=savingRate<0?'down':'';
   return `<div class="foodhouse-cash-meta">
-    <div class="foodhouse-cash-line">
-      <span class="foodhouse-cash-name">本月儲蓄率</span>
-      <span class="foodhouse-cash-rate">${esc(monthly.savingRate||'--')}</span>
+    <div class="foodhouse-monthly-viz">
+      <div class="foodhouse-savings-gauge ${gaugeClass}" role="img" aria-label="本月儲蓄率 ${esc(monthly.savingRate||'--')}">
+        <svg viewBox="0 0 120 66" aria-hidden="true">
+          <path class="gauge-track" pathLength="100" d="M 12 58 A 48 48 0 0 1 108 58"></path>
+          <path class="gauge-value" pathLength="100" stroke-dasharray="${gaugeRate.toFixed(1)} 100" d="M 12 58 A 48 48 0 0 1 108 58"></path>
+        </svg>
+        <span class="foodhouse-savings-label">本月儲蓄率</span>
+        <strong class="foodhouse-savings-number">${esc(monthly.savingRate||'--')}</strong>
+      </div>
+      <div class="foodhouse-expense-rank" aria-label="本月最高兩項支出">${topHtml}</div>
     </div>
-    ${topHtml}
   </div>`;
 }
 
