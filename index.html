@@ -2901,7 +2901,7 @@ function advisorTotalReturnDeltaFullText(snapshot){
   var verb=diff>0?'增':(diff<0?'減':'持平');
   var arrow=diff>0?'▲':(diff<0?'▼':'');
   var pctText=(diff>0?'+':'')+pct.toFixed(2)+'%'+(arrow?' '+arrow:'');
-  return '較昨'+verb+' $'+fmtFull(Math.abs(diff))+'(日漲跌 '+pctText+')';
+  return '較昨'+verb+' '+fmtFull(Math.abs(diff))+'(日漲跌 '+pctText+')';
 }
 function advisorTotalReturnDelta(snapshot){
   var rows=(snapshot&&snapshot.rows||[]).filter(function(row){
