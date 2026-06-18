@@ -3195,7 +3195,7 @@ function renderFoodhouseCouncilRosterSummary(rows){
       ${groups.map(function(group){
         var costPct=group.costPct||0;
         var fillPct=Math.max(0,Math.min(100,costPct/50*100));
-        var cls=costPct>40?'red':(costPct<10?'green':'yellow');
+        var cls=costPct>40?'red':(costPct>20?'blue':'green');
         return `<div class="foodhouse-roster-item">
           <div class="foodhouse-roster-label">${esc(group.label)}</div>
           <div class="foodhouse-roster-meta">
