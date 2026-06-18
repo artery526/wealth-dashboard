@@ -503,6 +503,8 @@ body::after{
 .advisor-summary-value.up{color:var(--teal)}
 .advisor-summary-value.down{color:var(--coral)}
 .advisor-summary-sub{margin-top:3px;font-family:var(--sans);font-size:10px;font-weight:800;line-height:1.35;color:#9a7430}
+.advisor-summary-sub.up{color:var(--teal)}
+.advisor-summary-sub.down{color:var(--coral)}
 .foodhouse-advisor-reminder .advisor-reminder-card{border:0;background:transparent;box-shadow:none;padding:0}
 .foodhouse-advisor-reminder .advisor-reminder-card::before{display:none}
 .foodhouse-advisor-reminder .advisor-reminder-head{display:none}
@@ -2870,13 +2872,20 @@ function advisorTotalReturnDeltaFullText(snapshot){
   var pctText=(diff>0?'+':'')+pct.toFixed(2)+'%'+(arrow?' '+arrow:'');
   return '較昨'+verb+' $'+fmtFull(Math.abs(diff))+'(日漲跌 '+pctText+')';
 }
+function advisorTotalReturnDelta(snapshot){
+  var rows=(snapshot&&snapshot.rows||[]).filter(function(row){
+    return row&&row.totalReturn!==null&&row.totalReturn!==undefined&&isFinite(Number(row.totalReturn));
+  });
+  if(rows.length<2)return null;
+  return Number(rows[rows.length-1].totalReturn)-Number(rows[rows.length-2].totalReturn);
+}
 function advisorFinanceSummaryHtml(items){
   return `<div class="advisor-summary-grid">
     ${items.map(function(item){
       return `<div class="advisor-summary-item">
         <div class="advisor-summary-label">${esc(item.label)}</div>
         <div class="advisor-summary-value ${advisorMetricValueClass(item.toneValue)}">${esc(item.value)}</div>
-        ${item.sub?`<div class="advisor-summary-sub">${esc(item.sub)}</div>`:''}
+        ${item.sub?`<div class="advisor-summary-sub ${advisorMetricValueClass(item.subToneValue)}">${esc(item.sub)}</div>`:''}
       </div>`;
     }).join('')}
   </div>`;
@@ -2894,7 +2903,7 @@ function buildAdvisorFinanceSummary(monthly,holdings,assetSnapshot){
     metrics:[
       {label:'本月收入支出',value:fmtFull(monthly.income||0)+' / '+fmtFull(monthly.expense||0),sub:'收入 / 支出',toneValue:(Number(monthly.income)||0)-(Number(monthly.expense)||0)},
       {label:'投資市值較昨增加金額',value:marketDeltaText,sub:'投資市值',toneValue:marketDelta},
-      {label:'含息報酬',value:advisorSignedCurrency(totalReturn),sub:advisorTotalReturnDeltaFullText(assetSnapshot),toneValue:totalReturn},
+      {label:'含息報酬',value:advisorSignedCurrency(totalReturn),sub:advisorTotalReturnDeltaFullText(assetSnapshot),toneValue:totalReturn,subToneValue:advisorTotalReturnDelta(assetSnapshot)},
       {label:'月總配息',value:fmtFull(totalMonthly),sub:'預估月配',toneValue:totalMonthly}
     ]
   };
