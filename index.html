@@ -2855,6 +2855,21 @@ function advisorMarketDeltaFullText(snapshot){
   var pctText=(diff>0?'+':'')+pct.toFixed(2)+'%'+(arrow?' '+arrow:'');
   return '較昨'+verb+' '+fmtFull(Math.abs(diff))+'(日漲跌 '+pctText+')';
 }
+function advisorTotalReturnDeltaFullText(snapshot){
+  var rows=(snapshot&&snapshot.rows||[]).filter(function(row){
+    return row&&row.totalReturn!==null&&row.totalReturn!==undefined&&isFinite(Number(row.totalReturn));
+  });
+  if(rows.length<2)return '較昨 --(日漲跌 --%)';
+  var latestValue=Number(rows[rows.length-1].totalReturn);
+  var previousValue=Number(rows[rows.length-2].totalReturn);
+  if(previousValue===0)return '較昨 --(日漲跌 --%)';
+  var diff=latestValue-previousValue;
+  var pct=diff/previousValue*100;
+  var verb=diff>0?'增':(diff<0?'減':'持平');
+  var arrow=diff>0?'▲':(diff<0?'▼':'');
+  var pctText=(diff>0?'+':'')+pct.toFixed(2)+'%'+(arrow?' '+arrow:'');
+  return '較昨'+verb+' $'+fmtFull(Math.abs(diff))+'(日漲跌 '+pctText+')';
+}
 function advisorFinanceSummaryHtml(items){
   return `<div class="advisor-summary-grid">
     ${items.map(function(item){
@@ -2879,7 +2894,7 @@ function buildAdvisorFinanceSummary(monthly,holdings,assetSnapshot){
     metrics:[
       {label:'本月收入支出',value:fmtFull(monthly.income||0)+' / '+fmtFull(monthly.expense||0),sub:'收入 / 支出',toneValue:(Number(monthly.income)||0)-(Number(monthly.expense)||0)},
       {label:'投資市值較昨增加金額',value:marketDeltaText,sub:'投資市值',toneValue:marketDelta},
-      {label:'含息報酬',value:advisorSignedCurrency(totalReturn),sub:'持倉累計',toneValue:totalReturn},
+      {label:'含息報酬',value:advisorSignedCurrency(totalReturn),sub:advisorTotalReturnDeltaFullText(assetSnapshot),toneValue:totalReturn},
       {label:'月總配息',value:fmtFull(totalMonthly),sub:'預估月配',toneValue:totalMonthly}
     ]
   };
