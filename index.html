@@ -8222,6 +8222,9 @@ function renderMarketDashboard(data,el){
     return `<span class="market-chip ${marketTone(k)}">${k} ${counts[k]}</span>`;
   }).join('');
   var stanceTone=marketTone(summary.stance);
+  var staleWarning=summary.isStale
+    ? `<div style="margin:0 0 12px;padding:10px 12px;border:1px solid rgba(180,70,45,.45);background:rgba(180,70,45,.08);color:#8b2f20;font-family:var(--sans);font-size:12px;border-radius:8px">⚠️ 市場資料已超過 96 小時未更新，請檢查每日總經排程。</div>`
+    : '';
 
   var twseHtml=twseRow?`<div class="sec-title">台股指標</div>${renderTWSECard(twseRow)}`:'';
   var otherHtml=otherRows.length?`<div class="sec-title" style="margin-top:${twseRow?14:0}px">指標風向</div>`:'';
@@ -8260,6 +8263,7 @@ function renderMarketDashboard(data,el){
   }).join('');
 
   el.innerHTML=`
+    ${staleWarning}
     <div class="market-command">
       <div>
         <div class="market-command-title">今日市場軍令</div>
