@@ -419,6 +419,7 @@ body::after{
 .card:nth-child(5){animation-delay:.7s}
 .card:nth-child(6){animation-delay:.85s}
 .card:nth-child(7){animation-delay:1s}
+.card:nth-child(8){animation-delay:1.15s}
 @keyframes appear{from{opacity:0;transform:translateY(36px) scale(.94)}to{opacity:1;transform:translateY(0) scale(1)}}
 .card:hover{transform:translateY(-12px) scale(1.03);z-index:10}
 .card.active{transform:translateY(-16px) scale(1.05);z-index:20}
@@ -2190,7 +2191,7 @@ body::after{
 
   <div class="nav-bottom-row">
     <div class="top-nav-logo" id="nav-date-display">
-      <div class="nav-date-row" role="button" tabindex="0" title="查看旅途備忘" onclick="openTravelMemoForDate(new Date())" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openTravelMemoForDate(new Date());}">
+      <div class="nav-date-row">
         <span class="nav-date-day" id="nav-day">--</span>
         <span class="nav-date-sep">·</span>
         <span class="nav-date-ym" id="nav-ym">----/--</span>
@@ -2419,6 +2420,31 @@ body::after{
             background:linear-gradient(to top,rgba(8,5,3,.95) 0%,rgba(8,5,3,.5) 50%,transparent 100%);
             padding:16px 12px 12px;text-align:center;pointer-events:none;">
             <span style="font-family:'Noto Sans TC',sans-serif;font-size:11px;color:#c09a50;letter-spacing:3px;">司天監</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Wall -->
+    <div class="card" id="c-wall" onclick="openTravelMemoForDate(new Date())">
+      <div class="frame">
+        <div class="corner tl"></div><div class="corner tr"></div>
+        <div class="corner bl"></div><div class="corner br"></div>
+        <div class="gem">城</div>
+        <div class="art" style="position:relative;overflow:hidden;height:427px;border-bottom:none;">
+          <video
+            class="card-video"
+            src="wall.mp4"
+            loop
+            muted
+            playsinline
+            preload="metadata"
+            style="width:100%;height:100%;display:block;object-fit:cover;object-position:center center;"
+          ></video>
+          <div style="position:absolute;bottom:0;left:0;right:0;z-index:4;
+            background:linear-gradient(to top,rgba(8,5,3,.95) 0%,rgba(8,5,3,.5) 50%,transparent 100%);
+            padding:16px 12px 12px;text-align:center;pointer-events:none;">
+            <span style="font-family:'Noto Sans TC',sans-serif;font-size:11px;color:#c09a50;letter-spacing:3px;">城牆</span>
           </div>
         </div>
       </div>
@@ -5342,6 +5368,9 @@ function openTravelMemoForDate(value){
   var key=travelDateKey(value||new Date());
   var overlay=document.getElementById('travel-overlay');
   var body=document.getElementById('travel-body');
+  document.querySelectorAll('.card').forEach(function(card){card.classList.remove('active');});
+  var wallCard=document.getElementById('c-wall');
+  if(wallCard)wallCard.classList.add('active');
   currentTravelMemoKey=key;
   if(overlay)overlay.classList.add('open');
   if(!hasMainApiCredentials()){
@@ -5435,6 +5464,12 @@ async function submitTravelMemoCard(event){
 function closeTravelMemo(){
   var overlay=document.getElementById('travel-overlay');
   if(overlay)overlay.classList.remove('open');
+  var wallCard=document.getElementById('c-wall');
+  if(wallCard)wallCard.classList.remove('active');
+  var wallVideo=wallCard&&wallCard.querySelector('video.card-video');
+  if(wallVideo){
+    try{wallVideo.pause();wallVideo.currentTime=0;}catch(e){}
+  }
 }
 function travelOverlayClick(e){
   if(e.target===document.getElementById('travel-overlay'))closeTravelMemo();
