@@ -8634,6 +8634,12 @@ initHeaderVideoPlayback();
           </div>
         </section>
         <section class="advisor-menu-section">
+          <button class="advisor-menu-toggle" type="button" onclick="toggleAdvisorMenuGroup(this)" aria-expanded="false"><span class="advisor-menu-mark">城</span>城牆<span class="advisor-menu-caret">▼</span></button>
+          <div class="advisor-btn-group">
+          <button class="advisor-btn" onclick="advisorGoTravelMemo()"><span class="advisor-btn-tag">城</span>遠征錄</button>
+          </div>
+        </section>
+        <section class="advisor-menu-section">
           <button class="advisor-menu-toggle" type="button" onclick="toggleAdvisorMenuGroup(this)" aria-expanded="false"><span class="advisor-menu-mark">醫</span>醫館<span class="advisor-menu-caret">▼</span></button>
           <div class="advisor-btn-group">
           <button class="advisor-btn" onclick="advisorGo('medical','medical-quick')"><span class="advisor-btn-tag">醫</span>身體記錄</button>
@@ -8688,6 +8694,10 @@ function advisorGo(panel, tab){
       if(btn) switchTab(btn, tab);
     }, 80);
   }
+}
+function advisorGoTravelMemo(){
+  closeAdvisorDialog();
+  openTravelMemoForDate(new Date());
 }
 
 
