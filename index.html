@@ -1568,6 +1568,11 @@ body::after{
   font-family:var(--sans);font-size:17px;
   color:#a89060;letter-spacing:1px;
 }
+.nav-date-lunar{
+  padding-left:8px;border-left:1px solid rgba(232,192,80,.28);
+  font-family:var(--sans);font-size:13px;font-weight:700;
+  color:#d8b45d;letter-spacing:.5px;white-space:nowrap;
+}
 .top-nav-link{
   font-family:var(--sans);font-size:11px;
   color:#7a5c28;letter-spacing:1px;
@@ -1836,6 +1841,8 @@ body::after{
   .nav-date-sep{font-size:13px}
   .nav-date-ym{font-size:12px;letter-spacing:1px}
   .nav-date-week{font-size:12px}
+  .nav-date-row{gap:5px;padding-left:4px;padding-right:4px}
+  .nav-date-lunar{padding-left:5px;font-size:10px;letter-spacing:0}
   .nav-weather-icon{font-size:11px}
   .nav-weather-temp{font-size:11px}
   .nav-weather-desc{font-size:10px}
@@ -2200,6 +2207,7 @@ body::after{
         <span class="nav-date-sep">·</span>
         <span class="nav-date-ym" id="nav-ym">----/--</span>
         <span class="nav-date-week" id="nav-week">星期—</span>
+        <span class="nav-date-lunar" id="nav-lunar" aria-label="農曆日期"></span>
       </div>
       <div class="nav-weather-row" id="nav-weather">
         <span class="nav-weather-icon" id="nav-weather-icon">⏳</span>
@@ -8375,24 +8383,40 @@ function setupNotice(){
 // ══════════════════════════════════════════
 (function(){
   var WEEKS=['日','一','二','三','四','五','六'];
-  var now=new Date();
-  var y=now.getFullYear();
-  var m=String(now.getMonth()+1).padStart(2,'0');
-  var d=String(now.getDate()).padStart(2,'0');
-  var w=WEEKS[now.getDay()];
-  var dayEl=document.getElementById('hdr-day');
-  var ymEl=document.getElementById('hdr-ym');
-  var wkEl=document.getElementById('hdr-week');
-  if(dayEl)dayEl.textContent=d;
-  if(ymEl)ymEl.textContent=y+' / '+m;
-  if(wkEl)wkEl.textContent='· 星期'+w;
-  // nav bar date
-  var navDay=document.getElementById('nav-day');
-  var navYm=document.getElementById('nav-ym');
-  var navWk=document.getElementById('nav-week');
-  if(navDay)navDay.textContent=d;
-  if(navYm)navYm.textContent=y+'/'+m;
-  if(navWk)navWk.textContent='星期'+w;
+  var LUNAR_DAYS=['','初一','初二','初三','初四','初五','初六','初七','初八','初九','初十','十一','十二','十三','十四','十五','十六','十七','十八','十九','二十','廿一','廿二','廿三','廿四','廿五','廿六','廿七','廿八','廿九','三十'];
+  function lunarDateLabel(date){
+    try{
+      var parts=new Intl.DateTimeFormat('zh-TW-u-ca-chinese',{month:'long',day:'numeric'}).formatToParts(date);
+      var month=parts.find(function(part){return part.type==='month';});
+      var day=parts.find(function(part){return part.type==='day';});
+      var dayName=day?LUNAR_DAYS[Number(day.value)]||day.value:'';
+      return month&&dayName?'農曆'+month.value+dayName:'';
+    }catch(e){
+      return '';
+    }
+  }
+  function updateDateDisplay(){
+    var now=new Date();
+    var y=now.getFullYear();
+    var m=String(now.getMonth()+1).padStart(2,'0');
+    var d=String(now.getDate()).padStart(2,'0');
+    var w=WEEKS[now.getDay()];
+    var dayEl=document.getElementById('hdr-day');
+    var ymEl=document.getElementById('hdr-ym');
+    var wkEl=document.getElementById('hdr-week');
+    if(dayEl)dayEl.textContent=d;
+    if(ymEl)ymEl.textContent=y+' / '+m;
+    if(wkEl)wkEl.textContent='· 星期'+w;
+    var navDay=document.getElementById('nav-day');
+    var navYm=document.getElementById('nav-ym');
+    var navWk=document.getElementById('nav-week');
+    var navLunar=document.getElementById('nav-lunar');
+    if(navDay)navDay.textContent=d;
+    if(navYm)navYm.textContent=y+'/'+m;
+    if(navWk)navWk.textContent='星期'+w;
+    if(navLunar)navLunar.textContent=lunarDateLabel(now);
+  }
+  updateDateDisplay();
   initTodayAgenda();
   // 彰化天氣（Open-Meteo，無需 API key）
   (function(){
