@@ -1569,7 +1569,8 @@ body::after{
   color:#a89060;letter-spacing:1px;
 }
 .nav-date-lunar{
-  padding-left:8px;border-left:1px solid rgba(232,192,80,.28);
+  align-self:flex-end;
+  padding-right:7px;
   font-family:var(--sans);font-size:13px;font-weight:700;
   color:#d8b45d;letter-spacing:.5px;white-space:nowrap;
 }
@@ -1842,7 +1843,7 @@ body::after{
   .nav-date-ym{font-size:12px;letter-spacing:1px}
   .nav-date-week{font-size:12px}
   .nav-date-row{gap:5px;padding-left:4px;padding-right:4px}
-  .nav-date-lunar{padding-left:5px;font-size:10px;letter-spacing:0}
+  .nav-date-lunar{padding-right:4px;font-size:10px;letter-spacing:0}
   .nav-weather-icon{font-size:11px}
   .nav-weather-temp{font-size:11px}
   .nav-weather-desc{font-size:10px}
@@ -2207,8 +2208,8 @@ body::after{
         <span class="nav-date-sep">·</span>
         <span class="nav-date-ym" id="nav-ym">----/--</span>
         <span class="nav-date-week" id="nav-week">星期—</span>
-        <span class="nav-date-lunar" id="nav-lunar" aria-label="農曆日期"></span>
       </div>
+      <div class="nav-date-lunar" id="nav-lunar" aria-label="農曆日期"></div>
       <div class="nav-weather-row" id="nav-weather">
         <span class="nav-weather-icon" id="nav-weather-icon">⏳</span>
         <span class="nav-weather-temp" id="nav-weather-temp">—°C</span>
