@@ -2876,6 +2876,7 @@ async function apiPost(body){
   var text=await r.text();var d;
   try{d=JSON.parse(text)}catch(e){throw new Error('回傳非JSON：'+text.slice(0,100))}
   if(!d.ok)throw new Error(d.error||'寫入失敗');
+  if(/^(expense|income|transfer|transactionUndo|stockTradeVoid|dividendEntry|dividendDelete|holdingTradeEntry|holdingTradeDelete)$/.test(body.action||''))invalidateFoodhouseDashboardCache();
   return d.data;
 }
 async function apiPostJson(body){
@@ -2890,11 +2891,15 @@ async function apiPostJson(body){
   var text=await r.text();var d;
   try{d=JSON.parse(text)}catch(e){throw new Error('回傳非JSON：'+text.slice(0,100))}
   if(!d.ok)throw new Error(d.error||'寫入失敗');
+  if(/^(expense|income|transfer|transactionUndo|stockTradeVoid|dividendEntry|dividendDelete|holdingTradeEntry|holdingTradeDelete)$/.test(body.action||''))invalidateFoodhouseDashboardCache();
   return d.data;
 }
 
 var ADVISOR_REMINDER_CACHE_KEY='empire_today_advisor_reminder_v1';
 var advisorReminderPromise=null;
+var FOODHOUSE_CACHE_KEY='wealth_foodhouse_dashboard_v1';
+var FOODHOUSE_CACHE_TTL=6*60*60*1000;
+var foodhouseDashboardPromise=null;
 function clearLegacyAdvisorReminderCache(){
   try{localStorage.removeItem(ADVISOR_REMINDER_CACHE_KEY);}catch(e){}
 }
@@ -3219,15 +3224,77 @@ function renderFoodhousePanel(){
       <div class="foodhouse-roster-wrap" id="foodhouse-roster-content">${apiReady?'<div class="skel-line skel"></div><div class="skel-line skel" style="width:74%"></div>':''}</div>
       <div class="foodhouse-bills-wrap" id="foodhouse-bills-content">${apiReady?'<div class="skel-line skel"></div><div class="skel-line skel" style="width:66%"></div>':''}</div>
     </div>`;
-  loadTodayAdvisorReminder().then(function(){
-    var label=document.getElementById('foodhouse-label');
-    if(label&&apiReady)label.textContent='已連線 · 戰情摘要';
-  });
   if(apiReady){
-    loadFoodhouseWarRoom();
-    loadFoodhouseCouncilRoster();
-    loadFoodhouseBills();
+    var cached=readFoodhouseDashboardCache();
+    if(cached)renderFoodhouseDashboardData(cached,true);
+    else{
+      var reminder=document.getElementById('foodhouse-advisor-reminder');
+      if(reminder)reminder.innerHTML=advisorReminderHtml(null,'loading');
+    }
+    loadFoodhouseDashboard();
+  }else{
+    var reminder=document.getElementById('foodhouse-advisor-reminder');
+    if(reminder)reminder.innerHTML=advisorReminderHtml({date:today(),displayDate:today().replace(/-/g,'/'),message:'請先設定 API URL，才能調閱糧倉戰情。'},'error');
   }
+}
+
+function invalidateFoodhouseDashboardCache(){
+  try{localStorage.removeItem(FOODHOUSE_CACHE_KEY);}catch(e){}
+}
+
+function readFoodhouseDashboardCache(){
+  try{
+    var cached=JSON.parse(localStorage.getItem(FOODHOUSE_CACHE_KEY)||'null');
+    if(cached&&cached.data&&Date.now()-Number(cached.savedAt||0)<FOODHOUSE_CACHE_TTL)return cached.data;
+  }catch(e){}
+  return null;
+}
+
+function renderFoodhouseDashboardData(data,stale){
+  data=data||{};
+  var core=data.core||{};
+  var monthly=core.monthly||{};
+  var holdings=core.holdings||[];
+  var reminder=document.getElementById('foodhouse-advisor-reminder');
+  var warroom=document.getElementById('foodhouse-warroom-content');
+  var roster=document.getElementById('foodhouse-roster-content');
+  var bills=document.getElementById('foodhouse-bills-content');
+  if(reminder)reminder.innerHTML=advisorReminderHtml(buildAdvisorFinanceSummary(monthly,holdings,data.assetSnapshot));
+  if(warroom)warroom.innerHTML=renderFoodhouseWarRoom(core.pantry||[],monthly);
+  if(roster)roster.innerHTML=renderFoodhouseCouncilRosterSummary(mergeCouncilRows(holdings,data.heroes||[],data.armySettings||{}));
+  if(bills)bills.innerHTML=renderBillReservoirHtml(core.bills||{});
+  var label=document.getElementById('foodhouse-label');
+  if(label)label.textContent=stale?'已顯示快取 · 更新中…':'已連線 · 戰情摘要';
+}
+
+async function loadFoodhouseDashboard(){
+  if(foodhouseDashboardPromise)return foodhouseDashboardPromise;
+  foodhouseDashboardPromise=Promise.allSettled([
+    apiGet({action:'foodhouseDashboard',ym:currentYM()}),
+    loadHeroSheet(false),
+    loadArmySettingsSheet(),
+    loadAssetSnapshot()
+  ]).then(function(results){
+    if(results[0].status!=='fulfilled')throw results[0].reason;
+    var data={
+      core:results[0].value||{},
+      heroes:results[1].status==='fulfilled'?(results[1].value||[]):[],
+      armySettings:results[2].status==='fulfilled'?(results[2].value||{}):{},
+      assetSnapshot:results[3].status==='fulfilled'?results[3].value:null
+    };
+    holdingsCache=(data.core.holdings||[]).length?data.core.holdings:holdingsCache;
+    try{localStorage.setItem(FOODHOUSE_CACHE_KEY,JSON.stringify({savedAt:Date.now(),data:data}));}catch(e){}
+    if(document.getElementById('foodhouse-warroom-content'))renderFoodhouseDashboardData(data,false);
+    return data;
+  }).catch(function(e){
+    var label=document.getElementById('foodhouse-label');
+    if(label)label.textContent=readFoodhouseDashboardCache()?'快取資料 · 更新失敗':'糧倉資料讀取失敗';
+    console.error(e);
+    return null;
+  }).finally(function(){
+    foodhouseDashboardPromise=null;
+  });
+  return foodhouseDashboardPromise;
 }
 
 function foodhouseMonthlyMetaHtml(monthly){
@@ -8431,6 +8498,9 @@ function setupNotice(){
   }
   updateDateDisplay();
   initTodayAgenda();
+  setTimeout(function(){
+    if(hasMainApiCredentials())loadFoodhouseDashboard();
+  },1500);
   // 彰化天氣（Open-Meteo，無需 API key）
   (function(){
     var WMO={
