@@ -2546,7 +2546,13 @@ body::after{
 // ══════════════════════════════════════════
 var API_URL = localStorage.getItem('wealth_api_url') || '';
 var WRITE_TOKEN = localStorage.getItem('wealth_write_token') || '';
-var cfg = { categories: [], sources: [], accounts: [], holdings: [], dividendSymbols: [] };
+var cfg = (function(){
+  try{
+    var cached=JSON.parse(localStorage.getItem('wealth_booking_config_v1')||'null');
+    if(cached&&typeof cached==='object')return cached;
+  }catch(e){}
+  return { categories: [], sources: [], accounts: [], holdings: [], dividendSymbols: [] };
+})();
 var BOOKING_FALLBACK_CATEGORIES = ['🛒全聯食材','🍴超商外食','🍔大餐簡餐','🛵外送餐飲','🏠家居用品','⛽機車加油','🧑‍🔧機車維護','💻3C產品','💧水電瓦斯','🏦稅務勞健保','🧥服飾外貌','⚒️房屋修繕','💊醫療保健','☎️電信網路','📱APP訂閱','📖書籍教材','👩Sis學貸/支出','💸租屋管理費','🛎️旅遊住宿','🤹娛樂費用','👤公益樂捐','🎅爸媽代繳'];
 var BOOKING_FALLBACK_SOURCES = ['👷工作所得','💰投資理財','🪙副業兼職','💲交易所得','🤶爸媽收入','🪙機構退稅'];
 var BOOKING_FALLBACK_ACCOUNTS = ['💰Cash','💵國泰Stock','🔖中國信託','🟡將來銀行','🏔️玉山銀行','🟥永豐銀行','🌳國泰Money','💳Cube','🧚Sis 國泰世華'];
@@ -4625,7 +4631,14 @@ async function initBookingForm(){
   var initSeq=++bookingFormInitSeq;
   el.dataset.bookingLoading='1';
   bookingFormInitPromise=(async function(){
-  try{cfg=await apiGet({action:'config'})}catch(e){console.error(e);cfg={categories:[],sources:[],accounts:[],holdings:[],dividendSymbols:[]};}
+  var configRefresh=apiGet({action:'config'}).then(function(nextCfg){
+    cfg=nextCfg||{categories:[],sources:[],accounts:[],holdings:[],dividendSymbols:[]};
+    try{localStorage.setItem('wealth_booking_config_v1',JSON.stringify(cfg));}catch(e){}
+    return cfg;
+  }).catch(function(e){
+    console.error(e);
+    return cfg;
+  });
   if(initSeq!==bookingFormInitSeq||el!==document.getElementById('pane-booking-form'))return;
   var cats=prioritizeBookingOption((cfg.categories&&cfg.categories.length)?cfg.categories:BOOKING_FALLBACK_CATEGORIES,'超商外食');
   var sources=prioritizeBookingOption((cfg.sources&&cfg.sources.length)?cfg.sources:BOOKING_FALLBACK_SOURCES,'投資理財');
