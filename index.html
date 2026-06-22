@@ -3167,7 +3167,10 @@ function switchTab(btn,key){
   var el=document.getElementById('pane-'+key);
   if(el)el.classList.add('active');
   currentTab=key;
-  if(key==='finance-accs')loadAccounts();
+  if(key==='finance-accs'){
+    loadAccounts();
+    loadPledgePanel();
+  }
   else if(key==='booking-form')initBookingForm();
   else if(key==='booking-recent')loadRecentBooking();
   else if(key==='dividend-center')loadDividendCenterPanel();
@@ -3175,7 +3178,6 @@ function switchTab(btn,key){
   else if(key==='council-holdings')loadHoldings();
   else if(key==='market-watch')loadMarketDashboard();
   else if(key==='macro-overview')loadMacroOverview();
-  else if(key==='finance-pledge')loadPledgePanel();
   else if(key==='council-roster')loadCouncilDashboard();
   else if(key==='council-task')resetAdvisorTaskStatus();
   else if(key==='div-calc')initDivCalc();
@@ -4497,7 +4499,7 @@ async function submitMedicalTarotRecord(e){
 }
 function renderFinancePanel(){
   setPanelHead('⚱️','Finance · Treasury','財政');
-  setTabs([{key:'finance-accs',label:'帳戶餘額'},{key:'domestic-yearly',label:'年度財報'},{key:'div-calc',label:'配息試算'},{key:'finance-pledge',label:'質押信貸'}]);
+  setTabs([{key:'finance-accs',label:'國庫現況'},{key:'domestic-yearly',label:'年度財報'},{key:'div-calc',label:'配息試算'}]);
   document.getElementById('p-body').innerHTML=`
     <div class="pane active" id="pane-finance-accs">
       <div class="api-bar" onclick="openCfg()">
@@ -4506,6 +4508,13 @@ function renderFinancePanel(){
         <span class="api-action">⚙ 設定</span>
       </div>
       <div id="acc-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:75%"></div><div class="skel-line skel" style="width:85%"></div></div>
+      <div class="res-section-title" style="margin-top:22px">🏦 質押信貸</div>
+      <div class="api-bar" onclick="openCfg()">
+        <div class="api-dot ${API_URL?'ok':'err'}" id="pledge-dot"></div>
+        <span class="api-label" id="pledge-label">${API_URL?'載入質押信貸…':'尚未設定 API'}</span>
+        <span class="api-action">⚙ 設定</span>
+      </div>
+      <div id="pledge-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:75%"></div></div>
     </div>
     <div class="pane" id="pane-domestic-yearly">
       <div class="api-bar" onclick="openCfg()">
@@ -4518,15 +4527,11 @@ function renderFinancePanel(){
     <div class="pane" id="pane-div-calc">
       <div id="div-calc-content"></div>
     </div>
-    <div class="pane" id="pane-finance-pledge">
-      <div class="api-bar" onclick="openCfg()">
-        <div class="api-dot ${API_URL?'ok':'err'}" id="pledge-dot"></div>
-        <span class="api-label" id="pledge-label">${API_URL?'載入質押信貸…':'尚未設定 API'}</span>
-        <span class="api-action">⚙ 設定</span>
-      </div>
-      <div id="pledge-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:75%"></div></div>
-    </div>`;
-  if(API_URL)loadAccounts();
+    `;
+  if(API_URL){
+    loadAccounts();
+    loadPledgePanel();
+  }
 }
 
 async function loadAccounts(){
@@ -8709,10 +8714,10 @@ initHeaderVideoPlayback();
         <section class="advisor-menu-section">
           <button class="advisor-menu-toggle" type="button" onclick="toggleAdvisorMenuGroup(this)" aria-expanded="false"><span class="advisor-menu-mark">財</span>財政<span class="advisor-menu-caret">▼</span></button>
           <div class="advisor-btn-group">
-          <button class="advisor-btn" onclick="advisorGo('finance','finance-accs')"><span class="advisor-btn-tag">財</span>帳戶餘額</button>
+          <button class="advisor-btn" onclick="advisorGo('finance','finance-accs')"><span class="advisor-btn-tag">財</span>國庫現況</button>
           <button class="advisor-btn" onclick="advisorGo('finance','domestic-yearly')"><span class="advisor-btn-tag">財</span>年度財報</button>
           <button class="advisor-btn" onclick="advisorGo('finance','div-calc')"><span class="advisor-btn-tag">財</span>配息試算</button>
-          <button class="advisor-btn" onclick="advisorGo('finance','finance-pledge')"><span class="advisor-btn-tag">財</span>質押信貸</button>
+          <span class="advisor-btn-spacer" aria-hidden="true"></span>
           </div>
         </section>
         <section class="advisor-menu-section">
