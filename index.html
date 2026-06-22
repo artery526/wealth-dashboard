@@ -2564,7 +2564,7 @@ var bookingDividendHiddenRows = {};
 var bookingDividendExpanded = false;
 var bookingDividendPickerOpen = false;
 var DIVIDEND_CACHE_TTL = 5 * 60 * 1000;
-var DIVIDEND_AUTOFILL_SYMBOLS = ['CHPY','AIPI','QQQI','SPYI','MLPI','PLTY'];
+var DIVIDEND_AUTOFILL_SYMBOLS = ['CHPY','AIPI','QQQI','SPYI','MLPI','PLTY','00997A'];
 var heroCache = [];
 var armySettingCache = null;
 var stockTradeMode = false;
@@ -2585,7 +2585,7 @@ var TRAVEL_MAP_GID = '652889684';
 var TRAVEL_SET_GID = '340830404';
 var COMMAND_SETTING_GID = '1479341396';
 var MONTHLY_HOLDINGS_SHEET_NAME = '\u6708\u5EA6\u6230\u60C5\u5BA4';
-var MONTHLY_HOLDINGS_RANGE = 'A12:N23';
+var MONTHLY_HOLDINGS_RANGE = 'A12:N24';
 var COMMAND_MARKET_VALUE_RANGE = 'I2:I2';
 var ASSET_SNAPSHOT_SHEET_NAME = '\u6BCF\u65E5\u8CC7\u7522\u5FEB\u7167';
 var ASSET_SNAPSHOT_GID = '2000002006';
@@ -2627,7 +2627,7 @@ var DEFAULT_MEDICAL_OPTIONS = {
 };
 
 var DIVIDEND_SYMBOLS = [
-  {value:'00985B',label:'🎟️00985B'},{value:'MLPI',label:'🛢️MLPI'},
+  {value:'00985B',label:'🎟️00985B'},{value:'00997A',label:'🪄00997A'},{value:'MLPI',label:'🛢️MLPI'},
   {value:'施羅德收益成長A2',label:'🌳施羅德收益成長A2'},{value:'路博邁台灣5G',label:'🪐路博邁台灣5G'},
   {value:'SPYI',label:'💎SPYI'},{value:'QQQI',label:'📡QQQI'},
   {value:'AIPI',label:'🤖AIPI'},{value:'PLTY',label:'🪖PLTY'},{value:'CHPY',label:'🐦‍🔥CHPY'} ,
@@ -2636,14 +2636,14 @@ var DIVIDEND_SYMBOLS = [
 var STOCK_SYMBOLS = [
   {value:'👑IAU',label:'👑IAU'},{value:'📡QQQI',label:'📡QQQI'},{value:'🛢️MLPI',label:'🛢️MLPI'},
   {value:'🪐路博邁台灣5G',label:'🪐路博邁台灣5G'},{value:'🌳施羅德收益成長A2',label:'🌳施羅德收益成長A2'},
-  {value:'🎟️00985B',label:'🎟️00985B'},{value:'🤖AIPI',label:'🤖AIPI'},
+  {value:'🎟️00985B',label:'🎟️00985B'},{value:'🪄00997A',label:'🪄00997A'},{value:'🤖AIPI',label:'🤖AIPI'},
   {value:'💎SPYI',label:'💎SPYI'},{value:'🪖PLTY',label:'🪖PLTY'},{value:'🐦‍🔥CHPY',label:'🐦‍🔥CHPY'},
   {value:'\u2692\uFE0FGDXW',label:'\u2692\uFE0FGDXW'},{value:'💛GLDW',label:'💛GLDW'}
 ];
 var HOLDING_META = {
   'IAU':{emoji:'👑',name:'IAU'},'QQQI':{emoji:'📡',name:'QQQI'},'MLPI':{emoji:'🛢️',name:'MLPI'},
   '路博邁台灣5G':{emoji:'🪐',name:'路博邁台灣5G'},'施羅德收益成長A2':{emoji:'🌳',name:'施羅德收益成長A2'},
-  '00985B':{emoji:'🎟️',name:'00985B'},'AIPI':{emoji:'🤖',name:'AIPI'},
+  '00985B':{emoji:'🎟️',name:'00985B'},'00997A':{emoji:'🪄',name:'00997A'},'AIPI':{emoji:'🤖',name:'AIPI'},
   'SPYI':{emoji:'💎',name:'SPYI'},'PLTY':{emoji:'🪖',name:'PLTY'},'CHPY':{emoji:'🐦‍🔥',name:'CHPY'},
   'GDXW':{emoji:'\u2692\uFE0F',name:'GDXW'},'GLDW':{emoji:'💛',name:'GLDW'}
 };
@@ -2699,6 +2699,7 @@ function normalizeKey(s){
   if(s.indexOf('GDXW')>=0)return 'GDXW';
   if(s.indexOf('00988A')>=0)return 'GDXW';
   if(s.indexOf('00985B')>=0)return '00985B';
+  if(s.indexOf('00997A')>=0)return '00997A';
   if(s.indexOf('MLPI')>=0)return 'MLPI';
   if(s.indexOf('SPYI')>=0)return 'SPYI';
   if(s.indexOf('QQQI')>=0)return 'QQQI';
@@ -6319,6 +6320,7 @@ function getDividendDefaultFx(symbol,data){
 function dividendTaxFactor(symbol){
   var k=normalizeKey(symbol);
   if(k==='00985B'||String(symbol||'').indexOf('985B')>=0)return 1;
+  if(k==='00997A'||String(symbol||'').indexOf('997A')>=0)return 1;
   if(k==='路博邁台灣5G')return 1;
   if(k==='施羅德收益成長A2')return 1;
   return 0.7;
@@ -6737,7 +6739,7 @@ function renderHoldings(rows,el){
       var formationDate=r.formationDate||'--';
       var elapsedDays=fmtWholeNumberText(r.elapsedDays);
       var paybackText=done?'已回本':(months>0?'剩 '+months+' 月':'待估算');
-      var currency=(sym.indexOf('00985B')>=0||sym.indexOf('路博邁')>=0||sym.indexOf('施羅德')>=0)?'TWD':'USD';
+      var currency=(sym.indexOf('00985B')>=0||sym.indexOf('00997A')>=0||sym.indexOf('路博邁')>=0||sym.indexOf('施羅德')>=0)?'TWD':'USD';
       if(sym.indexOf('GDXW')>=0)currency='USD';
       var rc=ret>=0?'up':'down';
       return `<div class="holding-row">
@@ -7263,7 +7265,7 @@ function councilRosterGroups(){
     {label:'\u6307\u6578\u6210\u9577\u578b',keys:['QQQI','SPYI'],aliases:['QQQI','SPYI','5G']},
     {label:'\u5168\u7403\u6210\u9577\u578b',keys:[],aliases:['\u65bd\u7f85\u5fb7','\u6536\u76ca\u6210\u9577','A2'],useRemaining:true},
     {label:'\u671f\u6b0a\u6536\u76ca\u578b',keys:['CHPY','MLPI','AIPI','PLTY'],aliases:['CHPY','MLPI','AIPI','PLTY']},
-    {label:'\u9632\u79a6\u6536\u76ca\u578b',keys:['00985B','IAU','GDXW','GLDW'],aliases:['00985B','IAU','GDXW','GLDW']}
+    {label:'\u9632\u79a6\u6536\u76ca\u578b',keys:['00985B','00997A','IAU','GDXW','GLDW'],aliases:['00985B','00997A','IAU','GDXW','GLDW']}
   ];
 }
 
@@ -7470,7 +7472,7 @@ async function loadMonthlyHoldingsSheet(){
       yuanPerDay:gvizCellValue(c[13])
     });
   }).filter(function(row){
-    return row.symbol&&(row.shares>0||row.cost>0||row.marketValue>0);
+    return row.symbol&&(row.shares>0||row.cost>0||row.marketValue>0||normalizeKey(row.symbol)==='00997A');
   });
 }
 
