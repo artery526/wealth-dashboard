@@ -7608,6 +7608,17 @@ async function loadCouncilHoldingsOverview(){
   return (rows||[]).map(normalizeHoldingOverviewRow);
 }
 
+function councilHeroAccentColor(row){
+  var key=normalizeKey(row&&row.symbol);
+  var text=councilRowText(row);
+  if(key==='QQQI'||key==='SPYI'||key==='CHPY')return '#2F80ED';
+  if(key==='路博邁台灣5G'||key==='00997A'||text.indexOf('路博邁')>=0||text.indexOf('5G')>=0)return '#E8C050';
+  if(key==='AIPI')return '#D85A30';
+  if(key==='GDXW'||key==='GLDW')return '#1D9E75';
+  if(key==='施羅德收益成長A2'||text.indexOf('施羅德')>=0)return '#8B5CF6';
+  return row&&row.accentColor||'#B8892E';
+}
+
 function renderHeroCard(row,totalCost){
   var h=row.holding||{};
   var ret=toNum(h.totalReturn);
@@ -7622,7 +7633,7 @@ function renderHeroCard(row,totalCost){
   var annualYield=cost>0?monthlyDiv*12/cost*100:0;
   var yuanPerDay=fmtWholeNumberText(h.yuanPerDay);
   var tone=ret<0?'down':'up';
-  var color=row.accentColor||'#B8892E';
+  var color=councilHeroAccentColor(row);
   var skill=row.skillData||{};
   var effectColor=skill.effectColor||color;
   var img=normalizeImageUrl(row.avatarUrl);
@@ -7636,7 +7647,7 @@ function renderHeroCard(row,totalCost){
       <div class="hero-effect-text">${esc(effectText)}</div>
       ${effectTrigger?`<div class="hero-effect-trigger">${esc(effectTrigger)}</div>`:''}
     </div>`:'';
-  return `<div class="hero-card ${tone}" style="--hero-color:${esc(color)};--hero-glow:${hexToRgba(color,.24)};--effect-glow:${hexToRgba(effectColor,.20)}">
+  return `<div class="hero-card ${tone}" style="--hero-color:${esc(color)};--hero-glow:${hexToRgba(color,.24)};--effect-glow:${hexToRgba(effectColor,.20)};border-color:${hexToRgba(color,.72)}">
     <div class="hero-visual">
       ${img?`<img src="${esc(img)}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`:''}
       <div class="hero-fallback" style="${img?'display:none':''}">${esc((row.icon||name.slice(0,1)||'軍'))}</div>
