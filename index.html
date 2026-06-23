@@ -7262,9 +7262,9 @@ function renderCouncilRoster(rows,el,assetSnapshot){
 
 function councilRosterGroups(){
   return [
-    {label:'\u6307\u6578\u6210\u9577\u578b',keys:['QQQI','SPYI'],aliases:['QQQI','SPYI','5G']},
+    {label:'\u6307\u6578\u6210\u9577\u578b',keys:['QQQI','SPYI'],aliases:['QQQI','SPYI','5G'],order:['QQQI','SPYI']},
     {label:'\u5168\u7403\u6210\u9577\u578b',keys:['00997A'],aliases:['00997A','\u65bd\u7f85\u5fb7','\u6536\u76ca\u6210\u9577','A2'],useRemaining:true},
-    {label:'\u671f\u6b0a\u6536\u76ca\u578b',keys:['CHPY','MLPI','AIPI','PLTY'],aliases:['CHPY','MLPI','AIPI','PLTY']},
+    {label:'\u671f\u6b0a\u6536\u76ca\u578b',keys:['CHPY','MLPI','AIPI','PLTY'],aliases:['CHPY','MLPI','AIPI','PLTY'],order:['PLTY','AIPI','CHPY','MLPI']},
     {label:'\u9632\u79a6\u6536\u76ca\u578b',keys:['00985B','IAU','GDXW','GLDW'],aliases:['00985B','IAU','GDXW','GLDW']}
   ];
 }
@@ -7294,6 +7294,7 @@ function renderCouncilRosterGroups(active,totalCost){
       if(used.indexOf(row)>=0)return false;
       return councilRowInGroup(row,group);
     });
+    rows=sortCouncilRosterRows(rows,group);
     rows.forEach(function(row){used.push(row);});
     return Object.assign({},group,{rows:rows});
   });
@@ -7310,6 +7311,19 @@ function renderCouncilRosterGroups(active,totalCost){
   return `<div class="council-roster-groups">
     ${groups.map(function(group){return renderCouncilRosterGroup(group,totalCost);}).join('')}
   </div>`;
+}
+
+function sortCouncilRosterRows(rows,group){
+  var order=(group&&group.order||[]).map(normalizeKey);
+  if(!order.length)return rows;
+  return (rows||[]).slice().sort(function(a,b){
+    var aKey=councilRowKeys(a).find(function(key){return order.indexOf(key)>=0;});
+    var bKey=councilRowKeys(b).find(function(key){return order.indexOf(key)>=0;});
+    var ai=aKey?order.indexOf(aKey):999;
+    var bi=bKey?order.indexOf(bKey):999;
+    if(ai!==bi)return ai-bi;
+    return (Number(a.sortOrder)||999)-(Number(b.sortOrder)||999);
+  });
 }
 
 function renderCouncilRosterGroup(group,totalCost){
