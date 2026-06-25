@@ -2878,7 +2878,10 @@ async function apiPost(body){
   var text=await r.text();var d;
   try{d=JSON.parse(text)}catch(e){throw new Error('回傳非JSON：'+text.slice(0,100))}
   if(!d.ok)throw new Error(d.error||'寫入失敗');
-  if(/^(expense|income|transfer|transactionUndo|stockTradeVoid|dividendEntry|dividendDelete|holdingTradeEntry|holdingTradeDelete)$/.test(body.action||''))invalidateFoodhouseDashboardCache();
+  if(/^(expense|income|transfer|transactionUndo|stockTradeVoid|dividendEntry|dividendDelete|holdingTradeEntry|holdingTradeDelete)$/.test(body.action||'')){
+    invalidateFoodhouseDashboardCache();
+    invalidateFinanceDashboardCache();
+  }
   return d.data;
 }
 async function apiPostJson(body){
@@ -2893,7 +2896,10 @@ async function apiPostJson(body){
   var text=await r.text();var d;
   try{d=JSON.parse(text)}catch(e){throw new Error('回傳非JSON：'+text.slice(0,100))}
   if(!d.ok)throw new Error(d.error||'寫入失敗');
-  if(/^(expense|income|transfer|transactionUndo|stockTradeVoid|dividendEntry|dividendDelete|holdingTradeEntry|holdingTradeDelete)$/.test(body.action||''))invalidateFoodhouseDashboardCache();
+  if(/^(expense|income|transfer|transactionUndo|stockTradeVoid|dividendEntry|dividendDelete|holdingTradeEntry|holdingTradeDelete)$/.test(body.action||'')){
+    invalidateFoodhouseDashboardCache();
+    invalidateFinanceDashboardCache();
+  }
   return d.data;
 }
 
@@ -2902,6 +2908,13 @@ var advisorReminderPromise=null;
 var FOODHOUSE_CACHE_KEY='wealth_foodhouse_dashboard_v1';
 var FOODHOUSE_CACHE_TTL=6*60*60*1000;
 var foodhouseDashboardPromise=null;
+var FINANCE_TREASURY_CACHE_KEY='wealth_finance_treasury_v1';
+var FINANCE_PLEDGE_CACHE_KEY='wealth_finance_pledge_v1';
+var FINANCE_YEARLY_CACHE_PREFIX='wealth_finance_yearly_v1_';
+var FINANCE_CACHE_TTL=6*60*60*1000;
+var financeTreasuryPromise=null;
+var financePledgePromise=null;
+var financeYearlyPromises={};
 function clearLegacyAdvisorReminderCache(){
   try{localStorage.removeItem(ADVISOR_REMINDER_CACHE_KEY);}catch(e){}
 }
@@ -3244,6 +3257,29 @@ function renderFoodhousePanel(){
 
 function invalidateFoodhouseDashboardCache(){
   try{localStorage.removeItem(FOODHOUSE_CACHE_KEY);}catch(e){}
+}
+
+function invalidateFinanceDashboardCache(){
+  try{
+    localStorage.removeItem(FINANCE_TREASURY_CACHE_KEY);
+    localStorage.removeItem(FINANCE_PLEDGE_CACHE_KEY);
+    for(var i=localStorage.length-1;i>=0;i--){
+      var key=localStorage.key(i);
+      if(key&&key.indexOf(FINANCE_YEARLY_CACHE_PREFIX)===0)localStorage.removeItem(key);
+    }
+  }catch(e){}
+}
+
+function readTimedFinanceCache(key){
+  try{
+    var cached=JSON.parse(localStorage.getItem(key)||'null');
+    if(cached&&cached.data&&Date.now()-Number(cached.savedAt||0)<FINANCE_CACHE_TTL)return cached.data;
+  }catch(e){}
+  return null;
+}
+
+function writeTimedFinanceCache(key,data){
+  try{localStorage.setItem(key,JSON.stringify({savedAt:Date.now(),data:data}));}catch(e){}
 }
 
 function readFoodhouseDashboardCache(){
@@ -4541,16 +4577,37 @@ async function loadAccounts(){
   if(!API_URL){
     el.innerHTML=setupNotice();return;
   }
-  try{
-    var [accs,monthly,financeStatus]=await Promise.all([
-      apiGet({action:'accounts'}),
-      apiGet({action:'monthly',ym:currentYM()}),
-      apiGet({action:'financeStatus'}).catch(function(){return null;})
-    ]);
-    renderAccounts(accs,monthly,el,financeStatus);
-  }catch(e){
-    el.innerHTML=`<div style="color:var(--coral);font-family:var(--sans);font-size:12px;padding:12px 0">${esc(e.message)}</div>`;
+  var cached=readTimedFinanceCache(FINANCE_TREASURY_CACHE_KEY);
+  if(cached)renderAccounts(cached.accs,cached.monthly,el,cached.financeStatus,true);
+  if(financeTreasuryPromise){
+    return financeTreasuryPromise.then(function(data){
+      if(data&&data.accs&&document.getElementById('acc-content'))renderAccounts(data.accs,data.monthly,document.getElementById('acc-content'),data.financeStatus,false);
+      return data;
+    });
   }
+  financeTreasuryPromise=Promise.allSettled([
+    apiGet({action:'accounts'}),
+    apiGet({action:'monthly',ym:currentYM()}),
+    apiGet({action:'financeStatus'})
+  ]).then(function(results){
+    if(results[0].status!=='fulfilled'||results[1].status!=='fulfilled'){
+      throw (results[0].reason||results[1].reason||new Error('finance load failed'));
+    }
+    var data={
+      accs:results[0].value||[],
+      monthly:results[1].value||{},
+      financeStatus:results[2].status==='fulfilled'?results[2].value:null
+    };
+    writeTimedFinanceCache(FINANCE_TREASURY_CACHE_KEY,data);
+    if(document.getElementById('acc-content'))renderAccounts(data.accs,data.monthly,document.getElementById('acc-content'),data.financeStatus,false);
+    return data;
+  }).catch(function(e){
+    if(!cached)el.innerHTML=`<div style="color:var(--coral);font-family:var(--sans);font-size:12px;padding:12px 0">${esc(e.message)}</div>`;
+    return null;
+  }).finally(function(){
+    financeTreasuryPromise=null;
+  });
+  return financeTreasuryPromise;
 }
 
 function renderFinanceStatusHud(data){
@@ -4630,7 +4687,7 @@ function renderBillReservoirHtml(bills){
     <div class="res-grid">${cards}</div>`;
 }
 
-function renderAccounts(accs,monthly,el,financeStatus){
+function renderAccounts(accs,monthly,el,financeStatus,stale){
   var all=accs||[];
   var totalRow=all.find(a=>a.name==='總資產'||a.name==='總資產/總計')||null;
   var filtered=all.filter(a=>a.name!=='總資產'&&a.name!=='總資產/總計');
@@ -4670,7 +4727,7 @@ function renderAccounts(accs,monthly,el,financeStatus){
   var dot=document.getElementById('acc-dot');
   var lbl=document.getElementById('acc-label');
   if(dot)dot.className='api-dot ok';
-  if(lbl)lbl.textContent='已連線 · '+currentYM();
+  if(lbl)lbl.textContent=(stale?'快取先顯示 · 背景更新':'已連線 · ')+currentYM();
 }
 
 // ══════════════════════════════════════════
@@ -6547,22 +6604,41 @@ async function loadDomesticYearly(){
   var el=document.getElementById('annual-content');
   if(!el)return;
   if(!API_URL){el.innerHTML=setupNotice();return}
-  try{
-    var sel=document.getElementById('annual-year-sel');
-    var selected=sel&&sel.value?sel.value:String(new Date().getFullYear());
-    el.innerHTML='<div class="skel-line skel"></div><div class="skel-line skel" style="width:80%"></div><div class="skel-line skel" style="width:65%"></div>';
-    var history=await apiGet({action:'history'});
+  var sel=document.getElementById('annual-year-sel');
+  var selected=sel&&sel.value?sel.value:String(new Date().getFullYear());
+  var cacheKey=FINANCE_YEARLY_CACHE_PREFIX+selected;
+  var cached=readTimedFinanceCache(cacheKey);
+  if(cached)renderDomesticYearly(cached.data,cached.history,cached.years,selected,true);
+  else el.innerHTML='<div class="skel-line skel"></div><div class="skel-line skel" style="width:80%"></div><div class="skel-line skel" style="width:65%"></div>';
+  if(financeYearlyPromises[selected]){
+    return financeYearlyPromises[selected].then(function(packed){
+      if(packed&&document.getElementById('annual-content'))renderDomesticYearly(packed.data,packed.history,packed.years,selected,false);
+      return packed;
+    });
+  }
+  financeYearlyPromises[selected]=Promise.all([
+    apiGet({action:'history'}),
+    apiGet({action:'yearly',year:selected})
+  ]).then(function(results){
+    var history=results[0]||[];
+    var data=results[1]||{};
     var years=(history||[]).map(r=>String(r.year)).filter(Boolean);
     if(years.indexOf(selected)===-1)years.push(selected);
     years=[...new Set(years)].sort((a,b)=>Number(b)-Number(a));
-    var data=await apiGet({action:'yearly',year:selected});
-    renderDomesticYearly(data,history,years,selected);
-  }catch(e){
-    el.innerHTML=`<div style="color:var(--coral);font-family:var(--sans);font-size:12px;padding:12px 0">${esc(e.message)}</div>`;
-  }
+    var packed={data:data,history:history,years:years};
+    writeTimedFinanceCache(cacheKey,packed);
+    if(document.getElementById('annual-content'))renderDomesticYearly(data,history,years,selected,false);
+    return packed;
+  }).catch(function(e){
+    if(!cached)el.innerHTML=`<div style="color:var(--coral);font-family:var(--sans);font-size:12px;padding:12px 0">${esc(e.message)}</div>`;
+    return null;
+  }).finally(function(){
+    delete financeYearlyPromises[selected];
+  });
+  return financeYearlyPromises[selected];
 }
 
-function renderDomesticYearly(d,history,years,selected){
+function renderDomesticYearly(d,history,years,selected,stale){
   var el=document.getElementById('annual-content');
   if(!el)return;
   d=d||{};
@@ -6601,7 +6677,7 @@ function renderDomesticYearly(d,history,years,selected){
     <div class="annual-head">
       <div>
         <div class="annual-title">年度財報</div>
-        <div class="txn-list-title" style="margin:6px 0 0;border:0;padding:0">年度收支統計與歷年趨勢</div>
+        <div class="txn-list-title" style="margin:6px 0 0;border:0;padding:0">${stale?'快取先顯示，背景更新中':'年度收支統計與歷年趨勢'}</div>
       </div>
       <div class="annual-tools">
         <select class="form-control" id="annual-year-sel" onchange="loadDomesticYearly()">${yearOptions}</select>
@@ -6681,6 +6757,52 @@ function annualHistoryRows(history){
     }).join('');
     return `<div><div class="annual-card-title">${metric.title}</div>${bars}</div>`;
   }).join('')+'</div>';
+}
+
+function prefetchFinanceDashboard(){
+  if(!API_URL)return;
+  if(!readTimedFinanceCache(FINANCE_TREASURY_CACHE_KEY)&&!financeTreasuryPromise){
+    financeTreasuryPromise=Promise.allSettled([
+      apiGet({action:'accounts'}),
+      apiGet({action:'monthly',ym:currentYM()}),
+      apiGet({action:'financeStatus'})
+    ]).then(function(results){
+      if(results[0].status==='fulfilled'&&results[1].status==='fulfilled'){
+        var data={
+          accs:results[0].value||[],
+          monthly:results[1].value||{},
+          financeStatus:results[2].status==='fulfilled'?results[2].value:null
+        };
+        writeTimedFinanceCache(FINANCE_TREASURY_CACHE_KEY,data);
+        return data;
+      }
+      return null;
+    }).catch(function(e){console.warn(e)}).finally(function(){financeTreasuryPromise=null;});
+  }
+  if(!readTimedFinanceCache(FINANCE_PLEDGE_CACHE_KEY)&&!financePledgePromise){
+    financePledgePromise=apiGet({action:'pledgeLoans'}).then(function(data){
+      data=data||{pledges:[],loans:[]};
+      writeTimedFinanceCache(FINANCE_PLEDGE_CACHE_KEY,data);
+      return data;
+    }).catch(function(e){console.warn(e)}).finally(function(){financePledgePromise=null;});
+  }
+  var selected=String(new Date().getFullYear());
+  var cacheKey=FINANCE_YEARLY_CACHE_PREFIX+selected;
+  if(!readTimedFinanceCache(cacheKey)&&!financeYearlyPromises[selected]){
+    financeYearlyPromises[selected]=Promise.all([
+      apiGet({action:'history'}),
+      apiGet({action:'yearly',year:selected})
+    ]).then(function(results){
+      var history=results[0]||[];
+      var data=results[1]||{};
+      var years=(history||[]).map(r=>String(r.year)).filter(Boolean);
+      if(years.indexOf(selected)===-1)years.push(selected);
+      years=[...new Set(years)].sort((a,b)=>Number(b)-Number(a));
+      var packed={data:data,history:history,years:years};
+      writeTimedFinanceCache(cacheKey,packed);
+      return packed;
+    }).catch(function(e){console.warn(e)}).finally(function(){delete financeYearlyPromises[selected];});
+  }
 }
 
 // booking-recent 與配息試算已整合至 switchTab
@@ -8146,16 +8268,30 @@ async function loadPledgePanel(){
   var el=document.getElementById('pledge-content');
   if(!el)return;
   if(!API_URL){el.innerHTML=setupNotice();return}
-  try{
-    var data=await apiGet({action:'pledgeLoans'});
-    renderPledgePanel(data||{pledges:[],loans:[]},el);
+  var cached=readTimedFinanceCache(FINANCE_PLEDGE_CACHE_KEY);
+  if(cached)renderPledgePanel(cached,el);
+  if(financePledgePromise){
+    return financePledgePromise.then(function(data){
+      if(data&&document.getElementById('pledge-content'))renderPledgePanel(data,document.getElementById('pledge-content'));
+      return data;
+    });
+  }
+  financePledgePromise=apiGet({action:'pledgeLoans'}).then(function(data){
+    data=data||{pledges:[],loans:[]};
+    writeTimedFinanceCache(FINANCE_PLEDGE_CACHE_KEY,data);
+    if(document.getElementById('pledge-content'))renderPledgePanel(data,document.getElementById('pledge-content'));
     var dot=document.getElementById('pledge-dot');
     var lbl=document.getElementById('pledge-label');
     if(dot)dot.className='api-dot ok';
     if(lbl)lbl.textContent='已連線 · 質押信貸';
-  }catch(e){
-    el.innerHTML=`<div style="color:var(--coral);font-family:var(--sans);font-size:12px;padding:12px 0">${esc(e.message)}</div>`;
-  }
+    return data;
+  }).catch(function(e){
+    if(!cached)el.innerHTML=`<div style="color:var(--coral);font-family:var(--sans);font-size:12px;padding:12px 0">${esc(e.message)}</div>`;
+    return null;
+  }).finally(function(){
+    financePledgePromise=null;
+  });
+  return financePledgePromise;
 }
 
 function pledgeMaintStatus(val){
@@ -8534,6 +8670,9 @@ function setupNotice(){
   setTimeout(function(){
     if(hasMainApiCredentials())loadFoodhouseDashboard();
   },1500);
+  setTimeout(function(){
+    if(hasMainApiCredentials())prefetchFinanceDashboard();
+  },2200);
   // 彰化天氣（Open-Meteo，無需 API key）
   (function(){
     var WMO={
