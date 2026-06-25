@@ -1196,6 +1196,12 @@ body::after{
 .booking-dividend-summary{font-family:var(--sans);font-size:12px;font-weight:800;color:var(--gold);padding:6px 0}
 .booking-dividend-backdrop{position:fixed;inset:0;z-index:210;background:rgba(0,0,0,.28)}
 .booking-api-under-button{margin:7px 0 0}
+.booking-chip-row{display:flex;flex-wrap:wrap;gap:7px;margin:0 0 8px}
+.booking-chip{border:1px solid rgba(184,137,46,.34);border-radius:999px;background:rgba(10,8,4,.66);color:#b99550;font-family:var(--sans);font-size:12px;font-weight:900;line-height:1;padding:8px 10px;cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s,color .15s,box-shadow .15s,transform .12s}
+.booking-chip:hover{border-color:rgba(232,192,80,.56);color:var(--gold);background:rgba(232,192,80,.08)}
+.booking-chip.active{border-color:rgba(232,192,80,.72);background:rgba(232,192,80,.14);color:var(--gold);box-shadow:0 0 12px rgba(232,192,80,.14)}
+.booking-chip.other.active{border-color:rgba(124,111,192,.65);background:rgba(124,111,192,.14);color:#bcb5ff}
+.booking-chip-select-wrap{margin-top:4px}
 .booking-source-label{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .booking-dividend-anchor{position:relative;display:inline-flex;align-items:center}
 .booking-dividend-anchor .booking-dividend-pending{display:inline;margin:0}
@@ -2758,6 +2764,61 @@ function prioritizeBookingOption(values,target){
 function bookingOptionHtml(value,selectedTarget){
   var selected=selectedTarget&&bookingOptionMatches(value,selectedTarget)?' selected':'';
   return `<option value="${esc(value)}"${selected}>${esc(value)}</option>`;
+}
+function bookingQuickChipHtml(selectId,label,target){
+  return `<button class="booking-chip" type="button" data-booking-select="${esc(selectId)}" data-booking-target="${esc(target)}" onclick="selectBookingQuickChip(this)">${esc(label)}</button>`;
+}
+function bookingQuickOtherHtml(selectId){
+  return `<button class="booking-chip other" type="button" data-booking-select="${esc(selectId)}" data-booking-other="1" onclick="selectBookingQuickChip(this)">📃其他</button>`;
+}
+function bookingQuickChipsHtml(selectId,items){
+  return `<div class="booking-chip-row" data-booking-chip-group="${esc(selectId)}">`+
+    items.map(function(item){return bookingQuickChipHtml(selectId,item.label,item.value);}).join('')+
+    bookingQuickOtherHtml(selectId)+
+  `</div>`;
+}
+function revealBookingQuickSelect(selectId,show){
+  var wrap=document.querySelector('[data-booking-select-wrap="'+selectId+'"]');
+  if(wrap)wrap.classList.toggle('hidden',!show);
+}
+function syncBookingQuickChip(selectId){
+  var select=document.getElementById(selectId);
+  var group=document.querySelector('[data-booking-chip-group="'+selectId+'"]');
+  if(!select||!group)return;
+  var value=select.value;
+  var matched=false;
+  group.querySelectorAll('.booking-chip').forEach(function(btn){
+    var isOther=btn.dataset.bookingOther==='1';
+    var target=btn.dataset.bookingTarget||'';
+    var active=!isOther&&bookingOptionMatches(value,target);
+    if(active)matched=true;
+    btn.classList.toggle('active',active);
+  });
+  var other=group.querySelector('.booking-chip.other');
+  if(other)other.classList.toggle('active',!matched);
+  revealBookingQuickSelect(selectId,!matched);
+}
+function selectBookingQuickChip(btn){
+  var selectId=btn&&btn.dataset?btn.dataset.bookingSelect:'';
+  if(!selectId)return;
+  if(btn.dataset.bookingOther==='1'){
+    revealBookingQuickSelect(selectId,true);
+    var group=document.querySelector('[data-booking-chip-group="'+selectId+'"]');
+    if(group)group.querySelectorAll('.booking-chip').forEach(function(chip){chip.classList.toggle('active',chip===btn);});
+    var select=document.getElementById(selectId);
+    if(select){
+      select.focus();
+      if(typeof select.showPicker==='function'){
+        try{select.showPicker();}catch(e){}
+      }
+    }
+    return;
+  }
+  var target=btn.dataset.bookingTarget||'';
+  if(selectBookingOptionByText(selectId,target)){
+    revealBookingQuickSelect(selectId,false);
+    syncBookingQuickChip(selectId);
+  }
 }
 function normalizeBookingSymbolList(list){
   var seen={};
@@ -4814,6 +4875,22 @@ async function initBookingForm(){
     `<option disabled>── 持股標的 ──</option>`+
     stockSymbols.map(s=>`<option value="${esc(s.value)}">${esc(s.label)}</option>`).join('');
   var divOpts=`<option value="">選擇配息標的</option>`+dividendSymbols.map(s=>`<option value="${esc(s.value)}">${esc(s.label)}</option>`).join('');
+  var expenseCatChips=bookingQuickChipsHtml('e-cat',[
+    {label:'🍴外食',value:'🍴超商外食'},
+    {label:'🛒食材',value:'🛒全聯食材'},
+    {label:'🍔大餐',value:'🍔大餐簡餐'},
+    {label:'👩Sis',value:'👩Sis學貸/支出'},
+    {label:'🏠家居',value:'🏠家居用品'},
+    {label:'⛽️加油',value:'⛽機車加油'},
+    {label:'📱APP',value:'📱APP訂閱'},
+    {label:'☎️電信',value:'☎️電信網路'}
+  ]);
+  var expenseAccountChips=bookingQuickChipsHtml('e-account',[
+    {label:'💰Cash',value:'💰Cash'},
+    {label:'💵國泰S',value:'💵國泰Stock'},
+    {label:'🔖中國',value:'🔖中國信託'},
+    {label:'💳Cube',value:'💳Cube'}
+  ]);
   var bookingApiStatus=`<div class="api-bar booking-api-under-button" onclick="openCfg()">
       <div class="api-dot ok"></div>
       <span class="api-label">已連線 · 資料直接寫入試算表</span>
@@ -4834,8 +4911,8 @@ async function initBookingForm(){
       </div>
       <div class="form-grid booking-entry-grid">
         <div class="form-group hidden"><label class="form-label">記帳日期</label><input class="form-control" type="date" id="e-date" value="${today()}"></div>
-        <div class="form-group"><label class="form-label">消費項目</label><select class="form-control" id="e-cat">${catOpts}</select></div>
-        <div class="form-group"><label class="form-label">支出帳戶</label><select class="form-control" id="e-account">${accOpts}</select></div>
+        <div class="form-group"><label class="form-label">消費項目</label>${expenseCatChips}<div class="booking-chip-select-wrap hidden" data-booking-select-wrap="e-cat"><select class="form-control" id="e-cat" onchange="syncBookingQuickChip('e-cat')">${catOpts}</select></div></div>
+        <div class="form-group"><label class="form-label">支出帳戶</label>${expenseAccountChips}<div class="booking-chip-select-wrap hidden" data-booking-select-wrap="e-account"><select class="form-control" id="e-account" onchange="syncBookingQuickChip('e-account')">${accOpts}</select></div></div>
         <div class="form-group"><label class="form-label">金額 (TWD)</label><input class="form-control" type="number" id="e-amount" placeholder="0" min="1"></div>
         <div class="form-group full"><label class="form-label">備註（選填）</label><input class="form-control" type="text" id="e-note" placeholder="備註..."></div>
       </div>
@@ -5020,6 +5097,8 @@ function applyBookingEntryDefaults(){
   selectBookingOptionByText('e-cat','超商外食');
   selectBookingOptionByText('i-source','投資理財');
   selectBookingOptionByText('i-account','國泰Stock');
+  syncBookingQuickChip('e-cat');
+  syncBookingQuickChip('e-account');
   toggleDivFields();
 }
 
@@ -5035,7 +5114,11 @@ function setBookingEntryMode(key){
   document.querySelectorAll('.booking-mode-btn').forEach(function(btn){btn.classList.remove('active');});
   document.querySelectorAll('.booking-mode-btn.'+(key==='income'?'income':'expense')).forEach(function(btn){btn.classList.add('active');});
   initBookingDateInputs(false);
-  if(key==='expense')selectBookingOptionByText('e-cat','超商外食');
+  if(key==='expense'){
+    selectBookingOptionByText('e-cat','超商外食');
+    syncBookingQuickChip('e-cat');
+    syncBookingQuickChip('e-account');
+  }
   if(key==='income')selectBookingOptionByText('i-source','投資理財');
 }
 
