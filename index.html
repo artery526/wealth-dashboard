@@ -958,6 +958,11 @@ body::after{
 .panel-titles{flex:1}
 .panel-en{font-family:'Cinzel Decorative',serif;font-size:7px;letter-spacing:3px;color:#5a4018;text-transform:uppercase;display:block;margin-bottom:2px}
 .panel-zh{font-size:20px;font-weight:900;color:var(--gold);letter-spacing:4px;text-shadow:0 0 8px rgba(232,192,80,.3)}
+.panel-extra{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.booking-date-pill{position:relative;display:inline-flex;align-items:center}
+.booking-date-btn{border:1px solid rgba(232,192,80,.48);border-radius:8px;background:rgba(232,192,80,.08);color:var(--gold);font-family:var(--mono);font-size:13px;font-weight:900;letter-spacing:.5px;padding:7px 10px;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(255,255,255,.03),0 0 12px rgba(232,192,80,.08)}
+.booking-date-btn:hover{border-color:rgba(232,192,80,.72);background:rgba(232,192,80,.13)}
+.booking-date-native{position:absolute;inset:0;opacity:0;pointer-events:none}
 .close-x{background:none;border:none;color:#3a2a10;cursor:pointer;font-size:20px;padding:4px;transition:color .2s;flex-shrink:0}
 .close-x:hover{color:var(--gold2)}
 
@@ -1190,6 +1195,16 @@ body::after{
 .booking-dividend-toggle:hover{box-shadow:0 0 12px rgba(232,192,80,.16)}
 .booking-dividend-summary{font-family:var(--sans);font-size:12px;font-weight:800;color:var(--gold);padding:6px 0}
 .booking-dividend-backdrop{position:fixed;inset:0;z-index:210;background:rgba(0,0,0,.28)}
+.booking-api-under-button{margin:7px 0 0}
+.booking-source-label{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.booking-dividend-anchor{position:relative;display:inline-flex;align-items:center}
+.booking-dividend-anchor .booking-dividend-pending{display:inline;margin:0}
+.booking-dividend-mini{border:1px solid rgba(232,192,80,.46);border-radius:999px;background:rgba(232,192,80,.08);color:var(--gold);font-family:var(--sans);font-size:10px;font-weight:900;padding:3px 9px;line-height:1;cursor:pointer;white-space:nowrap}
+.booking-dividend-mini:hover{background:rgba(232,192,80,.14);box-shadow:0 0 12px rgba(232,192,80,.14)}
+.booking-dividend-panel.is-floating{position:absolute;top:26px;right:0;left:auto;transform:none;width:min(520px,calc(100vw - 58px));max-height:min(54vh,440px);overflow:auto;z-index:222;background:rgba(6,5,4,.92);backdrop-filter:blur(6px);border:1px solid rgba(232,192,80,.5);border-radius:10px;padding:12px;box-shadow:0 16px 42px rgba(0,0,0,.76),0 0 24px rgba(232,192,80,.12)}
+.booking-dividend-panel.is-floating .booking-dividend-head{cursor:default}
+.booking-dividend-close{border:1px solid rgba(232,192,80,.28);border-radius:999px;background:rgba(0,0,0,.2);color:#9a7430;font-family:var(--sans);font-size:11px;font-weight:900;width:24px;height:24px;cursor:pointer}
+.booking-dividend-close:hover{color:var(--gold);border-color:rgba(232,192,80,.6)}
 .dividend-autofill-note{grid-column:1/-1;border:1px solid rgba(124,111,192,.35);border-radius:7px;background:rgba(124,111,192,.08);padding:9px 11px;font-family:var(--sans);font-size:11px;color:#bcb5ff;line-height:1.5}
 .dividend-entry-form{
   border:1px solid rgba(232,192,80,.28);border-radius:8px;background:linear-gradient(135deg,rgba(232,192,80,.06),rgba(124,111,192,.06));
@@ -2475,6 +2490,7 @@ body::after{
         <span class="panel-en" id="p-en"></span>
         <span class="panel-zh" id="p-zh"></span>
       </div>
+      <div class="panel-extra" id="p-extra"></div>
       <button class="close-x" onclick="closePanel()">✕</button>
     </div>
     <div class="panel-tabs" id="p-tabs"></div>
@@ -3167,6 +3183,8 @@ function setPanelHead(icon,en,zh){
   document.getElementById('p-icon').textContent=icon;
   document.getElementById('p-en').textContent=en;
   document.getElementById('p-zh').textContent=zh;
+  var extra=document.getElementById('p-extra');
+  if(extra)extra.innerHTML='';
 }
 
 function setTabs(tabs){
@@ -3181,6 +3199,13 @@ function switchTab(btn,key){
   var el=document.getElementById('pane-'+key);
   if(el)el.classList.add('active');
   currentTab=key;
+  if(currentPanel==='domestic'){
+    if(key==='booking-form')renderBookingHeaderDate();
+    else{
+      var extra=document.getElementById('p-extra');
+      if(extra)extra.innerHTML='';
+    }
+  }
   if(key==='finance-accs'){
     loadAccounts();
     loadPledgePanel();
@@ -4735,6 +4760,7 @@ function renderAccounts(accs,monthly,el,financeStatus,stale){
 // ══════════════════════════════════════════
 function renderDomesticPanel(){
   setPanelHead('⚖️','Domestic · Policy','內政');
+  renderBookingHeaderDate();
   setTabs([{key:'booking-form',label:'快速記帳'},{key:'booking-recent',label:'最近記錄'},{key:'dividend-center',label:'持股備忘錄'}]);
   document.getElementById('p-body').innerHTML=`
     <div class="pane active" id="pane-booking-form"></div>
@@ -4788,14 +4814,13 @@ async function initBookingForm(){
     `<option disabled>── 持股標的 ──</option>`+
     stockSymbols.map(s=>`<option value="${esc(s.value)}">${esc(s.label)}</option>`).join('');
   var divOpts=`<option value="">選擇配息標的</option>`+dividendSymbols.map(s=>`<option value="${esc(s.value)}">${esc(s.label)}</option>`).join('');
-
-  el.innerHTML=`
-    <div class="api-bar" onclick="openCfg()">
+  var bookingApiStatus=`<div class="api-bar booking-api-under-button" onclick="openCfg()">
       <div class="api-dot ok"></div>
       <span class="api-label">已連線 · 資料直接寫入試算表</span>
       <span class="api-action">⚙ 設定</span>
-    </div>
-    <div class="booking-dividend-pending" id="booking-dividend-pending"></div>
+    </div>`;
+
+  el.innerHTML=`
     <div class="btabs">
       <button class="btab expense active" type="button" onclick="switchBTab(this,'expense')">收入支出</button>
       <button class="btab transfer" type="button" onclick="switchBTab(this,'transfer')">網銀股票</button>
@@ -4808,13 +4833,14 @@ async function initBookingForm(){
         <button class="booking-mode-btn income" type="button" onclick="setBookingEntryMode('income')">💰 收入</button>
       </div>
       <div class="form-grid booking-entry-grid">
-        <div class="form-group"><label class="form-label">記帳日期</label><input class="form-control" type="date" id="e-date" value="${today()}"></div>
+        <div class="form-group hidden"><label class="form-label">記帳日期</label><input class="form-control" type="date" id="e-date" value="${today()}"></div>
         <div class="form-group"><label class="form-label">消費項目</label><select class="form-control" id="e-cat">${catOpts}</select></div>
         <div class="form-group"><label class="form-label">支出帳戶</label><select class="form-control" id="e-account">${accOpts}</select></div>
         <div class="form-group"><label class="form-label">金額 (TWD)</label><input class="form-control" type="number" id="e-amount" placeholder="0" min="1"></div>
         <div class="form-group full"><label class="form-label">備註（選填）</label><input class="form-control" type="text" id="e-note" placeholder="備註..."></div>
       </div>
       <button class="submit-btn expense" id="btn-expense" type="button" onclick="submitExpense(event)">記錄支出</button>
+      ${bookingApiStatus}
       <span class="result-msg" id="msg-expense"></span>
     </div>
 
@@ -4825,8 +4851,8 @@ async function initBookingForm(){
         <button class="booking-mode-btn income active" type="button" onclick="setBookingEntryMode('income')">💰 收入</button>
       </div>
       <div class="form-grid booking-entry-grid">
-        <div class="form-group"><label class="form-label">記帳日期</label><input class="form-control" type="date" id="i-date" value="${today()}"></div>
-        <div class="form-group"><label class="form-label">收入來源</label><select class="form-control" id="i-source" onchange="toggleDivFields()">${srcOpts}</select></div>
+        <div class="form-group hidden"><label class="form-label">記帳日期</label><input class="form-control" type="date" id="i-date" value="${today()}"></div>
+        <div class="form-group"><div class="form-label booking-source-label"><span>收入來源</span><span class="booking-dividend-anchor"><button class="booking-dividend-mini" type="button" onclick="event.stopPropagation();openBookingDividendPicker()">配息</button><span class="booking-dividend-pending" id="booking-dividend-pending"></span></span></div><select class="form-control" id="i-source" onchange="toggleDivFields()">${srcOpts}</select></div>
         <div class="form-group"><label class="form-label">入帳帳戶</label><select class="form-control" id="i-account" onchange="onIncomeAccountChange()">${incomeAccOpts}</select></div>
         <div class="form-group"><label class="form-label">金額 (TWD)</label><input class="form-control" type="number" id="i-amount" placeholder="0" min="1"></div>
         <div class="form-group hidden" id="i-div-rate-grp"><label class="form-label">配息比例</label><input class="form-control" type="number" id="i-div-rate" placeholder="例：0.35" step="0.001" min="0"></div>
@@ -4835,6 +4861,7 @@ async function initBookingForm(){
         <div class="form-group full"><label class="form-label">備註</label><input class="form-control" type="text" id="i-note" placeholder="配息標的" readonly></div>
       </div>
       <button class="submit-btn income" id="btn-income" type="button" onclick="submitIncome(event)">記錄收入</button>
+      ${bookingApiStatus}
       <span class="result-msg" id="msg-income"></span>
     </div>
 
@@ -4847,19 +4874,20 @@ async function initBookingForm(){
       <div class="booking-transfer-section bank booking-transfer-pane active" id="transfer-account-pane">
         <div class="booking-transfer-title">帳戶轉帳</div>
         <div class="form-grid booking-transfer-grid">
-          <div class="form-group"><label class="form-label">轉帳日期</label><input class="form-control" type="date" id="a-date" value="${today()}"></div>
+          <div class="form-group hidden"><label class="form-label">記帳日期</label><input class="form-control" type="date" id="a-date" value="${today()}"></div>
           <div class="form-group"><label class="form-label">轉出帳戶</label><select class="form-control" id="a-from">${accOpts}</select></div>
           <div class="form-group"><label class="form-label">轉入帳戶</label><select class="form-control" id="a-to">${accOpts}</select></div>
           <div class="form-group"><label class="form-label">金額 (TWD)</label><input class="form-control" type="number" id="a-amount" placeholder="0" min="1"></div>
           <div class="form-group full"><label class="form-label">備註（選填）</label><input class="form-control" type="text" id="a-note" placeholder="備註..."></div>
         </div>
         <button class="submit-btn transfer" id="btn-transfer" type="button" onclick="submitAccountTransfer(event)">記錄轉帳</button>
+        ${bookingApiStatus}
         <span class="result-msg" id="msg-transfer"></span>
       </div>
       <div class="booking-transfer-section stock booking-transfer-pane" id="transfer-stock-pane">
         <div class="booking-transfer-title">股票交易</div>
         <div class="form-grid booking-transfer-grid">
-          <div class="form-group"><label class="form-label">交易日期</label><input class="form-control" type="date" id="t-date" value="${today()}"></div>
+          <div class="form-group hidden"><label class="form-label">記帳日期</label><input class="form-control" type="date" id="t-date" value="${today()}"></div>
           <div class="form-group"><label class="form-label">轉出帳戶</label><select class="form-control" id="t-from">${accOpts}</select></div>
           <div class="form-group"><label class="form-label">轉入帳戶</label><select class="form-control" id="t-to">${accOpts}</select></div>
           <div class="form-group"><label class="form-label">交易類型</label><select class="form-control" id="t-stock-type"><option value="buy">買入</option><option value="sell">賣出</option></select></div>
@@ -4869,6 +4897,7 @@ async function initBookingForm(){
           <div class="dividend-autofill-note hidden" id="t-dividend-autofill"></div>
         </div>
         <button class="submit-btn transfer" id="btn-stock-transfer" type="button" onclick="submitStockTransfer(event)">記錄交易</button>
+        ${bookingApiStatus}
         <span class="result-msg" id="msg-stock-transfer"></span>
       </div>
     </div>`;
@@ -4894,7 +4923,7 @@ async function initBookingForm(){
 }
 
 function initBookingDateInputs(force){
-  var current=today();
+  var current=force?today():currentBookingDateValue();
   ['e-date','i-date','a-date','t-date'].forEach(function(id){
     var el=document.getElementById(id);
     if(!el)return;
@@ -4913,6 +4942,62 @@ function initBookingDateInputs(force){
     }
   });
   bookingAutoDate=current;
+  syncBookingHeaderDate();
+}
+
+function formatBookingHeaderDate(value){
+  var raw=String(value||today()).trim();
+  var m=raw.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if(!m)return '[--/--/--]';
+  return '['+String(Number(m[1])%100).padStart(2,'0')+'/'+Number(m[2])+'/'+Number(m[3])+']';
+}
+
+function currentBookingDateValue(){
+  var ids=['e-date','i-date','a-date','t-date'];
+  for(var i=0;i<ids.length;i++){
+    var el=document.getElementById(ids[i]);
+    if(el&&el.value)return el.value;
+  }
+  return today();
+}
+
+function renderBookingHeaderDate(){
+  var extra=document.getElementById('p-extra');
+  if(!extra)return;
+  var value=currentBookingDateValue();
+  extra.innerHTML=`<div class="booking-date-pill">
+    <button class="booking-date-btn" id="booking-date-btn" type="button" onclick="openBookingHeaderDatePicker()">${formatBookingHeaderDate(value)}</button>
+    <input class="booking-date-native" type="date" id="booking-date-native" value="${esc(value)}" onchange="setBookingDateForAll(this.value)">
+  </div>`;
+}
+
+function syncBookingHeaderDate(){
+  var btn=document.getElementById('booking-date-btn');
+  var native=document.getElementById('booking-date-native');
+  var value=currentBookingDateValue();
+  if(btn)btn.textContent=formatBookingHeaderDate(value);
+  if(native)native.value=value;
+}
+
+function openBookingHeaderDatePicker(){
+  var input=document.getElementById('booking-date-native');
+  if(!input)return;
+  if(!input.value)input.value=currentBookingDateValue();
+  if(typeof input.showPicker==='function'){
+    try{input.showPicker();return;}catch(e){}
+  }
+  input.focus();
+  input.click();
+}
+
+function setBookingDateForAll(value){
+  var next=String(value||today()).trim()||today();
+  ['e-date','i-date','a-date','t-date'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el)el.value=next;
+  });
+  bookingAutoDate=next;
+  syncBookingHeaderDate();
 }
 
 function selectBookingOptionByText(selectId,text){
@@ -6054,9 +6139,9 @@ function renderBookingDividendPending(data){
     var pickerList=pending.map(function(row){return renderDividendPendingRow(row,true);}).join('')||'<div class="dividend-empty">目前沒有待入帳配息。</div>';
     return `<div class="booking-dividend-backdrop" onclick="closeBookingDividendPicker()"></div>
     <div class="booking-dividend-panel${bookingDividendPickerOpen?' is-floating':''}">
-      <div class="booking-dividend-head" onclick="toggleBookingDividendExpanded()">
+      <div class="booking-dividend-head">
         <div class="booking-dividend-title">待入帳配息</div>
-        <button class="booking-dividend-toggle" type="button" onclick="event.stopPropagation();toggleBookingDividendExpanded()">${expanded?'收合':'展開'}</button>
+        <button class="booking-dividend-close" type="button" onclick="event.stopPropagation();closeBookingDividendPicker()">×</button>
       </div>
       <div class="booking-dividend-summary">點選一筆配息紀錄後會自動帶入並關閉浮窗</div>
       ${pickerList}
@@ -6064,6 +6149,7 @@ function renderBookingDividendPending(data){
   }
   var tradePending=dividendPendingDisplayRows((data&&data.holdingTradePending)||[]);
   if(!tradePending.length&&!pending.length)return '';
+  if(document.getElementById('booking-dividend-pending'))return '';
   var tradeTotal=tradePending.reduce(function(sum,row){return sum+(Number(row.estimatedTwd)||0);},0);
   var dividendTotal=pending.reduce(function(sum,row){return sum+(Number(row.estimatedTwd)||0);},0);
   var tradeList=tradePending.length?'<div class="dividend-section-title">待入帳持股記錄</div>'+tradePending.map(renderHoldingTradePendingRow).join(''):'';
