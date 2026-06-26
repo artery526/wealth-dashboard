@@ -580,6 +580,7 @@ body::after{
 .advisor-practice-btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .advisor-ai-orb{flex-shrink:0;width:28px;height:28px;border-radius:50%;border:1px solid rgba(255,226,138,.82);background:radial-gradient(circle at 35% 28%,#fff4b8 0 10%,#f3cb55 24%,#b8892e 58%,#5d3b0e 100%);box-shadow:0 0 18px rgba(232,192,80,.42),inset 0 1px 0 rgba(255,255,255,.35);color:#241604;font-family:var(--sans);font-size:11px;font-weight:950;line-height:1;cursor:pointer}
 .advisor-ai-orb:hover{box-shadow:0 0 24px rgba(232,192,80,.58),inset 0 1px 0 rgba(255,255,255,.42);filter:brightness(1.07)}
+.nav-advisor-ai-orb{position:absolute;right:7px;top:calc(100% + 7px);z-index:70;width:34px;height:34px;font-family:'Noto Serif TC',serif;font-size:16px;letter-spacing:0}
 .advisor-btn-grid{display:flex;flex-direction:column;gap:9px}
 .advisor-menu-section{position:relative}
 .advisor-menu-toggle{width:100%;min-height:46px;display:flex;align-items:center;justify-content:center;gap:10px;border:1px solid rgba(210,188,138,.42);border-radius:4px;background:radial-gradient(circle at 9% 50%,rgba(34,24,13,.88) 0 5px,transparent 6px),radial-gradient(circle at 91% 50%,rgba(34,24,13,.86) 0 5px,transparent 6px),linear-gradient(90deg,rgba(28,24,17,.78),rgba(216,198,154,.82) 18%,rgba(234,224,194,.74) 50%,rgba(172,145,92,.76) 82%,rgba(28,24,17,.8));color:#21180d;font-family:'Noto Serif TC',serif;font-size:18px;font-weight:900;letter-spacing:3px;cursor:pointer;box-shadow:0 9px 20px rgba(0,0,0,.34),inset 0 1px 0 rgba(255,246,216,.24);text-shadow:0 1px 0 rgba(244,235,207,.34);transition:filter .18s,box-shadow .18s}
@@ -1598,6 +1599,7 @@ body::after{
   border-bottom:1px solid #2a1c08;
 }
 .top-nav-logo{
+  position:relative;
   display:flex;flex-direction:column;align-items:flex-end;gap:3px;
 }
 .nav-bottom-row{
@@ -1919,6 +1921,7 @@ body::after{
   .nav-weather-icon{font-size:11px}
   .nav-weather-temp{font-size:11px}
   .nav-weather-desc{font-size:10px}
+  .nav-advisor-ai-orb{right:3px;top:calc(100% + 4px);width:30px;height:30px;font-size:14px}
   .top-nav-link{font-size:10px;padding:4px 9px;white-space:nowrap}
   .wrap{padding-top:98px}
 }
@@ -2287,6 +2290,7 @@ body::after{
         <span class="nav-weather-temp" id="nav-weather-temp">—°C</span>
         <span class="nav-weather-desc" id="nav-weather-desc">彰化天氣讀取中…</span>
       </div>
+      <button class="advisor-ai-orb nav-advisor-ai-orb" type="button" onclick="openAdvisorAIFromOrb(event)" title="軍師AI V1">軍</button>
     </div>
   </div>
   <section class="today-agenda court-agenda" id="today-agenda" aria-label="朝中政務">
@@ -9180,7 +9184,6 @@ initHeaderVideoPlayback();
       <button class="advisor-close" onclick="closeAdvisorDialog()">✕</button>
       <div class="advisor-command-head">
         <div class="advisor-command-title">主公，請下令🏹</div>
-        <button class="advisor-ai-orb" type="button" onclick="toggleAdvisorAI()" title="軍師AI V1">AI</button>
         <a class="advisor-practice-btn" href="daily-practice.png" target="_blank" rel="noopener" title="開啟每日練習清晰原圖">📖 每日練習</a>
       </div>
       <div class="advisor-btn-grid">
@@ -9214,6 +9217,11 @@ initHeaderVideoPlayback();
 // ══ Advisor Dialog ══════════════════════════════════════════
 function openAdvisorDialog(){
   document.getElementById('advisor-overlay').classList.add('open');
+}
+function openAdvisorAIFromOrb(event){
+  if(event&&event.stopPropagation)event.stopPropagation();
+  openAdvisorDialog();
+  setTimeout(openAdvisorAI,0);
 }
 function closeAdvisorDialog(){
   document.getElementById('advisor-overlay').classList.remove('open');
