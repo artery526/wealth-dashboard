@@ -4922,6 +4922,25 @@ async function initBookingForm(){
     {label:'🔖中國',value:'🔖中國信託'},
     {label:'🧚Sis 國泰',value:'🧚Sis 國泰世華'}
   ]);
+  var transferFromChips=bookingQuickChipsHtml('a-from',[
+    {label:'💰Cash',value:'💰Cash'},
+    {label:'💵國泰S',value:'💵國泰Stock'},
+    {label:'🔖中國',value:'🔖中國信託'},
+    {label:'🟡將來',value:'🟡將來銀行'},
+    {label:'🏔️玉山',value:'🏔️玉山銀行'},
+    {label:'🟥永豐',value:'🟥永豐銀行'},
+    {label:'🌳國泰',value:'🌳國泰Money'}
+  ]);
+  var transferToChips=bookingQuickChipsHtml('a-to',[
+    {label:'💰Cash',value:'💰Cash'},
+    {label:'💵國泰S',value:'💵國泰Stock'},
+    {label:'🔖中國',value:'🔖中國信託'},
+    {label:'🟡將來',value:'🟡將來銀行'},
+    {label:'🏔️玉山',value:'🏔️玉山銀行'},
+    {label:'🟥永豐',value:'🟥永豐銀行'},
+    {label:'💳Cube',value:'💳Cube'},
+    {label:'🧚Sis 國泰',value:'🧚Sis 國泰世華'}
+  ]);
   var bookingApiStatus=`<div class="api-bar booking-api-under-button" onclick="openCfg()">
       <div class="api-dot ok"></div>
       <span class="api-label">已連線 · 資料直接寫入試算表</span>
@@ -4979,8 +4998,8 @@ async function initBookingForm(){
         <div class="booking-transfer-title">帳戶轉帳</div>
         <div class="form-grid booking-transfer-grid">
           <div class="form-group hidden"><label class="form-label">記帳日期</label><input class="form-control" type="date" id="a-date" value="${today()}"></div>
-          <div class="form-group"><label class="form-label">轉出帳戶</label><select class="form-control" id="a-from">${accOpts}</select></div>
-          <div class="form-group"><label class="form-label">轉入帳戶</label><select class="form-control" id="a-to">${accOpts}</select></div>
+          <div class="form-group"><label class="form-label">轉出帳戶</label>${transferFromChips}<div class="booking-chip-select-wrap hidden" data-booking-select-wrap="a-from"><select class="form-control" id="a-from" onchange="syncBookingQuickChip('a-from')">${accOpts}</select></div></div>
+          <div class="form-group"><label class="form-label">轉入帳戶</label>${transferToChips}<div class="booking-chip-select-wrap hidden" data-booking-select-wrap="a-to"><select class="form-control" id="a-to" onchange="syncBookingQuickChip('a-to')">${accOpts}</select></div></div>
           <div class="form-group"><label class="form-label">金額 (TWD)</label><input class="form-control" type="number" id="a-amount" placeholder="0" min="1"></div>
           <div class="form-group full"><button class="booking-stock-toggle" id="btn-stock-toggle" type="button" onclick="toggleMergedStockTrade()">股票交易</button></div>
           <div class="form-group full hidden" id="merged-stock-fields">
@@ -5125,6 +5144,8 @@ function applyBookingEntryDefaults(){
   syncBookingQuickChip('e-account');
   syncBookingQuickChip('i-source');
   syncBookingQuickChip('i-account');
+  syncBookingQuickChip('a-from');
+  syncBookingQuickChip('a-to');
   toggleDivFields();
 }
 
@@ -5154,6 +5175,8 @@ function setBookingEntryMode(key){
 
 function setTransferEntryMode(key){
   setMergedStockTrade(key==='stock');
+  syncBookingQuickChip('a-from');
+  syncBookingQuickChip('a-to');
   initBookingDateInputs(false);
 }
 
