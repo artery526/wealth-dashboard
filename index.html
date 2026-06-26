@@ -2566,6 +2566,13 @@ body::after{
   </div>
 </div>
 
+<div class="carrier-overlay" id="member-card-overlay" onclick="memberCardOverlayClick(event)">
+  <div class="carrier-box" role="dialog" aria-modal="true" aria-label="會員條碼">
+    <button class="carrier-close" type="button" onclick="hideMemberCard()" aria-label="關閉會員條碼">x</button>
+    <img class="carrier-img" id="member-card-img" src="" alt="">
+  </div>
+</div>
+
 <div class="cfg-overlay" id="cfg-overlay" onclick="cfgOverlayClick(event)">
   <div class="cfg-box" id="cfg-box">
     <div class="cfg-title">⚙ API 設定</div>
@@ -5498,6 +5505,26 @@ function hideInvoiceCarrier(){
 }
 function carrierOverlayClick(event){
   if(event.target===document.getElementById('carrier-overlay'))hideInvoiceCarrier();
+}
+function showMemberCard(type){
+  var map={
+    seven:{src:'小7會員.jpg',alt:'7-11會員條碼'},
+    family:{src:'全家會員.jpg',alt:'全家會員條碼'}
+  };
+  var data=map[type];
+  var overlay=document.getElementById('member-card-overlay');
+  var img=document.getElementById('member-card-img');
+  if(!data||!overlay||!img)return;
+  img.src=data.src;
+  img.alt=data.alt;
+  overlay.classList.add('open');
+}
+function hideMemberCard(){
+  var overlay=document.getElementById('member-card-overlay');
+  if(overlay)overlay.classList.remove('open');
+}
+function memberCardOverlayClick(event){
+  if(event.target===document.getElementById('member-card-overlay'))hideMemberCard();
 }
 function travelAddFormHtml(){
   if(!hasMainApiCredentials())return travelAddLockedHtml();
@@ -9147,6 +9174,10 @@ initHeaderVideoPlayback();
           <button class="advisor-btn advisor-travel-card" type="button" onclick="advisorShowInvoiceCarrier()"><span class="advisor-btn-tag">載</span>顯示載具</button>
           <button class="advisor-btn advisor-travel-card" type="button" data-tag="複" onclick="advisorCopyInvoiceCarrier(this)"><span class="advisor-btn-tag">複</span>複製載具</button>
         </div>
+        <div class="advisor-travel-card-row" aria-label="會員快捷">
+          <button class="advisor-btn advisor-travel-card" type="button" onclick="advisorShowMemberCard('seven')"><span class="advisor-btn-tag">7</span>7-11會員</button>
+          <button class="advisor-btn advisor-travel-card" type="button" onclick="advisorShowMemberCard('family')"><span class="advisor-btn-tag">全</span>全家會員</button>
+        </div>
         <div class="advisor-shortcut-panel" id="advisor-shortcut-panel"></div>
       </div>
     </div>
@@ -9172,6 +9203,10 @@ function advisorShowInvoiceCarrier(){
 }
 function advisorCopyInvoiceCarrier(btn){
   copyInvoiceCarrier(btn);
+}
+function advisorShowMemberCard(type){
+  closeAdvisorDialog();
+  showMemberCard(type);
 }
 function closeAdvisorMenuGroups(){
   document.querySelectorAll('.advisor-menu-section.is-open').forEach(function(section){
