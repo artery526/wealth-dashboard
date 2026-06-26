@@ -578,6 +578,8 @@ body::after{
 .advisor-practice-btn{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;gap:4px;min-height:28px;padding:4px 8px;border:1px solid rgba(232,192,80,.48);border-radius:4px;background:rgba(90,64,24,.34);color:#e8c050;font-family:'Noto Sans TC',sans-serif;font-size:11px;font-weight:900;line-height:1;text-decoration:none;cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.08);transition:background .18s,box-shadow .18s,color .18s}
 .advisor-practice-btn:hover{background:rgba(160,122,26,.48);color:#fff1b8;box-shadow:0 0 12px rgba(232,192,80,.22)}
 .advisor-practice-btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.advisor-ai-orb{flex-shrink:0;width:28px;height:28px;border-radius:50%;border:1px solid rgba(255,226,138,.82);background:radial-gradient(circle at 35% 28%,#fff4b8 0 10%,#f3cb55 24%,#b8892e 58%,#5d3b0e 100%);box-shadow:0 0 18px rgba(232,192,80,.42),inset 0 1px 0 rgba(255,255,255,.35);color:#241604;font-family:var(--sans);font-size:11px;font-weight:950;line-height:1;cursor:pointer}
+.advisor-ai-orb:hover{box-shadow:0 0 24px rgba(232,192,80,.58),inset 0 1px 0 rgba(255,255,255,.42);filter:brightness(1.07)}
 .advisor-btn-grid{display:flex;flex-direction:column;gap:9px}
 .advisor-menu-section{position:relative}
 .advisor-menu-toggle{width:100%;min-height:46px;display:flex;align-items:center;justify-content:center;gap:10px;border:1px solid rgba(210,188,138,.42);border-radius:4px;background:radial-gradient(circle at 9% 50%,rgba(34,24,13,.88) 0 5px,transparent 6px),radial-gradient(circle at 91% 50%,rgba(34,24,13,.86) 0 5px,transparent 6px),linear-gradient(90deg,rgba(28,24,17,.78),rgba(216,198,154,.82) 18%,rgba(234,224,194,.74) 50%,rgba(172,145,92,.76) 82%,rgba(28,24,17,.8));color:#21180d;font-family:'Noto Serif TC',serif;font-size:18px;font-weight:900;letter-spacing:3px;cursor:pointer;box-shadow:0 9px 20px rgba(0,0,0,.34),inset 0 1px 0 rgba(255,246,216,.24);text-shadow:0 1px 0 rgba(244,235,207,.34);transition:filter .18s,box-shadow .18s}
@@ -617,6 +619,11 @@ body::after{
 .advisor-dividend-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
 .advisor-shortcut-secondary{width:100%;border:1px solid rgba(232,192,80,.32);border-radius:7px;background:rgba(232,192,80,.07);color:var(--gold);font-family:var(--sans);font-size:13px;font-weight:900;letter-spacing:1px;padding:10px 12px;cursor:pointer}
 .advisor-shortcut-secondary:hover{background:rgba(232,192,80,.13)}
+.advisor-ai-row{display:flex;gap:8px;align-items:center}
+.advisor-ai-row .advisor-shortcut-submit{width:auto;flex-shrink:0;padding-left:13px;padding-right:13px}
+.advisor-ai-input{flex:1;min-width:0;border:1px solid #2a1c08;border-radius:7px;background:#0a0804;color:var(--ink);font-family:var(--sans);font-size:14px;padding:10px 11px;outline:none}
+.advisor-ai-input:focus{border-color:var(--gold2)}
+.advisor-ai-result{border:1px solid rgba(232,192,80,.24);border-radius:8px;background:rgba(232,192,80,.05);padding:9px 10px;margin-top:9px;font-family:var(--sans);font-size:12px;font-weight:850;line-height:1.7;color:#d8c18a}
 .advisor-close{position:absolute;top:10px;right:12px;background:none;border:none;color:#5a4018;font-size:14px;cursor:pointer;transition:color .2s;line-height:1;padding:2px}
 .advisor-close:hover{color:var(--gold)}
 @media(max-width:480px){.advisor-overlay{padding:52px 0 0 6px}.advisor-img{width:clamp(98px,25vw,120px)}.advisor-dialog{margin-top:26px;margin-left:-14px;width:calc(100vw - 98px);padding:12px 12px 10px}.advisor-command-head{gap:6px;margin-right:18px}.advisor-command-title{font-size:15px;letter-spacing:.5px}.advisor-practice-btn{min-height:26px;padding:4px 6px;font-size:10px}.advisor-reminder-card{padding:10px 11px 11px}.advisor-reminder-title{font-size:12px}.advisor-reminder-text{font-size:12px;line-height:1.68}.advisor-btn-grid{gap:8px}.advisor-menu-toggle{min-height:42px;font-size:16px;letter-spacing:2px}.advisor-menu-mark{width:20px;height:20px;font-size:11px}.advisor-btn-group{gap:6px;border-radius:7px}.advisor-menu-section.is-open .advisor-btn-group{padding:7px;max-height:220px}.advisor-btn{font-size:12px;padding:8px 4px;letter-spacing:0;gap:3px}.advisor-btn-tag{width:14px;height:14px;font-size:9px}.advisor-btn-spacer{min-height:32px}}
@@ -9173,6 +9180,7 @@ initHeaderVideoPlayback();
       <button class="advisor-close" onclick="closeAdvisorDialog()">✕</button>
       <div class="advisor-command-head">
         <div class="advisor-command-title">主公，請下令🏹</div>
+        <button class="advisor-ai-orb" type="button" onclick="toggleAdvisorAI()" title="軍師AI V1">AI</button>
         <a class="advisor-practice-btn" href="daily-practice.png" target="_blank" rel="noopener" title="開啟每日練習清晰原圖">📖 每日練習</a>
       </div>
       <div class="advisor-btn-grid">
@@ -9274,6 +9282,222 @@ function closeAdvisorShortcutPanel(){
 function isAdvisorShortcutOpen(kind){
   var panel=document.getElementById('advisor-shortcut-panel');
   return !!(panel&&advisorShortcutOpenKind===kind&&String(panel.innerHTML||'').trim());
+}
+
+function toggleAdvisorAI(){
+  if(isAdvisorShortcutOpen('ai')){
+    closeAdvisorShortcutPanel();
+    return;
+  }
+  openAdvisorAI();
+}
+
+function openAdvisorAI(){
+  var panel=document.getElementById('advisor-shortcut-panel');
+  if(!panel)return;
+  advisorShortcutOpenKind='ai';
+  advisorDividendSelection=null;
+  panel.innerHTML=`<div class="advisor-shortcut-title">軍師AI V1</div>
+    <div class="advisor-shortcut-hint">本地指令路由器，優先 0 token 判斷。例：提款2000、大餐 玉山 720、AIPI 配息 4065、載具、711。</div>
+    <div class="advisor-ai-row">
+      <input class="advisor-ai-input" id="advisor-ai-input" type="text" placeholder="輸入指令…" onkeydown="advisorAIKey(event)">
+      <button class="advisor-shortcut-submit" id="advisor-ai-submit" type="button" onclick="runAdvisorAICommand(this)">執行</button>
+    </div>
+    <div class="advisor-shortcut-msg" id="advisor-ai-msg"></div>`;
+  setTimeout(function(){
+    var input=document.getElementById('advisor-ai-input');
+    if(input)input.focus();
+  },0);
+}
+
+function advisorAIKey(e){
+  if(e&&e.key==='Enter'){
+    e.preventDefault();
+    runAdvisorAICommand(document.getElementById('advisor-ai-submit'));
+  }
+}
+
+function advisorAINormalize(text){
+  return String(text||'').trim().replace(/[，,]/g,' ').replace(/\s+/g,' ');
+}
+
+function advisorAICompact(text){
+  return advisorAINormalize(text).replace(/\s+/g,'').toLowerCase();
+}
+
+function advisorAIAmount(text){
+  var matches=String(text||'').match(/\d+(?:\.\d+)?/g)||[];
+  return matches.length?parseFloat(matches[matches.length-1]):0;
+}
+
+function advisorAIAccount(text){
+  var s=advisorAICompact(text);
+  if(s.indexOf('玉山')>=0)return '🏔️玉山銀行';
+  if(s.indexOf('cube')>=0||s.indexOf('卡')>=0)return '💳Cube';
+  if(s.indexOf('中信')>=0||s.indexOf('中國')>=0)return '🔖中國信託';
+  if(s.indexOf('cash')>=0||s.indexOf('現金')>=0)return '💰Cash';
+  if(s.indexOf('永豐')>=0)return '🟥永豐銀行';
+  return '';
+}
+
+function advisorAICommand(raw){
+  var text=advisorAINormalize(raw);
+  var compact=advisorAICompact(raw);
+  var amount=advisorAIAmount(raw);
+  var stockSell=text.match(/賣出\s*(\d+(?:\.\d+)?)\s*股\s*([A-Za-z0-9]+)\s*(\d+(?:\.\d+)?)/i);
+  if(stockSell)return {intent:'stockSell',shares:parseFloat(stockSell[1]),symbol:stockSell[2].toUpperCase(),amount:parseFloat(stockSell[3])};
+  if(compact.indexOf('提款')>=0&&amount>0)return {intent:'withdraw',amount:amount};
+  if(compact.indexOf('年度財報')>=0)return {intent:'open',panel:'finance',tab:'domestic-yearly',label:'年度財報'};
+  if(compact.indexOf('糧倉')>=0)return {intent:'open',panel:'foodhouse',label:'糧倉'};
+  if(compact.indexOf('總經')>=0)return {intent:'open',panel:'market',tab:'macro-overview',label:'總經戰情'};
+  if(compact.indexOf('維持率')>=0)return {intent:'maintenance'};
+  if(compact.indexOf('複製載具')>=0)return {intent:'copyCarrier'};
+  if(compact==='載具'||compact.indexOf('顯示載具')>=0)return {intent:'showCarrier'};
+  if(compact==='711'||compact==='7'||compact.indexOf('7-11')>=0||compact.indexOf('小7')>=0)return {intent:'member',type:'seven',label:'7-11會員'};
+  if(compact==='全'||compact.indexOf('全家')>=0)return {intent:'member',type:'family',label:'全家會員'};
+  var dividend=text.match(/([A-Za-z0-9]+)\s*配息\s*(\d+(?:\.\d+)?)/i)||text.match(/配息\s*([A-Za-z0-9]+)\s*(\d+(?:\.\d+)?)/i);
+  if(dividend)return {intent:'dividend',symbol:dividend[1].toUpperCase(),amount:parseFloat(dividend[2])};
+  if(amount>0){
+    var account=advisorAIAccount(raw);
+    if(compact.indexOf('大餐')>=0)return {intent:'expense',category:'🍔大餐簡餐',account:account||'🏔️玉山銀行',amount:amount,note:'外食簡餐'};
+    if(compact.indexOf('訂閱')>=0||compact.indexOf('app')>=0)return {intent:'expense',category:'📱APP訂閱',account:account||'🏔️玉山銀行',amount:amount,note:'APP訂閱'};
+    if(compact.indexOf('網購')>=0||compact.indexOf('3c')>=0)return {intent:'expense',category:'💻3C產品',account:account||'💳Cube',amount:amount,note:'PX網購'};
+    if(compact.indexOf('超商')>=0)return {intent:'expense',category:'🍴超商外食',account:account||'🔖中國信託',amount:amount,note:'超商消費'};
+  }
+  return {intent:'unknown'};
+}
+
+function advisorAISetMessage(text,type){
+  var msg=document.getElementById('advisor-ai-msg')||document.getElementById('advisor-shortcut-msg');
+  if(msg){msg.textContent=text;msg.className='advisor-shortcut-msg '+(type||'');}
+}
+
+function advisorAIResultHtml(title,lines){
+  return `<div class="advisor-ai-result"><strong>${esc(title)}</strong><br>${(lines||[]).map(esc).join('<br>')}</div>`;
+}
+
+function advisorAIRequireWrite(){
+  if(!API_URL||!cleanToken(WRITE_TOKEN)){
+    advisorAISetMessage('請先完成 API URL 與 WRITE_TOKEN 設定。','err');
+    return false;
+  }
+  return true;
+}
+
+async function runAdvisorAICommand(btn){
+  var input=document.getElementById('advisor-ai-input');
+  var raw=input?input.value:'';
+  var panel=document.getElementById('advisor-shortcut-panel');
+  var cmd=advisorAICommand(raw);
+  if(!raw.trim()){advisorAISetMessage('請輸入指令。','err');return;}
+  if(btn&&btn.disabled)return;
+  if(btn){btn.disabled=true;btn.textContent='判斷中…';}
+  try{
+    if(cmd.intent==='unknown')throw new Error('V1 尚未辨識這句指令，可改用：提款2000、大餐 玉山 720、3C cube 320、載具。');
+    if(cmd.intent==='open'){
+      advisorGo(cmd.panel,cmd.tab);
+      return;
+    }
+    if(cmd.intent==='copyCarrier'){
+      copyInvoiceCarrier();
+      advisorAISetMessage('已複製載具。','ok');
+      return;
+    }
+    if(cmd.intent==='showCarrier'){
+      advisorShowInvoiceCarrier();
+      return;
+    }
+    if(cmd.intent==='member'){
+      advisorShowMemberCard(cmd.type);
+      return;
+    }
+    if(cmd.intent==='maintenance'){
+      await advisorAIShowMaintenance();
+      return;
+    }
+    if(cmd.intent==='stockSell'){
+      if(panel)panel.innerHTML=`<div class="advisor-shortcut-title">軍師AI V1</div>
+        ${advisorAIResultHtml('請確認股票交易',['賣出股票：'+cmd.symbol,'股數：'+cmd.shares,'金額：'+fmtFull(cmd.amount)])}
+        <div class="advisor-dividend-actions">
+          <button class="advisor-shortcut-secondary" type="button" onclick="openAdvisorAI()">取消</button>
+          <button class="advisor-shortcut-submit" type="button" onclick="advisorAIConfirmStockSell('${esc(cmd.symbol)}',${Number(cmd.shares)||0},${Number(cmd.amount)||0},this)">確認寫入</button>
+        </div>
+        <div class="advisor-shortcut-msg" id="advisor-ai-msg"></div>`;
+      return;
+    }
+    if(!advisorAIRequireWrite())return;
+    if(cmd.intent==='withdraw'){
+      await apiPost({action:'transfer',date:today().replace(/-/g,'/'),from:'💵國泰Stock',to:'💰Cash',amount:cmd.amount,label:'',note:'日常提款'});
+      if(panel)panel.innerHTML=`<div class="advisor-shortcut-title">軍師AI V1</div>${advisorAIResultHtml('已記錄日常提款',['國泰Stock → Cash','金額：'+fmtFull(cmd.amount)])}`;
+      return;
+    }
+    if(cmd.intent==='expense'){
+      await apiPost({action:'expense',date:today().replace(/-/g,'/'),cat:cmd.category,account:cmd.account,amount:cmd.amount,note:cmd.note||'軍師AI'});
+      if(panel)panel.innerHTML=`<div class="advisor-shortcut-title">軍師AI V1</div>${advisorAIResultHtml('已記錄支出',['項目：'+cmd.category,'帳戶：'+cmd.account,'金額：'+fmtFull(cmd.amount)])}`;
+      return;
+    }
+    if(cmd.intent==='dividend'){
+      await advisorAIRecordDividend(cmd.symbol,cmd.amount);
+      return;
+    }
+  }catch(err){
+    advisorAISetMessage('✗ '+(err&&err.message?err.message:'執行失敗'),'err');
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='執行';}
+  }
+}
+
+async function advisorAIRecordDividend(symbol,amount){
+  var panel=document.getElementById('advisor-shortcut-panel');
+  var data=await loadDividendCenter(false);
+  var key=normalizeKey(symbol);
+  var rows=advisorDividendRows(data);
+  var row=rows.find(function(item){return normalizeKey(item.symbol||item.displaySymbol)===key;});
+  if(!row)throw new Error('找不到 '+symbol+' 的待入帳配息，請先確認配息清單。');
+  await apiPost({
+    action:'income',
+    date:today().replace(/-/g,'/'),
+    source:'💰投資理財',
+    account:'💵國泰Stock',
+    amount:amount,
+    note:'',
+    divRate:row.dividendUsd||'',
+    divSymbol:row.symbol||symbol,
+    dividendIncome:'1',
+    dividendRowId:row.rowId||''
+  });
+  invalidateDividendCenter();
+  if(panel)panel.innerHTML=`<div class="advisor-shortcut-title">軍師AI V1</div>${advisorAIResultHtml('已記錄配息入帳',['標的：'+(row.displaySymbol||row.symbol||symbol),'金額：'+fmtFull(amount)])}`;
+}
+
+async function advisorAIConfirmStockSell(symbol,shares,amount,btn){
+  if(!advisorAIRequireWrite())return;
+  if(btn&&btn.disabled)return;
+  if(btn){btn.disabled=true;btn.textContent='寫入中…';}
+  try{
+    await apiPost({action:'transfer',date:today().replace(/-/g,'/'),from:symbol,to:'💵國泰Stock',amount:amount,label:symbol,note:'軍師AI賣出',
+      stockMode:'1',stockType:'sell',stockSymbol:symbol,stockShares:-Math.abs(Number(shares)||0),stockAmount:amount});
+    var panel=document.getElementById('advisor-shortcut-panel');
+    if(panel)panel.innerHTML=`<div class="advisor-shortcut-title">軍師AI V1</div>${advisorAIResultHtml('已記錄股票賣出',['標的：'+symbol,'股數：'+shares,'金額：'+fmtFull(amount)])}`;
+  }catch(err){
+    advisorAISetMessage('✗ '+(err&&err.message?err.message:'寫入失敗'),'err');
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='確認寫入';}
+  }
+}
+
+async function advisorAIShowMaintenance(){
+  var panel=document.getElementById('advisor-shortcut-panel');
+  if(panel)panel.innerHTML=`<div class="advisor-shortcut-title">軍師AI V1</div><div class="advisor-shortcut-hint">讀取台股維持率中…</div>`;
+  if(!API_URL)throw new Error('尚未設定 API URL，無法讀取市場快報。');
+  var data=await apiGet({action:'marketDashboard'});
+  await ensureMarketMarginData(data);
+  var rows=(data&&data.rows)||[];
+  var twse=rows.find(function(r){return r&&(r.isTWSE||r.code==='^TWII');})||{};
+  var text=(twse.marginMaintenanceText||'').trim();
+  if(!text&&twse.marginMaintenanceRatio)text=Number(twse.marginMaintenanceRatio||0).toFixed(2)+'%';
+  if(!text)throw new Error('目前沒有台股維持率資料。');
+  if(panel)panel.innerHTML=`<div class="advisor-shortcut-title">軍師AI V1</div>${advisorAIResultHtml('台股維持率',[text])}`;
 }
 
 function advisorDividendRows(data){
