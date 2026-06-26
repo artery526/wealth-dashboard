@@ -9177,7 +9177,10 @@ initHeaderVideoPlayback();
       </div>
       <div class="advisor-btn-grid">
         <button class="advisor-btn" onclick="openAdvisorShortcut('withdraw')"><span class="advisor-btn-tag">提</span>日常提款</button>
-        <button class="advisor-btn" onclick="openAdvisorShortcut('credit')"><span class="advisor-btn-tag">卡</span>信用卡消費</button>
+        <div class="advisor-travel-card-row" aria-label="支出快捷">
+          <button class="advisor-btn" onclick="openAdvisorShortcut('credit')"><span class="advisor-btn-tag">PX</span>PX網購</button>
+          <button class="advisor-btn" onclick="openAdvisorShortcut('dining')"><span class="advisor-btn-tag">食</span>外食簡餐</button>
+        </div>
         <button class="advisor-btn" onclick="openAdvisorShortcut('fuel')"><span class="advisor-btn-tag">油</span>日常加油</button>
         <button class="advisor-btn" onclick="openAdvisorShortcut('store')"><span class="advisor-btn-tag">商</span>超商消費</button>
         <button class="advisor-btn" onclick="toggleAdvisorDividendShortcut()"><span class="advisor-btn-tag">息</span>配息入帳</button>
@@ -9242,7 +9245,8 @@ function toggleAdvisorMenuGroup(btn){
 function advisorShortcutSpecs(){
   return {
     withdraw:{title:'日常提款',amountLabel:'提款金額',hint:'國泰Stock → Cash，直接記錄轉帳。',action:'transfer',from:'💵國泰Stock',to:'💰Cash',note:'日常提款'},
-    credit:{title:'信用卡消費',amountLabel:'消費金額',hint:'Cube 支出，請選擇完整消費項目。',action:'expense',account:'💳Cube',cat:'',note:'信用卡消費',needCategory:true},
+    credit:{title:'PX網購',amountLabel:'消費金額',hint:'Cube 支出，請選擇完整消費項目。',action:'expense',account:'💳Cube',cat:'',note:'PX網購',needCategory:true},
+    dining:{title:'外食簡餐',amountLabel:'消費金額',hint:'玉山銀行支出，請選擇完整消費項目。',action:'expense',account:'🏔️玉山銀行',cat:'',note:'外食簡餐',needCategory:true},
     fuel:{title:'日常加油',amountLabel:'消費金額',hint:'固定分類：⛽機車加油；帳戶：🟥永豐銀行。',action:'expense',account:'🟥永豐銀行',cat:'⛽機車加油',note:'日常加油'},
     store:{title:'超商消費',amountLabel:'消費金額',hint:'固定分類：🍴超商外食；帳戶：🔖中國信託。',action:'expense',account:'🔖中國信託',cat:'🍴超商外食',note:'超商消費'}
   };
