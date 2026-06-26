@@ -590,6 +590,8 @@ body::after{
 .advisor-btn-spacer{min-height:38px}
 .advisor-btn{font-family:'Noto Serif TC',serif;font-size:13px;font-weight:700;color:#fff;letter-spacing:1px;background:linear-gradient(145deg,#8b6914,#6b4f0e);border:1px solid rgba(232,192,80,.45);border-radius:6px;padding:10px 8px;cursor:pointer;text-align:center;transition:background .18s,box-shadow .18s,transform .12s;box-shadow:0 2px 8px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.08);white-space:nowrap;display:flex;align-items:center;justify-content:center;gap:5px}
 .advisor-btn-tag{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:rgba(12,8,3,.42);border:1px solid rgba(232,192,80,.42);font-family:'Noto Sans TC',sans-serif;font-size:10px;font-weight:900;line-height:1;color:var(--gold);letter-spacing:0;box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
+.advisor-travel-card-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.advisor-travel-card{min-height:56px;flex-direction:column;gap:6px;white-space:normal;line-height:1.25}
 .advisor-btn:hover{background:linear-gradient(145deg,#a07a1a,#7d5e10);box-shadow:0 4px 16px rgba(184,137,46,.35);transform:translateY(-1px)}
 .advisor-btn:active{transform:translateY(0)}
 .advisor-shortcut-panel{border:1px solid rgba(232,192,80,.32);border-radius:9px;background:rgba(10,8,4,.68);padding:12px;margin-top:10px}
@@ -2543,10 +2545,6 @@ body::after{
       <div class="travel-title-wrap">
         <div class="travel-title-row">
           <div class="travel-title" id="travel-title">📖遠征錄</div>
-        </div>
-        <div class="travel-carrier-actions">
-          <button class="travel-copy-btn" id="travel-invoice-copy" type="button" onclick="copyInvoiceCarrier(this)">📋 複製載具</button>
-          <button class="travel-carrier-show" type="button" onclick="showInvoiceCarrier()">顯示載具</button>
         </div>
       </div>
       <div class="travel-head-actions">
@@ -5438,7 +5436,18 @@ function parseTravelCsv(text){
 }
 function setInvoiceCarrierCopyState(btn,text,disabled){
   if(!btn)return;
-  btn.textContent=text;
+  if(btn.classList&&btn.classList.contains('advisor-travel-card')){
+    var tag=btn.getAttribute('data-tag')||'複';
+    var label=String(text||'').replace(/^📋\s*/,'');
+    btn.textContent='';
+    var tagEl=document.createElement('span');
+    tagEl.className='advisor-btn-tag';
+    tagEl.textContent=tag;
+    btn.appendChild(tagEl);
+    btn.appendChild(document.createTextNode(label));
+  }else{
+    btn.textContent=text;
+  }
   btn.disabled=!!disabled;
 }
 function fallbackCopyText(text){
@@ -9134,6 +9143,10 @@ initHeaderVideoPlayback();
         <button class="advisor-btn" onclick="openAdvisorShortcut('fuel')"><span class="advisor-btn-tag">油</span>日常加油</button>
         <button class="advisor-btn" onclick="openAdvisorShortcut('store')"><span class="advisor-btn-tag">商</span>超商消費</button>
         <button class="advisor-btn" onclick="advisorGo('foodhouse')"><span class="advisor-btn-tag">糧</span>巡視糧倉</button>
+        <div class="advisor-travel-card-row" aria-label="遠征錄載具快捷">
+          <button class="advisor-btn advisor-travel-card" type="button" onclick="advisorShowInvoiceCarrier()"><span class="advisor-btn-tag">載</span>顯示載具</button>
+          <button class="advisor-btn advisor-travel-card" type="button" data-tag="複" onclick="advisorCopyInvoiceCarrier(this)"><span class="advisor-btn-tag">複</span>複製載具</button>
+        </div>
         <div class="advisor-shortcut-panel" id="advisor-shortcut-panel"></div>
       </div>
     </div>
@@ -9152,6 +9165,13 @@ function closeAdvisorDialog(){
 }
 function advisorOverlayClick(e){
   if(e.target===document.getElementById('advisor-overlay'))closeAdvisorDialog();
+}
+function advisorShowInvoiceCarrier(){
+  closeAdvisorDialog();
+  showInvoiceCarrier();
+}
+function advisorCopyInvoiceCarrier(btn){
+  copyInvoiceCarrier(btn);
 }
 function closeAdvisorMenuGroups(){
   document.querySelectorAll('.advisor-menu-section.is-open').forEach(function(section){
