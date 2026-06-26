@@ -606,6 +606,16 @@ body::after{
 .advisor-shortcut-msg{min-height:18px;margin-top:8px;text-align:center;font-family:var(--sans);font-size:12px;font-weight:800}
 .advisor-shortcut-msg.ok{color:var(--teal)}
 .advisor-shortcut-msg.err{color:var(--coral)}
+.advisor-dividend-list{display:grid;gap:8px;margin-top:9px}
+.advisor-dividend-row{width:100%;border:1px solid rgba(232,192,80,.28);border-radius:8px;background:rgba(232,192,80,.06);padding:9px 10px;text-align:left;cursor:pointer;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;transition:background .18s,box-shadow .18s,border-color .18s}
+.advisor-dividend-row:hover{background:rgba(232,192,80,.11);border-color:rgba(232,192,80,.52);box-shadow:0 0 14px rgba(232,192,80,.12)}
+.advisor-dividend-name{font-family:var(--sans);font-size:12px;font-weight:950;color:var(--ink);line-height:1.45}
+.advisor-dividend-meta{margin-top:4px;font-family:var(--sans);font-size:11px;font-weight:800;color:#b99550;line-height:1.45}
+.advisor-dividend-amount{font-family:var(--mono);font-size:13px;font-weight:950;color:var(--gold);white-space:nowrap}
+.advisor-dividend-lock{border:1px solid rgba(124,111,192,.32);border-radius:7px;background:rgba(124,111,192,.08);padding:8px 10px;margin-bottom:10px;font-family:var(--sans);font-size:12px;font-weight:850;line-height:1.7;color:#d8d2ff}
+.advisor-dividend-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.advisor-shortcut-secondary{width:100%;border:1px solid rgba(232,192,80,.32);border-radius:7px;background:rgba(232,192,80,.07);color:var(--gold);font-family:var(--sans);font-size:13px;font-weight:900;letter-spacing:1px;padding:10px 12px;cursor:pointer}
+.advisor-shortcut-secondary:hover{background:rgba(232,192,80,.13)}
 .advisor-close{position:absolute;top:10px;right:12px;background:none;border:none;color:#5a4018;font-size:14px;cursor:pointer;transition:color .2s;line-height:1;padding:2px}
 .advisor-close:hover{color:var(--gold)}
 @media(max-width:480px){.advisor-overlay{padding:52px 0 0 6px}.advisor-img{width:clamp(98px,25vw,120px)}.advisor-dialog{margin-top:26px;margin-left:-14px;width:calc(100vw - 98px);padding:12px 12px 10px}.advisor-command-head{gap:6px;margin-right:18px}.advisor-command-title{font-size:15px;letter-spacing:.5px}.advisor-practice-btn{min-height:26px;padding:4px 6px;font-size:10px}.advisor-reminder-card{padding:10px 11px 11px}.advisor-reminder-title{font-size:12px}.advisor-reminder-text{font-size:12px;line-height:1.68}.advisor-btn-grid{gap:8px}.advisor-menu-toggle{min-height:42px;font-size:16px;letter-spacing:2px}.advisor-menu-mark{width:20px;height:20px;font-size:11px}.advisor-btn-group{gap:6px;border-radius:7px}.advisor-menu-section.is-open .advisor-btn-group{padding:7px;max-height:220px}.advisor-btn{font-size:12px;padding:8px 4px;letter-spacing:0;gap:3px}.advisor-btn-tag{width:14px;height:14px;font-size:9px}.advisor-btn-spacer{min-height:32px}}
@@ -9169,6 +9179,7 @@ initHeaderVideoPlayback();
         <button class="advisor-btn" onclick="openAdvisorShortcut('credit')"><span class="advisor-btn-tag">卡</span>信用卡消費</button>
         <button class="advisor-btn" onclick="openAdvisorShortcut('fuel')"><span class="advisor-btn-tag">油</span>日常加油</button>
         <button class="advisor-btn" onclick="openAdvisorShortcut('store')"><span class="advisor-btn-tag">商</span>超商消費</button>
+        <button class="advisor-btn" onclick="openAdvisorDividendShortcut()"><span class="advisor-btn-tag">息</span>配息入帳</button>
         <button class="advisor-btn" onclick="advisorGo('foodhouse')"><span class="advisor-btn-tag">糧</span>巡視糧倉</button>
         <div class="advisor-travel-card-row" aria-label="遠征錄載具快捷">
           <button class="advisor-btn advisor-travel-card" type="button" onclick="advisorShowInvoiceCarrier()"><span class="advisor-btn-tag">載</span>顯示載具</button>
@@ -9238,6 +9249,128 @@ function advisorShortcutSpecs(){
 function advisorShortcutCategoryOptions(){
   var cats=uniqueBookingOptions((cfg&&cfg.categories&&cfg.categories.length)?cfg.categories:BOOKING_FALLBACK_CATEGORIES);
   return cats.map(function(cat){return `<option value="${esc(cat)}">${esc(cat)}</option>`;}).join('');
+}
+
+var advisorDividendSelection=null;
+
+function advisorDividendRows(data){
+  return dividendPendingDisplayRows((data&&data.pending)||[]).filter(function(row){
+    return !bookingDividendHiddenRows[dividendPendingKey(row)];
+  });
+}
+
+function advisorDividendRowHtml(row){
+  var key=dividendPendingKey(row);
+  return `<button class="advisor-dividend-row" type="button" data-dividend-key="${esc(key)}" onclick="selectAdvisorDividendPending(this.dataset.dividendKey)">
+    <div>
+      <div class="advisor-dividend-name">${esc(row.displaySymbol||row.symbol)} · ${esc(row.note||'配息')}</div>
+      <div class="advisor-dividend-meta">每股配息 USD ${esc(row.dividendUsd||'--')} · 預估入帳 ${esc(row.estimatedPayDate||'--')}</div>
+    </div>
+    <div class="advisor-dividend-amount">NT${fmtFull(row.estimatedTwd)}</div>
+  </button>`;
+}
+
+async function openAdvisorDividendShortcut(force){
+  var panel=document.getElementById('advisor-shortcut-panel');
+  if(!panel)return;
+  advisorDividendSelection=null;
+  panel.innerHTML=`<div class="advisor-shortcut-title">配息入帳</div>
+    <div class="advisor-shortcut-hint">讀取待入帳配息中…</div>`;
+  if(!API_URL){
+    panel.innerHTML=`<div class="advisor-shortcut-title">配息入帳</div>
+      <div class="advisor-shortcut-msg err">尚未設定 API URL</div>`;
+    return;
+  }
+  try{
+    var data=await loadDividendCenter(!!force);
+    var rows=advisorDividendRows(data);
+    panel.innerHTML=`<div class="advisor-shortcut-title">配息入帳</div>
+      <div class="advisor-shortcut-hint">選一筆待入帳配息，軍師會鎖定收入來源「💰投資理財」與帳戶「💵國泰Stock」，金額可修正後寫入收入。</div>
+      ${rows.length?`<div class="advisor-dividend-list">${rows.map(advisorDividendRowHtml).join('')}</div>`:'<div class="dividend-empty">目前沒有待入帳配息。</div>'}
+      <button class="advisor-shortcut-secondary" type="button" onclick="openAdvisorDividendShortcut(true)">重新整理</button>
+      <div class="advisor-shortcut-msg" id="advisor-shortcut-msg"></div>`;
+  }catch(err){
+    panel.innerHTML=`<div class="advisor-shortcut-title">配息入帳</div>
+      <div class="advisor-shortcut-msg err">讀取失敗：${esc(err&&err.message?err.message:'請稍後再試')}</div>`;
+  }
+}
+
+function selectAdvisorDividendPending(key){
+  var panel=document.getElementById('advisor-shortcut-panel');
+  if(!panel)return;
+  var rows=advisorDividendRows(dividendCenterCache||{});
+  var row=rows.find(function(item){return dividendPendingKey(item)===String(key);});
+  if(!row){
+    panel.innerHTML=`<div class="advisor-shortcut-title">配息入帳</div>
+      <div class="advisor-shortcut-msg err">找不到這筆配息，請重新整理。</div>
+      <button class="advisor-shortcut-secondary" type="button" onclick="openAdvisorDividendShortcut(true)">重新整理</button>`;
+    return;
+  }
+  advisorDividendSelection=row;
+  var amount=Math.round(Number(row.estimatedTwd)||0);
+  panel.innerHTML=`<div class="advisor-shortcut-title">配息入帳</div>
+    <div class="advisor-dividend-lock">
+      收入來源：💰投資理財<br>
+      入帳帳戶：💵國泰Stock<br>
+      配息標的：${esc(row.displaySymbol||row.symbol)}<br>
+      配息比例：${esc(row.dividendUsd||'--')}
+    </div>
+    <div class="advisor-shortcut-field">
+      <label>入帳金額</label>
+      <input class="advisor-shortcut-input" id="advisor-dividend-amount" type="number" min="1" step="1" value="${esc(amount)}" onkeydown="advisorDividendKey(event)">
+    </div>
+    <div class="advisor-shortcut-hint">金額可修正；送出後會寫入收入，並將這筆待入帳配息標記為已入帳。</div>
+    <div class="advisor-dividend-actions">
+      <button class="advisor-shortcut-secondary" type="button" onclick="openAdvisorDividendShortcut(false)">返回清單</button>
+      <button class="advisor-shortcut-submit" id="advisor-dividend-submit" type="button" onclick="submitAdvisorDividendIncome(this)">記錄配息收入</button>
+    </div>
+    <div class="advisor-shortcut-msg" id="advisor-shortcut-msg"></div>`;
+  setTimeout(function(){
+    var amountEl=document.getElementById('advisor-dividend-amount');
+    if(amountEl){amountEl.focus();amountEl.select();}
+  },0);
+}
+
+function advisorDividendKey(e){
+  if(e&&e.key==='Enter'){
+    e.preventDefault();
+    submitAdvisorDividendIncome(document.getElementById('advisor-dividend-submit'));
+  }
+}
+
+async function submitAdvisorDividendIncome(btn){
+  var row=advisorDividendSelection;
+  var msg=document.getElementById('advisor-shortcut-msg');
+  var amountEl=document.getElementById('advisor-dividend-amount');
+  var amount=parseFloat(amountEl&&amountEl.value)||0;
+  if(!row){if(msg){msg.textContent='請先選擇一筆配息';msg.className='advisor-shortcut-msg err';}return;}
+  if(!amount||amount<=0){if(msg){msg.textContent='請輸入大於 0 的金額';msg.className='advisor-shortcut-msg err';}return;}
+  if(btn&&btn.disabled)return;
+  if(btn){btn.disabled=true;btn.textContent='記錄中…';}
+  if(msg){msg.textContent='';msg.className='advisor-shortcut-msg';}
+  try{
+    await apiPost({
+      action:'income',
+      date:today().replace(/-/g,'/'),
+      source:'💰投資理財',
+      account:'💵國泰Stock',
+      amount:amount,
+      note:'',
+      divRate:row.dividendUsd||'',
+      divSymbol:row.symbol||row.displaySymbol||'',
+      dividendIncome:'1',
+      dividendRowId:row.rowId||''
+    });
+    invalidateDividendCenter();
+    advisorDividendSelection=null;
+    if(msg){msg.textContent='✓ 已記錄配息收入';msg.className='advisor-shortcut-msg ok';}
+    if(amountEl)amountEl.value='';
+    setTimeout(function(){openAdvisorDividendShortcut(true);},700);
+  }catch(err){
+    if(msg){msg.textContent='✗ '+(err&&err.message?err.message:'寫入失敗');msg.className='advisor-shortcut-msg err';}
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='記錄配息收入';}
+  }
 }
 
 function openAdvisorShortcut(kind){
