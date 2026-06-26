@@ -5007,7 +5007,6 @@ async function initBookingForm(){
     <!-- 轉帳 -->
     <div class="bform" id="bf-transfer">
       <div class="booking-transfer-section bank booking-transfer-pane active" id="transfer-account-pane">
-        <div class="booking-transfer-title">帳戶轉帳</div>
         <div class="form-grid booking-transfer-grid">
           <div class="form-group hidden"><label class="form-label">記帳日期</label><input class="form-control" type="date" id="a-date" value="${today()}"></div>
           <div class="form-group"><label class="form-label">轉出帳戶</label>${transferFromChips}<div class="booking-chip-select-wrap hidden" data-booking-select-wrap="a-from"><select class="form-control" id="a-from" onchange="syncBookingQuickChip('a-from')">${accOpts}</select></div></div>
@@ -5201,14 +5200,12 @@ function setMergedStockTrade(open){
   var fields=document.getElementById('merged-stock-fields');
   var btn=document.getElementById('btn-stock-toggle');
   var submit=document.getElementById('btn-transfer');
-  var title=document.querySelector('#transfer-account-pane .booking-transfer-title');
   if(fields)fields.classList.toggle('hidden',!open);
   if(btn){
     btn.classList.toggle('active',!!open);
     btn.textContent=open?'股票交易：開':'股票交易';
   }
   if(submit&&!submit.disabled)submit.textContent=open?'記錄交易':'記錄轉帳';
-  if(title)title.textContent=open?'帳戶轉帳 · 股票交易':'帳戶轉帳';
   clearTransferDividendAutofill();
 }
 
@@ -9136,6 +9133,7 @@ initHeaderVideoPlayback();
         <button class="advisor-btn" onclick="openAdvisorShortcut('credit')"><span class="advisor-btn-tag">卡</span>信用卡消費</button>
         <button class="advisor-btn" onclick="openAdvisorShortcut('fuel')"><span class="advisor-btn-tag">油</span>日常加油</button>
         <button class="advisor-btn" onclick="openAdvisorShortcut('store')"><span class="advisor-btn-tag">商</span>超商消費</button>
+        <button class="advisor-btn" onclick="advisorGo('foodhouse')"><span class="advisor-btn-tag">糧</span>巡視糧倉</button>
         <div class="advisor-shortcut-panel" id="advisor-shortcut-panel"></div>
       </div>
     </div>
