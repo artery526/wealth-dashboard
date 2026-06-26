@@ -595,6 +595,7 @@ body::after{
 .advisor-btn:hover{background:linear-gradient(145deg,#a07a1a,#7d5e10);box-shadow:0 4px 16px rgba(184,137,46,.35);transform:translateY(-1px)}
 .advisor-btn:active{transform:translateY(0)}
 .advisor-shortcut-panel{border:1px solid rgba(232,192,80,.32);border-radius:9px;background:rgba(10,8,4,.68);padding:12px;margin-top:10px}
+.advisor-shortcut-panel:empty{display:none}
 .advisor-shortcut-title{font-family:'Noto Serif TC',serif;font-size:15px;font-weight:900;color:var(--gold);letter-spacing:1px;margin-bottom:8px}
 .advisor-shortcut-hint{font-family:var(--sans);font-size:12px;line-height:1.6;color:#9a7430;margin-bottom:10px}
 .advisor-shortcut-field{margin-bottom:10px}
@@ -9179,7 +9180,7 @@ initHeaderVideoPlayback();
         <button class="advisor-btn" onclick="openAdvisorShortcut('credit')"><span class="advisor-btn-tag">卡</span>信用卡消費</button>
         <button class="advisor-btn" onclick="openAdvisorShortcut('fuel')"><span class="advisor-btn-tag">油</span>日常加油</button>
         <button class="advisor-btn" onclick="openAdvisorShortcut('store')"><span class="advisor-btn-tag">商</span>超商消費</button>
-        <button class="advisor-btn" onclick="openAdvisorDividendShortcut()"><span class="advisor-btn-tag">息</span>配息入帳</button>
+        <button class="advisor-btn" onclick="toggleAdvisorDividendShortcut()"><span class="advisor-btn-tag">息</span>配息入帳</button>
         <button class="advisor-btn" onclick="advisorGo('foodhouse')"><span class="advisor-btn-tag">糧</span>巡視糧倉</button>
         <div class="advisor-travel-card-row" aria-label="遠征錄載具快捷">
           <button class="advisor-btn advisor-travel-card" type="button" onclick="advisorShowInvoiceCarrier()"><span class="advisor-btn-tag">載</span>顯示載具</button>
@@ -9204,6 +9205,7 @@ function closeAdvisorDialog(){
   document.getElementById('advisor-overlay').classList.remove('open');
   toggleTodayAgenda(false);
   closeAdvisorMenuGroups();
+  closeAdvisorShortcutPanel();
 }
 function advisorOverlayClick(e){
   if(e.target===document.getElementById('advisor-overlay'))closeAdvisorDialog();
@@ -9252,6 +9254,19 @@ function advisorShortcutCategoryOptions(){
 }
 
 var advisorDividendSelection=null;
+var advisorShortcutOpenKind='';
+
+function closeAdvisorShortcutPanel(){
+  var panel=document.getElementById('advisor-shortcut-panel');
+  if(panel)panel.innerHTML='';
+  advisorShortcutOpenKind='';
+  advisorDividendSelection=null;
+}
+
+function isAdvisorShortcutOpen(kind){
+  var panel=document.getElementById('advisor-shortcut-panel');
+  return !!(panel&&advisorShortcutOpenKind===kind&&String(panel.innerHTML||'').trim());
+}
 
 function advisorDividendRows(data){
   return dividendPendingDisplayRows((data&&data.pending)||[]).filter(function(row){
@@ -9273,6 +9288,7 @@ function advisorDividendRowHtml(row){
 async function openAdvisorDividendShortcut(force){
   var panel=document.getElementById('advisor-shortcut-panel');
   if(!panel)return;
+  advisorShortcutOpenKind='dividend';
   advisorDividendSelection=null;
   panel.innerHTML=`<div class="advisor-shortcut-title">配息入帳</div>
     <div class="advisor-shortcut-hint">讀取待入帳配息中…</div>`;
@@ -9293,6 +9309,14 @@ async function openAdvisorDividendShortcut(force){
     panel.innerHTML=`<div class="advisor-shortcut-title">配息入帳</div>
       <div class="advisor-shortcut-msg err">讀取失敗：${esc(err&&err.message?err.message:'請稍後再試')}</div>`;
   }
+}
+
+function toggleAdvisorDividendShortcut(){
+  if(isAdvisorShortcutOpen('dividend')){
+    closeAdvisorShortcutPanel();
+    return;
+  }
+  openAdvisorDividendShortcut(false);
 }
 
 function selectAdvisorDividendPending(key){
@@ -9377,6 +9401,12 @@ function openAdvisorShortcut(kind){
   var spec=advisorShortcutSpecs()[kind];
   var panel=document.getElementById('advisor-shortcut-panel');
   if(!spec||!panel)return;
+  if(isAdvisorShortcutOpen(kind)){
+    closeAdvisorShortcutPanel();
+    return;
+  }
+  advisorShortcutOpenKind=kind;
+  advisorDividendSelection=null;
   panel.innerHTML=`
     <div class="advisor-shortcut-title">${esc(spec.title)}</div>
     <div class="advisor-shortcut-hint">${esc(spec.hint)}</div>
