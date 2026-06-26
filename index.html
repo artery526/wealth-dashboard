@@ -592,6 +592,18 @@ body::after{
 .advisor-btn-tag{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:rgba(12,8,3,.42);border:1px solid rgba(232,192,80,.42);font-family:'Noto Sans TC',sans-serif;font-size:10px;font-weight:900;line-height:1;color:var(--gold);letter-spacing:0;box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
 .advisor-btn:hover{background:linear-gradient(145deg,#a07a1a,#7d5e10);box-shadow:0 4px 16px rgba(184,137,46,.35);transform:translateY(-1px)}
 .advisor-btn:active{transform:translateY(0)}
+.advisor-shortcut-panel{border:1px solid rgba(232,192,80,.32);border-radius:9px;background:rgba(10,8,4,.68);padding:12px;margin-top:10px}
+.advisor-shortcut-title{font-family:'Noto Serif TC',serif;font-size:15px;font-weight:900;color:var(--gold);letter-spacing:1px;margin-bottom:8px}
+.advisor-shortcut-hint{font-family:var(--sans);font-size:12px;line-height:1.6;color:#9a7430;margin-bottom:10px}
+.advisor-shortcut-field{margin-bottom:10px}
+.advisor-shortcut-field label{display:block;margin-bottom:5px;font-family:var(--sans);font-size:11px;font-weight:900;color:#b99550;letter-spacing:.7px}
+.advisor-shortcut-input,.advisor-shortcut-select{width:100%;border:1px solid #2a1c08;border-radius:7px;background:#0a0804;color:var(--ink);font-family:var(--sans);font-size:15px;padding:11px 12px;outline:none}
+.advisor-shortcut-input:focus,.advisor-shortcut-select:focus{border-color:var(--gold2)}
+.advisor-shortcut-submit{width:100%;border:0;border-radius:7px;background:var(--gold);color:#0a0804;font-family:var(--sans);font-size:14px;font-weight:950;letter-spacing:1px;padding:11px 12px;cursor:pointer}
+.advisor-shortcut-submit:disabled{opacity:.55;cursor:not-allowed}
+.advisor-shortcut-msg{min-height:18px;margin-top:8px;text-align:center;font-family:var(--sans);font-size:12px;font-weight:800}
+.advisor-shortcut-msg.ok{color:var(--teal)}
+.advisor-shortcut-msg.err{color:var(--coral)}
 .advisor-close{position:absolute;top:10px;right:12px;background:none;border:none;color:#5a4018;font-size:14px;cursor:pointer;transition:color .2s;line-height:1;padding:2px}
 .advisor-close:hover{color:var(--gold)}
 @media(max-width:480px){.advisor-overlay{padding:52px 0 0 6px}.advisor-img{width:clamp(98px,25vw,120px)}.advisor-dialog{margin-top:26px;margin-left:-14px;width:calc(100vw - 98px);padding:12px 12px 10px}.advisor-command-head{gap:6px;margin-right:18px}.advisor-command-title{font-size:15px;letter-spacing:.5px}.advisor-practice-btn{min-height:26px;padding:4px 6px;font-size:10px}.advisor-reminder-card{padding:10px 11px 11px}.advisor-reminder-title{font-size:12px}.advisor-reminder-text{font-size:12px;line-height:1.68}.advisor-btn-grid{gap:8px}.advisor-menu-toggle{min-height:42px;font-size:16px;letter-spacing:2px}.advisor-menu-mark{width:20px;height:20px;font-size:11px}.advisor-btn-group{gap:6px;border-radius:7px}.advisor-menu-section.is-open .advisor-btn-group{padding:7px;max-height:220px}.advisor-btn{font-size:12px;padding:8px 4px;letter-spacing:0;gap:3px}.advisor-btn-tag{width:14px;height:14px;font-size:9px}.advisor-btn-spacer{min-height:32px}}
@@ -9120,65 +9132,11 @@ initHeaderVideoPlayback();
         <a class="advisor-practice-btn" href="daily-practice.png" target="_blank" rel="noopener" title="開啟每日練習清晰原圖">📖 每日練習</a>
       </div>
       <div class="advisor-btn-grid">
-        <section class="advisor-menu-section">
-          <button class="advisor-menu-toggle" type="button" onclick="toggleAdvisorMenuGroup(this)" aria-expanded="false"><span class="advisor-menu-mark">內</span>內政<span class="advisor-menu-caret">▼</span></button>
-          <div class="advisor-btn-group">
-          <button class="advisor-btn" onclick="advisorGo('domestic','booking-form')"><span class="advisor-btn-tag">內</span>快速記帳</button>
-          <button class="advisor-btn" onclick="advisorGo('domestic','dividend-center')"><span class="advisor-btn-tag">內</span>持股息帳</button>
-          <button class="advisor-btn" onclick="advisorGo('domestic','booking-recent')"><span class="advisor-btn-tag">內</span>最近記錄</button>
-          <span class="advisor-btn-spacer" aria-hidden="true"></span>
-          </div>
-        </section>
-        <section class="advisor-menu-section">
-          <button class="advisor-menu-toggle" type="button" onclick="toggleAdvisorMenuGroup(this)" aria-expanded="false"><span class="advisor-menu-mark">財</span>財政<span class="advisor-menu-caret">▼</span></button>
-          <div class="advisor-btn-group">
-          <button class="advisor-btn" onclick="advisorGo('finance','finance-accs')"><span class="advisor-btn-tag">財</span>國庫現況</button>
-          <button class="advisor-btn" onclick="advisorGo('finance','domestic-yearly')"><span class="advisor-btn-tag">財</span>年度財報</button>
-          <button class="advisor-btn" onclick="advisorGo('finance','div-calc')"><span class="advisor-btn-tag">財</span>配息試算</button>
-          <span class="advisor-btn-spacer" aria-hidden="true"></span>
-          </div>
-        </section>
-        <section class="advisor-menu-section">
-          <button class="advisor-menu-toggle" type="button" onclick="advisorGo('foodhouse')" aria-label="開啟糧倉"><span class="advisor-menu-mark">糧</span>糧倉<span class="advisor-menu-caret">›</span></button>
-        </section>
-        <section class="advisor-menu-section">
-          <button class="advisor-menu-toggle" type="button" onclick="toggleAdvisorMenuGroup(this)" aria-expanded="false"><span class="advisor-menu-mark">軍</span>軍機處<span class="advisor-menu-caret">▼</span></button>
-          <div class="advisor-btn-group">
-          <button class="advisor-btn" onclick="advisorGo('council','council-roster')"><span class="advisor-btn-tag">軍</span>部隊陣容</button>
-          <button class="advisor-btn" onclick="advisorGo('council','council-holdings')"><span class="advisor-btn-tag">軍</span>軍團概覽</button>
-          <button class="advisor-btn" onclick="advisorGo('council','council-task')"><span class="advisor-btn-tag">軍</span>軍師工單</button>
-          <span class="advisor-btn-spacer" aria-hidden="true"></span>
-          </div>
-        </section>
-        <section class="advisor-menu-section">
-          <button class="advisor-menu-toggle" type="button" onclick="toggleAdvisorMenuGroup(this)" aria-expanded="false"><span class="advisor-menu-mark">市</span>市集<span class="advisor-menu-caret">▼</span></button>
-          <div class="advisor-btn-group">
-          <button class="advisor-btn" onclick="advisorGo('market','market-watch')"><span class="advisor-btn-tag">市</span>市場快報</button>
-          <button class="advisor-btn" onclick="advisorGo('market','macro-overview')"><span class="advisor-btn-tag">市</span>總經戰情</button>
-          </div>
-        </section>
-        <section class="advisor-menu-section">
-          <button class="advisor-menu-toggle" type="button" onclick="toggleAdvisorMenuGroup(this)" aria-expanded="false"><span class="advisor-menu-mark">卷</span>司天監<span class="advisor-menu-caret">▼</span></button>
-          <div class="advisor-btn-group">
-          <button class="advisor-btn" onclick="advisorGo('stars','stars-home')"><span class="advisor-btn-tag">卷</span>命盤總覽</button>
-          <button class="advisor-btn" onclick="advisorGo('stars','stars-chronicle')"><span class="advisor-btn-tag">卷</span>事件編年史</button>
-          </div>
-        </section>
-        <section class="advisor-menu-section">
-          <button class="advisor-menu-toggle" type="button" onclick="toggleAdvisorMenuGroup(this)" aria-expanded="false"><span class="advisor-menu-mark">城</span>城牆<span class="advisor-menu-caret">▼</span></button>
-          <div class="advisor-btn-group">
-          <button class="advisor-btn" onclick="advisorGoTravelMemo()"><span class="advisor-btn-tag">城</span>遠征錄</button>
-          </div>
-        </section>
-        <section class="advisor-menu-section">
-          <button class="advisor-menu-toggle" type="button" onclick="toggleAdvisorMenuGroup(this)" aria-expanded="false"><span class="advisor-menu-mark">醫</span>醫館<span class="advisor-menu-caret">▼</span></button>
-          <div class="advisor-btn-group">
-          <button class="advisor-btn" onclick="advisorGo('medical','medical-quick')"><span class="advisor-btn-tag">醫</span>身體記錄</button>
-          <button class="advisor-btn" onclick="advisorGo('medical','medical-tarot')"><span class="advisor-btn-tag">醫</span>抽牌記錄</button>
-          <button class="advisor-btn" onclick="advisorGo('medical','medical-stats')"><span class="advisor-btn-tag">醫</span>牌卡統計</button>
-          <button class="advisor-btn" onclick="advisorGo('medical','medical-painmap')"><span class="advisor-btn-tag">醫</span>疼痛地圖</button>
-          </div>
-        </section>
+        <button class="advisor-btn" onclick="openAdvisorShortcut('withdraw')"><span class="advisor-btn-tag">提</span>日常提款</button>
+        <button class="advisor-btn" onclick="openAdvisorShortcut('credit')"><span class="advisor-btn-tag">卡</span>信用卡消費</button>
+        <button class="advisor-btn" onclick="openAdvisorShortcut('fuel')"><span class="advisor-btn-tag">油</span>日常加油</button>
+        <button class="advisor-btn" onclick="openAdvisorShortcut('store')"><span class="advisor-btn-tag">商</span>超商消費</button>
+        <div class="advisor-shortcut-panel" id="advisor-shortcut-panel"></div>
       </div>
     </div>
   </div>
@@ -9214,6 +9172,79 @@ function toggleAdvisorMenuGroup(btn){
     btn.setAttribute('aria-expanded','true');
   }
 }
+
+function advisorShortcutSpecs(){
+  return {
+    withdraw:{title:'日常提款',amountLabel:'提款金額',hint:'國泰Stock → Cash，直接記錄轉帳。',action:'transfer',from:'💵國泰Stock',to:'💰Cash',note:'日常提款'},
+    credit:{title:'信用卡消費',amountLabel:'消費金額',hint:'Cube 支出，請選擇完整消費項目。',action:'expense',account:'💳Cube',cat:'',note:'信用卡消費',needCategory:true},
+    fuel:{title:'日常加油',amountLabel:'消費金額',hint:'固定分類：⛽機車加油；帳戶：🟥永豐銀行。',action:'expense',account:'🟥永豐銀行',cat:'⛽機車加油',note:'日常加油'},
+    store:{title:'超商消費',amountLabel:'消費金額',hint:'固定分類：🍴超商外食；帳戶：🔖中國信託。',action:'expense',account:'🔖中國信託',cat:'🍴超商外食',note:'超商消費'}
+  };
+}
+
+function advisorShortcutCategoryOptions(){
+  var cats=uniqueBookingOptions((cfg&&cfg.categories&&cfg.categories.length)?cfg.categories:BOOKING_FALLBACK_CATEGORIES);
+  return cats.map(function(cat){return `<option value="${esc(cat)}">${esc(cat)}</option>`;}).join('');
+}
+
+function openAdvisorShortcut(kind){
+  var spec=advisorShortcutSpecs()[kind];
+  var panel=document.getElementById('advisor-shortcut-panel');
+  if(!spec||!panel)return;
+  panel.innerHTML=`
+    <div class="advisor-shortcut-title">${esc(spec.title)}</div>
+    <div class="advisor-shortcut-hint">${esc(spec.hint)}</div>
+    <div class="advisor-shortcut-field">
+      <label>${esc(spec.amountLabel)}</label>
+      <input class="advisor-shortcut-input" id="advisor-shortcut-amount" type="number" min="1" step="1" placeholder="輸入金額" onkeydown="advisorShortcutKey(event,'${esc(kind)}')">
+    </div>
+    ${spec.needCategory?`<div class="advisor-shortcut-field">
+      <label>消費項目</label>
+      <select class="advisor-shortcut-select" id="advisor-shortcut-category">${advisorShortcutCategoryOptions()}</select>
+    </div>`:''}
+    <button class="advisor-shortcut-submit" id="advisor-shortcut-submit" type="button" onclick="submitAdvisorShortcut('${esc(kind)}',this)">立即記錄</button>
+    <div class="advisor-shortcut-msg" id="advisor-shortcut-msg"></div>`;
+  setTimeout(function(){
+    var amount=document.getElementById('advisor-shortcut-amount');
+    if(amount)amount.focus();
+  },0);
+}
+
+function advisorShortcutKey(e,kind){
+  if(e&&e.key==='Enter'){
+    e.preventDefault();
+    submitAdvisorShortcut(kind,document.getElementById('advisor-shortcut-submit'));
+  }
+}
+
+async function submitAdvisorShortcut(kind,btn){
+  var spec=advisorShortcutSpecs()[kind];
+  var msg=document.getElementById('advisor-shortcut-msg');
+  var amountEl=document.getElementById('advisor-shortcut-amount');
+  var amount=parseFloat(amountEl&&amountEl.value)||0;
+  if(!spec)return;
+  if(!API_URL){if(msg){msg.textContent='尚未設定 API URL';msg.className='advisor-shortcut-msg err';}return;}
+  if(!amount||amount<=0){if(msg){msg.textContent='請輸入大於 0 的金額';msg.className='advisor-shortcut-msg err';}return;}
+  if(btn&&btn.disabled)return;
+  if(btn){btn.disabled=true;btn.textContent='記錄中…';}
+  if(msg){msg.textContent='';msg.className='advisor-shortcut-msg';}
+  try{
+    if(spec.action==='transfer'){
+      await apiPost({action:'transfer',date:today().replace(/-/g,'/'),from:spec.from,to:spec.to,amount:amount,label:'',note:spec.note});
+    }else if(spec.action==='expense'){
+      var cat=spec.needCategory?((document.getElementById('advisor-shortcut-category')||{}).value||''):spec.cat;
+      if(!cat)throw new Error('請選擇消費項目');
+      await apiPost({action:'expense',date:today().replace(/-/g,'/'),cat:cat,account:spec.account,amount:amount,note:spec.note});
+    }
+    if(msg){msg.textContent='✓ 已記錄：'+spec.title;msg.className='advisor-shortcut-msg ok';}
+    if(amountEl)amountEl.value='';
+  }catch(e){
+    if(msg){msg.textContent='✗ '+(e&&e.message?e.message:'寫入失敗');msg.className='advisor-shortcut-msg err';}
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='立即記錄';}
+  }
+}
+
 function advisorGo(panel, tab){
   closeAdvisorDialog();
   // 開啟面板
