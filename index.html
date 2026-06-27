@@ -144,6 +144,8 @@ body::after{
   text-align:center;
 }
 .advisor-duo-role:hover{transform:translateY(-6px) scale(1.04);filter:brightness(1.08)}
+.advisor-duo-role.pangtong{transform:translateX(-10px)}
+.advisor-duo-role.pangtong:hover{transform:translateX(-10px) translateY(-6px) scale(1.04)}
 .advisor-duo-stage{
   height:206px;
   display:flex;
@@ -2420,13 +2422,13 @@ body::after{
     <div class="hdr-left">
       <div class="hdr-char-wrap advisor-duo-wrap">
         <div class="advisor-duo" aria-label="選擇軍師">
-          <button class="advisor-duo-role zhuge" type="button" onclick="openAdvisorDialog()" title="諸葛亮 · 快捷政務">
-            <span class="advisor-duo-stage"><img src="advisor-zhuge.png" alt="諸葛亮軍師"></span>
-            <span class="advisor-duo-label">諸葛亮</span>
-          </button>
           <button class="advisor-duo-role pangtong" type="button" onclick="openAdvisorAIFromOrb(event)" title="龐統 · 軍師AI">
             <span class="advisor-duo-stage"><img src="pangtong.png" alt="龐統軍師"></span>
             <span class="advisor-duo-label">龐統</span>
+          </button>
+          <button class="advisor-duo-role zhuge" type="button" onclick="openAdvisorDialog()" title="諸葛亮 · 快捷政務">
+            <span class="advisor-duo-stage"><img src="advisor-zhuge.png" alt="諸葛亮軍師"></span>
+            <span class="advisor-duo-label">諸葛亮</span>
           </button>
         </div>
         <div class="hdr-char-vignette"></div>
