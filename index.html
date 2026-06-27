@@ -10121,14 +10121,14 @@ async function advisorAIShowMonthlyAssetBrief(){
     ]);
     var monthData=results[0].status==='fulfilled'?(results[0].value||{}):{};
     var foodhouse=results[1].status==='fulfilled'?(results[1].value||{}):{};
-    var foodhouseMonthly=((foodhouse.core||{}).monthly)||{};
+    var foodhouseMonthly=((foodhouse.core||{}).monthly)||foodhouse.monthly||{};
     var monthly=Object.assign({},foodhouseMonthly,monthData);
     var monthIncome=Number(monthly.income)||0;
     var monthExpense=Number(monthly.expense)||0;
     var monthNet=monthData.net!=null&&!isNaN(Number(monthData.net))?Number(monthData.net):(monthIncome-monthExpense);
     var monthSavingRate=monthly.savingRate!=null&&monthly.savingRate!==''?String(monthly.savingRate):'—';
     if(monthSavingRate!=='—'&&monthSavingRate.indexOf('%')<0)monthSavingRate=monthSavingRate+'%';
-    var cats=(foodhouseMonthly.categories||[])
+    var cats=(foodhouseMonthly.categories||monthData.categories||[])
       .filter(function(item){return item&&item.name&&Number(item.amount)>0;})
       .sort(function(a,b){return (Number(b.amount)||0)-(Number(a.amount)||0);})
       .slice(0,2);
