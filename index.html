@@ -9556,6 +9556,7 @@ function closeAdvisorAIStandalone(){
     panel.innerHTML='';
   }
   if(advisorShortcutOpenKind==='ai')advisorShortcutOpenKind='';
+  advisorAIScheduleOpen=false;
 }
 function openAdvisorDialog(){
   closeAdvisorAIStandalone();
@@ -9634,6 +9635,7 @@ function advisorShortcutCategoryOptions(){
 var advisorDividendSelection=null;
 var advisorDividendMemoPending=null;
 var advisorShortcutOpenKind='';
+var advisorAIScheduleOpen=false;
 
 function closeAdvisorShortcutPanel(){
   var panel=document.getElementById('advisor-shortcut-panel');
@@ -9641,6 +9643,7 @@ function closeAdvisorShortcutPanel(){
   advisorShortcutOpenKind='';
   advisorDividendSelection=null;
   advisorDividendMemoPending=null;
+  advisorAIScheduleOpen=false;
 }
 
 function isAdvisorShortcutOpen(kind){
@@ -9659,7 +9662,7 @@ function toggleAdvisorAI(){
 function advisorAIHeaderHtml(title){
   return `<button class="advisor-ai-close" type="button" onclick="closeAdvisorAIStandalone()" aria-label="關閉軍師AI">×</button>
     <div class="advisor-ai-head-row">
-      <button class="advisor-ai-agenda-btn" type="button" onclick="advisorAIShowSchedule(this)">📜 朝中政務</button>
+      <button class="advisor-ai-agenda-btn" type="button" onclick="advisorAIShowSchedule(this)" aria-expanded="${advisorAIScheduleOpen?'true':'false'}">${advisorAIScheduleOpen?'📜 收合政務':'📜 朝中政務'}</button>
       <div class="advisor-shortcut-title">🗡️主公，今日有何吩咐?</div>
     </div>`;
 }
@@ -9708,6 +9711,7 @@ function openAdvisorAIAuthPanel(panel){
   if(!panel)return;
   advisorShortcutOpenKind='ai';
   advisorDividendSelection=null;
+  advisorAIScheduleOpen=false;
   panel.classList.add('open');
   panel.innerHTML=`${advisorAIHeaderHtml('軍師AI 驗證')}
     <div class="advisor-shortcut-hint">${ADVISOR_AI_PASSCODE?'請輸入軍師AI通行令；驗證通過後，本分頁可使用軍師AI。':'尚未設定軍師AI通行令，請先到設定建立通行令。'}</div>
@@ -9758,6 +9762,7 @@ function openAdvisorAI(targetPanel){
   }
   advisorShortcutOpenKind='ai';
   advisorDividendSelection=null;
+  advisorAIScheduleOpen=false;
   panel.innerHTML=`${advisorAIHeaderHtml('🗡️主公，請下令')}
     <div class="advisor-ai-portrait"><img class="advisor-ai-portrait-img" src="pangtong.png" alt="龐統軍師"></div>
     <div class="advisor-ai-row">
@@ -10095,8 +10100,14 @@ async function advisorAIShowSchedule(btn){
   }
   var panel=advisorAIActivePanel();
   if(!panel)return;
+  if(advisorAIScheduleOpen){
+    advisorAIScheduleOpen=false;
+    openAdvisorAI(panel);
+    return;
+  }
   advisorShortcutOpenKind='ai';
   advisorDividendSelection=null;
+  advisorAIScheduleOpen=true;
   panel.innerHTML=`${advisorAIHeaderHtml()}
     <div class="advisor-ai-portrait"><img class="advisor-ai-portrait-img" src="pangtong.png" alt="龐統軍師"></div>
     <div class="advisor-ai-result">
