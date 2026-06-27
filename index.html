@@ -9594,6 +9594,41 @@ function advisorAITransferAliases(){
   ];
 }
 
+function advisorAIAccountLookupAliases(){
+  return [
+    {label:'💰Cash',keys:['現金','cash','錢包']},
+    {label:'💵國泰Stock',keys:['國泰s','國泰stock','國泰證券','國泰股票']},
+    {label:'🔖中國信託',keys:['中國','中信','中國信託']},
+    {label:'🟡將來銀行',keys:['將來','將來銀行']},
+    {label:'🏔️玉山銀行',keys:['玉山','玉山銀行']},
+    {label:'🟥永豐銀行',keys:['永豐','永豐銀行']},
+    {label:'🌳國泰Money',keys:['國泰m','國泰money','國泰money']},
+    {label:'💳Cube',keys:['cube','CUBE']},
+    {label:'🧚Sis 國泰世華',keys:['sis國泰','sis','sis國泰世華']}
+  ];
+}
+
+function advisorAIResolveAccountLookup(text){
+  var key=advisorAICompact(text).replace(/[?？]/g,'').replace(/(查帳|餘額|帳戶|多少|有多少)$/g,'');
+  if(!key)return '';
+  var aliases=advisorAIAccountLookupAliases();
+  for(var i=0;i<aliases.length;i++){
+    var keys=aliases[i].keys.concat([aliases[i].label]);
+    for(var j=0;j<keys.length;j++){
+      var alias=advisorAICompact(keys[j]);
+      if(key===alias||key.indexOf(alias)>=0||alias.indexOf(key)>=0)return aliases[i].label;
+    }
+  }
+  return '';
+}
+
+function advisorAIAccountLookupCommand(raw){
+  var text=String(raw||'').trim();
+  if(!/[?？]\s*$/.test(text))return null;
+  var account=advisorAIResolveAccountLookup(text);
+  return account?{intent:'accountLookup',account:account}:{intent:'unknown'};
+}
+
 function advisorAIResolveTransferTarget(part){
   var key=advisorAICompact(part).replace(/^(從|由)/,'').replace(/(帳戶|銀行|股票|標的)$/,'');
   if(!key)return '';
@@ -9752,6 +9787,8 @@ function advisorAICommand(raw){
   var text=advisorAINormalize(raw);
   var compact=advisorAICompact(raw);
   var amount=advisorAIAmount(raw);
+  var accountLookup=advisorAIAccountLookupCommand(raw);
+  if(accountLookup)return accountLookup;
   var transfer=advisorAITransferCommand(raw,amount);
   if(transfer)return transfer;
   var stockSell=text.match(/賣出\s*(\d+(?:\.\d+)?)\s*股\s*([A-Za-z0-9]+)\s*(\d+(?:\.\d+)?)/i);
@@ -9845,6 +9882,10 @@ async function runAdvisorAICommand(btn){
       await advisorAIShowDividendMemoPreview(cmd);
       return;
     }
+    if(cmd.intent==='accountLookup'){
+      await advisorAIShowAccountBalance(cmd.account);
+      return;
+    }
     if(cmd.intent==='stockSell'){
       if(panel)panel.innerHTML=`${advisorAIHeaderHtml('軍師AI V1')}
         ${advisorAIResultHtml('請確認股票交易',['賣出股票：'+cmd.symbol,'股數：'+cmd.shares,'金額：'+fmtFull(cmd.amount)])}
@@ -9903,6 +9944,34 @@ async function advisorAIRecordDividend(symbol,amount){
   });
   invalidateDividendCenter();
   if(panel)panel.innerHTML=`${advisorAIHeaderHtml('軍師AI V1')}${advisorAIResultHtml('已記錄配息入帳',['標的：'+(row.displaySymbol||row.symbol||symbol),'金額：'+fmtFull(amount)])}`;
+}
+
+function advisorAIAccountMatches(rowName,target){
+  var a=advisorAICompact(rowName);
+  var b=advisorAICompact(target);
+  if(!a||!b)return false;
+  if(a===b||a.indexOf(b)>=0||b.indexOf(a)>=0)return true;
+  var aliases=advisorAIAccountLookupAliases().find(function(item){return item.label===target;});
+  if(!aliases)return false;
+  return aliases.keys.concat([aliases.label]).some(function(key){
+    var k=advisorAICompact(key);
+    return !!k&&(a===k||a.indexOf(k)>=0||k.indexOf(a)>=0);
+  });
+}
+
+async function advisorAIShowAccountBalance(account){
+  var panel=advisorAIActivePanel();
+  if(!API_URL)throw new Error('尚未設定 API URL，無法查帳。');
+  var rows=await apiGet({action:'accounts'});
+  var row=(rows||[]).find(function(item){return advisorAIAccountMatches(item&&item.name,account);});
+  if(!row)throw new Error('找不到帳戶：'+account);
+  var lines=[
+    '帳戶：'+(row.name||account),
+    '餘額：'+fmtFull(row.value)
+  ];
+  if(row.stockValue!=null&&!isNaN(Number(row.stockValue)))lines.push('股票市值：'+fmtFull(row.stockValue));
+  if(row.note)lines.push('備註：'+row.note);
+  if(panel)panel.innerHTML=`${advisorAIHeaderHtml('軍師AI V1')}${advisorAIResultHtml('查帳結果',lines)}`;
 }
 
 async function advisorAIShowDividendMemoPreview(cmd){
