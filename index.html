@@ -227,6 +227,7 @@ body::after{
   isolation:isolate;
 }
 .court-agenda{
+  display:none;
   position:absolute;
   left:50%;
   top:9px;
@@ -727,13 +728,17 @@ body::after{
 .advisor-ai-standalone::before{content:'';position:absolute;left:-10px;top:42px;border:5px solid transparent;border-right-color:rgba(232,192,80,.55)}
 .advisor-ai-standalone::after{content:'';position:absolute;left:-8px;top:43px;border:4px solid transparent;border-right-color:#1a1005}
 .advisor-ai-standalone.open{opacity:1;pointer-events:auto;transform:translateX(-50%) translateY(0)}
-.advisor-ai-standalone .advisor-shortcut-title{font-family:'Noto Serif TC',serif;font-size:26px;letter-spacing:2px;text-align:center;margin:2px 34px 16px 0;color:#f4e5b7;text-shadow:0 0 16px rgba(232,192,80,.22)}
+.advisor-ai-head-row{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:10px;margin:2px 34px 16px 0}
+.advisor-ai-agenda-btn{border:1px solid rgba(232,192,80,.46);border-radius:999px;background:linear-gradient(145deg,rgba(123,85,19,.92),rgba(42,27,8,.92));color:#f6ddb0;font-family:var(--sans);font-size:12px;font-weight:950;letter-spacing:1px;padding:8px 12px;cursor:pointer;white-space:nowrap;box-shadow:0 0 14px rgba(232,192,80,.14),inset 0 1px 0 rgba(255,246,216,.18);text-shadow:0 0 9px rgba(232,192,80,.24)}
+.advisor-ai-agenda-btn:hover{filter:brightness(1.08);box-shadow:0 0 20px rgba(232,192,80,.24),inset 0 1px 0 rgba(255,246,216,.22)}
+.advisor-ai-agenda-btn:disabled{opacity:.55;cursor:wait}
+.advisor-ai-standalone .advisor-shortcut-title{font-family:'Noto Serif TC',serif;font-size:26px;letter-spacing:2px;text-align:center;margin:0;color:#f4e5b7;text-shadow:0 0 16px rgba(232,192,80,.22)}
 .advisor-ai-close{position:absolute;top:8px;right:10px;width:24px;height:24px;border:1px solid rgba(232,192,80,.34);border-radius:999px;background:rgba(232,192,80,.08);color:#e8c050;font-size:16px;font-weight:900;line-height:20px;cursor:pointer;box-shadow:0 0 12px rgba(232,192,80,.12);transition:background .16s,border-color .16s,transform .16s}
 .advisor-ai-close:hover{background:rgba(232,192,80,.18);border-color:rgba(232,192,80,.7);transform:scale(1.05)}
 .advisor-close{position:absolute;top:10px;right:12px;background:none;border:none;color:#5a4018;font-size:14px;cursor:pointer;transition:color .2s;line-height:1;padding:2px}
 .advisor-close:hover{color:var(--gold)}
 @media(max-width:480px){.advisor-overlay{padding:52px 0 0 6px}.advisor-img{width:clamp(98px,25vw,120px)}.advisor-dialog{margin-top:26px;margin-left:-14px;width:calc(100vw - 98px);padding:12px 12px 10px}.advisor-command-head{gap:6px;margin-right:18px}.advisor-command-title{font-size:15px;letter-spacing:.5px}.advisor-practice-btn{min-height:26px;padding:4px 6px;font-size:10px}.advisor-reminder-card{padding:10px 11px 11px}.advisor-reminder-title{font-size:12px}.advisor-reminder-text{font-size:12px;line-height:1.68}.advisor-btn-grid{gap:8px}.advisor-menu-toggle{min-height:42px;font-size:16px;letter-spacing:2px}.advisor-menu-mark{width:20px;height:20px;font-size:11px}.advisor-btn-group{gap:6px;border-radius:7px}.advisor-menu-section.is-open .advisor-btn-group{padding:7px;max-height:220px}.advisor-btn{font-size:12px;padding:8px 4px;letter-spacing:0;gap:3px}.advisor-btn-tag{width:14px;height:14px;font-size:9px}.advisor-btn-spacer{min-height:32px}}
-@media(max-width:480px){.advisor-ai-standalone{left:calc(50% + 40px);top:108px;width:calc(100vw - 122px);padding:15px 14px 13px;border-radius:0 14px 14px 14px}.advisor-ai-portrait{left:-112px;top:-31px;width:124px}.advisor-ai-portrait-img{max-height:168px}.advisor-ai-standalone .advisor-shortcut-title{font-size:22px;line-height:1.35;margin-right:28px;margin-bottom:14px}.advisor-ai-examples-grid{grid-template-columns:1fr}}
+@media(max-width:480px){.advisor-ai-standalone{left:calc(50% + 40px);top:108px;width:calc(100vw - 122px);padding:15px 14px 13px;border-radius:0 14px 14px 14px}.advisor-ai-portrait{left:-112px;top:-31px;width:124px}.advisor-ai-portrait-img{max-height:168px}.advisor-ai-head-row{grid-template-columns:auto minmax(0,1fr);gap:7px;margin-right:28px;margin-bottom:14px}.advisor-ai-agenda-btn{font-size:11px;padding:7px 9px;letter-spacing:0}.advisor-ai-standalone .advisor-shortcut-title{font-size:20px;line-height:1.35}.advisor-ai-examples-grid{grid-template-columns:1fr}}
 
 .military-lord{
   position:absolute;
@@ -9652,7 +9657,11 @@ function toggleAdvisorAI(){
 }
 
 function advisorAIHeaderHtml(title){
-  return `<button class="advisor-ai-close" type="button" onclick="closeAdvisorAIStandalone()" aria-label="關閉軍師AI">×</button><div class="advisor-shortcut-title">🗡️主公，請確認以下訊息</div>`;
+  return `<button class="advisor-ai-close" type="button" onclick="closeAdvisorAIStandalone()" aria-label="關閉軍師AI">×</button>
+    <div class="advisor-ai-head-row">
+      <button class="advisor-ai-agenda-btn" type="button" onclick="advisorAIShowSchedule(this)">📜 朝中政務</button>
+      <div class="advisor-shortcut-title">🗡️主公，今日有何吩咐?</div>
+    </div>`;
 }
 
 function advisorAIExamplesHtml(){
@@ -9665,6 +9674,7 @@ function advisorAIExamplesHtml(){
     ['股票賣出','賣出 100股 IAU 156000'],
     ['股票買入','買入 12.02股 施羅德 54000'],
     ['開啟頁面','糧 / 看年度財報'],
+    ['行程待辦','行程 / 今日行程 / 待辦'],
     ['載具會員','載具 / 711 / 全']
   ];
   return `<div class="advisor-ai-examples">
@@ -10033,6 +10043,7 @@ function advisorAICommand(raw){
   var text=advisorAINormalize(raw);
   var compact=advisorAICompact(raw);
   var amount=advisorAIAmount(raw);
+  if(compact==='行程'||compact.indexOf('今日行程')>=0||compact.indexOf('待辦')>=0||compact.indexOf('朝中政務')>=0)return {intent:'schedule'};
   var openTarget=advisorAIOpenTarget(raw);
   if(openTarget)return openTarget;
   var accountLookup=advisorAIAccountLookupCommand(raw);
@@ -10075,6 +10086,59 @@ function advisorAISetMessage(text,type){
 
 function advisorAIResultHtml(title,lines){
   return `<div class="advisor-ai-result"><strong>${esc(title)}</strong><br>${(lines||[]).map(esc).join('<br>')}</div>`;
+}
+
+async function advisorAIShowSchedule(btn){
+  if(!advisorAIIsVerified()){
+    openAdvisorAIAuthPanel(advisorAIActivePanel());
+    return;
+  }
+  var panel=advisorAIActivePanel();
+  if(!panel)return;
+  advisorShortcutOpenKind='ai';
+  advisorDividendSelection=null;
+  panel.innerHTML=`${advisorAIHeaderHtml()}
+    <div class="advisor-ai-portrait"><img class="advisor-ai-portrait-img" src="pangtong.png" alt="龐統軍師"></div>
+    <div class="advisor-ai-result">
+      <strong>朝中政務</strong><br>
+      軍師正在調閱待辦與今日行程…
+    </div>
+    <div class="advisor-shortcut-msg" id="advisor-ai-msg"></div>`;
+  if(!API_URL){
+    advisorAISetMessage('尚未設定 Web App API，無法調閱朝中政務。','err');
+    return;
+  }
+  try{
+    if(btn)btn.disabled=true;
+    var results=await Promise.allSettled([
+      apiGet({action:'todayTasks'}),
+      apiGet({action:'todayCalendar',mode:'today'})
+    ]);
+    var taskHtml=results[0].status==='fulfilled'
+      ? renderGoogleTasks(results[0].value.tasks||[])
+      : `<div class="today-agenda-error">${esc(results[0].reason&&results[0].reason.message||'Google Tasks 讀取失敗')}</div>`;
+    var calendarHtml=results[1].status==='fulfilled'
+      ? renderCalendarAgenda(results[1].value.events||[],'today')
+      : `<div class="today-agenda-error">${esc(results[1].reason&&results[1].reason.message||'行程讀取失敗')}</div>`;
+    panel.innerHTML=`${advisorAIHeaderHtml()}
+      <div class="advisor-ai-portrait"><img class="advisor-ai-portrait-img" src="pangtong.png" alt="龐統軍師"></div>
+      <div class="advisor-ai-result">
+        <strong>朝中政務</strong>
+        <section class="agenda-section">
+          <div class="agenda-section-title">待辦事項</div>
+          ${taskHtml}
+        </section>
+        <section class="agenda-section">
+          <div class="agenda-section-title">今日行程</div>
+          ${calendarHtml}
+        </section>
+      </div>
+      <div class="advisor-shortcut-msg" id="advisor-ai-msg"></div>`;
+  }catch(err){
+    panel.innerHTML=`${advisorAIHeaderHtml()}${advisorAIResultHtml('朝中政務讀取失敗',[err.message||'請確認主 Web App 已完成 Calendar / Tasks 授權。'])}`;
+  }finally{
+    if(btn)btn.disabled=false;
+  }
 }
 
 function advisorAIRequireWrite(){
@@ -10126,6 +10190,10 @@ async function runAdvisorAICommand(btn){
     }
     if(cmd.intent==='maintenance'){
       await advisorAIShowMaintenance();
+      return;
+    }
+    if(cmd.intent==='schedule'){
+      await advisorAIShowSchedule();
       return;
     }
     if(cmd.intent==='advisorDividendMemo'){
