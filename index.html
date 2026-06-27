@@ -146,6 +146,8 @@ body::after{
 .advisor-duo-role:hover{transform:translateY(-6px) scale(1.04);filter:brightness(1.08)}
 .advisor-duo-role.pangtong{transform:translateX(-10px)}
 .advisor-duo-role.pangtong:hover{transform:translateX(-10px) translateY(-6px) scale(1.04)}
+.advisor-duo-role.zhuge .advisor-duo-stage{transform:translateY(-16px)}
+.advisor-duo-role.zhuge .advisor-duo-label{margin-top:-24px}
 .advisor-duo-stage{
   height:206px;
   display:flex;
@@ -512,6 +514,51 @@ body::after{
 
 .art{width:100%;height:200px;position:relative;overflow:hidden;border-bottom:1px solid #5a4018}
 .art svg{width:100%;height:100%;display:block}
+.card-scrolls{
+  display:grid;
+  gap:7px;
+  padding:9px 9px 11px;
+  background:
+    radial-gradient(circle at 50% 0%,rgba(232,192,80,.16),transparent 45%),
+    linear-gradient(180deg,rgba(17,12,6,.96),rgba(7,5,3,.98));
+  border-top:1px solid rgba(232,192,80,.22);
+}
+.card-scrolls.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.card-scroll-btn{
+  border:1px solid rgba(123,86,32,.62);
+  border-radius:12px;
+  min-height:36px;
+  padding:8px 7px;
+  color:#f5e8c8;
+  background:
+    linear-gradient(90deg,rgba(66,38,12,.74),rgba(166,119,28,.45),rgba(66,38,12,.74)),
+    radial-gradient(circle at 50% 20%,rgba(255,244,185,.18),transparent 55%);
+  box-shadow:inset 0 1px 0 rgba(255,239,175,.18),0 4px 12px rgba(0,0,0,.35);
+  font-family:var(--sans);
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:1px;
+  cursor:pointer;
+  transition:transform .18s,filter .18s,border-color .18s;
+}
+.card-scroll-btn::before{
+  content:'卷';
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:18px;
+  height:18px;
+  margin-right:5px;
+  border-radius:50%;
+  color:#f8e7a7;
+  background:rgba(20,12,4,.45);
+  font-size:10px;
+}
+.card-scroll-btn:hover{
+  transform:translateY(-2px);
+  filter:brightness(1.1);
+  border-color:rgba(232,192,80,.68);
+}
 .gold-rule{height:2.5px;background:linear-gradient(90deg,transparent,#8a6010 15%,#e0c060 50%,#8a6010 85%,transparent)}
 
 .info{padding:13px 14px 5px;text-align:center}
@@ -2426,7 +2473,7 @@ body::after{
             <span class="advisor-duo-stage"><img src="pangtong.png" alt="龐統軍師"></span>
             <span class="advisor-duo-label">龐統</span>
           </button>
-          <button class="advisor-duo-role zhuge" type="button" onclick="openAdvisorDialog()" title="諸葛亮 · 快捷政務">
+          <button class="advisor-duo-role zhuge" type="button" title="策 諸葛亮">
             <span class="advisor-duo-stage"><img src="advisor-zhuge.png" alt="諸葛亮軍師"></span>
             <span class="advisor-duo-label">諸葛亮</span>
           </button>
@@ -3423,6 +3470,79 @@ function closePanel(){
 }
 function overlayClick(e){if(e.target===document.getElementById('overlay'))closePanel()}
 
+function openEmpireCardShortcut(event,panel,tab){
+  if(event&&event.stopPropagation)event.stopPropagation();
+  if(panel==='wall'){
+    openTravelMemoForDate(new Date());
+    return;
+  }
+  if(currentPanel!==panel){
+    openPanel(panel);
+  }else{
+    document.getElementById('overlay').classList.add('open');
+  }
+  if(tab){
+    setTimeout(function(){
+      var btn=document.querySelector('.ptab[onclick*="'+tab+'"]');
+      if(btn)switchTab(btn,tab);
+    },0);
+  }
+}
+
+function ensureEmpireCardScrolls(){
+  var specs={
+    'c-foodhouse':[{label:'打開糧倉',panel:'foodhouse'}],
+    'c-finance':[
+      {label:'國庫現況',panel:'finance',tab:'finance-accs'},
+      {label:'年度財報',panel:'finance',tab:'domestic-yearly'},
+      {label:'配息試算',panel:'finance',tab:'div-calc'}
+    ],
+    'c-domestic':[
+      {label:'快速記帳',panel:'domestic',tab:'booking-form'},
+      {label:'最近記錄',panel:'domestic',tab:'booking-recent'},
+      {label:'持股備忘',panel:'domestic',tab:'dividend-center'}
+    ],
+    'c-market':[
+      {label:'市場快報',panel:'market',tab:'market-watch'},
+      {label:'總經戰情',panel:'market',tab:'macro-overview'}
+    ],
+    'c-council':[
+      {label:'部隊陣容',panel:'council',tab:'council-roster'},
+      {label:'軍團概覽',panel:'council',tab:'council-holdings'}
+    ],
+    'c-medical':[
+      {label:'快速記錄',panel:'medical',tab:'medical-quick'},
+      {label:'抽排記錄',panel:'medical',tab:'medical-tarot'},
+      {label:'牌卡統計',panel:'medical',tab:'medical-stats'},
+      {label:'疼痛地圖',panel:'medical',tab:'medical-painmap'}
+    ],
+    'c-stars':[
+      {label:'命盤總覽',panel:'stars',tab:'stars-home'},
+      {label:'事件編年',panel:'stars',tab:'stars-chronicle'}
+    ],
+    'c-wall':[{label:'打開城牆',panel:'wall'}]
+  };
+  Object.keys(specs).forEach(function(id){
+    var card=document.getElementById(id);
+    if(!card||card.querySelector('.card-scrolls'))return;
+    var frame=card.querySelector('.frame')||card;
+    var items=specs[id];
+    var wrap=document.createElement('div');
+    wrap.className='card-scrolls'+(items.length>1?' two':'');
+    items.forEach(function(item){
+      var btn=document.createElement('button');
+      btn.className='card-scroll-btn';
+      btn.type='button';
+      btn.textContent=item.label;
+      btn.addEventListener('click',function(ev){
+        openEmpireCardShortcut(ev,item.panel,item.tab);
+      });
+      wrap.appendChild(btn);
+    });
+    frame.appendChild(wrap);
+  });
+}
+
 function setPanelHead(icon,en,zh){
   document.getElementById('p-icon').textContent=icon;
   document.getElementById('p-en').textContent=en;
@@ -3472,7 +3592,7 @@ function switchTab(btn,key){
 
 function renderStarsPanel(){
   setPanelHead('★','Zi Wei · Star Chart','司天監');
-  setTabs([{key:'stars-home',label:'命盤總覽'},{key:'stars-chronicle',label:'事件編年史'}]);
+  setTabs([{key:'stars-home',label:'命盤總覽'},{key:'stars-chronicle',label:'事件編年'}]);
   document.getElementById('p-body').innerHTML=`
     <div class="pane active" id="pane-stars-home">
       <div class="api-bar" onclick="openCfg()">
@@ -4059,7 +4179,7 @@ function fitZiwei(){
 
 function renderMedicalPanel(){
   setPanelHead('✚','Clinic · Recovery','醫館');
-  setTabs([{key:'medical-quick',label:'快速紀錄'},{key:'medical-tarot',label:'🃏 抽牌紀錄'},{key:'medical-stats',label:'📊 牌卡統計'},{key:'medical-painmap',label:'🧍 疼痛地圖'}]);
+  setTabs([{key:'medical-quick',label:'快速記錄'},{key:'medical-tarot',label:'抽排記錄'},{key:'medical-stats',label:'牌卡統計'},{key:'medical-painmap',label:'疼痛地圖'}]);
   var el=document.getElementById('p-body');
   if(!HEALTH_API_URL){
     el.innerHTML=`<div class="setup-notice">
@@ -7414,7 +7534,7 @@ function renderMarketPanel(){
 // ══════════════════════════════════════════
 function renderCouncilPanel(){
   setPanelHead('📜','War Room · Command','軍機處');
-  setTabs([{key:'council-roster',label:'部隊陣容'},{key:'council-holdings',label:'軍團概覽'},{key:'council-task',label:'軍師工單'}]);
+  setTabs([{key:'council-roster',label:'部隊陣容'},{key:'council-holdings',label:'軍團概覽'}]);
   var apiReady=hasMainApiCredentials();
   var lockedNotice=setupNotice();
   document.getElementById('p-body').innerHTML=`
@@ -9188,6 +9308,7 @@ function setupNotice(){
     if(navLunar)navLunar.textContent=lunarDateLabel(now);
   }
   updateDateDisplay();
+  ensureEmpireCardScrolls();
   initTodayAgenda();
   setTimeout(function(){
     if(hasMainApiCredentials())loadFoodhouseDashboard();
