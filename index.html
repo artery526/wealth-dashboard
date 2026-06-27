@@ -2643,7 +2643,7 @@ body::after{
 var API_URL = localStorage.getItem('wealth_api_url') || '';
 var WRITE_TOKEN = localStorage.getItem('wealth_write_token') || '';
 var ADVISOR_AI_PASSCODE = localStorage.getItem('wealth_advisor_ai_passcode') || '';
-var advisorAIVerified = localStorage.getItem('wealth_advisor_ai_verified') === advisorAIVerificationKey(ADVISOR_AI_PASSCODE);
+var advisorAIVerified = false;
 var cfg = (function(){
   try{
     var cached=JSON.parse(localStorage.getItem('wealth_booking_config_v1')||'null');
@@ -3284,6 +3284,7 @@ async function saveCfg(){
   localStorage.setItem('health_secret_key',healthKey);
   localStorage.setItem('wealth_advisor_ai_passcode',advisorAiPass);
   localStorage.removeItem('wealth_advisor_ai_verified');
+  localStorage.removeItem('wealth_advisor_ai_verified_for');
   medicalOptionsCache=null;
   closeCfg();
   try{
@@ -9456,9 +9457,13 @@ function advisorAIVerificationKey(passcode){
   return text?('v1:'+hash.toString(16)+':'+text.length):'';
 }
 
+function advisorAIStoredVerificationKey(){
+  return localStorage.getItem('wealth_advisor_ai_verified_for')||localStorage.getItem('wealth_advisor_ai_verified')||'';
+}
+
 function advisorAIIsVerified(){
   var key=advisorAIVerificationKey(ADVISOR_AI_PASSCODE);
-  return !!(ADVISOR_AI_PASSCODE&&advisorAIVerified&&localStorage.getItem('wealth_advisor_ai_verified')===key);
+  return !!(ADVISOR_AI_PASSCODE&&advisorAIStoredVerificationKey()===key);
 }
 
 function openAdvisorAIAuthPanel(panel){
@@ -9496,7 +9501,9 @@ function verifyAdvisorAI(btn){
   }
   if(value===ADVISOR_AI_PASSCODE){
     advisorAIVerified=true;
-    localStorage.setItem('wealth_advisor_ai_verified',advisorAIVerificationKey(ADVISOR_AI_PASSCODE));
+    var key=advisorAIVerificationKey(ADVISOR_AI_PASSCODE);
+    localStorage.setItem('wealth_advisor_ai_verified',key);
+    localStorage.setItem('wealth_advisor_ai_verified_for',key);
     openAdvisorAI(advisorAIActivePanel());
     return;
   }
