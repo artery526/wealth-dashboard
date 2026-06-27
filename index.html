@@ -625,6 +625,11 @@ body::after{
 .advisor-ai-row .advisor-shortcut-submit{width:auto;flex-shrink:0;padding-left:13px;padding-right:13px}
 .advisor-ai-input{flex:1;min-width:0;border:1px solid #2a1c08;border-radius:7px;background:#0a0804;color:var(--ink);font-family:var(--sans);font-size:14px;padding:10px 11px;outline:none}
 .advisor-ai-input:focus{border-color:var(--gold2)}
+.advisor-ai-examples{margin-top:10px;border:1px solid rgba(232,192,80,.16);border-radius:9px;background:rgba(0,0,0,.34);padding:9px 10px;font-family:var(--sans);font-size:11px;line-height:1.65;color:#9f8248}
+.advisor-ai-examples-title{font-size:10px;font-weight:950;letter-spacing:2px;color:#d5ad55;margin-bottom:4px}
+.advisor-ai-examples-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 9px}
+.advisor-ai-example{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.advisor-ai-example code{font-family:var(--mono);font-size:11px;color:#e7c77a;background:rgba(232,192,80,.08);border-radius:5px;padding:1px 4px}
 .advisor-ai-result{border:1px solid rgba(232,192,80,.24);border-radius:8px;background:rgba(232,192,80,.05);padding:9px 10px;margin-top:9px;font-family:var(--sans);font-size:12px;font-weight:850;line-height:1.7;color:#d8c18a}
 .advisor-ai-standalone{position:fixed;left:50%;top:132px;z-index:2950;width:min(360px,calc(100vw - 28px));border:1px solid rgba(232,192,80,.38);border-radius:12px;background:rgba(10,8,4,.92);backdrop-filter:blur(8px);padding:12px;box-shadow:0 18px 42px rgba(0,0,0,.62),0 0 28px rgba(232,192,80,.18);opacity:0;pointer-events:none;transform:translateX(-50%) translateY(-8px);transition:opacity .18s,transform .18s}
 .advisor-ai-standalone.open{opacity:1;pointer-events:auto;transform:translateX(-50%) translateY(0)}
@@ -633,7 +638,7 @@ body::after{
 .advisor-close{position:absolute;top:10px;right:12px;background:none;border:none;color:#5a4018;font-size:14px;cursor:pointer;transition:color .2s;line-height:1;padding:2px}
 .advisor-close:hover{color:var(--gold)}
 @media(max-width:480px){.advisor-overlay{padding:52px 0 0 6px}.advisor-img{width:clamp(98px,25vw,120px)}.advisor-dialog{margin-top:26px;margin-left:-14px;width:calc(100vw - 98px);padding:12px 12px 10px}.advisor-command-head{gap:6px;margin-right:18px}.advisor-command-title{font-size:15px;letter-spacing:.5px}.advisor-practice-btn{min-height:26px;padding:4px 6px;font-size:10px}.advisor-reminder-card{padding:10px 11px 11px}.advisor-reminder-title{font-size:12px}.advisor-reminder-text{font-size:12px;line-height:1.68}.advisor-btn-grid{gap:8px}.advisor-menu-toggle{min-height:42px;font-size:16px;letter-spacing:2px}.advisor-menu-mark{width:20px;height:20px;font-size:11px}.advisor-btn-group{gap:6px;border-radius:7px}.advisor-menu-section.is-open .advisor-btn-group{padding:7px;max-height:220px}.advisor-btn{font-size:12px;padding:8px 4px;letter-spacing:0;gap:3px}.advisor-btn-tag{width:14px;height:14px;font-size:9px}.advisor-btn-spacer{min-height:32px}}
-@media(max-width:480px){.advisor-ai-standalone{top:118px;width:calc(100vw - 22px)}}
+@media(max-width:480px){.advisor-ai-standalone{top:118px;width:calc(100vw - 22px)}.advisor-ai-examples-grid{grid-template-columns:1fr}}
 
 .military-lord{
   position:absolute;
@@ -9447,6 +9452,25 @@ function advisorAIHeaderHtml(title){
   return `<button class="advisor-ai-close" type="button" onclick="closeAdvisorAIStandalone()" aria-label="關閉軍師AI">×</button><div class="advisor-shortcut-title">${esc(title||'軍師AI V1')}</div>`;
 }
 
+function advisorAIExamplesHtml(){
+  var examples=[
+    ['轉帳','國泰s 轉 現金 1000'],
+    ['查帳','現金? / 國泰s?'],
+    ['支出','大餐 玉山 720'],
+    ['配息入帳','AIPI 配息 4065'],
+    ['配息備忘','美股 QQQI 0.63'],
+    ['股票賣出','賣出 100股 IAU 156000'],
+    ['開啟頁面','糧 / 看年度財報'],
+    ['載具會員','載具 / 711 / 全']
+  ];
+  return `<div class="advisor-ai-examples">
+    <div class="advisor-ai-examples-title">口令範例</div>
+    <div class="advisor-ai-examples-grid">${examples.map(function(row){
+      return `<div class="advisor-ai-example">${esc(row[0])}：<code>${esc(row[1])}</code></div>`;
+    }).join('')}</div>
+  </div>`;
+}
+
 function advisorAIVerificationKey(passcode){
   var text=String(passcode||'');
   var hash=0x811c9dc5;
@@ -9526,6 +9550,7 @@ function openAdvisorAI(targetPanel){
       <input class="advisor-ai-input" id="advisor-ai-input" type="text" placeholder="輸入指令…" onkeydown="advisorAIKey(event)">
       <button class="advisor-shortcut-submit" id="advisor-ai-submit" type="button" onclick="runAdvisorAICommand(this)">執行</button>
     </div>
+    ${advisorAIExamplesHtml()}
     <div class="advisor-shortcut-msg" id="advisor-ai-msg"></div>`;
   setTimeout(function(){
     var input=document.getElementById('advisor-ai-input');
