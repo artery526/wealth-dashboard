@@ -126,14 +126,14 @@ body::after{
   display:flex;
   align-items:flex-end;
   justify-content:center;
-  gap:30px;
+  gap:26px;
   width:100%;
-  min-height:220px;
+  min-height:238px;
   padding:10px 12px 0;
 }
 .advisor-duo-role{
   position:relative;
-  width:164px;
+  width:178px;
   border:0;
   background:transparent;
   color:var(--gold);
@@ -147,7 +147,7 @@ body::after{
 .advisor-duo-role.pangtong{transform:translateX(-10px)}
 .advisor-duo-role.pangtong:hover{transform:translateX(-10px) translateY(-6px) scale(1.04)}
 .advisor-duo-role.zhuge .advisor-duo-stage{transform:translateY(-16px)}
-.advisor-duo-role.zhuge .advisor-duo-stage::after{
+.advisor-duo-role .advisor-duo-stage::after{
   content:'';
   position:absolute;
   inset:10px 2px 0;
@@ -160,7 +160,7 @@ body::after{
 }
 .advisor-duo-stage{
   position:relative;
-  height:206px;
+  height:224px;
   display:flex;
   align-items:flex-end;
   justify-content:center;
@@ -1948,8 +1948,8 @@ body::after{
     overflow:visible;
   }
   .advisor-duo{min-height:176px;gap:12px;padding-top:4px}
-  .advisor-duo-role{width:124px}
-  .advisor-duo-stage{height:158px}
+  .advisor-duo-role{width:132px}
+  .advisor-duo-stage{height:170px}
   .advisor-duo-label{min-width:96px;font-size:11px;padding:4px 7px}
   .hdr-char{
     width:100%;
@@ -2002,8 +2002,8 @@ body::after{
   .hdr{margin-bottom:14px}
   .hdr-char-wrap{width:clamp(180px,66vw,260px)}
   .advisor-duo{min-height:156px;gap:8px}
-  .advisor-duo-role{width:112px}
-  .advisor-duo-stage{height:142px}
+  .advisor-duo-role{width:120px}
+  .advisor-duo-stage{height:154px}
   .advisor-duo-label{min-width:86px;font-size:10px;letter-spacing:0}
   .cards{
     grid-template-columns:repeat(2,minmax(0,clamp(138px,44vw,178px)));
@@ -2443,8 +2443,7 @@ body::after{
       <div class="hdr-char-wrap advisor-duo-wrap">
         <div class="advisor-duo" aria-label="選擇軍師">
           <button class="advisor-duo-role pangtong" type="button" onclick="openAdvisorAIFromOrb(event)" title="龐統 · 軍師AI">
-            <span class="advisor-duo-stage"><img src="pangtong.png" alt="龐統軍師"></span>
-            <span class="advisor-duo-label">龐統</span>
+            <span class="advisor-duo-stage"><video class="advisor-duo-video" src="wistomtree.mp4" poster="pangtong.png" muted playsinline preload="auto" aria-label="龐統軍師"></video></span>
           </button>
           <button class="advisor-duo-role zhuge" type="button" onclick="openAdvisorDialog()" title="策 諸葛亮">
             <span class="advisor-duo-stage"><video class="advisor-duo-video" src="wistom.mp4" poster="advisor-zhuge.png" muted playsinline preload="auto" aria-label="諸葛亮軍師"></video></span>
@@ -9389,7 +9388,7 @@ function initHeaderVideoPlayback(){
 initHeaderVideoPlayback();
 
 function initAdvisorDuoVideoPlayback(){
-  document.querySelectorAll('.advisor-duo-role.zhuge').forEach(function(role){
+  document.querySelectorAll('.advisor-duo-role').forEach(function(role){
     var video=role.querySelector('video.advisor-duo-video');
     if(!video)return;
     video.muted=true;
