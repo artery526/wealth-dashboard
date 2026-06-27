@@ -9962,6 +9962,8 @@ function advisorAICommand(raw){
   var text=advisorAINormalize(raw);
   var compact=advisorAICompact(raw);
   var amount=advisorAIAmount(raw);
+  var openTarget=advisorAIOpenTarget(raw);
+  if(openTarget)return openTarget;
   var accountLookup=advisorAIAccountLookupCommand(raw);
   if(accountLookup)return accountLookup;
   var transfer=advisorAITransferCommand(raw,amount);
