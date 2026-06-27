@@ -9676,6 +9676,7 @@ function advisorAIExamplesHtml(){
     ['配息備忘','美股 QQQI 0.63'],
     ['股票賣出','賣出 100股 IAU 156000'],
     ['股票買入','買入 12.02股 施羅德 54000'],
+    ['資產簡報','檢視本月資產'],
     ['開啟頁面','糧 / 看年度財報'],
     ['行程待辦','行程 / 今日行程 / 待辦'],
     ['載具會員','載具 / 711 / 全']
@@ -10049,6 +10050,7 @@ function advisorAICommand(raw){
   var compact=advisorAICompact(raw);
   var amount=advisorAIAmount(raw);
   if(compact==='行程'||compact.indexOf('今日行程')>=0||compact.indexOf('待辦')>=0||compact.indexOf('朝中政務')>=0)return {intent:'schedule'};
+  if(compact==='檢視本月資產'||compact==='本月資產'||compact.indexOf('本月資產')>=0)return {intent:'monthlyAssetBrief'};
   var openTarget=advisorAIOpenTarget(raw);
   if(openTarget)return openTarget;
   var accountLookup=advisorAIAccountLookupCommand(raw);
@@ -10091,6 +10093,62 @@ function advisorAISetMessage(text,type){
 
 function advisorAIResultHtml(title,lines){
   return `<div class="advisor-ai-result"><strong>${esc(title)}</strong><br>${(lines||[]).map(esc).join('<br>')}</div>`;
+}
+
+async function advisorAIShowMonthlyAssetBrief(){
+  if(!advisorAIIsVerified()){
+    openAdvisorAIAuthPanel(advisorAIActivePanel());
+    return;
+  }
+  var panel=advisorAIActivePanel();
+  if(!panel)return;
+  advisorShortcutOpenKind='ai';
+  advisorDividendSelection=null;
+  advisorAIScheduleOpen=false;
+  panel.innerHTML=`${advisorAIHeaderHtml()}
+    <div class="advisor-ai-portrait"><img class="advisor-ai-portrait-img" src="pangtong.png" alt="龐統軍師"></div>
+    <div class="advisor-ai-result"><strong>本月資產簡報</strong><br>軍師正在調閱年度財報與糧倉資訊…</div>
+    <div class="advisor-shortcut-msg" id="advisor-ai-msg"></div>`;
+  if(!API_URL){
+    advisorAISetMessage('尚未設定 Web App API，無法檢視本月資產。','err');
+    return;
+  }
+  try{
+    var year=String(new Date().getFullYear());
+    var ym=currentYM();
+    var results=await Promise.allSettled([
+      apiGet({action:'yearly',year:year}),
+      apiGet({action:'foodhouseDashboard',ym:ym})
+    ]);
+    var yearly=results[0].status==='fulfilled'?(results[0].value||{}):{};
+    var foodhouse=results[1].status==='fulfilled'?(results[1].value||{}):{};
+    var total=yearly.total||{};
+    var monthly=((foodhouse.core||{}).monthly)||{};
+    var cats=(monthly.categories||[])
+      .filter(function(item){return item&&item.name&&Number(item.amount)>0;})
+      .sort(function(a,b){return (Number(b.amount)||0)-(Number(a.amount)||0);})
+      .slice(0,2);
+    var lines=[
+      year+' 年度淨現金流：'+((Number(total.net)||0)>=0?'+':'')+fmtFull(total.net||0),
+      year+' 年度儲蓄率：'+(total.savingRate||'—'),
+      ym+' 本月最多支出：'
+    ];
+    if(cats.length){
+      cats.forEach(function(item,idx){
+        lines.push((idx+1)+'. '+item.name+'：'+fmtFull(item.amount));
+      });
+    }else{
+      lines.push('尚無本月支出項目資料');
+    }
+    if(results[0].status!=='fulfilled')lines.push('年度財報讀取失敗：'+(results[0].reason&&results[0].reason.message||'未知錯誤'));
+    if(results[1].status!=='fulfilled')lines.push('糧倉資訊讀取失敗：'+(results[1].reason&&results[1].reason.message||'未知錯誤'));
+    panel.innerHTML=`${advisorAIHeaderHtml()}
+      <div class="advisor-ai-portrait"><img class="advisor-ai-portrait-img" src="pangtong.png" alt="龐統軍師"></div>
+      ${advisorAIResultHtml('本月資產簡報',lines)}
+      <div class="advisor-shortcut-msg" id="advisor-ai-msg"></div>`;
+  }catch(err){
+    panel.innerHTML=`${advisorAIHeaderHtml()}${advisorAIResultHtml('本月資產簡報讀取失敗',[err.message||'請稍後再試。'])}`;
+  }
 }
 
 async function advisorAIShowSchedule(btn){
@@ -10205,6 +10263,10 @@ async function runAdvisorAICommand(btn){
     }
     if(cmd.intent==='schedule'){
       await advisorAIShowSchedule();
+      return;
+    }
+    if(cmd.intent==='monthlyAssetBrief'){
+      await advisorAIShowMonthlyAssetBrief();
       return;
     }
     if(cmd.intent==='advisorDividendMemo'){
