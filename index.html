@@ -126,14 +126,14 @@ body::after{
   display:flex;
   align-items:flex-end;
   justify-content:center;
-  gap:22px;
+  gap:30px;
   width:100%;
   min-height:220px;
   padding:10px 12px 0;
 }
 .advisor-duo-role{
   position:relative;
-  width:154px;
+  width:164px;
   border:0;
   background:transparent;
   color:var(--gold);
@@ -144,21 +144,26 @@ body::after{
   text-align:center;
 }
 .advisor-duo-role:hover{transform:translateY(-6px) scale(1.04);filter:brightness(1.08)}
+.advisor-duo-stage{
+  height:206px;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+}
 .advisor-duo-role img{
   display:block;
   width:100%;
-  height:190px;
+  height:100%;
   object-fit:contain;
   object-position:center bottom;
   filter:drop-shadow(0 0 22px rgba(232,192,80,.22));
 }
-.advisor-duo-role.pangtong img{height:204px}
 .advisor-duo-label{
   display:inline-flex;
   align-items:center;
   justify-content:center;
   gap:4px;
-  min-width:112px;
+  min-width:124px;
   margin-top:-8px;
   border:1px solid rgba(232,192,80,.45);
   border-radius:999px;
@@ -1922,9 +1927,8 @@ body::after{
   }
   .advisor-duo{min-height:176px;gap:12px;padding-top:4px}
   .advisor-duo-role{width:124px}
-  .advisor-duo-role img{height:148px}
-  .advisor-duo-role.pangtong img{height:158px}
-  .advisor-duo-label{min-width:92px;font-size:11px;padding:4px 7px}
+  .advisor-duo-stage{height:158px}
+  .advisor-duo-label{min-width:96px;font-size:11px;padding:4px 7px}
   .hdr-char{
     width:100%;
     height:auto;
@@ -1977,9 +1981,8 @@ body::after{
   .hdr-char-wrap{width:clamp(180px,66vw,260px)}
   .advisor-duo{min-height:156px;gap:8px}
   .advisor-duo-role{width:112px}
-  .advisor-duo-role img{height:132px}
-  .advisor-duo-role.pangtong img{height:142px}
-  .advisor-duo-label{min-width:82px;font-size:10px;letter-spacing:0}
+  .advisor-duo-stage{height:142px}
+  .advisor-duo-label{min-width:86px;font-size:10px;letter-spacing:0}
   .cards{
     grid-template-columns:repeat(2,minmax(0,clamp(138px,44vw,178px)));
     gap:10px;
@@ -2418,12 +2421,12 @@ body::after{
       <div class="hdr-char-wrap advisor-duo-wrap">
         <div class="advisor-duo" aria-label="選擇軍師">
           <button class="advisor-duo-role zhuge" type="button" onclick="openAdvisorDialog()" title="諸葛亮 · 快捷政務">
-            <img src="advisor-zhuge.png" alt="諸葛亮軍師">
-            <span class="advisor-duo-label">快捷政務</span>
+            <span class="advisor-duo-stage"><img src="advisor-zhuge.png" alt="諸葛亮軍師"></span>
+            <span class="advisor-duo-label">諸葛亮</span>
           </button>
           <button class="advisor-duo-role pangtong" type="button" onclick="openAdvisorAIFromOrb(event)" title="龐統 · 軍師AI">
-            <img src="pangtong.png" alt="龐統軍師">
-            <span class="advisor-duo-label">軍師AI</span>
+            <span class="advisor-duo-stage"><img src="pangtong.png" alt="龐統軍師"></span>
+            <span class="advisor-duo-label">龐統</span>
           </button>
         </div>
         <div class="hdr-char-vignette"></div>
