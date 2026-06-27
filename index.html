@@ -1552,6 +1552,7 @@ body::after{
   background:linear-gradient(160deg,#181208,#0e0a04);
   border:1px solid #5a4018;border-radius:12px;padding:24px;
   width:100%;max-width:400px;
+  max-height:86vh;overflow:auto;
 }
 .cfg-title{font-size:16px;font-weight:900;color:var(--gold);letter-spacing:2px;margin-bottom:6px}
 .cfg-sub{font-family:var(--sans);font-size:11px;color:#7a5c28;line-height:1.7;margin-bottom:20px}
@@ -2622,6 +2623,14 @@ body::after{
     <input class="cfg-input" type="text" id="cfg-health-url" placeholder="https://script.google.com/macros/s/.../exec">
     <label class="cfg-label">醫館密鑰（SECRET_KEY）</label>
     <input class="cfg-input" type="password" id="cfg-health-key" placeholder="輸入醫館密鑰">
+    <div style="border-top:1px solid #2a1c08;margin:14px 0 12px"></div>
+    <div class="cfg-sub" style="margin-bottom:10px">
+      軍師AI V2：V1 本地規則判斷不到時，才呼叫 DeepSeek 解析成安全 JSON。
+    </div>
+    <label class="cfg-label">DeepSeek API Key</label>
+    <input class="cfg-input" type="password" id="cfg-deepseek-key" placeholder="sk-...">
+    <label class="cfg-label">DeepSeek 模型</label>
+    <input class="cfg-input" type="text" id="cfg-deepseek-model" placeholder="deepseek-chat">
     <div class="cfg-actions">
       <button class="cfg-cancel" onclick="closeCfg()">取消</button>
       <button class="cfg-save" onclick="saveCfg()">儲存並連線</button>
@@ -2635,6 +2644,8 @@ body::after{
 // ══════════════════════════════════════════
 var API_URL = localStorage.getItem('wealth_api_url') || '';
 var WRITE_TOKEN = localStorage.getItem('wealth_write_token') || '';
+var DEEPSEEK_API_KEY = localStorage.getItem('wealth_deepseek_api_key') || '';
+var DEEPSEEK_MODEL = localStorage.getItem('wealth_deepseek_model') || 'deepseek-chat';
 var cfg = (function(){
   try{
     var cached=JSON.parse(localStorage.getItem('wealth_booking_config_v1')||'null');
@@ -3253,6 +3264,10 @@ function openCfg(){
   document.getElementById('cfg-token').value=WRITE_TOKEN;
   document.getElementById('cfg-health-url').value=HEALTH_API_URL;
   document.getElementById('cfg-health-key').value=HEALTH_SECRET_KEY;
+  var dsKey=document.getElementById('cfg-deepseek-key');
+  var dsModel=document.getElementById('cfg-deepseek-model');
+  if(dsKey)dsKey.value=DEEPSEEK_API_KEY;
+  if(dsModel)dsModel.value=DEEPSEEK_MODEL||'deepseek-chat';
   document.getElementById('cfg-overlay').classList.add('open');
 }
 function closeCfg(){document.getElementById('cfg-overlay').classList.remove('open')}
@@ -3262,12 +3277,17 @@ async function saveCfg(){
   var token=cleanToken(document.getElementById('cfg-token').value);
   var healthUrl=document.getElementById('cfg-health-url').value.trim();
   var healthKey=cleanToken(document.getElementById('cfg-health-key').value);
+  var deepseekKey=cleanToken((document.getElementById('cfg-deepseek-key')||{}).value||'');
+  var deepseekModel=((document.getElementById('cfg-deepseek-model')||{}).value||'deepseek-chat').trim()||'deepseek-chat';
   API_URL=url;WRITE_TOKEN=token;
   HEALTH_API_URL=healthUrl;HEALTH_SECRET_KEY=healthKey;
+  DEEPSEEK_API_KEY=deepseekKey;DEEPSEEK_MODEL=deepseekModel;
   localStorage.setItem('wealth_api_url',url);
   localStorage.setItem('wealth_write_token',token);
   localStorage.setItem('health_api_url',healthUrl);
   localStorage.setItem('health_secret_key',healthKey);
+  localStorage.setItem('wealth_deepseek_api_key',deepseekKey);
+  localStorage.setItem('wealth_deepseek_model',deepseekModel);
   medicalOptionsCache=null;
   closeCfg();
   try{
@@ -9536,6 +9556,142 @@ function advisorAITransferCommand(raw,amount){
   return {intent:'transfer',from:from,to:to,amount:amount,note:'軍師AI轉帳'};
 }
 
+function advisorAICategoryAliases(){
+  return [
+    {label:'🍴超商外食',keys:['外食','超商','早餐','午餐','晚餐','便當','咖啡']},
+    {label:'🍔大餐簡餐',keys:['大餐','簡餐','聚餐','火鍋','餐廳']},
+    {label:'🛒全聯食材',keys:['食材','全聯','買菜','菜錢']},
+    {label:'🏠家居用品',keys:['家居','家用品','生活用品','日用品']},
+    {label:'⛽️機車加油',keys:['加油','油錢','機車加油']},
+    {label:'📱APP訂閱',keys:['訂閱','app','APP','軟體']},
+    {label:'💻3C產品',keys:['3c','3C','網購','電腦','手機','電子']},
+    {label:'☎️電信網路',keys:['電信','網路','電話費','手機費']},
+    {label:'👩Sis學貸/支出',keys:['sis','Sis','學貸']},
+    {label:'🎅爸媽代繳',keys:['爸媽','媽媽','爸爸','代繳']}
+  ];
+}
+
+function advisorAIResolveCategory(text){
+  var key=advisorAICompact(text);
+  if(!key)return '';
+  var aliases=advisorAICategoryAliases();
+  for(var i=0;i<aliases.length;i++){
+    if(key===advisorAICompact(aliases[i].label)||key.indexOf(advisorAICompact(aliases[i].label))>=0)return aliases[i].label;
+    for(var j=0;j<aliases[i].keys.length;j++){
+      var alias=advisorAICompact(aliases[i].keys[j]);
+      if(alias&&(key===alias||key.indexOf(alias)>=0))return aliases[i].label;
+    }
+  }
+  var cats=(cfg&&cfg.categories&&cfg.categories.length)?cfg.categories:BOOKING_FALLBACK_CATEGORIES;
+  for(var k=0;k<cats.length;k++){
+    if(key===advisorAICompact(cats[k])||advisorAICompact(cats[k]).indexOf(key)>=0||key.indexOf(advisorAICompact(cats[k]))>=0)return cats[k];
+  }
+  return '';
+}
+
+function advisorAIResolveAccount(text){
+  return advisorAIResolveTransferTarget(text)||advisorAIAccount(text)||'';
+}
+
+function advisorAIOpenTarget(text){
+  var key=advisorAICompact(text);
+  if(key==='foodhouse')return {intent:'open',panel:'foodhouse',label:'糧倉'};
+  if(key==='market')return {intent:'open',panel:'market',tab:'market-watch',label:'市場快報'};
+  if(key==='finance')return {intent:'open',panel:'finance',tab:'finance-accs',label:'財政'};
+  if(key==='domestic')return {intent:'open',panel:'domestic',tab:'booking-form',label:'快速記帳'};
+  if(key==='council')return {intent:'open',panel:'council',label:'軍機處'};
+  if(key==='stars')return {intent:'open',panel:'stars',label:'司天監'};
+  if(key==='medical')return {intent:'open',panel:'medical',label:'醫館'};
+  if(key.indexOf('糧')>=0)return {intent:'open',panel:'foodhouse',label:'糧倉'};
+  if(key.indexOf('年度財報')>=0||key.indexOf('財報')>=0)return {intent:'open',panel:'finance',tab:'domestic-yearly',label:'年度財報'};
+  if(key.indexOf('總經')>=0)return {intent:'open',panel:'market',tab:'macro-overview',label:'總經戰情'};
+  if(key.indexOf('市集')>=0||key.indexOf('市場')>=0)return {intent:'open',panel:'market',tab:'market-watch',label:'市場快報'};
+  if(key.indexOf('內政')>=0||key.indexOf('記帳')>=0)return {intent:'open',panel:'domestic',tab:'booking-form',label:'快速記帳'};
+  return null;
+}
+
+function advisorAIDeepSeekSystemPrompt(){
+  return [
+    '你是軍師AI V2，只負責把中文短指令解析成 JSON，不執行任何動作。',
+    '只回 json / JSON object，不要 markdown，不要說明。',
+    '允許 intent: expense, transfer, dividend, stockSell, open, maintenance, copyCarrier, showCarrier, member, unknown。',
+    'expense 欄位: category, account, amount, note。',
+    'transfer 欄位: from, to, amount, note。',
+    'dividend 欄位: symbol, amount。',
+    'stockSell 欄位: symbol, shares, amount。',
+    'open 欄位: panel, tab, label。panel 只能 finance, foodhouse, market, domestic, council, stars, medical。',
+    'member 欄位: type，只能 seven 或 family。',
+    '帳戶/標的請盡量用使用者原文，例如 國泰s, 現金, 玉山, cube, AIPI；前端會再轉換成正式名稱。',
+    '如果金額不明或意圖不明，回 {"intent":"unknown"}。'
+  ].join('\\n');
+}
+
+async function advisorAIDeepSeekCommand(raw){
+  if(!DEEPSEEK_API_KEY)return {intent:'unknown',reason:'missing_key'};
+  var res=await fetchWithTimeout('https://api.deepseek.com/chat/completions',{
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'Authorization':'Bearer '+DEEPSEEK_API_KEY
+    },
+    body:JSON.stringify({
+      model:DEEPSEEK_MODEL||'deepseek-chat',
+      messages:[
+        {role:'system',content:advisorAIDeepSeekSystemPrompt()},
+        {role:'user',content:String(raw||'')}
+      ],
+      response_format:{type:'json_object'},
+      temperature:0,
+      max_tokens:260
+    })
+  },12000);
+  if(!res.ok)throw new Error('DeepSeek V2 連線失敗：HTTP '+res.status);
+  var data=await res.json();
+  var content=data&&data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content;
+  if(!content)throw new Error('DeepSeek V2 沒有回傳內容');
+  try{return JSON.parse(content);}catch(e){throw new Error('DeepSeek V2 回傳格式不是 JSON');}
+}
+
+function advisorAINormalizeDeepSeekCommand(cmd,raw){
+  cmd=cmd||{};
+  var intent=String(cmd.intent||'unknown');
+  var amount=Number(cmd.amount||0);
+  if(intent==='open')return advisorAIOpenTarget(cmd.label||cmd.panel||cmd.tab||raw)||{intent:'unknown'};
+  if(intent==='maintenance')return {intent:'maintenance'};
+  if(intent==='copyCarrier')return {intent:'copyCarrier'};
+  if(intent==='showCarrier')return {intent:'showCarrier'};
+  if(intent==='member'){
+    var type=String(cmd.type||'').toLowerCase();
+    if(type==='seven'||type==='7'||type==='711')return {intent:'member',type:'seven',label:'7-11會員'};
+    if(type==='family'||type==='全'||type==='全家')return {intent:'member',type:'family',label:'全家會員'};
+    return {intent:'unknown'};
+  }
+  if(intent==='transfer'){
+    var from=advisorAIResolveAccount(cmd.from||'');
+    var to=advisorAIResolveAccount(cmd.to||'');
+    if(from&&to&&amount>0)return {intent:'transfer',from:from,to:to,amount:amount,note:cmd.note||'軍師AI V2轉帳'};
+    return {intent:'unknown'};
+  }
+  if(intent==='expense'){
+    var category=advisorAIResolveCategory(cmd.category||raw);
+    var account=advisorAIResolveAccount(cmd.account||raw)||'';
+    if(category&&account&&amount>0)return {intent:'expense',category:category,account:account,amount:amount,note:cmd.note||'軍師AI V2'};
+    return {intent:'unknown'};
+  }
+  if(intent==='dividend'){
+    var symbol=String(cmd.symbol||'').trim().toUpperCase();
+    if(symbol&&amount>0)return {intent:'dividend',symbol:symbol,amount:amount};
+    return {intent:'unknown'};
+  }
+  if(intent==='stockSell'){
+    var sellSymbol=String(cmd.symbol||'').trim().toUpperCase();
+    var shares=Number(cmd.shares||0);
+    if(sellSymbol&&shares>0&&amount>0)return {intent:'stockSell',symbol:sellSymbol,shares:shares,amount:amount};
+    return {intent:'unknown'};
+  }
+  return {intent:'unknown'};
+}
+
 function advisorAICommand(raw){
   var text=advisorAINormalize(raw);
   var compact=advisorAICompact(raw);
@@ -9591,7 +9747,13 @@ async function runAdvisorAICommand(btn){
   if(btn&&btn.disabled)return;
   if(btn){btn.disabled=true;btn.textContent='判斷中…';}
   try{
-    if(cmd.intent==='unknown')throw new Error('V1 尚未辨識這句指令，可改用：提款2000、大餐 玉山 720、3C cube 320、載具。');
+    if(cmd.intent==='unknown'){
+      if(!DEEPSEEK_API_KEY)throw new Error('V1 尚未辨識；若要啟用 V2，請到設定填入 DeepSeek API Key。');
+      advisorAISetMessage('V1 未命中，軍師AI V2 召喚 DeepSeek 判讀中…','');
+      var aiCmd=await advisorAIDeepSeekCommand(raw);
+      cmd=advisorAINormalizeDeepSeekCommand(aiCmd,raw);
+      if(cmd.intent==='unknown')throw new Error('V2 仍無法安全判斷這句指令，請換更明確說法。');
+    }
     if(cmd.intent==='open'){
       closeAdvisorAIStandalone();
       advisorGo(cmd.panel,cmd.tab);
