@@ -9342,7 +9342,7 @@ function openAdvisorAI(targetPanel){
   advisorShortcutOpenKind='ai';
   advisorDividendSelection=null;
   panel.innerHTML=`${advisorAIHeaderHtml('軍師AI V1')}
-    <div class="advisor-shortcut-hint">本地指令路由器，優先 0 token 判斷。例：提款2000、大餐 玉山 720、AIPI 配息 4065、載具、711。</div>
+    <div class="advisor-shortcut-hint">本地指令路由器，優先 0 token 判斷。例：國泰s 轉 現金 1000、提款2000、大餐 玉山 720、AIPI 配息 4065、糧。</div>
     <div class="advisor-ai-row">
       <input class="advisor-ai-input" id="advisor-ai-input" type="text" placeholder="輸入指令…" onkeydown="advisorAIKey(event)">
       <button class="advisor-shortcut-submit" id="advisor-ai-submit" type="button" onclick="runAdvisorAICommand(this)">執行</button>
@@ -9384,15 +9384,81 @@ function advisorAIAccount(text){
   return '';
 }
 
+function advisorAIAmountToken(text){
+  var matches=String(text||'').match(/\d+(?:\.\d+)?/g)||[];
+  return matches.length?matches[matches.length-1]:'';
+}
+
+function advisorAITransferAliases(){
+  return [
+    {label:'💵國泰Stock',keys:['國泰s','國泰stock','國泰證券','國泰stock']},
+    {label:'💰Cash',keys:['現金','cash']},
+    {label:'🔖中國信託',keys:['中國','中信','中國信託']},
+    {label:'🟡將來銀行',keys:['將來','將來銀行']},
+    {label:'🏔️玉山銀行',keys:['玉山','玉山銀行']},
+    {label:'🟥永豐銀行',keys:['永豐','永豐銀行']},
+    {label:'🌳國泰Money',keys:['國泰m','國泰money','國泰money']},
+    {label:'💳Cube',keys:['cube']},
+    {label:'💛IAU',keys:['iau']},
+    {label:'📡QQQI',keys:['qqqi']},
+    {label:'🛢️MLPI',keys:['mlpi']},
+    {label:'🐉路博邁5G',keys:['台灣5g','路博邁5g','5g']},
+    {label:'🪄施羅德收益成長A2',keys:['施羅德','施羅德收益成長a2','a2']},
+    {label:'🎟️群益00985B',keys:['985b','00985b','群益00985b']},
+    {label:'💎AIPI',keys:['aipi']},
+    {label:'📡SPYI',keys:['spyi']},
+    {label:'🪖PLTY',keys:['plty']},
+    {label:'🐦‍🔥CHPY',keys:['chpy']},
+    {label:'⚒️GDXW',keys:['gdxw']},
+    {label:'💛GLDW',keys:['gldw']},
+    {label:'🪄00997A',keys:['997a','00997a']}
+  ];
+}
+
+function advisorAIResolveTransferTarget(part){
+  var key=advisorAICompact(part).replace(/^(從|由)/,'').replace(/(帳戶|銀行|股票|標的)$/,'');
+  if(!key)return '';
+  var aliases=advisorAITransferAliases();
+  for(var i=0;i<aliases.length;i++){
+    var keys=aliases[i].keys.concat([aliases[i].label]);
+    for(var j=0;j<keys.length;j++){
+      var alias=advisorAICompact(keys[j]).replace(/(帳戶|銀行|股票|標的)$/,'');
+      if(key===alias||key.indexOf(alias)>=0)return aliases[i].label;
+    }
+  }
+  return '';
+}
+
+function advisorAITransferCommand(raw,amount){
+  if(!amount)return null;
+  var compact=advisorAICompact(raw);
+  if(compact.indexOf('轉')<0&&compact.indexOf('->')<0&&compact.indexOf('=>')<0&&compact.indexOf('到')<0)return null;
+  var amountToken=advisorAIAmountToken(raw);
+  var route=compact;
+  if(amountToken){
+    var amountKey=advisorAICompact(amountToken);
+    var idx=route.lastIndexOf(amountKey);
+    if(idx>=0)route=route.slice(0,idx)+route.slice(idx+amountKey.length);
+  }
+  var parts=route.split(/(?:轉到|轉入|轉|到|->|=>|＞|→)/).filter(Boolean);
+  if(parts.length<2)return null;
+  var from=advisorAIResolveTransferTarget(parts[0]);
+  var to=advisorAIResolveTransferTarget(parts[1]);
+  if(!from||!to)return null;
+  return {intent:'transfer',from:from,to:to,amount:amount,note:'軍師AI轉帳'};
+}
+
 function advisorAICommand(raw){
   var text=advisorAINormalize(raw);
   var compact=advisorAICompact(raw);
   var amount=advisorAIAmount(raw);
+  var transfer=advisorAITransferCommand(raw,amount);
+  if(transfer)return transfer;
   var stockSell=text.match(/賣出\s*(\d+(?:\.\d+)?)\s*股\s*([A-Za-z0-9]+)\s*(\d+(?:\.\d+)?)/i);
   if(stockSell)return {intent:'stockSell',shares:parseFloat(stockSell[1]),symbol:stockSell[2].toUpperCase(),amount:parseFloat(stockSell[3])};
   if(compact.indexOf('提款')>=0&&amount>0)return {intent:'withdraw',amount:amount};
   if(compact.indexOf('年度財報')>=0)return {intent:'open',panel:'finance',tab:'domestic-yearly',label:'年度財報'};
-  if(compact.indexOf('糧倉')>=0)return {intent:'open',panel:'foodhouse',label:'糧倉'};
+  if(compact==='糧'||compact.indexOf('糧倉')>=0)return {intent:'open',panel:'foodhouse',label:'糧倉'};
   if(compact.indexOf('總經')>=0)return {intent:'open',panel:'market',tab:'macro-overview',label:'總經戰情'};
   if(compact.indexOf('維持率')>=0)return {intent:'maintenance'};
   if(compact.indexOf('複製載具')>=0)return {intent:'copyCarrier'};
@@ -9473,6 +9539,11 @@ async function runAdvisorAICommand(btn){
       return;
     }
     if(!advisorAIRequireWrite())return;
+    if(cmd.intent==='transfer'){
+      await apiPost({action:'transfer',date:today().replace(/-/g,'/'),from:cmd.from,to:cmd.to,amount:cmd.amount,label:'',note:cmd.note||'軍師AI轉帳'});
+      if(panel)panel.innerHTML=`${advisorAIHeaderHtml('軍師AI V1')}${advisorAIResultHtml('已記錄轉帳',[cmd.from+' → '+cmd.to,'金額：'+fmtFull(cmd.amount)])}`;
+      return;
+    }
     if(cmd.intent==='withdraw'){
       await apiPost({action:'transfer',date:today().replace(/-/g,'/'),from:'💵國泰Stock',to:'💰Cash',amount:cmd.amount,label:'',note:'日常提款'});
       if(panel)panel.innerHTML=`${advisorAIHeaderHtml('軍師AI V1')}${advisorAIResultHtml('已記錄日常提款',['國泰Stock → Cash','金額：'+fmtFull(cmd.amount)])}`;
