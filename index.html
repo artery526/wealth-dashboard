@@ -9663,6 +9663,7 @@ function advisorAIExamplesHtml(){
     ['配息入帳','AIPI 配息 4065'],
     ['配息備忘','美股 QQQI 0.63'],
     ['股票賣出','賣出 100股 IAU 156000'],
+    ['股票買入','買入 12.02股 施羅德 54000'],
     ['開啟頁面','糧 / 看年度財報'],
     ['載具會員','載具 / 711 / 全']
   ];
@@ -9948,11 +9949,11 @@ function advisorAIDeepSeekSystemPrompt(){
   return [
     '你是軍師AI V2，只負責把中文短指令解析成 JSON，不執行任何動作。',
     '只回 json / JSON object，不要 markdown，不要說明。',
-    '允許 intent: expense, transfer, dividend, stockSell, open, maintenance, copyCarrier, showCarrier, member, unknown。',
+    '允許 intent: expense, transfer, dividend, stockBuy, stockSell, open, maintenance, copyCarrier, showCarrier, member, unknown。',
     'expense 欄位: category, account, amount, note。',
     'transfer 欄位: from, to, amount, note。',
     'dividend 欄位: symbol, amount。',
-    'stockSell 欄位: symbol, shares, amount。',
+    'stockBuy/stockSell 欄位: symbol, shares, amount。',
     'open 欄位: panel, tab, label。panel 只能 finance, foodhouse, market, domestic, council, stars, medical。',
     'member 欄位: type，只能 seven 或 family。',
     '帳戶/標的請盡量用使用者原文，例如 國泰s, 現金, 玉山, cube, AIPI；前端會再轉換成正式名稱。',
@@ -10008,6 +10009,23 @@ function advisorAINormalizeDeepSeekCommand(cmd,raw){
     if(sellSymbol&&shares>0&&amount>0)return {intent:'stockSell',symbol:sellSymbol,shares:shares,amount:amount};
     return {intent:'unknown'};
   }
+  if(intent==='stockBuy'){
+    var buySymbol=advisorAIResolveTransferTarget(cmd.symbol||cmd.target||raw);
+    var buyShares=Number(cmd.shares||0);
+    if(buySymbol&&buyShares>0&&amount>0)return {intent:'stockBuy',symbol:buySymbol,shares:buyShares,amount:amount};
+    return {intent:'unknown'};
+  }
+  return {intent:'unknown'};
+}
+
+function advisorAIStockBuyCommand(raw){
+  var text=advisorAINormalize(raw);
+  var m=text.match(/(?:買入|買進)\s*(\d+(?:\.\d+)?)\s*股\s*(.+?)\s*(\d+(?:\.\d+)?)\s*$/i);
+  if(!m)return null;
+  var shares=parseFloat(m[1]);
+  var symbol=advisorAIResolveTransferTarget(m[2]);
+  var amount=parseFloat(m[3]);
+  if(symbol&&shares>0&&amount>0)return {intent:'stockBuy',symbol:symbol,shares:shares,amount:amount};
   return {intent:'unknown'};
 }
 
@@ -10019,6 +10037,8 @@ function advisorAICommand(raw){
   if(openTarget)return openTarget;
   var accountLookup=advisorAIAccountLookupCommand(raw);
   if(accountLookup)return accountLookup;
+  var stockBuy=advisorAIStockBuyCommand(raw);
+  if(stockBuy)return stockBuy;
   var transfer=advisorAITransferCommand(raw,amount);
   if(transfer)return transfer;
   var stockSell=text.match(/賣出\s*(\d+(?:\.\d+)?)\s*股\s*([A-Za-z0-9]+)\s*(\d+(?:\.\d+)?)/i);
@@ -10114,6 +10134,16 @@ async function runAdvisorAICommand(btn){
     }
     if(cmd.intent==='accountLookup'){
       await advisorAIShowAccountBalance(cmd.account);
+      return;
+    }
+    if(cmd.intent==='stockBuy'){
+      if(panel)panel.innerHTML=`${advisorAIHeaderHtml()}
+        ${advisorAIResultHtml('請確認股票交易',['買入標的：'+cmd.symbol,'轉出帳戶：💵國泰Stock','轉入帳戶：'+cmd.symbol,'股數：'+cmd.shares,'金額：'+fmtFull(cmd.amount)])}
+        <div class="advisor-dividend-actions">
+          <button class="advisor-shortcut-secondary" type="button" onclick="openAdvisorAI()">取消</button>
+          <button class="advisor-shortcut-submit" type="button" onclick="advisorAIConfirmStockBuy('${esc(cmd.symbol)}',${Number(cmd.shares)||0},${Number(cmd.amount)||0},this)">確認寫入</button>
+        </div>
+        <div class="advisor-shortcut-msg" id="advisor-ai-msg"></div>`;
       return;
     }
     if(cmd.intent==='stockSell'){
@@ -10276,6 +10306,22 @@ async function advisorAIConfirmStockSell(symbol,shares,amount,btn){
       stockMode:'1',stockType:'sell',stockSymbol:symbol,stockShares:-Math.abs(Number(shares)||0),stockAmount:amount});
     var panel=advisorAIActivePanel();
     if(panel)panel.innerHTML=`${advisorAIHeaderHtml()}${advisorAIResultHtml('已記錄股票賣出',['標的：'+symbol,'股數：'+shares,'金額：'+fmtFull(amount)])}`;
+  }catch(err){
+    advisorAISetMessage('✗ '+(err&&err.message?err.message:'寫入失敗'),'err');
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='確認寫入';}
+  }
+}
+
+async function advisorAIConfirmStockBuy(symbol,shares,amount,btn){
+  if(!advisorAIRequireWrite())return;
+  if(btn&&btn.disabled)return;
+  if(btn){btn.disabled=true;btn.textContent='寫入中…';}
+  try{
+    await apiPost({action:'transfer',date:today().replace(/-/g,'/'),from:'💵國泰Stock',to:symbol,amount:amount,label:symbol,note:'軍師AI買入',
+      stockMode:'1',stockType:'buy',stockSymbol:symbol,stockShares:Math.abs(Number(shares)||0),stockAmount:amount});
+    var panel=advisorAIActivePanel();
+    if(panel)panel.innerHTML=`${advisorAIHeaderHtml()}${advisorAIResultHtml('已記錄股票買入',['國泰Stock → '+symbol,'股數：'+shares,'金額：'+fmtFull(amount)])}`;
   }catch(err){
     advisorAISetMessage('✗ '+(err&&err.message?err.message:'寫入失敗'),'err');
   }finally{
