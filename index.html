@@ -114,7 +114,7 @@ body::after{
   display:inline-block;
   cursor:pointer;
   transition:transform .3s;
-  width:380px;
+  width:420px;
   overflow:visible;
   background:transparent;
 }
@@ -126,7 +126,7 @@ body::after{
   display:flex;
   align-items:flex-end;
   justify-content:center;
-  gap:26px;
+  gap:18px;
   width:100%;
   min-height:238px;
   padding:10px 12px 0;
@@ -144,9 +144,9 @@ body::after{
   text-align:center;
 }
 .advisor-duo-role:hover{transform:translateY(-6px) scale(1.04);filter:brightness(1.08)}
-.advisor-duo-role.pangtong{transform:translateX(-10px)}
-.advisor-duo-role.pangtong:hover{transform:translateX(-10px) translateY(-6px) scale(1.04)}
-.advisor-duo-role.zhuge .advisor-duo-stage{transform:translateY(-16px)}
+.advisor-duo-role.pangtong{transform:none}
+.advisor-duo-role.pangtong:hover{transform:translateY(-6px) scale(1.04)}
+.advisor-duo-role.zhuge .advisor-duo-stage{transform:none}
 .advisor-duo-role .advisor-duo-stage::after{
   content:'';
   position:absolute;
@@ -1943,12 +1943,12 @@ body::after{
   }
   .hdr-left{position:static;transform:none;width:100%;justify-content:center}
   .hdr-char-wrap{
-    width:clamp(190px,62vw,300px);
+    width:clamp(270px,76vw,360px);
     max-width:92vw;
     overflow:visible;
   }
-  .advisor-duo{min-height:176px;gap:12px;padding-top:4px}
-  .advisor-duo-role{width:132px}
+  .advisor-duo{min-height:176px;gap:12px;padding:4px 0 0}
+  .advisor-duo-role{width:132px;flex:0 0 132px}
   .advisor-duo-stage{height:170px}
   .advisor-duo-label{min-width:96px;font-size:11px;padding:4px 7px}
   .hdr-char{
@@ -2000,9 +2000,9 @@ body::after{
 @media(max-width:480px){
   .wrap{padding:100px 10px 36px}
   .hdr{margin-bottom:14px}
-  .hdr-char-wrap{width:clamp(180px,66vw,260px)}
-  .advisor-duo{min-height:156px;gap:8px}
-  .advisor-duo-role{width:120px}
+  .hdr-char-wrap{width:clamp(268px,82vw,340px)}
+  .advisor-duo{min-height:156px;gap:10px;justify-content:center}
+  .advisor-duo-role{width:120px;flex:0 0 120px}
   .advisor-duo-stage{height:154px}
   .advisor-duo-label{min-width:86px;font-size:10px;letter-spacing:0}
   .cards{
