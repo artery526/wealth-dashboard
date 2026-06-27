@@ -10107,30 +10107,34 @@ async function advisorAIShowMonthlyAssetBrief(){
   advisorAIScheduleOpen=false;
   panel.innerHTML=`${advisorAIHeaderHtml()}
     <div class="advisor-ai-portrait"><img class="advisor-ai-portrait-img" src="pangtong.png" alt="龐統軍師"></div>
-    <div class="advisor-ai-result"><strong>本月資產簡報</strong><br>軍師正在調閱年度財報與糧倉資訊…</div>
+    <div class="advisor-ai-result"><strong>本月資產簡報</strong><br>軍師正在調閱本月財報與糧倉資訊…</div>
     <div class="advisor-shortcut-msg" id="advisor-ai-msg"></div>`;
   if(!API_URL){
     advisorAISetMessage('尚未設定 Web App API，無法檢視本月資產。','err');
     return;
   }
   try{
-    var year=String(new Date().getFullYear());
     var ym=currentYM();
     var results=await Promise.allSettled([
-      apiGet({action:'yearly',year:year}),
+      apiGet({action:'monthly',ym:ym}),
       apiGet({action:'foodhouseDashboard',ym:ym})
     ]);
-    var yearly=results[0].status==='fulfilled'?(results[0].value||{}):{};
+    var monthData=results[0].status==='fulfilled'?(results[0].value||{}):{};
     var foodhouse=results[1].status==='fulfilled'?(results[1].value||{}):{};
-    var total=yearly.total||{};
-    var monthly=((foodhouse.core||{}).monthly)||{};
-    var cats=(monthly.categories||[])
+    var foodhouseMonthly=((foodhouse.core||{}).monthly)||{};
+    var monthly=Object.assign({},foodhouseMonthly,monthData);
+    var monthIncome=Number(monthly.income)||0;
+    var monthExpense=Number(monthly.expense)||0;
+    var monthNet=monthData.net!=null&&!isNaN(Number(monthData.net))?Number(monthData.net):(monthIncome-monthExpense);
+    var monthSavingRate=monthly.savingRate!=null&&monthly.savingRate!==''?String(monthly.savingRate):'—';
+    if(monthSavingRate!=='—'&&monthSavingRate.indexOf('%')<0)monthSavingRate=monthSavingRate+'%';
+    var cats=(foodhouseMonthly.categories||[])
       .filter(function(item){return item&&item.name&&Number(item.amount)>0;})
       .sort(function(a,b){return (Number(b.amount)||0)-(Number(a.amount)||0);})
       .slice(0,2);
     var lines=[
-      year+' 年度淨現金流：'+((Number(total.net)||0)>=0?'+':'')+fmtFull(total.net||0),
-      year+' 年度儲蓄率：'+(total.savingRate||'—'),
+      ym+' 本月淨現金流：'+(monthNet>=0?'+':'')+fmtFull(monthNet),
+      ym+' 本月儲蓄率：'+monthSavingRate,
       ym+' 本月最多支出：'
     ];
     if(cats.length){
@@ -10140,7 +10144,7 @@ async function advisorAIShowMonthlyAssetBrief(){
     }else{
       lines.push('尚無本月支出項目資料');
     }
-    if(results[0].status!=='fulfilled')lines.push('年度財報讀取失敗：'+(results[0].reason&&results[0].reason.message||'未知錯誤'));
+    if(results[0].status!=='fulfilled')lines.push('本月財報讀取失敗：'+(results[0].reason&&results[0].reason.message||'未知錯誤'));
     if(results[1].status!=='fulfilled')lines.push('糧倉資訊讀取失敗：'+(results[1].reason&&results[1].reason.message||'未知錯誤'));
     panel.innerHTML=`${advisorAIHeaderHtml()}
       <div class="advisor-ai-portrait"><img class="advisor-ai-portrait-img" src="pangtong.png" alt="龐統軍師"></div>
