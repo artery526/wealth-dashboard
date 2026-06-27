@@ -9599,7 +9599,7 @@ function toggleAdvisorAI(){
 }
 
 function advisorAIHeaderHtml(title){
-  return `<button class="advisor-ai-close" type="button" onclick="closeAdvisorAIStandalone()" aria-label="關閉軍師AI">×</button><div class="advisor-shortcut-title">${esc(title||'軍師AI V1')}</div>`;
+  return `<button class="advisor-ai-close" type="button" onclick="closeAdvisorAIStandalone()" aria-label="關閉軍師AI">×</button><div class="advisor-shortcut-title">🗡️主公，請確認以下訊息</div>`;
 }
 
 function advisorAIExamplesHtml(){
@@ -9646,7 +9646,7 @@ function openAdvisorAIAuthPanel(panel){
   advisorDividendSelection=null;
   panel.classList.add('open');
   panel.innerHTML=`${advisorAIHeaderHtml('軍師AI 驗證')}
-    <div class="advisor-shortcut-hint">${ADVISOR_AI_PASSCODE?'請輸入軍師AI通行令；驗證通過後，本分頁可使用軍師AI V1/V2。':'尚未設定軍師AI通行令，請先到設定建立通行令。'}</div>
+    <div class="advisor-shortcut-hint">${ADVISOR_AI_PASSCODE?'請輸入軍師AI通行令；驗證通過後，本分頁可使用軍師AI。':'尚未設定軍師AI通行令，請先到設定建立通行令。'}</div>
     ${ADVISOR_AI_PASSCODE?`<div class="advisor-ai-row">
       <input class="advisor-ai-input" id="advisor-ai-auth-input" type="password" placeholder="輸入通行令…" onkeydown="advisorAIAuthKey(event)">
       <button class="advisor-shortcut-submit" id="advisor-ai-auth-submit" type="button" onclick="verifyAdvisorAI(this)">驗證</button>
@@ -10062,7 +10062,7 @@ async function runAdvisorAICommand(btn){
       return;
     }
     if(cmd.intent==='stockSell'){
-      if(panel)panel.innerHTML=`${advisorAIHeaderHtml('軍師AI V1')}
+      if(panel)panel.innerHTML=`${advisorAIHeaderHtml()}
         ${advisorAIResultHtml('請確認股票交易',['賣出股票：'+cmd.symbol,'股數：'+cmd.shares,'金額：'+fmtFull(cmd.amount)])}
         <div class="advisor-dividend-actions">
           <button class="advisor-shortcut-secondary" type="button" onclick="openAdvisorAI()">取消</button>
@@ -10074,17 +10074,17 @@ async function runAdvisorAICommand(btn){
     if(!advisorAIRequireWrite())return;
     if(cmd.intent==='transfer'){
       await apiPost({action:'transfer',date:today().replace(/-/g,'/'),from:cmd.from,to:cmd.to,amount:cmd.amount,label:'',note:cmd.note||'軍師AI轉帳'});
-      if(panel)panel.innerHTML=`${advisorAIHeaderHtml('軍師AI V1')}${advisorAIResultHtml('已記錄轉帳',[cmd.from+' → '+cmd.to,'金額：'+fmtFull(cmd.amount)])}`;
+      if(panel)panel.innerHTML=`${advisorAIHeaderHtml()}${advisorAIResultHtml('已記錄轉帳',[cmd.from+' → '+cmd.to,'金額：'+fmtFull(cmd.amount)])}`;
       return;
     }
     if(cmd.intent==='withdraw'){
       await apiPost({action:'transfer',date:today().replace(/-/g,'/'),from:'💵國泰Stock',to:'💰Cash',amount:cmd.amount,label:'',note:'日常提款'});
-      if(panel)panel.innerHTML=`${advisorAIHeaderHtml('軍師AI V1')}${advisorAIResultHtml('已記錄日常提款',['國泰Stock → Cash','金額：'+fmtFull(cmd.amount)])}`;
+      if(panel)panel.innerHTML=`${advisorAIHeaderHtml()}${advisorAIResultHtml('已記錄日常提款',['國泰Stock → Cash','金額：'+fmtFull(cmd.amount)])}`;
       return;
     }
     if(cmd.intent==='expense'){
       await apiPost({action:'expense',date:today().replace(/-/g,'/'),cat:cmd.category,account:cmd.account,amount:cmd.amount,note:cmd.note||'軍師AI'});
-      if(panel)panel.innerHTML=`${advisorAIHeaderHtml('軍師AI V1')}${advisorAIResultHtml('已記錄支出',['項目：'+cmd.category,'帳戶：'+cmd.account,'金額：'+fmtFull(cmd.amount)])}`;
+      if(panel)panel.innerHTML=`${advisorAIHeaderHtml()}${advisorAIResultHtml('已記錄支出',['項目：'+cmd.category,'帳戶：'+cmd.account,'金額：'+fmtFull(cmd.amount)])}`;
       return;
     }
     if(cmd.intent==='dividend'){
@@ -10118,7 +10118,7 @@ async function advisorAIRecordDividend(symbol,amount){
     dividendRowId:row.rowId||''
   });
   invalidateDividendCenter();
-  if(panel)panel.innerHTML=`${advisorAIHeaderHtml('軍師AI V1')}${advisorAIResultHtml('已記錄配息入帳',['標的：'+(row.displaySymbol||row.symbol||symbol),'金額：'+fmtFull(amount)])}`;
+  if(panel)panel.innerHTML=`${advisorAIHeaderHtml()}${advisorAIResultHtml('已記錄配息入帳',['標的：'+(row.displaySymbol||row.symbol||symbol),'金額：'+fmtFull(amount)])}`;
 }
 
 function advisorAIAccountMatches(rowName,target){
@@ -10134,6 +10134,14 @@ function advisorAIAccountMatches(rowName,target){
   });
 }
 
+function advisorAIShouldShowStockValue(row,account){
+  var name=String(row&&row.name||account||'');
+  var compact=advisorAICompact(name);
+  if(!compact)return false;
+  if(compact.indexOf('cash')>=0||compact.indexOf('現金')>=0)return false;
+  return /stock|股票|證券|券商/i.test(name);
+}
+
 async function advisorAIShowAccountBalance(account){
   var panel=advisorAIActivePanel();
   if(!API_URL)throw new Error('尚未設定 API URL，無法查帳。');
@@ -10144,9 +10152,9 @@ async function advisorAIShowAccountBalance(account){
     '帳戶：'+(row.name||account),
     '餘額：'+fmtFull(row.value)
   ];
-  if(row.stockValue!=null&&!isNaN(Number(row.stockValue)))lines.push('股票市值：'+fmtFull(row.stockValue));
+  if(advisorAIShouldShowStockValue(row,account)&&row.stockValue!=null&&!isNaN(Number(row.stockValue)))lines.push('股票市值：'+fmtFull(row.stockValue));
   if(row.note)lines.push('備註：'+row.note);
-  if(panel)panel.innerHTML=`${advisorAIHeaderHtml('軍師AI V1')}${advisorAIResultHtml('查帳結果',lines)}`;
+  if(panel)panel.innerHTML=`${advisorAIHeaderHtml()}${advisorAIResultHtml('查帳結果',lines)}`;
 }
 
 async function advisorAIShowDividendMemoPreview(cmd){
@@ -10165,7 +10173,7 @@ async function advisorAIShowDividendMemoPreview(cmd){
     symbol:payload.symbol,
     dividendPerShare:payload.dividendPerShare
   };
-  if(panel)panel.innerHTML=`${advisorAIHeaderHtml('軍師AI V1')}
+  if(panel)panel.innerHTML=`${advisorAIHeaderHtml()}
     ${advisorAIResultHtml('配息備忘試算',[
       '標的：'+(result.displaySymbol||result.symbol||payload.symbol),
       '持股數：'+Number(result.shares||0).toLocaleString('zh-TW'),
@@ -10191,7 +10199,7 @@ async function advisorAIConfirmDividendMemo(btn){
     invalidateDividendCenter();
     advisorDividendMemoPending=null;
     var panel=advisorAIActivePanel();
-    if(panel)panel.innerHTML=`${advisorAIHeaderHtml('軍師AI V1')}${advisorAIResultHtml('已寫入持股備忘錄',[
+    if(panel)panel.innerHTML=`${advisorAIHeaderHtml()}${advisorAIResultHtml('已寫入持股備忘錄',[
       '標的：'+(result.displaySymbol||result.symbol),
       '每股配息：'+result.dividendPerShare,
       '持股數：'+Number(result.shares||0).toLocaleString('zh-TW'),
@@ -10212,7 +10220,7 @@ async function advisorAIConfirmStockSell(symbol,shares,amount,btn){
     await apiPost({action:'transfer',date:today().replace(/-/g,'/'),from:symbol,to:'💵國泰Stock',amount:amount,label:symbol,note:'軍師AI賣出',
       stockMode:'1',stockType:'sell',stockSymbol:symbol,stockShares:-Math.abs(Number(shares)||0),stockAmount:amount});
     var panel=advisorAIActivePanel();
-    if(panel)panel.innerHTML=`${advisorAIHeaderHtml('軍師AI V1')}${advisorAIResultHtml('已記錄股票賣出',['標的：'+symbol,'股數：'+shares,'金額：'+fmtFull(amount)])}`;
+    if(panel)panel.innerHTML=`${advisorAIHeaderHtml()}${advisorAIResultHtml('已記錄股票賣出',['標的：'+symbol,'股數：'+shares,'金額：'+fmtFull(amount)])}`;
   }catch(err){
     advisorAISetMessage('✗ '+(err&&err.message?err.message:'寫入失敗'),'err');
   }finally{
@@ -10222,7 +10230,7 @@ async function advisorAIConfirmStockSell(symbol,shares,amount,btn){
 
 async function advisorAIShowMaintenance(){
   var panel=advisorAIActivePanel();
-  if(panel)panel.innerHTML=`${advisorAIHeaderHtml('軍師AI V1')}<div class="advisor-shortcut-hint">讀取台股維持率中…</div>`;
+  if(panel)panel.innerHTML=`${advisorAIHeaderHtml()}<div class="advisor-shortcut-hint">讀取台股維持率中…</div>`;
   if(!API_URL)throw new Error('尚未設定 API URL，無法讀取市場快報。');
   var data=await apiGet({action:'marketDashboard'});
   await ensureMarketMarginData(data);
@@ -10231,7 +10239,7 @@ async function advisorAIShowMaintenance(){
   var text=(twse.marginMaintenanceText||'').trim();
   if(!text&&twse.marginMaintenanceRatio)text=Number(twse.marginMaintenanceRatio||0).toFixed(2)+'%';
   if(!text)throw new Error('目前沒有台股維持率資料。');
-  if(panel)panel.innerHTML=`${advisorAIHeaderHtml('軍師AI V1')}${advisorAIResultHtml('台股維持率',[text])}`;
+  if(panel)panel.innerHTML=`${advisorAIHeaderHtml()}${advisorAIResultHtml('台股維持率',[text])}`;
 }
 
 function advisorDividendRows(data){
