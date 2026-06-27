@@ -625,6 +625,8 @@ body::after{
 .advisor-ai-row .advisor-shortcut-submit{width:auto;flex-shrink:0;padding-left:13px;padding-right:13px}
 .advisor-ai-input{flex:1;min-width:0;border:1px solid #2a1c08;border-radius:7px;background:#0a0804;color:var(--ink);font-family:var(--sans);font-size:14px;padding:10px 11px;outline:none}
 .advisor-ai-input:focus{border-color:var(--gold2)}
+.advisor-ai-portrait{margin:2px 0 11px;border:1px solid rgba(232,192,80,.28);border-radius:10px;background:linear-gradient(180deg,rgba(0,0,0,.38),rgba(232,192,80,.05));padding:8px;box-shadow:inset 0 1px 0 rgba(255,236,170,.08),0 0 18px rgba(0,0,0,.18)}
+.advisor-ai-portrait-img{display:block;width:100%;max-height:150px;object-fit:contain;object-position:center bottom;filter:drop-shadow(0 0 18px rgba(232,192,80,.18))}
 .advisor-ai-examples{margin-top:10px;border:1px solid rgba(232,192,80,.16);border-radius:9px;background:rgba(0,0,0,.34);padding:9px 10px;font-family:var(--sans);font-size:11px;line-height:1.65;color:#9f8248}
 .advisor-ai-examples-title{font-size:10px;font-weight:950;letter-spacing:2px;color:#d5ad55;margin-bottom:4px}
 .advisor-ai-examples-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 9px}
@@ -638,7 +640,7 @@ body::after{
 .advisor-close{position:absolute;top:10px;right:12px;background:none;border:none;color:#5a4018;font-size:14px;cursor:pointer;transition:color .2s;line-height:1;padding:2px}
 .advisor-close:hover{color:var(--gold)}
 @media(max-width:480px){.advisor-overlay{padding:52px 0 0 6px}.advisor-img{width:clamp(98px,25vw,120px)}.advisor-dialog{margin-top:26px;margin-left:-14px;width:calc(100vw - 98px);padding:12px 12px 10px}.advisor-command-head{gap:6px;margin-right:18px}.advisor-command-title{font-size:15px;letter-spacing:.5px}.advisor-practice-btn{min-height:26px;padding:4px 6px;font-size:10px}.advisor-reminder-card{padding:10px 11px 11px}.advisor-reminder-title{font-size:12px}.advisor-reminder-text{font-size:12px;line-height:1.68}.advisor-btn-grid{gap:8px}.advisor-menu-toggle{min-height:42px;font-size:16px;letter-spacing:2px}.advisor-menu-mark{width:20px;height:20px;font-size:11px}.advisor-btn-group{gap:6px;border-radius:7px}.advisor-menu-section.is-open .advisor-btn-group{padding:7px;max-height:220px}.advisor-btn{font-size:12px;padding:8px 4px;letter-spacing:0;gap:3px}.advisor-btn-tag{width:14px;height:14px;font-size:9px}.advisor-btn-spacer{min-height:32px}}
-@media(max-width:480px){.advisor-ai-standalone{top:118px;width:calc(100vw - 22px)}.advisor-ai-examples-grid{grid-template-columns:1fr}}
+@media(max-width:480px){.advisor-ai-standalone{top:118px;width:calc(100vw - 22px)}.advisor-ai-portrait-img{max-height:128px}.advisor-ai-examples-grid{grid-template-columns:1fr}}
 
 .military-lord{
   position:absolute;
@@ -9544,8 +9546,8 @@ function openAdvisorAI(targetPanel){
   }
   advisorShortcutOpenKind='ai';
   advisorDividendSelection=null;
-  panel.innerHTML=`${advisorAIHeaderHtml('軍師AI V1')}
-    <div class="advisor-shortcut-hint">本地指令路由器，優先 0 token 判斷。例：國泰s 轉 現金 1000、提款2000、大餐 玉山 720、AIPI 配息 4065、糧。</div>
+  panel.innerHTML=`${advisorAIHeaderHtml('🗡️主公，請下令')}
+    <div class="advisor-ai-portrait"><img class="advisor-ai-portrait-img" src="pangtong.png" alt="龐統軍師"></div>
     <div class="advisor-ai-row">
       <input class="advisor-ai-input" id="advisor-ai-input" type="text" placeholder="輸入指令…" onkeydown="advisorAIKey(event)">
       <button class="advisor-shortcut-submit" id="advisor-ai-submit" type="button" onclick="runAdvisorAICommand(this)">執行</button>
