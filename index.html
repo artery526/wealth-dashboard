@@ -2643,7 +2643,7 @@ body::after{
 var API_URL = localStorage.getItem('wealth_api_url') || '';
 var WRITE_TOKEN = localStorage.getItem('wealth_write_token') || '';
 var ADVISOR_AI_PASSCODE = localStorage.getItem('wealth_advisor_ai_passcode') || '';
-var advisorAIVerified = sessionStorage.getItem('wealth_advisor_ai_verified') === '1';
+var advisorAIVerified = localStorage.getItem('wealth_advisor_ai_verified') === advisorAIVerificationKey(ADVISOR_AI_PASSCODE);
 var cfg = (function(){
   try{
     var cached=JSON.parse(localStorage.getItem('wealth_booking_config_v1')||'null');
@@ -3283,7 +3283,7 @@ async function saveCfg(){
   localStorage.setItem('health_api_url',healthUrl);
   localStorage.setItem('health_secret_key',healthKey);
   localStorage.setItem('wealth_advisor_ai_passcode',advisorAiPass);
-  sessionStorage.removeItem('wealth_advisor_ai_verified');
+  localStorage.removeItem('wealth_advisor_ai_verified');
   medicalOptionsCache=null;
   closeCfg();
   try{
@@ -9446,8 +9446,19 @@ function advisorAIHeaderHtml(title){
   return `<button class="advisor-ai-close" type="button" onclick="closeAdvisorAIStandalone()" aria-label="關閉軍師AI">×</button><div class="advisor-shortcut-title">${esc(title||'軍師AI V1')}</div>`;
 }
 
+function advisorAIVerificationKey(passcode){
+  var text=String(passcode||'');
+  var hash=0x811c9dc5;
+  for(var i=0;i<text.length;i++){
+    hash^=text.charCodeAt(i);
+    hash=(hash+((hash<<1)+(hash<<4)+(hash<<7)+(hash<<8)+(hash<<24)))>>>0;
+  }
+  return text?('v1:'+hash.toString(16)+':'+text.length):'';
+}
+
 function advisorAIIsVerified(){
-  return !!(ADVISOR_AI_PASSCODE&&advisorAIVerified&&sessionStorage.getItem('wealth_advisor_ai_verified')==='1');
+  var key=advisorAIVerificationKey(ADVISOR_AI_PASSCODE);
+  return !!(ADVISOR_AI_PASSCODE&&advisorAIVerified&&localStorage.getItem('wealth_advisor_ai_verified')===key);
 }
 
 function openAdvisorAIAuthPanel(panel){
@@ -9485,7 +9496,7 @@ function verifyAdvisorAI(btn){
   }
   if(value===ADVISOR_AI_PASSCODE){
     advisorAIVerified=true;
-    sessionStorage.setItem('wealth_advisor_ai_verified','1');
+    localStorage.setItem('wealth_advisor_ai_verified',advisorAIVerificationKey(ADVISOR_AI_PASSCODE));
     openAdvisorAI(advisorAIActivePanel());
     return;
   }
