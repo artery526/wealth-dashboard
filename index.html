@@ -3021,7 +3021,7 @@ async function apiPost(body){
   if(!API_URL)throw new Error('未設定 API 網址');
   WRITE_TOKEN=cleanToken(WRITE_TOKEN);
   if(!WRITE_TOKEN)throw new Error('未設定記帳密鑰');
-  if(body&&/^(advisorTask|advisorDraft|advisorAiParse|income|transfer)$/.test(body.action||'')){
+  if(body&&/^(advisorTask|advisorDraft|advisorAiParse|advisorDividendMemo|income|transfer)$/.test(body.action||'')){
     return apiPostJson(body);
   }
   var params=Object.assign({},body,{token:WRITE_TOKEN});
@@ -9418,6 +9418,7 @@ function advisorShortcutCategoryOptions(){
 }
 
 var advisorDividendSelection=null;
+var advisorDividendMemoPending=null;
 var advisorShortcutOpenKind='';
 
 function closeAdvisorShortcutPanel(){
@@ -9425,6 +9426,7 @@ function closeAdvisorShortcutPanel(){
   if(panel)panel.innerHTML='';
   advisorShortcutOpenKind='';
   advisorDividendSelection=null;
+  advisorDividendMemoPending=null;
 }
 
 function isAdvisorShortcutOpen(kind){
@@ -9712,6 +9714,13 @@ function advisorAINormalizeDeepSeekCommand(cmd,raw){
     if(symbol&&amount>0)return {intent:'dividend',symbol:symbol,amount:amount};
     return {intent:'unknown'};
   }
+  if(intent==='advisorDividendMemo'||intent==='dividendMemo'){
+    var memoSymbol=String(cmd.symbol||cmd.displaySymbol||'').trim();
+    var perShare=Number(cmd.dividendPerShare||cmd.perShare||cmd.amount||0);
+    var market=String(cmd.market||'').toLowerCase();
+    if(memoSymbol&&perShare>0)return {intent:'advisorDividendMemo',market:market,symbol:memoSymbol,dividendPerShare:perShare};
+    return {intent:'unknown'};
+  }
   if(intent==='stockSell'){
     var sellSymbol=String(cmd.symbol||'').trim().toUpperCase();
     var shares=Number(cmd.shares||0);
@@ -9738,6 +9747,10 @@ function advisorAICommand(raw){
   if(compact==='載具'||compact.indexOf('顯示載具')>=0)return {intent:'showCarrier'};
   if(compact==='711'||compact==='7'||compact.indexOf('7-11')>=0||compact.indexOf('小7')>=0)return {intent:'member',type:'seven',label:'7-11會員'};
   if(compact==='全'||compact.indexOf('全家')>=0)return {intent:'member',type:'family',label:'全家會員'};
+  var dividendMemo=text.match(/(美股|台股)\s*([^\s]+)\s*(\d+(?:\.\d+)?)/i);
+  if(dividendMemo)return {intent:'advisorDividendMemo',market:dividendMemo[1]==='台股'?'tw':'us',symbol:dividendMemo[2],dividendPerShare:parseFloat(dividendMemo[3])};
+  var dividendMemo2=text.match(/([A-Za-z0-9\u4e00-\u9fff]+)\s*(?:配息備忘|配息紀錄)\s*(\d+(?:\.\d+)?)/i);
+  if(dividendMemo2)return {intent:'advisorDividendMemo',market:'',symbol:dividendMemo2[1],dividendPerShare:parseFloat(dividendMemo2[2])};
   var dividend=text.match(/([A-Za-z0-9]+)\s*配息\s*(\d+(?:\.\d+)?)/i)||text.match(/配息\s*([A-Za-z0-9]+)\s*(\d+(?:\.\d+)?)/i);
   if(dividend)return {intent:'dividend',symbol:dividend[1].toUpperCase(),amount:parseFloat(dividend[2])};
   if(amount>0){
@@ -9810,6 +9823,10 @@ async function runAdvisorAICommand(btn){
       await advisorAIShowMaintenance();
       return;
     }
+    if(cmd.intent==='advisorDividendMemo'){
+      await advisorAIShowDividendMemoPreview(cmd);
+      return;
+    }
     if(cmd.intent==='stockSell'){
       if(panel)panel.innerHTML=`${advisorAIHeaderHtml('軍師AI V1')}
         ${advisorAIResultHtml('請確認股票交易',['賣出股票：'+cmd.symbol,'股數：'+cmd.shares,'金額：'+fmtFull(cmd.amount)])}
@@ -9868,6 +9885,61 @@ async function advisorAIRecordDividend(symbol,amount){
   });
   invalidateDividendCenter();
   if(panel)panel.innerHTML=`${advisorAIHeaderHtml('軍師AI V1')}${advisorAIResultHtml('已記錄配息入帳',['標的：'+(row.displaySymbol||row.symbol||symbol),'金額：'+fmtFull(amount)])}`;
+}
+
+async function advisorAIShowDividendMemoPreview(cmd){
+  if(!advisorAIRequireWrite())return;
+  var panel=advisorAIActivePanel();
+  var payload={
+    action:'advisorDividendMemo',
+    preview:'1',
+    market:cmd.market||'',
+    symbol:cmd.symbol||'',
+    dividendPerShare:cmd.dividendPerShare||cmd.amount||0
+  };
+  var result=await apiPost(payload);
+  advisorDividendMemoPending={
+    market:payload.market,
+    symbol:payload.symbol,
+    dividendPerShare:payload.dividendPerShare
+  };
+  if(panel)panel.innerHTML=`${advisorAIHeaderHtml('軍師AI V1')}
+    ${advisorAIResultHtml('配息備忘試算',[
+      '標的：'+(result.displaySymbol||result.symbol||payload.symbol),
+      '持股數：'+Number(result.shares||0).toLocaleString('zh-TW'),
+      '每股配息：'+result.dividendPerShare,
+      '稅率係數：'+result.taxFactor,
+      '匯率：'+result.fx,
+      '預估台幣：'+fmtFull(result.estimatedTwd)
+    ])}
+    <div class="advisor-dividend-actions">
+      <button class="advisor-shortcut-secondary" type="button" onclick="openAdvisorAI()">返回</button>
+      <button class="advisor-shortcut-submit" type="button" onclick="advisorAIConfirmDividendMemo(this)">確認記錄</button>
+    </div>
+    <div class="advisor-shortcut-msg" id="advisor-ai-msg"></div>`;
+}
+
+async function advisorAIConfirmDividendMemo(btn){
+  if(!advisorAIRequireWrite())return;
+  if(!advisorDividendMemoPending){advisorAISetMessage('找不到待確認的配息備忘資料','err');return;}
+  if(btn&&btn.disabled)return;
+  if(btn){btn.disabled=true;btn.textContent='記錄中…';}
+  try{
+    var result=await apiPost(Object.assign({action:'advisorDividendMemo'},advisorDividendMemoPending));
+    invalidateDividendCenter();
+    advisorDividendMemoPending=null;
+    var panel=advisorAIActivePanel();
+    if(panel)panel.innerHTML=`${advisorAIHeaderHtml('軍師AI V1')}${advisorAIResultHtml('已寫入持股備忘錄',[
+      '標的：'+(result.displaySymbol||result.symbol),
+      '每股配息：'+result.dividendPerShare,
+      '持股數：'+Number(result.shares||0).toLocaleString('zh-TW'),
+      '預估台幣：'+fmtFull(result.estimatedTwd)
+    ])}`;
+  }catch(err){
+    advisorAISetMessage('✗ '+(err&&err.message?err.message:'記錄失敗'),'err');
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='確認記錄';}
+  }
 }
 
 async function advisorAIConfirmStockSell(symbol,shares,amount,btn){
