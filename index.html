@@ -514,51 +514,6 @@ body::after{
 
 .art{width:100%;height:200px;position:relative;overflow:hidden;border-bottom:1px solid #5a4018}
 .art svg{width:100%;height:100%;display:block}
-.card-scrolls{
-  display:grid;
-  gap:7px;
-  padding:9px 9px 11px;
-  background:
-    radial-gradient(circle at 50% 0%,rgba(232,192,80,.16),transparent 45%),
-    linear-gradient(180deg,rgba(17,12,6,.96),rgba(7,5,3,.98));
-  border-top:1px solid rgba(232,192,80,.22);
-}
-.card-scrolls.two{grid-template-columns:repeat(2,minmax(0,1fr))}
-.card-scroll-btn{
-  border:1px solid rgba(123,86,32,.62);
-  border-radius:12px;
-  min-height:36px;
-  padding:8px 7px;
-  color:#f5e8c8;
-  background:
-    linear-gradient(90deg,rgba(66,38,12,.74),rgba(166,119,28,.45),rgba(66,38,12,.74)),
-    radial-gradient(circle at 50% 20%,rgba(255,244,185,.18),transparent 55%);
-  box-shadow:inset 0 1px 0 rgba(255,239,175,.18),0 4px 12px rgba(0,0,0,.35);
-  font-family:var(--sans);
-  font-size:12px;
-  font-weight:900;
-  letter-spacing:1px;
-  cursor:pointer;
-  transition:transform .18s,filter .18s,border-color .18s;
-}
-.card-scroll-btn::before{
-  content:'卷';
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  width:18px;
-  height:18px;
-  margin-right:5px;
-  border-radius:50%;
-  color:#f8e7a7;
-  background:rgba(20,12,4,.45);
-  font-size:10px;
-}
-.card-scroll-btn:hover{
-  transform:translateY(-2px);
-  filter:brightness(1.1);
-  border-color:rgba(232,192,80,.68);
-}
 .gold-rule{height:2.5px;background:linear-gradient(90deg,transparent,#8a6010 15%,#e0c060 50%,#8a6010 85%,transparent)}
 
 .info{padding:13px 14px 5px;text-align:center}
@@ -2473,7 +2428,7 @@ body::after{
             <span class="advisor-duo-stage"><img src="pangtong.png" alt="龐統軍師"></span>
             <span class="advisor-duo-label">龐統</span>
           </button>
-          <button class="advisor-duo-role zhuge" type="button" title="策 諸葛亮">
+          <button class="advisor-duo-role zhuge" type="button" onclick="openAdvisorDialog()" title="策 諸葛亮">
             <span class="advisor-duo-stage"><img src="advisor-zhuge.png" alt="諸葛亮軍師"></span>
             <span class="advisor-duo-label">諸葛亮</span>
           </button>
@@ -3472,6 +3427,7 @@ function overlayClick(e){if(e.target===document.getElementById('overlay'))closeP
 
 function openEmpireCardShortcut(event,panel,tab){
   if(event&&event.stopPropagation)event.stopPropagation();
+  closeAdvisorDialog();
   if(panel==='wall'){
     openTravelMemoForDate(new Date());
     return;
@@ -3487,60 +3443,6 @@ function openEmpireCardShortcut(event,panel,tab){
       if(btn)switchTab(btn,tab);
     },0);
   }
-}
-
-function ensureEmpireCardScrolls(){
-  var specs={
-    'c-foodhouse':[{label:'打開糧倉',panel:'foodhouse'}],
-    'c-finance':[
-      {label:'國庫現況',panel:'finance',tab:'finance-accs'},
-      {label:'年度財報',panel:'finance',tab:'domestic-yearly'},
-      {label:'配息試算',panel:'finance',tab:'div-calc'}
-    ],
-    'c-domestic':[
-      {label:'快速記帳',panel:'domestic',tab:'booking-form'},
-      {label:'最近記錄',panel:'domestic',tab:'booking-recent'},
-      {label:'持股備忘',panel:'domestic',tab:'dividend-center'}
-    ],
-    'c-market':[
-      {label:'市場快報',panel:'market',tab:'market-watch'},
-      {label:'總經戰情',panel:'market',tab:'macro-overview'}
-    ],
-    'c-council':[
-      {label:'部隊陣容',panel:'council',tab:'council-roster'},
-      {label:'軍團概覽',panel:'council',tab:'council-holdings'}
-    ],
-    'c-medical':[
-      {label:'快速記錄',panel:'medical',tab:'medical-quick'},
-      {label:'抽排記錄',panel:'medical',tab:'medical-tarot'},
-      {label:'牌卡統計',panel:'medical',tab:'medical-stats'},
-      {label:'疼痛地圖',panel:'medical',tab:'medical-painmap'}
-    ],
-    'c-stars':[
-      {label:'命盤總覽',panel:'stars',tab:'stars-home'},
-      {label:'事件編年',panel:'stars',tab:'stars-chronicle'}
-    ],
-    'c-wall':[{label:'打開城牆',panel:'wall'}]
-  };
-  Object.keys(specs).forEach(function(id){
-    var card=document.getElementById(id);
-    if(!card||card.querySelector('.card-scrolls'))return;
-    var frame=card.querySelector('.frame')||card;
-    var items=specs[id];
-    var wrap=document.createElement('div');
-    wrap.className='card-scrolls'+(items.length>1?' two':'');
-    items.forEach(function(item){
-      var btn=document.createElement('button');
-      btn.className='card-scroll-btn';
-      btn.type='button';
-      btn.textContent=item.label;
-      btn.addEventListener('click',function(ev){
-        openEmpireCardShortcut(ev,item.panel,item.tab);
-      });
-      wrap.appendChild(btn);
-    });
-    frame.appendChild(wrap);
-  });
 }
 
 function setPanelHead(icon,en,zh){
@@ -9308,7 +9210,6 @@ function setupNotice(){
     if(navLunar)navLunar.textContent=lunarDateLabel(now);
   }
   updateDateDisplay();
-  ensureEmpireCardScrolls();
   initTodayAgenda();
   setTimeout(function(){
     if(hasMainApiCredentials())loadFoodhouseDashboard();
@@ -9514,18 +9415,66 @@ initHeaderVideoPlayback();
         <a class="advisor-practice-btn" href="daily-practice.png" target="_blank" rel="noopener" title="開啟每日練習清晰原圖">📖 每日練習</a>
       </div>
       <div class="advisor-btn-grid">
-        <div class="advisor-travel-card-row" aria-label="現金快捷">
-          <button class="advisor-btn" onclick="openAdvisorShortcut('withdraw')"><span class="advisor-btn-tag">提</span>日常提款</button>
-          <button class="advisor-btn" onclick="openAdvisorShortcut('cashpay')"><span class="advisor-btn-tag">現</span>現金支付</button>
-        </div>
-        <div class="advisor-travel-card-row" aria-label="支出快捷">
-          <button class="advisor-btn" onclick="openAdvisorShortcut('credit')"><span class="advisor-btn-tag">PX</span>PX網購</button>
-          <button class="advisor-btn" onclick="openAdvisorShortcut('dining')"><span class="advisor-btn-tag">食</span>外食簡餐</button>
-        </div>
-        <button class="advisor-btn" onclick="openAdvisorShortcut('fuel')"><span class="advisor-btn-tag">油</span>日常加油</button>
-        <button class="advisor-btn" onclick="openAdvisorShortcut('store')"><span class="advisor-btn-tag">商</span>超商消費</button>
-        <button class="advisor-btn" onclick="toggleAdvisorDividendShortcut()"><span class="advisor-btn-tag">息</span>配息入帳</button>
-        <button class="advisor-btn" onclick="advisorGo('foodhouse')"><span class="advisor-btn-tag">糧</span>巡視糧倉</button>
+        <section class="advisor-menu-section">
+          <button class="advisor-menu-toggle" type="button" onclick="toggleAdvisorMenuGroup(this)" aria-expanded="false"><span class="advisor-menu-mark">糧</span>糧倉<span class="advisor-menu-caret">▼</span></button>
+          <div class="advisor-btn-group">
+            <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'foodhouse')"><span class="advisor-btn-tag">糧</span>打開糧倉</button>
+            <div class="advisor-btn-spacer" aria-hidden="true"></div>
+          </div>
+        </section>
+        <section class="advisor-menu-section">
+          <button class="advisor-menu-toggle" type="button" onclick="toggleAdvisorMenuGroup(this)" aria-expanded="false"><span class="advisor-menu-mark">財</span>財政卷軸<span class="advisor-menu-caret">▼</span></button>
+          <div class="advisor-btn-group">
+            <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'finance','finance-accs')"><span class="advisor-btn-tag">庫</span>國庫現況</button>
+            <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'finance','domestic-yearly')"><span class="advisor-btn-tag">年</span>年度財報</button>
+            <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'finance','div-calc')"><span class="advisor-btn-tag">息</span>配息試算</button>
+          </div>
+        </section>
+        <section class="advisor-menu-section">
+          <button class="advisor-menu-toggle" type="button" onclick="toggleAdvisorMenuGroup(this)" aria-expanded="false"><span class="advisor-menu-mark">內</span>內政卷軸<span class="advisor-menu-caret">▼</span></button>
+          <div class="advisor-btn-group">
+            <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'domestic','booking-form')"><span class="advisor-btn-tag">記</span>快速記帳</button>
+            <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'domestic','booking-recent')"><span class="advisor-btn-tag">近</span>最近記錄</button>
+            <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'domestic','dividend-center')"><span class="advisor-btn-tag">股</span>持股備忘</button>
+          </div>
+        </section>
+        <section class="advisor-menu-section">
+          <button class="advisor-menu-toggle" type="button" onclick="toggleAdvisorMenuGroup(this)" aria-expanded="false"><span class="advisor-menu-mark">市</span>市集卷軸<span class="advisor-menu-caret">▼</span></button>
+          <div class="advisor-btn-group">
+            <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'market','market-watch')"><span class="advisor-btn-tag">報</span>市場快報</button>
+            <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'market','macro-overview')"><span class="advisor-btn-tag">總</span>總經戰情</button>
+          </div>
+        </section>
+        <section class="advisor-menu-section">
+          <button class="advisor-menu-toggle" type="button" onclick="toggleAdvisorMenuGroup(this)" aria-expanded="false"><span class="advisor-menu-mark">軍</span>軍機處卷軸<span class="advisor-menu-caret">▼</span></button>
+          <div class="advisor-btn-group">
+            <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'council','council-roster')"><span class="advisor-btn-tag">隊</span>部隊陣容</button>
+            <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'council','council-holdings')"><span class="advisor-btn-tag">團</span>軍團概覽</button>
+          </div>
+        </section>
+        <section class="advisor-menu-section">
+          <button class="advisor-menu-toggle" type="button" onclick="toggleAdvisorMenuGroup(this)" aria-expanded="false"><span class="advisor-menu-mark">醫</span>醫館卷軸<span class="advisor-menu-caret">▼</span></button>
+          <div class="advisor-btn-group">
+            <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'medical','medical-quick')"><span class="advisor-btn-tag">快</span>快速記錄</button>
+            <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'medical','medical-tarot')"><span class="advisor-btn-tag">抽</span>抽排記錄</button>
+            <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'medical','medical-stats')"><span class="advisor-btn-tag">牌</span>牌卡統計</button>
+            <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'medical','medical-painmap')"><span class="advisor-btn-tag">痛</span>疼痛地圖</button>
+          </div>
+        </section>
+        <section class="advisor-menu-section">
+          <button class="advisor-menu-toggle" type="button" onclick="toggleAdvisorMenuGroup(this)" aria-expanded="false"><span class="advisor-menu-mark">星</span>司天監卷軸<span class="advisor-menu-caret">▼</span></button>
+          <div class="advisor-btn-group">
+            <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'stars','stars-home')"><span class="advisor-btn-tag">命</span>命盤總覽</button>
+            <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'stars','stars-chronicle')"><span class="advisor-btn-tag">史</span>事件編年</button>
+          </div>
+        </section>
+        <section class="advisor-menu-section">
+          <button class="advisor-menu-toggle" type="button" onclick="toggleAdvisorMenuGroup(this)" aria-expanded="false"><span class="advisor-menu-mark">牆</span>城牆卷軸<span class="advisor-menu-caret">▼</span></button>
+          <div class="advisor-btn-group">
+            <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'wall')"><span class="advisor-btn-tag">城</span>打開城牆</button>
+            <div class="advisor-btn-spacer" aria-hidden="true"></div>
+          </div>
+        </section>
         <div class="advisor-travel-card-row" aria-label="遠征錄載具快捷">
           <button class="advisor-btn advisor-travel-card" type="button" onclick="advisorShowInvoiceCarrier()"><span class="advisor-btn-tag">載</span>顯示載具</button>
           <button class="advisor-btn advisor-travel-card" type="button" data-tag="複" onclick="advisorCopyInvoiceCarrier(this)"><span class="advisor-btn-tag">複</span>複製載具</button>
