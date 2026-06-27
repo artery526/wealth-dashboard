@@ -2625,12 +2625,8 @@ body::after{
     <input class="cfg-input" type="password" id="cfg-health-key" placeholder="輸入醫館密鑰">
     <div style="border-top:1px solid #2a1c08;margin:14px 0 12px"></div>
     <div class="cfg-sub" style="margin-bottom:10px">
-      軍師AI V2：V1 本地規則判斷不到時，才呼叫 DeepSeek 解析成安全 JSON。
+      軍師AI V2：DeepSeek Key 已移至後端保存；前端只送指令，不保存 AI 金鑰。
     </div>
-    <label class="cfg-label">DeepSeek API Key</label>
-    <input class="cfg-input" type="password" id="cfg-deepseek-key" placeholder="sk-...">
-    <label class="cfg-label">DeepSeek 模型</label>
-    <input class="cfg-input" type="text" id="cfg-deepseek-model" placeholder="deepseek-chat">
     <label class="cfg-label">軍師AI 通行令</label>
     <input class="cfg-input" type="password" id="cfg-advisor-ai-passcode" placeholder="設定後才可開啟軍師AI">
     <div class="cfg-actions">
@@ -2646,8 +2642,6 @@ body::after{
 // ══════════════════════════════════════════
 var API_URL = localStorage.getItem('wealth_api_url') || '';
 var WRITE_TOKEN = localStorage.getItem('wealth_write_token') || '';
-var DEEPSEEK_API_KEY = localStorage.getItem('wealth_deepseek_api_key') || '';
-var DEEPSEEK_MODEL = localStorage.getItem('wealth_deepseek_model') || 'deepseek-chat';
 var ADVISOR_AI_PASSCODE = localStorage.getItem('wealth_advisor_ai_passcode') || '';
 var advisorAIVerified = sessionStorage.getItem('wealth_advisor_ai_verified') === '1';
 var cfg = (function(){
@@ -3027,7 +3021,7 @@ async function apiPost(body){
   if(!API_URL)throw new Error('未設定 API 網址');
   WRITE_TOKEN=cleanToken(WRITE_TOKEN);
   if(!WRITE_TOKEN)throw new Error('未設定記帳密鑰');
-  if(body&&/^(advisorTask|advisorDraft|income|transfer)$/.test(body.action||'')){
+  if(body&&/^(advisorTask|advisorDraft|advisorAiParse|income|transfer)$/.test(body.action||'')){
     return apiPostJson(body);
   }
   var params=Object.assign({},body,{token:WRITE_TOKEN});
@@ -3268,11 +3262,7 @@ function openCfg(){
   document.getElementById('cfg-token').value=WRITE_TOKEN;
   document.getElementById('cfg-health-url').value=HEALTH_API_URL;
   document.getElementById('cfg-health-key').value=HEALTH_SECRET_KEY;
-  var dsKey=document.getElementById('cfg-deepseek-key');
-  var dsModel=document.getElementById('cfg-deepseek-model');
   var aiPass=document.getElementById('cfg-advisor-ai-passcode');
-  if(dsKey)dsKey.value=DEEPSEEK_API_KEY;
-  if(dsModel)dsModel.value=DEEPSEEK_MODEL||'deepseek-chat';
   if(aiPass)aiPass.value=ADVISOR_AI_PASSCODE;
   document.getElementById('cfg-overlay').classList.add('open');
 }
@@ -3283,20 +3273,15 @@ async function saveCfg(){
   var token=cleanToken(document.getElementById('cfg-token').value);
   var healthUrl=document.getElementById('cfg-health-url').value.trim();
   var healthKey=cleanToken(document.getElementById('cfg-health-key').value);
-  var deepseekKey=cleanToken((document.getElementById('cfg-deepseek-key')||{}).value||'');
-  var deepseekModel=((document.getElementById('cfg-deepseek-model')||{}).value||'deepseek-chat').trim()||'deepseek-chat';
   var advisorAiPass=((document.getElementById('cfg-advisor-ai-passcode')||{}).value||'').trim();
   API_URL=url;WRITE_TOKEN=token;
   HEALTH_API_URL=healthUrl;HEALTH_SECRET_KEY=healthKey;
-  DEEPSEEK_API_KEY=deepseekKey;DEEPSEEK_MODEL=deepseekModel;
   ADVISOR_AI_PASSCODE=advisorAiPass;
   advisorAIVerified=false;
   localStorage.setItem('wealth_api_url',url);
   localStorage.setItem('wealth_write_token',token);
   localStorage.setItem('health_api_url',healthUrl);
   localStorage.setItem('health_secret_key',healthKey);
-  localStorage.setItem('wealth_deepseek_api_key',deepseekKey);
-  localStorage.setItem('wealth_deepseek_model',deepseekModel);
   localStorage.setItem('wealth_advisor_ai_passcode',advisorAiPass);
   sessionStorage.removeItem('wealth_advisor_ai_verified');
   medicalOptionsCache=null;
@@ -9693,29 +9678,7 @@ function advisorAIDeepSeekSystemPrompt(){
 }
 
 async function advisorAIDeepSeekCommand(raw){
-  if(!DEEPSEEK_API_KEY)return {intent:'unknown',reason:'missing_key'};
-  var res=await fetchWithTimeout('https://api.deepseek.com/chat/completions',{
-    method:'POST',
-    headers:{
-      'Content-Type':'application/json',
-      'Authorization':'Bearer '+DEEPSEEK_API_KEY
-    },
-    body:JSON.stringify({
-      model:DEEPSEEK_MODEL||'deepseek-chat',
-      messages:[
-        {role:'system',content:advisorAIDeepSeekSystemPrompt()},
-        {role:'user',content:String(raw||'')}
-      ],
-      response_format:{type:'json_object'},
-      temperature:0,
-      max_tokens:260
-    })
-  },12000);
-  if(!res.ok)throw new Error('DeepSeek V2 連線失敗：HTTP '+res.status);
-  var data=await res.json();
-  var content=data&&data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content;
-  if(!content)throw new Error('DeepSeek V2 沒有回傳內容');
-  try{return JSON.parse(content);}catch(e){throw new Error('DeepSeek V2 回傳格式不是 JSON');}
+  return apiPost({action:'advisorAiParse',raw:String(raw||'')});
 }
 
 function advisorAINormalizeDeepSeekCommand(cmd,raw){
@@ -9818,8 +9781,7 @@ async function runAdvisorAICommand(btn){
   if(btn){btn.disabled=true;btn.textContent='判斷中…';}
   try{
     if(cmd.intent==='unknown'){
-      if(!DEEPSEEK_API_KEY)throw new Error('V1 尚未辨識；若要啟用 V2，請到設定填入 DeepSeek API Key。');
-      advisorAISetMessage('V1 未命中，軍師AI V2 召喚 DeepSeek 判讀中…','');
+      advisorAISetMessage('V1 未命中，軍師AI V2 請後端 DeepSeek 判讀中…','');
       var aiCmd=await advisorAIDeepSeekCommand(raw);
       cmd=advisorAINormalizeDeepSeekCommand(aiCmd,raw);
       if(cmd.intent==='unknown')throw new Error('V2 仍無法安全判斷這句指令，請換更明確說法。');
