@@ -3025,6 +3025,7 @@ async function apiPost(body){
     invalidateFoodhouseDashboardCache();
     invalidateFinanceDashboardCache();
   }
+  if(/^(macroWebhook)$/.test(body.action||''))invalidateMarketDashboardCache();
   return d.data;
 }
 async function apiPostJson(body){
@@ -3043,6 +3044,7 @@ async function apiPostJson(body){
     invalidateFoodhouseDashboardCache();
     invalidateFinanceDashboardCache();
   }
+  if(/^(macroWebhook)$/.test(body.action||''))invalidateMarketDashboardCache();
   return d.data;
 }
 
@@ -3058,6 +3060,11 @@ var FINANCE_CACHE_TTL=6*60*60*1000;
 var financeTreasuryPromise=null;
 var financePledgePromise=null;
 var financeYearlyPromises={};
+var MARKET_DASHBOARD_CACHE_KEY='wealth_market_dashboard_v1';
+var MARKET_MACRO_CACHE_KEY='wealth_market_macro_v1';
+var MARKET_CACHE_TTL=2*60*60*1000;
+var marketDashboardPromise=null;
+var macroOverviewPromise=null;
 function clearLegacyAdvisorReminderCache(){
   try{localStorage.removeItem(ADVISOR_REMINDER_CACHE_KEY);}catch(e){}
 }
@@ -3422,6 +3429,13 @@ function invalidateFinanceDashboardCache(){
   }catch(e){}
 }
 
+function invalidateMarketDashboardCache(){
+  try{
+    localStorage.removeItem(MARKET_DASHBOARD_CACHE_KEY);
+    localStorage.removeItem(MARKET_MACRO_CACHE_KEY);
+  }catch(e){}
+}
+
 function readTimedFinanceCache(key){
   try{
     var cached=JSON.parse(localStorage.getItem(key)||'null');
@@ -3431,6 +3445,18 @@ function readTimedFinanceCache(key){
 }
 
 function writeTimedFinanceCache(key,data){
+  try{localStorage.setItem(key,JSON.stringify({savedAt:Date.now(),data:data}));}catch(e){}
+}
+
+function readTimedMarketCache(key){
+  try{
+    var cached=JSON.parse(localStorage.getItem(key)||'null');
+    if(cached&&cached.data&&Date.now()-Number(cached.savedAt||0)<MARKET_CACHE_TTL)return cached.data;
+  }catch(e){}
+  return null;
+}
+
+function writeTimedMarketCache(key,data){
   try{localStorage.setItem(key,JSON.stringify({savedAt:Date.now(),data:data}));}catch(e){}
 }
 
@@ -7132,6 +7158,22 @@ function prefetchFinanceDashboard(){
   }
 }
 
+function prefetchMarketDashboard(){
+  if(!API_URL)return;
+  if(!readTimedMarketCache(MARKET_DASHBOARD_CACHE_KEY)&&!marketDashboardPromise){
+    marketDashboardPromise=apiGet({action:'marketDashboard'}).then(function(data){
+      writeTimedMarketCache(MARKET_DASHBOARD_CACHE_KEY,data);
+      return data;
+    }).catch(function(e){console.warn(e)}).finally(function(){marketDashboardPromise=null;});
+  }
+  if(!readTimedMarketCache(MARKET_MACRO_CACHE_KEY)&&!macroOverviewPromise){
+    macroOverviewPromise=apiGet({action:'macroOverview'}).then(function(data){
+      writeTimedMarketCache(MARKET_MACRO_CACHE_KEY,data);
+      return data;
+    }).catch(function(e){console.warn(e)}).finally(function(){macroOverviewPromise=null;});
+  }
+}
+
 // booking-recent 與配息試算已整合至 switchTab
 
 async function loadHoldings(){
@@ -7254,6 +7296,7 @@ function renderMarketPanel(){
       <div id="macro-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:82%"></div><div class="skel-line skel" style="width:68%"></div></div>
     </div>`;
   if(API_URL)loadMarketDashboard();
+  if(API_URL)setTimeout(prefetchMarketDashboard,300);
 }
 
 // ══════════════════════════════════════════
@@ -8412,21 +8455,48 @@ async function loadMarketDashboard(){
   var el=document.getElementById('market-content');
   if(!el)return;
   if(!API_URL){el.innerHTML=setupNotice();return}
-  try{
-    var data=await apiGet({action:'marketDashboard'});
-    await ensureMarketMarginData(data);
+  var cached=readTimedMarketCache(MARKET_DASHBOARD_CACHE_KEY);
+  if(cached)renderMarketDashboard(cached,el);
+  var dot=document.getElementById('market-dot');
+  var lbl=document.getElementById('market-label');
+  if(cached&&lbl)lbl.textContent='快取資料 · 更新中…';
+  if(marketDashboardPromise){
+    return marketDashboardPromise.then(function(data){
+      if(data&&document.getElementById('market-content')){
+        renderMarketDashboard(data,document.getElementById('market-content'));
+        ensureMarketMarginData(data).then(function(){
+          writeTimedMarketCache(MARKET_DASHBOARD_CACHE_KEY,data);
+          var current=document.getElementById('market-content');
+          if(current)renderMarketDashboard(data,current);
+        }).catch(function(e){console.warn('market margin refresh failed',e);});
+      }
+      return data;
+    });
+  }
+  marketDashboardPromise=apiGet({action:'marketDashboard'}).then(function(data){
     renderMarketDashboard(data,el);
+    writeTimedMarketCache(MARKET_DASHBOARD_CACHE_KEY,data);
     var dot=document.getElementById('market-dot');
     var lbl=document.getElementById('market-label');
     if(dot)dot.className='api-dot ok';
     if(lbl)lbl.textContent='已連線 · 市場快報';
-  }catch(e){
-    el.innerHTML=`<div style="color:var(--coral);font-family:var(--sans);font-size:12px;padding:12px 0">${esc(e.message)}</div>`;
+    ensureMarketMarginData(data).then(function(){
+      writeTimedMarketCache(MARKET_DASHBOARD_CACHE_KEY,data);
+      var current=document.getElementById('market-content');
+      if(current)renderMarketDashboard(data,current);
+    }).catch(function(e){console.warn('market margin refresh failed',e);});
+    return data;
+  }).catch(function(e){
+    if(!cached)el.innerHTML=`<div style="color:var(--coral);font-family:var(--sans);font-size:12px;padding:12px 0">${esc(e.message)}</div>`;
     var dot=document.getElementById('market-dot');
     var lbl=document.getElementById('market-label');
     if(dot)dot.className='api-dot err';
-    if(lbl)lbl.textContent='市場快報讀取失敗';
-  }
+    if(lbl)lbl.textContent=cached?'快取資料 · 更新失敗':'市場快報讀取失敗';
+    return null;
+  }).finally(function(){
+    marketDashboardPromise=null;
+  });
+  return marketDashboardPromise;
 }
 
 function marketFormatNumber(value,digits){
@@ -8537,21 +8607,36 @@ async function loadMacroOverview(){
   var el=document.getElementById('macro-content');
   if(!el)return;
   if(!API_URL){el.innerHTML=setupNotice();return}
-  el.innerHTML='<div class="skel-line skel"></div><div class="skel-line skel" style="width:82%"></div><div class="skel-line skel" style="width:68%"></div>';
-  try{
-    var data=await apiGet({action:'macroOverview'});
+  var cached=readTimedMarketCache(MARKET_MACRO_CACHE_KEY);
+  if(cached)renderMacroOverview(cached,el);
+  else el.innerHTML='<div class="skel-line skel"></div><div class="skel-line skel" style="width:82%"></div><div class="skel-line skel" style="width:68%"></div>';
+  var lbl=document.getElementById('macro-label');
+  if(cached&&lbl)lbl.textContent='快取資料 · 更新中…';
+  if(macroOverviewPromise){
+    return macroOverviewPromise.then(function(data){
+      if(data&&document.getElementById('macro-content'))renderMacroOverview(data,document.getElementById('macro-content'));
+      return data;
+    });
+  }
+  macroOverviewPromise=apiGet({action:'macroOverview'}).then(function(data){
     renderMacroOverview(data,el);
+    writeTimedMarketCache(MARKET_MACRO_CACHE_KEY,data);
     var dot=document.getElementById('macro-dot');
     var lbl=document.getElementById('macro-label');
     if(dot)dot.className='api-dot ok';
     if(lbl)lbl.textContent=data&&data.hasData?'已連線 · 總經戰情':'已連線 · 尚未建立總經資料';
-  }catch(e){
-    el.innerHTML=`<div style="color:var(--coral);font-family:var(--sans);font-size:12px;padding:12px 0">${esc(e.message)}</div>`;
+    return data;
+  }).catch(function(e){
+    if(!cached)el.innerHTML=`<div style="color:var(--coral);font-family:var(--sans);font-size:12px;padding:12px 0">${esc(e.message)}</div>`;
     var dot=document.getElementById('macro-dot');
     var lbl=document.getElementById('macro-label');
     if(dot)dot.className='api-dot err';
-    if(lbl)lbl.textContent='總經戰情讀取失敗';
-  }
+    if(lbl)lbl.textContent=cached?'快取資料 · 更新失敗':'總經戰情讀取失敗';
+    return null;
+  }).finally(function(){
+    macroOverviewPromise=null;
+  });
+  return macroOverviewPromise;
 }
 
 async function createMacroSample(){
@@ -9000,6 +9085,9 @@ function setupNotice(){
   setTimeout(function(){
     if(hasMainApiCredentials())prefetchFinanceDashboard();
   },2200);
+  setTimeout(function(){
+    if(API_URL)prefetchMarketDashboard();
+  },3200);
   // 彰化天氣（Open-Meteo，無需 API key）
   (function(){
     var WMO={
