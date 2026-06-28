@@ -588,6 +588,8 @@ body::after{
 .advisor-reminder-title{font-family:'Noto Serif TC',serif;font-size:13px;font-weight:900;color:#f0dfa0;letter-spacing:1px}
 .advisor-reminder-text{position:relative;z-index:1;font-family:'Noto Sans TC',sans-serif;font-size:13px;font-weight:700;line-height:1.75;color:#ead9a8;letter-spacing:.4px}
 .advisor-reminder-card.loading .advisor-reminder-text,.advisor-reminder-card.error .advisor-reminder-text{color:#9a7430;font-weight:700}
+.advisor-world-slot{margin:0 0 11px}
+.advisor-world-slot:empty{display:none}
 .advisor-summary-grid{position:relative;z-index:1;display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .advisor-summary-item{min-width:0;border:1px solid rgba(232,192,80,.22);border-radius:6px;background:rgba(0,0,0,.16);padding:8px 9px}
 .advisor-summary-label{font-family:var(--sans);font-size:10px;font-weight:900;line-height:1.35;color:#bda36d;letter-spacing:.6px}
@@ -9651,6 +9653,7 @@ initAdvisorDuoVideoPlayback();
         <div class="advisor-command-title">主公，請下令🏹</div>
         <a class="advisor-practice-btn" href="daily-practice.png" target="_blank" rel="noopener" title="開啟每日練習清晰原圖">📖 每日練習</a>
       </div>
+      <div class="advisor-world-slot" id="advisor-world-slot"></div>
       <div class="advisor-btn-grid">
         <section class="advisor-menu-section">
           <button class="advisor-menu-toggle" type="button" onclick="toggleAdvisorMenuGroup(this)" aria-expanded="false"><span class="advisor-menu-mark">糧</span>糧倉<span class="advisor-menu-caret">▼</span></button>
@@ -9741,6 +9744,7 @@ function closeAdvisorAIStandalone(){
 function openAdvisorDialog(){
   closeAdvisorAIStandalone();
   document.getElementById('advisor-overlay').classList.add('open');
+  openAdvisorWorldSituation(null,true);
 }
 function openAdvisorAIFromOrb(event){
   if(event&&event.stopPropagation)event.stopPropagation();
@@ -9762,6 +9766,8 @@ function closeAdvisorDialog(){
   document.getElementById('advisor-overlay').classList.remove('open');
   toggleTodayAgenda(false);
   closeAdvisorMenuGroups();
+  var world=document.getElementById('advisor-world-slot');
+  if(world)world.innerHTML='';
   closeAdvisorShortcutPanel();
 }
 function advisorOverlayClick(e){
@@ -9796,17 +9802,17 @@ function toggleAdvisorMenuGroup(btn){
   }
 }
 
-async function openAdvisorWorldSituation(event){
+async function openAdvisorWorldSituation(event,auto){
   if(event&&event.stopPropagation)event.stopPropagation();
-  var panel=document.getElementById('advisor-shortcut-panel');
+  var panel=document.getElementById('advisor-world-slot')||document.getElementById('advisor-shortcut-panel');
   if(!panel)return;
-  advisorShortcutOpenKind='world';
   advisorDividendSelection=null;
   advisorDividendMemoPending=null;
   advisorAIScheduleOpen=false;
-  panel.innerHTML='<div class="advisor-shortcut-title">天下局勢</div><div class="advisor-shortcut-hint">諸葛亮正在觀台股、美股、VIX、DXY、殖利率、Fed、黃金、油價與 CPI 月增率…</div>';
+  panel.innerHTML='<div class="advisor-world-card"><div class="advisor-world-title">目前頁面為【天下局勢】</div><div class="advisor-world-text" style="position:relative;z-index:1;text-align:center">諸葛亮正在觀台股、美股、VIX、DXY、殖利率、Fed、黃金、油價與 CPI 月增率…</div></div>';
+  if(!auto&&panel.scrollIntoView)panel.scrollIntoView({block:'nearest',behavior:'smooth'});
   if(!API_URL){
-    panel.innerHTML='<div class="advisor-shortcut-title">天下局勢</div><div class="advisor-shortcut-msg err">尚未設定 API URL，無法調閱局勢。</div>';
+    panel.innerHTML='<div class="advisor-world-card"><div class="advisor-world-title">目前頁面為【天下局勢】</div><div class="advisor-world-text" style="position:relative;z-index:1;text-align:center;color:var(--coral)">尚未設定 API URL，無法調閱局勢。</div></div>';
     return;
   }
   try{
@@ -9820,7 +9826,7 @@ async function openAdvisorWorldSituation(event){
     var view=advisorWorldBuild(market,macro);
     panel.innerHTML=advisorWorldHtml(view);
   }catch(err){
-    panel.innerHTML='<div class="advisor-shortcut-title">天下局勢</div><div class="advisor-shortcut-msg err">讀取失敗：'+esc(err&&err.message?err.message:'請稍後再試')+'</div>';
+    panel.innerHTML='<div class="advisor-world-card"><div class="advisor-world-title">目前頁面為【天下局勢】</div><div class="advisor-world-text" style="position:relative;z-index:1;text-align:center;color:var(--coral)">讀取失敗：'+esc(err&&err.message?err.message:'請稍後再試')+'</div></div>';
   }
 }
 
