@@ -4125,7 +4125,7 @@ function fitZiwei(){
 
 function renderMedicalPanel(){
   setPanelHead('✚','Clinic · Recovery','醫館');
-  setTabs([{key:'medical-quick',label:'快速記錄'},{key:'medical-tarot',label:'抽排記錄'},{key:'medical-stats',label:'牌卡統計'},{key:'medical-painmap',label:'疼痛地圖'}]);
+  setTabs([{key:'medical-quick',label:'快速記錄'},{key:'medical-tarot',label:'抽牌記錄'},{key:'medical-stats',label:'牌卡統計'},{key:'medical-painmap',label:'疼痛地圖'}]);
   var el=document.getElementById('p-body');
   if(!HEALTH_API_URL){
     el.innerHTML=`<div class="setup-notice">
@@ -9701,7 +9701,7 @@ initAdvisorDuoVideoPlayback();
           <button class="advisor-menu-toggle" type="button" onclick="toggleAdvisorMenuGroup(this)" aria-expanded="false"><span class="advisor-menu-mark">醫</span>醫館<span class="advisor-menu-caret">▼</span></button>
           <div class="advisor-btn-group">
             <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'medical','medical-quick')"><span class="advisor-btn-tag">快</span>快速記錄</button>
-            <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'medical','medical-tarot')"><span class="advisor-btn-tag">抽</span>抽排記錄</button>
+            <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'medical','medical-tarot')"><span class="advisor-btn-tag">抽</span>抽牌記錄</button>
             <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'medical','medical-stats')"><span class="advisor-btn-tag">牌</span>牌卡統計</button>
             <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'medical','medical-painmap')"><span class="advisor-btn-tag">痛</span>疼痛地圖</button>
           </div>
