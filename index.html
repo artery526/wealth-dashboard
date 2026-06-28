@@ -598,6 +598,23 @@ body::after{
 .advisor-summary-sub.up{color:var(--teal)}
 .advisor-summary-sub.down{color:var(--coral)}
 .advisor-summary-visual{margin-top:9px;padding-top:8px;border-top:1px solid rgba(232,192,80,.12)}
+.advisor-world-card{position:relative;overflow:hidden;border:1px solid rgba(232,192,80,.36);border-radius:8px;background:linear-gradient(135deg,rgba(45,30,10,.9),rgba(12,8,3,.92));padding:12px 13px 13px;box-shadow:inset 0 1px 0 rgba(255,238,190,.1)}
+.advisor-world-card::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 12% 0,rgba(232,192,80,.18),transparent 34%);pointer-events:none}
+.advisor-world-title{position:relative;z-index:1;font-family:var(--font);font-size:16px;font-weight:900;color:#f0dfa0;letter-spacing:1.5px;margin-bottom:9px;text-align:center}
+.advisor-world-stance{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid rgba(232,192,80,.2);border-radius:7px;background:rgba(0,0,0,.18);padding:9px 10px;margin-bottom:10px}
+.advisor-world-stance span{font-family:var(--sans);font-size:11px;font-weight:900;color:#bda36d}
+.advisor-world-stance strong{font-family:var(--font);font-size:22px;font-weight:900;color:#f3df9a;letter-spacing:2px}
+.advisor-world-stance.attack strong{color:var(--teal)}
+.advisor-world-stance.defense strong{color:var(--coral)}
+.advisor-world-section{position:relative;z-index:1;margin-top:9px}
+.advisor-world-label{font-family:var(--sans);font-size:11px;font-weight:950;color:#b99550;letter-spacing:1px;margin-bottom:4px}
+.advisor-world-text{font-family:var(--font);font-size:14px;font-weight:800;line-height:1.75;color:#ead9a8}
+.advisor-world-indicators{position:relative;z-index:1;display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px}
+.advisor-world-pill{border:1px solid rgba(232,192,80,.16);border-radius:6px;background:rgba(0,0,0,.16);padding:6px 7px;font-family:var(--sans);font-size:10px;font-weight:850;color:#bda36d;line-height:1.35}
+.advisor-world-pill strong{display:block;font-family:var(--mono);font-size:11px;color:#f3df9a;margin-top:2px}
+.advisor-world-pill.defense strong{color:var(--coral)}
+.advisor-world-pill.attack strong{color:var(--teal)}
+.advisor-world-quote{position:relative;z-index:1;margin-top:11px;padding-top:9px;border-top:1px solid rgba(232,192,80,.16);font-family:var(--font);font-size:15px;font-weight:900;line-height:1.8;color:#f4e5b7;text-align:center;text-shadow:0 0 12px rgba(232,192,80,.14)}
 .foodhouse-spark-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px;font-family:var(--sans);font-size:9px;font-weight:800;color:#84652d}
 .foodhouse-spark-head strong{font-family:var(--mono);font-size:10px;color:#bda36d}
 .foodhouse-sparkline{display:block;width:100%;height:42px;overflow:visible}
@@ -9015,6 +9032,168 @@ function macroTone(signal){
   if(signal.indexOf('紅')>=0||signal.indexOf('黑')>=0||signal.indexOf('衰退')>=0||signal.indexOf('滯脹')>=0)return 'defense';
   return 'watch';
 }
+function advisorWorldNum(value){
+  var n=Number(value);
+  return isNaN(n)||!isFinite(n)?null:n;
+}
+function advisorWorldIndicator(macro,code){
+  var row=((macro&&macro.indicators)||[]).find(function(item){return item&&item.code===code;})||null;
+  var values=macro&&macro.values||{};
+  if(row)return row;
+  return values&&values[code]!=null?{code:code,value:values[code],displayValue:String(values[code]),status:'資料'}:null;
+}
+function advisorWorldMarketRow(market,matcher){
+  return ((market&&market.rows)||[]).find(matcher)||null;
+}
+function advisorWorldValue(row){
+  return advisorWorldNum(row&&(row.value!=null?row.value:row.price));
+}
+function advisorWorldDisplay(row,digits,suffix){
+  if(!row)return '--';
+  if(row.displayValue)return row.displayValue;
+  var value=advisorWorldValue(row);
+  if(value==null)return '--';
+  return value.toFixed(digits==null?2:digits)+(suffix||'');
+}
+function advisorWorldToneFromText(text){
+  text=String(text||'');
+  if(text.indexOf('紅')>=0||text.indexOf('黑')>=0||text.indexOf('防守')>=0||text.indexOf('警戒')>=0)return 'defense';
+  if(text.indexOf('綠')>=0||text.indexOf('進攻')>=0||text.indexOf('強力')>=0)return 'attack';
+  return 'watch';
+}
+function advisorWorldBuild(market,macro){
+  market=market||{};
+  macro=macro||{};
+  var rows=market.rows||[];
+  var twse=advisorWorldMarketRow(market,function(r){return r&&(r.isTWSE||r.code==='^TWII');});
+  var qqq=advisorWorldMarketRow(market,function(r){return /QQQ/i.test(String(r&&r.symbol||r&&r.code||''));});
+  var spy=advisorWorldMarketRow(market,function(r){return /SPY/i.test(String(r&&r.symbol||r&&r.code||''));});
+  var gold=advisorWorldMarketRow(market,function(r){return /GLD/i.test(String(r&&r.symbol||r&&r.code||''));});
+  var vix=advisorWorldIndicator(macro,'vix');
+  var dxy=advisorWorldIndicator(macro,'dxy');
+  var yield10y=advisorWorldIndicator(macro,'yield10y');
+  var yield2y=advisorWorldIndicator(macro,'yield2y');
+  var oil=advisorWorldIndicator(macro,'oil');
+  var cpi=advisorWorldIndicator(macro,'cpi');
+  var cpiMoM=advisorWorldIndicator(macro,'cpiMoM');
+  var liquidity=advisorWorldIndicator(macro,'liquidityScore');
+  var risks=[];
+  var chances=[];
+  function risk(weight,text){risks.push({weight:weight,text:text});}
+  function chance(weight,text){chances.push({weight:weight,text:text});}
+  var cpiMoMVal=advisorWorldValue(cpiMoM);
+  if(cpiMoMVal!=null){
+    if(cpiMoMVal>=0.4)risk(3,'CPI月增率達 '+cpiMoMVal.toFixed(2)+'%，通膨再升溫，降息預期容易後撤。');
+    else if(cpiMoMVal>=0.3)risk(2,'CPI月增率 '+cpiMoMVal.toFixed(2)+'%，通膨仍需警戒。');
+  }
+  var vixVal=advisorWorldValue(vix);
+  if(vixVal!=null){
+    if(vixVal>=30)risk(3,'VIX 升至 '+vixVal.toFixed(2)+'，市場恐慌已進入警戒。');
+    else if(vixVal>=20)risk(2,'VIX 位於 '+vixVal.toFixed(2)+'，風險情緒偏緊。');
+    else if(vixVal<18)chance(1,'VIX 仍在低檔，市場尚未進入恐慌。');
+  }
+  var dxyVal=advisorWorldValue(dxy);
+  if(dxyVal!=null){
+    if(dxyVal>=110)risk(3,'美元指數過強，資金回流美元壓抑風險資產。');
+    else if(dxyVal>=105)risk(2,'DXY 偏強，非美資產與科技估值承壓。');
+    else chance(1,'DXY 未見強壓，風險資產仍有喘息空間。');
+  }
+  var y10=advisorWorldValue(yield10y);
+  if(y10!=null){
+    if(y10>=5)risk(3,'美國十年期殖利率逼近高壓區，估值折現壓力大。');
+    else if(y10>=4.5)risk(2,'十年期殖利率偏高，長天期資產仍受壓。');
+    else chance(1,'十年期殖利率未入高壓區，估值壓力較可控。');
+  }
+  var oilVal=advisorWorldValue(oil);
+  if(oilVal!=null){
+    if(oilVal>=100)risk(3,'油價站上百元級別，通膨與企業成本風險升高。');
+    else if(oilVal>=85)risk(2,'油價偏高，通膨降溫路徑受干擾。');
+  }
+  var cpiVal=advisorWorldValue(cpi);
+  if(cpiVal!=null){
+    if(cpiVal>=4)risk(2,'CPI年增率仍高，聯準會難以快速轉鴿。');
+    else if(cpiVal<3)chance(1,'CPI年增率接近舒緩區，政策壓力下降。');
+  }
+  var y2=advisorWorldValue(yield2y);
+  var liq=advisorWorldValue(liquidity);
+  var fedPolicy='中性觀望';
+  if((y2!=null&&y2>=5)||(liq!=null&&liq<=1)){
+    fedPolicy='偏鷹／流動性緊縮';
+    risk(3,'聯準會政策環境偏鷹，流動性不利進攻。');
+  }else if((y2!=null&&y2>=4.5)||(liq!=null&&liq<=3)){
+    fedPolicy='偏緊觀察';
+    risk(1,'聯準會政策仍偏緊，須等待利率壓力降溫。');
+  }else if(liq!=null&&liq>=4){
+    fedPolicy='偏鴿／流動性改善';
+    chance(2,'流動性分數改善，風險資產有進攻條件。');
+  }
+  [twse,qqq,spy].forEach(function(row){
+    if(!row)return;
+    var tone=marketTone(row.signal||row.status);
+    var name=row.isTWSE?'台股':(/QQQ/i.test(String(row.symbol||row.code||''))?'美股科技':'美股大盤');
+    if(tone==='defense')risk(2,name+' 技術面轉弱，短線不宜追擊。');
+    if(tone==='attack')chance(2,name+' 趨勢偏多，可保留分批進攻彈性。');
+  });
+  if(gold){
+    var goldTone=marketTone(gold.signal||gold.status);
+    if(goldTone==='attack')chance(1,'黃金維持強勢，避險與抗通膨配置有支撐。');
+    if(goldTone==='defense')risk(1,'黃金轉弱，避險需求暫未形成支撐。');
+  }
+  if(!risks.length)risk(1,'目前未見單一指標進入紅色危險區，但仍需等待市場方向確認。');
+  if(!chances.length)chance(1,'機會尚未明確，宜等待 VIX、美元與股市趨勢同步轉佳。');
+  risks.sort(function(a,b){return b.weight-a.weight;});
+  chances.sort(function(a,b){return b.weight-a.weight;});
+  var riskScore=risks.reduce(function(s,r){return s+r.weight;},0);
+  var chanceScore=chances.reduce(function(s,r){return s+r.weight;},0);
+  var stance='觀望';
+  if(riskScore>=6||risks[0].weight>=3&&riskScore>=4)stance='防守';
+  else if(chanceScore>=5&&riskScore<=3)stance='進攻';
+  var quote=stance==='進攻'
+    ? '敵陣露隙，可遣輕騎試探；但糧草未滿，不可孤軍深入。'
+    : stance==='防守'
+      ? '風急雲重，先固城池；待旗色轉明，再議出兵。'
+      : '霧未散，鼓勿急鳴；守住陣腳，等天下自露破綻。';
+  return {
+    stance:stance,
+    stanceTone:marketTone(stance),
+    risk:risks[0].text,
+    chance:chances[0].text,
+    fedPolicy:fedPolicy,
+    quote:quote,
+    updatedAt:(market.summary&&market.summary.updatedAt)||(macro.judgment&&macro.judgment.updatedAt)||'--',
+    sourceDate:macro.sourceDate||(macro.judgment&&macro.judgment.date)||'--',
+    pills:[
+      {label:'台股',value:twse?marketSignalText(twse.signal):'--',tone:twse?marketTone(twse.signal):'watch'},
+      {label:'美股',value:qqq?marketSignalText(qqq.signal):(spy?marketSignalText(spy.signal):'--'),tone:qqq?marketTone(qqq.signal):(spy?marketTone(spy.signal):'watch')},
+      {label:'VIX',value:advisorWorldDisplay(vix,2),tone:advisorWorldToneFromText(vix&&vix.status)},
+      {label:'DXY',value:advisorWorldDisplay(dxy,2),tone:advisorWorldToneFromText(dxy&&dxy.status)},
+      {label:'10Y',value:advisorWorldDisplay(yield10y,2,'%'),tone:advisorWorldToneFromText(yield10y&&yield10y.status)},
+      {label:'Fed',value:fedPolicy,tone:fedPolicy.indexOf('鷹')>=0||fedPolicy.indexOf('緊')>=0?'defense':fedPolicy.indexOf('鴿')>=0?'attack':'watch'},
+      {label:'黃金',value:gold?marketSignalText(gold.signal):'--',tone:gold?marketTone(gold.signal):'watch'},
+      {label:'油價',value:advisorWorldDisplay(oil,2),tone:advisorWorldToneFromText(oil&&oil.status)},
+      {label:'CPI月增',value:advisorWorldDisplay(cpiMoM,2,'%'),tone:advisorWorldToneFromText(cpiMoM&&cpiMoM.status)}
+    ]
+  };
+}
+function advisorWorldHtml(view){
+  return `<div class="advisor-world-card">
+    <div class="advisor-world-title">目前頁面為【天下局勢】</div>
+    <div class="advisor-world-stance ${esc(view.stanceTone)}"><span>軍師判斷</span><strong>${esc(view.stance)}</strong></div>
+    <div class="advisor-world-section">
+      <div class="advisor-world-label">最大風險</div>
+      <div class="advisor-world-text">${esc(view.risk)}</div>
+    </div>
+    <div class="advisor-world-section">
+      <div class="advisor-world-label">最大機會</div>
+      <div class="advisor-world-text">${esc(view.chance)}</div>
+    </div>
+    <div class="advisor-world-indicators">${view.pills.map(function(p){
+      return `<div class="advisor-world-pill ${esc(p.tone)}">${esc(p.label)}<strong>${esc(p.value)}</strong></div>`;
+    }).join('')}</div>
+    <div class="advisor-world-quote">${esc(view.quote)}</div>
+    <div class="advisor-summary-sub" style="position:relative;z-index:1;text-align:center;margin-top:7px">更新 ${esc(view.updatedAt)} · 指標 ${esc(view.sourceDate)}</div>
+  </div>`;
+}
 // ══════════════════════════════════════════
 //  台股指數卡片渲染（資料來自 GAS，無 CORS 問題）
 // ══════════════════════════════════════════
@@ -9501,6 +9680,7 @@ initAdvisorDuoVideoPlayback();
           <div class="advisor-btn-group">
             <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'market','market-watch')"><span class="advisor-btn-tag">報</span>市場快報</button>
             <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'market','macro-overview')"><span class="advisor-btn-tag">總</span>總經戰情</button>
+            <button class="advisor-btn" type="button" onclick="openAdvisorWorldSituation(event)"><span class="advisor-btn-tag">勢</span>天下局勢</button>
           </div>
         </section>
         <section class="advisor-menu-section">
@@ -9613,6 +9793,34 @@ function toggleAdvisorMenuGroup(btn){
   if(willOpen){
     section.classList.add('is-open');
     btn.setAttribute('aria-expanded','true');
+  }
+}
+
+async function openAdvisorWorldSituation(event){
+  if(event&&event.stopPropagation)event.stopPropagation();
+  var panel=document.getElementById('advisor-shortcut-panel');
+  if(!panel)return;
+  advisorShortcutOpenKind='world';
+  advisorDividendSelection=null;
+  advisorDividendMemoPending=null;
+  advisorAIScheduleOpen=false;
+  panel.innerHTML='<div class="advisor-shortcut-title">天下局勢</div><div class="advisor-shortcut-hint">諸葛亮正在觀台股、美股、VIX、DXY、殖利率、Fed、黃金、油價與 CPI 月增率…</div>';
+  if(!API_URL){
+    panel.innerHTML='<div class="advisor-shortcut-title">天下局勢</div><div class="advisor-shortcut-msg err">尚未設定 API URL，無法調閱局勢。</div>';
+    return;
+  }
+  try{
+    var results=await Promise.allSettled([
+      apiGet({action:'marketDashboard'}),
+      apiGet({action:'macroOverview'})
+    ]);
+    if(results[0].status!=='fulfilled'&&results[1].status!=='fulfilled')throw new Error('市場與總經資料讀取失敗');
+    var market=results[0].status==='fulfilled'?(results[0].value||{}):{};
+    var macro=results[1].status==='fulfilled'?(results[1].value||{}):{};
+    var view=advisorWorldBuild(market,macro);
+    panel.innerHTML=advisorWorldHtml(view);
+  }catch(err){
+    panel.innerHTML='<div class="advisor-shortcut-title">天下局勢</div><div class="advisor-shortcut-msg err">讀取失敗：'+esc(err&&err.message?err.message:'請稍後再試')+'</div>';
   }
 }
 
