@@ -743,6 +743,10 @@ body::after{
 .advisor-ai-example{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .advisor-ai-example code{font-family:var(--mono);font-size:11px;color:#e7c77a;background:rgba(232,192,80,.08);border-radius:5px;padding:1px 4px}
 .advisor-ai-result{border:1px solid rgba(232,192,80,.24);border-radius:8px;background:rgba(232,192,80,.05);padding:9px 10px;margin-top:9px;font-family:var(--sans);font-size:12px;font-weight:850;line-height:1.7;color:#d8c18a}
+.advisor-ai-granary-brief{position:relative;overflow:hidden;border:1px solid rgba(232,192,80,.28);border-radius:9px;background:linear-gradient(135deg,rgba(36,24,8,.84),rgba(8,6,3,.88));padding:10px 11px;margin:0 0 10px;font-family:var(--font);font-size:14px;font-weight:850;line-height:1.75;color:#ead9a8;text-shadow:0 0 9px rgba(232,192,80,.08)}
+.advisor-ai-granary-brief::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 10% 0,rgba(232,192,80,.16),transparent 34%);pointer-events:none}
+.advisor-ai-granary-brief span{position:relative;z-index:1}
+.advisor-ai-granary-brief.loading,.advisor-ai-granary-brief.error{font-family:var(--sans);font-size:12px;font-weight:850;color:#9f8248;text-align:center}
 .advisor-ai-standalone{position:fixed;left:calc(50% + 44px);top:116px;z-index:2950;width:min(690px,calc(100vw - 150px));border:1.5px solid rgba(232,192,80,.55);border-radius:0 16px 16px 16px;background:linear-gradient(145deg,rgba(26,16,5,.96),rgba(10,7,3,.96));backdrop-filter:blur(8px);padding:18px 20px 16px;box-shadow:0 18px 42px rgba(0,0,0,.62),0 0 28px rgba(232,192,80,.18),0 0 0 9999px rgba(0,0,0,.52);opacity:0;pointer-events:none;transform:translateX(-50%) translateY(-8px);transition:opacity .18s,transform .18s}
 .advisor-ai-standalone::before{content:'';position:absolute;left:-10px;top:42px;border:5px solid transparent;border-right-color:rgba(232,192,80,.55)}
 .advisor-ai-standalone::after{content:'';position:absolute;left:-8px;top:43px;border:4px solid transparent;border-right-color:#1a1005}
@@ -9980,6 +9984,7 @@ function openAdvisorAI(targetPanel){
   advisorAIScheduleOpen=false;
   panel.innerHTML=`${advisorAIHeaderHtml('🗡️主公，請下令')}
     <div class="advisor-ai-portrait"><img class="advisor-ai-portrait-img" src="pangtong.png" alt="龐統軍師"></div>
+    <div class="advisor-ai-granary-brief loading" id="advisor-ai-granary-brief"><span>龐統正在檢視帝國糧倉…</span></div>
     <div class="advisor-ai-row">
       <input class="advisor-ai-input" id="advisor-ai-input" type="text" placeholder="輸入指令…" onkeydown="advisorAIKey(event)">
       <button class="advisor-shortcut-submit" id="advisor-ai-submit" type="button" onclick="runAdvisorAICommand(this)">執行</button>
@@ -9990,6 +9995,7 @@ function openAdvisorAI(targetPanel){
     var input=document.getElementById('advisor-ai-input');
     if(input)input.focus();
   },0);
+  loadAdvisorAIGranaryBrief();
 }
 
 function advisorAIKey(e){
@@ -10307,6 +10313,76 @@ function advisorAISetMessage(text,type){
 
 function advisorAIResultHtml(title,lines){
   return `<div class="advisor-ai-result"><strong>${esc(title)}</strong><br>${(lines||[]).map(esc).join('<br>')}</div>`;
+}
+
+function advisorAISavingRateNumber(value){
+  var text=String(value==null?'':value).replace('%','').trim();
+  var n=parseFloat(text);
+  return isNaN(n)?0:n;
+}
+function advisorAIGranarySentence(monthly,dividend){
+  monthly=monthly||{};
+  dividend=dividend||{};
+  var income=Number(monthly.income)||0;
+  var expense=Number(monthly.expense)||0;
+  var net=monthly.net!=null&&!isNaN(Number(monthly.net))?Number(monthly.net):(income-expense);
+  var savingRate=advisorAISavingRateNumber(monthly.savingRate);
+  var cashAsset=Number(monthly.cashAsset)||0;
+  var monthlyDiv=Number(dividend.monthlyTotal)||0;
+  var categories=(monthly.categories||[]).filter(function(item){return item&&item.name&&Number(item.amount)>0;}).sort(function(a,b){return Number(b.amount||0)-Number(a.amount||0);});
+  var top=categories[0]||null;
+  var topShare=top&&expense>0?Number(top.amount||0)/expense:0;
+  var reserveMonths=expense>0?cashAsset/expense:0;
+  var enoughReserve=reserveMonths>=3||cashAsset>0&&expense===0;
+  var abnormal=topShare>=0.35||(expense>0&&savingRate<30);
+  var dividendSupport=monthlyDiv>0;
+  if(net<0){
+    return '🪶 主公，本月軍糧流失偏快，現金流已轉弱；宜先穩固內政，暫緩擴張帝國。';
+  }
+  if(savingRate<30){
+    return abnormal
+      ? '🪶 主公，本月糧草仍有入庫，但支出軍勢偏盛；建議先壓住大宗消耗，再議遠征。'
+      : '🪶 主公，本月糧草尚可支應，但儲蓄率不算健康；宜守住內政節奏，暫不急於擴張。';
+  }
+  if(abnormal){
+    return '🪶 主公，本月糧草尚足，但有單一路線耗糧偏重；可維持兵種培養，惟軍需開銷需設哨控管。';
+  }
+  if(savingRate>=60&&enoughReserve){
+    return dividendSupport
+      ? '🪶 主公，本月糧草充足，儲蓄率維持高檔，配息亦有助軍需；可安心培養長期兵種，採小步擴張。'
+      : '🪶 主公，本月糧草充足，儲蓄率維持高檔；可安心培養長期兵種，穩步擴張帝國。';
+  }
+  if(savingRate>=30&&net>0){
+    return enoughReserve
+      ? '🪶 主公，本月糧草入庫穩定，預備金尚能護城；可小幅擴張，但不宜貿然重兵遠征。'
+      : '🪶 主公，本月現金流尚正，但預備糧仍需增厚；宜先補足城防，再行擴張。';
+  }
+  return '🪶 主公，本月糧草局勢尚稱平穩；宜維持節制開支，等待更明確的擴張時機。';
+}
+async function loadAdvisorAIGranaryBrief(){
+  var el=document.getElementById('advisor-ai-granary-brief');
+  if(!el)return;
+  if(!API_URL){
+    el.className='advisor-ai-granary-brief error';
+    el.innerHTML='<span>🪶 主公，糧倉戰情暫不可得；請先完成 API 設定。</span>';
+    return;
+  }
+  try{
+    var ym=currentYM();
+    var results=await Promise.allSettled([
+      apiGet({action:'foodhouseDashboard',ym:ym}),
+      loadDividendCenter(false)
+    ]);
+    if(results[0].status!=='fulfilled')throw results[0].reason||new Error('糧倉讀取失敗');
+    var foodhouse=results[0].value||{};
+    var monthly=((foodhouse.core||{}).monthly)||foodhouse.monthly||{};
+    var dividend=results[1].status==='fulfilled'?(results[1].value||{}):{};
+    el.className='advisor-ai-granary-brief';
+    el.innerHTML='<span>'+esc(advisorAIGranarySentence(monthly,dividend))+'</span>';
+  }catch(err){
+    el.className='advisor-ai-granary-brief error';
+    el.innerHTML='<span>🪶 主公，糧倉戰情暫不可得；龐統仍可聽令辦事。</span>';
+  }
 }
 
 async function advisorAIShowMonthlyAssetBrief(){
