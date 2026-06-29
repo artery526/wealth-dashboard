@@ -1727,7 +1727,7 @@ body::after{
 /* ── Top Nav ── */
 .top-nav{
   position:fixed;top:0;left:0;right:0;z-index:50;
-  display:flex;align-items:center;justify-content:space-between;
+  display:flex;align-items:center;justify-content:center;
   padding:10px 20px;
   background:rgba(10,7,4,.85);
   backdrop-filter:blur(8px);
@@ -1735,21 +1735,22 @@ body::after{
 }
 .top-nav-logo{
   position:relative;
-  display:flex;flex-direction:column;align-items:flex-end;gap:3px;
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  text-align:center;
 }
 .nav-bottom-row{
   display:contents; /* 桌面版：子元素直接參與 top-nav 的 flex 排列 */
 }
 .nav-date-row{
   display:flex;align-items:center;gap:8px;
-  justify-content:flex-end;
+  justify-content:center;
   border:1px solid transparent;border-radius:8px;padding:3px 7px;
   cursor:pointer;transition:border-color .2s,background .2s,box-shadow .2s;
 }
 .nav-date-row:hover,.nav-date-row:focus-visible{border-color:rgba(232,192,80,.38);background:rgba(232,192,80,.06);box-shadow:0 0 16px rgba(232,192,80,.12);outline:none}
 .nav-weather-row{
   display:flex;align-items:center;gap:5px;
-  justify-content:flex-end;
+  justify-content:center;
 }
 .nav-weather-icon{
   font-size:13px;line-height:1;
@@ -1778,8 +1779,8 @@ body::after{
   color:#a89060;letter-spacing:1px;
 }
 .nav-date-lunar{
-  align-self:flex-end;
-  padding-right:7px;
+  align-self:center;
+  padding-right:0;
   font-family:var(--sans);font-size:13px;font-weight:700;
   color:#d8b45d;letter-spacing:.5px;white-space:nowrap;
 }
@@ -2050,9 +2051,9 @@ body::after{
     padding:8px 14px 8px;
     gap:5px;
   }
-  /* 第一行：帝國指揮所置中 */
+  /* 第一行：日期資訊置中 */
   .nav-bottom-row{
-    display:flex;align-items:center;justify-content:space-between;
+    display:flex;align-items:center;justify-content:center;
   }
   .top-nav-logo{gap:1px}
   .nav-date-day{font-size:20px}
