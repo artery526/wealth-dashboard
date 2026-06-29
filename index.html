@@ -515,31 +515,77 @@ body::after{
 .card:hover{transform:translateY(-12px) scale(1.03);z-index:10}
 .card.active{transform:translateY(-16px) scale(1.05);z-index:20}
 .card-shortcuts{
+  position:relative;
   display:grid;
   grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:7px;
-  margin-top:8px;
+  gap:8px;
+  margin-top:10px;
+  padding:13px 14px 12px;
+  border:1px solid rgba(196,164,92,.58);
+  border-radius:14px 14px 10px 10px;
+  background:
+    radial-gradient(ellipse at 50% -18%,rgba(255,245,204,.18),transparent 56%),
+    radial-gradient(circle at 12% 20%,rgba(120,82,24,.18),transparent 35%),
+    radial-gradient(circle at 88% 70%,rgba(232,192,80,.12),transparent 34%),
+    linear-gradient(90deg,rgba(25,16,7,.94),rgba(122,90,38,.34) 13%,rgba(232,215,170,.18) 50%,rgba(122,90,38,.34) 87%,rgba(25,16,7,.94)),
+    repeating-linear-gradient(135deg,rgba(244,227,176,.08) 0 1px,transparent 1px 9px),
+    linear-gradient(180deg,rgba(28,20,10,.92),rgba(11,8,4,.92));
+  box-shadow:
+    0 12px 26px rgba(0,0,0,.34),
+    0 0 18px rgba(232,192,80,.1),
+    inset 0 1px 0 rgba(255,246,216,.18),
+    inset 0 0 22px rgba(0,0,0,.28);
+  isolation:isolate;
+}
+.card-shortcuts::before,
+.card-shortcuts::after{
+  content:"";
+  position:absolute;
+  left:18px;
+  right:18px;
+  height:5px;
+  border-radius:999px;
+  background:linear-gradient(90deg,transparent,rgba(232,192,80,.58) 15%,rgba(255,240,180,.76) 50%,rgba(232,192,80,.58) 85%,transparent);
+  box-shadow:0 0 10px rgba(232,192,80,.14);
+  pointer-events:none;
+  z-index:0;
+}
+.card-shortcuts::before{top:-3px}
+.card-shortcuts::after{bottom:-3px}
+.card-shortcuts .card-shortcut{position:relative;z-index:1}
+.card-shortcuts:focus-within{
+  border-color:rgba(232,192,80,.74);
+  box-shadow:0 12px 28px rgba(0,0,0,.38),0 0 22px rgba(232,192,80,.14),inset 0 1px 0 rgba(255,246,216,.2);
+}
+.card-shortcuts:hover{border-color:rgba(232,192,80,.68)}
+.card-shortcuts::before{
+  filter:drop-shadow(0 1px 0 rgba(0,0,0,.48));
+}
+.card-shortcuts::after{
+  filter:drop-shadow(0 -1px 0 rgba(0,0,0,.48));
 }
 .card-shortcut{
   min-height:34px;
-  border:1px solid rgba(184,137,46,.42);
-  border-radius:8px;
+  border:1px solid rgba(184,137,46,.34);
+  border-radius:7px;
   background:
-    radial-gradient(circle at 12% 0,rgba(232,192,80,.14),transparent 42%),
-    linear-gradient(145deg,rgba(34,24,12,.86),rgba(9,7,4,.82));
-  color:#ead9a8;
+    radial-gradient(circle at 18% 0,rgba(255,242,190,.18),transparent 40%),
+    linear-gradient(90deg,rgba(16,11,5,.55),rgba(232,215,170,.18) 50%,rgba(16,11,5,.55)),
+    linear-gradient(180deg,rgba(42,29,13,.78),rgba(13,10,5,.82));
+  color:#f0dfa0;
   font-family:var(--sans);
   font-size:12px;
   font-weight:900;
   letter-spacing:.5px;
   cursor:pointer;
-  box-shadow:0 8px 16px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,246,216,.08);
+  text-shadow:0 0 10px rgba(232,192,80,.18),0 1px 0 rgba(0,0,0,.6);
+  box-shadow:inset 0 1px 0 rgba(255,246,216,.12),inset 0 -10px 18px rgba(0,0,0,.12);
   transition:border-color .18s,box-shadow .18s,transform .12s,color .18s;
 }
 .card-shortcut:hover{
   border-color:rgba(232,192,80,.7);
   color:#fff0b8;
-  box-shadow:0 10px 20px rgba(0,0,0,.32),0 0 14px rgba(232,192,80,.16),inset 0 1px 0 rgba(255,246,216,.12);
+  box-shadow:0 0 14px rgba(232,192,80,.16),inset 0 1px 0 rgba(255,246,216,.16),inset 0 -10px 18px rgba(0,0,0,.1);
   transform:translateY(-1px);
 }
 .card-shortcut:active{transform:translateY(0)}
