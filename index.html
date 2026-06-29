@@ -2921,7 +2921,7 @@ var bookingDividendHiddenRows = {};
 var bookingDividendExpanded = false;
 var bookingDividendPickerOpen = false;
 var DIVIDEND_CACHE_TTL = 5 * 60 * 1000;
-var DIVIDEND_AUTOFILL_SYMBOLS = ['CHPY','AIPI','QQQI','SPYI','MLPI','PLTY','00997A'];
+var DIVIDEND_AUTOFILL_SYMBOLS = ['CHPY','AIPI','QQQI','MLPI','PLTY','00997A'];
 var heroCache = [];
 var armySettingCache = null;
 var stockTradeMode = false;
@@ -2986,7 +2986,7 @@ var DEFAULT_MEDICAL_OPTIONS = {
 var DIVIDEND_SYMBOLS = [
   {value:'00985B',label:'🎟️00985B'},{value:'00997A',label:'🪄00997A'},{value:'MLPI',label:'🛢️MLPI'},
   {value:'施羅德收益成長A2',label:'🌳施羅德收益成長A2'},{value:'路博邁台灣5G',label:'🪐路博邁台灣5G'},
-  {value:'SPYI',label:'💎SPYI'},{value:'QQQI',label:'📡QQQI'},
+  {value:'QQQI',label:'📡QQQI'},
   {value:'AIPI',label:'🤖AIPI'},{value:'PLTY',label:'🪖PLTY'},{value:'CHPY',label:'🐦‍🔥CHPY'} ,
   {value:'GDXW',label:'\u2692\uFE0FGDXW'},{value:'💛GLDW',label:'💛GLDW'}
 ];
@@ -2994,7 +2994,7 @@ var STOCK_SYMBOLS = [
   {value:'📡QQQI',label:'📡QQQI'},{value:'🛢️MLPI',label:'🛢️MLPI'},
   {value:'🪐路博邁台灣5G',label:'🪐路博邁台灣5G'},{value:'🌳施羅德收益成長A2',label:'🌳施羅德收益成長A2'},
   {value:'🎟️00985B',label:'🎟️00985B'},{value:'🪄00997A',label:'🪄00997A'},{value:'🤖AIPI',label:'🤖AIPI'},
-  {value:'💎SPYI',label:'💎SPYI'},{value:'🪖PLTY',label:'🪖PLTY'},{value:'🐦‍🔥CHPY',label:'🐦‍🔥CHPY'},
+  {value:'🪖PLTY',label:'🪖PLTY'},{value:'🐦‍🔥CHPY',label:'🐦‍🔥CHPY'},
   {value:'\u2692\uFE0FGDXW',label:'\u2692\uFE0FGDXW'},{value:'💛GLDW',label:'💛GLDW'}
 ];
 var HOLDING_META = {
@@ -8496,7 +8496,7 @@ function initDivCalc(){
     <!-- 股票名稱 -->
     <div class="form-group">
       <label class="form-label">股票名稱</label>
-      <input class="form-control" type="text" id="div-name" placeholder="例：00985B、SPYI">
+      <input class="form-control" type="text" id="div-name" placeholder="例：00985B、QQQI">
     </div>
 
     <!-- 配息頻率 -->
@@ -11170,7 +11170,6 @@ var LORD_DATA = {
     {emoji:'🌳',name:'施羅德收益成長A2', cost:648000, mktVal:662593, units:150, price:140.174, div:4753},
     {emoji:'🎟️',name:'00985B', cost:3187000, mktVal:3219300, units:315000, price:10.22, div:90911},
     {emoji:'🤖',name:'AIPI', cost:1933685, mktVal:1349131, units:1200, price:35.71, div:534589},
-    {emoji:'💎',name:'SPYI', cost:300927, mktVal:328688, units:200, price:52.20, div:24530},
     {emoji:'🪖',name:'PLTY', cost:1169750, mktVal:795808, units:700, price:36.11, div:341114},
     {emoji:'🐦‍🔥',name:'CHPY', cost:870351, mktVal:1100033, units:500, price:69.88, div:144158},
   ],
