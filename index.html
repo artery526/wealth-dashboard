@@ -8,9 +8,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&family=Noto+Sans+TC:wght@400;500;700&family=DM+Mono:wght@400;500&family=Cinzel+Decorative:wght@700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-/* Finance card full-height video */
+/* Finance / domestic cards keep video filled inside the frame */
 #c-finance .frame,#c-domestic .frame{display:flex;flex-direction:column;min-height:100%;}
-#c-finance .art{flex:1;height:auto;min-height:0;}
+#c-finance .art,#c-domestic .art{flex:1;height:auto;min-height:0;}
 :root{
   --bg:#0a0704;--gold:#e8c050;--gold2:#c8963e;--gold3:#8a6010;
   --teal:#1D9E75;--teal-l:rgba(29,158,117,.12);
@@ -2608,13 +2608,13 @@ body::after{
             muted
             playsinline
             preload="metadata"
-            style="width:100%;height:auto;display:block;"
+            style="width:100%;height:100%;display:block;object-fit:cover;object-position:center center;"
           ></video>
           <!-- 底部漸層 + 小字標籤 -->
           <div style="position:absolute;bottom:0;left:0;right:0;z-index:4;
             background:linear-gradient(to top,rgba(8,5,3,.95) 0%,rgba(8,5,3,.5) 50%,transparent 100%);
             padding:16px 12px 12px;text-align:center;pointer-events:none;">
-            <span style="font-family:'Noto Sans TC',sans-serif;font-size:11px;color:#c09a50;letter-spacing:3px;">倉庫</span>
+            <span style="font-family:'Noto Sans TC',sans-serif;font-size:11px;color:#c09a50;letter-spacing:3px;">&#x570B;&#x5EAB;&#x8CA1;&#x5831;</span>
           </div>
         </div>
       </div>
@@ -2639,7 +2639,7 @@ body::after{
             muted
             playsinline
             preload="metadata"
-            style="width:100%;height:auto;display:block;"
+            style="width:100%;height:100%;display:block;object-fit:cover;object-position:center center;"
           ></video>
           <div style="position:absolute;bottom:0;left:0;right:0;z-index:4;
             background:linear-gradient(to top,rgba(8,5,3,.95) 0%,rgba(8,5,3,.5) 50%,transparent 100%);
