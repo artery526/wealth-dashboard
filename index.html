@@ -514,6 +514,35 @@ body::after{
 @keyframes appear{from{opacity:0;transform:translateY(36px) scale(.94)}to{opacity:1;transform:translateY(0) scale(1)}}
 .card:hover{transform:translateY(-12px) scale(1.03);z-index:10}
 .card.active{transform:translateY(-16px) scale(1.05);z-index:20}
+.card-shortcuts{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:7px;
+  margin-top:8px;
+}
+.card-shortcut{
+  min-height:34px;
+  border:1px solid rgba(184,137,46,.42);
+  border-radius:8px;
+  background:
+    radial-gradient(circle at 12% 0,rgba(232,192,80,.14),transparent 42%),
+    linear-gradient(145deg,rgba(34,24,12,.86),rgba(9,7,4,.82));
+  color:#ead9a8;
+  font-family:var(--sans);
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:.5px;
+  cursor:pointer;
+  box-shadow:0 8px 16px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,246,216,.08);
+  transition:border-color .18s,box-shadow .18s,transform .12s,color .18s;
+}
+.card-shortcut:hover{
+  border-color:rgba(232,192,80,.7);
+  color:#fff0b8;
+  box-shadow:0 10px 20px rgba(0,0,0,.32),0 0 14px rgba(232,192,80,.16),inset 0 1px 0 rgba(255,246,216,.12);
+  transform:translateY(-1px);
+}
+.card-shortcut:active{transform:translateY(0)}
 
 .frame{
   border-radius:14px 14px 8px 8px;overflow:hidden;
@@ -2685,6 +2714,12 @@ body::after{
             <span style="font-family:'Noto Sans TC',sans-serif;font-size:11px;color:#c09a50;letter-spacing:3px;">城牆</span>
           </div>
         </div>
+      </div>
+      <div class="card-shortcuts" aria-label="醫館快捷入口">
+        <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'medical','medical-quick')">快速記錄</button>
+        <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'medical','medical-tarot')">抽牌記錄</button>
+        <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'medical','medical-stats')">牌卡統計</button>
+        <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'medical','medical-painmap')">疼痛地圖</button>
       </div>
     </div>
 
@@ -9699,15 +9734,6 @@ initAdvisorDuoVideoPlayback();
           </div>
         </section>
         <section class="advisor-menu-section">
-          <button class="advisor-menu-toggle" type="button" onclick="toggleAdvisorMenuGroup(this)" aria-expanded="false"><span class="advisor-menu-mark">醫</span>醫館<span class="advisor-menu-caret">▼</span></button>
-          <div class="advisor-btn-group">
-            <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'medical','medical-quick')"><span class="advisor-btn-tag">快</span>快速記錄</button>
-            <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'medical','medical-tarot')"><span class="advisor-btn-tag">抽</span>抽牌記錄</button>
-            <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'medical','medical-stats')"><span class="advisor-btn-tag">牌</span>牌卡統計</button>
-            <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'medical','medical-painmap')"><span class="advisor-btn-tag">痛</span>疼痛地圖</button>
-          </div>
-        </section>
-        <section class="advisor-menu-section">
           <button class="advisor-menu-toggle" type="button" onclick="toggleAdvisorMenuGroup(this)" aria-expanded="false"><span class="advisor-menu-mark">星</span>司天監<span class="advisor-menu-caret">▼</span></button>
           <div class="advisor-btn-group">
             <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'stars','stars-home')"><span class="advisor-btn-tag">命</span>命盤總覽</button>
@@ -10109,6 +10135,22 @@ function advisorAIResolveTransferTarget(part){
   return '';
 }
 
+function advisorAIResolveInvestmentSymbol(value){
+  var raw=String(value||'').trim();
+  var key=advisorAICompact(raw);
+  if(!key)return '';
+  if(key.indexOf('985b')>=0||key.indexOf('00985b')>=0)return '00985B';
+  if(key.indexOf('997a')>=0||key.indexOf('00997a')>=0)return '00997A';
+  if(key.indexOf('台灣5g')>=0||key.indexOf('路博邁')>=0)return '路博邁台灣5G';
+  if(key.indexOf('施羅德')>=0)return '施羅德收益成長A2';
+  var symbols=['AIPI','IAU','QQQI','MLPI','SPYI','PLTY','CHPY','GDXW','GLDW'];
+  var up=raw.toUpperCase();
+  for(var i=0;i<symbols.length;i++){
+    if(up.indexOf(symbols[i])>=0)return symbols[i];
+  }
+  return raw.toUpperCase();
+}
+
 function advisorAITransferCommand(raw,amount){
   if(!amount)return null;
   var compact=advisorAICompact(raw);
@@ -10229,19 +10271,19 @@ function advisorAINormalizeDeepSeekCommand(cmd,raw){
     return {intent:'unknown'};
   }
   if(intent==='dividend'){
-    var symbol=String(cmd.symbol||'').trim().toUpperCase();
+    var symbol=advisorAIResolveInvestmentSymbol(cmd.symbol||raw);
     if(symbol&&amount>0)return {intent:'dividend',symbol:symbol,amount:amount};
     return {intent:'unknown'};
   }
   if(intent==='advisorDividendMemo'||intent==='dividendMemo'){
-    var memoSymbol=String(cmd.symbol||cmd.displaySymbol||'').trim();
+    var memoSymbol=advisorAIResolveInvestmentSymbol(cmd.symbol||cmd.displaySymbol||raw);
     var perShare=Number(cmd.dividendPerShare||cmd.perShare||cmd.amount||0);
     var market=String(cmd.market||'').toLowerCase();
     if(memoSymbol&&perShare>0)return {intent:'advisorDividendMemo',market:market,symbol:memoSymbol,dividendPerShare:perShare};
     return {intent:'unknown'};
   }
   if(intent==='stockSell'){
-    var sellSymbol=String(cmd.symbol||'').trim().toUpperCase();
+    var sellSymbol=advisorAIResolveInvestmentSymbol(cmd.symbol||raw);
     var shares=Number(cmd.shares||0);
     if(sellSymbol&&shares>0&&amount>0)return {intent:'stockSell',symbol:sellSymbol,shares:shares,amount:amount};
     return {intent:'unknown'};
