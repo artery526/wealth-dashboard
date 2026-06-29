@@ -10116,13 +10116,13 @@ function advisorAITransferAliases(){
     {label:'🟥永豐銀行',keys:['永豐','永豐銀行']},
     {label:'🌳國泰Money',keys:['國泰m','國泰money','國泰money']},
     {label:'💳Cube',keys:['cube']},
-    {label:'💛IAU',keys:['iau']},
+    {label:'👑IAU',keys:['iau']},
     {label:'📡QQQI',keys:['qqqi']},
     {label:'🛢️MLPI',keys:['mlpi']},
-    {label:'🐉路博邁5G',keys:['台灣5g','路博邁5g','5g']},
+    {label:'🪐路博邁台灣5G',keys:['台灣5g','路博邁5g','路博邁台灣5g','5g']},
     {label:'🌳施羅德收益成長A2',keys:['施羅德','施羅德收益成長a2','a2']},
-    {label:'🎟️群益00985B',keys:['985b','00985b','群益00985b']},
-    {label:'💎AIPI',keys:['aipi']},
+    {label:'🎟️00985B',keys:['985b','00985b','群益00985b']},
+    {label:'🤖AIPI',keys:['aipi']},
     {label:'📡SPYI',keys:['spyi']},
     {label:'🪖PLTY',keys:['plty']},
     {label:'🐦‍🔥CHPY',keys:['chpy']},
@@ -10195,6 +10195,20 @@ function advisorAIResolveInvestmentSymbol(value){
     if(up.indexOf(symbols[i])>=0)return symbols[i];
   }
   return raw.toUpperCase();
+}
+
+function advisorAIResolveStockTradeLabel(value){
+  var raw=String(value||'').trim();
+  if(!raw)return '';
+  var key=normalizeKey(advisorAIResolveInvestmentSymbol(raw)||raw);
+  var options=Array.isArray(STOCK_SYMBOLS)?STOCK_SYMBOLS:[];
+  for(var i=0;i<options.length;i++){
+    var item=options[i]||{};
+    if(normalizeKey(item.value||item.label)===key)return item.value||item.label;
+  }
+  var meta=HOLDING_META&&HOLDING_META[key];
+  if(meta)return String(meta.emoji||'')+String(meta.name||key);
+  return advisorAIResolveTransferTarget(raw)||raw;
 }
 
 function advisorAITransferCommand(raw,amount){
@@ -10329,13 +10343,13 @@ function advisorAINormalizeDeepSeekCommand(cmd,raw){
     return {intent:'unknown'};
   }
   if(intent==='stockSell'){
-    var sellSymbol=advisorAIResolveInvestmentSymbol(cmd.symbol||raw);
+    var sellSymbol=advisorAIResolveStockTradeLabel(cmd.symbol||raw);
     var shares=Number(cmd.shares||0);
     if(sellSymbol&&shares>0&&amount>0)return {intent:'stockSell',symbol:sellSymbol,shares:shares,amount:amount};
     return {intent:'unknown'};
   }
   if(intent==='stockBuy'){
-    var buySymbol=advisorAIResolveTransferTarget(cmd.symbol||cmd.target||raw);
+    var buySymbol=advisorAIResolveStockTradeLabel(cmd.symbol||cmd.target||raw);
     var buyShares=Number(cmd.shares||0);
     if(buySymbol&&buyShares>0&&amount>0)return {intent:'stockBuy',symbol:buySymbol,shares:buyShares,amount:amount};
     return {intent:'unknown'};
@@ -10348,7 +10362,7 @@ function advisorAIStockBuyCommand(raw){
   var m=text.match(/(?:買入|買進)\s*(\d+(?:\.\d+)?)\s*股\s*(.+?)\s*(\d+(?:\.\d+)?)\s*$/i);
   if(!m)return null;
   var shares=parseFloat(m[1]);
-  var symbol=advisorAIResolveTransferTarget(m[2]);
+  var symbol=advisorAIResolveStockTradeLabel(m[2]);
   var amount=parseFloat(m[3]);
   if(symbol&&shares>0&&amount>0)return {intent:'stockBuy',symbol:symbol,shares:shares,amount:amount};
   return {intent:'unknown'};
@@ -10369,7 +10383,7 @@ function advisorAICommand(raw){
   var transfer=advisorAITransferCommand(raw,amount);
   if(transfer)return transfer;
   var stockSell=text.match(/賣出\s*(\d+(?:\.\d+)?)\s*股\s*([A-Za-z0-9]+)\s*(\d+(?:\.\d+)?)/i);
-  if(stockSell)return {intent:'stockSell',shares:parseFloat(stockSell[1]),symbol:stockSell[2].toUpperCase(),amount:parseFloat(stockSell[3])};
+  if(stockSell)return {intent:'stockSell',shares:parseFloat(stockSell[1]),symbol:advisorAIResolveStockTradeLabel(stockSell[2]),amount:parseFloat(stockSell[3])};
   if(compact.indexOf('提款')>=0&&amount>0)return {intent:'withdraw',amount:amount};
   if(compact.indexOf('年度財報')>=0)return {intent:'open',panel:'finance',tab:'domestic-yearly',label:'年度財報'};
   if(compact==='糧'||compact.indexOf('糧倉')>=0)return {intent:'open',panel:'foodhouse',label:'糧倉'};
@@ -10826,6 +10840,7 @@ async function advisorAIConfirmStockSell(symbol,shares,amount,btn){
   if(btn&&btn.disabled)return;
   if(btn){btn.disabled=true;btn.textContent='寫入中…';}
   try{
+    symbol=advisorAIResolveStockTradeLabel(symbol);
     await apiPost({action:'transfer',date:today().replace(/-/g,'/'),from:symbol,to:'💵國泰Stock',amount:amount,label:symbol,note:'軍師AI賣出',
       stockMode:'1',stockType:'sell',stockSymbol:symbol,stockShares:-Math.abs(Number(shares)||0),stockAmount:amount});
     var panel=advisorAIActivePanel();
@@ -10842,6 +10857,7 @@ async function advisorAIConfirmStockBuy(symbol,shares,amount,btn){
   if(btn&&btn.disabled)return;
   if(btn){btn.disabled=true;btn.textContent='寫入中…';}
   try{
+    symbol=advisorAIResolveStockTradeLabel(symbol);
     await apiPost({action:'transfer',date:today().replace(/-/g,'/'),from:'💵國泰Stock',to:symbol,amount:amount,label:symbol,note:'軍師AI買入',
       stockMode:'1',stockType:'buy',stockSymbol:symbol,stockShares:Math.abs(Number(shares)||0),stockAmount:amount});
     var panel=advisorAIActivePanel();
