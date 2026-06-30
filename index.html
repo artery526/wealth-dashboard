@@ -3325,6 +3325,7 @@ var foodhouseDashboardPromise=null;
 var FINANCE_TREASURY_CACHE_KEY='wealth_finance_treasury_v1';
 var FINANCE_PLEDGE_CACHE_KEY='wealth_finance_pledge_v1';
 var FINANCE_YEARLY_CACHE_PREFIX='wealth_finance_yearly_v2_';
+var FINANCE_YEARLY_LEGACY_CACHE_PREFIXES=['wealth_finance_yearly_v1_'];
 var FINANCE_CACHE_TTL=6*60*60*1000;
 var financeTreasuryPromise=null;
 var financePledgePromise=null;
@@ -3722,6 +3723,21 @@ function invalidateFinanceDashboardCache(){
     for(var i=localStorage.length-1;i>=0;i--){
       var key=localStorage.key(i);
       if(key&&key.indexOf(FINANCE_YEARLY_CACHE_PREFIX)===0)localStorage.removeItem(key);
+    }
+  }catch(e){}
+}
+
+function clearLegacyFinanceYearlyCache(){
+  try{
+    for(var i=localStorage.length-1;i>=0;i--){
+      var key=localStorage.key(i);
+      if(!key)continue;
+      for(var j=0;j<FINANCE_YEARLY_LEGACY_CACHE_PREFIXES.length;j++){
+        if(key.indexOf(FINANCE_YEARLY_LEGACY_CACHE_PREFIXES[j])===0){
+          localStorage.removeItem(key);
+          break;
+        }
+      }
     }
   }catch(e){}
 }
@@ -7252,14 +7268,19 @@ async function useDividendFromCenter(rowId){
   }catch(e){console.warn(e)}
 }
 
-async function loadDomesticYearly(){
+async function loadDomesticYearly(forceRefresh){
   var el=document.getElementById('annual-content');
   if(!el)return;
   if(!API_URL){el.innerHTML=setupNotice();return}
+  clearLegacyFinanceYearlyCache();
   var sel=document.getElementById('annual-year-sel');
   var selected=sel&&sel.value?sel.value:String(new Date().getFullYear());
   var cacheKey=FINANCE_YEARLY_CACHE_PREFIX+selected;
-  var cached=readTimedFinanceCache(cacheKey);
+  if(forceRefresh){
+    try{localStorage.removeItem(cacheKey);}catch(e){}
+    delete financeYearlyPromises[selected];
+  }
+  var cached=forceRefresh?null:readTimedFinanceCache(cacheKey);
   if(cached)renderDomesticYearly(cached.data,cached.history,cached.years,selected,true);
   else el.innerHTML='<div class="skel-line skel"></div><div class="skel-line skel" style="width:80%"></div><div class="skel-line skel" style="width:65%"></div>';
   if(financeYearlyPromises[selected]){
@@ -7333,7 +7354,7 @@ function renderDomesticYearly(d,history,years,selected,stale){
       </div>
       <div class="annual-tools">
         <select class="form-control" id="annual-year-sel" onchange="loadDomesticYearly()">${yearOptions}</select>
-        <button class="submit-btn" style="width:auto;margin:0;padding:9px 12px;background:var(--gold);color:#0a0804" onclick="loadDomesticYearly()">重新整理</button>
+        <button class="submit-btn" style="width:auto;margin:0;padding:9px 12px;background:var(--gold);color:#0a0804" onclick="loadDomesticYearly(true)">重新整理</button>
       </div>
     </div>
     <div class="kpi-row annual-kpis">
