@@ -2974,6 +2974,7 @@ var COMMAND_SETTING_GID = '1479341396';
 var MONTHLY_HOLDINGS_SHEET_NAME = '\u6708\u5EA6\u6230\u60C5\u5BA4';
 var MONTHLY_HOLDINGS_RANGE = 'A12:N24';
 var COMMAND_MARKET_VALUE_RANGE = 'I2:I2';
+var COMMAND_EXPOSURE_VALUE_RANGE = 'G2:H2';
 var ASSET_SNAPSHOT_SHEET_NAME = '\u6BCF\u65E5\u8CC7\u7522\u5FEB\u7167';
 var ASSET_SNAPSHOT_GID = '2000002006';
 var ASSET_SNAPSHOT_RANGE = 'A2:F1000';
@@ -3344,7 +3345,7 @@ async function apiPostJson(body){
 
 var ADVISOR_REMINDER_CACHE_KEY='empire_today_advisor_reminder_v1';
 var advisorReminderPromise=null;
-var FOODHOUSE_CACHE_KEY='wealth_foodhouse_dashboard_v4';
+var FOODHOUSE_CACHE_KEY='wealth_foodhouse_dashboard_v5';
 var FOODHOUSE_CACHE_TTL=6*60*60*1000;
 var foodhouseDashboardPromise=null;
 var FINANCE_TREASURY_CACHE_KEY='wealth_finance_treasury_v1';
@@ -3487,7 +3488,8 @@ function latestInvestmentMarketValue(assetSnapshot,fallbackValue){
   return !isNaN(value)&&isFinite(value)&&value>0?value:0;
 }
 function foodhouseMarketExposure(assetSnapshot,netAsset,fallbackMarket){
-  var market=latestInvestmentMarketValue(assetSnapshot,fallbackMarket);
+  var market=Number(netAsset&&netAsset.exposureValue);
+  if(isNaN(market)||!isFinite(market)||market<=0)market=latestInvestmentMarketValue(assetSnapshot,fallbackMarket);
   var total=Number(netAsset&&netAsset.value!=null?netAsset.value:netAsset);
   return market>0&&total>0?market/total*100:null;
 }
@@ -3510,17 +3512,19 @@ function foodhouseCashValue(core){
   if(cash>0)return cash;
   return toNum(core.monthly&&core.monthly.cashAsset);
 }
-function buildFoodhouseNetAsset(core,assetSnapshot,debt){
+function buildFoodhouseNetAsset(core,assetSnapshot,debt,exposureAsset){
   core=core||{};
   var holdings=core.holdings||[];
   var fallbackMarket=holdings.reduce(function(s,h){return s+toNum(h.marketValue);},0);
   var investment=latestInvestmentMarketValue(assetSnapshot,fallbackMarket);
+  var exposureValue=toNum(exposureAsset&&exposureAsset.value)||investment;
   var cash=foodhouseCashValue(core);
   var borrowings=foodhouseBorrowingTotal(debt);
   var value=investment+cash-borrowings;
   return {
     value:value>0?value:0,
     investmentValue:investment,
+    exposureValue:exposureValue,
     cashValue:cash,
     borrowings:borrowings
   };
@@ -3893,19 +3897,21 @@ async function loadFoodhouseDashboard(){
     loadHeroSheet(false),
     loadArmySettingsSheet(),
     loadAssetSnapshot(),
-    apiGet({action:'pledgeLoans'})
+    apiGet({action:'pledgeLoans'}),
+    loadCommandExposureAsset()
   ]).then(function(results){
     if(results[0].status!=='fulfilled')throw results[0].reason;
     var core=results[0].value||{};
     var assetSnapshot=results[3].status==='fulfilled'?results[3].value:null;
     var debt=results[4].status==='fulfilled'?(results[4].value||{pledges:[],loans:[]}):{pledges:[],loans:[]};
+    var exposureAsset=results[5].status==='fulfilled'?results[5].value:null;
     var data={
       core:core,
       heroes:results[1].status==='fulfilled'?(results[1].value||[]):[],
       armySettings:results[2].status==='fulfilled'?(results[2].value||{}):{},
       assetSnapshot:assetSnapshot,
       debt:debt,
-      netAsset:buildFoodhouseNetAsset(core,assetSnapshot,debt)
+      netAsset:buildFoodhouseNetAsset(core,assetSnapshot,debt,exposureAsset)
     };
     holdingsCache=(data.core.holdings||[]).length?data.core.holdings:holdingsCache;
     try{localStorage.setItem(FOODHOUSE_CACHE_KEY,JSON.stringify({savedAt:Date.now(),data:data}));}catch(e){}
@@ -8350,6 +8356,21 @@ async function loadCommandMarketSnapshot(){
     investmentMarketValue:marketValue,
     marketValue:marketValue,
     source:'commandI2'
+  };
+}
+
+async function loadCommandExposureAsset(){
+  var url='https://docs.google.com/spreadsheets/d/'+COMMAND_SHEET_ID+'/gviz/tq?tqx=out:json&gid='+encodeURIComponent(COMMAND_MONTHLY_GID)+'&range='+encodeURIComponent(COMMAND_EXPOSURE_VALUE_RANGE);
+  var json=await readGvizJson(url);
+  var row=(json.table.rows||[])[0]||{};
+  var cells=row.c||[];
+  var label=String(gvizCellValue(cells[0])||'總資產/總計').trim()||'總資產/總計';
+  var value=toNum(gvizCellValue(cells[1]));
+  if(!value)return null;
+  return {
+    label:label,
+    value:value,
+    source:'commandH2'
   };
 }
 
