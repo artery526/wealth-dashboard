@@ -673,6 +673,9 @@ body::after{
 .advisor-summary-line span{font-family:var(--sans);white-space:nowrap}
 .advisor-summary-line strong{font:inherit;color:inherit;text-align:right;white-space:nowrap;word-break:normal}
 .advisor-summary-line-note{margin-top:2px;font-family:var(--sans);font-size:11px;font-weight:900;line-height:1.35;color:var(--teal);white-space:pre-line}
+.advisor-summary-line-note .foodhouse-delta{font-family:var(--mono);font-weight:900;white-space:nowrap}
+.advisor-summary-line-note .foodhouse-delta.up{color:var(--coral)}
+.advisor-summary-line-note .foodhouse-delta.down{color:var(--teal)}
 .advisor-summary-value{margin-top:4px;font-family:var(--mono);font-size:14px;font-weight:900;line-height:1.25;color:#f3df9a;white-space:normal;word-break:break-word}
 .advisor-summary-value.up{color:var(--teal)}
 .advisor-summary-value.down{color:var(--coral)}
@@ -2987,7 +2990,7 @@ var COMMAND_MARKET_VALUE_RANGE = 'I2:I2';
 var COMMAND_EXPOSURE_VALUE_RANGE = 'G2:H2';
 var ASSET_SNAPSHOT_SHEET_NAME = '\u6BCF\u65E5\u8CC7\u7522\u5FEB\u7167';
 var ASSET_SNAPSHOT_GID = '2000002006';
-var ASSET_SNAPSHOT_RANGE = 'A2:F1000';
+var ASSET_SNAPSHOT_RANGE = 'A2:H1000';
 var travelMemoCache = null;
 var travelMapsCache = null;
 var travelMemoOptionsCache = null;
@@ -3355,7 +3358,7 @@ async function apiPostJson(body){
 
 var ADVISOR_REMINDER_CACHE_KEY='empire_today_advisor_reminder_v1';
 var advisorReminderPromise=null;
-var FOODHOUSE_CACHE_KEY='wealth_foodhouse_dashboard_v8';
+var FOODHOUSE_CACHE_KEY='wealth_foodhouse_dashboard_v9';
 var FOODHOUSE_CACHE_TTL=6*60*60*1000;
 var foodhouseDashboardPromise=null;
 var FINANCE_TREASURY_CACHE_KEY='wealth_finance_treasury_v1';
@@ -3482,7 +3485,7 @@ function advisorFinanceSummaryHtml(items){
     ${items.map(function(item){
       return `<div class="advisor-summary-item">
         ${item.rows?`<div class="advisor-summary-lines">${item.rows.map(function(row){
-          return `<div><div class="advisor-summary-line"><span>${esc(row.label)}</span><strong>${esc(row.value)}</strong></div>${row.note?`<div class="advisor-summary-line-note">${esc(row.note)}</div>`:''}</div>`;
+          return `<div><div class="advisor-summary-line"><span>${esc(row.label)}</span><strong>${esc(row.value)}</strong></div>${row.noteHtml?`<div class="advisor-summary-line-note">${row.noteHtml}</div>`:(row.note?`<div class="advisor-summary-line-note">${esc(row.note)}</div>`:'')}</div>`;
         }).join('')}</div>`:`<div class="advisor-summary-label">${esc(item.label)}</div>
         ${item.pre?`<div class="advisor-summary-pre">${esc(item.pre)}</div>`:''}
         <div class="advisor-summary-value ${advisorMetricValueClass(item.toneValue)}">${item.valueHtml||esc(item.value)}</div>`}
@@ -3508,6 +3511,20 @@ function foodhouseMarketExposure(assetSnapshot,netAsset,fallbackMarket){
   if(isNaN(market)||!isFinite(market)||market<=0)market=latestInvestmentMarketValue(assetSnapshot,fallbackMarket);
   var total=Number(netAsset&&netAsset.value!=null?netAsset.value:netAsset);
   return market>0&&total>0?market/total*100:null;
+}
+function foodhouseRatioPct(value){
+  var n=Number(value);
+  if(isNaN(n)||!isFinite(n))return null;
+  return Math.abs(n)<=3?n*100:n;
+}
+function foodhousePctDeltaHtml(current,previous){
+  current=foodhouseRatioPct(current);
+  previous=foodhouseRatioPct(previous);
+  if(current===null||previous===null)return '';
+  var diff=current-previous;
+  if(!isFinite(diff)||Math.abs(diff)<0.05)return ' <span class="foodhouse-delta">(+0.0%)</span>';
+  var cls=diff>0?'up':'down';
+  return ' <span class="foodhouse-delta '+cls+'">('+(diff>0?'+':'-')+Math.abs(diff).toFixed(1)+'%)</span>';
 }
 function foodhouseBorrowingTotal(debt){
   debt=debt||{};
@@ -3557,10 +3574,13 @@ function buildAdvisorFinanceSummary(monthly,holdings,assetSnapshot,netAsset){
   var netAssetValue=Number(netAsset&&netAsset.value)||0;
   var borrowings=Number(netAsset&&netAsset.borrowings)||0;
   var exposure=foodhouseMarketExposure(assetSnapshot,netAsset);
-  var exposureText=exposure!=null?'⚔️市場曝險 '+exposure.toFixed(1)+'%':'';
+  var previousSnapshot=assetSnapshot&&assetSnapshot.previous;
+  var exposureDeltaHtml=foodhousePctDeltaHtml(exposure,previousSnapshot&&previousSnapshot.marketExposurePct);
+  var exposureText=exposure!=null?'⚔️市場曝險 '+exposure.toFixed(1)+'%'+exposureDeltaHtml:'';
   var debtRatio=netAssetValue>0?borrowings/netAssetValue*100:null;
-  var debtRatioText=debtRatio!=null?'🧸負債／淨資產比 '+debtRatio.toFixed(1)+'%':'';
-  var exposureNote=[exposureText,debtRatioText].filter(Boolean).join('\n');
+  var debtRatioDeltaHtml=foodhousePctDeltaHtml(debtRatio,previousSnapshot&&previousSnapshot.debtToNetAssetPct);
+  var debtRatioText=debtRatio!=null?'🧸負債／淨資產比 '+debtRatio.toFixed(1)+'%'+debtRatioDeltaHtml:'';
+  var exposureNoteHtml=[exposureText,debtRatioText].filter(Boolean).join('<br>');
   var marketDelta=advisorMarketDelta(assetSnapshot);
   var marketDeltaText=advisorMarketDeltaFullText(assetSnapshot);
   return {
@@ -3573,7 +3593,7 @@ function buildAdvisorFinanceSummary(monthly,holdings,assetSnapshot,netAsset){
       {rows:[
         {label:'🏰淨資產',value:netAssetValue?fmtFull(netAssetValue):'--'},
         {label:'💰信貸質押',value:fmtFull(borrowings)},
-        {label:'🪙投入成本',value:fmtFull(totalCost),note:exposureNote}
+        {label:'🪙投入成本',value:fmtFull(totalCost),noteHtml:exposureNoteHtml}
       ],toneValue:netAssetValue||totalMonthly}
     ]
   };
@@ -8322,6 +8342,10 @@ async function loadDailyAssetSnapshotSheet(){
     var c=row.c||[];
     var marketValue=toNum(gvizCellValue(c[1]));
     if(!marketValue)return null;
+    var marketExposureRaw=gvizCellValue(c[6]);
+    var debtToNetAssetRaw=gvizCellValue(c[7]);
+    var marketExposure=String(marketExposureRaw||'').trim()===''?null:foodhouseRatioPct(toNum(marketExposureRaw));
+    var debtToNetAsset=String(debtToNetAssetRaw||'').trim()===''?null:foodhouseRatioPct(toNum(debtToNetAssetRaw));
     return {
       rowNumber:index+2,
       date:gvizCellValue(c[0]),
@@ -8331,6 +8355,10 @@ async function loadDailyAssetSnapshotSheet(){
       totalCost:toNum(gvizCellValue(c[2])),
       totalReturn:toNum(gvizCellValue(c[3])),
       monthlyDiv:toNum(gvizCellValue(c[4])),
+      marketExposurePct:marketExposure,
+      marketExposure:marketExposure===null?null:marketExposure/100,
+      debtToNetAssetPct:debtToNetAsset,
+      debtToNetAsset:debtToNetAsset===null?null:debtToNetAsset/100,
       note:String(gvizCellValue(c[5])||'')
     };
   }).filter(Boolean);
