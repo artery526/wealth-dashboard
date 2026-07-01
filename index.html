@@ -672,7 +672,7 @@ body::after{
 .advisor-summary-line{display:flex;align-items:baseline;justify-content:space-between;gap:8px;font-family:var(--mono);font-size:14px;font-weight:900;line-height:1.25;color:#f3df9a;white-space:normal;word-break:normal}
 .advisor-summary-line span{font-family:var(--sans);white-space:nowrap}
 .advisor-summary-line strong{font:inherit;color:inherit;text-align:right;white-space:nowrap;word-break:normal}
-.advisor-summary-line-note{margin-top:2px;font-family:var(--sans);font-size:11px;font-weight:900;line-height:1.35;color:var(--teal)}
+.advisor-summary-line-note{margin-top:2px;font-family:var(--sans);font-size:11px;font-weight:900;line-height:1.35;color:var(--teal);white-space:pre-line}
 .advisor-summary-value{margin-top:4px;font-family:var(--mono);font-size:14px;font-weight:900;line-height:1.25;color:#f3df9a;white-space:normal;word-break:break-word}
 .advisor-summary-value.up{color:var(--teal)}
 .advisor-summary-value.down{color:var(--coral)}
@@ -3355,7 +3355,7 @@ async function apiPostJson(body){
 
 var ADVISOR_REMINDER_CACHE_KEY='empire_today_advisor_reminder_v1';
 var advisorReminderPromise=null;
-var FOODHOUSE_CACHE_KEY='wealth_foodhouse_dashboard_v7';
+var FOODHOUSE_CACHE_KEY='wealth_foodhouse_dashboard_v8';
 var FOODHOUSE_CACHE_TTL=6*60*60*1000;
 var foodhouseDashboardPromise=null;
 var FINANCE_TREASURY_CACHE_KEY='wealth_finance_treasury_v1';
@@ -3558,6 +3558,9 @@ function buildAdvisorFinanceSummary(monthly,holdings,assetSnapshot,netAsset){
   var borrowings=Number(netAsset&&netAsset.borrowings)||0;
   var exposure=foodhouseMarketExposure(assetSnapshot,netAsset);
   var exposureText=exposure!=null?'⚔️市場曝險 '+exposure.toFixed(1)+'%':'';
+  var debtRatio=netAssetValue>0?borrowings/netAssetValue*100:null;
+  var debtRatioText=debtRatio!=null?'🧸負債／淨資產比 '+debtRatio.toFixed(1)+'%':'';
+  var exposureNote=[exposureText,debtRatioText].filter(Boolean).join('\n');
   var marketDelta=advisorMarketDelta(assetSnapshot);
   var marketDeltaText=advisorMarketDeltaFullText(assetSnapshot);
   return {
@@ -3570,7 +3573,7 @@ function buildAdvisorFinanceSummary(monthly,holdings,assetSnapshot,netAsset){
       {rows:[
         {label:'🏰淨資產',value:netAssetValue?fmtFull(netAssetValue):'--'},
         {label:'💰信貸質押',value:fmtFull(borrowings)},
-        {label:'🪙投入成本',value:fmtFull(totalCost),note:exposureText}
+        {label:'🪙投入成本',value:fmtFull(totalCost),note:exposureNote}
       ],toneValue:netAssetValue||totalMonthly}
     ]
   };
