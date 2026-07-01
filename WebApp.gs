@@ -115,7 +115,6 @@ function doGet(e) {
     if (action === 'councilPantry') return ok(getCouncilPantry(ss));
     if (action === 'topStatusBar') return ok(getTopStatusBar(ss));
     if (action === 'financeStatus') return ok(getFinanceStatus(ss));
-    if (action === 'taskSheetOptions') return ok(getTaskSheetOptions(ss));
     if (action === 'tradeOptions') return ok(getTradeOptions(ss));
     if (action === 'marketDashboard') return ok(getMarketDashboard(getExternalDbSpreadsheet_()));
     if (action === 'macroOverview') return ok(getMacroOverview(getExternalDbSpreadsheet_()));
@@ -129,8 +128,6 @@ function doGet(e) {
     if (action === 'todayCalendar') return ok(getTodayCalendar());
     if (action === 'ziweiCharts') return ok(getZiweiCharts());
     if (action === 'eventChronicle') return ok(getEventChronicle(ss));
-    if (action === 'advisorDraft') return ok(createAdvisorDraft(p));
-    if (action === 'advisorTask') return ok(writeAdvisorTask(ss, p));
     // ── 寫入路由（需要 token）──
     if (action === 'expense' || action === 'income' || action === 'transfer' || action === 'transactionUndo' || action === 'stockTradeVoid' || action === 'divCalc' || action === 'dividendEntry' || action === 'dividendDelete' || action === 'holdingTradeEntry' || action === 'holdingTradeDelete' || action === 'macroWebhook' || action === 'travelMemoHide' || action === 'travelMemoAdd' || action === 'verifyWriteToken') {
       verifyWriteToken(p);
@@ -161,9 +158,6 @@ function doPost(e) {
   try {
     var body = JSON.parse(e.postData.contents);
     var action = (body.action || '').trim();
-
-    if (action === 'advisorDraft') return ok(createAdvisorDraft(body));
-    if (action === 'advisorTask') return ok(writeAdvisorTask(SpreadsheetApp.getActiveSpreadsheet(), body));
 
     // ★ 所有寫入請求均需通過 token 驗證
     verifyWriteToken(body);
@@ -1373,14 +1367,6 @@ function getDailyAssetSnapshot(ss) {
   };
 }
 
-function getTaskSheetOptions(ss) {
-  return ss.getSheets().map(function(sheet) {
-    return sheet.getName();
-  }).filter(function(name) {
-    return name !== '軍師工單';
-  });
-}
-
 function getEventChronicle(ss) {
   var sheet = ss.getSheetByName(EVENT_CHRONICLE_SHEET_NAME);
   if (!sheet || sheet.getLastRow() < 2) {
@@ -2524,126 +2510,6 @@ function macroNumber_(value) {
   return isNaN(n) ? null : n;
 }
 
-function writeAdvisorTask(ss, body) {
-  var sheet = ss.getSheetByName('軍師工單');
-  if (!sheet) sheet = ss.insertSheet('軍師工單');
-
-  var headers = ['建立時間', '任務類型', '優先度', '需求內容', '相關區域', '狀態', '處理備註', '修改目標', '指定試算表'];
-  var currentHeaders = sheet.getRange(1, 1, 1, headers.length).getValues()[0];
-  var needsHeader = headers.some(function(header, index) {
-    return String(currentHeaders[index] || '').trim() !== header;
-  });
-  if (needsHeader) {
-    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
-    sheet.setFrozenRows(1);
-  }
-
-  var taskType = String(body.taskType || '網頁修改').trim();
-  var priority = String(body.priority || '一般').trim();
-  var detail = String(body.detail || '').trim();
-  var area = String(body.area || '').trim();
-  var draft = String(body.draft || '').trim();
-  var targetType = String(body.targetType || '網頁端').trim();
-  var targetSheet = String(body.targetSheet || '').trim();
-  if (!detail) throw new Error('請輸入工單需求內容');
-  if (detail.length > 1500) throw new Error('工單內容請控制在 1500 字以內');
-
-  sheet.appendRow([
-    new Date(),
-    taskType,
-    priority,
-    detail,
-    area,
-    '待處理',
-    draft,
-    targetType,
-    targetSheet
-  ]);
-
-  return {
-    message: '軍師工單已送出',
-    row: sheet.getLastRow(),
-    status: '待處理',
-    taskType: taskType,
-    priority: priority
-  };
-}
-
-function createAdvisorDraft(body) {
-  var taskType = String(body.taskType || '網頁修改').trim();
-  var priority = String(body.priority || '一般').trim();
-  var area = String(body.area || '').trim();
-  var detail = String(body.detail || '').trim();
-  var targetType = String(body.targetType || '網頁端').trim();
-  var targetSheet = String(body.targetSheet || '').trim();
-  if (!detail) throw new Error('請輸入需求內容後再請副軍師草擬');
-  if (detail.length > 1500) throw new Error('需求內容請控制在 1500 字以內');
-
-  return {
-    draft: askDeepSeekDraft_(buildAdvisorTaskPrompt_(taskType, priority, area, detail, targetType, targetSheet))
-  };
-}
-
-function buildAdvisorTaskPrompt_(taskType, priority, area, detail, targetType, targetSheet) {
-  return [
-    '任務類型：' + taskType,
-    '優先度：' + priority,
-    '修改目標：' + targetType,
-    '指定試算表：' + (targetSheet || '未指定'),
-    '相關區域：' + (area || '未指定'),
-    '需求內容：',
-    detail,
-    '',
-    '請整理成：',
-    '1. 一句話任務摘要',
-    '2. 可能需要修改或檢查的檔案/試算表區域',
-    '3. 建議執行步驟',
-    '4. 驗證清單',
-    '5. 需要主公補充的問題（若沒有就寫無）'
-  ].join('\n');
-}
-
-function askDeepSeekDraft_(prompt) {
-  var key = PropertiesService.getScriptProperties().getProperty('DEEPSEEK_API_KEY');
-  if (!key) throw new Error('尚未設定 DEEPSEEK_API_KEY');
-
-  var response = UrlFetchApp.fetch('https://api.deepseek.com/chat/completions', {
-    method: 'post',
-    contentType: 'application/json',
-    headers: {
-      Authorization: 'Bearer ' + key
-    },
-    payload: JSON.stringify({
-      model: 'deepseek-v4-flash',
-      messages: [
-        {
-          role: 'system',
-          content: '你是帝國指揮所的副軍師。請使用繁體中文，協助把需求整理成可執行工單草稿。你只能草擬與檢查，不要聲稱已經修改檔案、部署、寫入試算表或完成任務。'
-        },
-        {
-          role: 'user',
-          content: prompt
-        }
-      ],
-      thinking: { type: 'enabled' },
-      reasoning_effort: 'medium',
-      stream: false
-    }),
-    muteHttpExceptions: true
-  });
-
-  var text = response.getContentText();
-  var data = JSON.parse(text);
-  if (response.getResponseCode() < 200 || response.getResponseCode() >= 300 || data.error) {
-    throw new Error(data.error && data.error.message ? data.error.message : 'DeepSeek 回應失敗');
-  }
-  if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-    throw new Error('DeepSeek 回應格式異常');
-  }
-  return data.choices[0].message.content || '';
-}
-
-// ── 當月明細（最新 50 筆） ────────────────────────────────────
 function sheetDateText_(value) {
   if (value instanceof Date) {
     return Utilities.formatDate(value, Session.getScriptTimeZone(), 'yyyy/MM/dd');

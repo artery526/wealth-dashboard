@@ -2954,11 +2954,6 @@ var currentTravelMemoKey = '';
 var currentTravelMemoShownKey = '';
 var currentTravelMemoAddDateKey = '';
 var travelMapZoom = 1;
-var TASK_SHEET_FALLBACK_OPTIONS = ['月度戰情室','轉帳資料庫','設定','資料庫','收入流水帳','支出流水帳','市場儀表板','配息試算','年度財報','武將資料','類型設定','帳戶基準'];
-var taskSheetOptionsCache = null;
-var advisorDraftInFlight = false;
-var advisorTaskInFlight = false;
-var lastAdvisorDraftKey = '';
 var gvizJsonpQueue = Promise.resolve();
 var HERO_SHEET_ID = COMMAND_SHEET_ID;
 var HERO_SHEET_NAME = '武將資料';
@@ -3281,7 +3276,7 @@ async function apiPost(body){
   if(!API_URL)throw new Error('未設定 API 網址');
   WRITE_TOKEN=cleanToken(WRITE_TOKEN);
   if(!WRITE_TOKEN)throw new Error('未設定記帳密鑰');
-  if(body&&/^(advisorTask|advisorDraft|advisorAiParse|advisorDividendMemo|income|transfer)$/.test(body.action||'')){
+  if(body&&/^(advisorAiParse|advisorDividendMemo|income|transfer)$/.test(body.action||'')){
     return apiPostJson(body);
   }
   var params=Object.assign({},body,{token:WRITE_TOKEN});
@@ -3650,7 +3645,7 @@ function switchTab(btn,key){
   else if(key==='market-watch')loadMarketDashboard();
   else if(key==='macro-overview')loadMacroOverview();
   else if(key==='council-roster')loadCouncilDashboard();
-  else if(key==='council-task')resetAdvisorTaskStatus();
+  else if(key==='council-task')resetRetiredTaskStatus();
   else if(key==='div-calc')initDivCalc();
   else if(key==='medical-tarot')initMedicalTarotForm();
   else if(key==='medical-stats')initMedicalCardStats();
@@ -7645,7 +7640,7 @@ function renderCouncilPanel(){
       <div id="holdings-content">${apiReady?'<div class="skel-line skel"></div><div class="skel-line skel" style="width:80%"></div><div class="skel-line skel" style="width:65%"></div>':lockedNotice}</div>
     </div>
     <div class="pane" id="pane-council-task">
-      ${apiReady?renderAdvisorTaskForm():lockedNotice}
+      ${renderRetiredTaskNotice()}
     </div>`;
   if(apiReady)loadCouncilDashboard();
 }
@@ -7684,243 +7679,14 @@ async function loadCouncilDashboard(){
   }
 }
 
-function renderAdvisorTaskForm(){
+function renderRetiredTaskNotice(){
   return `<div class="advisor-task-card">
-    <div class="advisor-task-note">把想交給軍師處理的需求寫成工單，會送到 Google Sheet 的「軍師工單」。之後在這裡下令讀工單，我會依序處理。</div>
-    <div class="form-grid">
-      <div class="form-group">
-        <label class="form-label">工單類別</label>
-        <select class="form-control" id="task-type">
-          <option>報錯</option>
-          <option>新增功能</option>
-          <option>修改內容</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label class="form-label">修改目標</label>
-        <select class="form-control" id="task-target-type" onchange="onTaskTargetChange()">
-          <option>網頁端</option>
-          <option>試算表</option>
-        </select>
-      </div>
-      <div class="form-group hidden" id="task-sheet-wrap">
-        <label class="form-label">指定試算表</label>
-        <select class="form-control" id="task-target-sheet"></select>
-      </div>
-      <div class="form-group full">
-        <label class="form-label">位置</label>
-        <input class="form-control" id="task-area" type="text" maxlength="120" placeholder="例如：網頁端 > 內政 > 快速記帳 > 收入">
-      </div>
-      <div class="form-group full">
-        <label class="form-label">改動方向/動作</label>
-        <textarea class="form-control" id="task-action" maxlength="700" rows="3" placeholder="例如：選「🐦‍🔥CHPY」後送出收入 7843"></textarea>
-      </div>
-      <div class="form-group full">
-        <label class="form-label">預期效果</label>
-        <textarea class="form-control" id="task-expected" maxlength="700" rows="3" placeholder="例如：試算表「⚔️帝國指揮所」>「資料庫」F 欄備註應顯示「🐦‍🔥CHPY」"></textarea>
-      </div>
-      <div class="form-group full hidden" id="task-draft-wrap">
-        <label class="form-label">副軍師草稿</label>
-        <textarea class="form-control" id="task-draft" rows="8" readonly></textarea>
-      </div>
-    </div>
-    <button class="submit-btn income" id="task-draft-btn" onclick="requestAdvisorDraft()">副軍師草稿</button>
-    <button class="submit-btn transfer" id="task-submit" onclick="submitAdvisorTask()">送出工單</button>
-    <span class="result-msg" id="task-result"></span>
+    <div class="advisor-task-note">\u8ecd\u5e2b\u5de5\u55ae\u6d41\u7a0b\u5df2\u505c\u7528\u3002\u6b64\u9801\u4e0d\u518d\u5efa\u7acb\u6216\u5beb\u5165 Google Sheet \u7684\u300c\u8ecd\u5e2b\u5de5\u55ae\u300d\u5206\u9801\u3002</div>
   </div>`;
 }
 
-function resetAdvisorTaskStatus(){
-  var el=document.getElementById('task-result');
-  if(el){el.textContent='';el.className='result-msg'}
-  onTaskTargetChange();
-}
-
-async function loadTaskSheetOptions(){
-  if(taskSheetOptionsCache)return taskSheetOptionsCache;
-  if(!hasMainApiCredentials())return [];
-  if(API_URL){
-    try{
-      var rows=await apiGet({action:'taskSheetOptions'});
-      if(rows&&rows.length){
-        taskSheetOptionsCache=rows;
-        return taskSheetOptionsCache;
-      }
-    }catch(e){
-      console.warn('taskSheetOptions fallback:',e);
-    }
-  }
-  taskSheetOptionsCache=TASK_SHEET_FALLBACK_OPTIONS.slice();
-  return taskSheetOptionsCache;
-}
-
-async function onTaskTargetChange(){
-  var typeEl=document.getElementById('task-target-type');
-  var wrap=document.getElementById('task-sheet-wrap');
-  var sel=document.getElementById('task-target-sheet');
-  if(!typeEl||!wrap||!sel)return;
-  var isSheet=typeEl.value==='試算表';
-  wrap.classList.toggle('hidden',!isSheet);
-  if(!isSheet){
-    sel.innerHTML='';
-    return;
-  }
-  if(!sel.options.length){
-    sel.innerHTML='<option>讀取中...</option>';
-    var rows=await loadTaskSheetOptions();
-    sel.innerHTML=rows.map(function(name){return `<option>${esc(name)}</option>`;}).join('');
-  }
-}
-
-function advisorTaskPayload(){
-  var targetType=(document.getElementById('task-target-type')||{}).value||'網頁端';
-  var targetSheet=targetType==='試算表'?((document.getElementById('task-target-sheet')||{}).value||''):'';
-  var detail=buildAdvisorTaskDetail();
-  return {
-    detail:detail,
-    area:(document.getElementById('task-area').value||'').trim(),
-    taskType:document.getElementById('task-type').value,
-    priority:document.getElementById('task-type').value,
-    targetType:targetType,
-    targetSheet:targetSheet
-  };
-}
-
-function advisorDraftKey(payload){
-  return [payload.detail,payload.area,payload.taskType,payload.priority,payload.targetType,payload.targetSheet].join('\n---\n');
-}
-
-function advisorFieldValue(id){
-  var el=document.getElementById(id);
-  return (el&&el.value||'').trim();
-}
-
-function buildAdvisorTaskDetail(){
-  return [
-    ['位置：',advisorFieldValue('task-area')],
-    ['改動方向/動作：',advisorFieldValue('task-action')],
-    ['預期效果：',advisorFieldValue('task-expected')]
-  ].map(function(pair){return pair[0]+'\n'+pair[1];}).join('\n\n').trim();
-}
-
-function hasAdvisorTaskBody(){
-  return [
-    'task-area',
-    'task-action',
-    'task-expected'
-  ].some(function(id){return !!advisorFieldValue(id);});
-}
-
-function clearAdvisorTaskFields(){
-  [
-    'task-area',
-    'task-action',
-    'task-expected'
-  ].forEach(function(id){
-    var el=document.getElementById(id);
-    if(el)el.value='';
-  });
-}
-
-async function submitAdvisorTask(){
-  var btn=document.getElementById('task-submit');
-  if(advisorTaskInFlight)return;
-  var msg=document.getElementById('task-result');
-  if(!hasMainApiCredentials()){
-    if(msg){
-      msg.textContent='尚未設定 API，無法讀取資料。請填入 Google Apps Script Web App URL 與記帳密鑰。';
-      msg.className='result-msg err';
-    }
-    return;
-  }
-  var payload=advisorTaskPayload();
-  var draft=limitTaskDraft((document.getElementById('task-draft').value||'').trim());
-  if(!hasAdvisorTaskBody()){
-    msg.textContent='請先填寫工單內容';
-    msg.className='result-msg err';
-    return;
-  }
-  if(payload.targetType==='試算表'&&!payload.targetSheet){
-    msg.textContent='請選擇指定試算表';
-    msg.className='result-msg err';
-    return;
-  }
-  advisorTaskInFlight=true;
-  btn.disabled=true;
-  msg.textContent='送出中...';
-  msg.className='result-msg';
-  try{
-    var res=await apiPost(Object.assign({action:'advisorTask',draft},payload));
-    msg.textContent='已送出：軍師工單第 '+res.row+' 列，狀態 '+res.status;
-    msg.className='result-msg ok';
-    clearAdvisorTaskFields();
-    document.getElementById('task-draft').value='';
-    document.getElementById('task-draft-wrap').classList.add('hidden');
-    lastAdvisorDraftKey='';
-  }catch(e){
-    msg.textContent=e.message;
-    msg.className='result-msg err';
-  }finally{
-    btn.disabled=false;
-    advisorTaskInFlight=false;
-  }
-}
-
-function limitTaskDraft(text){
-  if(!text)return '';
-  var max=900;
-  if(text.length<=max)return text;
-  return text.slice(0,max)+'\n\n[副軍師草稿過長，已由網頁端截短；完整內容請以畫面草稿為準。]';
-}
-
-async function requestAdvisorDraft(){
-  var btn=document.getElementById('task-draft-btn');
-  if(advisorDraftInFlight)return;
-  var msg=document.getElementById('task-result');
-  if(!hasMainApiCredentials()){
-    if(msg){
-      msg.textContent='尚未設定 API，無法讀取資料。請填入 Google Apps Script Web App URL 與記帳密鑰。';
-      msg.className='result-msg err';
-    }
-    return;
-  }
-  var payload=advisorTaskPayload();
-  var key=advisorDraftKey(payload);
-  var existing=(document.getElementById('task-draft').value||'').trim();
-  if(!hasAdvisorTaskBody()){
-    msg.textContent='請先填寫工單內容';
-    msg.className='result-msg err';
-    return;
-  }
-  if(payload.targetType==='試算表'&&!payload.targetSheet){
-    msg.textContent='請選擇指定試算表';
-    msg.className='result-msg err';
-    return;
-  }
-  if(existing&&lastAdvisorDraftKey===key){
-    document.getElementById('task-draft-wrap').classList.remove('hidden');
-    msg.textContent='已使用現有副軍師草稿，避免重複消耗 token';
-    msg.className='result-msg ok';
-    return;
-  }
-  advisorDraftInFlight=true;
-  btn.disabled=true;
-  msg.textContent='副軍師草擬中...';
-  msg.className='result-msg';
-  try{
-    var res=await apiPost(Object.assign({action:'advisorDraft'},payload));
-    document.getElementById('task-draft').value=res.draft||'';
-    document.getElementById('task-draft-wrap').classList.remove('hidden');
-    lastAdvisorDraftKey=key;
-    msg.textContent='副軍師草稿已產生，可檢查後送出工單';
-    msg.className='result-msg ok';
-  }catch(e){
-    msg.textContent=e.message;
-    msg.className='result-msg err';
-  }finally{
-    btn.disabled=false;
-    advisorDraftInFlight=false;
-  }
+function resetRetiredTaskStatus(){
+  // Advisor task intake is retired; keep this hook harmless for tab switching.
 }
 
 async function loadHeroSheet(force){
