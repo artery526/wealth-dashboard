@@ -2967,7 +2967,6 @@ var COMMAND_SETTING_GID = '1479341396';
 var MONTHLY_HOLDINGS_SHEET_NAME = '\u6708\u5EA6\u6230\u60C5\u5BA4';
 var MONTHLY_HOLDINGS_RANGE = 'A12:N24';
 var COMMAND_MARKET_VALUE_RANGE = 'I2:I2';
-var COMMAND_NET_ASSET_RANGE = 'G2:H2';
 var ASSET_SNAPSHOT_SHEET_NAME = '\u6BCF\u65E5\u8CC7\u7522\u5FEB\u7167';
 var ASSET_SNAPSHOT_GID = '2000002006';
 var ASSET_SNAPSHOT_RANGE = 'A2:F1000';
@@ -3338,7 +3337,7 @@ async function apiPostJson(body){
 
 var ADVISOR_REMINDER_CACHE_KEY='empire_today_advisor_reminder_v1';
 var advisorReminderPromise=null;
-var FOODHOUSE_CACHE_KEY='wealth_foodhouse_dashboard_v1';
+var FOODHOUSE_CACHE_KEY='wealth_foodhouse_dashboard_v2';
 var FOODHOUSE_CACHE_TTL=6*60*60*1000;
 var foodhouseDashboardPromise=null;
 var FINANCE_TREASURY_CACHE_KEY='wealth_finance_treasury_v1';
@@ -3474,22 +3473,51 @@ function latestInvestmentMarketValue(assetSnapshot,fallbackValue){
   value=Number(fallbackValue);
   return !isNaN(value)&&isFinite(value)&&value>0?value:0;
 }
-function normalizeNetAsset(netAsset){
-  var value=netAsset&&netAsset.value!=null?netAsset.value:netAsset;
-  value=Number(value);
-  return !isNaN(value)&&isFinite(value)&&value>0?value:0;
-}
 function foodhouseMarketExposure(assetSnapshot,netAsset,fallbackMarket){
   var market=latestInvestmentMarketValue(assetSnapshot,fallbackMarket);
-  var total=normalizeNetAsset(netAsset);
+  var total=Number(netAsset&&netAsset.value!=null?netAsset.value:netAsset);
   return market>0&&total>0?market/total*100:null;
+}
+function foodhouseBorrowingTotal(debt){
+  debt=debt||{};
+  var pledges=debt.pledges||[];
+  var loans=debt.loans||[];
+  var pledgeTotal=pledges.reduce(function(s,p){return s+toNum(p&&p.loanAmount);},0);
+  var loanRemain=loans.reduce(function(s,l){
+    var remain=toNum(l&&l.remainingAmount);
+    return s+(remain||toNum(l&&l.loanAmount));
+  },0);
+  return pledgeTotal+loanRemain;
+}
+function foodhouseCashValue(core){
+  core=core||{};
+  var pantry=core.pantry||[];
+  var cashItem=pantry[0]||null;
+  var cash=toNum(cashItem&&(cashItem.value!=null?cashItem.value:cashItem.displayValue));
+  if(cash>0)return cash;
+  return toNum(core.monthly&&core.monthly.cashAsset);
+}
+function buildFoodhouseNetAsset(core,assetSnapshot,debt){
+  core=core||{};
+  var holdings=core.holdings||[];
+  var fallbackMarket=holdings.reduce(function(s,h){return s+toNum(h.marketValue);},0);
+  var investment=latestInvestmentMarketValue(assetSnapshot,fallbackMarket);
+  var cash=foodhouseCashValue(core);
+  var borrowings=foodhouseBorrowingTotal(debt);
+  var value=investment+cash-borrowings;
+  return {
+    value:value>0?value:0,
+    investmentValue:investment,
+    cashValue:cash,
+    borrowings:borrowings
+  };
 }
 function buildAdvisorFinanceSummary(monthly,holdings,assetSnapshot,netAsset){
   monthly=monthly||{};
   holdings=holdings||[];
   var totalReturn=holdings.reduce(function(s,h){return s+toNum(h.totalReturn);},0);
   var totalMonthly=holdings.reduce(function(s,h){return s+toNum(h.monthlyDiv);},0);
-  var netAssetValue=normalizeNetAsset(netAsset);
+  var netAssetValue=Number(netAsset&&netAsset.value)||0;
   var marketDelta=advisorMarketDelta(assetSnapshot);
   var marketDeltaText=advisorMarketDeltaFullText(assetSnapshot);
   return {
@@ -3846,15 +3874,19 @@ async function loadFoodhouseDashboard(){
     loadHeroSheet(false),
     loadArmySettingsSheet(),
     loadAssetSnapshot(),
-    loadCommandNetAsset()
+    apiGet({action:'pledgeLoans'})
   ]).then(function(results){
     if(results[0].status!=='fulfilled')throw results[0].reason;
+    var core=results[0].value||{};
+    var assetSnapshot=results[3].status==='fulfilled'?results[3].value:null;
+    var debt=results[4].status==='fulfilled'?(results[4].value||{pledges:[],loans:[]}):{pledges:[],loans:[]};
     var data={
-      core:results[0].value||{},
+      core:core,
       heroes:results[1].status==='fulfilled'?(results[1].value||[]):[],
       armySettings:results[2].status==='fulfilled'?(results[2].value||{}):{},
-      assetSnapshot:results[3].status==='fulfilled'?results[3].value:null,
-      netAsset:results[4].status==='fulfilled'?results[4].value:null
+      assetSnapshot:assetSnapshot,
+      debt:debt,
+      netAsset:buildFoodhouseNetAsset(core,assetSnapshot,debt)
     };
     holdingsCache=(data.core.holdings||[]).length?data.core.holdings:holdingsCache;
     try{localStorage.setItem(FOODHOUSE_CACHE_KEY,JSON.stringify({savedAt:Date.now(),data:data}));}catch(e){}
@@ -8299,23 +8331,6 @@ async function loadCommandMarketSnapshot(){
     investmentMarketValue:marketValue,
     marketValue:marketValue,
     source:'commandI2'
-  };
-}
-
-async function loadCommandNetAsset(){
-  var url='https://docs.google.com/spreadsheets/d/'+COMMAND_SHEET_ID+'/gviz/tq?tqx=out:json&gid='+encodeURIComponent(COMMAND_MONTHLY_GID)+'&range='+encodeURIComponent(COMMAND_NET_ASSET_RANGE);
-  var json=await readGvizJson(url);
-  var row=(json.table.rows||[])[0]||{};
-  var cells=row.c||[];
-  var label=String(gvizCellValue(cells[0])||'淨資產').trim()||'淨資產';
-  var value=toNum(gvizCellValue(cells[1]));
-  var displayValue=cells[1]&&cells[1].f?String(cells[1].f):fmtFull(value);
-  if(!value)return null;
-  return {
-    label:label,
-    value:value,
-    displayValue:displayValue,
-    source:'commandH2'
   };
 }
 
