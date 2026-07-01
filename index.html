@@ -669,9 +669,9 @@ body::after{
 .advisor-summary-label{font-family:var(--sans);font-size:10px;font-weight:900;line-height:1.35;color:#bda36d;letter-spacing:.6px}
 .advisor-summary-pre{margin-top:4px;font-family:var(--sans);font-size:10px;font-weight:850;line-height:1.35;color:#bda36d}
 .advisor-summary-lines{display:grid;gap:5px}
-.advisor-summary-line{display:flex;align-items:baseline;justify-content:space-between;gap:8px;font-family:var(--mono);font-size:14px;font-weight:900;line-height:1.25;color:#f3df9a;white-space:normal;word-break:break-word}
+.advisor-summary-line{display:flex;align-items:baseline;justify-content:space-between;gap:8px;font-family:var(--mono);font-size:14px;font-weight:900;line-height:1.25;color:#f3df9a;white-space:normal;word-break:normal}
 .advisor-summary-line span{font-family:var(--sans);white-space:nowrap}
-.advisor-summary-line strong{font:inherit;color:inherit;text-align:right}
+.advisor-summary-line strong{font:inherit;color:inherit;text-align:right;white-space:nowrap;word-break:normal}
 .advisor-summary-value{margin-top:4px;font-family:var(--mono);font-size:14px;font-weight:900;line-height:1.25;color:#f3df9a;white-space:normal;word-break:break-word}
 .advisor-summary-value.up{color:var(--teal)}
 .advisor-summary-value.down{color:var(--coral)}
@@ -762,7 +762,7 @@ body::after{
 .foodhouse-roster-reservoir .res-fill{border-radius:0 0 5px 5px}
 .foodhouse-roster-reservoir .res-pct{font-size:11px}
 .foodhouse-bills-wrap{margin-top:12px}
-@media(max-width:540px){.foodhouse-warroom-grid,.foodhouse-roster-grid{grid-template-columns:1fr}.foodhouse-monthly-viz{grid-template-columns:104px minmax(0,1fr);gap:9px}.foodhouse-savings-gauge,.foodhouse-savings-gauge svg{width:104px}}
+@media(max-width:540px){.foodhouse-warroom-grid,.foodhouse-roster-grid{grid-template-columns:1fr}.foodhouse-advisor-reminder .advisor-summary-grid{grid-template-columns:1fr}.foodhouse-advisor-reminder .advisor-summary-line{font-size:18px}.foodhouse-monthly-viz{grid-template-columns:104px minmax(0,1fr);gap:9px}.foodhouse-savings-gauge,.foodhouse-savings-gauge svg{width:104px}}
 .finance-reminder-wrap{margin:0 0 12px}
 .advisor-command-head{display:flex;align-items:center;justify-content:center;gap:9px;margin:0 20px 13px 0}
 .advisor-command-title{margin:0;text-align:center;font-family:'Noto Serif TC',serif;font-size:18px;font-weight:900;line-height:1.35;color:#f0dfa0;letter-spacing:1.5px;text-shadow:0 0 14px rgba(232,192,80,.22)}
