@@ -2987,10 +2987,11 @@ var COMMAND_SETTING_GID = '1479341396';
 var MONTHLY_HOLDINGS_SHEET_NAME = '\u6708\u5EA6\u6230\u60C5\u5BA4';
 var MONTHLY_HOLDINGS_RANGE = 'A12:N24';
 var COMMAND_MARKET_VALUE_RANGE = 'I2:I2';
+var COMMAND_TOTAL_ASSET_RANGE = 'H2:H2';
 var COMMAND_EXPOSURE_VALUE_RANGE = 'G2:H2';
 var ASSET_SNAPSHOT_SHEET_NAME = '\u6BCF\u65E5\u8CC7\u7522\u5FEB\u7167';
 var ASSET_SNAPSHOT_GID = '2000002006';
-var ASSET_SNAPSHOT_RANGE = 'A2:H1000';
+var ASSET_SNAPSHOT_RANGE = 'A2:I1000';
 var travelMemoCache = null;
 var travelMapsCache = null;
 var travelMemoOptionsCache = null;
@@ -3358,7 +3359,7 @@ async function apiPostJson(body){
 
 var ADVISOR_REMINDER_CACHE_KEY='empire_today_advisor_reminder_v1';
 var advisorReminderPromise=null;
-var FOODHOUSE_CACHE_KEY='wealth_foodhouse_dashboard_v9';
+var FOODHOUSE_CACHE_KEY='wealth_foodhouse_dashboard_v10';
 var FOODHOUSE_CACHE_TTL=6*60*60*1000;
 var foodhouseDashboardPromise=null;
 var FINANCE_TREASURY_CACHE_KEY='wealth_finance_treasury_v1';
@@ -3405,6 +3406,28 @@ function advisorMarketDeltaFullText(snapshot){
   if(!latest||!previous)return '較昨 --(日漲跌 --%)';
   var latestValue=Number(latest.investmentMarketValue!=null?latest.investmentMarketValue:latest.marketValue);
   var previousValue=Number(previous.investmentMarketValue!=null?previous.investmentMarketValue:previous.marketValue);
+  if(isNaN(latestValue)||isNaN(previousValue)||!isFinite(latestValue)||!isFinite(previousValue)||previousValue===0)return '較昨 --(日漲跌 --%)';
+  var diff=latestValue-previousValue;
+  var pct=diff/previousValue*100;
+  var verb=diff>0?'增':(diff<0?'減':'持平');
+  var arrow=diff>0?'▲':(diff<0?'▼':'');
+  var pctText=(diff>0?'+':'')+pct.toFixed(2)+'%'+(arrow?' '+arrow:'');
+  return '較昨'+verb+' '+fmtFull(Math.abs(diff))+'(日漲跌 '+pctText+')';
+}
+function advisorSnapshotDelta(snapshot,key){
+  var latest=snapshot&&snapshot.latest;
+  var previous=snapshot&&snapshot.previous;
+  var latestValue=Number(latest&&latest[key]);
+  var previousValue=Number(previous&&previous[key]);
+  if(isNaN(latestValue)||isNaN(previousValue)||!isFinite(latestValue)||!isFinite(previousValue))return null;
+  return latestValue-previousValue;
+}
+function advisorSnapshotDeltaFullText(snapshot,key){
+  var latest=snapshot&&snapshot.latest;
+  var previous=snapshot&&snapshot.previous;
+  if(!latest||!previous)return '較昨 --(日漲跌 --%)';
+  var latestValue=Number(latest&&latest[key]);
+  var previousValue=Number(previous&&previous[key]);
   if(isNaN(latestValue)||isNaN(previousValue)||!isFinite(latestValue)||!isFinite(previousValue)||previousValue===0)return '較昨 --(日漲跌 --%)';
   var diff=latestValue-previousValue;
   var pct=diff/previousValue*100;
@@ -3581,14 +3604,14 @@ function buildAdvisorFinanceSummary(monthly,holdings,assetSnapshot,netAsset){
   var debtRatioDeltaHtml=foodhousePctDeltaHtml(debtRatio,previousSnapshot&&previousSnapshot.debtToNetAssetPct);
   var debtRatioText=debtRatio!=null?'🧸負債／淨資產比 '+debtRatio.toFixed(1)+'%'+debtRatioDeltaHtml:'';
   var exposureNoteHtml=[exposureText,debtRatioText].filter(Boolean).join('<br>');
-  var marketDelta=advisorMarketDelta(assetSnapshot);
-  var marketDeltaText=advisorMarketDeltaFullText(assetSnapshot);
+  var totalAssetDelta=advisorSnapshotDelta(assetSnapshot,'totalAssetValue');
+  var totalAssetDeltaText=advisorSnapshotDeltaFullText(assetSnapshot,'totalAssetValue');
   return {
     date:today(),
     displayDate:today().replace(/-/g,'/'),
     metrics:[
       {label:'本月收入支出',value:fmtFull(monthly.income||0)+' / '+fmtFull(monthly.expense||0),valueHtml:advisorCashflowValueHtml(monthly),sub:'收入 / 支出',toneValue:(Number(monthly.income)||0)-(Number(monthly.expense)||0),visual:advisorCashflowVisual(monthly)},
-      {label:'投資市值較昨增加金額',value:marketDeltaText,sub:'投資市值',toneValue:marketDelta,visual:advisorSnapshotSparkline(assetSnapshot,'investmentMarketValue','投資市值')},
+      {label:'總資產較昨漲跌追蹤',value:totalAssetDeltaText,sub:'總資產',toneValue:totalAssetDelta,visual:advisorSnapshotSparkline(assetSnapshot,'totalAssetValue','總資產')},
       {label:'含息報酬',value:advisorSignedCurrency(totalReturn),sub:advisorTotalReturnDeltaFullText(assetSnapshot),toneValue:totalReturn,subToneValue:advisorTotalReturnDelta(assetSnapshot),visual:advisorSnapshotSparkline(assetSnapshot,'totalReturn','含息報酬')},
       {rows:[
         {label:'🏰淨資產',value:netAssetValue?fmtFull(netAssetValue):'--'},
@@ -8344,6 +8367,7 @@ async function loadDailyAssetSnapshotSheet(){
     if(!marketValue)return null;
     var marketExposureRaw=gvizCellValue(c[6]);
     var debtToNetAssetRaw=gvizCellValue(c[7]);
+    var totalAssetValue=toNum(gvizCellValue(c[8]));
     var marketExposure=String(marketExposureRaw||'').trim()===''?null:foodhouseRatioPct(toNum(marketExposureRaw));
     var debtToNetAsset=String(debtToNetAssetRaw||'').trim()===''?null:foodhouseRatioPct(toNum(debtToNetAssetRaw));
     return {
@@ -8359,6 +8383,7 @@ async function loadDailyAssetSnapshotSheet(){
       marketExposure:marketExposure===null?null:marketExposure/100,
       debtToNetAssetPct:debtToNetAsset,
       debtToNetAsset:debtToNetAsset===null?null:debtToNetAsset/100,
+      totalAssetValue:totalAssetValue||null,
       note:String(gvizCellValue(c[5])||'')
     };
   }).filter(Boolean);
@@ -8370,9 +8395,15 @@ async function loadDailyAssetSnapshotSheet(){
   var previous=rows.length>1?rows[rows.length-2]:null;
   var dailyChangeAmount=null;
   var dailyChangePct=null;
+  var totalAssetChangeAmount=null;
+  var totalAssetChangePct=null;
   if(latest&&previous){
     dailyChangeAmount=latest.investmentMarketValue-previous.investmentMarketValue;
     if(previous.investmentMarketValue)dailyChangePct=dailyChangeAmount/previous.investmentMarketValue*100;
+    if(latest.totalAssetValue&&previous.totalAssetValue){
+      totalAssetChangeAmount=latest.totalAssetValue-previous.totalAssetValue;
+      totalAssetChangePct=totalAssetChangeAmount/previous.totalAssetValue*100;
+    }
   }
   return {
     sheetName:ASSET_SNAPSHOT_SHEET_NAME,
@@ -8382,23 +8413,32 @@ async function loadDailyAssetSnapshotSheet(){
     latestMarketValue:latest?latest.investmentMarketValue:null,
     previousMarketValue:previous?previous.investmentMarketValue:null,
     dailyChangeAmount:dailyChangeAmount,
-    dailyChangePct:dailyChangePct
+    dailyChangePct:dailyChangePct,
+    latestTotalAssetValue:latest?latest.totalAssetValue:null,
+    previousTotalAssetValue:previous?previous.totalAssetValue:null,
+    totalAssetChangeAmount:totalAssetChangeAmount,
+    totalAssetChangePct:totalAssetChangePct
   };
 }
 
 async function loadCommandMarketSnapshot(){
-  var url='https://docs.google.com/spreadsheets/d/'+COMMAND_SHEET_ID+'/gviz/tq?tqx=out:json&gid='+encodeURIComponent(COMMAND_MONTHLY_GID)+'&range='+encodeURIComponent(COMMAND_MARKET_VALUE_RANGE);
-  var json=await readGvizJson(url);
+  var marketUrl='https://docs.google.com/spreadsheets/d/'+COMMAND_SHEET_ID+'/gviz/tq?tqx=out:json&gid='+encodeURIComponent(COMMAND_MONTHLY_GID)+'&range='+encodeURIComponent(COMMAND_MARKET_VALUE_RANGE);
+  var totalUrl='https://docs.google.com/spreadsheets/d/'+COMMAND_SHEET_ID+'/gviz/tq?tqx=out:json&gid='+encodeURIComponent(COMMAND_MONTHLY_GID)+'&range='+encodeURIComponent(COMMAND_TOTAL_ASSET_RANGE);
+  var results=await Promise.all([readGvizJson(marketUrl),readGvizJson(totalUrl).catch(function(){return null;})]);
+  var json=results[0];
   var row=(json.table.rows||[])[0]||{};
   var cell=(row.c||[])[0];
   var marketValue=toNum(gvizCellValue(cell));
   if(!marketValue)return null;
+  var totalRow=results[1]&&((results[1].table.rows||[])[0]||{});
+  var totalAssetValue=toNum(gvizCellValue((totalRow.c||[])[0]));
   return {
     rowNumber:0,
     date:today().replace(/-/g,'/'),
     dateValue:Date.now(),
     investmentMarketValue:marketValue,
     marketValue:marketValue,
+    totalAssetValue:totalAssetValue||null,
     source:'commandI2'
   };
 }
@@ -8423,9 +8463,15 @@ function buildAssetSnapshotFromCommand(commandLatest,sheetSnapshot){
   var previous=latestSnapshotBeforeToday(rows);
   var dailyChangeAmount=null;
   var dailyChangePct=null;
+  var totalAssetChangeAmount=null;
+  var totalAssetChangePct=null;
   if(commandLatest&&previous){
     dailyChangeAmount=commandLatest.investmentMarketValue-previous.investmentMarketValue;
     if(previous.investmentMarketValue)dailyChangePct=dailyChangeAmount/previous.investmentMarketValue*100;
+    if(commandLatest.totalAssetValue&&previous.totalAssetValue){
+      totalAssetChangeAmount=commandLatest.totalAssetValue-previous.totalAssetValue;
+      totalAssetChangePct=totalAssetChangeAmount/previous.totalAssetValue*100;
+    }
   }
   return {
     sheetName:ASSET_SNAPSHOT_SHEET_NAME,
@@ -8436,6 +8482,10 @@ function buildAssetSnapshotFromCommand(commandLatest,sheetSnapshot){
     previousMarketValue:previous?previous.investmentMarketValue:null,
     dailyChangeAmount:dailyChangeAmount,
     dailyChangePct:dailyChangePct,
+    latestTotalAssetValue:commandLatest?commandLatest.totalAssetValue:null,
+    previousTotalAssetValue:previous?previous.totalAssetValue:null,
+    totalAssetChangeAmount:totalAssetChangeAmount,
+    totalAssetChangePct:totalAssetChangePct,
     source:'commandI2'
   };
 }
