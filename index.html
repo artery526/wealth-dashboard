@@ -676,6 +676,7 @@ body::after{
 .advisor-summary-value{margin-top:4px;font-family:var(--mono);font-size:14px;font-weight:900;line-height:1.25;color:#f3df9a;white-space:normal;word-break:break-word}
 .advisor-summary-value.up{color:var(--teal)}
 .advisor-summary-value.down{color:var(--coral)}
+.advisor-summary-value .summary-sep{color:#bda36d}
 .advisor-summary-sub{margin-top:3px;font-family:var(--sans);font-size:10px;font-weight:800;line-height:1.35;color:#9a7430}
 .advisor-summary-sub.up{color:var(--teal)}
 .advisor-summary-sub.down{color:var(--coral)}
@@ -709,8 +710,10 @@ body::after{
 .foodhouse-cashflow-row{display:grid;grid-template-columns:24px minmax(0,1fr);align-items:center;gap:7px;font-family:var(--sans);font-size:10px;font-weight:900;color:#bda36d}
 .foodhouse-cashflow-track,.foodhouse-expense-track{height:7px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden}
 .foodhouse-cashflow-fill,.foodhouse-expense-fill{display:block;height:100%;border-radius:2px}
-.foodhouse-cashflow-fill.income{background:var(--teal)}
-.foodhouse-cashflow-fill.expense{background:var(--coral)}
+.foodhouse-income-tone,.foodhouse-cashflow-row:first-child{color:var(--coral)}
+.foodhouse-expense-tone,.foodhouse-cashflow-row:nth-child(2){color:var(--teal)}
+.foodhouse-cashflow-fill.income{background:var(--coral)}
+.foodhouse-cashflow-fill.expense{background:var(--teal)}
 .foodhouse-advisor-reminder .advisor-reminder-card{border:0;background:transparent;box-shadow:none;padding:0}
 .foodhouse-advisor-reminder .advisor-reminder-card::before{display:none}
 .foodhouse-advisor-reminder .advisor-reminder-head{display:none}
@@ -723,6 +726,8 @@ body::after{
 .foodhouse-advisor-reminder .advisor-summary-line{font-size:19px}
 .foodhouse-advisor-reminder .advisor-summary-line-note{font-size:12px}
 .foodhouse-advisor-reminder .advisor-summary-value{font-size:19px}
+.foodhouse-advisor-reminder .advisor-summary-value.up,.foodhouse-advisor-reminder .advisor-summary-sub.up{color:var(--coral)}
+.foodhouse-advisor-reminder .advisor-summary-value.down,.foodhouse-advisor-reminder .advisor-summary-sub.down{color:var(--teal)}
 .foodhouse-advisor-reminder .advisor-summary-item:nth-child(2) .advisor-summary-value{font-size:14px;line-height:1.45}
 .foodhouse-advisor-reminder .advisor-summary-sub{font-size:12px}
 .foodhouse-warroom-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px}
@@ -3466,6 +3471,12 @@ function advisorCashflowVisual(monthly){
     <div class="foodhouse-cashflow-row"><span>支出</span><span class="foodhouse-cashflow-track"><span class="foodhouse-cashflow-fill expense" style="width:${(expense/max*100).toFixed(1)}%"></span></span></div>
   </div>`;
 }
+function advisorCashflowValueHtml(monthly){
+  monthly=monthly||{};
+  return '<span class="foodhouse-income-tone">'+esc(fmtFull(monthly.income||0))+'</span>'
+    +'<span class="summary-sep"> / </span>'
+    +'<span class="foodhouse-expense-tone">'+esc(fmtFull(monthly.expense||0))+'</span>';
+}
 function advisorFinanceSummaryHtml(items){
   return `<div class="advisor-summary-grid">
     ${items.map(function(item){
@@ -3474,7 +3485,7 @@ function advisorFinanceSummaryHtml(items){
           return `<div><div class="advisor-summary-line"><span>${esc(row.label)}</span><strong>${esc(row.value)}</strong></div>${row.note?`<div class="advisor-summary-line-note">${esc(row.note)}</div>`:''}</div>`;
         }).join('')}</div>`:`<div class="advisor-summary-label">${esc(item.label)}</div>
         ${item.pre?`<div class="advisor-summary-pre">${esc(item.pre)}</div>`:''}
-        <div class="advisor-summary-value ${advisorMetricValueClass(item.toneValue)}">${esc(item.value)}</div>`}
+        <div class="advisor-summary-value ${advisorMetricValueClass(item.toneValue)}">${item.valueHtml||esc(item.value)}</div>`}
         ${(item.subs||[]).map(function(sub){
           return `<div class="advisor-summary-sub ${advisorMetricValueClass(sub.toneValue)}">${esc(sub.text)}</div>`;
         }).join('')}
@@ -3553,7 +3564,7 @@ function buildAdvisorFinanceSummary(monthly,holdings,assetSnapshot,netAsset){
     date:today(),
     displayDate:today().replace(/-/g,'/'),
     metrics:[
-      {label:'本月收入支出',value:fmtFull(monthly.income||0)+' / '+fmtFull(monthly.expense||0),sub:'收入 / 支出',toneValue:(Number(monthly.income)||0)-(Number(monthly.expense)||0),visual:advisorCashflowVisual(monthly)},
+      {label:'本月收入支出',value:fmtFull(monthly.income||0)+' / '+fmtFull(monthly.expense||0),valueHtml:advisorCashflowValueHtml(monthly),sub:'收入 / 支出',toneValue:(Number(monthly.income)||0)-(Number(monthly.expense)||0),visual:advisorCashflowVisual(monthly)},
       {label:'投資市值較昨增加金額',value:marketDeltaText,sub:'投資市值',toneValue:marketDelta,visual:advisorSnapshotSparkline(assetSnapshot,'investmentMarketValue','投資市值')},
       {label:'含息報酬',value:advisorSignedCurrency(totalReturn),sub:advisorTotalReturnDeltaFullText(assetSnapshot),toneValue:totalReturn,subToneValue:advisorTotalReturnDelta(assetSnapshot),visual:advisorSnapshotSparkline(assetSnapshot,'totalReturn','含息報酬')},
       {rows:[
