@@ -3350,7 +3350,7 @@ async function apiPostJson(body){
 
 var ADVISOR_REMINDER_CACHE_KEY='empire_today_advisor_reminder_v1';
 var advisorReminderPromise=null;
-var FOODHOUSE_CACHE_KEY='wealth_foodhouse_dashboard_v6';
+var FOODHOUSE_CACHE_KEY='wealth_foodhouse_dashboard_v7';
 var FOODHOUSE_CACHE_TTL=6*60*60*1000;
 var foodhouseDashboardPromise=null;
 var FINANCE_TREASURY_CACHE_KEY='wealth_finance_treasury_v1';
@@ -3512,8 +3512,11 @@ function foodhouseBorrowingTotal(debt){
 function foodhouseCashValue(core){
   core=core||{};
   var pantry=core.pantry||[];
+  var tigerCashItem=pantry[2]||null;
+  var cash=toNum(tigerCashItem&&(tigerCashItem.value!=null?tigerCashItem.value:tigerCashItem.displayValue));
+  if(cash>0)return cash;
   var cashItem=pantry[0]||null;
-  var cash=toNum(cashItem&&(cashItem.value!=null?cashItem.value:cashItem.displayValue));
+  cash=toNum(cashItem&&(cashItem.value!=null?cashItem.value:cashItem.displayValue));
   if(cash>0)return cash;
   return toNum(core.monthly&&core.monthly.cashAsset);
 }
