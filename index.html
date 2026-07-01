@@ -2967,6 +2967,7 @@ var COMMAND_SETTING_GID = '1479341396';
 var MONTHLY_HOLDINGS_SHEET_NAME = '\u6708\u5EA6\u6230\u60C5\u5BA4';
 var MONTHLY_HOLDINGS_RANGE = 'A12:N24';
 var COMMAND_MARKET_VALUE_RANGE = 'I2:I2';
+var COMMAND_NET_ASSET_RANGE = 'G2:H2';
 var ASSET_SNAPSHOT_SHEET_NAME = '\u6BCF\u65E5\u8CC7\u7522\u5FEB\u7167';
 var ASSET_SNAPSHOT_GID = '2000002006';
 var ASSET_SNAPSHOT_RANGE = 'A2:F1000';
@@ -3465,11 +3466,30 @@ function advisorFinanceSummaryHtml(items){
     }).join('')}
   </div>`;
 }
-function buildAdvisorFinanceSummary(monthly,holdings,assetSnapshot){
+function latestInvestmentMarketValue(assetSnapshot,fallbackValue){
+  var latest=assetSnapshot&&assetSnapshot.latest;
+  var value=latest&&(latest.investmentMarketValue!=null?latest.investmentMarketValue:latest.marketValue);
+  value=Number(value);
+  if(!isNaN(value)&&isFinite(value)&&value>0)return value;
+  value=Number(fallbackValue);
+  return !isNaN(value)&&isFinite(value)&&value>0?value:0;
+}
+function normalizeNetAsset(netAsset){
+  var value=netAsset&&netAsset.value!=null?netAsset.value:netAsset;
+  value=Number(value);
+  return !isNaN(value)&&isFinite(value)&&value>0?value:0;
+}
+function foodhouseMarketExposure(assetSnapshot,netAsset,fallbackMarket){
+  var market=latestInvestmentMarketValue(assetSnapshot,fallbackMarket);
+  var total=normalizeNetAsset(netAsset);
+  return market>0&&total>0?market/total*100:null;
+}
+function buildAdvisorFinanceSummary(monthly,holdings,assetSnapshot,netAsset){
   monthly=monthly||{};
   holdings=holdings||[];
   var totalReturn=holdings.reduce(function(s,h){return s+toNum(h.totalReturn);},0);
   var totalMonthly=holdings.reduce(function(s,h){return s+toNum(h.monthlyDiv);},0);
+  var netAssetValue=normalizeNetAsset(netAsset);
   var marketDelta=advisorMarketDelta(assetSnapshot);
   var marketDeltaText=advisorMarketDeltaFullText(assetSnapshot);
   return {
@@ -3479,7 +3499,7 @@ function buildAdvisorFinanceSummary(monthly,holdings,assetSnapshot){
       {label:'本月收入支出',value:fmtFull(monthly.income||0)+' / '+fmtFull(monthly.expense||0),sub:'收入 / 支出',toneValue:(Number(monthly.income)||0)-(Number(monthly.expense)||0),visual:advisorCashflowVisual(monthly)},
       {label:'投資市值較昨增加金額',value:marketDeltaText,sub:'投資市值',toneValue:marketDelta,visual:advisorSnapshotSparkline(assetSnapshot,'investmentMarketValue','投資市值')},
       {label:'含息報酬',value:advisorSignedCurrency(totalReturn),sub:advisorTotalReturnDeltaFullText(assetSnapshot),toneValue:totalReturn,subToneValue:advisorTotalReturnDelta(assetSnapshot),visual:advisorSnapshotSparkline(assetSnapshot,'totalReturn','含息報酬')},
-      {label:'月總配息',value:fmtFull(totalMonthly),sub:'預估月配',toneValue:totalMonthly}
+      {label:'🏰淨資產',value:netAssetValue?fmtFull(netAssetValue):'--',sub:'月總配息 '+fmtFull(totalMonthly),toneValue:netAssetValue||totalMonthly,subToneValue:totalMonthly}
     ]
   };
 }
@@ -3811,8 +3831,8 @@ function renderFoodhouseDashboardData(data,stale){
   var warroom=document.getElementById('foodhouse-warroom-content');
   var roster=document.getElementById('foodhouse-roster-content');
   var bills=document.getElementById('foodhouse-bills-content');
-  if(reminder)reminder.innerHTML=advisorReminderHtml(buildAdvisorFinanceSummary(monthly,holdings,data.assetSnapshot));
-  if(warroom)warroom.innerHTML=renderFoodhouseWarRoom(core.pantry||[],monthly);
+  if(reminder)reminder.innerHTML=advisorReminderHtml(buildAdvisorFinanceSummary(monthly,holdings,data.assetSnapshot,data.netAsset));
+  if(warroom)warroom.innerHTML=renderFoodhouseWarRoom(core.pantry||[],monthly,data.assetSnapshot,data.netAsset);
   if(roster)roster.innerHTML=renderFoodhouseCouncilRosterSummary(mergeCouncilRows(holdings,data.heroes||[],data.armySettings||{}));
   if(bills)bills.innerHTML=renderBillReservoirHtml(core.bills||{});
   var label=document.getElementById('foodhouse-label');
@@ -3825,14 +3845,16 @@ async function loadFoodhouseDashboard(){
     apiGet({action:'foodhouseDashboard',ym:currentYM()}),
     loadHeroSheet(false),
     loadArmySettingsSheet(),
-    loadAssetSnapshot()
+    loadAssetSnapshot(),
+    loadCommandNetAsset()
   ]).then(function(results){
     if(results[0].status!=='fulfilled')throw results[0].reason;
     var data={
       core:results[0].value||{},
       heroes:results[1].status==='fulfilled'?(results[1].value||[]):[],
       armySettings:results[2].status==='fulfilled'?(results[2].value||{}):{},
-      assetSnapshot:results[3].status==='fulfilled'?results[3].value:null
+      assetSnapshot:results[3].status==='fulfilled'?results[3].value:null,
+      netAsset:results[4].status==='fulfilled'?results[4].value:null
     };
     holdingsCache=(data.core.holdings||[]).length?data.core.holdings:holdingsCache;
     try{localStorage.setItem(FOODHOUSE_CACHE_KEY,JSON.stringify({savedAt:Date.now(),data:data}));}catch(e){}
@@ -3878,17 +3900,27 @@ function foodhouseMonthlyMetaHtml(monthly){
   </div>`;
 }
 
-function foodhouseSupplyExtraHtml(item){
-  if(!item||!item.label||!item.displayValue)return '';
+function foodhouseSupplyExtraHtml(item,assetSnapshot,netAsset){
+  var lines=[];
+  if(item&&item.label&&item.displayValue){
+    lines.push({label:item.label,value:item.displayValue});
+  }
+  var exposure=foodhouseMarketExposure(assetSnapshot,netAsset);
+  if(exposure!=null){
+    lines.push({label:'⚔️市場曝險',value:exposure.toFixed(1)+'%'});
+  }
+  if(!lines.length)return '';
   return `<div class="foodhouse-supply-extra">
-    <div class="foodhouse-cash-line">
-      <span class="foodhouse-cash-name">${esc(item.label)}</span>
-      <span class="foodhouse-cash-amt">${esc(item.displayValue)}</span>
-    </div>
+    ${lines.map(function(line){
+      return `<div class="foodhouse-cash-line">
+        <span class="foodhouse-cash-name">${esc(line.label)}</span>
+        <span class="foodhouse-cash-amt">${esc(line.value)}</span>
+      </div>`;
+    }).join('')}
   </div>`;
 }
 
-function renderFoodhouseWarRoom(items,monthly){
+function renderFoodhouseWarRoom(items,monthly,assetSnapshot,netAsset){
   items=(items||[]).filter(function(item){return item&&item.label&&item.displayValue;});
   var mainItems=items.slice(0,2);
   var supplyExtra=items[2]||null;
@@ -3899,7 +3931,7 @@ function renderFoodhouseWarRoom(items,monthly){
         <div class="foodhouse-warroom-label">${esc(item.label)}</div>
         <div class="foodhouse-warroom-value">${esc(item.displayValue)}</div>
         ${idx===0?foodhouseMonthlyMetaHtml(monthly):''}
-        ${idx===1?foodhouseSupplyExtraHtml(supplyExtra):''}
+        ${idx===1?foodhouseSupplyExtraHtml(supplyExtra,assetSnapshot,netAsset):''}
       </div>`;
     }).join('')}
   </div>`;
@@ -8267,6 +8299,23 @@ async function loadCommandMarketSnapshot(){
     investmentMarketValue:marketValue,
     marketValue:marketValue,
     source:'commandI2'
+  };
+}
+
+async function loadCommandNetAsset(){
+  var url='https://docs.google.com/spreadsheets/d/'+COMMAND_SHEET_ID+'/gviz/tq?tqx=out:json&gid='+encodeURIComponent(COMMAND_MONTHLY_GID)+'&range='+encodeURIComponent(COMMAND_NET_ASSET_RANGE);
+  var json=await readGvizJson(url);
+  var row=(json.table.rows||[])[0]||{};
+  var cells=row.c||[];
+  var label=String(gvizCellValue(cells[0])||'淨資產').trim()||'淨資產';
+  var value=toNum(gvizCellValue(cells[1]));
+  var displayValue=cells[1]&&cells[1].f?String(cells[1].f):fmtFull(value);
+  if(!value)return null;
+  return {
+    label:label,
+    value:value,
+    displayValue:displayValue,
+    source:'commandH2'
   };
 }
 
