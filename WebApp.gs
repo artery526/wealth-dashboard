@@ -9,6 +9,8 @@
 // 讀取報表不需要 token
 var WRITE_TOKEN = '';
 var EXTERNAL_DB_SPREADSHEET_ID = '1BPnjwZKlBmxMkHmLDk6MSV28kfcAtQhGuZdufv5T7FY';
+var LEGACY_FINANCE_SPREADSHEET_ID = '1xtqOgRRTR6y-KWLjLHk7TFT7EKZpNLU2HSYTr-HhWcc';
+var LEGACY_FINANCE_LEDGER_SHEET = '交易流水_標準化';
 var ZIWEI_SPREADSHEET_ID = '1Z8cW96qqk5J7LL0mGg12GxmdZc_5elwDe4rEcGq-P-M';
 var ZIWEI_SHEET_NAME = '紫微星盤';
 var ZIWEI_HEADERS = ['啟用', '名稱', '出生年月日', '出生時辰', '性別', '雲端硬碟檔案ID', '圖片連結', '備註', '更新時間'];
@@ -97,7 +99,7 @@ function err(msg) {
 }
 
 // ── GET 路由（讀取 + 寫入全部走 GET，避免 CORS preflight 問題）──
-// 讀取：?action=config / monthly / yearly / history / accounts / holdingsOverview / councilPantry / topStatusBar / tradeOptions / marketDashboard / macroOverview / transactions / accountChanges / dividendCenter
+// 讀取：?action=config / monthly / yearly / legacyMonthDetails / history / accounts / holdingsOverview / councilPantry / topStatusBar / tradeOptions / marketDashboard / macroOverview / transactions / accountChanges / dividendCenter
 // 寫入：?action=expense|income|transfer&token=xxx&date=...（其餘參數同下）
 function doGet(e) {
   try {
@@ -109,6 +111,7 @@ function doGet(e) {
     if (action === 'config')       return ok(getConfig(ss));
     if (action === 'monthly')      return ok(getMonthly(ss, p.ym));
     if (action === 'yearly')       return ok(getYearly(ss, p.year));
+    if (action === 'legacyMonthDetails') return ok(getLegacyMonthDetails(p.ym));
     if (action === 'history')      return ok(getHistory(ss));
     if (action === 'accounts')     return ok(getAccounts(ss));
     if (action === 'holdingsOverview') return ok(getHoldingsOverview(ss));
@@ -562,6 +565,110 @@ function getYearly(ss, year) {
       savingRate: totIncome > 0 ? (totNet / totIncome * 100).toFixed(1) + '%' : '0%'
     }
   };
+}
+
+function getLegacyMonthDetails(ym) {
+  var targetYm = normalizeLegacyMonthKey_(ym);
+  if (!targetYm) return { ym: '', rows: [], total: { income: 0, expense: 0, transfer: 0, investmentTrade: 0 } };
+
+  var cache = CacheService.getScriptCache();
+  var cacheKey = 'legacyMonthDetails:' + targetYm;
+  var cached = cache.get(cacheKey);
+  if (cached) return JSON.parse(cached);
+
+  var ss = SpreadsheetApp.openById(LEGACY_FINANCE_SPREADSHEET_ID);
+  var sheet = ss.getSheetByName(LEGACY_FINANCE_LEDGER_SHEET);
+  if (!sheet) throw new Error('找不到舊資料標準化分頁：' + LEGACY_FINANCE_LEDGER_SHEET);
+
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) return { ym: targetYm, rows: [], total: { income: 0, expense: 0, transfer: 0, investmentTrade: 0 } };
+
+  var finder = sheet.getRange(2, 3, lastRow - 1, 1)
+    .createTextFinder(targetYm)
+    .matchEntireCell(true);
+  var matches = finder.findAll() || [];
+  var rowNums = matches.map(function(cell) { return cell.getRow(); }).sort(function(a, b) { return a - b; });
+  if (!rowNums.length) {
+    var empty = { ym: targetYm, rows: [], total: { income: 0, expense: 0, transfer: 0, investmentTrade: 0 } };
+    cache.put(cacheKey, JSON.stringify(empty), 900);
+    return empty;
+  }
+
+  var ranges = groupContiguousRows_(rowNums);
+  var rawRows = [];
+  ranges.forEach(function(group) {
+    rawRows = rawRows.concat(sheet.getRange(group.start, 1, group.count, 16).getDisplayValues());
+  });
+
+  var totals = { income: 0, expense: 0, transfer: 0, investmentTrade: 0 };
+  var rows = rawRows.map(function(row) {
+    var type = String(row[3] || '').trim();
+    var amount = parseAmount_(row[5]);
+    if (type === 'income') totals.income += amount;
+    else if (type === 'expense') totals.expense += amount;
+    else if (type === 'transfer') totals.transfer += amount;
+    else if (type === 'investment_trade') totals.investmentTrade += amount;
+
+    return {
+      id: String(row[0] || '').trim(),
+      date: normalizeLegacyDateText_(row[1]),
+      ym: targetYm,
+      type: type,
+      direction: String(row[4] || '').trim(),
+      amount: Math.round(amount),
+      category: String(row[6] || '').trim(),
+      subcategory: String(row[7] || '').trim(),
+      account: String(row[8] || '').trim(),
+      counterAccount: String(row[9] || '').trim(),
+      note: String(row[10] || '').trim(),
+      stock: String(row[11] || '').trim(),
+      shares: String(row[12] || '').trim(),
+      sourceSheet: String(row[13] || '').trim(),
+      sourceRow: String(row[14] || '').trim()
+    };
+  }).sort(function(a, b) {
+    var dateDiff = dateSortValue_(b.date) - dateSortValue_(a.date);
+    if (dateDiff) return dateDiff;
+    return String(a.id || '').localeCompare(String(b.id || ''));
+  });
+
+  var result = {
+    ym: targetYm,
+    displayYm: targetYm.replace('-', '/'),
+    rows: rows,
+    total: {
+      income: Math.round(totals.income),
+      expense: Math.round(totals.expense),
+      transfer: Math.round(totals.transfer),
+      investmentTrade: Math.round(totals.investmentTrade)
+    }
+  };
+  cache.put(cacheKey, JSON.stringify(result), 900);
+  return result;
+}
+
+function groupContiguousRows_(rowNums) {
+  var groups = [];
+  rowNums.forEach(function(row) {
+    var last = groups[groups.length - 1];
+    if (last && last.start + last.count === row) {
+      last.count += 1;
+    } else {
+      groups.push({ start: row, count: 1 });
+    }
+  });
+  return groups;
+}
+
+function normalizeLegacyMonthKey_(ym) {
+  var text = String(ym || '').trim().replace(/\//g, '-');
+  var m = text.match(/^(\d{4})-(\d{1,2})$/);
+  if (!m) return '';
+  return m[1] + '-' + String(m[2]).padStart(2, '0');
+}
+
+function normalizeLegacyDateText_(value) {
+  return String(value || '').trim().replace(/\//g, '-');
 }
 
 function getBlankYearlyMonths_(year) {

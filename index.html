@@ -1531,6 +1531,29 @@ body::after{
 .annual-table th{font-family:var(--sans);font-size:9px;color:#5a4018;letter-spacing:.5px;text-transform:uppercase}
 .annual-table td{font-family:var(--mono);color:var(--ink)}
 .annual-table tr:last-child td{border-bottom:none;font-weight:800;color:var(--gold)}
+.annual-month-row{cursor:pointer}
+.annual-month-row:hover td{background:rgba(232,192,80,.045)}
+.annual-month-row.open td{background:rgba(29,158,117,.055)}
+.annual-month-key{display:inline-flex;align-items:center;gap:6px}
+.annual-month-toggle{width:16px;height:16px;border:1px solid rgba(232,192,80,.32);border-radius:4px;display:inline-flex;align-items:center;justify-content:center;color:var(--gold);font-family:var(--sans);font-size:10px;line-height:1}
+.annual-month-row.open .annual-month-toggle{border-color:rgba(29,158,117,.55);color:var(--teal)}
+.annual-month-detail-row.is-hidden{display:none}
+.annual-month-detail-cell{padding:0 0 12px!important;border-bottom:1px solid #1e1408!important;background:#080603}
+.annual-month-detail{margin:4px 0 8px;border:1px solid rgba(232,192,80,.14);border-radius:7px;background:#090704;overflow:hidden}
+.annual-month-detail-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-bottom:1px solid rgba(232,192,80,.12);font-family:var(--sans)}
+.annual-month-detail-title{font-size:11px;font-weight:900;color:var(--gold)}
+.annual-month-detail-total{display:flex;flex-wrap:wrap;gap:8px;font-family:var(--mono);font-size:10px;color:#7a6030}
+.annual-month-detail-list{max-height:440px;overflow:auto}
+.annual-txn-row{display:grid;grid-template-columns:82px 54px minmax(86px,1fr) 88px minmax(82px,1fr);gap:8px;align-items:start;padding:8px 12px;border-bottom:1px solid rgba(232,192,80,.08)}
+.annual-txn-row:last-child{border-bottom:none}
+.annual-txn-date,.annual-txn-type,.annual-txn-amount,.annual-txn-account,.annual-txn-note{min-width:0}
+.annual-txn-date{font-family:var(--mono);font-size:10px;color:#7a6030}
+.annual-txn-type{font-family:var(--sans);font-size:10px;font-weight:900;color:#5a4018}
+.annual-txn-amount{font-family:var(--mono);font-size:11px;font-weight:900;text-align:right;color:var(--ink)}
+.annual-txn-main{min-width:0}
+.annual-txn-cat{font-family:var(--sans);font-size:12px;font-weight:800;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.annual-txn-note{margin-top:3px;font-family:var(--sans);font-size:11px;line-height:1.35;color:#8b7447;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.annual-txn-account{font-family:var(--sans);font-size:10px;color:#6f5830;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right}
 .annual-pos{color:var(--teal)!important}.annual-neg{color:var(--coral)!important}.annual-gold{color:var(--gold)!important}
 .annual-bars{display:flex;flex-direction:column;gap:8px}
 .annual-bar-row{display:grid;grid-template-columns:42px 1fr 74px;gap:8px;align-items:center}
@@ -1545,7 +1568,7 @@ body::after{
 .annual-detail-amt{font-family:var(--mono);font-size:11px;font-weight:800;text-align:right;color:var(--ink)}
 .annual-detail-pct{font-family:var(--sans);font-size:10px;color:#5a4018;text-align:right}
 .annual-empty{font-family:var(--sans);font-size:12px;color:#5a4018;padding:10px 0;text-align:center}
-@media(max-width:760px){.annual-grid{grid-template-columns:1fr}.annual-kpis{grid-template-columns:1fr 1fr}.annual-head{align-items:flex-start;flex-direction:column}.annual-tools{width:100%}.annual-tools select{flex:1}}
+@media(max-width:760px){.annual-grid{grid-template-columns:1fr}.annual-kpis{grid-template-columns:1fr 1fr}.annual-head{align-items:flex-start;flex-direction:column}.annual-tools{width:100%}.annual-tools select{flex:1}.annual-txn-row{grid-template-columns:74px minmax(0,1fr) 78px}.annual-txn-type,.annual-txn-account{display:none}.annual-txn-amount{text-align:right}}
 
 /* ── Holdings ── */
 .holding-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;padding:12px 0;border-bottom:1px solid #1e1408;align-items:start}
@@ -3320,11 +3343,13 @@ var foodhouseDashboardPromise=null;
 var FINANCE_TREASURY_CACHE_KEY='wealth_finance_treasury_v1';
 var FINANCE_PLEDGE_CACHE_KEY='wealth_finance_pledge_v1';
 var FINANCE_YEARLY_CACHE_PREFIX='wealth_finance_yearly_v2_';
+var FINANCE_MONTH_DETAIL_CACHE_PREFIX='wealth_finance_month_detail_v1_';
 var FINANCE_YEARLY_LEGACY_CACHE_PREFIXES=['wealth_finance_yearly_v1_'];
 var FINANCE_CACHE_TTL=6*60*60*1000;
 var financeTreasuryPromise=null;
 var financePledgePromise=null;
 var financeYearlyPromises={};
+var financeMonthDetailPromises={};
 var MARKET_DASHBOARD_CACHE_KEY='wealth_market_dashboard_v1';
 var MARKET_MACRO_CACHE_KEY='wealth_market_macro_v1';
 var MARKET_CACHE_TTL=2*60*60*1000;
@@ -3718,6 +3743,7 @@ function invalidateFinanceDashboardCache(){
     for(var i=localStorage.length-1;i>=0;i--){
       var key=localStorage.key(i);
       if(key&&key.indexOf(FINANCE_YEARLY_CACHE_PREFIX)===0)localStorage.removeItem(key);
+      if(key&&key.indexOf(FINANCE_MONTH_DETAIL_CACHE_PREFIX)===0)localStorage.removeItem(key);
     }
   }catch(e){}
 }
@@ -7316,12 +7342,17 @@ function renderDomesticYearly(d,history,years,selected,stale){
   var yearOptions=(years||[selected]).map(y=>`<option value="${esc(y)}" ${String(y)===String(selected)?'selected':''}>${esc(y)}</option>`).join('');
   var monthRows=months.map(m=>{
     var net=Number(m.net)||0;
-    return `<tr>
-      <td>${esc(m.ym)}</td>
+    var monthKey=annualMonthKey(m.ym);
+    var detailId=annualMonthDetailId(monthKey);
+    return `<tr class="annual-month-row" data-ym="${esc(monthKey)}" onclick="loadAnnualMonthDetails('${esc(monthKey)}')">
+      <td><span class="annual-month-key"><span class="annual-month-toggle">+</span>${esc(m.ym)}</span></td>
       <td class="annual-pos">${fmtN(Number(m.income)||0)}</td>
       <td class="annual-neg">${fmtN(Number(m.expense)||0)}</td>
       <td class="${net>=0?'annual-pos':'annual-neg'}">${net>=0?'+':''}${fmtN(net)}</td>
       <td>${esc(m.savingRate||'0%')}</td>
+    </tr>
+    <tr class="annual-month-detail-row is-hidden" id="${detailId}">
+      <td colspan="5" class="annual-month-detail-cell"><div class="annual-empty">載入中</div></td>
     </tr>`;
   }).join('')||'<tr><td colspan="5" class="annual-empty">這個年份尚無月份資料</td></tr>';
   var monthBars=months.map(m=>{
@@ -7381,6 +7412,117 @@ function renderDomesticYearly(d,history,years,selected,stale){
       <div class="annual-card-title">歷年概覽</div>
       ${annualHistoryRows(history)}
     </div>`;
+}
+
+function annualMonthKey(ym){
+  var text=String(ym||'').trim().replace(/\//g,'-');
+  var parts=text.split('-');
+  if(parts.length>=2)return parts[0]+'-'+String(parts[1]).padStart(2,'0');
+  return text;
+}
+
+function annualMonthDetailId(ym){
+  return 'annual-month-detail-'+annualMonthKey(ym).replace(/[^0-9A-Za-z_-]/g,'-');
+}
+
+async function loadAnnualMonthDetails(ym,forceRefresh){
+  var key=annualMonthKey(ym);
+  if(!key||!API_URL)return;
+  var row=document.querySelector('.annual-month-row[data-ym="'+key+'"]');
+  var detail=document.getElementById(annualMonthDetailId(key));
+  if(!detail)return;
+  var visible=!detail.classList.contains('is-hidden');
+  if(visible&&!forceRefresh){
+    detail.classList.add('is-hidden');
+    if(row){
+      row.classList.remove('open');
+      var toggle=row.querySelector('.annual-month-toggle');
+      if(toggle)toggle.textContent='+';
+    }
+    return;
+  }
+  detail.classList.remove('is-hidden');
+  if(row){
+    row.classList.add('open');
+    var openToggle=row.querySelector('.annual-month-toggle');
+    if(openToggle)openToggle.textContent='-';
+  }
+  var cacheKey=FINANCE_MONTH_DETAIL_CACHE_PREFIX+key;
+  if(forceRefresh){
+    try{localStorage.removeItem(cacheKey);}catch(e){}
+    delete financeMonthDetailPromises[key];
+  }
+  var cached=forceRefresh?null:readTimedFinanceCache(cacheKey);
+  if(cached){
+    detail.innerHTML=renderAnnualMonthDetails(cached,true);
+    return cached;
+  }
+  detail.innerHTML='<td colspan="5" class="annual-month-detail-cell"><div class="annual-empty">載入 '+esc(key.replace('-','/'))+' 明細中</div></td>';
+  if(financeMonthDetailPromises[key]){
+    return financeMonthDetailPromises[key].then(function(data){
+      if(data&&document.getElementById(annualMonthDetailId(key)))detail.innerHTML=renderAnnualMonthDetails(data,false);
+      return data;
+    });
+  }
+  financeMonthDetailPromises[key]=apiGet({action:'legacyMonthDetails',ym:key}).then(function(data){
+    data=data||{ym:key,rows:[],total:{}};
+    writeTimedFinanceCache(cacheKey,data);
+    if(document.getElementById(annualMonthDetailId(key)))detail.innerHTML=renderAnnualMonthDetails(data,false);
+    return data;
+  }).catch(function(e){
+    detail.innerHTML='<td colspan="5" class="annual-month-detail-cell"><div class="annual-empty" style="color:var(--coral)">讀取失敗：'+esc(e.message||e)+'</div></td>';
+    return null;
+  }).finally(function(){
+    delete financeMonthDetailPromises[key];
+  });
+  return financeMonthDetailPromises[key];
+}
+
+function renderAnnualMonthDetails(data,stale){
+  data=data||{};
+  var rows=data.rows||[];
+  var total=data.total||{};
+  var ym=data.displayYm||String(data.ym||'').replace('-','/');
+  if(!rows.length){
+    return '<td colspan="5" class="annual-month-detail-cell"><div class="annual-empty">這個月份沒有可顯示的舊資料明細</div></td>';
+  }
+  var list=rows.map(function(r){
+    var type=annualTxnTypeLabel(r.type);
+    var amountCls=r.type==='income'?'annual-pos':(r.type==='expense'?'annual-neg':'annual-gold');
+    var account=[r.account,r.counterAccount].filter(Boolean).join(' → ');
+    var note=r.note||r.stock||'';
+    return `<div class="annual-txn-row">
+      <div class="annual-txn-date">${esc(r.date||'')}</div>
+      <div class="annual-txn-type">${esc(type)}</div>
+      <div class="annual-txn-main">
+        <div class="annual-txn-cat" title="${esc(r.category||'')}">${esc(r.category||'未分類')}</div>
+        ${note?`<div class="annual-txn-note" title="${esc(note)}">${esc(note)}</div>`:''}
+      </div>
+      <div class="annual-txn-amount ${amountCls}">${fmtFull(r.amount)}</div>
+      <div class="annual-txn-account" title="${esc(account)}">${esc(account||'未標記')}</div>
+    </div>`;
+  }).join('');
+  return `<td colspan="5" class="annual-month-detail-cell">
+    <div class="annual-month-detail">
+      <div class="annual-month-detail-head">
+        <div class="annual-month-detail-title">${esc(ym)} 收支明細${stale?'（快取）':''}</div>
+        <div class="annual-month-detail-total">
+          <span class="annual-pos">收入 ${fmtFull(total.income)}</span>
+          <span class="annual-neg">支出 ${fmtFull(total.expense)}</span>
+          ${total.transfer?`<span>轉帳 ${fmtFull(total.transfer)}</span>`:''}
+        </div>
+      </div>
+      <div class="annual-month-detail-list">${list}</div>
+    </div>
+  </td>`;
+}
+
+function annualTxnTypeLabel(type){
+  if(type==='expense')return '支出';
+  if(type==='income')return '收入';
+  if(type==='transfer')return '轉帳';
+  if(type==='investment_trade')return '投資';
+  return type||'紀錄';
 }
 
 function annualDetailRows(rows,emptyText){
