@@ -672,6 +672,7 @@ body::after{
 .advisor-summary-line{display:flex;align-items:baseline;justify-content:space-between;gap:8px;font-family:var(--mono);font-size:14px;font-weight:900;line-height:1.25;color:#f3df9a;white-space:normal;word-break:normal}
 .advisor-summary-line span{font-family:var(--sans);white-space:nowrap}
 .advisor-summary-line strong{font:inherit;color:inherit;text-align:right;white-space:nowrap;word-break:normal}
+.advisor-summary-line-note{margin-top:2px;font-family:var(--sans);font-size:11px;font-weight:900;line-height:1.35;color:var(--teal)}
 .advisor-summary-value{margin-top:4px;font-family:var(--mono);font-size:14px;font-weight:900;line-height:1.25;color:#f3df9a;white-space:normal;word-break:break-word}
 .advisor-summary-value.up{color:var(--teal)}
 .advisor-summary-value.down{color:var(--coral)}
@@ -720,13 +721,17 @@ body::after{
 .foodhouse-advisor-reminder .advisor-summary-label{font-size:13px}
 .foodhouse-advisor-reminder .advisor-summary-pre{font-size:12px}
 .foodhouse-advisor-reminder .advisor-summary-line{font-size:19px}
+.foodhouse-advisor-reminder .advisor-summary-line-note{font-size:12px}
 .foodhouse-advisor-reminder .advisor-summary-value{font-size:19px}
 .foodhouse-advisor-reminder .advisor-summary-item:nth-child(2) .advisor-summary-value{font-size:14px;line-height:1.45}
 .foodhouse-advisor-reminder .advisor-summary-sub{font-size:12px}
 .foodhouse-warroom-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px}
 .foodhouse-warroom-item{border:1px solid rgba(232,192,80,.22);border-radius:6px;background:rgba(0,0,0,.16);padding:11px 12px}
+.foodhouse-warroom-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
 .foodhouse-warroom-label{font-family:var(--sans);font-size:13px;font-weight:900;line-height:1.35;color:#bda36d;letter-spacing:.6px}
+.foodhouse-warroom-supply-badge{flex-shrink:0;font-family:var(--mono);font-size:12px;font-weight:900;line-height:1.35;color:var(--coral);text-align:right;white-space:nowrap}
 .foodhouse-warroom-value{margin-top:4px;font-family:var(--mono);font-size:19px;font-weight:900;line-height:1.25;color:#f3df9a;white-space:normal;word-break:break-word}
+.foodhouse-warroom-subvalue{margin-top:3px;font-family:var(--mono);font-size:14px;font-weight:900;line-height:1.25;color:var(--coral)}
 .foodhouse-cash-meta{margin-top:10px;padding-top:9px;border-top:1px solid rgba(232,192,80,.16)}
 .foodhouse-cash-line{display:flex;align-items:center;justify-content:space-between;gap:10px;font-family:var(--sans);font-size:12px;font-weight:900;line-height:1.45;color:#d8c18a}
 .foodhouse-cash-line+.foodhouse-cash-line{margin-top:5px}
@@ -3345,7 +3350,7 @@ async function apiPostJson(body){
 
 var ADVISOR_REMINDER_CACHE_KEY='empire_today_advisor_reminder_v1';
 var advisorReminderPromise=null;
-var FOODHOUSE_CACHE_KEY='wealth_foodhouse_dashboard_v5';
+var FOODHOUSE_CACHE_KEY='wealth_foodhouse_dashboard_v6';
 var FOODHOUSE_CACHE_TTL=6*60*60*1000;
 var foodhouseDashboardPromise=null;
 var FINANCE_TREASURY_CACHE_KEY='wealth_finance_treasury_v1';
@@ -3466,7 +3471,7 @@ function advisorFinanceSummaryHtml(items){
     ${items.map(function(item){
       return `<div class="advisor-summary-item">
         ${item.rows?`<div class="advisor-summary-lines">${item.rows.map(function(row){
-          return `<div class="advisor-summary-line"><span>${esc(row.label)}</span><strong>${esc(row.value)}</strong></div>`;
+          return `<div><div class="advisor-summary-line"><span>${esc(row.label)}</span><strong>${esc(row.value)}</strong></div>${row.note?`<div class="advisor-summary-line-note">${esc(row.note)}</div>`:''}</div>`;
         }).join('')}</div>`:`<div class="advisor-summary-label">${esc(item.label)}</div>
         ${item.pre?`<div class="advisor-summary-pre">${esc(item.pre)}</div>`:''}
         <div class="advisor-summary-value ${advisorMetricValueClass(item.toneValue)}">${esc(item.value)}</div>`}
@@ -3537,6 +3542,8 @@ function buildAdvisorFinanceSummary(monthly,holdings,assetSnapshot,netAsset){
   var totalCost=holdings.reduce(function(s,h){return s+toNum(h.cost);},0);
   var netAssetValue=Number(netAsset&&netAsset.value)||0;
   var borrowings=Number(netAsset&&netAsset.borrowings)||0;
+  var exposure=foodhouseMarketExposure(assetSnapshot,netAsset);
+  var exposureText=exposure!=null?'⚔️市場曝險 '+exposure.toFixed(1)+'%':'';
   var marketDelta=advisorMarketDelta(assetSnapshot);
   var marketDeltaText=advisorMarketDeltaFullText(assetSnapshot);
   return {
@@ -3549,8 +3556,8 @@ function buildAdvisorFinanceSummary(monthly,holdings,assetSnapshot,netAsset){
       {rows:[
         {label:'🏰淨資產',value:netAssetValue?fmtFull(netAssetValue):'--'},
         {label:'💰信貸質押',value:fmtFull(borrowings)},
-        {label:'🪙投入成本',value:fmtFull(totalCost)}
-      ],subs:[{text:'月總配息 '+fmtFull(totalMonthly),toneValue:totalMonthly}],toneValue:netAssetValue||totalMonthly}
+        {label:'🪙投入成本',value:fmtFull(totalCost),note:exposureText}
+      ],toneValue:netAssetValue||totalMonthly}
     ]
   };
 }
@@ -3883,7 +3890,8 @@ function renderFoodhouseDashboardData(data,stale){
   var roster=document.getElementById('foodhouse-roster-content');
   var bills=document.getElementById('foodhouse-bills-content');
   if(reminder)reminder.innerHTML=advisorReminderHtml(buildAdvisorFinanceSummary(monthly,holdings,data.assetSnapshot,data.netAsset));
-  if(warroom)warroom.innerHTML=renderFoodhouseWarRoom(core.pantry||[],monthly,data.assetSnapshot,data.netAsset);
+  var totalMonthly=holdings.reduce(function(s,h){return s+toNum(h.monthlyDiv);},0);
+  if(warroom)warroom.innerHTML=renderFoodhouseWarRoom(core.pantry||[],monthly,data.assetSnapshot,data.netAsset,totalMonthly);
   if(roster)roster.innerHTML=renderFoodhouseCouncilRosterSummary(mergeCouncilRows(holdings,data.heroes||[],data.armySettings||{}));
   if(bills)bills.innerHTML=renderBillReservoirHtml(core.bills||{});
   var label=document.getElementById('foodhouse-label');
@@ -3957,38 +3965,27 @@ function foodhouseMonthlyMetaHtml(monthly){
   </div>`;
 }
 
-function foodhouseSupplyExtraHtml(item,assetSnapshot,netAsset){
-  var lines=[];
-  if(item&&item.label&&item.displayValue){
-    lines.push({label:item.label,value:item.displayValue});
-  }
-  var exposure=foodhouseMarketExposure(assetSnapshot,netAsset);
-  if(exposure!=null){
-    lines.push({label:'⚔️市場曝險',value:exposure.toFixed(1)+'%'});
-  }
-  if(!lines.length)return '';
-  return `<div class="foodhouse-supply-extra">
-    ${lines.map(function(line){
-      return `<div class="foodhouse-cash-line">
-        <span class="foodhouse-cash-name">${esc(line.label)}</span>
-        <span class="foodhouse-cash-amt">${esc(line.value)}</span>
-      </div>`;
-    }).join('')}
-  </div>`;
+function foodhousePlusValueHtml(item){
+  if(!item||!item.displayValue)return '';
+  return `<div class="foodhouse-warroom-subvalue">(+${esc(item.displayValue)})</div>`;
 }
 
-function renderFoodhouseWarRoom(items,monthly,assetSnapshot,netAsset){
+function renderFoodhouseWarRoom(items,monthly,assetSnapshot,netAsset,totalMonthly){
   items=(items||[]).filter(function(item){return item&&item.label&&item.displayValue;});
   var mainItems=items.slice(0,2);
   var supplyExtra=items[2]||null;
+  var monthlyBadge=totalMonthly>0?`<div class="foodhouse-warroom-supply-badge">月補給 ${fmtFull(totalMonthly)}</div>`:'';
   if(!mainItems.length)return '';
   return `<div class="foodhouse-warroom-grid">
     ${mainItems.map(function(item,idx){
       return `<div class="foodhouse-warroom-item">
-        <div class="foodhouse-warroom-label">${esc(item.label)}</div>
+        <div class="foodhouse-warroom-head">
+          <div class="foodhouse-warroom-label">${esc(item.label)}</div>
+          ${idx===1?monthlyBadge:''}
+        </div>
         <div class="foodhouse-warroom-value">${esc(item.displayValue)}</div>
+        ${idx===1?foodhousePlusValueHtml(supplyExtra):''}
         ${idx===0?foodhouseMonthlyMetaHtml(monthly):''}
-        ${idx===1?foodhouseSupplyExtraHtml(supplyExtra,assetSnapshot,netAsset):''}
       </div>`;
     }).join('')}
   </div>`;
@@ -4000,9 +3997,11 @@ async function loadFoodhouseWarRoom(){
   try{
     var results=await Promise.all([
       apiGet({action:'councilPantry'}),
-      apiGet({action:'monthly',ym:currentYM()}).catch(function(){return {};})
+      apiGet({action:'monthly',ym:currentYM()}).catch(function(){return {};}),
+      loadCouncilHoldingsOverview().catch(function(){return [];})
     ]);
-    content.innerHTML=renderFoodhouseWarRoom(results[0],results[1]);
+    var totalMonthly=(results[2]||[]).reduce(function(s,h){return s+toNum(h.monthlyDiv);},0);
+    content.innerHTML=renderFoodhouseWarRoom(results[0],results[1],null,null,totalMonthly);
   }catch(e){
     content.innerHTML='';
   }
