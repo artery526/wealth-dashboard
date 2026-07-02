@@ -3337,15 +3337,15 @@ async function apiPost(body){
   if(/^(macroWebhook)$/.test(body.action||''))invalidateMarketDashboardCache();
   return d.data;
 }
-async function apiPostJson(body){
+async function apiPostJson(body,timeoutMs){
   WRITE_TOKEN=cleanToken(WRITE_TOKEN);
   var payload=Object.assign({},body,{token:WRITE_TOKEN});
-  var r=await fetch(API_URL,{
+  var r=await fetchWithTimeout(API_URL,{
     method:'POST',
     redirect:'follow',
     headers:{'Content-Type':'text/plain;charset=utf-8'},
     body:JSON.stringify(payload)
-  });
+  },timeoutMs||15000);
   var text=await r.text();var d;
   try{d=JSON.parse(text)}catch(e){throw new Error('回傳非JSON：'+text.slice(0,100))}
   if(!d.ok)throw new Error(d.error||'寫入失敗');
@@ -10475,8 +10475,46 @@ function advisorAIDeepSeekSystemPrompt(){
   ].join('\\n');
 }
 
+var ADVISOR_AI_PARSE_CACHE_PREFIX='empire_advisor_ai_parse_v1_';
+var ADVISOR_AI_PARSE_CACHE_TTL=24*60*60*1000;
+var ADVISOR_AI_PARSE_TIMEOUT_MS=12000;
+
+function advisorAIParseCacheKey(raw){
+  return ADVISOR_AI_PARSE_CACHE_PREFIX+advisorAICompact(raw).slice(0,140);
+}
+
+function advisorAIGetCachedParse(raw){
+  try{
+    var packed=localStorage.getItem(advisorAIParseCacheKey(raw));
+    if(!packed)return null;
+    var cached=JSON.parse(packed);
+    if(!cached||Date.now()-Number(cached.ts||0)>ADVISOR_AI_PARSE_CACHE_TTL)return null;
+    return cached.cmd||null;
+  }catch(e){
+    return null;
+  }
+}
+
+function advisorAISetCachedParse(raw,cmd){
+  try{
+    if(!cmd||cmd.intent==='unknown')return;
+    localStorage.setItem(advisorAIParseCacheKey(raw),JSON.stringify({ts:Date.now(),cmd:cmd}));
+  }catch(e){}
+}
+
 async function advisorAIDeepSeekCommand(raw){
-  return apiPost({action:'advisorAiParse',raw:String(raw||'')});
+  var cached=advisorAIGetCachedParse(raw);
+  if(cached)return cached;
+  try{
+    var cmd=await apiPostJson({action:'advisorAiParse',raw:String(raw||'')},ADVISOR_AI_PARSE_TIMEOUT_MS);
+    advisorAISetCachedParse(raw,cmd);
+    return cmd;
+  }catch(err){
+    if(err&&err.name==='AbortError'){
+      throw new Error('軍師AI V2 等候超時，先請主公換成更明確口令再試一次。');
+    }
+    throw err;
+  }
 }
 
 function advisorAINormalizeDeepSeekCommand(cmd,raw){
