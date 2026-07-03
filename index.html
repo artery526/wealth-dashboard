@@ -1083,8 +1083,13 @@ body::after{
 .mpm-area-count-row{display:flex;align-items:center;gap:6px}
 .mpm-area-count{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--coral)}
 .mpm-area-count-lbl{font-family:var(--sans);font-size:12px;color:#7a4028}
+.mpm-area-count-sub{font-family:var(--sans);font-size:12px;color:#7a4028;margin-left:auto}
 .mpm-area-bar-track{width:100%;height:5px;background:rgba(216,90,48,.15);border-radius:3px;overflow:hidden}
 .mpm-area-bar-fill{height:100%;background:linear-gradient(90deg,var(--coral),#f09070);border-radius:3px;transition:width .5s ease}
+.mpm-detail-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:16px 0 8px;flex-wrap:wrap}
+.mpm-detail-head .council-army-title{margin:0!important}
+.mpm-month-select{min-width:150px;border:1px solid rgba(184,137,46,.42);border-radius:6px;background:rgba(10,8,4,.72);color:var(--gold);padding:8px 10px;font-family:var(--sans);font-size:13px;font-weight:800;outline:none}
+.mpm-month-select:focus{border-color:rgba(232,192,80,.68);box-shadow:0 0 0 2px rgba(232,192,80,.1)}
 .mpm-rec-list{display:grid;gap:10px;margin-top:6px}
 .mpm-rec-item{background:rgba(14,8,5,.78);border:1px solid rgba(184,137,46,.22);border-radius:8px;padding:12px 13px;display:grid;grid-template-columns:116px minmax(0,1fr);gap:10px;align-items:start}
 .mpm-rec-time{font-family:var(--mono);font-size:13px;color:var(--gold2);line-height:1.55;word-break:break-all}
@@ -4608,13 +4613,16 @@ function renderMedicalPanel(){
     <div class="pane" id="pane-medical-painmap">
       <div class="council-army-title">🧍 疼痛地圖</div>
       <div class="mpm-summary">
-        <div class="mpm-summary-box"><div class="mpm-summary-num" id="mpm-total-records">—</div><div class="mpm-summary-lbl">總疼痛紀錄</div></div>
+        <div class="mpm-summary-box"><div class="mpm-summary-num" id="mpm-total-records">—</div><div class="mpm-summary-lbl">總疼痛記錄</div></div>
         <div class="mpm-summary-box"><div class="mpm-summary-num" id="mpm-avg-pain">—</div><div class="mpm-summary-lbl">平均疼痛值</div></div>
         <div class="mpm-summary-box"><div class="mpm-summary-num" id="mpm-med-count">—</div><div class="mpm-summary-lbl">用藥次數</div></div>
       </div>
-      <div class="council-army-title" style="font-size:13px;margin-bottom:8px">痛｜疼痛部位統計</div>
+      <div class="council-army-title" style="font-size:13px;margin-bottom:8px">痛｜疼痛部位統計（前 6 影響占比）</div>
       <div id="mpm-area-chart"><div class="mpm-empty">⏳ 載入中…</div></div>
-      <div class="council-army-title" style="font-size:13px;margin:16px 0 8px">錄｜疼痛紀錄明細</div>
+      <div class="mpm-detail-head">
+        <div class="council-army-title" style="font-size:13px">錄｜疼痛記錄明細</div>
+        <select class="mpm-month-select" id="mpm-month-select" aria-label="選擇疼痛記錄月份"></select>
+      </div>
       <div id="mpm-rec-list"><div class="mpm-empty">⏳ 載入中…</div></div>
     </div>`;
   initMedicalQuickForm();
@@ -11777,6 +11785,17 @@ var _mpmCache = null; // getRecords 快取
 
 function mpmEsc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
+function mpmMonthKey(record){
+  var date = String(record.date||record.recordTime||'').trim();
+  var parts = date.match(/^(\d{4})-(\d{2})/);
+  return parts ? parts[1]+'-'+parts[2] : '';
+}
+
+function mpmMonthLabel(key){
+  var parts = String(key||'').split('-');
+  return parts.length === 2 ? parts[0]+' 年 '+Number(parts[1])+' 月' : '未分月份';
+}
+
 // 正規化一筆 record（對齊 medical-journal 的 normalizeRecord）
 function mpmNormalizeRecord(r){
   var rt = String(r.recordTime||'').trim();
@@ -11815,7 +11834,7 @@ async function initMedicalPainMap(){
 
 function mpmRender(records){
   // 篩選有疼痛意義的紀錄（有疼痛部位、有用藥、或疼痛值>0）
-  var painRecs = records.filter(function(r){
+  var allPainRecs = records.filter(function(r){
     var areas = String(r.painAreas||'').trim();
     var meds  = String(r.meds||'').trim();
     var lvl   = Number(r.painLevel);
@@ -11823,6 +11842,27 @@ function mpmRender(records){
   }).slice().sort(function(a,b){
     return String(b.recordTime||b.date||'').localeCompare(String(a.recordTime||a.date||''));
   });
+
+  var monthSelect = document.getElementById('mpm-month-select');
+  var months = Array.from(new Set(allPainRecs.map(mpmMonthKey).filter(Boolean))).sort().reverse();
+  var selectedMonth = monthSelect ? monthSelect.value : '';
+  if(monthSelect){
+    if(months.length){
+      if(!selectedMonth || !months.includes(selectedMonth)) selectedMonth = months[0];
+      monthSelect.innerHTML = months.map(function(key){
+        return '<option value="'+mpmEsc(key)+'"'+(key===selectedMonth?' selected':'')+'>'+mpmEsc(mpmMonthLabel(key))+'</option>';
+      }).join('');
+      monthSelect.disabled = false;
+      monthSelect.onchange = function(){ mpmRender(_mpmCache||records); };
+    }else{
+      selectedMonth = '';
+      monthSelect.innerHTML = '<option value="">尚無月份</option>';
+      monthSelect.disabled = true;
+      monthSelect.onchange = null;
+    }
+  }
+
+  var painRecs = selectedMonth ? allPainRecs.filter(function(r){ return mpmMonthKey(r) === selectedMonth; }) : allPainRecs;
 
   // ── 摘要數字 ──
   var totalMed = painRecs.filter(function(r){ var m=String(r.meds||'').trim(); return m&&!m.includes('未用藥'); }).length;
@@ -11842,29 +11882,30 @@ function mpmRender(records){
     });
   });
   var areaEl = document.getElementById('mpm-area-chart');
-  var areaEntries = Object.entries(areaCounts).sort(function(a,b){return b[1]-a[1];});
+  var areaTotal = Object.values(areaCounts).reduce(function(sum,cnt){return sum+cnt;},0);
+  var areaEntries = Object.entries(areaCounts).sort(function(a,b){return b[1]-a[1];}).slice(0,6);
   if(!areaEntries.length){
     areaEl.innerHTML = '<div class="mpm-empty">尚無疼痛部位記錄</div>';
   }else{
-    var areaMax = areaEntries[0][1];
     areaEl.innerHTML = '<div class="mpm-area-grid">'+areaEntries.map(function(e){
       var name=e[0], cnt=e[1];
-      var pct = Math.round(cnt/areaMax*100);
+      var pct = areaTotal ? Math.round(cnt/areaTotal*100) : 0;
       return '<div class="mpm-area-item">'
         +'<div class="mpm-area-name">'+mpmEsc(name)+'</div>'
         +'<div class="mpm-area-count-row">'
-        +'<span class="mpm-area-count">'+cnt+'</span>'
-        +'<span class="mpm-area-count-lbl">次</span>'
+        +'<span class="mpm-area-count">'+pct+'%</span>'
+        +'<span class="mpm-area-count-lbl">影響占比</span>'
+        +'<span class="mpm-area-count-sub">'+cnt+' 次</span>'
         +'</div>'
         +'<div class="mpm-area-bar-track"><div class="mpm-area-bar-fill" style="width:'+pct+'%"></div></div>'
         +'</div>';
     }).join('')+'</div>';
   }
 
-  // ── 疼痛紀錄明細 ──
+  // ── 疼痛記錄明細 ──
   var recEl = document.getElementById('mpm-rec-list');
   if(!painRecs.length){
-    recEl.innerHTML = '<div class="mpm-empty">尚無疼痛紀錄</div>';
+    recEl.innerHTML = '<div class="mpm-empty">尚無疼痛記錄</div>';
     return;
   }
   recEl.innerHTML = '<div class="mpm-rec-list">'+painRecs.map(function(r){
