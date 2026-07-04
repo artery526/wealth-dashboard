@@ -2967,14 +2967,6 @@ body::after{
     <input class="cfg-input" type="text" id="cfg-url" placeholder="https://script.google.com/macros/s/.../exec">
     <label class="cfg-label">記帳密鑰（WRITE_TOKEN）</label>
     <input class="cfg-input" type="password" id="cfg-token" placeholder="輸入你設定的密碼">
-    <div style="border-top:1px solid #2a1c08;margin:14px 0 12px"></div>
-    <div class="cfg-sub" style="margin-bottom:10px">
-      醫館功能專用連線：快速紀錄、抽牌紀錄、牌卡統計、疼痛地圖會使用這組 API。
-    </div>
-    <label class="cfg-label">醫館 API URL</label>
-    <input class="cfg-input" type="text" id="cfg-health-url" placeholder="https://script.google.com/macros/s/.../exec">
-    <label class="cfg-label">醫館密鑰（SECRET_KEY）</label>
-    <input class="cfg-input" type="password" id="cfg-health-key" placeholder="輸入醫館密鑰">
     <div class="cfg-actions">
       <button class="cfg-cancel" onclick="closeCfg()">取消</button>
       <button class="cfg-save" onclick="saveCfg()">儲存並連線</button>
@@ -3043,8 +3035,6 @@ var travelMapZoom = 1;
 var gvizJsonpQueue = Promise.resolve();
 var HERO_SHEET_ID = COMMAND_SHEET_ID;
 var HERO_SHEET_NAME = '武將資料';
-var HEALTH_API_URL = localStorage.getItem('health_api_url') || '';
-var HEALTH_SECRET_KEY = localStorage.getItem('health_secret_key') || '';
 var HEALTH_JOURNAL_URL = 'https://artery526.github.io/health-app/medical-journal.html';
 var medicalOptionsCache = null;
 var ziweiChartsCache = [];
@@ -3721,8 +3711,6 @@ async function loadTodayAdvisorReminder(){
 function openCfg(){
   document.getElementById('cfg-url').value=API_URL;
   document.getElementById('cfg-token').value=WRITE_TOKEN;
-  document.getElementById('cfg-health-url').value=HEALTH_API_URL;
-  document.getElementById('cfg-health-key').value=HEALTH_SECRET_KEY;
   document.getElementById('cfg-overlay').classList.add('open');
 }
 function closeCfg(){document.getElementById('cfg-overlay').classList.remove('open')}
@@ -3730,14 +3718,11 @@ function cfgOverlayClick(e){if(e.target===document.getElementById('cfg-overlay')
 async function saveCfg(){
   var url=document.getElementById('cfg-url').value.trim();
   var token=cleanToken(document.getElementById('cfg-token').value);
-  var healthUrl=document.getElementById('cfg-health-url').value.trim();
-  var healthKey=cleanToken(document.getElementById('cfg-health-key').value);
   API_URL=url;WRITE_TOKEN=token;
-  HEALTH_API_URL=healthUrl;HEALTH_SECRET_KEY=healthKey;
   localStorage.setItem('wealth_api_url',url);
   localStorage.setItem('wealth_write_token',token);
-  localStorage.setItem('health_api_url',healthUrl);
-  localStorage.setItem('health_secret_key',healthKey);
+  localStorage.removeItem('health_api_url');
+  localStorage.removeItem('health_secret_key');
   localStorage.removeItem('wealth_advisor_ai_passcode');
   localStorage.removeItem('wealth_advisor_ai_verified');
   localStorage.removeItem('wealth_advisor_ai_verified_for');
@@ -4487,9 +4472,9 @@ function renderMedicalPanel(){
   setPanelHead('✚','Clinic · Recovery','醫館');
   setTabs([{key:'medical-quick',label:'快速記錄'},{key:'medical-tarot',label:'抽牌記錄'},{key:'medical-stats',label:'牌卡統計'},{key:'medical-painmap',label:'疼痛地圖'}]);
   var el=document.getElementById('p-body');
-  if(!HEALTH_API_URL){
+  if(!hasMainApiCredentials()){
     el.innerHTML=`<div class="setup-notice">
-      <p>尚未設定醫館 API，無法使用醫館功能。<br>請填入醫館 Google Apps Script Web App URL 與密鑰。</p>
+      <p>尚未設定 API，無法使用醫館功能。<br>請填入 Google Apps Script Web App URL 與記帳密鑰。</p>
       <button class="setup-btn" onclick="openCfg()">⚙ 立即設定</button>
     </div>`;
     return;
@@ -4748,15 +4733,17 @@ function initPainAreaChips(areas){
 }
 
 async function medicalPost(body){
-  if(!HEALTH_API_URL)throw new Error('未設定醫館 API');
-  var r=await fetch(HEALTH_API_URL,{
-    method:'POST',
-    headers:{'Content-Type':'text/plain;charset=utf-8'},
-    body:JSON.stringify(Object.assign({secretKey:HEALTH_SECRET_KEY},body))
-  });
-  var text=await r.text();
-  var data;
-  try{data=JSON.parse(text)}catch(e){throw new Error('醫館 API 回傳非 JSON：'+text.slice(0,100))}
+  if(!hasMainApiCredentials())throw new Error('未設定主 API');
+  var map={
+    getOptions:'medicalOptions',
+    getRecords:'medicalRecords',
+    getCardStats:'medicalCardStats',
+    quickRecord:'medicalQuickRecord',
+    tarotRecord:'medicalTarotRecord'
+  };
+  var action=map[body&&body._action]||body.action;
+  if(!action)throw new Error('醫館 action 未指定');
+  var data=await apiPostJson(Object.assign({},body,{action:action}));
   if(data.status!=='success'&&data.status!=='test_ok')throw new Error(data.message||'醫館同步失敗');
   return data;
 }
