@@ -3335,10 +3335,10 @@ function normalizeImageUrl(url){
 // ══════════════════════════════════════════
 //  API
 // ══════════════════════════════════════════
-async function apiGet(params){
+async function apiGet(params,timeoutMs){
   if(!API_URL)throw new Error('未設定 API 網址');
   var url=API_URL+'?'+Object.entries(params).map(([k,v])=>k+'='+encodeURIComponent(v)).join('&');
-  var r=await fetchWithTimeout(url,{cache:'no-store'},15000);var d=await r.json();
+  var r=await fetchWithTimeout(url,{cache:'no-store'},timeoutMs||15000);var d=await r.json();
   if(!d.ok)throw new Error(d.error||'讀取失敗');
   return d.data;
 }
@@ -4229,7 +4229,7 @@ async function loadEventChronicle(){
   }
   try{
     content.innerHTML='<div class="skel-line skel"></div><div class="skel-line skel" style="width:72%"></div><div class="skel-line skel" style="width:54%"></div>';
-    var data=await apiGet({action:'eventChronicle'});
+    var data=await apiGet({action:'eventChronicle'},30000);
     eventChronicleCache=data.rows||[];
     if(dot)dot.className='api-dot ok';
     if(label)label.textContent='已連線 · '+eventChronicleCache.length+' 筆事件';
