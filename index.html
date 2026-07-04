@@ -3359,7 +3359,7 @@ var advisorReminderPromise=null;
 var FOODHOUSE_CACHE_KEY='wealth_foodhouse_dashboard_v10';
 var FOODHOUSE_CACHE_TTL=6*60*60*1000;
 var foodhouseDashboardPromise=null;
-var FINANCE_TREASURY_CACHE_KEY='wealth_finance_treasury_v3';
+var FINANCE_TREASURY_CACHE_KEY='wealth_finance_treasury_v4';
 var FINANCE_TREASURY_CACHE_PREFIX='wealth_finance_treasury_v';
 var FINANCE_PLEDGE_CACHE_KEY='wealth_finance_pledge_v1';
 var FINANCE_YEARLY_CACHE_PREFIX='wealth_finance_yearly_v2_';
@@ -5274,6 +5274,9 @@ async function loadAccounts(){
       monthly:monthly,
       financeStatus:results[2].status==='fulfilled'?results[2].value:null
     };
+    if(!financeStatusHasData(data.financeStatus)&&cached&&financeStatusHasData(cached.financeStatus)){
+      data.financeStatus=cached.financeStatus;
+    }
     writeTimedFinanceCache(FINANCE_TREASURY_CACHE_KEY,data);
     if(document.getElementById('acc-content'))renderAccounts(data.accs,data.monthly,document.getElementById('acc-content'),data.financeStatus,false);
     return data;
@@ -5318,6 +5321,10 @@ function financeMonthlyFromTransactions(txns,baseMonthly){
     .sort(function(a,b){return b.amount-a.amount;});
   if(cats.length)monthly.categories=cats;
   return monthly;
+}
+
+function financeStatusHasData(status){
+  return !!(status&&((status.metrics&&status.metrics.length)||(status.wealthStatus&&(status.wealthStatus.text||status.wealthStatus.rule))));
 }
 
 function renderFinanceStatusHud(data){
@@ -7773,12 +7780,15 @@ function prefetchFinanceDashboard(){
     financeTreasuryPromise=Promise.allSettled([
       apiGet({action:'accounts'}),
       apiGet({action:'monthly',ym:currentYM()}),
-      apiGet({action:'financeStatus'})
+      apiGet({action:'financeStatus'}),
+      apiGet({action:'transactions',ym:currentYM()})
     ]).then(function(results){
-      if(results[0].status==='fulfilled'&&results[1].status==='fulfilled'){
+      if(results[0].status==='fulfilled'){
+        var monthly=results[1].status==='fulfilled'?(results[1].value||{}):{};
+        if(results[3].status==='fulfilled')monthly=financeMonthlyFromTransactions(results[3].value||[],monthly);
         var data={
           accs:results[0].value||[],
-          monthly:results[1].value||{},
+          monthly:monthly,
           financeStatus:results[2].status==='fulfilled'?results[2].value:null
         };
         writeTimedFinanceCache(FINANCE_TREASURY_CACHE_KEY,data);
