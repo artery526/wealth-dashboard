@@ -5243,14 +5243,17 @@ async function loadAccounts(){
   financeTreasuryPromise=Promise.allSettled([
     apiGet({action:'accounts'}),
     apiGet({action:'monthly',ym:currentYM()}),
-    apiGet({action:'financeStatus'})
+    apiGet({action:'financeStatus'}),
+    apiGet({action:'transactions',ym:currentYM()})
   ]).then(function(results){
-    if(results[0].status!=='fulfilled'||results[1].status!=='fulfilled'){
-      throw (results[0].reason||results[1].reason||new Error('finance load failed'));
+    if(results[0].status!=='fulfilled'){
+      throw (results[0].reason||new Error('finance load failed'));
     }
+    var monthly=results[1].status==='fulfilled'?(results[1].value||{}):{};
+    if(results[3].status==='fulfilled')monthly=financeMonthlyFromTransactions(results[3].value||[],monthly);
     var data={
       accs:results[0].value||[],
-      monthly:results[1].value||{},
+      monthly:monthly,
       financeStatus:results[2].status==='fulfilled'?results[2].value:null
     };
     writeTimedFinanceCache(FINANCE_TREASURY_CACHE_KEY,data);
@@ -5263,6 +5266,40 @@ async function loadAccounts(){
     financeTreasuryPromise=null;
   });
   return financeTreasuryPromise;
+}
+
+function financeMonthlyFromTransactions(txns,baseMonthly){
+  baseMonthly=baseMonthly||{};
+  var income=0,expense=0,todayIncome=0,todayExpense=0;
+  var catMap={};
+  var d=new Date();
+  var todayShort=String(d.getMonth()+1).padStart(2,'0')+'/'+String(d.getDate()).padStart(2,'0');
+  (txns||[]).forEach(function(t){
+    var type=String(t&&t.type||'').trim();
+    var amount=Math.abs(Number(t&&t.amount)||0);
+    var date=String(t&&t.date||'').trim();
+    if(type==='收入'){
+      income+=amount;
+      if(date===todayShort)todayIncome+=amount;
+    }else if(type==='支出'){
+      expense+=amount;
+      if(date===todayShort)todayExpense+=amount;
+      var cat=String(t&&t.cat||'').trim();
+      if(cat)catMap[cat]=(catMap[cat]||0)+amount;
+    }
+  });
+  if(income<=0&&expense<=0)return baseMonthly;
+  var monthly=Object.assign({},baseMonthly);
+  if(income>Number(monthly.income||0))monthly.income=Math.round(income);
+  if(expense>Number(monthly.expense||0))monthly.expense=Math.round(expense);
+  monthly.todayIncome=Math.max(Number(monthly.todayIncome)||0,Math.round(todayIncome));
+  monthly.todayExpense=Math.max(Number(monthly.todayExpense)||0,Math.round(todayExpense));
+  monthly.net=Math.round((Number(monthly.income)||0)-(Number(monthly.expense)||0));
+  monthly.savingRate=Number(monthly.income)>0?(monthly.net/Number(monthly.income)*100).toFixed(1)+'%':'0%';
+  var cats=Object.keys(catMap).map(function(name){return {name:name,amount:Math.round(catMap[name])};})
+    .sort(function(a,b){return b.amount-a.amount;});
+  if(cats.length)monthly.categories=cats;
+  return monthly;
 }
 
 function renderFinanceStatusHud(data){
