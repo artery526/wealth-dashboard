@@ -3360,6 +3360,7 @@ var FOODHOUSE_CACHE_KEY='wealth_foodhouse_dashboard_v10';
 var FOODHOUSE_CACHE_TTL=6*60*60*1000;
 var foodhouseDashboardPromise=null;
 var FINANCE_TREASURY_CACHE_KEY='wealth_finance_treasury_v3';
+var FINANCE_TREASURY_CACHE_PREFIX='wealth_finance_treasury_v';
 var FINANCE_PLEDGE_CACHE_KEY='wealth_finance_pledge_v1';
 var FINANCE_YEARLY_CACHE_PREFIX='wealth_finance_yearly_v2_';
 var FINANCE_MONTH_DETAIL_CACHE_PREFIX='wealth_finance_month_detail_v1_';
@@ -3865,6 +3866,23 @@ function renderFoodhousePanel(){
 function invalidateFoodhouseDashboardCache(){
   try{localStorage.removeItem(FOODHOUSE_CACHE_KEY);}catch(e){}
 }
+
+function pruneFinanceTreasuryCacheVersions(){
+  try{
+    var match=FINANCE_TREASURY_CACHE_KEY.match(/_v(\d+)$/);
+    var currentVersion=match?Number(match[1]):0;
+    var keepKeys={};
+    keepKeys[FINANCE_TREASURY_CACHE_KEY]=true;
+    if(currentVersion>1)keepKeys[FINANCE_TREASURY_CACHE_PREFIX+(currentVersion-1)]=true;
+    for(var i=localStorage.length-1;i>=0;i--){
+      var key=localStorage.key(i);
+      if(key&&key.indexOf(FINANCE_TREASURY_CACHE_PREFIX)===0&&!keepKeys[key]){
+        localStorage.removeItem(key);
+      }
+    }
+  }catch(e){}
+}
+pruneFinanceTreasuryCacheVersions();
 
 function invalidateFinanceDashboardCache(){
   try{
