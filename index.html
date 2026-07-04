@@ -2931,12 +2931,6 @@ body::after{
     <input class="cfg-input" type="text" id="cfg-health-url" placeholder="https://script.google.com/macros/s/.../exec">
     <label class="cfg-label">醫館密鑰（SECRET_KEY）</label>
     <input class="cfg-input" type="password" id="cfg-health-key" placeholder="輸入醫館密鑰">
-    <div style="border-top:1px solid #2a1c08;margin:14px 0 12px"></div>
-    <div class="cfg-sub" style="margin-bottom:10px">
-      軍師AI V2：DeepSeek Key 已移至後端保存；前端只送指令，不保存 AI 金鑰。
-    </div>
-    <label class="cfg-label">軍師AI 通行令</label>
-    <input class="cfg-input" type="password" id="cfg-advisor-ai-passcode" placeholder="設定後才可開啟軍師AI">
     <div class="cfg-actions">
       <button class="cfg-cancel" onclick="closeCfg()">取消</button>
       <button class="cfg-save" onclick="saveCfg()">儲存並連線</button>
@@ -2950,8 +2944,6 @@ body::after{
 // ══════════════════════════════════════════
 var API_URL = localStorage.getItem('wealth_api_url') || '';
 var WRITE_TOKEN = localStorage.getItem('wealth_write_token') || '';
-var ADVISOR_AI_PASSCODE = localStorage.getItem('wealth_advisor_ai_passcode') || '';
-var advisorAIVerified = false;
 var cfg = (function(){
   try{
     var cached=JSON.parse(localStorage.getItem('wealth_booking_config_v1')||'null');
@@ -3686,8 +3678,6 @@ function openCfg(){
   document.getElementById('cfg-token').value=WRITE_TOKEN;
   document.getElementById('cfg-health-url').value=HEALTH_API_URL;
   document.getElementById('cfg-health-key').value=HEALTH_SECRET_KEY;
-  var aiPass=document.getElementById('cfg-advisor-ai-passcode');
-  if(aiPass)aiPass.value=ADVISOR_AI_PASSCODE;
   document.getElementById('cfg-overlay').classList.add('open');
 }
 function closeCfg(){document.getElementById('cfg-overlay').classList.remove('open')}
@@ -3697,16 +3687,13 @@ async function saveCfg(){
   var token=cleanToken(document.getElementById('cfg-token').value);
   var healthUrl=document.getElementById('cfg-health-url').value.trim();
   var healthKey=cleanToken(document.getElementById('cfg-health-key').value);
-  var advisorAiPass=((document.getElementById('cfg-advisor-ai-passcode')||{}).value||'').trim();
   API_URL=url;WRITE_TOKEN=token;
   HEALTH_API_URL=healthUrl;HEALTH_SECRET_KEY=healthKey;
-  ADVISOR_AI_PASSCODE=advisorAiPass;
-  advisorAIVerified=false;
   localStorage.setItem('wealth_api_url',url);
   localStorage.setItem('wealth_write_token',token);
   localStorage.setItem('health_api_url',healthUrl);
   localStorage.setItem('health_secret_key',healthKey);
-  localStorage.setItem('wealth_advisor_ai_passcode',advisorAiPass);
+  localStorage.removeItem('wealth_advisor_ai_passcode');
   localStorage.removeItem('wealth_advisor_ai_verified');
   localStorage.removeItem('wealth_advisor_ai_verified_for');
   medicalOptionsCache=null;
@@ -10016,10 +10003,6 @@ function openAdvisorAIFromOrb(event){
   }
   closeAdvisorDialog();
   panel.classList.add('open');
-  if(!advisorAIIsVerified()){
-    openAdvisorAIAuthPanel(panel);
-    return;
-  }
   openAdvisorAI(panel);
 }
 function closeAdvisorDialog(){
@@ -10163,78 +10146,9 @@ function advisorAIExamplesHtml(){
   </div>`;
 }
 
-function advisorAIVerificationKey(passcode){
-  var text=String(passcode||'');
-  var hash=0x811c9dc5;
-  for(var i=0;i<text.length;i++){
-    hash^=text.charCodeAt(i);
-    hash=(hash+((hash<<1)+(hash<<4)+(hash<<7)+(hash<<8)+(hash<<24)))>>>0;
-  }
-  return text?('v1:'+hash.toString(16)+':'+text.length):'';
-}
-
-function advisorAIStoredVerificationKey(){
-  return localStorage.getItem('wealth_advisor_ai_verified_for')||localStorage.getItem('wealth_advisor_ai_verified')||'';
-}
-
-function advisorAIIsVerified(){
-  var key=advisorAIVerificationKey(ADVISOR_AI_PASSCODE);
-  return !!(ADVISOR_AI_PASSCODE&&advisorAIStoredVerificationKey()===key);
-}
-
-function openAdvisorAIAuthPanel(panel){
-  if(!panel)return;
-  advisorShortcutOpenKind='ai';
-  advisorDividendSelection=null;
-  advisorAIScheduleOpen=false;
-  panel.classList.add('open');
-  panel.innerHTML=`${advisorAIHeaderHtml('軍師AI 驗證')}
-    <div class="advisor-shortcut-hint">${ADVISOR_AI_PASSCODE?'請輸入軍師AI通行令；驗證通過後，本分頁可使用軍師AI。':'尚未設定軍師AI通行令，請先到設定建立通行令。'}</div>
-    ${ADVISOR_AI_PASSCODE?`<div class="advisor-ai-row">
-      <input class="advisor-ai-input" id="advisor-ai-auth-input" type="password" placeholder="輸入通行令…" onkeydown="advisorAIAuthKey(event)">
-      <button class="advisor-shortcut-submit" id="advisor-ai-auth-submit" type="button" onclick="verifyAdvisorAI(this)">驗證</button>
-    </div>`:`<button class="advisor-shortcut-submit" type="button" onclick="closeAdvisorAIStandalone();openCfg()">前往設定</button>`}
-    <div class="advisor-shortcut-msg" id="advisor-ai-auth-msg"></div>`;
-  setTimeout(function(){
-    var input=document.getElementById('advisor-ai-auth-input');
-    if(input)input.focus();
-  },0);
-}
-
-function advisorAIAuthKey(e){
-  if(e&&e.key==='Enter'){
-    e.preventDefault();
-    verifyAdvisorAI(document.getElementById('advisor-ai-auth-submit'));
-  }
-}
-
-function verifyAdvisorAI(btn){
-  var input=document.getElementById('advisor-ai-auth-input');
-  var msg=document.getElementById('advisor-ai-auth-msg');
-  var value=(input&&input.value||'').trim();
-  if(!ADVISOR_AI_PASSCODE){
-    if(msg){msg.textContent='尚未設定通行令';msg.className='advisor-shortcut-msg err';}
-    return;
-  }
-  if(value===ADVISOR_AI_PASSCODE){
-    advisorAIVerified=true;
-    var key=advisorAIVerificationKey(ADVISOR_AI_PASSCODE);
-    localStorage.setItem('wealth_advisor_ai_verified',key);
-    localStorage.setItem('wealth_advisor_ai_verified_for',key);
-    openAdvisorAI(advisorAIActivePanel());
-    return;
-  }
-  if(msg){msg.textContent='通行令錯誤，請再試一次。';msg.className='advisor-shortcut-msg err';}
-  if(input){input.value='';input.focus();}
-}
-
 function openAdvisorAI(targetPanel){
   var panel=targetPanel||advisorAIActivePanel();
   if(!panel)return;
-  if(!advisorAIIsVerified()){
-    openAdvisorAIAuthPanel(panel);
-    return;
-  }
   advisorShortcutOpenKind='ai';
   advisorDividendSelection=null;
   advisorAIScheduleOpen=false;
@@ -10710,10 +10624,6 @@ async function loadAdvisorAIGranaryBrief(){
 }
 
 async function advisorAIShowMonthlyAssetBrief(){
-  if(!advisorAIIsVerified()){
-    openAdvisorAIAuthPanel(advisorAIActivePanel());
-    return;
-  }
   var panel=advisorAIActivePanel();
   if(!panel)return;
   advisorShortcutOpenKind='ai';
@@ -10770,10 +10680,6 @@ async function advisorAIShowMonthlyAssetBrief(){
 }
 
 async function advisorAIShowSchedule(btn){
-  if(!advisorAIIsVerified()){
-    openAdvisorAIAuthPanel(advisorAIActivePanel());
-    return;
-  }
   var panel=advisorAIActivePanel();
   if(!panel)return;
   if(advisorAIScheduleOpen){
@@ -10837,10 +10743,6 @@ function advisorAIRequireWrite(){
 }
 
 async function runAdvisorAICommand(btn){
-  if(!advisorAIIsVerified()){
-    openAdvisorAIAuthPanel(advisorAIActivePanel());
-    return;
-  }
   var input=document.getElementById('advisor-ai-input');
   var raw=input?input.value:'';
   var panel=advisorAIActivePanel();
