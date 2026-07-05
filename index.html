@@ -123,27 +123,27 @@ body::after{
   display:flex;
   align-items:flex-end;
   justify-content:center;
-  gap:18px;
+  gap:14px;
   width:100%;
-  min-height:238px;
-  padding:10px 12px 0;
+  min-height:228px;
+  padding:8px 10px 0;
 }
 .advisor-duo-role{
   position:relative;
-  width:178px;
+  width:166px;
   border:0;
   background:transparent;
   color:var(--gold);
   font-family:var(--font);
   cursor:pointer;
-  padding:0 0 10px;
+  padding:0;
   transition:transform .22s,filter .22s;
   text-align:center;
 }
-.advisor-duo-role:hover{transform:translateY(-6px) scale(1.04);filter:brightness(1.08)}
-.advisor-duo-role.active{filter:brightness(1.12) drop-shadow(0 0 14px rgba(232,192,80,.18))}
+.advisor-duo-role:hover{transform:translateY(-5px) scale(1.025);filter:brightness(1.04)}
+.advisor-duo-role.active{filter:brightness(1.08) drop-shadow(0 0 10px rgba(232,192,80,.12))}
 .advisor-duo-role.pangtong,.advisor-duo-role.caozhi{transform:none}
-.advisor-duo-role.pangtong:hover,.advisor-duo-role.caozhi:hover{transform:translateY(-6px) scale(1.04)}
+.advisor-duo-role.pangtong:hover,.advisor-duo-role.caozhi:hover{transform:translateY(-5px) scale(1.025)}
 .advisor-duo-role.zhuge .advisor-duo-stage{transform:none}
 .advisor-duo-role .advisor-duo-stage::after{
   content:'';
@@ -151,17 +151,18 @@ body::after{
   inset:10px 2px 0;
   border-radius:42% 42% 24% 24%;
   background:
-    radial-gradient(circle at 50% 35%,rgba(232,192,80,.08),transparent 45%),
-    linear-gradient(180deg,rgba(15,10,4,.10),rgba(8,6,3,.34));
+    radial-gradient(circle at 50% 36%,rgba(232,192,80,.05),transparent 46%),
+    linear-gradient(180deg,rgba(15,10,4,.08),rgba(8,6,3,.22));
   mix-blend-mode:multiply;
   pointer-events:none;
 }
 .advisor-duo-stage{
   position:relative;
-  height:224px;
+  height:216px;
   display:flex;
   align-items:flex-end;
   justify-content:center;
+  overflow:hidden;
 }
 .advisor-duo-role img,
 .advisor-duo-role video{
@@ -170,14 +171,18 @@ body::after{
   height:100%;
   object-fit:contain;
   object-position:center bottom;
-  filter:drop-shadow(0 0 22px rgba(232,192,80,.22));
+  -webkit-mask-image:radial-gradient(ellipse 58% 78% at 50% 57%,#000 0 48%,rgba(0,0,0,.62) 66%,transparent 100%);
+  mask-image:radial-gradient(ellipse 58% 78% at 50% 57%,#000 0 48%,rgba(0,0,0,.62) 66%,transparent 100%);
+  filter:drop-shadow(0 10px 16px rgba(0,0,0,.34));
 }
 .advisor-duo-video{
   pointer-events:none;
-  opacity:.82;
-  filter:saturate(.72) sepia(.12) brightness(.82) contrast(.94) drop-shadow(0 0 18px rgba(232,192,80,.14)) drop-shadow(0 12px 18px rgba(0,0,0,.46));
-  mix-blend-mode:luminosity;
+  opacity:.68;
+  filter:saturate(.58) sepia(.2) brightness(.72) contrast(.9) drop-shadow(0 8px 14px rgba(0,0,0,.28));
+  mix-blend-mode:soft-light;
 }
+.advisor-duo-role.zhuge .advisor-duo-video{transform:scale(.94);transform-origin:center bottom}
+.advisor-duo-role.caozhi .advisor-duo-video{transform:scale(.88);transform-origin:center bottom}
 .advisor-duo-label{
   display:inline-flex;
   align-items:center;
@@ -2676,7 +2681,6 @@ body::after{
           </button>
           <button class="advisor-duo-role caozhi" type="button" onclick="openCaozhi()" title="文 曹植軍師">
             <span class="advisor-duo-stage"><video class="advisor-duo-video" src="AIpost.mp4" muted playsinline preload="auto" aria-label="曹植軍師"></video></span>
-            <span class="advisor-duo-label">曹植軍師</span>
           </button>
         </div>
         <div class="hdr-char-vignette"></div>
