@@ -141,8 +141,9 @@ body::after{
   text-align:center;
 }
 .advisor-duo-role:hover{transform:translateY(-6px) scale(1.04);filter:brightness(1.08)}
-.advisor-duo-role.pangtong{transform:none}
-.advisor-duo-role.pangtong:hover{transform:translateY(-6px) scale(1.04)}
+.advisor-duo-role.active{filter:brightness(1.12) drop-shadow(0 0 14px rgba(232,192,80,.18))}
+.advisor-duo-role.pangtong,.advisor-duo-role.caozhi{transform:none}
+.advisor-duo-role.pangtong:hover,.advisor-duo-role.caozhi:hover{transform:translateY(-6px) scale(1.04)}
 .advisor-duo-role.zhuge .advisor-duo-stage{transform:none}
 .advisor-duo-role .advisor-duo-stage::after{
   content:'';
@@ -197,6 +198,7 @@ body::after{
 }
 .advisor-duo-role.zhuge .advisor-duo-label::before{content:'策'}
 .advisor-duo-role.pangtong .advisor-duo-label::before{content:'AI'}
+.advisor-duo-role.caozhi .advisor-duo-label::before{content:'文'}
 .advisor-duo-role .advisor-duo-label::before{
   display:inline-flex;
   align-items:center;
@@ -588,33 +590,6 @@ body::after{
 .card-shortcut:active{transform:translateY(0)}
 .card-shortcuts .card-shortcut:only-child,
 .card-shortcuts .card-shortcut:last-child:nth-child(odd){grid-column:1/-1}
-#c-caozhi{width:220px;margin-top:-6px}
-#c-caozhi .frame{border:0;background:transparent;box-shadow:none;overflow:visible;border-radius:0}
-#c-caozhi.active .frame{border-color:transparent;box-shadow:none}
-#c-caozhi .corner,#c-caozhi .gem,#c-caozhi .card-shortcuts{display:none}
-#c-caozhi .art{
-  border:0!important;
-  background:transparent;
-  overflow:visible!important;
-  -webkit-mask-image:
-    linear-gradient(to bottom,transparent 0%,black 12%,black 78%,transparent 100%),
-    linear-gradient(to right,transparent 0%,black 10%,black 90%,transparent 100%);
-  -webkit-mask-composite:destination-in;
-  mask-image:
-    linear-gradient(to bottom,transparent 0%,black 12%,black 78%,transparent 100%),
-    linear-gradient(to right,transparent 0%,black 10%,black 90%,transparent 100%);
-  mask-composite:intersect;
-}
-#c-caozhi .card-video{
-  object-fit:contain!important;
-  object-position:center bottom!important;
-  opacity:.86;
-  filter:saturate(.74) sepia(.14) brightness(.84) contrast(.95) drop-shadow(0 0 18px rgba(232,192,80,.13)) drop-shadow(0 12px 20px rgba(0,0,0,.48));
-  mix-blend-mode:luminosity;
-}
-#c-caozhi:hover .card-video,#c-caozhi.active .card-video{opacity:.94;filter:saturate(.82) sepia(.12) brightness(.9) contrast(.98) drop-shadow(0 0 24px rgba(232,192,80,.2)) drop-shadow(0 14px 22px rgba(0,0,0,.5))}
-#c-caozhi .art>div{background:linear-gradient(to top,rgba(8,5,3,.52) 0%,rgba(8,5,3,.18) 46%,transparent 100%)!important}
-
 .frame{
   border-radius:14px 14px 8px 8px;overflow:hidden;
   border:1.5px solid var(--card-border);
@@ -2198,10 +2173,10 @@ body::after{
     max-width:92vw;
     overflow:visible;
   }
-  .advisor-duo{min-height:176px;gap:12px;padding:4px 0 0}
-  .advisor-duo-role{width:132px;flex:0 0 132px}
-  .advisor-duo-stage{height:170px}
-  .advisor-duo-label{min-width:96px;font-size:11px;padding:4px 7px}
+  .advisor-duo{min-height:164px;gap:8px;padding:4px 0 0}
+  .advisor-duo-role{width:104px;flex:0 0 104px}
+  .advisor-duo-stage{height:156px}
+  .advisor-duo-label{min-width:82px;font-size:10px;padding:4px 6px}
   .hdr-char{
     width:100%;
     height:auto;
@@ -2252,10 +2227,10 @@ body::after{
   .wrap{padding:12px 10px 36px}
   .hdr{margin-bottom:10px}
   .hdr-char-wrap{width:clamp(268px,82vw,340px)}
-  .advisor-duo{min-height:156px;gap:10px;justify-content:center}
-  .advisor-duo-role{width:120px;flex:0 0 120px}
-  .advisor-duo-stage{height:154px}
-  .advisor-duo-label{min-width:86px;font-size:10px;letter-spacing:0}
+  .advisor-duo{min-height:138px;gap:6px;justify-content:center}
+  .advisor-duo-role{width:92px;flex:0 0 92px}
+  .advisor-duo-stage{height:134px}
+  .advisor-duo-label{min-width:74px;font-size:9px;letter-spacing:0}
   .cards{
     grid-template-columns:repeat(2,minmax(0,clamp(138px,44vw,178px)));
     gap:10px;
@@ -2699,6 +2674,10 @@ body::after{
           <button class="advisor-duo-role zhuge" type="button" onclick="openAdvisorDialog()" title="策 諸葛亮">
             <span class="advisor-duo-stage"><video class="advisor-duo-video" src="wistom.mp4" poster="advisor-zhuge.png" muted playsinline preload="auto" aria-label="諸葛亮軍師"></video></span>
           </button>
+          <button class="advisor-duo-role caozhi" type="button" onclick="openCaozhi()" title="文 曹植軍師">
+            <span class="advisor-duo-stage"><video class="advisor-duo-video" src="AIpost.mp4" muted playsinline preload="auto" aria-label="曹植軍師"></video></span>
+            <span class="advisor-duo-label">曹植軍師</span>
+          </button>
         </div>
         <div class="hdr-char-vignette"></div>
       </div>
@@ -2915,34 +2894,6 @@ body::after{
       </div>
       <div class="card-shortcuts" aria-label="&#x57CE;&#x7246;&#x5FEB;&#x6377;&#x5165;&#x53E3;">
         <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'wall')">&#x6253;&#x958B;&#x57CE;&#x7246;</button>
-      </div>
-    </div>
-
-    <!-- Caozhi -->
-    <div class="card" id="c-caozhi" onclick="openCaozhi()">
-      <div class="frame">
-        <div class="corner tl"></div><div class="corner tr"></div>
-        <div class="corner bl"></div><div class="corner br"></div>
-        <div class="gem">文</div>
-        <div class="art" style="position:relative;overflow:hidden;height:427px;border-bottom:none;">
-          <video
-            class="card-video"
-            src="AIpost.mp4"
-            loop
-            muted
-            playsinline
-            preload="metadata"
-            style="width:100%;height:100%;display:block;object-fit:cover;object-position:center center;"
-          ></video>
-          <div style="position:absolute;bottom:0;left:0;right:0;z-index:4;
-            background:linear-gradient(to top,rgba(8,5,3,.95) 0%,rgba(8,5,3,.5) 50%,transparent 100%);
-            padding:16px 12px 12px;text-align:center;pointer-events:none;">
-            <span style="font-family:'Noto Sans TC',sans-serif;font-size:11px;color:#c09a50;letter-spacing:3px;">曹植軍師</span>
-          </div>
-        </div>
-      </div>
-      <div class="card-shortcuts" aria-label="曹植軍師快捷入口">
-        <button class="card-shortcut" type="button" onclick="event.stopPropagation();openCaozhi()">草擬城牆</button>
       </div>
     </div>
 
@@ -6152,8 +6103,9 @@ function toggleCaozhiTag(tag){
 
 function openCaozhi(){
   document.querySelectorAll('.card').forEach(function(card){card.classList.remove('active');});
-  var card=document.getElementById('c-caozhi');
-  if(card)card.classList.add('active');
+  document.querySelectorAll('.advisor-duo-role').forEach(function(role){role.classList.remove('active');});
+  var role=document.querySelector('.advisor-duo-role.caozhi');
+  if(role)role.classList.add('active');
   var overlay=document.getElementById('caozhi-overlay');
   if(overlay)overlay.classList.add('open');
   var form=caozhiForm();
@@ -6164,9 +6116,9 @@ function openCaozhi(){
 function closeCaozhi(){
   var overlay=document.getElementById('caozhi-overlay');
   if(overlay)overlay.classList.remove('open');
-  var card=document.getElementById('c-caozhi');
-  if(card)card.classList.remove('active');
-  var video=card&&card.querySelector('video.card-video');
+  var role=document.querySelector('.advisor-duo-role.caozhi');
+  if(role)role.classList.remove('active');
+  var video=role&&role.querySelector('video.advisor-duo-video');
   if(video){try{video.pause();video.currentTime=0;}catch(e){}}
 }
 
