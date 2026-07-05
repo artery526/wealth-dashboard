@@ -588,6 +588,32 @@ body::after{
 .card-shortcut:active{transform:translateY(0)}
 .card-shortcuts .card-shortcut:only-child,
 .card-shortcuts .card-shortcut:last-child:nth-child(odd){grid-column:1/-1}
+#c-caozhi{width:220px;margin-top:-6px}
+#c-caozhi .frame{border:0;background:transparent;box-shadow:none;overflow:visible;border-radius:0}
+#c-caozhi.active .frame{border-color:transparent;box-shadow:none}
+#c-caozhi .corner,#c-caozhi .gem,#c-caozhi .card-shortcuts{display:none}
+#c-caozhi .art{
+  border:0!important;
+  background:transparent;
+  overflow:visible!important;
+  -webkit-mask-image:
+    linear-gradient(to bottom,transparent 0%,black 12%,black 78%,transparent 100%),
+    linear-gradient(to right,transparent 0%,black 10%,black 90%,transparent 100%);
+  -webkit-mask-composite:destination-in;
+  mask-image:
+    linear-gradient(to bottom,transparent 0%,black 12%,black 78%,transparent 100%),
+    linear-gradient(to right,transparent 0%,black 10%,black 90%,transparent 100%);
+  mask-composite:intersect;
+}
+#c-caozhi .card-video{
+  object-fit:contain!important;
+  object-position:center bottom!important;
+  opacity:.86;
+  filter:saturate(.74) sepia(.14) brightness(.84) contrast(.95) drop-shadow(0 0 18px rgba(232,192,80,.13)) drop-shadow(0 12px 20px rgba(0,0,0,.48));
+  mix-blend-mode:luminosity;
+}
+#c-caozhi:hover .card-video,#c-caozhi.active .card-video{opacity:.94;filter:saturate(.82) sepia(.12) brightness(.9) contrast(.98) drop-shadow(0 0 24px rgba(232,192,80,.2)) drop-shadow(0 14px 22px rgba(0,0,0,.5))}
+#c-caozhi .art>div{background:linear-gradient(to top,rgba(8,5,3,.52) 0%,rgba(8,5,3,.18) 46%,transparent 100%)!important}
 
 .frame{
   border-radius:14px 14px 8px 8px;overflow:hidden;
