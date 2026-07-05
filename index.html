@@ -2134,7 +2134,11 @@ body::after{
 .ark-wall-detail-title{font-family:var(--font);font-size:28px;font-weight:900;color:#f0dfa0;line-height:1.35;letter-spacing:1px}
 .ark-wall-detail-text{border:1px solid rgba(184,137,46,.24);border-radius:8px;background:rgba(3,4,3,.72);font-family:var(--sans);font-size:15px;font-weight:750;line-height:1.95;color:#d8c18a;white-space:pre-wrap;overflow-wrap:anywhere;padding:13px 14px}
 .ark-wall-photo-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-.ark-wall-photo{display:block;width:100%;aspect-ratio:4/3;border:1px solid rgba(184,137,46,.26);border-radius:8px;background:#090704;object-fit:cover;overflow:hidden}
+.ark-wall-photo{display:block;width:100%;aspect-ratio:4/3;border:1px solid rgba(184,137,46,.26);border-radius:8px;background:#090704;object-fit:cover;overflow:hidden;cursor:zoom-in}
+.ark-wall-lightbox{position:fixed;inset:0;z-index:4200;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.86);padding:18px;opacity:0;pointer-events:none;transition:opacity .18s ease}
+.ark-wall-lightbox.open{opacity:1;pointer-events:auto}
+.ark-wall-lightbox-img{display:block;max-width:min(96vw,1100px);max-height:88vh;border:1px solid rgba(232,192,80,.34);border-radius:8px;background:#050403;object-fit:contain;box-shadow:0 18px 48px rgba(0,0,0,.55)}
+.ark-wall-lightbox-close{position:absolute;top:18px;right:18px;width:42px;height:42px;border:1px solid rgba(232,192,80,.38);border-radius:8px;background:rgba(8,6,3,.86);color:#f0dfa0;font-family:var(--sans);font-size:18px;font-weight:900;cursor:pointer}
 .ark-wall-back{border:1px solid rgba(78,217,255,.34);border-radius:8px;background:rgba(78,217,255,.08);color:#aeefff;font-family:var(--sans);font-size:12px;font-weight:900;padding:7px 10px;cursor:pointer}
 .ark-wall-back:hover{border-color:rgba(78,217,255,.62);background:rgba(78,217,255,.14)}
 .caozhi-form{display:grid;gap:13px}
@@ -6347,7 +6351,7 @@ function openArkWallEntry(id){
     var images=Array.isArray(entry.images)?entry.images:[];
     var photos=images.map(function(img){
       var url=arkWallUrl(img.thumbnailUrl||img.originalUrl);
-      return url?'<img class="ark-wall-photo" src="'+esc(url)+'" alt="'+esc(entry.title||'城牆照片')+'" loading="lazy">':'';
+      return url?'<img class="ark-wall-photo" src="'+esc(url)+'" data-photo-url="'+esc(url)+'" data-photo-title="'+esc(entry.title||'城牆照片')+'" alt="'+esc(entry.title||'城牆照片')+'" loading="lazy">':'';
     }).join('');
     if(body)body.innerHTML='<div class="ark-wall-detail">'
       +'<div class="ark-wall-detail-head">'
@@ -6358,6 +6362,11 @@ function openArkWallEntry(id){
       +(photos?'<div class="ark-wall-photo-grid">'+photos+'</div>':'')
       +(text?'<div class="ark-wall-detail-text">'+esc(text)+'</div>':'')
     +'</div>';
+    if(body)body.querySelectorAll('.ark-wall-photo').forEach(function(photo){
+      photo.addEventListener('click',function(){
+        openArkWallPhoto(photo.dataset.photoUrl,photo.dataset.photoTitle||photo.alt);
+      });
+    });
   }).catch(function(err){
     if(err&&err.status===401){
       renderArkWallGate('通行令已失效或尚未輸入。請重新解鎖城牆。');
@@ -6374,7 +6383,38 @@ function arkWallEntryKey(event,id){
   }
 }
 
+function ensureArkWallLightbox(){
+  var box=document.getElementById('ark-wall-lightbox');
+  if(box)return box;
+  box=document.createElement('div');
+  box.className='ark-wall-lightbox';
+  box.id='ark-wall-lightbox';
+  box.onclick=function(event){if(event.target===box)closeArkWallPhoto();};
+  box.innerHTML='<button class="ark-wall-lightbox-close" type="button" onclick="closeArkWallPhoto()" aria-label="關閉照片">x</button><img class="ark-wall-lightbox-img" alt="">';
+  document.body.appendChild(box);
+  return box;
+}
+
+function openArkWallPhoto(url,title){
+  var box=ensureArkWallLightbox();
+  var img=box.querySelector('.ark-wall-lightbox-img');
+  if(img){
+    img.src=url;
+    img.alt=title||'城牆照片';
+  }
+  box.classList.add('open');
+}
+
+function closeArkWallPhoto(){
+  var box=document.getElementById('ark-wall-lightbox');
+  if(!box)return;
+  box.classList.remove('open');
+  var img=box.querySelector('.ark-wall-lightbox-img');
+  if(img)img.removeAttribute('src');
+}
+
 function closeArkWall(){
+  closeArkWallPhoto();
   var overlay=document.getElementById('ark-wall-overlay');
   if(overlay)overlay.classList.remove('open');
   var wallCard=document.getElementById('c-wall');
