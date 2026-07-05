@@ -2663,34 +2663,6 @@ body::after{
 
   <div class="cards">
 
-    <!-- 糧倉 -->
-    <div class="card" id="c-foodhouse" onclick="openPanel('foodhouse')">
-      <div class="frame">
-        <div class="corner tl"></div><div class="corner tr"></div>
-        <div class="corner bl"></div><div class="corner br"></div>
-        <div class="gem">🌾</div>
-        <div class="art" style="position:relative;overflow:hidden;height:427px;border-bottom:none;">
-          <video
-            class="card-video"
-            src="foodhouse.mp4"
-            loop
-            muted
-            playsinline
-            preload="metadata"
-            style="width:100%;height:100%;display:block;object-fit:cover;object-position:center center;"
-          ></video>
-          <div style="position:absolute;bottom:0;left:0;right:0;z-index:4;
-            background:linear-gradient(to top,rgba(8,5,3,.95) 0%,rgba(8,5,3,.5) 50%,transparent 100%);
-            padding:16px 12px 12px;text-align:center;pointer-events:none;">
-            <span style="font-family:'Noto Sans TC',sans-serif;font-size:11px;color:#c09a50;letter-spacing:3px;">糧倉</span>
-          </div>
-        </div>
-      </div>
-      <div class="card-shortcuts" aria-label="&#x7CE7;&#x5009;&#x5FEB;&#x6377;&#x5165;&#x53E3;">
-        <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'foodhouse')">&#x6253;&#x958B;&#x7CE7;&#x5009;</button>
-      </div>
-    </div>
-
     <!-- 財政 -->
     <div class="card" id="c-finance" onclick="openPanel('finance')">
       <div class="frame">
@@ -2717,6 +2689,7 @@ body::after{
       </div>
       <div class="card-shortcuts" aria-label="&#x8CA1;&#x653F;&#x5FEB;&#x6377;&#x5165;&#x53E3;">
         <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'finance','finance-accs')">&#x570B;&#x5EAB;&#x73FE;&#x6CC1;</button>
+        <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'foodhouse')">&#x6253;&#x958B;&#x7CE7;&#x5009;</button>
         <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'finance','domestic-yearly')">&#x5E74;&#x5EA6;&#x8CA1;&#x5831;</button>
         <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'finance','div-calc')">&#x914D;&#x606F;&#x8A66;&#x7B97;</button>
       </div>
@@ -3761,7 +3734,8 @@ async function saveCfg(){
 function openPanel(key){
   if(currentPanel===key){closePanel();return}
   document.querySelectorAll('.card').forEach(c=>c.classList.remove('active'));
-  document.getElementById('c-'+key).classList.add('active');
+  var activeCard=document.getElementById('c-'+key);
+  if(activeCard)activeCard.classList.add('active');
   document.getElementById('panel').classList.toggle('council-wide',key==='council');
   document.getElementById('panel').classList.toggle('domestic-wide',key==='domestic');
   document.getElementById('panel').classList.toggle('finance-wide',key==='finance');
