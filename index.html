@@ -6163,7 +6163,9 @@ async function draftCaozhiWall(btn){
     data.append('tags',form.elements.tags.value||'');
     var body=await caozhiAuthFetch('/api/wall-draft',{method:'POST',body:data});
     if(body.title&&!form.elements.title.value)form.elements.title.value=body.title;
-    form.elements.content.value=body.content||'';
+    var draftContent=(body.content||body.text||body.draft||'').trim();
+    if(!draftContent)throw new Error('曹植沒有產生內文，請再草擬一次。');
+    form.elements.content.value=draftContent;
     if(Array.isArray(body.tags))setCaozhiTags(body.tags);
     caozhiMsg('草稿已完成，可修改後送入城牆。','ok');
   }catch(err){
