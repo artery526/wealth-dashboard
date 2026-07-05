@@ -10407,6 +10407,28 @@ function toggleAdvisorMenuGroup(btn){
   }
 }
 
+function advisorWorldMarketRequest(){
+  if(marketDashboardPromise)return marketDashboardPromise;
+  marketDashboardPromise=apiGet({action:'marketDashboard'}).then(function(data){
+    writeTimedMarketCache(MARKET_DASHBOARD_CACHE_KEY,data);
+    return data;
+  }).finally(function(){
+    marketDashboardPromise=null;
+  });
+  return marketDashboardPromise;
+}
+
+function advisorWorldMacroRequest(){
+  if(macroOverviewPromise)return macroOverviewPromise;
+  macroOverviewPromise=apiGet({action:'macroOverview'}).then(function(data){
+    writeTimedMarketCache(MARKET_MACRO_CACHE_KEY,data);
+    return data;
+  }).finally(function(){
+    macroOverviewPromise=null;
+  });
+  return macroOverviewPromise;
+}
+
 async function openAdvisorWorldSituation(event,auto){
   if(event&&event.stopPropagation)event.stopPropagation();
   var panel=document.getElementById('advisor-world-slot')||document.getElementById('advisor-shortcut-panel');
@@ -10414,7 +10436,14 @@ async function openAdvisorWorldSituation(event,auto){
   advisorDividendSelection=null;
   advisorDividendMemoPending=null;
   advisorAIScheduleOpen=false;
-  panel.innerHTML='<div class="advisor-world-card"><div class="advisor-world-title">目前頁面為【天下局勢】</div><div class="advisor-world-text" style="position:relative;z-index:1;text-align:center">諸葛亮正在觀台股、美股、VIX、DXY、殖利率、Fed、黃金、油價與 CPI 月增率…</div></div>';
+  var cachedMarket=readTimedMarketCache(MARKET_DASHBOARD_CACHE_KEY);
+  var cachedMacro=readTimedMarketCache(MARKET_MACRO_CACHE_KEY);
+  var hasCachedWorld=!!(cachedMarket||cachedMacro);
+  if(hasCachedWorld){
+    panel.innerHTML=advisorWorldHtml(advisorWorldBuild(cachedMarket||{},cachedMacro||{}));
+  }else{
+    panel.innerHTML='<div class="advisor-world-card"><div class="advisor-world-title">目前頁面為【天下局勢】</div><div class="advisor-world-text" style="position:relative;z-index:1;text-align:center">諸葛亮正在觀台股、美股、VIX、DXY、殖利率、Fed、黃金、油價與 CPI 月增率…</div></div>';
+  }
   if(!auto&&panel.scrollIntoView)panel.scrollIntoView({block:'nearest',behavior:'smooth'});
   if(!API_URL){
     panel.innerHTML='<div class="advisor-world-card"><div class="advisor-world-title">目前頁面為【天下局勢】</div><div class="advisor-world-text" style="position:relative;z-index:1;text-align:center;color:var(--coral)">尚未設定 API URL，無法調閱局勢。</div></div>';
@@ -10422,12 +10451,15 @@ async function openAdvisorWorldSituation(event,auto){
   }
   try{
     var results=await Promise.allSettled([
-      apiGet({action:'marketDashboard'}),
-      apiGet({action:'macroOverview'})
+      advisorWorldMarketRequest(),
+      advisorWorldMacroRequest()
     ]);
-    if(results[0].status!=='fulfilled'&&results[1].status!=='fulfilled')throw new Error('市場與總經資料讀取失敗');
-    var market=results[0].status==='fulfilled'?(results[0].value||{}):{};
-    var macro=results[1].status==='fulfilled'?(results[1].value||{}):{};
+    if(results[0].status!=='fulfilled'&&results[1].status!=='fulfilled'){
+      if(hasCachedWorld)return;
+      throw new Error('市場與總經資料讀取失敗');
+    }
+    var market=results[0].status==='fulfilled'?(results[0].value||{}):(cachedMarket||{});
+    var macro=results[1].status==='fulfilled'?(results[1].value||{}):(cachedMacro||{});
     var view=advisorWorldBuild(market,macro);
     panel.innerHTML=advisorWorldHtml(view);
   }catch(err){
