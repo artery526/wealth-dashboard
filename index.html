@@ -2104,6 +2104,19 @@ body::after{
 .ark-wall-select-label{font-family:var(--sans);font-size:11px;font-weight:900;color:#9a7430;letter-spacing:1px}
 .ark-wall-select{width:100%;height:38px;border:1px solid rgba(184,137,46,.36);border-radius:8px;background:rgba(10,8,4,.82);color:#f0dfa0;font-family:var(--sans);font-size:14px;font-weight:900;padding:0 10px;outline:none}
 .ark-wall-select:focus{border-color:rgba(232,192,80,.72);box-shadow:0 0 0 2px rgba(232,192,80,.12)}
+.ark-wall-library{display:grid;gap:11px;border:1px solid rgba(78,217,255,.22);border-radius:8px;background:rgba(4,10,12,.58);padding:12px;margin-bottom:15px}
+.ark-wall-library-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.ark-wall-library-title{font-family:var(--font);font-size:20px;font-weight:900;color:#aeefff;letter-spacing:1px}
+.ark-wall-library-sub{font-family:var(--sans);font-size:12px;font-weight:800;color:#8aa7a9;line-height:1.6;margin-top:3px}
+.ark-wall-library-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.ark-wall-library-load{height:38px;border:1px solid rgba(78,217,255,.34);border-radius:8px;background:rgba(78,217,255,.09);color:#aeefff;font-family:var(--sans);font-size:12px;font-weight:900;padding:0 10px;cursor:pointer}
+.ark-wall-library-status{font-family:var(--sans);font-size:12px;font-weight:800;color:#9a7430;min-height:18px}
+.ark-wall-library-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:7px}
+.ark-wall-library-card{display:block;width:100%;aspect-ratio:1;border:1px solid rgba(78,217,255,.18);border-radius:8px;background:#070a0b;overflow:hidden;cursor:zoom-in;padding:0;position:relative}
+.ark-wall-library-card:hover{border-color:rgba(78,217,255,.54)}
+.ark-wall-library-card img{display:block;width:100%;height:100%;object-fit:cover}
+.ark-wall-library-video{display:grid;place-items:center;width:100%;height:100%;font-family:var(--sans);font-size:12px;font-weight:900;color:#aeefff;background:rgba(78,217,255,.08)}
+.ark-wall-library-more{font-family:var(--sans);font-size:12px;font-weight:800;color:#8aa7a9}
 .ark-wall-lock{display:grid;gap:12px;border:1px solid rgba(184,137,46,.32);border-radius:8px;background:rgba(10,8,4,.72);padding:16px}
 .ark-wall-lock-title{font-family:var(--font);font-size:22px;font-weight:900;color:#f0dfa0;letter-spacing:1px}
 .ark-wall-lock-text{font-family:var(--sans);font-size:13px;font-weight:750;line-height:1.7;color:#bda36d}
@@ -2161,8 +2174,8 @@ body::after{
 .caozhi-btn:disabled{opacity:.55;cursor:wait}
 .caozhi-msg{min-height:18px;font-family:var(--sans);font-size:12px;font-weight:800;color:#9a7430}
 .caozhi-msg.ok{color:#8fd0b8}.caozhi-msg.err{color:#ef9a77}
-@media(max-width:760px){.ark-wall-grid,.ark-wall-photo-grid{grid-template-columns:1fr}.ark-wall-index-row{grid-template-columns:84px minmax(0,1fr);gap:7px}}
-@media(max-width:560px){#ark-wall-overlay .ark-wall-actions{grid-column:2/4;grid-row:2;width:100%;justify-content:flex-start;margin-top:3px}.ark-wall-admin,.ark-wall-back{font-size:11px;padding:7px 9px}.ark-wall-filter,.ark-wall-lock-form,.caozhi-grid{grid-template-columns:1fr}.ark-wall-month-title{font-size:18px}.ark-wall-index-title{font-size:16px}.caozhi-actions{display:grid;grid-template-columns:1fr}.caozhi-btn{width:100%}}
+@media(max-width:760px){.ark-wall-grid,.ark-wall-photo-grid{grid-template-columns:1fr}.ark-wall-index-row{grid-template-columns:84px minmax(0,1fr);gap:7px}.ark-wall-library-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:560px){#ark-wall-overlay .ark-wall-actions{grid-column:2/4;grid-row:2;width:100%;justify-content:flex-start;margin-top:3px}.ark-wall-admin,.ark-wall-back{font-size:11px;padding:7px 9px}.ark-wall-filter,.ark-wall-lock-form,.caozhi-grid{grid-template-columns:1fr}.ark-wall-library-head{display:grid}.ark-wall-library-actions{display:grid;grid-template-columns:1fr 1fr}.ark-wall-library-load{grid-column:1/-1}.ark-wall-library-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ark-wall-month-title{font-size:18px}.ark-wall-index-title{font-size:16px}.caozhi-actions{display:grid;grid-template-columns:1fr}.caozhi-btn{width:100%}}
 @media(max-width:760px){.travel-card-list{grid-template-columns:1fr}}
 @media(max-width:560px){.travel-overlay{padding:10px;align-items:flex-end}.travel-panel{max-height:86vh;border-radius:12px 12px 0 0}.travel-head{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:9px;padding:13px 14px 10px;align-items:start}.travel-title-wrap{grid-column:2/3}.travel-title{font-size:19px}.travel-carrier-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;width:100%;margin-top:8px}.travel-copy-btn,.travel-carrier-show{width:100%;font-size:11px;padding:7px 6px;text-align:center}.carrier-box{width:94vw;padding:42px 14px 18px}.carrier-img{padding:12px}.travel-head-actions{grid-column:2/3;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;width:100%;justify-content:stretch}.travel-map-btn{width:100%;font-size:11px;padding:7px 6px}.travel-close{grid-column:3/4;grid-row:1/2}.travel-body{padding:13px}.travel-detail-row{grid-template-columns:76px minmax(0,1fr);gap:7px}.travel-route{grid-template-columns:1fr}.travel-arrow{display:none}.travel-card-head{flex-direction:column}.travel-card-actions{width:100%;justify-content:space-between}.travel-time-badge{font-size:14px;padding:5px 8px}.travel-add-grid{grid-template-columns:1fr}.travel-time-pair{grid-template-columns:72px minmax(0,1fr)}}
 
@@ -5985,13 +5998,26 @@ function stripIncomeStockNotePrefix(note){
   return s;
 }
 
-var ARK_WALL_API_BASE='https://api.ark-os26.cc';
+var ARK_WALL_API_BASE=(function(){
+  var base='https://api.ark-os26.cc';
+  try{
+    if(/^(localhost|127\.0\.0\.1)$/.test(location.hostname)){
+      var override=new URLSearchParams(location.search).get('arkWallApiBase');
+      if(/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(override||''))return override.replace(/\/$/,'');
+    }
+  }catch(e){}
+  return base;
+})();
 var ARK_WALL_ADMIN_URL='https://wall-admin.ark-os26.cc/admin';
 var ARK_WALL_READ_TOKEN_KEY='arkos26.wall.readToken';
 var arkWallEntries=[];
 var arkWallLoaded=false;
 var arkWallSelectedYear='';
 var arkWallSelectedMonth='';
+var arkWallLibrarySummary=null;
+var arkWallLibrarySelectedYear='';
+var arkWallLibrarySelectedMonth='';
+var arkWallLibraryItems=[];
 
 function arkWallReadToken(){
   try{return localStorage.getItem(ARK_WALL_READ_TOKEN_KEY)||'';}catch(e){return '';}
@@ -6042,6 +6068,142 @@ function arkWallUrl(path){
     }
   }catch(e){}
   return url;
+}
+
+function arkWallPadMonth(value){
+  return String(value||'').padStart(2,'0');
+}
+
+function arkWallMonthRange(firstDate,lastDate){
+  var first=String(firstDate||'').match(/^(\d{4})-(\d{2})-/);
+  var last=String(lastDate||'').match(/^(\d{4})-(\d{2})-/);
+  if(!first||!last)return [];
+  var start=new Date(Number(first[1]),Number(first[2])-1,1);
+  var end=new Date(Number(last[1]),Number(last[2])-1,1);
+  var out=[];
+  for(var d=end;d>=start;d=new Date(d.getFullYear(),d.getMonth()-1,1)){
+    out.push({year:String(d.getFullYear()),month:arkWallPadMonth(d.getMonth()+1)});
+  }
+  return out;
+}
+
+function arkWallLibraryYears(){
+  var seen={};
+  arkWallMonthRange(arkWallLibrarySummary&&arkWallLibrarySummary.firstDate,arkWallLibrarySummary&&arkWallLibrarySummary.lastDate).forEach(function(part){
+    seen[part.year]=true;
+  });
+  return Object.keys(seen).sort(function(a,b){return String(b).localeCompare(String(a));});
+}
+
+function arkWallLibraryMonthsForYear(year){
+  return arkWallMonthRange(arkWallLibrarySummary&&arkWallLibrarySummary.firstDate,arkWallLibrarySummary&&arkWallLibrarySummary.lastDate)
+    .filter(function(part){return part.year===year;})
+    .map(function(part){return part.month;});
+}
+
+function loadArkWallLibrarySummary(){
+  if(arkWallLibrarySummary)return Promise.resolve(arkWallLibrarySummary);
+  return arkWallFetch('/api/photo-library/summary').then(function(data){
+    arkWallLibrarySummary=data.summary||{};
+    if(!arkWallLibrarySelectedYear&&arkWallLibrarySummary.lastDate){
+      arkWallLibrarySelectedYear=String(arkWallLibrarySummary.lastDate).slice(0,4);
+      arkWallLibrarySelectedMonth=String(arkWallLibrarySummary.lastDate).slice(5,7);
+    }
+    return arkWallLibrarySummary;
+  });
+}
+
+function arkWallLibraryStatus(text){
+  var el=document.getElementById('ark-wall-library-status');
+  if(el)el.textContent=text||'';
+}
+
+function arkWallLibraryMediaUrl(item){
+  return arkWallUrl(item&&((item.displayUrl||item.thumbnailUrl||item.originalUrl)||''));
+}
+
+function arkWallLibraryOriginalUrl(item){
+  return arkWallUrl(item&&((item.originalUrl||item.displayUrl||item.thumbnailUrl)||''));
+}
+
+function renderArkWallLibraryItems(items){
+  var grid=document.getElementById('ark-wall-library-grid');
+  if(!grid)return;
+  arkWallLibraryItems=Array.isArray(items)?items:[];
+  if(!arkWallLibraryItems.length){
+    grid.innerHTML='<div class="travel-status">這個月份尚無影像。</div>';
+    return;
+  }
+  var shown=arkWallLibraryItems.slice(0,96);
+  grid.innerHTML=shown.map(function(item){
+    var id=item.id||'';
+    var url=arkWallLibraryMediaUrl(item);
+    var label=esc(item.fileName||item.date||id);
+    var media=item.type==='video'
+      ? '<span class="ark-wall-library-video">影片</span>'
+      : (url?'<img src="'+esc(url)+'" alt="'+label+'" loading="lazy">':'<span class="ark-wall-library-video">無圖</span>');
+    return '<button class="ark-wall-library-card" type="button" title="'+label+'" onclick="openArkWallLibraryMedia(\''+esc(id)+'\')">'+media+'</button>';
+  }).join('');
+  var more=document.getElementById('ark-wall-library-more');
+  if(more)more.textContent=arkWallLibraryItems.length>shown.length?'顯示前 '+shown.length+' 個，完整月份共 '+arkWallLibraryItems.length+' 個影像。':'';
+}
+
+function loadArkWallLibraryMonth(){
+  if(!arkWallLibrarySelectedYear||!arkWallLibrarySelectedMonth)return;
+  arkWallLibraryStatus('載入影像庫中...');
+  return arkWallFetch('/api/photo-library/months/'+encodeURIComponent(arkWallLibrarySelectedYear)+'/'+encodeURIComponent(arkWallLibrarySelectedMonth)).then(function(data){
+    var items=Array.isArray(data.items)?data.items:[];
+    renderArkWallLibraryItems(items);
+    arkWallLibraryStatus(arkWallLibrarySelectedYear+'-'+arkWallLibrarySelectedMonth+'，共 '+items.length+' 個影像');
+  }).catch(function(err){
+    arkWallLibraryStatus('影像庫讀取失敗：'+(err&&err.message?err.message:err));
+    renderArkWallLibraryItems([]);
+  });
+}
+
+function changeArkWallLibraryYear(value){
+  arkWallLibrarySelectedYear=String(value||'');
+  var months=arkWallLibraryMonthsForYear(arkWallLibrarySelectedYear);
+  arkWallLibrarySelectedMonth=months.indexOf(arkWallLibrarySelectedMonth)>=0?arkWallLibrarySelectedMonth:(months[0]||'');
+  renderArkWallList();
+}
+
+function changeArkWallLibraryMonth(value){
+  arkWallLibrarySelectedMonth=String(value||'');
+  loadArkWallLibraryMonth();
+}
+
+function renderArkWallLibraryBlock(){
+  var years=arkWallLibraryYears();
+  if(!years.length)return '<section class="ark-wall-library" id="ark-wall-library"><div class="ark-wall-library-status">影像庫索引尚未建立。</div></section>';
+  if(!arkWallLibrarySelectedYear||years.indexOf(arkWallLibrarySelectedYear)<0)arkWallLibrarySelectedYear=years[0]||'';
+  var months=arkWallLibraryMonthsForYear(arkWallLibrarySelectedYear);
+  if(!arkWallLibrarySelectedMonth||months.indexOf(arkWallLibrarySelectedMonth)<0)arkWallLibrarySelectedMonth=months[0]||'';
+  return '<section class="ark-wall-library" id="ark-wall-library">'
+    +'<div class="ark-wall-library-head">'
+      +'<div><div class="ark-wall-library-title">時光長廊 / 影像庫</div><div class="ark-wall-library-sub">依年份與月份調閱 NAS Photos 影像。</div></div>'
+      +'<div class="ark-wall-library-actions">'
+        +'<select class="ark-wall-select" onchange="changeArkWallLibraryYear(this.value)">'+arkWallSelectOptions(years,arkWallLibrarySelectedYear,function(year){return year+'年';})+'</select>'
+        +'<select class="ark-wall-select" onchange="changeArkWallLibraryMonth(this.value)">'+arkWallSelectOptions(months,arkWallLibrarySelectedMonth,function(month){return Number(month)+'月';})+'</select>'
+        +'<button class="ark-wall-library-load" type="button" onclick="loadArkWallLibraryMonth()">載入影像</button>'
+      +'</div>'
+    +'</div>'
+    +'<div class="ark-wall-library-status" id="ark-wall-library-status">準備載入影像庫...</div>'
+    +'<div class="ark-wall-library-grid" id="ark-wall-library-grid"></div>'
+    +'<div class="ark-wall-library-more" id="ark-wall-library-more"></div>'
+  +'</section>';
+}
+
+function openArkWallLibraryMedia(id){
+  var item=arkWallLibraryItems.find(function(candidate){return candidate.id===id;});
+  if(!item)return;
+  var url=arkWallLibraryOriginalUrl(item);
+  if(!url)return;
+  if(item.type==='video'){
+    window.open(url,'_blank','noopener');
+    return;
+  }
+  openArkWallPhoto(url,item.fileName||item.date||'城牆影像');
 }
 
 function renderArkWallGate(message){
@@ -6306,6 +6468,15 @@ function renderArkWallList(){
   var back=document.getElementById('ark-wall-back');
   if(back)back.hidden=true;
   if(!body)return;
+  var libraryHtml=arkWallLibrarySummary
+    ? renderArkWallLibraryBlock()
+    : '<section class="ark-wall-library" id="ark-wall-library"><div class="ark-wall-library-status" id="ark-wall-library-status">影像庫索引讀取中...</div></section>';
+  if(!arkWallEntries.length){
+    body.innerHTML=libraryHtml+'<div class="travel-status">城牆尚無紀錄。可由右上角「新增紀錄」寫入 NAS。</div>';
+    if(!arkWallLibrarySummary)loadArkWallLibrarySummary().then(renderArkWallList).catch(function(err){arkWallLibraryStatus('影像庫讀取失敗：'+(err&&err.message?err.message:err));});
+    else loadArkWallLibraryMonth();
+    return;
+  }
   if(!arkWallEntries.length){
     body.innerHTML='<div class="travel-status">城牆尚無紀錄。可由右上角「新增紀錄」寫入 NAS。</div>';
     return;
@@ -6321,6 +6492,9 @@ function renderArkWallList(){
   +'</div>'
   +'<div class="ark-wall-month-title">'+esc(arkWallMonthLabel(arkWallSelectedYear,arkWallSelectedMonth))+'</div>'
   +(entries.length?'<div class="ark-wall-index">'+entries.map(arkWallIndexRow).join('')+'</div>':'<div class="travel-status">這個月份尚無紀錄。</div>');
+  body.innerHTML=libraryHtml+body.innerHTML;
+  if(!arkWallLibrarySummary)loadArkWallLibrarySummary().then(renderArkWallList).catch(function(err){arkWallLibraryStatus('影像庫讀取失敗：'+(err&&err.message?err.message:err));});
+  else loadArkWallLibraryMonth();
 }
 
 function loadArkWallEntries(force){
