@@ -2722,7 +2722,7 @@ body::after{
       </div>
       <div class="card-shortcuts" aria-label="&#x8CA1;&#x653F;&#x5FEB;&#x6377;&#x5165;&#x53E3;">
         <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'finance','finance-accs')">&#x570B;&#x5EAB;&#x73FE;&#x6CC1;</button>
-        <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'foodhouse')">&#x6253;&#x958B;&#x7CE7;&#x5009;</button>
+        <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'finance','finance-foodhouse')">&#x6253;&#x958B;&#x7CE7;&#x5009;</button>
         <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'finance','domestic-yearly')">&#x5E74;&#x5EA6;&#x8CA1;&#x5831;</button>
         <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'finance','div-calc')">&#x914D;&#x606F;&#x8A66;&#x7B97;</button>
       </div>
@@ -3902,6 +3902,7 @@ function switchTab(btn,key){
     loadAccounts();
     loadPledgePanel();
   }
+  else if(key==='finance-foodhouse')initFoodhousePane();
   else if(key==='booking-form')initBookingForm();
   else if(key==='booking-recent')loadRecentBooking();
   else if(key==='dividend-center')loadDividendCenterPanel();
@@ -3942,36 +3943,44 @@ function renderStarsPanel(){
   else document.getElementById('ziwei-content').innerHTML=setupNotice();
 }
 
-function renderFoodhousePanel(){
-  setPanelHead('🌾','Granary · Stores','糧倉');
-  setTabs([]);
+function foodhousePaneHtml(active,id){
   var apiReady=hasMainApiCredentials();
-  document.getElementById('p-body').innerHTML=`
-    <div class="pane active" id="pane-foodhouse">
+  return `
+    <div class="pane ${active?'active':''}" id="${id||'pane-foodhouse'}">
       <div class="api-bar" onclick="openCfg()">
         <div class="api-dot ${apiReady?'ok':'err'}" id="foodhouse-dot"></div>
-        <span class="api-label" id="foodhouse-label">${apiReady?'讀取戰情摘要…':'尚未設定 API'}</span>
-        <span class="api-action">⚙ 設定</span>
+        <span class="api-label" id="foodhouse-label">${apiReady?'API 已連線，正在調閱糧倉會報':'請先設定 API'}</span>
+        <span class="api-action">設定</span>
       </div>
       <div class="advisor-reminder-slot foodhouse-advisor-reminder" id="foodhouse-advisor-reminder"></div>
       <div id="foodhouse-warroom-content">${apiReady?'<div class="skel-line skel"></div><div class="skel-line skel" style="width:72%"></div>':''}</div>
       <div class="foodhouse-roster-wrap" id="foodhouse-roster-content">${apiReady?'<div class="skel-line skel"></div><div class="skel-line skel" style="width:74%"></div>':''}</div>
       <div class="foodhouse-bills-wrap" id="foodhouse-bills-content">${apiReady?'<div class="skel-line skel"></div><div class="skel-line skel" style="width:66%"></div>':''}</div>
     </div>`;
+}
+
+function initFoodhousePane(){
+  var apiReady=hasMainApiCredentials();
   if(apiReady){
     var cached=readFoodhouseDashboardCache();
     if(cached)renderFoodhouseDashboardData(cached,true);
     else{
-      var reminder=document.getElementById('foodhouse-advisor-reminder');
-      if(reminder)reminder.innerHTML=advisorReminderHtml(null,'loading');
+      var loadingReminder=document.getElementById('foodhouse-advisor-reminder');
+      if(loadingReminder)loadingReminder.innerHTML=advisorReminderHtml(null,'loading');
     }
     loadFoodhouseDashboard();
   }else{
     var reminder=document.getElementById('foodhouse-advisor-reminder');
-    if(reminder)reminder.innerHTML=advisorReminderHtml({date:today(),displayDate:today().replace(/-/g,'/'),message:'請先設定 API URL，才能調閱糧倉戰情。'},'error');
+    if(reminder)reminder.innerHTML=advisorReminderHtml({date:today(),displayDate:today().replace(/-/g,'/'),message:'請先設定 API URL，才能調閱糧倉會報。'},'error');
   }
 }
 
+function renderFoodhousePanel(){
+  setPanelHead('🌾','Granary · Stores','糧倉');
+  setTabs([]);
+  document.getElementById('p-body').innerHTML=foodhousePaneHtml(true,'pane-foodhouse');
+  initFoodhousePane();
+}
 function invalidateFoodhouseDashboardCache(){
   try{localStorage.removeItem(FOODHOUSE_CACHE_KEY);}catch(e){}
 }
@@ -5320,7 +5329,7 @@ async function submitMedicalTarotRecord(e){
 }
 function renderFinancePanel(){
   setPanelHead('⚱️','Finance · Treasury','財政');
-  setTabs([{key:'finance-accs',label:'國庫現況'},{key:'domestic-yearly',label:'年度財報'},{key:'div-calc',label:'配息試算'}]);
+  setTabs([{key:'finance-accs',label:'國庫現況'},{key:'finance-foodhouse',label:'糧倉會報'},{key:'domestic-yearly',label:'年度財報'},{key:'div-calc',label:'配息試算'}]);
   document.getElementById('p-body').innerHTML=`
     <div class="pane active" id="pane-finance-accs">
       <div class="api-bar" onclick="openCfg()">
@@ -5337,6 +5346,7 @@ function renderFinancePanel(){
       </div>
       <div id="pledge-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:75%"></div></div>
     </div>
+    ${foodhousePaneHtml(false,'pane-finance-foodhouse')}
     <div class="pane" id="pane-domestic-yearly">
       <div class="api-bar" onclick="openCfg()">
         <div class="api-dot ${API_URL?'ok':'err'}"></div>
@@ -10537,7 +10547,7 @@ initAdvisorDuoVideoPlayback();
         <section class="advisor-menu-section">
           <button class="advisor-menu-toggle" type="button" onclick="toggleAdvisorMenuGroup(this)" aria-expanded="false"><span class="advisor-menu-mark">糧</span>糧倉<span class="advisor-menu-caret">▼</span></button>
           <div class="advisor-btn-group">
-            <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'foodhouse')"><span class="advisor-btn-tag">糧</span>打開糧倉</button>
+            <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'finance','finance-foodhouse')"><span class="advisor-btn-tag">糧</span>打開糧倉</button>
             <div class="advisor-btn-spacer" aria-hidden="true"></div>
           </div>
         </section>
@@ -11027,14 +11037,14 @@ function advisorAIResolveAccount(text){
 
 function advisorAIOpenTarget(text){
   var key=advisorAICompact(text);
-  if(key==='foodhouse')return {intent:'open',panel:'foodhouse',label:'糧倉'};
+  if(key==='foodhouse')return {intent:'open',panel:'finance',tab:'finance-foodhouse',label:'糧倉會報'};
   if(key==='market')return {intent:'open',panel:'market',tab:'market-watch',label:'市場快報'};
   if(key==='finance')return {intent:'open',panel:'finance',tab:'finance-accs',label:'財政'};
   if(key==='domestic')return {intent:'open',panel:'domestic',tab:'booking-form',label:'快速記帳'};
   if(key==='council')return {intent:'open',panel:'council',label:'軍機處'};
   if(key==='stars')return {intent:'open',panel:'stars',label:'司天監'};
   if(key==='medical')return {intent:'open',panel:'medical',label:'醫館'};
-  if(key.indexOf('糧')>=0)return {intent:'open',panel:'foodhouse',label:'糧倉'};
+  if(key.indexOf('糧')>=0)return {intent:'open',panel:'finance',tab:'finance-foodhouse',label:'糧倉會報'};
   if(key.indexOf('年度財報')>=0||key.indexOf('財報')>=0)return {intent:'open',panel:'finance',tab:'domestic-yearly',label:'年度財報'};
   if(key.indexOf('總經')>=0)return {intent:'open',panel:'market',tab:'macro-overview',label:'總經戰情'};
   if(key.indexOf('市集')>=0||key.indexOf('市場')>=0)return {intent:'open',panel:'market',tab:'market-watch',label:'市場快報'};
@@ -11182,7 +11192,7 @@ function advisorAICommand(raw){
   if(stockSell)return {intent:'stockSell',shares:parseFloat(stockSell[1]),symbol:advisorAIResolveStockTradeLabel(stockSell[2]),amount:parseFloat(stockSell[3])};
   if(compact.indexOf('提款')>=0&&amount>0)return {intent:'withdraw',amount:amount};
   if(compact.indexOf('年度財報')>=0)return {intent:'open',panel:'finance',tab:'domestic-yearly',label:'年度財報'};
-  if(compact==='糧'||compact.indexOf('糧倉')>=0)return {intent:'open',panel:'foodhouse',label:'糧倉'};
+  if(compact==='糧'||compact.indexOf('糧倉')>=0)return {intent:'open',panel:'finance',tab:'finance-foodhouse',label:'糧倉會報'};
   if(compact.indexOf('總經')>=0)return {intent:'open',panel:'market',tab:'macro-overview',label:'總經戰情'};
   if(compact.indexOf('維持率')>=0)return {intent:'maintenance'};
   if(compact.indexOf('複製載具')>=0)return {intent:'copyCarrier'};
