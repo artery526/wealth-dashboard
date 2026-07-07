@@ -2094,6 +2094,7 @@ body::after{
 .travel-add-msg{font-family:var(--sans);font-size:12px;color:#9a7430;min-height:18px}
 .travel-add-msg.ok{color:#8fd0b8}.travel-add-msg.err{color:#ef9a77}
 .ark-wall-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+.ark-wall-today-date{border:1px solid rgba(232,192,80,.34);border-radius:8px;background:rgba(232,192,80,.08);color:#f0dfa0;font-family:var(--mono);font-size:12px;font-weight:900;line-height:1;padding:8px 10px;white-space:nowrap}
 .ark-wall-admin{border:1px solid rgba(29,158,117,.48);border-radius:8px;background:rgba(29,158,117,.13);color:#a8f1d6;font-family:var(--sans);font-size:12px;font-weight:900;padding:7px 10px;text-decoration:none;white-space:nowrap;transition:border-color .2s,background .2s,box-shadow .2s}
 .ark-wall-admin:hover{border-color:rgba(29,158,117,.72);background:rgba(29,158,117,.2);box-shadow:0 0 13px rgba(29,158,117,.16)}
 .ark-wall-filter{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-bottom:12px}
@@ -2953,6 +2954,7 @@ body::after{
       </div>
       <div class="ark-wall-actions">
         <button class="ark-wall-back" id="ark-wall-back" type="button" onclick="renderArkWallList()" hidden>&#x8FD4;&#x56DE;&#x5217;&#x8868;</button>
+        <span class="ark-wall-today-date" id="ark-wall-today-date"></span>
         <a class="ark-wall-admin" href="https://wall-admin.ark-os26.cc/admin" target="_blank" rel="noopener">&#x65B0;&#x589E;&#x7D00;&#x9304;</a>
       </div>
       <button class="travel-close" type="button" onclick="closeArkWall()" aria-label="Close">x</button>
@@ -6045,6 +6047,11 @@ function arkWallPadMonth(value){
   return String(value||'').padStart(2,'0');
 }
 
+function updateArkWallTodayDate(){
+  var el=document.getElementById('ark-wall-today-date');
+  if(el)el.textContent=String(today()).replace(/-/g,'/');
+}
+
 function arkWallMonthRange(firstDate,lastDate){
   var first=String(firstDate||'').match(/^(\d{4})-(\d{2})-/);
   var last=String(lastDate||'').match(/^(\d{4})-(\d{2})-/);
@@ -6552,6 +6559,7 @@ function loadArkWallEntries(force){
 }
 
 function openArkWall(){
+  updateArkWallTodayDate();
   var overlay=document.getElementById('ark-wall-overlay');
   var body=document.getElementById('ark-wall-body');
   document.querySelectorAll('.card').forEach(function(card){card.classList.remove('active');});
