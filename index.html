@@ -2117,7 +2117,9 @@ body::after{
 .ark-wall-library-card img{display:block;width:100%;height:100%;object-fit:cover}
 .ark-wall-library-video{display:grid;place-items:center;width:100%;height:100%;font-family:var(--sans);font-size:12px;font-weight:900;color:#aeefff;background:rgba(78,217,255,.08)}
 .ark-wall-library-video-badge{position:absolute;left:6px;bottom:6px;border:1px solid rgba(10,18,18,.72);border-radius:6px;background:rgba(5,12,14,.78);color:#d9fbff;font-family:var(--sans);font-size:10px;font-weight:950;line-height:1;padding:5px 6px;box-shadow:0 4px 12px rgba(0,0,0,.35)}
-.ark-wall-library-more{font-family:var(--sans);font-size:12px;font-weight:800;color:#8aa7a9}
+.ark-wall-library-more{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-family:var(--sans);font-size:12px;font-weight:800;color:#8aa7a9}
+.ark-wall-library-more-btn{height:30px;border:1px solid rgba(78,217,255,.34);border-radius:8px;background:rgba(78,217,255,.09);color:#aeefff;font-family:var(--sans);font-size:12px;font-weight:900;padding:0 10px;cursor:pointer}
+.ark-wall-library-more-btn:hover{border-color:rgba(78,217,255,.58)}
 .ark-wall-lock{display:grid;gap:12px;border:1px solid rgba(184,137,46,.32);border-radius:8px;background:rgba(10,8,4,.72);padding:16px}
 .ark-wall-lock-title{font-family:var(--font);font-size:22px;font-weight:900;color:#f0dfa0;letter-spacing:1px}
 .ark-wall-lock-text{font-family:var(--sans);font-size:13px;font-weight:750;line-height:1.7;color:#bda36d}
@@ -5984,6 +5986,7 @@ var arkWallLibrarySummary=null;
 var arkWallLibrarySelectedYear='';
 var arkWallLibrarySelectedMonth='';
 var arkWallLibraryItems=[];
+var arkWallLibraryShowAll=false;
 
 function arkWallReadToken(){
   try{return localStorage.getItem(ARK_WALL_READ_TOKEN_KEY)||'';}catch(e){return '';}
@@ -6096,11 +6099,14 @@ function renderArkWallLibraryItems(items){
   var grid=document.getElementById('ark-wall-library-grid');
   if(!grid)return;
   arkWallLibraryItems=Array.isArray(items)?items:[];
+  var more=document.getElementById('ark-wall-library-more');
   if(!arkWallLibraryItems.length){
     grid.innerHTML='<div class="travel-status">這個月份尚無影像。</div>';
+    if(more)more.innerHTML='';
     return;
   }
-  var shown=arkWallLibraryItems.slice(0,96);
+  var limit=96;
+  var shown=arkWallLibraryShowAll?arkWallLibraryItems:arkWallLibraryItems.slice(0,limit);
   grid.innerHTML=shown.map(function(item){
     var id=item.id||'';
     var url=arkWallLibraryMediaUrl(item);
@@ -6110,12 +6116,26 @@ function renderArkWallLibraryItems(items){
       : (url?'<img src="'+esc(url)+'" alt="'+label+'" loading="lazy">':'<span class="ark-wall-library-video">無圖</span>');
     return '<button class="ark-wall-library-card" type="button" title="'+label+'" onclick="openArkWallLibraryMedia(\''+esc(id)+'\')">'+media+'</button>';
   }).join('');
-  var more=document.getElementById('ark-wall-library-more');
-  if(more)more.textContent=arkWallLibraryItems.length>shown.length?'顯示前 '+shown.length+' 個，完整月份共 '+arkWallLibraryItems.length+' 個影像。':'';
+  if(more){
+    if(arkWallLibraryItems.length>shown.length){
+      more.innerHTML='<span>目前顯示前 '+shown.length+' 個，完整月份共 '+arkWallLibraryItems.length+' 個影像。</span><button class="ark-wall-library-more-btn" type="button" onclick="showAllArkWallLibraryItems()">顯示本月全部</button>';
+    }else if(arkWallLibraryItems.length>limit){
+      more.textContent='已顯示本月全部 '+arkWallLibraryItems.length+' 個影像。';
+    }else{
+      more.innerHTML='';
+    }
+  }
+}
+
+function showAllArkWallLibraryItems(){
+  arkWallLibraryShowAll=true;
+  renderArkWallLibraryItems(arkWallLibraryItems);
+  arkWallLibraryStatus('已顯示本月全部 '+arkWallLibraryItems.length+' 個影像。');
 }
 
 function loadArkWallLibraryMonth(){
   if(!arkWallLibrarySelectedYear||!arkWallLibrarySelectedMonth)return;
+  arkWallLibraryShowAll=false;
   arkWallLibraryStatus('載入影像庫中...');
   return arkWallFetch('/api/photo-library/months/'+encodeURIComponent(arkWallLibrarySelectedYear)+'/'+encodeURIComponent(arkWallLibrarySelectedMonth)).then(function(data){
     var items=Array.isArray(data.items)?data.items:[];
