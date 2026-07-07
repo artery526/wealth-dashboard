@@ -2117,6 +2117,10 @@ body::after{
 .ark-wall-library-more{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-family:var(--sans);font-size:12px;font-weight:800;color:#8aa7a9}
 .ark-wall-library-more-btn{height:30px;border:1px solid rgba(78,217,255,.34);border-radius:8px;background:rgba(78,217,255,.09);color:#aeefff;font-family:var(--sans);font-size:12px;font-weight:900;padding:0 10px;cursor:pointer}
 .ark-wall-library-more-btn:hover{border-color:rgba(78,217,255,.58)}
+.ark-wall-history-today{display:grid;gap:9px;border-top:1px solid rgba(78,217,255,.18);padding-top:11px;margin-top:2px}
+.ark-wall-history-title{font-family:var(--font);font-size:17px;font-weight:900;color:#aeefff;letter-spacing:1px}
+.ark-wall-history-sub{font-family:var(--sans);font-size:12px;font-weight:800;color:#8aa7a9;line-height:1.6}
+.ark-wall-history-grid{max-height:320px;overflow:auto;padding-right:2px}
 .ark-wall-lock{display:grid;gap:12px;border:1px solid rgba(184,137,46,.32);border-radius:8px;background:rgba(10,8,4,.72);padding:16px}
 .ark-wall-lock-title{font-family:var(--font);font-size:22px;font-weight:900;color:#f0dfa0;letter-spacing:1px}
 .ark-wall-lock-text{font-family:var(--sans);font-size:13px;font-weight:750;line-height:1.7;color:#bda36d}
@@ -5984,6 +5988,7 @@ var arkWallLibrarySelectedYear='';
 var arkWallLibrarySelectedMonth='';
 var arkWallLibraryItems=[];
 var arkWallLibraryShowAll=false;
+var arkWallHistoryItems=[];
 
 function arkWallReadToken(){
   try{return localStorage.getItem(ARK_WALL_READ_TOKEN_KEY)||'';}catch(e){return '';}
@@ -6131,6 +6136,44 @@ function showAllArkWallLibraryItems(){
   arkWallLibraryStatus('已顯示本月全部 '+arkWallLibraryItems.length+' 個影像。');
 }
 
+function renderArkWallHistoryTodayItems(items){
+  var grid=document.getElementById('ark-wall-history-grid');
+  if(!grid)return;
+  arkWallHistoryItems=Array.isArray(items)?items:[];
+  if(!arkWallHistoryItems.length){
+    grid.innerHTML='<div class="travel-status">歷史的今日尚無影像。</div>';
+    return;
+  }
+  var shown=arkWallHistoryItems.slice(0,96);
+  grid.innerHTML=shown.map(function(item,index){
+    var id=item.id||'';
+    var url=arkWallLibraryMediaUrl(item);
+    var label=esc(item.fileName||item.date||id);
+    var imageAttrs=' loading="lazy" decoding="async" fetchpriority="'+(index<12?'high':'low')+'"';
+    var media=item.type==='video'
+      ? (url?'<img src="'+esc(url)+'" alt="'+label+'"'+imageAttrs+'><span class="ark-wall-library-video-badge">影片</span>':'<span class="ark-wall-library-video">影片</span>')
+      : (url?'<img src="'+esc(url)+'" alt="'+label+'"'+imageAttrs+'>':'<span class="ark-wall-library-video">無圖</span>');
+    return '<button class="ark-wall-library-card" type="button" title="'+label+'" onclick="openArkWallHistoryMedia(\''+esc(id)+'\')">'+media+'</button>';
+  }).join('');
+}
+
+function loadArkWallHistoryToday(){
+  var status=document.getElementById('ark-wall-history-status');
+  var parts=String(today()).split('-');
+  var month=parts[1]||'';
+  var day=parts[2]||'';
+  if(!month||!day)return Promise.resolve();
+  if(status)status.textContent=month+'/'+day+' 歷年同日讀取中...';
+  return arkWallFetch('/api/photo-library/anniversaries/'+encodeURIComponent(month)+'/'+encodeURIComponent(day)).then(function(data){
+    var items=Array.isArray(data.items)?data.items:[];
+    renderArkWallHistoryTodayItems(items);
+    if(status)status.textContent=month+'/'+day+' 歷年同日，共 '+items.length+' 個影像。';
+  }).catch(function(err){
+    renderArkWallHistoryTodayItems([]);
+    if(status)status.textContent='歷史的今日讀取失敗：'+(err&&err.message?err.message:err);
+  });
+}
+
 function loadArkWallLibraryMonth(){
   if(!arkWallLibrarySelectedYear||!arkWallLibrarySelectedMonth)return;
   arkWallLibraryShowAll=false;
@@ -6139,9 +6182,11 @@ function loadArkWallLibraryMonth(){
     var items=Array.isArray(data.items)?data.items:[];
     renderArkWallLibraryItems(items);
     arkWallLibraryStatus(arkWallLibrarySelectedYear+'-'+arkWallLibrarySelectedMonth+'，共 '+items.length+' 個影像');
+    loadArkWallHistoryToday();
   }).catch(function(err){
     arkWallLibraryStatus('影像庫讀取失敗：'+(err&&err.message?err.message:err));
     renderArkWallLibraryItems([]);
+    loadArkWallHistoryToday();
   });
 }
 
@@ -6175,6 +6220,10 @@ function renderArkWallLibraryBlock(){
     +'<div class="ark-wall-library-status" id="ark-wall-library-status">準備載入影像庫...</div>'
     +'<div class="ark-wall-library-grid" id="ark-wall-library-grid"></div>'
     +'<div class="ark-wall-library-more" id="ark-wall-library-more"></div>'
+    +'<div class="ark-wall-history-today">'
+      +'<div><div class="ark-wall-history-title">歷史的今日</div><div class="ark-wall-history-sub" id="ark-wall-history-status">列出今天同月同日的歷年照片。</div></div>'
+      +'<div class="ark-wall-library-grid ark-wall-history-grid" id="ark-wall-history-grid"></div>'
+    +'</div>'
   +'</section>';
 }
 
@@ -6188,6 +6237,18 @@ function openArkWallLibraryMedia(id){
     return;
   }
   openArkWallPhoto(url,item.fileName||item.date||'城牆影像');
+}
+
+function openArkWallHistoryMedia(id){
+  var item=arkWallHistoryItems.find(function(candidate){return candidate.id===id;});
+  if(!item)return;
+  var url=arkWallLibraryOriginalUrl(item);
+  if(!url)return;
+  if(item.type==='video'){
+    window.open(url,'_blank','noopener');
+    return;
+  }
+  openArkWallPhoto(url,item.fileName||item.date||'歷史的今日');
 }
 
 function renderArkWallGate(message){
