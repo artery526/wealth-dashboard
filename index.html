@@ -10741,6 +10741,18 @@ function advisorAIStockBuyCommand(raw){
   return {intent:'unknown'};
 }
 
+function advisorAIDividendCommand(raw){
+  var text=advisorAINormalize(raw);
+  if(/配息(?:備忘|紀錄)/.test(text))return null;
+  var m=text.match(/(.+?)\s*配息\s*(\d+(?:\.\d+)?)\s*(?:元)?$/i)||
+    text.match(/配息\s*(.+?)\s*(\d+(?:\.\d+)?)\s*(?:元)?$/i);
+  if(!m)return null;
+  var symbol=advisorAIResolveInvestmentSymbol(m[1]);
+  var amount=parseFloat(m[2]);
+  if(symbol&&amount>0)return {intent:'dividend',symbol:symbol,amount:amount};
+  return {intent:'unknown'};
+}
+
 function advisorAICommand(raw){
   var text=advisorAINormalize(raw);
   var compact=advisorAICompact(raw);
@@ -10770,6 +10782,8 @@ function advisorAICommand(raw){
   if(dividendMemo)return {intent:'advisorDividendMemo',market:dividendMemo[1]==='台股'?'tw':'us',symbol:dividendMemo[2],dividendPerShare:parseFloat(dividendMemo[3])};
   var dividendMemo2=text.match(/([A-Za-z0-9\u4e00-\u9fff]+)\s*(?:配息備忘|配息紀錄)\s*(\d+(?:\.\d+)?)/i);
   if(dividendMemo2)return {intent:'advisorDividendMemo',market:'',symbol:dividendMemo2[1],dividendPerShare:parseFloat(dividendMemo2[2])};
+  var dividendCommand=advisorAIDividendCommand(raw);
+  if(dividendCommand)return dividendCommand;
   var dividend=text.match(/([A-Za-z0-9]+)\s*配息\s*(\d+(?:\.\d+)?)/i)||text.match(/配息\s*([A-Za-z0-9]+)\s*(\d+(?:\.\d+)?)/i);
   if(dividend)return {intent:'dividend',symbol:dividend[1].toUpperCase(),amount:parseFloat(dividend[2])};
   if(amount>0){
@@ -11088,7 +11102,7 @@ async function advisorAIRecordDividend(symbol,amount){
   var key=normalizeKey(symbol);
   var rows=advisorDividendRows(data);
   var row=rows.find(function(item){return normalizeKey(item.symbol||item.displaySymbol)===key;});
-  if(!row)throw new Error('找不到 '+symbol+' 的待入帳配息，請先確認配息清單。');
+  var displaySymbol=(row&&(row.displaySymbol||row.symbol))||advisorAIResolveStockTradeLabel(symbol)||symbol;
   await apiPost({
     action:'income',
     date:today().replace(/-/g,'/'),
@@ -11096,13 +11110,13 @@ async function advisorAIRecordDividend(symbol,amount){
     account:'💵國泰Stock',
     amount:amount,
     note:'',
-    divRate:row.dividendUsd||'',
-    divSymbol:row.symbol||symbol,
+    divRate:(row&&row.dividendUsd)||'',
+    divSymbol:(row&&row.symbol)||symbol,
     dividendIncome:'1',
-    dividendRowId:row.rowId||''
+    dividendRowId:(row&&row.rowId)||''
   });
   invalidateDividendCenter();
-  if(panel)panel.innerHTML=`${advisorAIHeaderHtml()}${advisorAIResultHtml('已記錄配息入帳',['標的：'+(row.displaySymbol||row.symbol||symbol),'金額：'+fmtFull(amount)])}`;
+  if(panel)panel.innerHTML=`${advisorAIHeaderHtml()}${advisorAIResultHtml('已記錄配息入帳',['標的：'+displaySymbol,'金額：'+fmtFull(amount)])}`;
 }
 
 function advisorAIAccountMatches(rowName,target){
