@@ -6017,8 +6017,21 @@ function arkWallLibraryMediaUrl(item){
   return arkWallUrl(item&&((item.displayUrl||item.thumbnailUrl||item.originalUrl)||''));
 }
 
+function arkWallLibraryThumbUrl(item){
+  if(item&&item.type==='video')return arkWallUrl(item.thumbnailUrl||'');
+  return arkWallLibraryMediaUrl(item);
+}
+
 function arkWallLibraryOriginalUrl(item){
   return arkWallUrl(item&&((item.originalUrl||item.displayUrl||item.thumbnailUrl)||''));
+}
+
+function arkWallMediaImgFallback(img,text){
+  if(!img||!img.parentNode)return;
+  var span=document.createElement('span');
+  span.className='ark-wall-library-video';
+  span.textContent=text||'無圖';
+  img.parentNode.replaceChild(span,img);
 }
 
 function renderArkWallLibraryItems(items){
@@ -6035,12 +6048,12 @@ function renderArkWallLibraryItems(items){
   var shown=arkWallLibraryShowAll?arkWallLibraryItems:arkWallLibraryItems.slice(0,limit);
   grid.innerHTML=shown.map(function(item,index){
     var id=item.id||'';
-    var url=arkWallLibraryMediaUrl(item);
+    var url=arkWallLibraryThumbUrl(item);
     var label=esc(item.fileName||item.date||id);
     var imageAttrs=' loading="lazy" decoding="async" fetchpriority="'+(index<12?'high':'low')+'"';
     var media=item.type==='video'
-      ? (url?'<img src="'+esc(url)+'" alt="'+label+'"'+imageAttrs+'><span class="ark-wall-library-video-badge">影片</span>':'<span class="ark-wall-library-video">影片</span>')
-      : (url?'<img src="'+esc(url)+'" alt="'+label+'"'+imageAttrs+'>':'<span class="ark-wall-library-video">無圖</span>');
+      ? (url?'<img src="'+esc(url)+'" alt="'+label+'"'+imageAttrs+' onerror="arkWallMediaImgFallback(this,\'影片\')"><span class="ark-wall-library-video-badge">影片</span>':'<span class="ark-wall-library-video">影片</span>')
+      : (url?'<img src="'+esc(url)+'" alt="'+label+'"'+imageAttrs+' onerror="arkWallMediaImgFallback(this,\'無圖\')">':'<span class="ark-wall-library-video">無圖</span>');
     return '<button class="ark-wall-library-card" type="button" title="'+label+'" onclick="openArkWallLibraryMedia(\''+esc(id)+'\')">'+media+'</button>';
   }).join('');
   if(more){
@@ -6071,12 +6084,12 @@ function renderArkWallHistoryTodayItems(items){
   var shown=arkWallHistoryItems.slice(0,96);
   grid.innerHTML=shown.map(function(item,index){
     var id=item.id||'';
-    var url=arkWallLibraryMediaUrl(item);
+    var url=arkWallLibraryThumbUrl(item);
     var label=esc(item.fileName||item.date||id);
     var imageAttrs=' loading="lazy" decoding="async" fetchpriority="'+(index<12?'high':'low')+'"';
     var media=item.type==='video'
-      ? (url?'<img src="'+esc(url)+'" alt="'+label+'"'+imageAttrs+'><span class="ark-wall-library-video-badge">影片</span>':'<span class="ark-wall-library-video">影片</span>')
-      : (url?'<img src="'+esc(url)+'" alt="'+label+'"'+imageAttrs+'>':'<span class="ark-wall-library-video">無圖</span>');
+      ? (url?'<img src="'+esc(url)+'" alt="'+label+'"'+imageAttrs+' onerror="arkWallMediaImgFallback(this,\'影片\')"><span class="ark-wall-library-video-badge">影片</span>':'<span class="ark-wall-library-video">影片</span>')
+      : (url?'<img src="'+esc(url)+'" alt="'+label+'"'+imageAttrs+' onerror="arkWallMediaImgFallback(this,\'無圖\')">':'<span class="ark-wall-library-video">無圖</span>');
     return '<button class="ark-wall-library-card" type="button" title="'+label+'" onclick="openArkWallHistoryMedia(\''+esc(id)+'\')">'+media+'</button>';
   }).join('');
 }
