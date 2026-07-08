@@ -3325,7 +3325,8 @@ async function apiPost(body){
   WRITE_TOKEN=cleanToken(WRITE_TOKEN);
   if(!WRITE_TOKEN)throw new Error('未設定記帳密鑰');
   if(body&&/^(advisorAiParse|advisorDividendMemo|income|transfer)$/.test(body.action||'')){
-    return apiPostJson(body,body.action==='transfer'?45000:undefined);
+    var jsonTimeout=(body.action==='transfer'||(body.action==='income'&&String(body.dividendIncome||'')==='1'))?45000:undefined;
+    return apiPostJson(body,jsonTimeout);
   }
   var params=Object.assign({},body,{token:WRITE_TOKEN});
   var qs=Object.entries(params).filter(kv=>kv[1]!==undefined&&kv[1]!==null&&kv[1]!=='').map(kv=>encodeURIComponent(kv[0])+'='+encodeURIComponent(kv[1])).join('&');
