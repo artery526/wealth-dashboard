@@ -5495,7 +5495,6 @@ async function initBookingForm(){
     return cfg;
   });
   if(initSeq!==bookingFormInitSeq||el!==document.getElementById('pane-booking-form'))return;
-  await configRefresh;
   if(initSeq!==bookingFormInitSeq||el!==document.getElementById('pane-booking-form'))return;
   var cats=prioritizeBookingOption((cfg.categories&&cfg.categories.length)?cfg.categories:BOOKING_FALLBACK_CATEGORIES,'超商外食');
   var sources=prioritizeBookingOption((cfg.sources&&cfg.sources.length)?cfg.sources:BOOKING_FALLBACK_SOURCES,'投資理財');
