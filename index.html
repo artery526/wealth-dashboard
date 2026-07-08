@@ -3308,7 +3308,7 @@ async function apiPost(body){
   if(!API_URL)throw new Error('未設定 API 網址');
   WRITE_TOKEN=cleanToken(WRITE_TOKEN);
   if(!WRITE_TOKEN)throw new Error('未設定記帳密鑰');
-  if(body&&/^(advisorAiParse|advisorDividendMemo|income|transfer)$/.test(body.action||'')){
+  if(body&&/^(advisorAiParse|advisorDividendMemo|income)$/.test(body.action||'')){
     return apiPostJson(body);
   }
   var params=Object.assign({},body,{token:WRITE_TOKEN});
@@ -3327,12 +3327,20 @@ async function apiPost(body){
 async function apiPostJson(body,timeoutMs){
   WRITE_TOKEN=cleanToken(WRITE_TOKEN);
   var payload=Object.assign({},body,{token:WRITE_TOKEN});
-  var r=await fetchWithTimeout(API_URL,{
-    method:'POST',
-    redirect:'follow',
-    headers:{'Content-Type':'text/plain;charset=utf-8'},
-    body:JSON.stringify(payload)
-  },timeoutMs||15000);
+  var r;
+  try{
+    r=await fetchWithTimeout(API_URL,{
+      method:'POST',
+      redirect:'follow',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify(payload)
+    },timeoutMs||15000);
+  }catch(e){
+    if(e&&(e.name==='AbortError'||String(e.message||'').toLowerCase().indexOf('abort')>=0)){
+      throw new Error('後端已送出但回應逾時，請先查看最近紀錄，避免重複寫入。');
+    }
+    throw e;
+  }
   var text=await r.text();var d;
   try{d=JSON.parse(text)}catch(e){throw new Error('回傳非JSON：'+text.slice(0,100))}
   if(!d.ok)throw new Error(d.error||'寫入失敗');
