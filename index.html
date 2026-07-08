@@ -3213,6 +3213,22 @@ function hexToRgba(hex,alpha){
 function parseGvizText(text){
   return JSON.parse(text.slice(text.indexOf('{'),text.lastIndexOf('}')+1));
 }
+function parseApiJsonText(text){
+  try{return JSON.parse(text)}catch(e){}
+  var start=String(text||'').indexOf('{');
+  var end=String(text||'').lastIndexOf('}');
+  if(start>=0&&end>start)return JSON.parse(String(text).slice(start,end+1));
+  throw new Error('API returned non-JSON response');
+}
+function isApiWriteAction(action){
+  return /^(expense|income|transfer|transactionUndo|stockTradeVoid|dividendEntry|dividendDelete|holdingTradeEntry|holdingTradeDelete)$/.test(action||'');
+}
+function apiNonJsonMessage(text){
+  if(/<!doctype html|<html[\s>]/i.test(String(text||''))){
+    return '後端已回傳 Google HTML 頁面，請稍後到紀錄確認是否已寫入，避免重複送出。';
+  }
+  return '回傳非JSON：'+String(text||'').slice(0,100);
+}
 function readGvizJsonp(url){
   var run=function(){
     return new Promise(function(resolve,reject){
@@ -3308,16 +3324,16 @@ async function apiPost(body){
   if(!API_URL)throw new Error('未設定 API 網址');
   WRITE_TOKEN=cleanToken(WRITE_TOKEN);
   if(!WRITE_TOKEN)throw new Error('未設定記帳密鑰');
-  if(body&&/^(advisorAiParse|advisorDividendMemo|income)$/.test(body.action||'')){
-    return apiPostJson(body);
+  if(body&&/^(advisorAiParse|advisorDividendMemo|income|transfer)$/.test(body.action||'')){
+    return apiPostJson(body,body.action==='transfer'?45000:undefined);
   }
   var params=Object.assign({},body,{token:WRITE_TOKEN});
   var qs=Object.entries(params).filter(kv=>kv[1]!==undefined&&kv[1]!==null&&kv[1]!=='').map(kv=>encodeURIComponent(kv[0])+'='+encodeURIComponent(kv[1])).join('&');
   var r=await fetch(API_URL+'?'+qs,{redirect:'follow'});
   var text=await r.text();var d;
-  try{d=JSON.parse(text)}catch(e){throw new Error('回傳非JSON：'+text.slice(0,100))}
+  try{d=parseApiJsonText(text)}catch(e){throw new Error(apiNonJsonMessage(text))}
   if(!d.ok)throw new Error(d.error||'寫入失敗');
-  if(/^(expense|income|transfer|transactionUndo|stockTradeVoid|dividendEntry|dividendDelete|holdingTradeEntry|holdingTradeDelete)$/.test(body.action||'')){
+  if(isApiWriteAction(body.action||'')){
     invalidateFoodhouseDashboardCache();
     invalidateFinanceDashboardCache();
   }
@@ -3342,9 +3358,9 @@ async function apiPostJson(body,timeoutMs){
     throw e;
   }
   var text=await r.text();var d;
-  try{d=JSON.parse(text)}catch(e){throw new Error('回傳非JSON：'+text.slice(0,100))}
+  try{d=parseApiJsonText(text)}catch(e){throw new Error(apiNonJsonMessage(text))}
   if(!d.ok)throw new Error(d.error||'寫入失敗');
-  if(/^(expense|income|transfer|transactionUndo|stockTradeVoid|dividendEntry|dividendDelete|holdingTradeEntry|holdingTradeDelete)$/.test(body.action||'')){
+  if(isApiWriteAction(body.action||'')){
     invalidateFoodhouseDashboardCache();
     invalidateFinanceDashboardCache();
   }
