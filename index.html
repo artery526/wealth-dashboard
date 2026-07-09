@@ -2154,7 +2154,8 @@ body::after{
 .ark-wall-photo{display:block;width:100%;aspect-ratio:4/3;border:1px solid rgba(184,137,46,.26);border-radius:8px;background:#090704;object-fit:cover;overflow:hidden;cursor:zoom-in}
 .ark-wall-lightbox{position:fixed;inset:0;z-index:4200;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.86);padding:18px;opacity:0;pointer-events:none;transition:opacity .18s ease}
 .ark-wall-lightbox.open{opacity:1;pointer-events:auto}
-.ark-wall-lightbox-img{display:block;max-width:min(96vw,1100px);max-height:88vh;border:1px solid rgba(232,192,80,.34);border-radius:8px;background:#050403;object-fit:contain;box-shadow:0 18px 48px rgba(0,0,0,.55)}
+.ark-wall-lightbox-img,.ark-wall-lightbox-video{display:block;max-width:min(96vw,1100px);max-height:88vh;border:1px solid rgba(232,192,80,.34);border-radius:8px;background:#050403;object-fit:contain;box-shadow:0 18px 48px rgba(0,0,0,.55)}
+.ark-wall-lightbox-video{width:min(96vw,1100px)}
 .ark-wall-lightbox-close{position:absolute;top:18px;right:18px;width:42px;height:42px;border:1px solid rgba(232,192,80,.38);border-radius:8px;background:rgba(8,6,3,.86);color:#f0dfa0;font-family:var(--sans);font-size:18px;font-weight:900;cursor:pointer}
 .ark-wall-back{border:1px solid rgba(78,217,255,.34);border-radius:8px;background:rgba(78,217,255,.08);color:#aeefff;font-family:var(--sans);font-size:12px;font-weight:900;padding:7px 10px;cursor:pointer}
 .ark-wall-back:hover{border-color:rgba(78,217,255,.62);background:rgba(78,217,255,.14)}
@@ -6171,7 +6172,7 @@ function openArkWallLibraryMedia(id){
   var url=item.type==='video'?arkWallLibraryOriginalUrl(item):arkWallLibraryMediaUrl(item);
   if(!url)return;
   if(item.type==='video'){
-    window.open(url,'_blank','noopener');
+    openArkWallVideo(url,item.fileName||item.date||'城牆影片');
     return;
   }
   openArkWallPhoto(url,item.fileName||item.date||'城牆影像');
@@ -6183,7 +6184,7 @@ function openArkWallHistoryMedia(id){
   var url=item.type==='video'?arkWallLibraryOriginalUrl(item):arkWallLibraryMediaUrl(item);
   if(!url)return;
   if(item.type==='video'){
-    window.open(url,'_blank','noopener');
+    openArkWallVideo(url,item.fileName||item.date||'歷史影片');
     return;
   }
   openArkWallPhoto(url,item.fileName||item.date||'歷史的今日');
@@ -6412,7 +6413,7 @@ function ensureArkWallLightbox(){
   box.className='ark-wall-lightbox';
   box.id='ark-wall-lightbox';
   box.onclick=function(event){if(event.target===box)closeArkWallPhoto();};
-  box.innerHTML='<button class="ark-wall-lightbox-close" type="button" onclick="closeArkWallPhoto()" aria-label="關閉照片">x</button><img class="ark-wall-lightbox-img" alt="">';
+  box.innerHTML='<button class="ark-wall-lightbox-close" type="button" onclick="closeArkWallPhoto()" aria-label="關閉媒體">x</button><img class="ark-wall-lightbox-img" alt=""><video class="ark-wall-lightbox-video" controls playsinline preload="metadata" hidden></video>';
   document.body.appendChild(box);
   return box;
 }
@@ -6420,9 +6421,35 @@ function ensureArkWallLightbox(){
 function openArkWallPhoto(url,title){
   var box=ensureArkWallLightbox();
   var img=box.querySelector('.ark-wall-lightbox-img');
+  var video=box.querySelector('.ark-wall-lightbox-video');
+  if(video){
+    try{video.pause();}catch(e){}
+    video.removeAttribute('src');
+    video.hidden=true;
+    video.load();
+  }
   if(img){
+    img.hidden=false;
     img.src=url;
     img.alt=title||'城牆照片';
+  }
+  box.classList.add('open');
+}
+
+function openArkWallVideo(url,title){
+  var box=ensureArkWallLightbox();
+  var img=box.querySelector('.ark-wall-lightbox-img');
+  var video=box.querySelector('.ark-wall-lightbox-video');
+  if(img){
+    img.removeAttribute('src');
+    img.hidden=true;
+  }
+  if(video){
+    video.hidden=false;
+    video.title=title||'城牆影片';
+    video.src=url;
+    video.load();
+    video.play().catch(function(){});
   }
   box.classList.add('open');
 }
@@ -6433,6 +6460,13 @@ function closeArkWallPhoto(){
   box.classList.remove('open');
   var img=box.querySelector('.ark-wall-lightbox-img');
   if(img)img.removeAttribute('src');
+  var video=box.querySelector('.ark-wall-lightbox-video');
+  if(video){
+    try{video.pause();}catch(e){}
+    video.removeAttribute('src');
+    video.hidden=true;
+    video.load();
+  }
 }
 
 function closeArkWall(){
