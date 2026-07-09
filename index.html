@@ -6168,7 +6168,7 @@ function renderArkWallLibraryBlock(){
 function openArkWallLibraryMedia(id){
   var item=arkWallLibraryItems.find(function(candidate){return candidate.id===id;});
   if(!item)return;
-  var url=arkWallLibraryOriginalUrl(item);
+  var url=item.type==='video'?arkWallLibraryOriginalUrl(item):arkWallLibraryMediaUrl(item);
   if(!url)return;
   if(item.type==='video'){
     window.open(url,'_blank','noopener');
@@ -6180,7 +6180,7 @@ function openArkWallLibraryMedia(id){
 function openArkWallHistoryMedia(id){
   var item=arkWallHistoryItems.find(function(candidate){return candidate.id===id;});
   if(!item)return;
-  var url=arkWallLibraryOriginalUrl(item);
+  var url=item.type==='video'?arkWallLibraryOriginalUrl(item):arkWallLibraryMediaUrl(item);
   if(!url)return;
   if(item.type==='video'){
     window.open(url,'_blank','noopener');
