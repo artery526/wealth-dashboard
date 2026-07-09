@@ -2152,10 +2152,12 @@ body::after{
 .ark-wall-detail-text{border:1px solid rgba(184,137,46,.24);border-radius:8px;background:rgba(3,4,3,.72);font-family:var(--sans);font-size:15px;font-weight:750;line-height:1.95;color:#d8c18a;white-space:pre-wrap;overflow-wrap:anywhere;padding:13px 14px}
 .ark-wall-photo-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .ark-wall-photo{display:block;width:100%;aspect-ratio:4/3;border:1px solid rgba(184,137,46,.26);border-radius:8px;background:#090704;object-fit:cover;overflow:hidden;cursor:zoom-in}
-.ark-wall-lightbox{position:fixed;inset:0;z-index:4200;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.86);padding:18px;opacity:0;pointer-events:none;transition:opacity .18s ease}
+.ark-wall-lightbox{position:fixed;inset:0;z-index:4200;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:rgba(0,0,0,.86);padding:18px;opacity:0;pointer-events:none;transition:opacity .18s ease}
 .ark-wall-lightbox.open{opacity:1;pointer-events:auto}
 .ark-wall-lightbox-img,.ark-wall-lightbox-video{display:block;max-width:min(96vw,1100px);max-height:88vh;border:1px solid rgba(232,192,80,.34);border-radius:8px;background:#050403;object-fit:contain;box-shadow:0 18px 48px rgba(0,0,0,.55)}
 .ark-wall-lightbox-video{width:min(96vw,1100px)}
+.ark-wall-lightbox-caption{max-width:min(96vw,1100px);border:1px solid rgba(78,217,255,.24);border-radius:8px;background:rgba(3,8,10,.86);color:#d9fbff;font-family:var(--sans);font-size:12px;font-weight:800;line-height:1.65;padding:8px 10px;text-align:left;overflow-wrap:anywhere}
+.ark-wall-lightbox-caption b{color:#f0dfa0}
 .ark-wall-lightbox-close{position:absolute;top:18px;right:18px;width:42px;height:42px;border:1px solid rgba(232,192,80,.38);border-radius:8px;background:rgba(8,6,3,.86);color:#f0dfa0;font-family:var(--sans);font-size:18px;font-weight:900;cursor:pointer}
 .ark-wall-back{border:1px solid rgba(78,217,255,.34);border-radius:8px;background:rgba(78,217,255,.08);color:#aeefff;font-family:var(--sans);font-size:12px;font-weight:900;padding:7px 10px;cursor:pointer}
 .ark-wall-back:hover{border-color:rgba(78,217,255,.62);background:rgba(78,217,255,.14)}
@@ -6172,10 +6174,10 @@ function openArkWallLibraryMedia(id){
   var url=item.type==='video'?arkWallLibraryOriginalUrl(item):arkWallLibraryMediaUrl(item);
   if(!url)return;
   if(item.type==='video'){
-    openArkWallVideo(url,item.fileName||item.date||'城牆影片');
+    openArkWallVideo(url,item.fileName||item.date||'城牆影片',item);
     return;
   }
-  openArkWallPhoto(url,item.fileName||item.date||'城牆影像');
+  openArkWallPhoto(url,item.fileName||item.date||'城牆影像',item);
 }
 
 function openArkWallHistoryMedia(id){
@@ -6184,10 +6186,10 @@ function openArkWallHistoryMedia(id){
   var url=item.type==='video'?arkWallLibraryOriginalUrl(item):arkWallLibraryMediaUrl(item);
   if(!url)return;
   if(item.type==='video'){
-    openArkWallVideo(url,item.fileName||item.date||'歷史影片');
+    openArkWallVideo(url,item.fileName||item.date||'歷史影片',item);
     return;
   }
-  openArkWallPhoto(url,item.fileName||item.date||'歷史的今日');
+  openArkWallPhoto(url,item.fileName||item.date||'歷史的今日',item);
 }
 
 function renderArkWallGate(message){
@@ -6413,12 +6415,64 @@ function ensureArkWallLightbox(){
   box.className='ark-wall-lightbox';
   box.id='ark-wall-lightbox';
   box.onclick=function(event){if(event.target===box)closeArkWallPhoto();};
-  box.innerHTML='<button class="ark-wall-lightbox-close" type="button" onclick="closeArkWallPhoto()" aria-label="關閉媒體">x</button><img class="ark-wall-lightbox-img" alt=""><video class="ark-wall-lightbox-video" controls playsinline preload="metadata" hidden></video>';
+  box.innerHTML='<button class="ark-wall-lightbox-close" type="button" onclick="closeArkWallPhoto()" aria-label="關閉媒體">x</button><img class="ark-wall-lightbox-img" alt=""><video class="ark-wall-lightbox-video" controls playsinline preload="metadata" hidden></video><div class="ark-wall-lightbox-caption" hidden></div>';
   document.body.appendChild(box);
   return box;
 }
 
-function openArkWallPhoto(url,title){
+function arkWallMediaFolder(relativePath){
+  var parts=String(relativePath||'').replace(/\\/g,'/').split('/').filter(Boolean);
+  parts.pop();
+  return parts.join('/')||'Photos 根目錄';
+}
+
+function arkWallMediaCapturedText(item){
+  if(!item)return '';
+  if(item.capturedAt){
+    var date=new Date(item.capturedAt);
+    if(!isNaN(date.getTime())){
+      return date.toLocaleString('zh-TW',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false});
+    }
+  }
+  return item.date?String(item.date).replace(/-/g,'/'):'';
+}
+
+function arkWallMediaMonthText(item){
+  var year=item&&(item.year||String(item.date||'').slice(0,4));
+  var month=item&&(item.month||String(item.date||'').slice(5,7));
+  if(!year||!month)return '';
+  return String(year)+'年'+Number(month)+'月';
+}
+
+function arkWallDateSourceText(source){
+  source=String(source||'');
+  if(source.indexOf('exif')===0)return '照片內建拍攝時間';
+  if(source.indexOf('file')===0)return '檔案時間';
+  if(source.indexOf('name')===0)return '檔名判斷';
+  return source||'索引日期';
+}
+
+function arkWallMediaCaptionHtml(item,title){
+  if(!item)return title?'<b>'+esc(title)+'</b>':'';
+  var rows=[];
+  rows.push('<b>'+esc(item.fileName||title||'城牆影像')+'</b>');
+  var captured=arkWallMediaCapturedText(item);
+  if(captured)rows.push('拍攝時間：'+esc(captured)+'（'+esc(arkWallDateSourceText(item.dateSource))+'）');
+  var month=arkWallMediaMonthText(item);
+  if(month)rows.push('月份歸類：'+esc(month));
+  if(item.relativePath)rows.push('資料夾：'+esc(arkWallMediaFolder(item.relativePath)));
+  return rows.join('<br>');
+}
+
+function setArkWallMediaCaption(box,item,title){
+  var caption=box&&box.querySelector('.ark-wall-lightbox-caption');
+  if(!caption)return;
+  var html=arkWallMediaCaptionHtml(item,title);
+  caption.innerHTML=html;
+  caption.hidden=!html;
+}
+
+function openArkWallPhoto(url,title,item){
   var box=ensureArkWallLightbox();
   var img=box.querySelector('.ark-wall-lightbox-img');
   var video=box.querySelector('.ark-wall-lightbox-video');
@@ -6433,10 +6487,11 @@ function openArkWallPhoto(url,title){
     img.src=url;
     img.alt=title||'城牆照片';
   }
+  setArkWallMediaCaption(box,item,title);
   box.classList.add('open');
 }
 
-function openArkWallVideo(url,title){
+function openArkWallVideo(url,title,item){
   var box=ensureArkWallLightbox();
   var img=box.querySelector('.ark-wall-lightbox-img');
   var video=box.querySelector('.ark-wall-lightbox-video');
@@ -6451,6 +6506,7 @@ function openArkWallVideo(url,title){
     video.load();
     video.play().catch(function(){});
   }
+  setArkWallMediaCaption(box,item,title);
   box.classList.add('open');
 }
 
@@ -6466,6 +6522,11 @@ function closeArkWallPhoto(){
     video.removeAttribute('src');
     video.hidden=true;
     video.load();
+  }
+  var caption=box.querySelector('.ark-wall-lightbox-caption');
+  if(caption){
+    caption.innerHTML='';
+    caption.hidden=true;
   }
 }
 
