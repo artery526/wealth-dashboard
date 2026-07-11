@@ -4496,10 +4496,6 @@ function renderMedicalPanel(){
             <select class="medical-select" id="medical-pain-level"></select>
           </div>
           <div class="medical-field">
-            <label for="medical-duration">持續時間</label>
-            <select class="medical-select" id="medical-duration"></select>
-          </div>
-          <div class="medical-field">
             <label for="medical-cause">起因</label>
             <select class="medical-select" id="medical-cause"></select>
           </div>
@@ -4944,7 +4940,6 @@ async function initMedicalQuickForm(){
   if(timeEl&&!timeEl.value)timeEl.value=localDateTimeValue();
   fillMedicalSelect('medical-pain-level',Array.from({length:11},function(_,i){return i===0?'0 無痛':String(i);}),'選擇疼痛程度');
   fillMedicalSelect('medical-dose',Array.from({length:7},function(_,i){return i+'顆';}),'選擇藥量');
-  fillMedicalSelect('medical-duration',['剛開始','15 分鐘內','30 分鐘內','1 小時內','1-3 小時','半天','整天','睡醒後仍持續'],'選擇持續時間');
   form.addEventListener('submit',submitMedicalQuickRecord);
 
   var options=await loadMedicalOptions();
@@ -4967,7 +4962,6 @@ async function submitMedicalQuickRecord(e){
   var cause=document.getElementById('medical-cause').value;
   var med=document.getElementById('medical-med').value;
   var dose=document.getElementById('medical-dose').value;
-  var duration=(document.getElementById('medical-duration')||{}).value||'';
   var notes=(document.getElementById('medical-notes')||{}).value||'';
   var painLevel=painLevelValue?parseInt(painLevelValue,10):'';
 
@@ -4994,7 +4988,6 @@ async function submitMedicalQuickRecord(e){
       causes:cause?[cause]:[],
       meds:med?[med]:[],
       medDose:dose,
-      duration:duration,
       notes:notes
     });
     setMedicalStatus('已同步到情緒倉庫，第 '+(data.row||'新')+' 列','ok');
@@ -12048,7 +12041,6 @@ function mpmRender(records){
     var medDose = String(r.medDose||'').trim();
     var medTxt  = (!meds||meds.includes('未用藥')) ? '' : ('💊 '+meds+(medDose?'（'+medDose+'）':''));
     var areas   = String(r.painAreas||'').trim();
-    var duration= String(r.duration||'').trim();
     var notes   = String(r.notes||'').trim();
     var cause   = String(r.cause||r.causes||'').trim();
 
@@ -12057,7 +12049,6 @@ function mpmRender(records){
     if(lvlTxt)   badges += '<span class="mpm-badge '+lvlCls+'">'+mpmEsc(lvlTxt)+'</span>';
     if(areas)    badges += '<span class="mpm-badge">📍 '+mpmEsc(areas)+'</span>';
     if(cause)    badges += '<span class="mpm-badge">⚡ '+mpmEsc(cause)+'</span>';
-    if(duration) badges += '<span class="mpm-badge">⏱ '+mpmEsc(duration)+'</span>';
     if(medTxt)   badges += '<span class="mpm-badge">'+mpmEsc(medTxt)+'</span>';
 
     return '<div class="mpm-rec-item">'
