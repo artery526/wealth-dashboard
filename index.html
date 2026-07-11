@@ -3390,7 +3390,7 @@ var financePledgePromise=null;
 var financeYearlyPromises={};
 var financeMonthDetailPromises={};
 var MARKET_DASHBOARD_CACHE_KEY='wealth_market_dashboard_v1';
-var MARKET_MACRO_CACHE_KEY='wealth_market_macro_v1';
+var MARKET_MACRO_CACHE_KEY='wealth_market_macro_v2';
 var MARKET_CACHE_TTL=2*60*60*1000;
 var marketDashboardPromise=null;
 var macroOverviewPromise=null;
@@ -9516,16 +9516,17 @@ function advisorWorldBuild(market,macro){
   var yield2y=advisorWorldIndicator(macro,'yield2y');
   var oil=advisorWorldIndicator(macro,'oil');
   var cpi=advisorWorldIndicator(macro,'cpi');
-  var cpiMoM=advisorWorldIndicator(macro,'cpiMoM');
+  var sofrIorbSpread=advisorWorldIndicator(macro,'sofrIorbSpread');
   var liquidity=advisorWorldIndicator(macro,'liquidityScore');
   var risks=[];
   var chances=[];
   function risk(weight,text){risks.push({weight:weight,text:text});}
   function chance(weight,text){chances.push({weight:weight,text:text});}
-  var cpiMoMVal=advisorWorldValue(cpiMoM);
-  if(cpiMoMVal!=null){
-    if(cpiMoMVal>=0.4)risk(3,'CPI月增率達 '+cpiMoMVal.toFixed(2)+'%，通膨再升溫，降息預期容易後撤。');
-    else if(cpiMoMVal>=0.3)risk(2,'CPI月增率 '+cpiMoMVal.toFixed(2)+'%，通膨仍需警戒。');
+  var sofrIorbVal=advisorWorldValue(sofrIorbSpread);
+  if(sofrIorbVal!=null){
+    if(sofrIorbVal>=0.25)risk(3,'SOFR-IORB '+sofrIorbVal.toFixed(2)+'%，短端資金出現搶錢警訊。');
+    else if(sofrIorbVal>0)risk(2,'SOFR-IORB '+sofrIorbVal.toFixed(2)+'%，短端資金開始轉緊。');
+    else chance(1,'SOFR-IORB '+sofrIorbVal.toFixed(2)+'%，短端資金仍偏平穩。');
   }
   var vixVal=advisorWorldValue(vix);
   if(vixVal!=null){
@@ -9612,7 +9613,7 @@ function advisorWorldBuild(market,macro){
       {label:'Fed',value:fedPolicy,tone:fedPolicy.indexOf('鷹')>=0||fedPolicy.indexOf('緊')>=0?'defense':fedPolicy.indexOf('鴿')>=0?'attack':'watch'},
       {label:'黃金',value:gold?marketSignalText(gold.signal):'--',tone:gold?marketTone(gold.signal):'watch'},
       {label:'油價',value:advisorWorldDisplay(oil,2),tone:advisorWorldToneFromText(oil&&oil.status)},
-      {label:'CPI月增',value:advisorWorldDisplay(cpiMoM,2,'%'),tone:advisorWorldToneFromText(cpiMoM&&cpiMoM.status)}
+      {label:'SOFR-IORB',value:advisorWorldDisplay(sofrIorbSpread,2,'%'),tone:advisorWorldToneFromText(sofrIorbSpread&&sofrIorbSpread.status)}
     ]
   };
 }
@@ -10261,7 +10262,7 @@ async function openAdvisorWorldSituation(event,auto){
   if(hasCachedWorld){
     panel.innerHTML=advisorWorldHtml(advisorWorldBuild(cachedMarket||{},cachedMacro||{}));
   }else{
-    panel.innerHTML='<div class="advisor-world-card"><div class="advisor-world-title">目前頁面為【天下局勢】</div><div class="advisor-world-text" style="position:relative;z-index:1;text-align:center">諸葛亮正在觀台股、美股、VIX、DXY、殖利率、Fed、黃金、油價與 CPI 月增率…</div></div>';
+    panel.innerHTML='<div class="advisor-world-card"><div class="advisor-world-title">目前頁面為【天下局勢】</div><div class="advisor-world-text" style="position:relative;z-index:1;text-align:center">諸葛亮正在觀台股、美股、VIX、DXY、殖利率、Fed、黃金、油價與 SOFR-IORB…</div></div>';
   }
   if(!auto&&panel.scrollIntoView)panel.scrollIntoView({block:'nearest',behavior:'smooth'});
   if(!API_URL){
