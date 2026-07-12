@@ -10565,13 +10565,21 @@ function advisorAITransferCommand(raw,amount){
   return {intent:'transfer',from:from,to:to,amount:amount,note:'軍師AI轉帳'};
 }
 
+function advisorAIFuelCommand(raw,amount){
+  if(!amount)return null;
+  var compact=advisorAICompact(raw);
+  if(compact.indexOf('中油')<0&&compact.indexOf('加油')<0&&compact.indexOf('機車加油')<0)return null;
+  var account=advisorAIResolveAccount(raw)||'🟥永豐銀行';
+  return {intent:'expense',category:'⛽機車加油',account:account,amount:amount,note:'中油加油'};
+}
+
 function advisorAICategoryAliases(){
   return [
     {label:'🍴超商外食',keys:['外食','超商','早餐','午餐','晚餐','便當','咖啡']},
     {label:'🍔大餐簡餐',keys:['大餐','簡餐','聚餐','火鍋','餐廳']},
     {label:'🛒全聯食材',keys:['食材','全聯','買菜','菜錢']},
     {label:'🏠家居用品',keys:['家居','家用品','生活用品','日用品']},
-    {label:'⛽️機車加油',keys:['加油','油錢','機車加油']},
+    {label:'⛽機車加油',keys:['加油','油錢','機車加油','中油']},
     {label:'📱APP訂閱',keys:['訂閱','app','APP','軟體']},
     {label:'💻3C產品',keys:['3c','3C','網購','電腦','手機','電子']},
     {label:'☎️電信網路',keys:['電信','網路','電話費','手機費']},
@@ -10765,6 +10773,8 @@ function advisorAICommand(raw){
   if(accountLookup)return accountLookup;
   var stockBuy=advisorAIStockBuyCommand(raw);
   if(stockBuy)return stockBuy;
+  var fuelCommand=advisorAIFuelCommand(raw,amount);
+  if(fuelCommand)return fuelCommand;
   var transfer=advisorAITransferCommand(raw,amount);
   if(transfer)return transfer;
   var stockSell=text.match(/賣出\s*(\d+(?:\.\d+)?)\s*股\s*([A-Za-z0-9]+)\s*(\d+(?:\.\d+)?)/i);
