@@ -8342,7 +8342,7 @@ function renderCouncilRoster(rows,el,assetSnapshot){
 
 function councilRosterGroups(){
   return [
-    {label:'\u6307\u6578\u6210\u9577\u578b',keys:['QQQI','SPYI'],aliases:['QQQI','SPYI','5G'],order:['QQQI','SPYI']},
+    {label:'\u6307\u6578\u6210\u9577\u578b',keys:['QQQI','SPYI','國泰高股息B','路博邁台灣5G'],aliases:['QQQI','SPYI','國泰高股息','路博邁台灣5G','5G'],order:['QQQI','國泰高股息B','路博邁台灣5G','SPYI']},
     {label:'\u5168\u7403\u6210\u9577\u578b',keys:['00997A'],aliases:['00997A','\u65bd\u7f85\u5fb7','\u6536\u76ca\u6210\u9577','A2'],useRemaining:true},
     {label:'\u671f\u6b0a\u6536\u76ca\u578b',keys:['CHPY','MLPI','AIPI','PLTY'],aliases:['CHPY','MLPI','AIPI','PLTY'],order:['PLTY','AIPI','CHPY','MLPI']},
     {label:'\u9632\u79a6\u6536\u76ca\u578b',keys:['00985B','IAU','GDXW','GLDW'],aliases:['00985B','IAU','GDXW','GLDW']}
@@ -8741,7 +8741,7 @@ async function loadCouncilHoldingsOverview(){
 function councilHeroAccentColor(row){
   var key=normalizeKey(row&&row.symbol);
   var text=councilRowText(row);
-  if(key==='QQQI'||key==='SPYI'||key==='CHPY')return '#2F80ED';
+  if(key==='QQQI'||key==='SPYI'||key==='CHPY'||key==='國泰高股息B'||text.indexOf('國泰高股息')>=0)return '#2F80ED';
   if(key==='路博邁台灣5G'||key==='00997A'||text.indexOf('路博邁')>=0||text.indexOf('5G')>=0)return '#E8C050';
   if(key==='AIPI')return '#D85A30';
   if(key==='GDXW'||key==='GLDW')return '#1D9E75';
@@ -8765,7 +8765,8 @@ function renderHeroCard(row,totalCost){
   var tone=ret<0?'down':'up';
   var color=councilHeroAccentColor(row);
   var skill=row.skillData||{};
-  var effectColor=skill.effectColor||color;
+  var forceHoldingAccent=normalizeKey(row&&row.symbol)==='國泰高股息B'||councilRowText(row).indexOf('國泰高股息')>=0;
+  var effectColor=forceHoldingAccent?color:(skill.effectColor||color);
   var img=normalizeImageUrl(row.avatarUrl);
   var name=row.heroName||row.symbol;
   var note=row.skill1Desc||row.shortComment||row.detail||row.assetName||'尚未設定武將技能';
