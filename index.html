@@ -705,6 +705,19 @@ body::after{
 .advisor-world-pill.defense strong{color:var(--coral)}
 .advisor-world-pill.attack strong{color:var(--teal)}
 .advisor-world-quote{position:relative;z-index:1;margin-top:11px;padding-top:9px;border-top:1px solid rgba(232,192,80,.16);font-family:var(--font);font-size:15px;font-weight:900;line-height:1.8;color:#f4e5b7;text-align:center;text-shadow:0 0 12px rgba(232,192,80,.14)}
+.advisor-brief-date{position:relative;z-index:1;margin-top:-4px;margin-bottom:12px;text-align:center;font-family:var(--mono);font-size:12px;font-weight:900;color:#bda36d}
+.advisor-brief-divider{position:relative;z-index:1;height:1px;margin:12px 0;background:linear-gradient(90deg,transparent,rgba(232,192,80,.35),transparent)}
+.advisor-brief-section{position:relative;z-index:1;padding:2px 0}
+.advisor-brief-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:7px}
+.advisor-brief-heading{font-family:var(--font);font-size:15px;font-weight:950;line-height:1.35;color:#f0dfa0;letter-spacing:1px}
+.advisor-brief-status{font-family:var(--font);font-size:15px;font-weight:950;line-height:1.35;color:#f3df9a;white-space:nowrap}
+.advisor-brief-status.attack{color:var(--teal)}
+.advisor-brief-status.defense{color:var(--coral)}
+.advisor-brief-lines{display:grid;gap:4px;margin:7px 0 9px}
+.advisor-brief-line{display:flex;align-items:baseline;justify-content:space-between;gap:10px;font-family:var(--sans);font-size:12px;font-weight:850;line-height:1.45;color:#d7c28b}
+.advisor-brief-line span{white-space:nowrap;color:#a98a48}
+.advisor-brief-line strong{font:inherit;text-align:right;color:#ead9a8}
+.advisor-brief-one{font-family:var(--font);font-size:14px;font-weight:900;line-height:1.75;color:#f4e5b7;white-space:pre-line}
 .foodhouse-spark-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px;font-family:var(--sans);font-size:9px;font-weight:800;color:#84652d}
 .foodhouse-spark-head strong{font-family:var(--mono);font-size:10px;color:#bda36d}
 .foodhouse-sparkline{display:block;width:100%;height:42px;overflow:visible}
@@ -9664,6 +9677,213 @@ function advisorWorldHtml(view){
     <div class="advisor-summary-sub" style="position:relative;z-index:1;text-align:center;margin-top:7px">更新 ${esc(view.updatedAt)} · 指標 ${esc(view.sourceDate)}</div>
   </div>`;
 }
+function advisorWorldBriefDate(value){
+  var text=String(value||'').trim();
+  if(!text)return new Date().toLocaleDateString('zh-TW',{timeZone:'Asia/Taipei'});
+  var m=text.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/);
+  if(m)return m[1]+'/'+String(m[2]).padStart(2,'0')+'/'+String(m[3]).padStart(2,'0');
+  return text;
+}
+function advisorWorldStatusIcon(tone){
+  return tone==='attack'?'🟢':tone==='defense'?'🔴':'🟡';
+}
+function advisorWorldBriefStatus(tone,label){
+  return advisorWorldStatusIcon(tone)+' '+label;
+}
+function advisorWorldBriefDisplay(row,digits,suffix){
+  return advisorWorldDisplay(row,digits,suffix).replace(/\.00(?=%|$)/,'');
+}
+function advisorWorldEmploymentDisplay(row){
+  var value=advisorWorldValue(row);
+  if(value==null)return '--';
+  return (value/10).toLocaleString('zh-TW',{maximumFractionDigits:1})+'萬';
+}
+function advisorWorldSimpleStatus(row,fallback){
+  if(!row)return '--';
+  var status=String(row.status||'').replace(/[🟢🟡🔴]/g,'').trim();
+  if(/^\?+$/.test(status))return fallback||advisorWorldBriefDisplay(row,2);
+  if(status&&status!=='趨勢追蹤'&&status!=='綠燈'&&status!=='黃燈'&&status!=='紅燈')return status;
+  return fallback||advisorWorldBriefDisplay(row,2);
+}
+function advisorWorldLine(label,value){
+  return {label:label,value:value||'--'};
+}
+function advisorWorldSectionHtml(section){
+  return `<div class="advisor-brief-section">
+    <div class="advisor-brief-head">
+      <div class="advisor-brief-heading">${esc(section.icon)} ${esc(section.title)}</div>
+      <div class="advisor-brief-status ${esc(section.tone)}">${esc(advisorWorldBriefStatus(section.tone,section.status))}</div>
+    </div>
+    <div class="advisor-brief-lines">${section.lines.map(function(line){
+      return `<div class="advisor-brief-line"><span>${esc(line.label)}：</span><strong>${esc(line.value)}</strong></div>`;
+    }).join('')}</div>
+    <div class="advisor-brief-one">一句話：<br>${esc(section.oneLine)}</div>
+  </div>`;
+}
+function advisorWorldBuild(market,macro){
+  market=market||{};
+  macro=macro||{};
+  var judgment=macro.judgment||{};
+  var sourceDate=macro.sourceDate||judgment.date||'';
+  var liquidity=advisorWorldIndicator(macro,'liquidityScore');
+  var sofr=advisorWorldIndicator(macro,'sofrIorbSpread');
+  var reserves=advisorWorldIndicator(macro,'bankReserves');
+  var rrp=advisorWorldIndicator(macro,'rrp');
+  var m2=advisorWorldIndicator(macro,'m2');
+  var jolts=advisorWorldIndicator(macro,'joltsOpenings');
+  var adp=advisorWorldIndicator(macro,'adpEmploymentChange');
+  var nfp=advisorWorldIndicator(macro,'nfpPayrollChange');
+  var cpi=advisorWorldIndicator(macro,'cpi');
+  var ppi=advisorWorldIndicator(macro,'ppi');
+  var oil=advisorWorldIndicator(macro,'oil');
+  var hy=advisorWorldIndicator(macro,'creditSpread');
+  var vix=advisorWorldIndicator(macro,'vix');
+  var sentiment=advisorWorldIndicator(macro,'consumerSentiment');
+  var liqVal=advisorWorldValue(liquidity);
+  var sofrVal=advisorWorldValue(sofr);
+  var reserveVal=advisorWorldValue(reserves);
+  var reserveTone=advisorWorldToneFromText(reserves&&reserves.status);
+  var liquidityTone='watch';
+  var liquidityStatus='觀察';
+  var liquidityOne='資金環境仍可用，但還不到全面放手進攻。';
+  if(liqVal!=null&&liqVal>=4&&!(sofrVal!=null&&sofrVal>=0.25)&&reserveTone!=='defense'){
+    liquidityTone='attack';
+    liquidityStatus='放水中';
+    liquidityOne='市場不缺錢。';
+  }else if((liqVal!=null&&liqVal<=1)||(sofrVal!=null&&sofrVal>=0.25)||reserveTone==='defense'){
+    liquidityTone='defense';
+    liquidityStatus='轉緊';
+    liquidityOne='短端資金壓力升高，先降低進攻速度。';
+  }
+  var nfpVal=advisorWorldValue(nfp);
+  var adpVal=advisorWorldValue(adp);
+  var joltsVal=advisorWorldValue(jolts);
+  var economyTone='attack';
+  var economyStatus='穩定';
+  var economyOne='就業仍有支撐，景氣未見明顯惡化。';
+  if((nfpVal!=null&&nfpVal<=0)||(adpVal!=null&&adpVal<=0)||(joltsVal!=null&&joltsVal<=6500)){
+    economyTone='defense';
+    economyStatus='轉弱';
+    economyOne='就業惡化訊號浮現，景氣風險升高。';
+  }else if((nfpVal!=null&&nfpVal<=100)||(adpVal!=null&&adpVal<=100)||(joltsVal!=null&&joltsVal<=7000)){
+    economyTone='watch';
+    economyStatus='降溫';
+    economyOne='就業降溫，但未惡化。';
+  }
+  var cpiVal=advisorWorldValue(cpi);
+  var ppiVal=advisorWorldValue(ppi);
+  var oilVal=advisorWorldValue(oil);
+  var inflationTone='attack';
+  var inflationStatus='舒緩';
+  var inflationOne='通膨壓力可控，政策壓力下降。';
+  if((cpiVal!=null&&cpiVal>=4)||(ppiVal!=null&&ppiVal>=5)||(oilVal!=null&&oilVal>=85)){
+    inflationTone='watch';
+    inflationStatus='偏高';
+    inflationOne=(oilVal!=null&&oilVal<85)?'通膨仍高，但油價提供緩衝。':'通膨仍高，油價也在干擾降溫路徑。';
+  }
+  if((cpiVal!=null&&cpiVal>=5)||(oilVal!=null&&oilVal>=100)){
+    inflationTone='defense';
+    inflationStatus='高壓';
+    inflationOne='通膨重新進入高壓區，政策轉鬆空間變小。';
+  }
+  var hyVal=advisorWorldValue(hy);
+  var vixVal=advisorWorldValue(vix);
+  var creditTone='attack';
+  var creditStatus='健康';
+  var creditOne='市場沒有信用危機。';
+  if((hyVal!=null&&hyVal>=5)||(vixVal!=null&&vixVal>=30)){
+    creditTone='defense';
+    creditStatus='警戒';
+    creditOne='信用或恐慌指標升高，先以防守為主。';
+  }else if((hyVal!=null&&hyVal>=4)||(vixVal!=null&&vixVal>=20)){
+    creditTone='watch';
+    creditStatus='觀察';
+    creditOne='信用市場未失控，但風險情緒開始升溫。';
+  }
+  var sections=[
+    {
+      icon:'💧',
+      title:'流動性',
+      tone:liquidityTone,
+      status:liquidityStatus,
+      lines:[
+        advisorWorldLine('SOFR-IORB',sofrVal==null?'--':(sofrVal>0?'轉緊':'正常')),
+        advisorWorldLine('銀行準備金',reserveTone==='defense'?'下降警戒':(reserveTone==='attack'||reserveVal>=3000000?'充足':'觀察')),
+        advisorWorldLine('RRP',advisorWorldSimpleStatus(rrp,'觀察中')),
+        advisorWorldLine('M2',advisorWorldSimpleStatus(m2,'觀察中'))
+      ],
+      oneLine:liquidityOne
+    },
+    {
+      icon:'👷',
+      title:'經濟',
+      tone:economyTone,
+      status:economyStatus,
+      lines:[
+        advisorWorldLine('JOLTS',advisorWorldEmploymentDisplay(jolts)),
+        advisorWorldLine('ADP',advisorWorldEmploymentDisplay(adp)),
+        advisorWorldLine('NFP',advisorWorldEmploymentDisplay(nfp))
+      ],
+      oneLine:economyOne
+    },
+    {
+      icon:'🔥',
+      title:'通膨',
+      tone:inflationTone,
+      status:inflationStatus,
+      lines:[
+        advisorWorldLine('CPI',advisorWorldBriefDisplay(cpi,2,'%')),
+        advisorWorldLine('PPI',advisorWorldBriefDisplay(ppi,2,'%')),
+        advisorWorldLine('油價',advisorWorldBriefDisplay(oil,0))
+      ],
+      oneLine:inflationOne
+    },
+    {
+      icon:'💳',
+      title:'信用',
+      tone:creditTone,
+      status:creditStatus,
+      lines:[
+        advisorWorldLine('HY OAS',advisorWorldBriefDisplay(hy,2,'%')),
+        advisorWorldLine('VIX',advisorWorldBriefDisplay(vix,0)),
+        advisorWorldLine('消費信心',advisorWorldBriefDisplay(sentiment,0))
+      ],
+      oneLine:creditOne
+    }
+  ];
+  var defenseCount=sections.filter(function(s){return s.tone==='defense';}).length;
+  var attackCount=sections.filter(function(s){return s.tone==='attack';}).length;
+  var empireTone=defenseCount?'defense':'attack';
+  var empireStatus=defenseCount?'防守警戒':(attackCount>=2?'穩定巡航':'穩定巡航');
+  var todayLine=defenseCount
+    ? '出現需要警戒的總經訊號，先守住部位，暫緩加碼。'
+    : '沒有新的系統性風險，\n維持原本投資策略即可。';
+  return {
+    date:advisorWorldBriefDate(sourceDate),
+    updatedAt:(market.summary&&market.summary.updatedAt)||judgment.updatedAt||'--',
+    sourceDate:sourceDate||'--',
+    empireTone:empireTone,
+    empireStatus:empireStatus,
+    sections:sections,
+    todayLine:todayLine
+  };
+}
+function advisorWorldHtml(view){
+  return `<div class="advisor-world-card">
+    <div class="advisor-world-title">🏛 帝國晨報</div>
+    <div class="advisor-brief-date">${esc(view.date)}</div>
+    <div class="advisor-brief-divider"></div>
+    <div class="advisor-world-stance ${esc(view.empireTone)}"><span>⚔ 帝國狀態</span><strong>${esc(advisorWorldBriefStatus(view.empireTone,view.empireStatus))}</strong></div>
+    <div class="advisor-brief-divider"></div>
+    ${view.sections.map(function(section){return advisorWorldSectionHtml(section);}).join('<div class="advisor-brief-divider"></div>')}
+    <div class="advisor-brief-divider"></div>
+    <div class="advisor-world-section">
+      <div class="advisor-world-label">📌 今日一句</div>
+      <div class="advisor-world-quote">${esc(view.todayLine)}</div>
+    </div>
+    <div class="advisor-summary-sub" style="position:relative;z-index:1;text-align:center;margin-top:7px">更新 ${esc(view.updatedAt)} · 指標 ${esc(view.sourceDate)}</div>
+  </div>`;
+}
 // ══════════════════════════════════════════
 //  台股指數卡片渲染（資料來自 GAS，無 CORS 問題）
 // ══════════════════════════════════════════
@@ -10290,11 +10510,11 @@ async function openAdvisorWorldSituation(event,auto){
   if(hasCachedWorld){
     panel.innerHTML=advisorWorldHtml(advisorWorldBuild(cachedMarket||{},cachedMacro||{}));
   }else{
-    panel.innerHTML='<div class="advisor-world-card"><div class="advisor-world-title">目前頁面為【天下局勢】</div><div class="advisor-world-text" style="position:relative;z-index:1;text-align:center">諸葛亮正在觀台股、美股、VIX、DXY、殖利率、Fed、黃金、油價與 SOFR-IORB…</div></div>';
+    panel.innerHTML='<div class="advisor-world-card"><div class="advisor-world-title">🏛 帝國晨報</div><div class="advisor-world-text" style="position:relative;z-index:1;text-align:center">諸葛亮正在整理流動性、經濟、通膨與信用戰報…</div></div>';
   }
   if(!auto&&panel.scrollIntoView)panel.scrollIntoView({block:'nearest',behavior:'smooth'});
   if(!API_URL){
-    panel.innerHTML='<div class="advisor-world-card"><div class="advisor-world-title">目前頁面為【天下局勢】</div><div class="advisor-world-text" style="position:relative;z-index:1;text-align:center;color:var(--coral)">尚未設定 API URL，無法調閱局勢。</div></div>';
+    panel.innerHTML='<div class="advisor-world-card"><div class="advisor-world-title">🏛 帝國晨報</div><div class="advisor-world-text" style="position:relative;z-index:1;text-align:center;color:var(--coral)">尚未設定 API URL，無法調閱晨報。</div></div>';
     return;
   }
   try{
@@ -10311,7 +10531,7 @@ async function openAdvisorWorldSituation(event,auto){
     var view=advisorWorldBuild(market,macro);
     panel.innerHTML=advisorWorldHtml(view);
   }catch(err){
-    panel.innerHTML='<div class="advisor-world-card"><div class="advisor-world-title">目前頁面為【天下局勢】</div><div class="advisor-world-text" style="position:relative;z-index:1;text-align:center;color:var(--coral)">讀取失敗：'+esc(err&&err.message?err.message:'請稍後再試')+'</div></div>';
+    panel.innerHTML='<div class="advisor-world-card"><div class="advisor-world-title">🏛 帝國晨報</div><div class="advisor-world-text" style="position:relative;z-index:1;text-align:center;color:var(--coral)">讀取失敗：'+esc(err&&err.message?err.message:'請稍後再試')+'</div></div>';
   }
 }
 
