@@ -2165,6 +2165,7 @@ body::after{
 .ark-wall-detail-text{border:1px solid rgba(184,137,46,.24);border-radius:8px;background:rgba(3,4,3,.72);font-family:var(--sans);font-size:15px;font-weight:750;line-height:1.95;color:#d8c18a;white-space:pre-wrap;overflow-wrap:anywhere;padding:13px 14px}
 .ark-wall-photo-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .ark-wall-photo{display:block;width:100%;aspect-ratio:4/3;border:1px solid rgba(184,137,46,.26);border-radius:8px;background:#090704;object-fit:cover;overflow:hidden;cursor:zoom-in}
+.ark-wall-entry-media{aspect-ratio:4/3;height:auto;border-color:rgba(184,137,46,.26)}
 .ark-wall-lightbox{position:fixed;inset:0;z-index:4200;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:rgba(0,0,0,.86);padding:18px;opacity:0;pointer-events:none;transition:opacity .18s ease}
 .ark-wall-lightbox.open{opacity:1;pointer-events:auto}
 .ark-wall-lightbox-img,.ark-wall-lightbox-video{display:block;max-width:min(96vw,1100px);max-height:88vh;border:1px solid rgba(232,192,80,.34);border-radius:8px;background:#050403;object-fit:contain;box-shadow:0 18px 48px rgba(0,0,0,.55)}
@@ -6409,8 +6410,18 @@ function openArkWallEntry(id){
     var text=arkWallTextFromMarkdown(data.markdown||entry.excerpt||'');
     var images=Array.isArray(entry.images)?entry.images:[];
     var photos=images.map(function(img){
-      var url=arkWallUrl(img.thumbnailUrl||img.originalUrl);
-      return url?'<img class="ark-wall-photo" src="'+esc(url)+'" data-photo-url="'+esc(url)+'" data-photo-title="'+esc(entry.title||'城牆照片')+'" alt="'+esc(entry.title||'城牆照片')+'" loading="lazy">':'';
+      var isVideo=img.type==='video'||String(img.mimeType||'').indexOf('video/')===0;
+      var thumb=arkWallUrl(img.thumbnailUrl||img.originalUrl);
+      var original=arkWallUrl(img.originalUrl||img.thumbnailUrl);
+      var title=entry.title||(isVideo?'城牆影片':'城牆照片');
+      if(!thumb&&!original)return '';
+      if(isVideo){
+        return '<button class="ark-wall-library-card ark-wall-entry-media" type="button" data-video-url="'+esc(original||thumb)+'" data-video-title="'+esc(title)+'">'
+          +(thumb?'<img src="'+esc(thumb)+'" alt="'+esc(title)+'" loading="lazy" onerror="arkWallMediaImgFallback(this,\'影片\')">':'<span class="ark-wall-library-video">影片</span>')
+          +'<span class="ark-wall-library-video-badge">影片</span>'
+        +'</button>';
+      }
+      return thumb?'<img class="ark-wall-photo" src="'+esc(thumb)+'" data-photo-url="'+esc(thumb)+'" data-photo-title="'+esc(title)+'" alt="'+esc(title)+'" loading="lazy">':'';
     }).join('');
     if(body)body.innerHTML='<div class="ark-wall-detail">'
       +'<div class="ark-wall-detail-head">'
@@ -6424,6 +6435,11 @@ function openArkWallEntry(id){
     if(body)body.querySelectorAll('.ark-wall-photo').forEach(function(photo){
       photo.addEventListener('click',function(){
         openArkWallPhoto(photo.dataset.photoUrl,photo.dataset.photoTitle||photo.alt);
+      });
+    });
+    if(body)body.querySelectorAll('[data-video-url]').forEach(function(video){
+      video.addEventListener('click',function(){
+        openArkWallVideo(video.dataset.videoUrl,video.dataset.videoTitle||'城牆影片');
       });
     });
   }).catch(function(err){
