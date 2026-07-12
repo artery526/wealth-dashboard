@@ -2970,6 +2970,8 @@ if(API_URL && API_URL !== (localStorage.getItem('wealth_api_url') || '')){
   localStorage.setItem('wealth_api_url',API_URL);
   localStorage.removeItem('wealth_market_macro_v1');
   localStorage.removeItem('wealth_market_macro_v2');
+  localStorage.removeItem('wealth_market_macro_v3');
+  localStorage.removeItem('wealth_market_macro_v4');
 }
 var WRITE_TOKEN = localStorage.getItem('wealth_write_token') || '';
 var cfg = (function(){
@@ -3408,7 +3410,7 @@ var financePledgePromise=null;
 var financeYearlyPromises={};
 var financeMonthDetailPromises={};
 var MARKET_DASHBOARD_CACHE_KEY='wealth_market_dashboard_v1';
-var MARKET_MACRO_CACHE_KEY='wealth_market_macro_v3';
+var MARKET_MACRO_CACHE_KEY='wealth_market_macro_v4';
 var MARKET_CACHE_TTL=2*60*60*1000;
 var marketDashboardPromise=null;
 var macroOverviewPromise=null;
@@ -3727,6 +3729,7 @@ async function saveCfg(){
   localStorage.removeItem('wealth_market_macro_v1');
   localStorage.removeItem('wealth_market_macro_v2');
   localStorage.removeItem('wealth_market_macro_v3');
+  localStorage.removeItem('wealth_market_macro_v4');
   localStorage.removeItem('health_api_url');
   localStorage.removeItem('health_secret_key');
   localStorage.removeItem('wealth_advisor_ai_passcode');
