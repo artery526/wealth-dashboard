@@ -3035,6 +3035,7 @@ var DEFAULT_MEDICAL_OPTIONS = {
 };
 
 var DIVIDEND_SYMBOLS = [
+  {value:'國泰高股息B',label:'🌐國泰高股息B'},
   {value:'00985B',label:'🎟️00985B'},{value:'00997A',label:'🪄00997A'},{value:'MLPI',label:'🛢️MLPI'},
   {value:'施羅德收益成長A2',label:'🌳施羅德收益成長A2'},{value:'路博邁台灣5G',label:'🪐路博邁台灣5G'},
   {value:'QQQI',label:'📡QQQI'},
@@ -3042,6 +3043,7 @@ var DIVIDEND_SYMBOLS = [
   {value:'GDXW',label:'\u2692\uFE0FGDXW'},{value:'💛GLDW',label:'💛GLDW'}
 ];
 var STOCK_SYMBOLS = [
+  {value:'🌐國泰高股息B',label:'🌐國泰高股息B'},
   {value:'📡QQQI',label:'📡QQQI'},{value:'🛢️MLPI',label:'🛢️MLPI'},
   {value:'🪐路博邁台灣5G',label:'🪐路博邁台灣5G'},{value:'🌳施羅德收益成長A2',label:'🌳施羅德收益成長A2'},
   {value:'🎟️00985B',label:'🎟️00985B'},{value:'🪄00997A',label:'🪄00997A'},{value:'🤖AIPI',label:'🤖AIPI'},
@@ -3049,6 +3051,7 @@ var STOCK_SYMBOLS = [
   {value:'\u2692\uFE0FGDXW',label:'\u2692\uFE0FGDXW'},{value:'💛GLDW',label:'💛GLDW'}
 ];
 var HOLDING_META = {
+  '國泰高股息B':{emoji:'🌐',name:'國泰高股息B'},
   'IAU':{emoji:'👑',name:'IAU'},'QQQI':{emoji:'📡',name:'QQQI'},'MLPI':{emoji:'🛢️',name:'MLPI'},
   '路博邁台灣5G':{emoji:'🪐',name:'路博邁台灣5G'},'施羅德收益成長A2':{emoji:'🌳',name:'施羅德收益成長A2'},
   '00985B':{emoji:'🎟️',name:'00985B'},'00997A':{emoji:'🪄',name:'00997A'},'AIPI':{emoji:'🤖',name:'AIPI'},
@@ -10451,6 +10454,7 @@ function advisorAITransferAliases(){
     {label:'🟥永豐銀行',keys:['永豐','永豐銀行']},
     {label:'🌳國泰Money',keys:['國泰m','國泰money','國泰money']},
     {label:'💳Cube',keys:['cube']},
+    {label:'🌐國泰高股息B',keys:['高股息','國泰高股息','國泰高股息b']},
     {label:'👑IAU',keys:['iau']},
     {label:'📡QQQI',keys:['qqqi']},
     {label:'🛢️MLPI',keys:['mlpi']},
@@ -10522,6 +10526,7 @@ function advisorAIResolveInvestmentSymbol(value){
   if(!key)return '';
   if(key.indexOf('985b')>=0||key.indexOf('00985b')>=0)return '00985B';
   if(key.indexOf('997a')>=0||key.indexOf('00997a')>=0)return '00997A';
+  if(key.indexOf('高股息')>=0)return '國泰高股息B';
   if(key.indexOf('台灣5g')>=0||key.indexOf('路博邁')>=0)return '路博邁台灣5G';
   if(key.indexOf('施羅德')>=0)return '施羅德收益成長A2';
   var symbols=['AIPI','IAU','QQQI','MLPI','SPYI','PLTY','CHPY','GDXW','GLDW'];
