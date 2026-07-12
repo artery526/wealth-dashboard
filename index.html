@@ -2952,7 +2952,25 @@ body::after{
 // ══════════════════════════════════════════
 //  State & Config
 // ══════════════════════════════════════════
-var API_URL = localStorage.getItem('wealth_api_url') || '';
+var CANONICAL_API_URL = 'https://script.google.com/macros/s/AKfycbz1Ndp8oT7penjejzs4LZxBnc1pmnmr_uoV4sGZJLmlRVEiK3vpcPtOtkvQASFiS4Hb/exec';
+var LEGACY_API_DEPLOYMENT_IDS = [
+  'AKfycbwBhxif_vONIC4m8mxWZB2q2bk3Hyy1lBkCkFSg66OLwQxPQL-Ktsc7BdTgZQZAc4bO',
+  'AKfycbw3ddm4mcOvSSijvguaBwVvJH-KOp5MdrUgJQw4oy58o9bg456EtRIaCsYnrsPSS7xN',
+  'AKfycbw9CiU81NKnhHsF8LbayJDzg5n4WJfgx_MKPEBtSnqBCXDQ2yCtoRN2vOTSvd_fb64a',
+  'AKfycbyjnasAMzS3prnT3dHJ3Fn1-GUQW_algDJyobkCwuQZMBocC4uFb1Fa7uT4T7kFD1yv'
+];
+function normalizeWealthApiUrl(url){
+  url=String(url||'').trim();
+  if(!url)return url;
+  if(LEGACY_API_DEPLOYMENT_IDS.some(function(id){return url.indexOf(id)>=0;}))return CANONICAL_API_URL;
+  return url;
+}
+var API_URL = normalizeWealthApiUrl(localStorage.getItem('wealth_api_url') || '');
+if(API_URL && API_URL !== (localStorage.getItem('wealth_api_url') || '')){
+  localStorage.setItem('wealth_api_url',API_URL);
+  localStorage.removeItem('wealth_market_macro_v1');
+  localStorage.removeItem('wealth_market_macro_v2');
+}
 var WRITE_TOKEN = localStorage.getItem('wealth_write_token') || '';
 var cfg = (function(){
   try{
@@ -3390,7 +3408,7 @@ var financePledgePromise=null;
 var financeYearlyPromises={};
 var financeMonthDetailPromises={};
 var MARKET_DASHBOARD_CACHE_KEY='wealth_market_dashboard_v1';
-var MARKET_MACRO_CACHE_KEY='wealth_market_macro_v2';
+var MARKET_MACRO_CACHE_KEY='wealth_market_macro_v3';
 var MARKET_CACHE_TTL=2*60*60*1000;
 var marketDashboardPromise=null;
 var macroOverviewPromise=null;
@@ -3701,11 +3719,14 @@ function openCfg(){
 function closeCfg(){document.getElementById('cfg-overlay').classList.remove('open')}
 function cfgOverlayClick(e){if(e.target===document.getElementById('cfg-overlay'))closeCfg()}
 async function saveCfg(){
-  var url=document.getElementById('cfg-url').value.trim();
+  var url=normalizeWealthApiUrl(document.getElementById('cfg-url').value.trim());
   var token=cleanToken(document.getElementById('cfg-token').value);
   API_URL=url;WRITE_TOKEN=token;
   localStorage.setItem('wealth_api_url',url);
   localStorage.setItem('wealth_write_token',token);
+  localStorage.removeItem('wealth_market_macro_v1');
+  localStorage.removeItem('wealth_market_macro_v2');
+  localStorage.removeItem('wealth_market_macro_v3');
   localStorage.removeItem('health_api_url');
   localStorage.removeItem('health_secret_key');
   localStorage.removeItem('wealth_advisor_ai_passcode');
