@@ -676,16 +676,19 @@ body::after{
 #c-finance .frame{margin-top:0}
 #c-council .frame{margin-top:0}
 #c-finance.finance-landscape,
-#c-domestic.domestic-landscape{
+#c-domestic.domestic-landscape,
+#c-council.military-landscape{
   width:502px;
 }
 #c-finance.finance-landscape .art,
-#c-domestic.domestic-landscape .art{
+#c-domestic.domestic-landscape .art,
+#c-council.military-landscape .art{
   height:auto!important;
   aspect-ratio:16/9;
 }
 #c-finance.finance-landscape .card-video,
-#c-domestic.domestic-landscape .card-video{
+#c-domestic.domestic-landscape .card-video,
+#c-council.military-landscape .card-video{
   object-fit:cover;
   object-position:center center;
 }
@@ -2278,13 +2281,15 @@ body::after{
     justify-self:center;
   }
   #c-finance.finance-landscape,
-  #c-domestic.domestic-landscape{
+  #c-domestic.domestic-landscape,
+  #c-council.military-landscape{
     grid-column:auto;
     width:100%;
     max-width:210px;
   }
   #c-finance.finance-landscape .art,
-  #c-domestic.domestic-landscape .art{
+  #c-domestic.domestic-landscape .art,
+  #c-council.military-landscape .art{
     height:auto!important;
     aspect-ratio:16/9;
   }
@@ -2336,12 +2341,14 @@ body::after{
   }
   .card{max-width:178px}
   #c-finance.finance-landscape,
-  #c-domestic.domestic-landscape{
+  #c-domestic.domestic-landscape,
+  #c-council.military-landscape{
     grid-column:auto;
     max-width:178px;
   }
   #c-finance.finance-landscape .art,
-  #c-domestic.domestic-landscape .art{
+  #c-domestic.domestic-landscape .art,
+  #c-council.military-landscape .art{
     height:auto!important;
     aspect-ratio:16/9;
   }
@@ -2866,7 +2873,7 @@ body::after{
     </div>
 
     <!-- 軍機處 -->
-    <div class="card" id="c-council" onclick="openPanel('council')">
+    <div class="card military-landscape" id="c-council" onclick="openPanel('council')">
       <div class="frame">
         <div class="corner tl"></div><div class="corner tr"></div>
         <div class="corner bl"></div><div class="corner br"></div>
@@ -2874,11 +2881,11 @@ body::after{
         <div class="art" style="position:relative;overflow:hidden;height:427px;border-bottom:none;">
           <video
             class="card-video"
-            src="military-control.mp4"
-            loop
+            src="military-controlv2.mp4"
+            autoplay
             muted
             playsinline
-            preload="metadata"
+            preload="auto"
             style="width:100%;height:100%;display:block;object-fit:cover;object-position:center center;"
           ></video>
           <div style="position:absolute;bottom:0;left:0;right:0;z-index:4;
@@ -10353,7 +10360,7 @@ function initCardVideoPlayback(){
         video.currentTime=0;
       }catch(e){}
     }
-    if(card.id==='c-finance'||card.id==='c-domestic'){
+    if(card.id==='c-finance'||card.id==='c-domestic'||card.id==='c-council'){
       video.dataset.playOnEntry='1';
       video.loop=false;
       video.addEventListener('ended',function(){
