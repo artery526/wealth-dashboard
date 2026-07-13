@@ -2804,10 +2804,10 @@ body::after{
           <video
             class="card-video"
             src="finance-cardv2.mp4"
-            loop
+            autoplay
             muted
             playsinline
-            preload="metadata"
+            preload="auto"
             style="width:100%;height:100%;display:block;object-fit:cover;object-position:center center;"
           ></video>
           <!-- 底部漸層 + 小字標籤 -->
@@ -10345,6 +10345,28 @@ function initCardVideoPlayback(){
         video.pause();
         video.currentTime=0;
       }catch(e){}
+    }
+    if(card.id==='c-finance'){
+      video.dataset.playOnEntry='1';
+      video.loop=false;
+      video.addEventListener('ended',function(){
+        try{
+          video.pause();
+          video.currentTime=0;
+        }catch(e){}
+      });
+      var playOnce=function(){
+        try{
+          video.currentTime=0;
+          var result=video.play();
+          if(result&&result.catch)result.catch(function(){});
+        }catch(e){}
+      };
+      if(video.readyState>=2){
+        setTimeout(playOnce,180);
+      }else{
+        video.addEventListener('loadeddata',function(){setTimeout(playOnce,180);},{once:true});
+      }
     }
     card.addEventListener('mouseenter',playCardVideo);
     card.addEventListener('mouseleave',stopCardVideo);
