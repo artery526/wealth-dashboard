@@ -2193,14 +2193,14 @@ body::after{
   }
   .hdr-left{position:static;transform:none;width:100%;justify-content:center}
   .hdr-char-wrap{
-    width:clamp(270px,76vw,360px);
+    width:clamp(310px,84vw,400px);
     max-width:92vw;
     overflow:visible;
   }
-  .advisor-duo{min-height:164px;gap:8px;padding:4px 0 0}
-  .advisor-duo-role{width:104px;flex:0 0 104px}
-  .advisor-duo-stage{height:156px}
-  .advisor-duo-label{min-width:82px;font-size:10px;padding:4px 6px}
+  .advisor-duo{min-height:206px;gap:12px;padding:4px 0 0}
+  .advisor-duo-role{width:136px;flex:0 0 136px}
+  .advisor-duo-stage{height:198px}
+  .advisor-duo-label{min-width:96px;font-size:11px;padding:5px 8px}
   .hdr-char{
     width:100%;
     height:auto;
@@ -2239,6 +2239,17 @@ body::after{
     height:100%!important;
     object-fit:cover;
   }
+  .card-shortcuts{
+    gap:9px;
+    margin-top:12px;
+    padding:14px 12px 13px;
+  }
+  .card-shortcut{
+    min-height:44px;
+    font-size:14px;
+    line-height:1.2;
+    padding:8px 7px;
+  }
   .info-main{font-size:22px;letter-spacing:4px}
   .flavor{font-size:10px}
   .hdr-title{font-size:16px;letter-spacing:5px}
@@ -2250,11 +2261,11 @@ body::after{
 @media(max-width:480px){
   .wrap{padding:12px 10px 36px}
   .hdr{margin-bottom:10px}
-  .hdr-char-wrap{width:clamp(268px,82vw,340px)}
-  .advisor-duo{min-height:138px;gap:6px;justify-content:center}
-  .advisor-duo-role{width:92px;flex:0 0 92px}
-  .advisor-duo-stage{height:134px}
-  .advisor-duo-label{min-width:74px;font-size:9px;letter-spacing:0}
+  .hdr-char-wrap{width:clamp(300px,94vw,380px)}
+  .advisor-duo{min-height:196px;gap:10px;justify-content:center}
+  .advisor-duo-role{width:130px;flex:0 0 130px}
+  .advisor-duo-stage{height:188px}
+  .advisor-duo-label{min-width:94px;font-size:11px;letter-spacing:.3px;padding:5px 8px}
   .cards{
     grid-template-columns:repeat(2,minmax(0,clamp(138px,44vw,178px)));
     gap:10px;
@@ -2263,6 +2274,16 @@ body::after{
   .card{max-width:178px}
   .card .art{
     height:clamp(214px,56vw,280px)!important;
+  }
+  .card-shortcuts{
+    gap:9px;
+    margin-top:12px;
+    padding:14px 10px 13px;
+  }
+  .card-shortcut{
+    min-height:46px;
+    font-size:15px;
+    padding:9px 6px;
   }
   /* ── 手機版 top-nav 兩行佈局 ── */
   .top-nav{
