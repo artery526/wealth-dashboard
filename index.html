@@ -677,18 +677,21 @@ body::after{
 #c-council .frame{margin-top:0}
 #c-finance.finance-landscape,
 #c-domestic.domestic-landscape,
-#c-council.military-landscape{
+#c-council.military-landscape,
+#c-medical.medical-landscape{
   width:502px;
 }
 #c-finance.finance-landscape .art,
 #c-domestic.domestic-landscape .art,
-#c-council.military-landscape .art{
+#c-council.military-landscape .art,
+#c-medical.medical-landscape .art{
   height:auto!important;
   aspect-ratio:16/9;
 }
 #c-finance.finance-landscape .card-video,
 #c-domestic.domestic-landscape .card-video,
-#c-council.military-landscape .card-video{
+#c-council.military-landscape .card-video,
+#c-medical.medical-landscape .card-video{
   object-fit:cover;
   object-position:center center;
 }
@@ -2282,14 +2285,16 @@ body::after{
   }
   #c-finance.finance-landscape,
   #c-domestic.domestic-landscape,
-  #c-council.military-landscape{
+  #c-council.military-landscape,
+  #c-medical.medical-landscape{
     grid-column:auto;
     width:100%;
     max-width:432px;
   }
   #c-finance.finance-landscape .art,
   #c-domestic.domestic-landscape .art,
-  #c-council.military-landscape .art{
+  #c-council.military-landscape .art,
+  #c-medical.medical-landscape .art{
     height:auto!important;
     aspect-ratio:16/9;
   }
@@ -2342,13 +2347,15 @@ body::after{
   .card{max-width:100%}
   #c-finance.finance-landscape,
   #c-domestic.domestic-landscape,
-  #c-council.military-landscape{
+  #c-council.military-landscape,
+  #c-medical.medical-landscape{
     grid-column:auto;
     max-width:100%;
   }
   #c-finance.finance-landscape .art,
   #c-domestic.domestic-landscape .art,
-  #c-council.military-landscape .art{
+  #c-council.military-landscape .art,
+  #c-medical.medical-landscape .art{
     height:auto!important;
     aspect-ratio:16/9;
   }
@@ -2905,7 +2912,7 @@ body::after{
     </div>
 
     <!-- 醫館 -->
-    <div class="card" id="c-medical" onclick="openPanel('medical')">
+    <div class="card medical-landscape" id="c-medical" onclick="openPanel('medical')">
       <div class="frame">
         <div class="corner tl"></div><div class="corner tr"></div>
         <div class="corner bl"></div><div class="corner br"></div>
@@ -2913,11 +2920,11 @@ body::after{
         <div class="art" style="position:relative;overflow:hidden;height:427px;border-bottom:none;">
           <video
             class="card-video"
-            src="medical-card.mp4"
-            loop
+            src="medical-cardv2.mp4"
+            autoplay
             muted
             playsinline
-            preload="metadata"
+            preload="auto"
             style="width:100%;height:100%;display:block;object-fit:cover;object-position:center center;"
           ></video>
           <div style="position:absolute;bottom:0;left:0;right:0;z-index:4;
@@ -10360,7 +10367,7 @@ function initCardVideoPlayback(){
         video.currentTime=0;
       }catch(e){}
     }
-    if(card.id==='c-finance'||card.id==='c-domestic'||card.id==='c-council'){
+    if(card.id==='c-finance'||card.id==='c-domestic'||card.id==='c-council'||card.id==='c-medical'){
       video.dataset.playOnEntry='1';
       video.loop=false;
       video.addEventListener('ended',function(){
