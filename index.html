@@ -2949,7 +2949,8 @@ body::after{
       </div>
       <button class="card-scroll-toggle" type="button" aria-expanded="false" onclick="toggleCardScroll(event,this)">打開卷軸</button>
       <div class="card-shortcuts" aria-label="&#x57CE;&#x7246;&#x5FEB;&#x6377;&#x5165;&#x53E3;">
-        <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'wall')">&#x6253;&#x958B;&#x57CE;&#x7246;</button>
+        <button class="card-shortcut" type="button" onclick="openArkWallAdminShortcut(event)">新增記錄</button>
+        <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'wall')">進入城牆</button>
       </div>
     </div>
 
@@ -3870,6 +3871,11 @@ function toggleCardScroll(event,btn){
   var isOpen=card.classList.toggle('shortcuts-open');
   btn.setAttribute('aria-expanded',isOpen?'true':'false');
   btn.textContent=isOpen?'收起卷軸':'打開卷軸';
+}
+
+function openArkWallAdminShortcut(event){
+  if(event&&event.stopPropagation)event.stopPropagation();
+  window.open(ARK_WALL_ADMIN_URL,'_blank','noopener');
 }
 
 function openEmpireCardShortcut(event,panel,tab){
