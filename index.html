@@ -516,12 +516,47 @@ body::after{
 @keyframes appear{from{opacity:0;transform:translateY(36px) scale(.94)}to{opacity:1;transform:translateY(0) scale(1)}}
 .card:hover{transform:translateY(-12px) scale(1.03);z-index:10}
 .card.active{transform:translateY(-16px) scale(1.05);z-index:20}
+.card-scroll-toggle{
+  width:100%;
+  min-height:42px;
+  margin-top:10px;
+  border:1px solid rgba(196,164,92,.56);
+  border-radius:10px;
+  background:
+    radial-gradient(ellipse at 50% 0,rgba(255,244,196,.2),transparent 58%),
+    linear-gradient(90deg,rgba(18,12,5,.92),rgba(116,82,28,.44) 50%,rgba(18,12,5,.92));
+  color:#f4e5b7;
+  font-family:var(--font);
+  font-size:16px;
+  font-weight:900;
+  letter-spacing:2px;
+  cursor:pointer;
+  text-shadow:0 0 12px rgba(232,192,80,.2),0 1px 0 rgba(0,0,0,.62);
+  box-shadow:0 8px 20px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,246,216,.16);
+  transition:border-color .18s,box-shadow .18s,filter .18s;
+}
+.card-scroll-toggle:hover,
+.card-scroll-toggle:focus-visible{
+  border-color:rgba(232,192,80,.78);
+  box-shadow:0 10px 24px rgba(0,0,0,.34),0 0 18px rgba(232,192,80,.14),inset 0 1px 0 rgba(255,246,216,.2);
+  filter:brightness(1.05);
+  outline:none;
+}
+.card-scroll-toggle::after{
+  content:"v";
+  display:inline-block;
+  margin-left:8px;
+  font-family:var(--sans);
+  font-size:13px;
+  transition:transform .18s;
+}
+.card.shortcuts-open .card-scroll-toggle::after{transform:rotate(180deg)}
 .card-shortcuts{
   position:relative;
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
+  display:none;
+  grid-template-columns:1fr;
   gap:8px;
-  margin-top:10px;
+  margin-top:8px;
   padding:13px 14px 12px;
   border:1px solid rgba(196,164,92,.58);
   border-radius:14px 14px 10px 10px;
@@ -539,6 +574,7 @@ body::after{
     inset 0 0 22px rgba(0,0,0,.28);
   isolation:isolate;
 }
+.card.shortcuts-open .card-shortcuts{display:grid}
 .card-shortcuts::before,
 .card-shortcuts::after{
   content:"";
@@ -2752,6 +2788,7 @@ body::after{
           </div>
         </div>
       </div>
+      <button class="card-scroll-toggle" type="button" aria-expanded="false" onclick="toggleCardScroll(event,this)">打開卷軸</button>
       <div class="card-shortcuts" aria-label="&#x8CA1;&#x653F;&#x5FEB;&#x6377;&#x5165;&#x53E3;">
         <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'finance','finance-accs')">&#x570B;&#x5EAB;&#x73FE;&#x6CC1;</button>
         <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'finance','finance-foodhouse')">&#x7CE7;&#x5009;&#x6703;&#x5831;</button>
@@ -2783,6 +2820,7 @@ body::after{
           </div>
         </div>
       </div>
+      <button class="card-scroll-toggle" type="button" aria-expanded="false" onclick="toggleCardScroll(event,this)">打開卷軸</button>
       <div class="card-shortcuts" aria-label="&#x5167;&#x653F;&#x5FEB;&#x6377;&#x5165;&#x53E3;">
         <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'domestic','booking-form')">&#x5FEB;&#x901F;&#x8A18;&#x5E33;</button>
         <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'domestic','booking-recent')">&#x6700;&#x8FD1;&#x8A18;&#x9304;</button>
@@ -2813,6 +2851,7 @@ body::after{
           </div>
         </div>
       </div>
+      <button class="card-scroll-toggle" type="button" aria-expanded="false" onclick="toggleCardScroll(event,this)">打開卷軸</button>
       <div class="card-shortcuts" aria-label="&#x8ECD;&#x6A5F;&#x8655;&#x5FEB;&#x6377;&#x5165;&#x53E3;">
         <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'council','council-roster')">&#x90E8;&#x968A;&#x9663;&#x5BB9;</button>
         <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'council','council-holdings')">&#x8ECD;&#x5718;&#x6982;&#x89BD;</button>
@@ -2844,6 +2883,7 @@ body::after{
           </div>
         </div>
       </div>
+      <button class="card-scroll-toggle" type="button" aria-expanded="false" onclick="toggleCardScroll(event,this)">打開卷軸</button>
       <div class="card-shortcuts" aria-label="醫館快捷入口">
         <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'medical','medical-quick')">快速記錄</button>
         <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'medical','medical-tarot')">抽牌記錄</button>
@@ -2875,6 +2915,7 @@ body::after{
           </div>
         </div>
       </div>
+      <button class="card-scroll-toggle" type="button" aria-expanded="false" onclick="toggleCardScroll(event,this)">打開卷軸</button>
       <div class="card-shortcuts" aria-label="&#x53F8;&#x5929;&#x76E3;&#x5FEB;&#x6377;&#x5165;&#x53E3;">
         <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'stars','stars-home')">&#x547D;&#x76E4;&#x7E3D;&#x89BD;</button>
         <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'stars','stars-chronicle')">&#x4E8B;&#x4EF6;&#x7DE8;&#x5E74;</button>
@@ -2904,6 +2945,7 @@ body::after{
           </div>
         </div>
       </div>
+      <button class="card-scroll-toggle" type="button" aria-expanded="false" onclick="toggleCardScroll(event,this)">打開卷軸</button>
       <div class="card-shortcuts" aria-label="&#x57CE;&#x7246;&#x5FEB;&#x6377;&#x5165;&#x53E3;">
         <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'wall')">&#x6253;&#x958B;&#x57CE;&#x7246;</button>
       </div>
@@ -3818,6 +3860,15 @@ function closePanel(){
   currentPanel=null;
 }
 function overlayClick(e){if(e.target===document.getElementById('overlay'))closePanel()}
+
+function toggleCardScroll(event,btn){
+  if(event&&event.stopPropagation)event.stopPropagation();
+  var card=btn&&btn.closest?btn.closest('.card'):null;
+  if(!card)return;
+  var isOpen=card.classList.toggle('shortcuts-open');
+  btn.setAttribute('aria-expanded',isOpen?'true':'false');
+  btn.textContent=isOpen?'收起卷軸':'打開卷軸';
+}
 
 function openEmpireCardShortcut(event,panel,tab){
   if(event&&event.stopPropagation)event.stopPropagation();
