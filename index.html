@@ -2266,18 +2266,18 @@ body::after{
   .hdr-char-wrap:hover{transform:none}
   .cards{
     display:grid;
-    grid-template-columns:repeat(2,minmax(0,clamp(150px,44vw,210px)));
+    grid-template-columns:minmax(0,min(100%,432px));
     justify-content:center;
     align-items:start;
-    gap:12px;
+    gap:14px;
     width:100%;
-    max-width:460px;
+    max-width:432px;
     padding:0;
   }
   .card{
     width:100%;
     min-width:0;
-    max-width:210px;
+    max-width:432px;
     justify-self:center;
   }
   #c-finance.finance-landscape,
@@ -2285,7 +2285,7 @@ body::after{
   #c-council.military-landscape{
     grid-column:auto;
     width:100%;
-    max-width:210px;
+    max-width:432px;
   }
   #c-finance.finance-landscape .art,
   #c-domestic.domestic-landscape .art,
@@ -2296,7 +2296,7 @@ body::after{
   .card:hover,
   .card.active{transform:translateY(-4px) scale(1.01)}
   .card .art{
-    height:clamp(250px,64vw,360px)!important;
+    height:clamp(360px,92vw,520px)!important;
   }
   #c-finance .frame,
   #c-domestic .frame{display:block;min-height:0}
@@ -2335,16 +2335,16 @@ body::after{
   .advisor-duo-stage{height:188px}
   .advisor-duo-label{min-width:94px;font-size:11px;letter-spacing:.3px;padding:5px 8px}
   .cards{
-    grid-template-columns:repeat(2,minmax(0,clamp(138px,44vw,178px)));
-    gap:10px;
+    grid-template-columns:minmax(0,1fr);
+    gap:14px;
     max-width:390px;
   }
-  .card{max-width:178px}
+  .card{max-width:100%}
   #c-finance.finance-landscape,
   #c-domestic.domestic-landscape,
   #c-council.military-landscape{
     grid-column:auto;
-    max-width:178px;
+    max-width:100%;
   }
   #c-finance.finance-landscape .art,
   #c-domestic.domestic-landscape .art,
@@ -2353,7 +2353,7 @@ body::after{
     aspect-ratio:16/9;
   }
   .card .art{
-    height:clamp(214px,56vw,280px)!important;
+    height:clamp(360px,108vw,500px)!important;
   }
   .card-shortcuts{
     gap:9px;
