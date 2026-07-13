@@ -675,6 +675,17 @@ body::after{
 #c-market .frame{margin-top:0}
 #c-finance .frame{margin-top:0}
 #c-council .frame{margin-top:0}
+#c-finance.finance-landscape{
+  width:502px;
+}
+#c-finance.finance-landscape .art{
+  height:auto!important;
+  aspect-ratio:16/9;
+}
+#c-finance.finance-landscape .card-video{
+  object-fit:cover;
+  object-position:center center;
+}
 .market-lord{
   position:absolute;
   top:-65px;
@@ -2263,6 +2274,15 @@ body::after{
     max-width:210px;
     justify-self:center;
   }
+  #c-finance.finance-landscape{
+    grid-column:1/-1;
+    width:100%;
+    max-width:432px;
+  }
+  #c-finance.finance-landscape .art{
+    height:auto!important;
+    aspect-ratio:16/9;
+  }
   .card:hover,
   .card.active{transform:translateY(-4px) scale(1.01)}
   .card .art{
@@ -2310,6 +2330,14 @@ body::after{
     max-width:390px;
   }
   .card{max-width:178px}
+  #c-finance.finance-landscape{
+    grid-column:1/-1;
+    max-width:100%;
+  }
+  #c-finance.finance-landscape .art{
+    height:auto!important;
+    aspect-ratio:16/9;
+  }
   .card .art{
     height:clamp(214px,56vw,280px)!important;
   }
@@ -2767,7 +2795,7 @@ body::after{
   <div class="cards">
 
     <!-- 財政 -->
-    <div class="card" id="c-finance" onclick="openPanel('finance')">
+    <div class="card finance-landscape" id="c-finance" onclick="openPanel('finance')">
       <div class="frame">
         <div class="corner tl"></div><div class="corner tr"></div>
         <div class="corner bl"></div><div class="corner br"></div>
@@ -2775,7 +2803,7 @@ body::after{
         <div class="art" style="position:relative;overflow:hidden;height:427px;border-bottom:none;">
           <video
             class="card-video"
-            src="finance-card.mp4"
+            src="finance-cardv2.mp4"
             loop
             muted
             playsinline
