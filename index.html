@@ -496,7 +496,7 @@ body::after{
 }
 
 /* ── Card row ── */
-.cards{display:flex;gap:22px;justify-content:center;flex-wrap:wrap}
+.cards{display:flex;gap:22px;justify-content:center;flex-wrap:wrap;max-width:1026px;width:100%;margin:0 auto}
 
 /* ── Card ── */
 .card{
@@ -675,14 +675,17 @@ body::after{
 #c-market .frame{margin-top:0}
 #c-finance .frame{margin-top:0}
 #c-council .frame{margin-top:0}
-#c-finance.finance-landscape{
+#c-finance.finance-landscape,
+#c-domestic.domestic-landscape{
   width:502px;
 }
-#c-finance.finance-landscape .art{
+#c-finance.finance-landscape .art,
+#c-domestic.domestic-landscape .art{
   height:auto!important;
   aspect-ratio:16/9;
 }
-#c-finance.finance-landscape .card-video{
+#c-finance.finance-landscape .card-video,
+#c-domestic.domestic-landscape .card-video{
   object-fit:cover;
   object-position:center center;
 }
@@ -2274,12 +2277,14 @@ body::after{
     max-width:210px;
     justify-self:center;
   }
-  #c-finance.finance-landscape{
-    grid-column:1/-1;
+  #c-finance.finance-landscape,
+  #c-domestic.domestic-landscape{
+    grid-column:auto;
     width:100%;
-    max-width:432px;
+    max-width:210px;
   }
-  #c-finance.finance-landscape .art{
+  #c-finance.finance-landscape .art,
+  #c-domestic.domestic-landscape .art{
     height:auto!important;
     aspect-ratio:16/9;
   }
@@ -2330,11 +2335,13 @@ body::after{
     max-width:390px;
   }
   .card{max-width:178px}
-  #c-finance.finance-landscape{
-    grid-column:1/-1;
-    max-width:100%;
+  #c-finance.finance-landscape,
+  #c-domestic.domestic-landscape{
+    grid-column:auto;
+    max-width:178px;
   }
-  #c-finance.finance-landscape .art{
+  #c-finance.finance-landscape .art,
+  #c-domestic.domestic-landscape .art{
     height:auto!important;
     aspect-ratio:16/9;
   }
@@ -2828,7 +2835,7 @@ body::after{
     </div>
 
     <!-- 內政 -->
-    <div class="card" id="c-domestic" onclick="openPanel('domestic')">
+    <div class="card domestic-landscape" id="c-domestic" onclick="openPanel('domestic')">
       <div class="frame">
         <div class="corner tl"></div><div class="corner tr"></div>
         <div class="corner bl"></div><div class="corner br"></div>
@@ -2836,11 +2843,11 @@ body::after{
         <div class="art" style="position:relative;overflow:hidden;height:427px;border-bottom:none;">
           <video
             class="card-video"
-            src="domestic-card.mp4"
-            loop
+            src="domestic-cardv2.mp4"
+            autoplay
             muted
             playsinline
-            preload="metadata"
+            preload="auto"
             style="width:100%;height:100%;display:block;object-fit:cover;object-position:center center;"
           ></video>
           <div style="position:absolute;bottom:0;left:0;right:0;z-index:4;
@@ -10346,7 +10353,7 @@ function initCardVideoPlayback(){
         video.currentTime=0;
       }catch(e){}
     }
-    if(card.id==='c-finance'){
+    if(card.id==='c-finance'||card.id==='c-domestic'){
       video.dataset.playOnEntry='1';
       video.loop=false;
       video.addEventListener('ended',function(){
