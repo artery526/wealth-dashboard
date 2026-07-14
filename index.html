@@ -111,7 +111,7 @@ body::after{
   display:inline-block;
   cursor:pointer;
   transition:transform .3s;
-  width:590px;
+  width:720px;
   overflow:visible;
   background:transparent;
 }
@@ -145,10 +145,12 @@ body::after{
 .advisor-duo-role.active{filter:brightness(1.08) drop-shadow(0 0 10px rgba(232,192,80,.12))}
 .advisor-duo-role.pangtong{transform:none}
 .advisor-duo-role.pangtong:hover{transform:translateY(-5px) scale(1.025)}
+.advisor-duo-role.pangtong,
 .advisor-duo-role.zhuge{
   width:342px;
   flex:0 0 342px;
 }
+.advisor-duo-role.pangtong .advisor-duo-stage,
 .advisor-duo-role.zhuge .advisor-duo-stage{
   height:192px;
   transform:none;
@@ -181,7 +183,7 @@ body::after{
   filter:saturate(.96) brightness(1.05) contrast(1.04) drop-shadow(0 10px 16px rgba(0,0,0,.3));
   mix-blend-mode:normal;
 }
-.advisor-duo-role.pangtong .advisor-duo-video{transform:scale(1);transform-origin:center bottom}
+.advisor-duo-role.pangtong .advisor-duo-video,
 .advisor-duo-role.zhuge .advisor-duo-video{
   object-fit:cover;
   object-position:center center;
@@ -2267,14 +2269,16 @@ body::after{
   }
   .hdr-left{position:static;transform:none;width:100%;justify-content:center}
   .hdr-char-wrap{
-    width:clamp(310px,84vw,400px);
-    max-width:92vw;
+    width:clamp(310px,96vw,454px);
+    max-width:96vw;
     overflow:visible;
   }
   .advisor-duo{min-height:232px;gap:14px;padding:4px 0 0}
   .advisor-duo-role{width:158px;flex:0 0 158px}
-  .advisor-duo-role.zhuge{width:220px;flex:0 0 220px}
+  .advisor-duo-role.pangtong,
+  .advisor-duo-role.zhuge{width:190px;flex:0 0 190px}
   .advisor-duo-stage{height:224px}
+  .advisor-duo-role.pangtong .advisor-duo-stage,
   .advisor-duo-role.zhuge .advisor-duo-stage{height:124px}
   .advisor-duo-label{min-width:96px;font-size:11px;padding:5px 8px}
   .hdr-char{
@@ -2356,12 +2360,14 @@ body::after{
 @media(max-width:480px){
   .wrap{padding:12px 10px 36px}
   .hdr{margin-bottom:10px}
-  .hdr-char-wrap{width:clamp(300px,94vw,380px)}
-  .advisor-duo{min-height:218px;gap:10px;justify-content:center}
+  .hdr-char-wrap{width:clamp(300px,96vw,380px)}
+  .advisor-duo{min-height:136px;gap:10px;justify-content:center}
   .advisor-duo-role{width:148px;flex:0 0 148px}
-  .advisor-duo-role.zhuge{width:216px;flex:0 0 216px}
+  .advisor-duo-role.pangtong,
+  .advisor-duo-role.zhuge{width:180px;flex:0 0 180px}
   .advisor-duo-stage{height:210px}
-  .advisor-duo-role.zhuge .advisor-duo-stage{height:122px}
+  .advisor-duo-role.pangtong .advisor-duo-stage,
+  .advisor-duo-role.zhuge .advisor-duo-stage{height:102px}
   .advisor-duo-label{min-width:94px;font-size:11px;letter-spacing:.3px;padding:5px 8px}
   .cards{
     grid-template-columns:minmax(0,1fr);
@@ -2829,7 +2835,7 @@ body::after{
       <div class="hdr-char-wrap advisor-duo-wrap">
         <div class="advisor-duo" aria-label="選擇軍師">
           <button class="advisor-duo-role pangtong" type="button" onclick="openAdvisorAIFromOrb(event)" title="龐統 · 軍師AI">
-            <span class="advisor-duo-stage"><video class="advisor-duo-video" src="wistomtree.mp4" poster="pangtong.png" muted playsinline preload="auto" aria-label="龐統軍師"></video></span>
+            <span class="advisor-duo-stage"><video class="advisor-duo-video" src="pangtongmenu.mp4" poster="pangtong.png" muted playsinline preload="auto" aria-label="龐統軍師"></video></span>
           </button>
           <button class="advisor-duo-role zhuge" type="button" onclick="openAdvisorDialog()" title="策 諸葛亮">
             <span class="advisor-duo-stage"><video class="advisor-duo-video" src="Kongmingmenu.mp4" poster="advisor-zhuge.png" muted playsinline preload="auto" aria-label="諸葛亮軍師"></video></span>
