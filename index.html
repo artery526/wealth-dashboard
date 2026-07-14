@@ -111,7 +111,7 @@ body::after{
   display:inline-block;
   cursor:pointer;
   transition:transform .3s;
-  width:420px;
+  width:590px;
   overflow:visible;
   background:transparent;
 }
@@ -131,6 +131,7 @@ body::after{
 .advisor-duo-role{
   position:relative;
   width:194px;
+  flex:0 0 194px;
   border:0;
   background:transparent;
   color:var(--gold);
@@ -144,7 +145,14 @@ body::after{
 .advisor-duo-role.active{filter:brightness(1.08) drop-shadow(0 0 10px rgba(232,192,80,.12))}
 .advisor-duo-role.pangtong{transform:none}
 .advisor-duo-role.pangtong:hover{transform:translateY(-5px) scale(1.025)}
-.advisor-duo-role.zhuge .advisor-duo-stage{transform:none}
+.advisor-duo-role.zhuge{
+  width:342px;
+  flex:0 0 342px;
+}
+.advisor-duo-role.zhuge .advisor-duo-stage{
+  height:192px;
+  transform:none;
+}
 .advisor-duo-role .advisor-duo-stage::after{
   content:none;
 }
@@ -174,7 +182,16 @@ body::after{
   mix-blend-mode:normal;
 }
 .advisor-duo-role.pangtong .advisor-duo-video{transform:scale(1);transform-origin:center bottom}
-.advisor-duo-role.zhuge .advisor-duo-video{object-fit:cover;transform:scale(1.34);transform-origin:center bottom}
+.advisor-duo-role.zhuge .advisor-duo-video{
+  object-fit:cover;
+  object-position:center center;
+  transform:scale(1.08);
+  transform-origin:center center;
+  opacity:.9;
+  filter:saturate(.86) brightness(.94) contrast(.96) drop-shadow(0 12px 18px rgba(0,0,0,.18));
+  -webkit-mask-image:radial-gradient(ellipse 70% 78% at 50% 52%,#000 0 58%,rgba(0,0,0,.72) 76%,transparent 100%);
+  mask-image:radial-gradient(ellipse 70% 78% at 50% 52%,#000 0 58%,rgba(0,0,0,.72) 76%,transparent 100%);
+}
 .advisor-duo-label{
   display:inline-flex;
   align-items:center;
@@ -2256,7 +2273,9 @@ body::after{
   }
   .advisor-duo{min-height:232px;gap:14px;padding:4px 0 0}
   .advisor-duo-role{width:158px;flex:0 0 158px}
+  .advisor-duo-role.zhuge{width:220px;flex:0 0 220px}
   .advisor-duo-stage{height:224px}
+  .advisor-duo-role.zhuge .advisor-duo-stage{height:124px}
   .advisor-duo-label{min-width:96px;font-size:11px;padding:5px 8px}
   .hdr-char{
     width:100%;
@@ -2340,7 +2359,9 @@ body::after{
   .hdr-char-wrap{width:clamp(300px,94vw,380px)}
   .advisor-duo{min-height:218px;gap:10px;justify-content:center}
   .advisor-duo-role{width:148px;flex:0 0 148px}
+  .advisor-duo-role.zhuge{width:216px;flex:0 0 216px}
   .advisor-duo-stage{height:210px}
+  .advisor-duo-role.zhuge .advisor-duo-stage{height:122px}
   .advisor-duo-label{min-width:94px;font-size:11px;letter-spacing:.3px;padding:5px 8px}
   .cards{
     grid-template-columns:minmax(0,1fr);
