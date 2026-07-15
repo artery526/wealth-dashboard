@@ -10883,10 +10883,7 @@ function advisorAIExamplesHtml(){
     ['配息備忘','美股 QQQI 0.63'],
     ['股票賣出','賣出 100股 IAU 156000'],
     ['股票買入','買入 12.02股 施羅德 54000'],
-    ['資產簡報','檢視本月資產'],
-    ['開啟頁面','糧 / 看年度財報'],
-    ['行程待辦','行程 / 今日行程 / 待辦'],
-    ['載具會員','載具 / 711 / 全']
+    ['資產簡報','檢視本月資產']
   ];
   return `<div class="advisor-ai-examples">
     <div class="advisor-ai-examples-title">口令範例</div>
@@ -10905,7 +10902,10 @@ function advisorAIQuickCommands(){
     {label:'行程&待辦',command:'行程'},
     {label:'本月資產',command:'本月資產'},
     {label:'查詢現金',command:'現金?'},
-    {label:'查詢國泰Stock',command:'國泰s?'}
+    {label:'查詢國泰Stock',command:'國泰s?'},
+    {label:'年度財報',command:'年度財報'},
+    {label:'糧倉會報',command:'糧倉會報'},
+    {label:'部隊陣容',command:'部隊陣容'}
   ];
 }
 
@@ -11169,6 +11169,7 @@ function advisorAIOpenTarget(text){
   if(key==='medical')return {intent:'open',panel:'medical',label:'醫館'};
   if(key.indexOf('糧')>=0)return {intent:'open',panel:'finance',tab:'finance-foodhouse',label:'糧倉會報'};
   if(key.indexOf('年度財報')>=0||key.indexOf('財報')>=0)return {intent:'open',panel:'finance',tab:'domestic-yearly',label:'年度財報'};
+  if(key.indexOf('部隊陣容')>=0||key.indexOf('陣容')>=0)return {intent:'open',panel:'council',tab:'council-roster',label:'部隊陣容'};
   if(key.indexOf('總經')>=0)return {intent:'open',panel:'council',tab:'macro-overview',label:'總經戰情'};
   if(key.indexOf('市集')>=0||key.indexOf('市場')>=0)return {intent:'open',panel:'council',tab:'market-watch',label:'快捷戰報'};
   if(key.indexOf('內政')>=0||key.indexOf('記帳')>=0)return {intent:'open',panel:'domestic',tab:'booking-form',label:'快速記帳'};
@@ -11330,6 +11331,7 @@ function advisorAICommand(raw){
   if(compact.indexOf('提款')>=0&&amount>0)return {intent:'withdraw',amount:amount};
   if(compact.indexOf('年度財報')>=0)return {intent:'open',panel:'finance',tab:'domestic-yearly',label:'年度財報'};
   if(compact==='糧'||compact.indexOf('糧倉')>=0)return {intent:'open',panel:'finance',tab:'finance-foodhouse',label:'糧倉會報'};
+  if(compact.indexOf('部隊陣容')>=0||compact.indexOf('陣容')>=0)return {intent:'open',panel:'council',tab:'council-roster',label:'部隊陣容'};
   if(compact.indexOf('總經')>=0)return {intent:'open',panel:'council',tab:'macro-overview',label:'總經戰情'};
   if(compact.indexOf('維持率')>=0)return {intent:'maintenance'};
   if(compact.indexOf('複製載具')>=0)return {intent:'copyCarrier'};
