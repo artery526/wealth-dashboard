@@ -943,6 +943,8 @@ body::after{
 .advisor-shortcut-secondary:hover{background:rgba(232,192,80,.13)}
 .advisor-ai-row{display:flex;gap:8px;align-items:center}
 .advisor-ai-row .advisor-shortcut-submit{width:auto;flex-shrink:0;padding-left:13px;padding-right:13px}
+.advisor-ai-quick-select{width:122px;flex-shrink:0;border:1px solid rgba(232,192,80,.34);border-radius:7px;background:#0a0804;color:var(--gold);font-family:var(--sans);font-size:12px;font-weight:900;padding:10px 9px;outline:none;cursor:pointer}
+.advisor-ai-quick-select:focus{border-color:var(--gold2);box-shadow:0 0 0 2px rgba(232,192,80,.1)}
 .advisor-ai-input{flex:1;min-width:0;border:1px solid #2a1c08;border-radius:7px;background:#0a0804;color:var(--ink);font-family:var(--sans);font-size:14px;padding:10px 11px;outline:none}
 .advisor-ai-input:focus{border-color:var(--gold2)}
 .advisor-ai-portrait{position:absolute;left:-204px;top:-62px;width:220px;pointer-events:none;z-index:1}
@@ -975,7 +977,7 @@ body::after{
 .advisor-close{position:absolute;top:10px;right:12px;background:none;border:none;color:#5a4018;font-size:14px;cursor:pointer;transition:color .2s;line-height:1;padding:2px}
 .advisor-close:hover{color:var(--gold)}
 @media(max-width:480px){.advisor-overlay{padding:0;background:rgba(0,0,0,0);transition:background .18s}.advisor-overlay.open{background:rgba(0,0,0,.52)}.advisor-wrap{position:fixed;left:6px;top:108px;display:flex;align-items:flex-start;transform:translateY(-8px);opacity:0;pointer-events:none;transition:opacity .18s,transform .18s}.advisor-overlay.open .advisor-wrap{transform:translateY(0);opacity:1;pointer-events:auto}.advisor-img{width:124px;margin-top:-31px}.advisor-dialog{margin-top:0;margin-left:-14px;width:calc(100vw - 122px);max-height:calc(100vh - 128px);padding:12px 12px 10px;border-radius:0 14px 14px 14px}.advisor-dialog::before{top:42px}.advisor-dialog::after{top:43px}.advisor-command-head{gap:6px;margin-right:18px}.advisor-command-title{font-size:15px;letter-spacing:.5px}.advisor-reminder-card{padding:10px 11px 11px}.advisor-reminder-title{font-size:12px}.advisor-reminder-text{font-size:12px;line-height:1.68}.advisor-btn-grid{gap:8px}.advisor-menu-toggle{min-height:42px;font-size:16px;letter-spacing:2px}.advisor-menu-mark{width:20px;height:20px;font-size:11px}.advisor-btn-group{gap:6px;border-radius:7px}.advisor-menu-section.is-open .advisor-btn-group{padding:7px;max-height:220px}.advisor-btn{font-size:12px;padding:8px 4px;letter-spacing:0;gap:3px}.advisor-btn-tag{width:14px;height:14px;font-size:9px}.advisor-btn-spacer{min-height:32px}}
-@media(max-width:480px){.advisor-ai-standalone{left:calc(50% + 40px);top:108px;width:calc(100vw - 122px);padding:15px 14px 13px;border-radius:0 14px 14px 14px}.advisor-ai-portrait{left:-112px;top:-31px;width:124px}.advisor-ai-portrait-img{max-height:168px}.advisor-ai-head-row{grid-template-columns:auto minmax(0,1fr);gap:7px;margin-right:28px;margin-bottom:14px}.advisor-ai-agenda-btn{font-size:11px;padding:7px 9px;letter-spacing:0}.advisor-ai-title-wrap{justify-content:flex-start;gap:6px}.advisor-ai-standalone .advisor-shortcut-title{font-size:20px;line-height:1.35;text-align:left}.advisor-ai-funds{justify-content:flex-start;font-size:10px}.advisor-ai-fund-pill{min-height:22px;padding:3px 6px}.advisor-ai-examples-grid{grid-template-columns:1fr}}
+@media(max-width:480px){.advisor-ai-standalone{left:calc(50% + 40px);top:108px;width:calc(100vw - 122px);padding:15px 14px 13px;border-radius:0 14px 14px 14px}.advisor-ai-portrait{left:-112px;top:-31px;width:124px}.advisor-ai-portrait-img{max-height:168px}.advisor-ai-head-row{grid-template-columns:auto minmax(0,1fr);gap:7px;margin-right:28px;margin-bottom:14px}.advisor-ai-agenda-btn{font-size:11px;padding:7px 9px;letter-spacing:0}.advisor-ai-title-wrap{justify-content:flex-start;gap:6px}.advisor-ai-standalone .advisor-shortcut-title{font-size:20px;line-height:1.35;text-align:left}.advisor-ai-funds{justify-content:flex-start;font-size:10px}.advisor-ai-fund-pill{min-height:22px;padding:3px 6px}.advisor-ai-row{flex-wrap:wrap}.advisor-ai-quick-select{width:100%;order:0}.advisor-ai-input{flex-basis:calc(100% - 66px)}.advisor-ai-examples-grid{grid-template-columns:1fr}}
 
 .military-lord{
   position:absolute;
@@ -10891,6 +10893,40 @@ function advisorAIExamplesHtml(){
   </div>`;
 }
 
+function advisorAIQuickCommands(){
+  return [
+    {label:'顯示載具',command:'顯示載具'},
+    {label:'複製載具',command:'複製載具'},
+    {label:'7-11',command:'711'},
+    {label:'全',command:'全'},
+    {label:'行程&待辦',command:'行程'},
+    {label:'本月資產',command:'本月資產'},
+    {label:'查詢現金',command:'現金?'},
+    {label:'查詢國泰Stock',command:'國泰s?'}
+  ];
+}
+
+function advisorAIQuickCommandSelectHtml(){
+  return `<select class="advisor-ai-quick-select" id="advisor-ai-quick-select" onchange="advisorAIRunQuickCommand(this)" aria-label="龐統常用查詢">
+    <option value="">常用查詢</option>
+    ${advisorAIQuickCommands().map(function(item){
+      return `<option value="${esc(item.command)}">${esc(item.label)}</option>`;
+    }).join('')}
+  </select>`;
+}
+
+function advisorAIRunQuickCommand(select){
+  var command=String(select&&select.value||'').trim();
+  if(!command)return;
+  var input=document.getElementById('advisor-ai-input');
+  if(input){
+    input.value=command;
+    input.focus();
+  }
+  if(select)select.value='';
+  runAdvisorAICommand(document.getElementById('advisor-ai-submit'));
+}
+
 function openAdvisorAI(targetPanel){
   var panel=targetPanel||advisorAIActivePanel();
   if(!panel)return;
@@ -10901,6 +10937,7 @@ function openAdvisorAI(targetPanel){
     <div class="advisor-ai-portrait"><img class="advisor-ai-portrait-img" src="pangtong.png" alt="龐統軍師"></div>
     <div class="advisor-ai-granary-brief loading" id="advisor-ai-granary-brief"><span>龐統正在檢視帝國糧倉…</span></div>
     <div class="advisor-ai-row">
+      ${advisorAIQuickCommandSelectHtml()}
       <input class="advisor-ai-input" id="advisor-ai-input" type="text" placeholder="輸入指令…" onkeydown="advisorAIKey(event)">
       <button class="advisor-shortcut-submit" id="advisor-ai-submit" type="button" onclick="runAdvisorAICommand(this)">執行</button>
     </div>
