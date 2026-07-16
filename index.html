@@ -1306,6 +1306,14 @@ body::after{
 .hero-value,.hero-cost{grid-column:1/-1;font-family:var(--mono);color:#f0dfa0;white-space:normal}
 .hero-value{color:#d7bd78}
 .hero-bottom .hero-yield{display:inline;border:0;background:transparent;padding:0;color:#34d399;font-weight:800;text-align:inherit}
+.hero-bottom .holding-payback{margin-top:2px;max-width:none;border:1px solid rgba(184,137,46,.18);border-radius:6px;background:rgba(10,8,4,.34);padding:8px 7px;text-align:left}
+.hero-bottom .holding-payback span{border:0;background:transparent;border-radius:0;padding:0;text-align:initial}
+.hero-bottom .holding-payback .holding-payback-seg{height:100%;background:#1a1208;border:1px solid rgba(232,192,80,.12);border-radius:3px;overflow:hidden}
+.hero-bottom .holding-payback .holding-payback-seg-fill{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--gold))}
+.hero-bottom .holding-payback .holding-payback-seg.complete .holding-payback-seg-fill{background:var(--teal)}
+.hero-bottom .holding-payback-title{font-size:11px}
+.hero-bottom .holding-payback-val{font-size:12px}
+.hero-bottom .holding-payback-meta{font-size:11px}
 .hero-service{font-family:var(--mono);color:#d7bd78}
 .hero-add{display:flex;min-height:304px;align-items:center;justify-content:center;text-align:center;border:1px dashed rgba(184,137,46,.45);border-radius:8px;color:#7a6030;background:rgba(10,8,4,.42);font-family:var(--sans)}
 .hero-add-plus{font-size:34px;color:#a89060;margin-bottom:10px}
@@ -2984,7 +2992,6 @@ body::after{
       <button class="card-scroll-toggle" type="button" aria-expanded="false" onclick="toggleCardScroll(event,this)">打開卷軸</button>
       <div class="card-shortcuts" aria-label="&#x8ECD;&#x6A5F;&#x8655;&#x5FEB;&#x6377;&#x5165;&#x53E3;">
         <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'council','council-roster')">&#x90E8;&#x968A;&#x9663;&#x5BB9;</button>
-        <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'council','council-holdings')">&#x8ECD;&#x5718;&#x6982;&#x89BD;</button>
         <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'council','market-watch')">&#x5FEB;&#x6377;&#x6230;&#x5831;</button>
         <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'council','macro-overview')">&#x7E3D;&#x7D93;&#x6230;&#x60C5;</button>
       </div>
@@ -4062,7 +4069,6 @@ function switchTab(btn,key){
   else if(key==='booking-recent')loadRecentBooking();
   else if(key==='dividend-center')loadDividendCenterPanel();
   else if(key==='domestic-yearly')loadDomesticYearly();
-  else if(key==='council-holdings')loadHoldings();
   else if(key==='market-watch')loadMarketDashboard();
   else if(key==='macro-overview')loadMacroOverview();
   else if(key==='council-roster')loadCouncilDashboard();
@@ -8398,7 +8404,6 @@ function renderCouncilPanel(){
   setPanelHead('📜','War Room · Command','軍機處');
   setTabs([
     {key:'council-roster',label:'部隊陣容'},
-    {key:'council-holdings',label:'軍團概覽'},
     {key:'market-watch',label:'快捷戰報'},
     {key:'macro-overview',label:'總經戰情'}
   ]);
@@ -8412,14 +8417,6 @@ function renderCouncilPanel(){
         <span class="api-action">⚙ 設定</span>
       </div>
       <div id="council-content">${apiReady?'':lockedNotice}</div>
-    </div>
-    <div class="pane" id="pane-council-holdings">
-      <div class="api-bar" onclick="openCfg()">
-        <div class="api-dot ${apiReady?'ok':'err'}" id="mil-dot"></div>
-        <span class="api-label" id="mil-label">${apiReady?'載入持股資料…':'尚未設定 API'}</span>
-        <span class="api-action">⚙ 設定</span>
-      </div>
-      <div id="holdings-content">${apiReady?'<div class="skel-line skel"></div><div class="skel-line skel" style="width:80%"></div><div class="skel-line skel" style="width:65%"></div>':lockedNotice}</div>
     </div>
     <div class="pane" id="pane-market-watch">
       <div class="api-bar" onclick="openCfg()">
@@ -9066,6 +9063,12 @@ function renderHeroCard(row,totalCost){
   var costWeight=totalCost>0?cost/totalCost*100:0;
   var annualYield=cost>0?monthlyDiv*12/cost*100:0;
   var monthlyDivText=String(h.monthlyDivDisplay||'').trim()||fmtFull(monthlyDiv);
+  var received=toNum(h.totalDiv);
+  var remaining=Math.max(0,cost-received);
+  var paybackPct=cost>0?Math.min(100,received/cost*100):0;
+  var paybackMonths=remaining>0&&monthlyDiv>0?Math.ceil(remaining/monthlyDiv):0;
+  var paybackDone=cost>0&&received>=cost;
+  var paybackText=paybackDone?'已回本':(paybackMonths>0?'剩 '+paybackMonths+' 月':'待估算');
   var tone=ret<0?'down':'up';
   var color=councilHeroAccentColor(row);
   var skill=row.skillData||{};
@@ -9102,6 +9105,16 @@ function renderHeroCard(row,totalCost){
       <span>現價 ${price?price.toFixed(2):'--'}</span>
       <span>均價 ${avg?avg.toFixed(2):'--'}</span>
       <span class="hero-service">月配息 ${esc(monthlyDivText)}</span>
+      <div class="holding-payback">
+        <div class="holding-payback-head">
+          <div class="holding-payback-title">回本進度</div>
+          <div class="holding-payback-val ${paybackDone?'complete':''}">${paybackText} · ${cost>0?paybackPct.toFixed(1)+'%':'--'}</div>
+        </div>
+        <div class="holding-payback-bar">
+          ${renderPaybackSegments(cost>0?paybackPct:0,paybackDone)}
+        </div>
+        <div class="holding-payback-meta">已收 ${fmtFull(received)} · 剩餘 ${fmtFull(remaining)}</div>
+      </div>
     </div>
   </div>`;
 }
@@ -10683,7 +10696,6 @@ initAdvisorDuoVideoPlayback();
           <button class="advisor-menu-toggle" type="button" onclick="toggleAdvisorMenuGroup(this)" aria-expanded="false"><span class="advisor-menu-mark">軍</span>軍機處<span class="advisor-menu-caret">▼</span></button>
           <div class="advisor-btn-group">
             <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'council','council-roster')"><span class="advisor-btn-tag">隊</span>部隊陣容</button>
-            <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'council','council-holdings')"><span class="advisor-btn-tag">團</span>軍團概覽</button>
           </div>
         </section>
         <section class="advisor-menu-section">
