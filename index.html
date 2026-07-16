@@ -1306,14 +1306,9 @@ body::after{
 .hero-value,.hero-cost{grid-column:1/-1;font-family:var(--mono);color:#f0dfa0;white-space:normal}
 .hero-value{color:#d7bd78}
 .hero-bottom .hero-yield{display:inline;border:0;background:transparent;padding:0;color:#34d399;font-weight:800;text-align:inherit}
-.hero-bottom .holding-payback{margin-top:2px;max-width:none;border:1px solid rgba(184,137,46,.18);border-radius:6px;background:rgba(10,8,4,.34);padding:8px 7px;text-align:left}
+.hero-bottom .holding-payback{margin-top:2px;max-width:none;border:1px solid rgba(184,137,46,.18);border-radius:6px;background:rgba(10,8,4,.34);padding:8px 7px;text-align:center}
 .hero-bottom .holding-payback span{border:0;background:transparent;border-radius:0;padding:0;text-align:initial}
-.hero-bottom .holding-payback .holding-payback-seg{height:100%;background:#1a1208;border:1px solid rgba(232,192,80,.12);border-radius:3px;overflow:hidden}
-.hero-bottom .holding-payback .holding-payback-seg-fill{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--gold))}
-.hero-bottom .holding-payback .holding-payback-seg.complete .holding-payback-seg-fill{background:var(--teal)}
-.hero-bottom .holding-payback-title{font-size:11px}
-.hero-bottom .holding-payback-val{font-size:12px}
-.hero-bottom .holding-payback-meta{font-size:11px}
+.hero-bottom .holding-payback-val{font-size:13px}
 .hero-service{font-family:var(--mono);color:#d7bd78}
 .hero-add{display:flex;min-height:304px;align-items:center;justify-content:center;text-align:center;border:1px dashed rgba(184,137,46,.45);border-radius:8px;color:#7a6030;background:rgba(10,8,4,.42);font-family:var(--sans)}
 .hero-add-plus{font-size:34px;color:#a89060;margin-bottom:10px}
@@ -9106,14 +9101,7 @@ function renderHeroCard(row,totalCost){
       <span>均價 ${avg?avg.toFixed(2):'--'}</span>
       <span class="hero-service">月配息 ${esc(monthlyDivText)}</span>
       <div class="holding-payback">
-        <div class="holding-payback-head">
-          <div class="holding-payback-title">回本進度</div>
-          <div class="holding-payback-val ${paybackDone?'complete':''}">${paybackText} · ${cost>0?paybackPct.toFixed(1)+'%':'--'}</div>
-        </div>
-        <div class="holding-payback-bar">
-          ${renderPaybackSegments(cost>0?paybackPct:0,paybackDone)}
-        </div>
-        <div class="holding-payback-meta">已收 ${fmtFull(received)} · 剩餘 ${fmtFull(remaining)}</div>
+        <div class="holding-payback-val ${paybackDone?'complete':''}">${paybackText} · ${cost>0?paybackPct.toFixed(1)+'%':'--'}</div>
       </div>
     </div>
   </div>`;
