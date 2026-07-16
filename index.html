@@ -8691,6 +8691,11 @@ function gvizCellValue(cell){
   if(cell.f!==null&&cell.f!==undefined)return cell.f;
   return cell.v!==null&&cell.v!==undefined?cell.v:'';
 }
+function gvizCellDisplayValue(cell){
+  if(!cell)return '';
+  if(cell.f!==null&&cell.f!==undefined)return cell.f;
+  return cell.v!==null&&cell.v!==undefined?cell.v:'';
+}
 
 function gvizCellSortValue(cell,rowIndex){
   if(cell&&typeof cell.v==='number')return cell.v;
@@ -8748,6 +8753,7 @@ function normalizeHoldingOverviewRow(row){
     cost:toNum(row.cost),
     marketValue:toNum(row.marketValue||row.mktVal),
     monthlyDiv:toNum(row.monthlyDiv),
+    monthlyDivDisplay:row.monthlyDivDisplay||'',
     totalDiv:toNum(row.totalDiv||row.div),
     unrealized:toNum(row.unrealized),
     totalReturn:toNum(row.totalReturn),
@@ -8770,6 +8776,7 @@ async function loadMonthlyHoldingsSheet(){
       cost:gvizCellValue(c[1]),
       marketValue:gvizCellValue(c[2]),
       monthlyDiv:gvizCellValue(c[3]),
+      monthlyDivDisplay:gvizCellDisplayValue(c[3]),
       shares:gvizCellValue(c[4]),
       price:gvizCellValue(c[5]),
       totalDiv:gvizCellValue(c[6]),
@@ -8977,7 +8984,7 @@ function renderHeroCard(row,totalCost){
   var avg=toNum(h.avgCost);
   var costWeight=totalCost>0?cost/totalCost*100:0;
   var annualYield=cost>0?monthlyDiv*12/cost*100:0;
-  var yuanPerDay=fmtWholeNumberText(h.yuanPerDay);
+  var monthlyDivText=String(h.monthlyDivDisplay||'').trim()||fmtFull(monthlyDiv);
   var tone=ret<0?'down':'up';
   var color=councilHeroAccentColor(row);
   var skill=row.skillData||{};
@@ -9013,7 +9020,7 @@ function renderHeroCard(row,totalCost){
       <span class="hero-cost">成本 ${fmtFull(cost)}${totalCost>0?' ('+costWeight.toFixed(1)+'%)':''} <span class="hero-yield">殖利率 ${annualYield.toFixed(1)}%</span></span>
       <span>現價 ${price?price.toFixed(2):'--'}</span>
       <span>均價 ${avg?avg.toFixed(2):'--'}</span>
-      <span class="hero-service">元寶/日 ${esc(yuanPerDay)}</span>
+      <span class="hero-service">月配息 ${esc(monthlyDivText)}</span>
     </div>
   </div>`;
 }
