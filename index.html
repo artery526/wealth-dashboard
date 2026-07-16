@@ -1456,6 +1456,27 @@ body::after{
 .acc-total-label{font-family:var(--sans);font-size:11px;font-weight:700;color:var(--ink2)}
 .acc-total-val{font-family:var(--mono);font-size:22px;font-weight:700;color:var(--gold)}
 
+.treasury-overview{display:grid;gap:10px;margin:0 0 14px}
+.treasury-hero{
+  position:relative;overflow:hidden;border:1px solid rgba(232,192,80,.45);border-radius:8px;
+  background:radial-gradient(circle at 18% 0,rgba(232,192,80,.16),transparent 34%),linear-gradient(145deg,#120d05,#070604 72%);
+  padding:14px 15px;box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 0 18px rgba(232,192,80,.1)
+}
+.treasury-hero:before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(232,192,80,.07),transparent);pointer-events:none}
+.treasury-hero-top{position:relative;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px}
+.treasury-label{font-family:var(--sans);font-size:10px;font-weight:900;letter-spacing:2px;color:#a67c2e;text-transform:uppercase}
+.treasury-date{font-family:var(--sans);font-size:10px;font-weight:800;color:#6f5529;white-space:nowrap}
+.treasury-main{position:relative;font-family:var(--mono);font-size:30px;font-weight:900;line-height:1.05;color:var(--gold);text-shadow:0 0 15px rgba(232,192,80,.22)}
+.treasury-sub{position:relative;margin-top:7px;font-family:var(--sans);font-size:12px;font-weight:800;color:#bda36d}
+.treasury-sub.up{color:var(--teal)}.treasury-sub.down{color:var(--coral)}
+.treasury-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.treasury-card{background:#0a0804;border:1px solid #2a1c08;border-radius:7px;padding:11px 10px;min-width:0}
+.treasury-card-label{font-family:var(--sans);font-size:10px;font-weight:800;color:#7a6030;letter-spacing:.8px;margin-bottom:5px}
+.treasury-card-value{font-family:var(--mono);font-size:17px;font-weight:900;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.treasury-card-value.up{color:var(--teal)}.treasury-card-value.down{color:var(--coral)}.treasury-card-value.gold{color:var(--gold)}
+.treasury-card-note{margin-top:4px;font-family:var(--sans);font-size:10px;font-weight:700;color:#5a4018;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media(max-width:680px){.treasury-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.treasury-main{font-size:25px}}
+
 .kpi-row{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-bottom:14px}
 .kpi{background:#0a0804;border:1px solid #2a1c08;border-radius:7px;padding:10px 10px}
 .kpi-label{font-family:var(--sans);font-size:9px;color:#5a4018;letter-spacing:.5px;margin-bottom:5px;text-transform:uppercase}
@@ -3588,7 +3609,7 @@ var advisorReminderPromise=null;
 var FOODHOUSE_CACHE_KEY='wealth_foodhouse_dashboard_v10';
 var FOODHOUSE_CACHE_TTL=6*60*60*1000;
 var foodhouseDashboardPromise=null;
-var FINANCE_TREASURY_CACHE_KEY='wealth_finance_treasury_v4';
+var FINANCE_TREASURY_CACHE_KEY='wealth_finance_treasury_v5';
 var FINANCE_TREASURY_CACHE_PREFIX='wealth_finance_treasury_v';
 var FINANCE_PLEDGE_CACHE_KEY='wealth_finance_pledge_v1';
 var FINANCE_YEARLY_CACHE_PREFIX='wealth_finance_yearly_v2_';
@@ -5499,10 +5520,10 @@ async function loadAccounts(){
     el.innerHTML=setupNotice();return;
   }
   var cached=readTimedFinanceCache(FINANCE_TREASURY_CACHE_KEY);
-  if(cached)renderAccounts(cached.accs,cached.monthly,el,cached.financeStatus,true);
+  if(cached)renderAccounts(cached.accs,cached.monthly,el,cached.financeStatus,cached.assetSnapshot,true);
   if(financeTreasuryPromise){
     return financeTreasuryPromise.then(function(data){
-      if(data&&data.accs&&document.getElementById('acc-content'))renderAccounts(data.accs,data.monthly,document.getElementById('acc-content'),data.financeStatus,false);
+      if(data&&data.accs&&document.getElementById('acc-content'))renderAccounts(data.accs,data.monthly,document.getElementById('acc-content'),data.financeStatus,data.assetSnapshot,false);
       return data;
     });
   }
@@ -5510,7 +5531,8 @@ async function loadAccounts(){
     apiGet({action:'accounts'}),
     apiGet({action:'monthly',ym:currentYM()}),
     apiGet({action:'financeStatus'}),
-    apiGet({action:'transactions',ym:currentYM()})
+    apiGet({action:'transactions',ym:currentYM()}),
+    apiGet({action:'assetSnapshot'})
   ]).then(function(results){
     if(results[0].status!=='fulfilled'){
       throw (results[0].reason||new Error('finance load failed'));
@@ -5520,13 +5542,14 @@ async function loadAccounts(){
     var data={
       accs:results[0].value||[],
       monthly:monthly,
-      financeStatus:results[2].status==='fulfilled'?results[2].value:null
+      financeStatus:results[2].status==='fulfilled'?results[2].value:null,
+      assetSnapshot:results[4].status==='fulfilled'?results[4].value:null
     };
     if(!financeStatusHasData(data.financeStatus)&&cached&&financeStatusHasData(cached.financeStatus)){
       data.financeStatus=cached.financeStatus;
     }
     writeTimedFinanceCache(FINANCE_TREASURY_CACHE_KEY,data);
-    if(document.getElementById('acc-content'))renderAccounts(data.accs,data.monthly,document.getElementById('acc-content'),data.financeStatus,false);
+    if(document.getElementById('acc-content'))renderAccounts(data.accs,data.monthly,document.getElementById('acc-content'),data.financeStatus,data.assetSnapshot,false);
     return data;
   }).catch(function(e){
     if(!cached)el.innerHTML=`<div style="color:var(--coral);font-family:var(--sans);font-size:12px;padding:12px 0">${esc(e.message)}</div>`;
@@ -5652,7 +5675,63 @@ function renderBillReservoirHtml(bills){
     <div class="res-grid">${cards}</div>`;
 }
 
-function renderAccounts(accs,monthly,el,financeStatus,stale){
+function renderTreasuryOverview(all,filtered,monthly,assetSnapshot,totalRow){
+  monthly=monthly||{};
+  var cashTotal=monthly&&!isNaN(monthly.cashAsset)?Number(monthly.cashAsset):filtered.reduce(function(s,a){return s+(Number(a.value)||0);},0);
+  var accountTotal=totalRow&&!isNaN(totalRow.value)?Number(totalRow.value):filtered.reduce(function(s,a){return s+(Number(a.value)||0);},0);
+  var marketTotal=totalRow&&totalRow.stockValue!=null&&!isNaN(totalRow.stockValue)?Number(totalRow.stockValue):filtered.reduce(function(s,a){return s+(Number(a.stockValue)||0);},0);
+  var latest=assetSnapshot&&assetSnapshot.latest;
+  var totalAsset=Number(assetSnapshot&&assetSnapshot.latestTotalAssetValue);
+  if(isNaN(totalAsset)||!isFinite(totalAsset)||totalAsset<=0)totalAsset=Number(latest&&latest.totalAssetValue);
+  if(isNaN(totalAsset)||!isFinite(totalAsset)||totalAsset<=0)totalAsset=accountTotal||cashTotal+marketTotal;
+  var totalAssetDelta=Number(assetSnapshot&&assetSnapshot.totalAssetChangeAmount);
+  var marketDelta=Number(assetSnapshot&&assetSnapshot.dailyChangeAmount);
+  var totalDeltaOk=!isNaN(totalAssetDelta)&&isFinite(totalAssetDelta);
+  var marketDeltaOk=!isNaN(marketDelta)&&isFinite(marketDelta);
+  var monthIncome=Number(monthly.income)||0;
+  var monthExpense=Number(monthly.expense)||0;
+  var monthNet=monthIncome-monthExpense;
+  var todayNet=(Number(monthly.todayIncome)||0)-(Number(monthly.todayExpense)||0);
+  var cashRatio=totalAsset>0?cashTotal/totalAsset*100:null;
+  var stockRatio=totalAsset>0?marketTotal/totalAsset*100:null;
+  var snapshotDate=latest&&latest.date?latest.date:'即時帳戶';
+  var totalDeltaText=totalDeltaOk?(totalAssetDelta>=0?'+':'-')+fmtFull(Math.abs(totalAssetDelta)):'--';
+  var marketDeltaText=marketDeltaOk?(marketDelta>=0?'+':'-')+fmtFull(Math.abs(marketDelta)):'--';
+  return `<div class="treasury-overview">
+    <div class="treasury-hero">
+      <div class="treasury-hero-top">
+        <div class="treasury-label">國庫總資產</div>
+        <div class="treasury-date">${esc(snapshotDate)}</div>
+      </div>
+      <div class="treasury-main">${fmtFull(totalAsset)}</div>
+      <div class="treasury-sub ${totalAssetDelta>0?'up':(totalAssetDelta<0?'down':'')}">總資產較昨 ${esc(totalDeltaText)}</div>
+    </div>
+    <div class="treasury-grid">
+      <div class="treasury-card">
+        <div class="treasury-card-label">現金資產</div>
+        <div class="treasury-card-value gold">${fmtFull(cashTotal)}</div>
+        <div class="treasury-card-note">${cashRatio===null?'佔比 --':'佔總資產 '+cashRatio.toFixed(1)+'%'}</div>
+      </div>
+      <div class="treasury-card">
+        <div class="treasury-card-label">投資市值</div>
+        <div class="treasury-card-value">${fmtFull(marketTotal)}</div>
+        <div class="treasury-card-note">${stockRatio===null?'較昨 '+marketDeltaText:'較昨 '+marketDeltaText+' · '+stockRatio.toFixed(1)+'%'}</div>
+      </div>
+      <div class="treasury-card">
+        <div class="treasury-card-label">本月淨流</div>
+        <div class="treasury-card-value ${monthNet>=0?'up':'down'}">${monthNet>=0?'+':'-'}${fmtFull(Math.abs(monthNet))}</div>
+        <div class="treasury-card-note">收 ${fmtFull(monthIncome)} / 支 ${fmtFull(monthExpense)}</div>
+      </div>
+      <div class="treasury-card">
+        <div class="treasury-card-label">今日結餘</div>
+        <div class="treasury-card-value ${todayNet>=0?'up':'down'}">${todayNet>=0?'+':'-'}${fmtFull(Math.abs(todayNet))}</div>
+        <div class="treasury-card-note">儲蓄率 ${esc(monthly.savingRate||'--')}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderAccounts(accs,monthly,el,financeStatus,assetSnapshot,stale){
   var all=accs||[];
   var totalRow=all.find(a=>a.name==='總資產'||a.name==='總資產/總計')||null;
   var filtered=all.filter(a=>a.name!=='總資產'&&a.name!=='總資產/總計');
@@ -5678,7 +5757,7 @@ function renderAccounts(accs,monthly,el,financeStatus,stale){
   var totalInvested=totalRow&&!isNaN(totalRow.value)?totalRow.value:filtered.reduce((s,a)=>s+(parseFloat(a.value)||0),0);
   var totalMarket=totalRow&&totalRow.stockValue!=null&&!isNaN(totalRow.stockValue)?totalRow.stockValue:filtered.reduce((s,a)=>s+(parseFloat(a.stockValue)||0),0);
 
-  el.innerHTML=statusHtml+kpisHtml+`
+  el.innerHTML=renderTreasuryOverview(all,filtered,monthly,assetSnapshot,totalRow)+statusHtml+kpisHtml+`
     <div class="sec-title">帳戶一覽</div>
     <div class="acc-grid">${accHtml}</div>
     <div class="acc-total-row">
@@ -8127,7 +8206,8 @@ function prefetchFinanceDashboard(){
       apiGet({action:'accounts'}),
       apiGet({action:'monthly',ym:currentYM()}),
       apiGet({action:'financeStatus'}),
-      apiGet({action:'transactions',ym:currentYM()})
+      apiGet({action:'transactions',ym:currentYM()}),
+      apiGet({action:'assetSnapshot'})
     ]).then(function(results){
       if(results[0].status==='fulfilled'){
         var monthly=results[1].status==='fulfilled'?(results[1].value||{}):{};
@@ -8135,7 +8215,8 @@ function prefetchFinanceDashboard(){
         var data={
           accs:results[0].value||[],
           monthly:monthly,
-          financeStatus:results[2].status==='fulfilled'?results[2].value:null
+          financeStatus:results[2].status==='fulfilled'?results[2].value:null,
+          assetSnapshot:results[4].status==='fulfilled'?results[4].value:null
         };
         writeTimedFinanceCache(FINANCE_TREASURY_CACHE_KEY,data);
         return data;
