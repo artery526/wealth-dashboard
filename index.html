@@ -1453,6 +1453,10 @@ body::after{
 .acc-name{font-family:var(--sans);font-size:13px;color:#9a7840;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.5px}
 .acc-val{font-family:var(--mono);font-size:17px;font-weight:400;color:var(--gold)}
 .acc-val.neg{color:var(--coral)}
+.treasury-total-card .acc-name{font-weight:900;color:#f0dfa0}
+.treasury-total-delta{font-family:var(--mono);font-size:11px;margin-top:2px}
+.treasury-total-delta.up{color:var(--coral)}
+.treasury-total-delta.down{color:var(--teal)}
 .acc-total-row{
   border-top:1px solid #2a1c08;padding-top:10px;
   display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;
@@ -5559,10 +5563,10 @@ function renderTreasuryAccountTotalAssetCard(assetSnapshot){
   var deltaOk=delta!==null&&delta!==undefined&&!isNaN(Number(delta))&&isFinite(Number(delta));
   var deltaClass=deltaOk?(Number(delta)<0?'down':'up'):'';
   var deltaText=deltaOk?advisorSignedCurrency(Number(delta)):'--';
-  return `<div class="acc-item">
-    <div class="acc-name">總資產</div>
+  return `<div class="acc-item treasury-total-card">
+    <div class="acc-name">帝國寶庫</div>
     <div class="acc-val">${fmtFull(total)}</div>
-    <div class="${deltaClass}" style="font-family:var(--mono);font-size:11px;margin-top:2px">較左日 ${deltaText}</div>
+    <div class="treasury-total-delta ${deltaClass}">較左日 ${deltaText}</div>
   </div>`;
 }
 
