@@ -2925,7 +2925,7 @@ body::after{
       <button class="card-scroll-toggle" type="button" aria-expanded="false" onclick="toggleCardScroll(event,this)">打開卷軸</button>
       <div class="card-shortcuts" aria-label="&#x8CA1;&#x653F;&#x5FEB;&#x6377;&#x5165;&#x53E3;">
         <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'finance','finance-accs')">&#x570B;&#x5EAB;&#x73FE;&#x6CC1;</button>
-        <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'finance','finance-foodhouse')">&#x7CE7;&#x5009;&#x6703;&#x5831;</button>
+        <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'finance','finance-accs')">&#x7CE7;&#x5009;&#x6703;&#x5831;</button>
         <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'finance','domestic-yearly')">&#x5E74;&#x5EA6;&#x8CA1;&#x5831;</button>
         <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'finance','div-calc')">&#x914D;&#x606F;&#x8A66;&#x7B97;</button>
       </div>
@@ -3573,7 +3573,6 @@ async function apiPost(body){
   try{d=parseApiJsonText(text)}catch(e){throw new Error(apiNonJsonMessage(text))}
   if(!d.ok)throw new Error(d.error||'寫入失敗');
   if(isApiWriteAction(body.action||'')){
-    invalidateFoodhouseDashboardCache();
     invalidateFinanceDashboardCache();
   }
   if(/^(macroWebhook)$/.test(body.action||''))invalidateMarketDashboardCache();
@@ -3600,7 +3599,6 @@ async function apiPostJson(body,timeoutMs){
   try{d=parseApiJsonText(text)}catch(e){throw new Error(apiNonJsonMessage(text))}
   if(!d.ok)throw new Error(d.error||'寫入失敗');
   if(isApiWriteAction(body.action||'')){
-    invalidateFoodhouseDashboardCache();
     invalidateFinanceDashboardCache();
   }
   if(/^(macroWebhook)$/.test(body.action||''))invalidateMarketDashboardCache();
@@ -3609,10 +3607,7 @@ async function apiPostJson(body,timeoutMs){
 
 var ADVISOR_REMINDER_CACHE_KEY='empire_today_advisor_reminder_v1';
 var advisorReminderPromise=null;
-var FOODHOUSE_CACHE_KEY='wealth_foodhouse_dashboard_v10';
-var FOODHOUSE_CACHE_TTL=6*60*60*1000;
-var foodhouseDashboardPromise=null;
-var FINANCE_TREASURY_CACHE_KEY='wealth_finance_treasury_v5';
+var FINANCE_TREASURY_CACHE_KEY='wealth_finance_treasury_v6';
 var FINANCE_TREASURY_CACHE_PREFIX='wealth_finance_treasury_v';
 var FINANCE_PLEDGE_CACHE_KEY='wealth_finance_pledge_v1';
 var FINANCE_YEARLY_CACHE_PREFIX='wealth_finance_yearly_v2_';
@@ -3954,7 +3949,6 @@ function openPanel(key){
   document.getElementById('panel').classList.toggle('finance-wide',key==='finance');
   document.getElementById('panel').classList.toggle('medical-wide',key==='medical');
   document.getElementById('panel').classList.toggle('stars-wide',key==='stars');
-  document.getElementById('panel').classList.toggle('foodhouse-wide',key==='foodhouse');
   currentPanel=key;
   if(key==='finance')renderFinancePanel();
   else if(key==='domestic')renderDomesticPanel();
@@ -3962,7 +3956,6 @@ function openPanel(key){
   else if(key==='council')renderCouncilPanel();
   else if(key==='medical')renderMedicalPanel();
   else if(key==='stars')renderStarsPanel();
-  else if(key==='foodhouse')renderFoodhousePanel();
   document.getElementById('overlay').classList.add('open');
 }
 function closePanel(){
@@ -3972,7 +3965,6 @@ function closePanel(){
   document.getElementById('panel').classList.remove('finance-wide');
   document.getElementById('panel').classList.remove('medical-wide');
   document.getElementById('panel').classList.remove('stars-wide');
-  document.getElementById('panel').classList.remove('foodhouse-wide');
   document.querySelectorAll('.card').forEach(c=>c.classList.remove('active'));
   currentPanel=null;
 }
@@ -4043,7 +4035,6 @@ function switchTab(btn,key){
     loadAccounts();
     loadPledgePanel();
   }
-  else if(key==='finance-foodhouse')initFoodhousePane();
   else if(key==='booking-form')initBookingForm();
   else if(key==='booking-recent')loadRecentBooking();
   else if(key==='dividend-center')loadDividendCenterPanel();
@@ -4081,47 +4072,6 @@ function renderStarsPanel(){
     </div>`;
   if(API_URL)loadZiweiCharts();
   else document.getElementById('ziwei-content').innerHTML=setupNotice();
-}
-
-function foodhousePaneHtml(active,id){
-  var apiReady=hasMainApiCredentials();
-  return `
-    <div class="pane ${active?'active':''}" id="${id||'pane-foodhouse'}">
-      <div class="api-bar" onclick="openCfg()">
-        <div class="api-dot ${apiReady?'ok':'err'}" id="foodhouse-dot"></div>
-        <span class="api-label" id="foodhouse-label">${apiReady?'API 已連線，正在調閱糧倉會報':'請先設定 API'}</span>
-        <span class="api-action">設定</span>
-      </div>
-      <div class="advisor-reminder-slot foodhouse-advisor-reminder" id="foodhouse-advisor-reminder"></div>
-      <div id="foodhouse-warroom-content">${apiReady?'<div class="skel-line skel"></div><div class="skel-line skel" style="width:72%"></div>':''}</div>
-      <div class="foodhouse-bills-wrap" id="foodhouse-bills-content">${apiReady?'<div class="skel-line skel"></div><div class="skel-line skel" style="width:66%"></div>':''}</div>
-    </div>`;
-}
-
-function initFoodhousePane(){
-  var apiReady=hasMainApiCredentials();
-  if(apiReady){
-    var cached=readFoodhouseDashboardCache();
-    if(cached)renderFoodhouseDashboardData(cached,true);
-    else{
-      var loadingReminder=document.getElementById('foodhouse-advisor-reminder');
-      if(loadingReminder)loadingReminder.innerHTML=advisorReminderHtml(null,'loading');
-    }
-    loadFoodhouseDashboard();
-  }else{
-    var reminder=document.getElementById('foodhouse-advisor-reminder');
-    if(reminder)reminder.innerHTML=advisorReminderHtml({date:today(),displayDate:today().replace(/-/g,'/'),message:'請先設定 API URL，才能調閱糧倉會報。'},'error');
-  }
-}
-
-function renderFoodhousePanel(){
-  setPanelHead('🌾','Granary · Stores','糧倉');
-  setTabs([]);
-  document.getElementById('p-body').innerHTML=foodhousePaneHtml(true,'pane-foodhouse');
-  initFoodhousePane();
-}
-function invalidateFoodhouseDashboardCache(){
-  try{localStorage.removeItem(FOODHOUSE_CACHE_KEY);}catch(e){}
 }
 
 function pruneFinanceTreasuryCacheVersions(){
@@ -4199,139 +4149,6 @@ function writeTimedMarketCache(key,data){
   try{localStorage.setItem(key,JSON.stringify({savedAt:Date.now(),data:data}));}catch(e){}
 }
 
-function readFoodhouseDashboardCache(){
-  try{
-    var cached=JSON.parse(localStorage.getItem(FOODHOUSE_CACHE_KEY)||'null');
-    if(cached&&cached.data&&Date.now()-Number(cached.savedAt||0)<FOODHOUSE_CACHE_TTL)return cached.data;
-  }catch(e){}
-  return null;
-}
-
-function renderFoodhouseDashboardData(data,stale){
-  data=data||{};
-  var core=data.core||{};
-  var monthly=core.monthly||{};
-  var holdings=core.holdings||[];
-  var reminder=document.getElementById('foodhouse-advisor-reminder');
-  var warroom=document.getElementById('foodhouse-warroom-content');
-  var bills=document.getElementById('foodhouse-bills-content');
-  if(reminder)reminder.innerHTML=advisorReminderHtml(buildAdvisorFinanceSummary(monthly,holdings,data.assetSnapshot,data.netAsset));
-  var totalMonthly=holdings.reduce(function(s,h){return s+toNum(h.monthlyDiv);},0);
-  if(warroom)warroom.innerHTML=renderFoodhouseWarRoom(core.pantry||[],monthly,data.assetSnapshot,data.netAsset,totalMonthly);
-  if(bills)bills.innerHTML=renderBillReservoirHtml(core.bills||{});
-  var label=document.getElementById('foodhouse-label');
-  if(label)label.textContent=stale?'已顯示快取 · 更新中…':'已連線 · 戰情摘要';
-}
-
-async function loadFoodhouseDashboard(){
-  if(foodhouseDashboardPromise)return foodhouseDashboardPromise;
-  foodhouseDashboardPromise=Promise.allSettled([
-    apiGet({action:'foodhouseDashboard',ym:currentYM()}),
-    loadHeroSheet(false),
-    loadArmySettingsSheet(),
-    loadAssetSnapshot(),
-    apiGet({action:'pledgeLoans'}),
-    loadCommandExposureAsset()
-  ]).then(function(results){
-    if(results[0].status!=='fulfilled')throw results[0].reason;
-    var core=results[0].value||{};
-    var assetSnapshot=results[3].status==='fulfilled'?results[3].value:null;
-    var debt=results[4].status==='fulfilled'?(results[4].value||{pledges:[],loans:[]}):{pledges:[],loans:[]};
-    var exposureAsset=results[5].status==='fulfilled'?results[5].value:null;
-    var data={
-      core:core,
-      heroes:results[1].status==='fulfilled'?(results[1].value||[]):[],
-      armySettings:results[2].status==='fulfilled'?(results[2].value||{}):{},
-      assetSnapshot:assetSnapshot,
-      debt:debt,
-      netAsset:buildFoodhouseNetAsset(core,assetSnapshot,debt,exposureAsset)
-    };
-    holdingsCache=(data.core.holdings||[]).length?data.core.holdings:holdingsCache;
-    try{localStorage.setItem(FOODHOUSE_CACHE_KEY,JSON.stringify({savedAt:Date.now(),data:data}));}catch(e){}
-    if(document.getElementById('foodhouse-warroom-content'))renderFoodhouseDashboardData(data,false);
-    return data;
-  }).catch(function(e){
-    var label=document.getElementById('foodhouse-label');
-    if(label)label.textContent=readFoodhouseDashboardCache()?'快取資料 · 更新失敗':'糧倉資料讀取失敗';
-    console.error(e);
-    return null;
-  }).finally(function(){
-    foodhouseDashboardPromise=null;
-  });
-  return foodhouseDashboardPromise;
-}
-
-function foodhouseMonthlyMetaHtml(monthly){
-  monthly=monthly||{};
-  var categories=(monthly.categories||[]).filter(function(item){return item&&item.name&&Number(item.amount)>0;}).slice(0,2);
-  var maxExpense=categories.reduce(function(max,item){return Math.max(max,Number(item.amount)||0);},0)||1;
-  var topHtml=categories.length?categories.map(function(item,idx){
-    var width=Math.max(4,Math.min(100,(Number(item.amount)||0)/maxExpense*100));
-    return `<div class="foodhouse-expense-row">
-      <div class="foodhouse-expense-head"><span>${idx+1}. ${esc(item.name)}</span><strong>${fmtFull(item.amount)}</strong></div>
-      <div class="foodhouse-expense-track"><span class="foodhouse-expense-fill" style="width:${width.toFixed(1)}%"></span></div>
-    </div>`;
-  }).join(''):`<div class="foodhouse-expense-head"><span>本月支出項目</span><strong>--</strong></div>`;
-  var savingRate=percentNum(monthly.savingRate||0);
-  var gaugeRate=Math.max(0,Math.min(100,savingRate));
-  var gaugeClass=savingRate<0?'down':'';
-  return `<div class="foodhouse-cash-meta">
-    <div class="foodhouse-monthly-viz">
-      <div class="foodhouse-savings-gauge ${gaugeClass}" role="img" aria-label="本月儲蓄率 ${esc(monthly.savingRate||'--')}">
-        <svg viewBox="0 0 120 66" aria-hidden="true">
-          <path class="gauge-track" pathLength="100" d="M 12 58 A 48 48 0 0 1 108 58"></path>
-          <path class="gauge-value" pathLength="100" stroke-dasharray="${gaugeRate.toFixed(1)} 100" d="M 12 58 A 48 48 0 0 1 108 58"></path>
-        </svg>
-        <span class="foodhouse-savings-label">本月儲蓄率</span>
-        <strong class="foodhouse-savings-number">${esc(monthly.savingRate||'--')}</strong>
-      </div>
-      <div class="foodhouse-expense-rank" aria-label="本月最高兩項支出">${topHtml}</div>
-    </div>
-  </div>`;
-}
-
-function foodhousePlusValueHtml(item){
-  if(!item||!item.displayValue)return '';
-  return `<div class="foodhouse-warroom-subvalue">(虎豹騎 ${esc(item.displayValue)})</div>`;
-}
-
-function renderFoodhouseWarRoom(items,monthly,assetSnapshot,netAsset,totalMonthly){
-  items=(items||[]).filter(function(item){return item&&item.label&&item.displayValue;});
-  var mainItems=items.slice(0,2);
-  var supplyExtra=items[2]||null;
-  var monthlyBadge=totalMonthly>0?`<div class="foodhouse-warroom-supply-badge">月補給 ${fmtFull(totalMonthly)}</div>`:'';
-  if(!mainItems.length)return '';
-  return `<div class="foodhouse-warroom-grid">
-    ${mainItems.map(function(item,idx){
-      return `<div class="foodhouse-warroom-item">
-        <div class="foodhouse-warroom-head">
-          <div class="foodhouse-warroom-label">${esc(item.label)}</div>
-          ${idx===1?monthlyBadge:''}
-        </div>
-        <div class="foodhouse-warroom-value">${esc(item.displayValue)}</div>
-        ${idx===1?foodhousePlusValueHtml(supplyExtra):''}
-        ${idx===0?foodhouseMonthlyMetaHtml(monthly):''}
-      </div>`;
-    }).join('')}
-  </div>`;
-}
-
-async function loadFoodhouseWarRoom(){
-  var content=document.getElementById('foodhouse-warroom-content');
-  if(!content)return;
-  try{
-    var results=await Promise.all([
-      apiGet({action:'councilPantry'}),
-      apiGet({action:'monthly',ym:currentYM()}).catch(function(){return {};}),
-      loadCouncilHoldingsOverview().catch(function(){return [];})
-    ]);
-    var totalMonthly=(results[2]||[]).reduce(function(s,h){return s+toNum(h.monthlyDiv);},0);
-    content.innerHTML=renderFoodhouseWarRoom(results[0],results[1],null,null,totalMonthly);
-  }catch(e){
-    content.innerHTML='';
-  }
-}
-
 function buildCouncilRosterGroupSummaries(active,totalCost){
   var used=[];
   var groups=councilRosterGroups().map(function(group){
@@ -4390,17 +4207,6 @@ function renderFoodhouseCouncilRosterSummary(rows){
         </div>`;
       }).join('')}
     </div>`;
-}
-
-async function loadFoodhouseBills(){
-  var content=document.getElementById('foodhouse-bills-content');
-  if(!content)return;
-  try{
-    var bills=await apiGet({action:'bills'});
-    content.innerHTML=renderBillReservoirHtml(bills);
-  }catch(e){
-    content.innerHTML='';
-  }
 }
 
 async function loadZiweiCharts(){
@@ -5440,7 +5246,7 @@ async function submitMedicalTarotRecord(e){
 }
 function renderFinancePanel(){
   setPanelHead('⚱️','Finance · Treasury','財政');
-  setTabs([{key:'finance-accs',label:'國庫現況'},{key:'finance-foodhouse',label:'糧倉會報'},{key:'domestic-yearly',label:'年度財報'},{key:'div-calc',label:'配息試算'}]);
+  setTabs([{key:'finance-accs',label:'國庫現況'},{key:'domestic-yearly',label:'年度財報'},{key:'div-calc',label:'配息試算'}]);
   document.getElementById('p-body').innerHTML=`
     <div class="pane active" id="pane-finance-accs">
       <div class="api-bar" onclick="openCfg()">
@@ -5457,7 +5263,6 @@ function renderFinancePanel(){
       </div>
       <div id="pledge-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:75%"></div></div>
     </div>
-    ${foodhousePaneHtml(false,'pane-finance-foodhouse')}
     <div class="pane" id="pane-domestic-yearly">
       <div class="api-bar" onclick="openCfg()">
         <div class="api-dot ${API_URL?'ok':'err'}"></div>
@@ -5483,10 +5288,10 @@ async function loadAccounts(){
     el.innerHTML=setupNotice();return;
   }
   var cached=readTimedFinanceCache(FINANCE_TREASURY_CACHE_KEY);
-  if(cached)renderAccounts(cached.accs,cached.monthly,el,cached.financeStatus,cached.assetSnapshot,true);
+  if(cached)renderAccounts(cached.accs,cached.monthly,el,cached.financeStatus,cached.assetSnapshot,cached.bills,true);
   if(financeTreasuryPromise){
     return financeTreasuryPromise.then(function(data){
-      if(data&&data.accs&&document.getElementById('acc-content'))renderAccounts(data.accs,data.monthly,document.getElementById('acc-content'),data.financeStatus,data.assetSnapshot,false);
+      if(data&&data.accs&&document.getElementById('acc-content'))renderAccounts(data.accs,data.monthly,document.getElementById('acc-content'),data.financeStatus,data.assetSnapshot,data.bills,false);
       return data;
     });
   }
@@ -5495,7 +5300,8 @@ async function loadAccounts(){
     apiGet({action:'monthly',ym:currentYM()}),
     apiGet({action:'financeStatus'}),
     apiGet({action:'transactions',ym:currentYM()}),
-    apiGet({action:'assetSnapshot'})
+    apiGet({action:'assetSnapshot'}),
+    apiGet({action:'bills'})
   ]).then(function(results){
     if(results[0].status!=='fulfilled'){
       throw (results[0].reason||new Error('finance load failed'));
@@ -5506,13 +5312,14 @@ async function loadAccounts(){
       accs:results[0].value||[],
       monthly:monthly,
       financeStatus:results[2].status==='fulfilled'?results[2].value:null,
-      assetSnapshot:results[4].status==='fulfilled'?results[4].value:null
+      assetSnapshot:results[4].status==='fulfilled'?results[4].value:null,
+      bills:results[5].status==='fulfilled'?results[5].value:null
     };
     if(!financeStatusHasData(data.financeStatus)&&cached&&financeStatusHasData(cached.financeStatus)){
       data.financeStatus=cached.financeStatus;
     }
     writeTimedFinanceCache(FINANCE_TREASURY_CACHE_KEY,data);
-    if(document.getElementById('acc-content'))renderAccounts(data.accs,data.monthly,document.getElementById('acc-content'),data.financeStatus,data.assetSnapshot,false);
+    if(document.getElementById('acc-content'))renderAccounts(data.accs,data.monthly,document.getElementById('acc-content'),data.financeStatus,data.assetSnapshot,data.bills,false);
     return data;
   }).catch(function(e){
     if(!cached)el.innerHTML=`<div style="color:var(--coral);font-family:var(--sans);font-size:12px;padding:12px 0">${esc(e.message)}</div>`;
@@ -5694,11 +5501,9 @@ function renderTreasuryOverview(all,filtered,monthly,assetSnapshot,totalRow){
   </div>`;
 }
 
-function renderAccounts(accs,monthly,el,financeStatus,assetSnapshot,stale){
+function renderAccounts(accs,monthly,el,financeStatus,assetSnapshot,bills,stale){
   var all=accs||[];
-  var totalRow=all.find(a=>a.name==='總資產'||a.name==='總資產/總計')||null;
   var filtered=all.filter(a=>a.name!=='總資產'&&a.name!=='總資產/總計');
-  var cashTotal=monthly&&!isNaN(monthly.cashAsset)?Number(monthly.cashAsset):filtered.reduce((s,a)=>s+a.value,0);
 
   var accHtml=filtered.map(a=>`
     <div class="acc-item">
@@ -5716,21 +5521,12 @@ function renderAccounts(accs,monthly,el,financeStatus,assetSnapshot,stale){
       <div class="kpi"><div class="kpi-label">本月支出</div><div class="kpi-val down">${fmtFull(monthly.expense)}</div></div>
       <div class="kpi"><div class="kpi-label">儲蓄率</div><div class="kpi-val gold">${monthly.savingRate||'—'}</div></div>
     </div>`;
-
-  var totalInvested=totalRow&&!isNaN(totalRow.value)?totalRow.value:filtered.reduce((s,a)=>s+(parseFloat(a.value)||0),0);
-  var totalMarket=totalRow&&totalRow.stockValue!=null&&!isNaN(totalRow.stockValue)?totalRow.stockValue:filtered.reduce((s,a)=>s+(parseFloat(a.stockValue)||0),0);
+  var billsHtml=renderBillReservoirHtml(bills);
 
   el.innerHTML=statusHtml+kpisHtml+`
     <div class="sec-title">帳戶一覽</div>
     <div class="acc-grid">${accHtml}</div>
-    <div class="acc-total-row">
-      <span class="acc-total-label">現金資產合計</span>
-      <span class="acc-total-val">${fmtFull(cashTotal)}</span>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-      <div class="acc-item"><div class="acc-name">投入總資產</div><div class="acc-val">${fmtFull(totalInvested)}</div></div>
-      <div class="acc-item"><div class="acc-name">市值總資產</div><div class="acc-val">${fmtFull(totalMarket)}</div></div>
-    </div>`;
+    ${billsHtml?`<div class="finance-bills-wrap">${billsHtml}</div>`:''}`;
   var dot=document.getElementById('acc-dot');
   var lbl=document.getElementById('acc-label');
   if(dot)dot.className='api-dot ok';
@@ -10359,9 +10155,6 @@ function setupNotice(){
   updateDateDisplay();
   initTodayAgenda();
   setTimeout(function(){
-    if(hasMainApiCredentials())loadFoodhouseDashboard();
-  },1500);
-  setTimeout(function(){
     if(hasMainApiCredentials())prefetchFinanceDashboard();
   },2200);
   setTimeout(function(){
@@ -10625,7 +10418,7 @@ initAdvisorDuoVideoPlayback();
         <section class="advisor-menu-section">
           <button class="advisor-menu-toggle" type="button" onclick="toggleAdvisorMenuGroup(this)" aria-expanded="false"><span class="advisor-menu-mark">糧</span>糧倉<span class="advisor-menu-caret">▼</span></button>
           <div class="advisor-btn-group">
-            <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'finance','finance-foodhouse')"><span class="advisor-btn-tag">糧</span>打開糧倉</button>
+            <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'finance','finance-accs')"><span class="advisor-btn-tag">庫</span>國庫現況</button>
             <div class="advisor-btn-spacer" aria-hidden="true"></div>
           </div>
         </section>
@@ -10954,7 +10747,7 @@ function advisorAIQuickCommands(){
     {label:'本月資產',command:'本月資產'},
     {label:'提款1000',command:'提款1000'},
     {label:'年度財報',command:'年度財報'},
-    {label:'糧倉會報',command:'糧倉會報'},
+    {label:'糧倉會報',command:'國庫現況'},
     {label:'部隊陣容',command:'部隊陣容'}
   ];
 }
@@ -11210,14 +11003,14 @@ function advisorAIResolveAccount(text){
 
 function advisorAIOpenTarget(text){
   var key=advisorAICompact(text);
-  if(key==='foodhouse')return {intent:'open',panel:'finance',tab:'finance-foodhouse',label:'糧倉會報'};
+  if(key==='foodhouse')return {intent:'open',panel:'finance',tab:'finance-accs',label:'國庫現況'};
   if(key==='market')return {intent:'open',panel:'council',tab:'market-watch',label:'快捷戰報'};
   if(key==='finance')return {intent:'open',panel:'finance',tab:'finance-accs',label:'財政'};
   if(key==='domestic')return {intent:'open',panel:'domestic',tab:'booking-form',label:'快速記帳'};
   if(key==='council')return {intent:'open',panel:'council',label:'軍機處'};
   if(key==='stars')return {intent:'open',panel:'stars',label:'司天監'};
   if(key==='medical')return {intent:'open',panel:'medical',label:'醫館'};
-  if(key.indexOf('糧')>=0)return {intent:'open',panel:'finance',tab:'finance-foodhouse',label:'糧倉會報'};
+  if(key.indexOf('糧')>=0)return {intent:'open',panel:'finance',tab:'finance-accs',label:'國庫現況'};
   if(key.indexOf('年度財報')>=0||key.indexOf('財報')>=0)return {intent:'open',panel:'finance',tab:'domestic-yearly',label:'年度財報'};
   if(key.indexOf('部隊陣容')>=0||key.indexOf('陣容')>=0)return {intent:'open',panel:'council',tab:'council-roster',label:'部隊陣容'};
   if(key.indexOf('總經')>=0)return {intent:'open',panel:'council',tab:'macro-overview',label:'總經戰情'};
@@ -11380,7 +11173,7 @@ function advisorAICommand(raw){
   if(stockSell)return {intent:'stockSell',shares:parseFloat(stockSell[1]),symbol:advisorAIResolveStockTradeLabel(stockSell[2]),amount:parseFloat(stockSell[3])};
   if(compact.indexOf('提款')>=0&&amount>0)return {intent:'withdraw',amount:amount};
   if(compact.indexOf('年度財報')>=0)return {intent:'open',panel:'finance',tab:'domestic-yearly',label:'年度財報'};
-  if(compact==='糧'||compact.indexOf('糧倉')>=0)return {intent:'open',panel:'finance',tab:'finance-foodhouse',label:'糧倉會報'};
+  if(compact==='糧'||compact.indexOf('糧倉')>=0)return {intent:'open',panel:'finance',tab:'finance-accs',label:'國庫現況'};
   if(compact.indexOf('部隊陣容')>=0||compact.indexOf('陣容')>=0)return {intent:'open',panel:'council',tab:'council-roster',label:'部隊陣容'};
   if(compact.indexOf('總經')>=0)return {intent:'open',panel:'council',tab:'macro-overview',label:'總經戰情'};
   if(compact.indexOf('維持率')>=0)return {intent:'maintenance'};
