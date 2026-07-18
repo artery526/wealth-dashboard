@@ -3842,18 +3842,6 @@ function buildAdvisorFinanceSummary(monthly,holdings,assetSnapshot,netAsset){
   monthly=monthly||{};
   holdings=holdings||[];
   var totalReturn=holdings.reduce(function(s,h){return s+toNum(h.totalReturn);},0);
-  var totalMonthly=holdings.reduce(function(s,h){return s+toNum(h.monthlyDiv);},0);
-  var totalCost=holdings.reduce(function(s,h){return s+toNum(h.cost);},0);
-  var netAssetValue=Number(netAsset&&netAsset.value)||0;
-  var borrowings=Number(netAsset&&netAsset.borrowings)||0;
-  var exposure=foodhouseMarketExposure(assetSnapshot,netAsset);
-  var previousSnapshot=assetSnapshot&&assetSnapshot.previous;
-  var exposureDeltaHtml=foodhousePctDeltaHtml(exposure,previousSnapshot&&previousSnapshot.marketExposurePct);
-  var exposureText=exposure!=null?'⚔️市場曝險 '+exposure.toFixed(1)+'%'+exposureDeltaHtml:'';
-  var debtRatio=netAssetValue>0?borrowings/netAssetValue*100:null;
-  var debtRatioDeltaHtml=foodhousePctDeltaHtml(debtRatio,previousSnapshot&&previousSnapshot.debtToNetAssetPct);
-  var debtRatioText=debtRatio!=null?'🧸負債／淨資產比 '+debtRatio.toFixed(1)+'%'+debtRatioDeltaHtml:'';
-  var exposureNoteHtml=[exposureText,debtRatioText].filter(Boolean).join('<br>');
   var totalAssetDelta=advisorSnapshotDelta(assetSnapshot,'totalAssetValue');
   var totalAssetDeltaText=advisorSnapshotDeltaFullText(assetSnapshot,'totalAssetValue');
   return {
@@ -3862,12 +3850,7 @@ function buildAdvisorFinanceSummary(monthly,holdings,assetSnapshot,netAsset){
     metrics:[
       {label:'本月收入支出',value:fmtFull(monthly.income||0)+' / '+fmtFull(monthly.expense||0),valueHtml:advisorCashflowValueHtml(monthly),sub:'收入 / 支出',toneValue:(Number(monthly.income)||0)-(Number(monthly.expense)||0),visual:advisorCashflowVisual(monthly)},
       {label:'總資產較昨漲跌追蹤',value:totalAssetDeltaText,sub:'總資產',toneValue:totalAssetDelta,visual:advisorSnapshotSparkline(assetSnapshot,'totalAssetValue','總資產')},
-      {label:'含息報酬',value:advisorSignedCurrency(totalReturn),sub:advisorTotalReturnDeltaFullText(assetSnapshot),toneValue:totalReturn,subToneValue:advisorTotalReturnDelta(assetSnapshot),visual:advisorSnapshotSparkline(assetSnapshot,'totalReturn','含息報酬')},
-      {rows:[
-        {label:'🏰淨資產',value:netAssetValue?fmtFull(netAssetValue):'--'},
-        {label:'💰信貸質押',value:fmtFull(borrowings)},
-        {label:'🪙投入成本',value:fmtFull(totalCost),noteHtml:exposureNoteHtml}
-      ],toneValue:netAssetValue||totalMonthly}
+      {label:'含息報酬',value:advisorSignedCurrency(totalReturn),sub:advisorTotalReturnDeltaFullText(assetSnapshot),toneValue:totalReturn,subToneValue:advisorTotalReturnDelta(assetSnapshot),visual:advisorSnapshotSparkline(assetSnapshot,'totalReturn','含息報酬')}
     ]
   };
 }
@@ -5758,7 +5741,7 @@ function renderAccounts(accs,monthly,el,financeStatus,assetSnapshot,stale){
   var totalInvested=totalRow&&!isNaN(totalRow.value)?totalRow.value:filtered.reduce((s,a)=>s+(parseFloat(a.value)||0),0);
   var totalMarket=totalRow&&totalRow.stockValue!=null&&!isNaN(totalRow.stockValue)?totalRow.stockValue:filtered.reduce((s,a)=>s+(parseFloat(a.stockValue)||0),0);
 
-  el.innerHTML=renderTreasuryOverview(all,filtered,monthly,assetSnapshot,totalRow)+statusHtml+kpisHtml+`
+  el.innerHTML=statusHtml+kpisHtml+`
     <div class="sec-title">帳戶一覽</div>
     <div class="acc-grid">${accHtml}</div>
     <div class="acc-total-row">
