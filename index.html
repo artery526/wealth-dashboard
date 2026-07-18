@@ -11043,6 +11043,7 @@ function advisorAIOpenTarget(text){
   if(key==='council')return {intent:'open',panel:'council',label:'軍機處'};
   if(key==='stars')return {intent:'open',panel:'stars',label:'司天監'};
   if(key==='medical')return {intent:'open',panel:'medical',label:'醫館'};
+  if(key.indexOf('國庫')>=0)return {intent:'open',panel:'finance',tab:'finance-accs',label:'國庫現況'};
   if(key.indexOf('糧')>=0)return {intent:'open',panel:'finance',tab:'finance-accs',label:'國庫現況'};
   if(key.indexOf('年度財報')>=0||key.indexOf('財報')>=0)return {intent:'open',panel:'finance',tab:'domestic-yearly',label:'年度財報'};
   if(key.indexOf('部隊陣容')>=0||key.indexOf('陣容')>=0)return {intent:'open',panel:'council',tab:'council-roster',label:'部隊陣容'};
