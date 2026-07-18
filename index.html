@@ -4506,8 +4506,8 @@ function renderMedicalPanel(){
             <input class="medical-input" id="medical-time" type="datetime-local">
           </div>
           <div class="medical-field">
-            <label for="medical-emotion">當下情緒</label>
-            <select class="medical-select" id="medical-emotion"></select>
+            <label for="medical-cause">起因</label>
+            <select class="medical-select" id="medical-cause"></select>
           </div>
           <div class="medical-field" style="grid-column:1/-1">
             <label>疼痛部位（可複選）</label>
@@ -4516,10 +4516,6 @@ function renderMedicalPanel(){
           <div class="medical-field">
             <label for="medical-pain-level">疼痛程度</label>
             <select class="medical-select" id="medical-pain-level"></select>
-          </div>
-          <div class="medical-field">
-            <label for="medical-cause">起因</label>
-            <select class="medical-select" id="medical-cause"></select>
           </div>
           <div class="medical-field">
             <label for="medical-med">使用藥物</label>
@@ -4965,7 +4961,6 @@ async function initMedicalQuickForm(){
   form.addEventListener('submit',submitMedicalQuickRecord);
 
   var options=await loadMedicalOptions();
-  fillMedicalSelect('medical-emotion',options.emotions,'選擇情緒');
   initPainAreaChips(options.painAreas);
   fillMedicalSelect('medical-cause',options.causes,'選擇起因');
   fillMedicalSelect('medical-med',options.meds,'選擇藥物');
@@ -4978,7 +4973,6 @@ async function submitMedicalQuickRecord(e){
   var timeValue=document.getElementById('medical-time').value||localDateTimeValue();
   var date=timeValue.slice(0,10);
   var time=timeValue.slice(11,16);
-  var emotion=document.getElementById('medical-emotion').value;
   var painAreas=Array.from(document.querySelectorAll('#medical-pain-area-group .pain-chip.active')).map(function(el){return el.dataset.value;});
   var painLevelValue=document.getElementById('medical-pain-level').value;
   var cause=document.getElementById('medical-cause').value;
@@ -4987,10 +4981,6 @@ async function submitMedicalQuickRecord(e){
   var notes=(document.getElementById('medical-notes')||{}).value||'';
   var painLevel=painLevelValue?parseInt(painLevelValue,10):'';
 
-  if(!emotion){
-    setMedicalStatus('請先選擇當下情緒','err');
-    return;
-  }
   if(!date||!time){
     setMedicalStatus('請確認紀錄時間','err');
     return;
@@ -5004,7 +4994,6 @@ async function submitMedicalQuickRecord(e){
       _append:true,
       date:date,
       time:time,
-      emotion:emotion,
       painAreas:painAreas,
       painLevel:painLevel,
       causes:cause?[cause]:[],
