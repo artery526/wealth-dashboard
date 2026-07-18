@@ -4193,7 +4193,7 @@ function renderFoodhouseCouncilRosterSummary(rows){
   var totalCost=holdings.reduce(function(s,r){return s+toNum(r.cost);},0);
   var groups=buildCouncilRosterGroupSummaries(active,totalCost);
   if(!groups.length)return '';
-  return `<div class="foodhouse-roster-title">部隊陣容</div>
+  return `<div class="foodhouse-roster-title">部隊兵力配置比例</div>
     <div class="foodhouse-roster-grid">
       ${groups.map(function(group){
         var costPct=group.costPct||0;
@@ -8423,7 +8423,7 @@ function renderCouncilRoster(rows,el,assetSnapshot){
       <div class="council-stat"><div class="council-stat-l">總投資成本</div><div class="council-stat-v">${fmtFull(totalCost)}</div><div class="council-stat-sub ${totalReturn>=0?'up':'down'}">含息報酬 ${totalReturn>=0?'+':'-'}${fmtFull(Math.abs(totalReturn))}</div></div>
       <div class="council-stat"><div class="council-stat-l council-stat-label-row"><span>投資市值</span>${snapshotDateBadge}</div><div class="council-stat-v">${fmtFull(totalMarket)}</div>${renderCouncilMarketDelta(assetSnapshot)}</div>
     </div>
-    <div class="council-army-title">部隊陣容</div>
+    <div class="council-army-title">軍團檢閱</div>
     ${renderCouncilRosterGroups(active,totalCost)}`;
 }
 
