@@ -7299,6 +7299,10 @@ function renderHoldingTradeEntryForm(){
       <div class="form-group">
         <label class="form-label">預估台幣</label>
         <input class="form-control" id="trade-entry-twd" type="number" min="0" placeholder="輸入台幣金額可反算股數" oninput="calcHoldingTradeEstimate(true,'twd')">
+        <label class="form-label" style="display:flex;align-items:center;gap:7px;margin-top:7px;font-weight:700;color:#c09a50">
+          <input id="trade-entry-fee-waived" type="checkbox" onchange="calcHoldingTradeEstimate(true)">
+          基金免手續費
+        </label>
       </div>
     </div>
     <button class="dividend-use-btn" id="trade-entry-submit" type="submit">登錄持股記錄</button>
@@ -7517,6 +7521,7 @@ function calcHoldingTradeEstimate(force,source){
   var sharesEl=document.getElementById('trade-entry-shares');
   var shares=parseFloat((sharesEl||{}).value)||0;
   var applyFx=(document.getElementById('trade-entry-fx-apply')||{}).checked!==false;
+  var feeUsd=(document.getElementById('trade-entry-fee-waived')||{}).checked?0:3;
   var twd=document.getElementById('trade-entry-twd');
   var canUseFx=!applyFx||fx>0;
   if(!source&&twd&&twd.dataset.calcSource==='twd')source='twd';
@@ -7525,7 +7530,7 @@ function calcHoldingTradeEstimate(force,source){
     var amount=parseFloat(twd.value)||0;
     if(amount>0){
       var usdBase=applyFx?amount/fx:amount;
-      var shareAbs=(usdBase-3)/price;
+      var shareAbs=(usdBase-feeUsd)/price;
       if(shareAbs>0){
         var sign=shares<0?-1:1;
         sharesEl.value=(sign*shareAbs).toFixed(2);
@@ -7535,7 +7540,7 @@ function calcHoldingTradeEstimate(force,source){
   }
   if(source==='shares'&&twd)twd.dataset.calcSource='shares';
   if(twd&&price>0&&shares!==0&&canUseFx&&(force||!twd.value)){
-    var base=Math.abs(price*shares)+3;
+    var base=Math.abs(price*shares)+feeUsd;
     twd.value=Math.round(applyFx?base*fx:base);
   }
 }
@@ -7587,10 +7592,11 @@ async function submitHoldingTradeEntry(e){
   var tradeDate=(document.getElementById('trade-entry-date')||{}).value||'';
   var fx=parseFloat((document.getElementById('trade-entry-fx')||{}).value)||0;
   var fxIncluded=(document.getElementById('trade-entry-fx-apply')||{}).checked!==false;
+  var feeUsd=(document.getElementById('trade-entry-fee-waived')||{}).checked?0:3;
   var shares=parseFloat((document.getElementById('trade-entry-shares')||{}).value)||0;
   var estimatedTwd=parseFloat((document.getElementById('trade-entry-twd')||{}).value)||0;
   if(estimatedTwd<=0&&priceUsd>0&&shares!==0&&(!fxIncluded||fx>0)){
-    var base=Math.abs(priceUsd*shares)+3;
+    var base=Math.abs(priceUsd*shares)+feeUsd;
     estimatedTwd=Math.round(fxIncluded?base*fx:base);
   }
   if(!symbol||priceUsd<=0||!tradeDate||shares===0||(fxIncluded&&fx<=0)){
@@ -7599,7 +7605,7 @@ async function submitHoldingTradeEntry(e){
   }
   try{
     if(btn){btn.disabled=true;btn.textContent='寫入中…';}
-    await apiPost({action:'holdingTradeEntry',symbol,priceUsd,tradeDate:tradeDate.replace(/-/g,'/'),fx,fxIncluded:fxIncluded?'1':'0',shares,estimatedTwd});
+    await apiPost({action:'holdingTradeEntry',symbol,priceUsd,tradeDate:tradeDate.replace(/-/g,'/'),fx,fxIncluded:fxIncluded?'1':'0',feeUsd,shares,estimatedTwd});
     showMsg('trade-entry-msg','✓ 已登錄持股記錄','ok');
     ['trade-entry-shares','trade-entry-twd'].forEach(function(id){
       var el=document.getElementById(id);
@@ -7616,11 +7622,12 @@ async function submitHoldingTradeEntry(e){
 function renderHoldingTradePendingRow(row){
   var direction=Number(row.shares)<0?'賣出':'買入';
   var fxText=row.fxIncluded===false?'匯率未計':'匯率 '+esc(row.fx||'--');
+  var feeUsd=(row.feeUsd===0||row.feeUsd==='0')?0:(row.feeUsd||3);
   var rowId=String(row.rowId||'');
   return `<div class="dividend-pending-row">
     <div>
       <div class="dividend-pending-name">${esc(row.displaySymbol||row.symbol)} · ${direction} ${esc(row.shares||'--')} 股</div>
-      <div class="dividend-pending-meta">股價 ${esc(row.priceUsd||'--')} · ${fxText} · 手續費 ${esc(row.feeUsd||3)} · 日期 ${esc(row.tradeDate||'--')}</div>
+      <div class="dividend-pending-meta">股價 ${esc(row.priceUsd||'--')} · ${fxText} · 手續費 ${esc(feeUsd)} · 日期 ${esc(row.tradeDate||'--')}</div>
     </div>
     <div class="dividend-pending-amt">${fmtFull(row.estimatedTwd)}</div>
     <div class="dividend-pending-actions"><button class="dividend-dismiss-btn" type="button" data-holding-trade-row-id="${esc(rowId)}" onclick="event.stopPropagation();deleteHoldingTradePending(this.dataset.holdingTradeRowId,this)">刪除</button></div>
