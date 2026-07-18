@@ -5505,12 +5505,23 @@ function renderAccounts(accs,monthly,el,financeStatus,assetSnapshot,bills,stale)
   var all=accs||[];
   var filtered=all.filter(a=>a.name!=='總資產'&&a.name!=='總資產/總計');
 
-  var accHtml=filtered.map(a=>`
+  var totalAssetHtml=renderTreasuryAccountTotalAssetCard(assetSnapshot);
+  var totalAssetInserted=false;
+  var accCards=[];
+  filtered.forEach(function(a){
+    accCards.push(`
     <div class="acc-item">
       <div class="acc-name">${esc(a.name)}</div>
       <div class="acc-val${a.value<0?' neg':''}">${fmtFull(a.value)}</div>
       ${a.stockValue!=null&&!isNaN(a.stockValue)?`<div style="font-family:var(--mono);font-size:11px;color:#9a7430;margin-top:2px">市值 $${Math.round(a.stockValue).toLocaleString('zh-TW')}</div>`:''}
-    </div>`).join('');
+    </div>`);
+    if(totalAssetHtml&&!totalAssetInserted&&isSisCathayAccount(a)){
+      accCards.push(totalAssetHtml);
+      totalAssetInserted=true;
+    }
+  });
+  if(totalAssetHtml&&!totalAssetInserted)accCards.push(totalAssetHtml);
+  var accHtml=accCards.join('');
 
   var statusHtml=renderFinanceStatusHud(financeStatus);
   var kpisHtml=`
@@ -5531,6 +5542,28 @@ function renderAccounts(accs,monthly,el,financeStatus,assetSnapshot,bills,stale)
   var lbl=document.getElementById('acc-label');
   if(dot)dot.className='api-dot ok';
   if(lbl)lbl.textContent=(stale?'快取先顯示 · 背景更新':'已連線 · ')+currentYM();
+}
+
+function isSisCathayAccount(account){
+  var name=String(account&&account.name||'');
+  return name.indexOf('Sis')>=0&&name.indexOf('國泰')>=0;
+}
+
+function renderTreasuryAccountTotalAssetCard(assetSnapshot){
+  var latest=assetSnapshot&&assetSnapshot.latest;
+  var total=Number(assetSnapshot&&assetSnapshot.latestTotalAssetValue);
+  if(isNaN(total)||!isFinite(total)||total<=0)total=Number(latest&&latest.totalAssetValue);
+  if(isNaN(total)||!isFinite(total)||total<=0)return '';
+  var delta=Number(assetSnapshot&&assetSnapshot.totalAssetChangeAmount);
+  if(isNaN(delta)||!isFinite(delta))delta=advisorSnapshotDelta(assetSnapshot,'totalAssetValue');
+  var deltaOk=delta!==null&&delta!==undefined&&!isNaN(Number(delta))&&isFinite(Number(delta));
+  var deltaClass=deltaOk?(Number(delta)<0?'down':'up'):'';
+  var deltaText=deltaOk?advisorSignedCurrency(Number(delta)):'--';
+  return `<div class="acc-item">
+    <div class="acc-name">總資產</div>
+    <div class="acc-val">${fmtFull(total)}</div>
+    <div class="${deltaClass}" style="font-family:var(--mono);font-size:11px;margin-top:2px">較左日 ${deltaText}</div>
+  </div>`;
 }
 
 // ══════════════════════════════════════════
