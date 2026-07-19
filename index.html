@@ -5530,6 +5530,13 @@ function renderAccounts(accs,monthly,el,financeStatus,assetSnapshot,bills,stale)
   });
   if(totalAssetHtml&&!totalAssetInserted)accCards.push(totalAssetHtml);
   var accHtml=accCards.join('');
+  var accountListHtml=`
+    <details class="finance-collapse finance-accounts-collapse">
+      <summary><span class="finance-collapse-title">帳戶一覽</span><span class="finance-collapse-meta">${accCards.length} 張卡</span></summary>
+      <div class="finance-collapse-body">
+        <div class="acc-grid">${accHtml}</div>
+      </div>
+    </details>`;
 
   var statusHtml=renderFinanceStatusHud(financeStatus);
   var kpisHtml=`
@@ -5543,8 +5550,7 @@ function renderAccounts(accs,monthly,el,financeStatus,assetSnapshot,bills,stale)
   var billsHtml=renderBillReservoirHtml(bills);
 
   el.innerHTML=statusHtml+kpisHtml+`
-    <div class="sec-title">帳戶一覽</div>
-    <div class="acc-grid">${accHtml}</div>
+    ${accountListHtml}
     ${billsHtml?`<div class="finance-bills-wrap">${billsHtml}</div>`:''}`;
   var dot=document.getElementById('acc-dot');
   var lbl=document.getElementById('acc-label');
