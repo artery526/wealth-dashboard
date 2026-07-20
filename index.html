@@ -888,6 +888,9 @@ body::after{
 .finance-reminder-wrap{margin:0 0 12px}
 .advisor-command-head{display:flex;align-items:center;justify-content:center;gap:9px;margin:0 20px 13px 0}
 .advisor-command-title{margin:0;text-align:center;font-family:'Noto Serif TC',serif;font-size:18px;font-weight:900;line-height:1.35;color:#f0dfa0;letter-spacing:1.5px;text-shadow:0 0 14px rgba(232,192,80,.22)}
+.advisor-sheet-link{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border:1px solid rgba(255,226,138,.72);border-radius:50%;background:radial-gradient(circle at 34% 28%,#fff7c7 0 12%,#f2c94c 28%,#b98724 64%,#56360d 100%);box-shadow:0 0 16px rgba(232,192,80,.38),inset 0 1px 0 rgba(255,255,255,.36);font-size:16px;line-height:1;text-decoration:none;flex-shrink:0;transition:transform .16s,filter .16s,box-shadow .16s}
+.advisor-sheet-link:hover{filter:brightness(1.08);box-shadow:0 0 22px rgba(232,192,80,.54),inset 0 1px 0 rgba(255,255,255,.42);transform:translateY(-1px)}
+.advisor-sheet-link:focus-visible{outline:2px solid rgba(255,238,190,.85);outline-offset:3px}
 .advisor-date-slot{margin:0 0 12px}
 .advisor-date-slot:empty{display:none}
 .advisor-date-slot .top-nav-logo{gap:6px;padding:10px 12px;border:1px solid rgba(232,192,80,.26);border-radius:12px;background:radial-gradient(circle at 50% 0,rgba(232,192,80,.12),transparent 58%),rgba(0,0,0,.24);box-shadow:inset 0 1px 0 rgba(255,246,216,.08),0 8px 18px rgba(0,0,0,.22)}
@@ -973,9 +976,6 @@ body::after{
 .advisor-ai-agenda-btn:disabled{opacity:.55;cursor:wait}
 .advisor-ai-title-wrap{display:flex;align-items:center;justify-content:center;gap:10px;min-width:0;flex-wrap:wrap}
 .advisor-ai-standalone .advisor-shortcut-title{font-family:'Noto Serif TC',serif;font-size:26px;letter-spacing:2px;text-align:center;margin:0;color:#f4e5b7;text-shadow:0 0 16px rgba(232,192,80,.22)}
-.advisor-ai-sheet-link{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border:1px solid rgba(255,226,138,.72);border-radius:50%;background:radial-gradient(circle at 34% 28%,#fff7c7 0 12%,#f2c94c 28%,#b98724 64%,#56360d 100%);box-shadow:0 0 16px rgba(232,192,80,.38),inset 0 1px 0 rgba(255,255,255,.36);font-size:16px;line-height:1;text-decoration:none;flex-shrink:0;transition:transform .16s,filter .16s,box-shadow .16s}
-.advisor-ai-sheet-link:hover{filter:brightness(1.08);box-shadow:0 0 22px rgba(232,192,80,.54),inset 0 1px 0 rgba(255,255,255,.42);transform:translateY(-1px)}
-.advisor-ai-sheet-link:focus-visible{outline:2px solid rgba(255,238,190,.85);outline-offset:3px}
 .advisor-ai-funds{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:0;flex-wrap:wrap;font-family:var(--sans);font-size:11px;font-weight:950;line-height:1.2;color:#f1d883}
 .advisor-ai-fund-pill{display:inline-flex;align-items:center;justify-content:center;min-height:24px;border:1px solid rgba(232,192,80,.32);border-radius:999px;background:rgba(232,192,80,.08);padding:4px 8px;white-space:nowrap;box-shadow:0 0 12px rgba(232,192,80,.09)}
 .advisor-ai-fund-pill strong{font-family:var(--mono);font-size:12px;color:#fff0b0;margin:0 1px}
@@ -10498,6 +10498,7 @@ initAdvisorDuoVideoPlayback();
       <button class="advisor-close" onclick="closeAdvisorDialog()">✕</button>
       <div class="advisor-command-head">
         <div class="advisor-command-title">主公，請下令🏹</div>
+        <a class="advisor-sheet-link" href="https://docs.google.com/spreadsheets/d/1MTPLhPA9j4kb2pllDDL1z7xaCD1UmIZutT0eVOHZd30/edit?gid=1479341396#gid=1479341396" target="_blank" rel="noopener noreferrer" aria-label="進入試算表" title="進入試算表">🪙</a>
       </div>
       <div class="advisor-date-slot" id="advisor-date-slot"></div>
       <div class="advisor-world-slot" id="advisor-world-slot"></div>
@@ -10802,7 +10803,6 @@ function advisorAIHeaderHtml(title){
       ${advisorAIQuickCommandSelectHtml()}
       <div class="advisor-ai-title-wrap">
         <div class="advisor-shortcut-title">🗡️主公，今日有何吩咐?</div>
-        <a class="advisor-ai-sheet-link" href="https://docs.google.com/spreadsheets/d/1MTPLhPA9j4kb2pllDDL1z7xaCD1UmIZutT0eVOHZd30/edit?gid=1479341396#gid=1479341396" target="_blank" rel="noopener noreferrer" aria-label="進入試算表" title="進入試算表">🪙</a>
         <div class="advisor-ai-funds" id="advisor-ai-funds">${advisorAIHeaderFundsHtml(advisorAIHeaderFundsCache&&advisorAIHeaderFundsCache.cash,advisorAIHeaderFundsCache&&advisorAIHeaderFundsCache.stock)}</div>
       </div>
     </div>`;
