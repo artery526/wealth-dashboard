@@ -973,6 +973,9 @@ body::after{
 .advisor-ai-agenda-btn:disabled{opacity:.55;cursor:wait}
 .advisor-ai-title-wrap{display:flex;align-items:center;justify-content:center;gap:10px;min-width:0;flex-wrap:wrap}
 .advisor-ai-standalone .advisor-shortcut-title{font-family:'Noto Serif TC',serif;font-size:26px;letter-spacing:2px;text-align:center;margin:0;color:#f4e5b7;text-shadow:0 0 16px rgba(232,192,80,.22)}
+.advisor-ai-sheet-link{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border:1px solid rgba(255,226,138,.72);border-radius:50%;background:radial-gradient(circle at 34% 28%,#fff7c7 0 12%,#f2c94c 28%,#b98724 64%,#56360d 100%);box-shadow:0 0 16px rgba(232,192,80,.38),inset 0 1px 0 rgba(255,255,255,.36);font-size:16px;line-height:1;text-decoration:none;flex-shrink:0;transition:transform .16s,filter .16s,box-shadow .16s}
+.advisor-ai-sheet-link:hover{filter:brightness(1.08);box-shadow:0 0 22px rgba(232,192,80,.54),inset 0 1px 0 rgba(255,255,255,.42);transform:translateY(-1px)}
+.advisor-ai-sheet-link:focus-visible{outline:2px solid rgba(255,238,190,.85);outline-offset:3px}
 .advisor-ai-funds{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:0;flex-wrap:wrap;font-family:var(--sans);font-size:11px;font-weight:950;line-height:1.2;color:#f1d883}
 .advisor-ai-fund-pill{display:inline-flex;align-items:center;justify-content:center;min-height:24px;border:1px solid rgba(232,192,80,.32);border-radius:999px;background:rgba(232,192,80,.08);padding:4px 8px;white-space:nowrap;box-shadow:0 0 12px rgba(232,192,80,.09)}
 .advisor-ai-fund-pill strong{font-family:var(--mono);font-size:12px;color:#fff0b0;margin:0 1px}
@@ -10799,6 +10802,7 @@ function advisorAIHeaderHtml(title){
       ${advisorAIQuickCommandSelectHtml()}
       <div class="advisor-ai-title-wrap">
         <div class="advisor-shortcut-title">🗡️主公，今日有何吩咐?</div>
+        <a class="advisor-ai-sheet-link" href="https://docs.google.com/spreadsheets/d/1MTPLhPA9j4kb2pllDDL1z7xaCD1UmIZutT0eVOHZd30/edit?gid=1479341396#gid=1479341396" target="_blank" rel="noopener noreferrer" aria-label="進入試算表" title="進入試算表">🪙</a>
         <div class="advisor-ai-funds" id="advisor-ai-funds">${advisorAIHeaderFundsHtml(advisorAIHeaderFundsCache&&advisorAIHeaderFundsCache.cash,advisorAIHeaderFundsCache&&advisorAIHeaderFundsCache.stock)}</div>
       </div>
     </div>`;
