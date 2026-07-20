@@ -3631,6 +3631,8 @@ var FINANCE_CACHE_TTL=6*60*60*1000;
 var financeTreasuryPromise=null;
 var financePledgePromise=null;
 var financeYearlyPromises={};
+var financeYearlyActiveRequest=0;
+var financeYearlySelectedYear='';
 var financeMonthDetailPromises={};
 var MARKET_DASHBOARD_CACHE_KEY='wealth_market_dashboard_v1';
 var MARKET_MACRO_CACHE_KEY='wealth_market_macro_v4';
@@ -7756,6 +7758,11 @@ async function loadDomesticYearly(forceRefresh){
   clearLegacyFinanceYearlyCache();
   var sel=document.getElementById('annual-year-sel');
   var selected=sel&&sel.value?sel.value:String(new Date().getFullYear());
+  var requestId=++financeYearlyActiveRequest;
+  financeYearlySelectedYear=selected;
+  function isCurrentRequest(){
+    return requestId===financeYearlyActiveRequest&&String(financeYearlySelectedYear)===String(selected)&&document.getElementById('annual-content');
+  }
   var cacheKey=FINANCE_YEARLY_CACHE_PREFIX+selected;
   if(forceRefresh){
     try{localStorage.removeItem(cacheKey);}catch(e){}
@@ -7766,13 +7773,13 @@ async function loadDomesticYearly(forceRefresh){
   else el.innerHTML='<div class="skel-line skel"></div><div class="skel-line skel" style="width:80%"></div><div class="skel-line skel" style="width:65%"></div>';
   if(financeYearlyPromises[selected]){
     return financeYearlyPromises[selected].then(function(packed){
-      if(packed&&document.getElementById('annual-content'))renderDomesticYearly(packed.data,packed.history,packed.years,selected,false);
+      if(packed&&isCurrentRequest())renderDomesticYearly(packed.data,packed.history,packed.years,selected,false);
       return packed;
     });
   }
   financeYearlyPromises[selected]=Promise.all([
-    apiGet({action:'history'}),
-    apiGet({action:'yearly',year:selected})
+    apiGet({action:'history'},25000),
+    apiGet({action:'yearly',year:selected},45000)
   ]).then(function(results){
     var history=results[0]||[];
     var data=results[1]||{};
@@ -7781,10 +7788,10 @@ async function loadDomesticYearly(forceRefresh){
     years=[...new Set(years)].sort((a,b)=>Number(b)-Number(a));
     var packed={data:data,history:history,years:years};
     writeTimedFinanceCache(cacheKey,packed);
-    if(document.getElementById('annual-content'))renderDomesticYearly(data,history,years,selected,false);
+    if(isCurrentRequest())renderDomesticYearly(data,history,years,selected,false);
     return packed;
   }).catch(function(e){
-    if(!cached)el.innerHTML=`<div style="color:var(--coral);font-family:var(--sans);font-size:12px;padding:12px 0">${esc(e.message)}</div>`;
+    if(!cached&&isCurrentRequest())el.innerHTML=`<div style="color:var(--coral);font-family:var(--sans);font-size:12px;padding:12px 0">${esc(e.message)}</div>`;
     return null;
   }).finally(function(){
     delete financeYearlyPromises[selected];
