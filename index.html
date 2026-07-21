@@ -6266,14 +6266,14 @@ function loadArkWallHistoryToday(){
 function loadArkWallLibraryMonth(){
   if(!arkWallLibrarySelectedYear||!arkWallLibrarySelectedMonth)return;
   arkWallLibraryShowAll=false;
-  arkWallLibraryStatus('載入影像庫中...');
+  arkWallLibraryStatus('載入時光長廊中...');
   return arkWallFetch('/api/photo-library/months/'+encodeURIComponent(arkWallLibrarySelectedYear)+'/'+encodeURIComponent(arkWallLibrarySelectedMonth)).then(function(data){
     var items=Array.isArray(data.items)?data.items:[];
     renderArkWallLibraryItems(items);
     arkWallLibraryStatus(arkWallLibrarySelectedYear+'-'+arkWallLibrarySelectedMonth+'，共 '+items.length+' 個影像');
     loadArkWallHistoryToday();
   }).catch(function(err){
-    arkWallLibraryStatus('影像庫讀取失敗：'+(err&&err.message?err.message:err));
+    arkWallLibraryStatus('時光長廊讀取失敗：'+(err&&err.message?err.message:err));
     renderArkWallLibraryItems([]);
     loadArkWallHistoryToday();
   });
@@ -6293,20 +6293,20 @@ function changeArkWallLibraryMonth(value){
 
 function renderArkWallLibraryBlock(){
   var years=arkWallLibraryYears();
-  if(!years.length)return '<section class="ark-wall-library" id="ark-wall-library"><div class="ark-wall-library-status">影像庫索引尚未建立。</div></section>';
+  if(!years.length)return '<section class="ark-wall-library" id="ark-wall-library"><div class="ark-wall-library-status">時光長廊索引尚未建立。</div></section>';
   if(!arkWallLibrarySelectedYear||years.indexOf(arkWallLibrarySelectedYear)<0)arkWallLibrarySelectedYear=years[0]||'';
   var months=arkWallLibraryMonthsForYear(arkWallLibrarySelectedYear);
   if(!arkWallLibrarySelectedMonth||months.indexOf(arkWallLibrarySelectedMonth)<0)arkWallLibrarySelectedMonth=months[0]||'';
   return '<section class="ark-wall-library" id="ark-wall-library">'
     +'<div class="ark-wall-library-head">'
-      +'<div><div class="ark-wall-library-title">時光長廊 / 影像庫</div><div class="ark-wall-library-sub">依年份與月份調閱 NAS Photos 影像。</div></div>'
+      +'<div><div class="ark-wall-library-title">時光長廊</div></div>'
       +'<div class="ark-wall-library-actions">'
         +'<select class="ark-wall-select" onchange="changeArkWallLibraryYear(this.value)">'+arkWallSelectOptions(years,arkWallLibrarySelectedYear,function(year){return year+'年';})+'</select>'
         +'<select class="ark-wall-select" onchange="changeArkWallLibraryMonth(this.value)">'+arkWallSelectOptions(months,arkWallLibrarySelectedMonth,function(month){return Number(month)+'月';})+'</select>'
         +'<button class="ark-wall-library-load" type="button" onclick="loadArkWallLibraryMonth()">載入影像</button>'
       +'</div>'
     +'</div>'
-    +'<div class="ark-wall-library-status" id="ark-wall-library-status">準備載入影像庫...</div>'
+    +'<div class="ark-wall-library-status" id="ark-wall-library-status">準備載入影像...</div>'
     +'<div class="ark-wall-library-grid" id="ark-wall-library-grid"></div>'
     +'<div class="ark-wall-library-more" id="ark-wall-library-more"></div>'
     +'<div class="ark-wall-history-today">'
@@ -6526,12 +6526,13 @@ function renderArkWallList(){
   if(!body)return;
   var libraryHtml=arkWallLibrarySummary
     ? renderArkWallLibraryBlock()
-    : '<section class="ark-wall-library" id="ark-wall-library"><div class="ark-wall-library-status" id="ark-wall-library-status">影像庫索引讀取中...</div></section>';
+    : '<section class="ark-wall-library" id="ark-wall-library"><div class="ark-wall-library-status" id="ark-wall-library-status">時光長廊索引讀取中...</div></section>';
   if(!arkWallEntries.length){
-    body.innerHTML=(arkWallView==='wall'?libraryHtml:'')+renderArkWallViewTabs()
-      +(arkWallView==='memo'?renderArkWallMemoList():'<div class="travel-status">城牆尚無紀錄。可由右上角「新增紀錄」寫入 NAS。</div>');
+    body.innerHTML=renderArkWallViewTabs()
+      +(arkWallView==='memo'?renderArkWallMemoList():'<div class="travel-status">城牆尚無紀錄。可由右上角「新增紀錄」寫入 NAS。</div>')
+      +(arkWallView==='wall'?libraryHtml:'');
     if(arkWallView==='wall'){
-      if(!arkWallLibrarySummary)loadArkWallLibrarySummary().then(renderArkWallList).catch(function(err){arkWallLibraryStatus('影像庫讀取失敗：'+(err&&err.message?err.message:err));});
+      if(!arkWallLibrarySummary)loadArkWallLibrarySummary().then(renderArkWallList).catch(function(err){arkWallLibraryStatus('時光長廊讀取失敗：'+(err&&err.message?err.message:err));});
       else loadArkWallLibraryMonth();
     }
     return;
@@ -6552,9 +6553,9 @@ function renderArkWallList(){
   +'<div class="ark-wall-month-title">'+esc(arkWallMonthLabel(arkWallSelectedYear,arkWallSelectedMonth))+'</div>'
   +(entries.length?'<div class="ark-wall-index">'+entries.map(arkWallIndexRow).join('')+'</div>':'<div class="travel-status">這個月份尚無紀錄。</div>');
   }
-  body.innerHTML=(arkWallView==='wall'?libraryHtml:'')+renderArkWallViewTabs()+content;
+  body.innerHTML=renderArkWallViewTabs()+content+(arkWallView==='wall'?libraryHtml:'');
   if(arkWallView==='wall'){
-    if(!arkWallLibrarySummary)loadArkWallLibrarySummary().then(renderArkWallList).catch(function(err){arkWallLibraryStatus('影像庫讀取失敗：'+(err&&err.message?err.message:err));});
+    if(!arkWallLibrarySummary)loadArkWallLibrarySummary().then(renderArkWallList).catch(function(err){arkWallLibraryStatus('時光長廊讀取失敗：'+(err&&err.message?err.message:err));});
     else loadArkWallLibraryMonth();
   }
 }
