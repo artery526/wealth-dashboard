@@ -961,6 +961,8 @@ body::after{
 .advisor-ai-examples-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 9px}
 .advisor-ai-example{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .advisor-ai-example code{font-family:var(--mono);font-size:11px;color:#e7c77a;background:rgba(232,192,80,.08);border-radius:5px;padding:1px 4px}
+.advisor-ai-tool-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+.advisor-ai-tool-row .advisor-shortcut-secondary{min-height:42px}
 .advisor-ai-result{border:1px solid rgba(232,192,80,.24);border-radius:8px;background:rgba(232,192,80,.05);padding:9px 10px;margin-top:9px;font-family:var(--sans);font-size:12px;font-weight:850;line-height:1.7;color:#d8c18a}
 .advisor-ai-granary-brief{position:relative;overflow:hidden;border:1px solid rgba(232,192,80,.28);border-radius:9px;background:linear-gradient(135deg,rgba(36,24,8,.84),rgba(8,6,3,.88));padding:10px 11px;margin:0 0 10px;font-family:var(--font);font-size:14px;font-weight:850;line-height:1.75;color:#ead9a8;text-shadow:0 0 9px rgba(232,192,80,.08)}
 .advisor-ai-granary-brief::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 10% 0,rgba(232,192,80,.16),transparent 34%);pointer-events:none}
@@ -984,7 +986,7 @@ body::after{
 .advisor-close{position:absolute;top:10px;right:12px;background:none;border:none;color:#5a4018;font-size:14px;cursor:pointer;transition:color .2s;line-height:1;padding:2px}
 .advisor-close:hover{color:var(--gold)}
 @media(max-width:480px){.advisor-overlay{padding:0;background:rgba(0,0,0,0);transition:background .18s}.advisor-overlay.open{background:rgba(0,0,0,.52)}.advisor-wrap{position:fixed;left:6px;top:108px;display:flex;align-items:flex-start;transform:translateY(-8px);opacity:0;pointer-events:none;transition:opacity .18s,transform .18s}.advisor-overlay.open .advisor-wrap{transform:translateY(0);opacity:1;pointer-events:auto}.advisor-img{width:124px;margin-top:-31px}.advisor-dialog{margin-top:0;margin-left:-14px;width:calc(100vw - 122px);max-height:calc(100vh - 128px);padding:12px 12px 10px;border-radius:0 14px 14px 14px}.advisor-dialog::before{top:42px}.advisor-dialog::after{top:43px}.advisor-command-head{gap:6px;margin-right:18px}.advisor-command-title{font-size:15px;letter-spacing:.5px}.advisor-reminder-card{padding:10px 11px 11px}.advisor-reminder-title{font-size:12px}.advisor-reminder-text{font-size:12px;line-height:1.68}.advisor-btn-grid{gap:8px}.advisor-menu-toggle{min-height:42px;font-size:16px;letter-spacing:2px}.advisor-menu-mark{width:20px;height:20px;font-size:11px}.advisor-btn-group{gap:6px;border-radius:7px}.advisor-menu-section.is-open .advisor-btn-group{padding:7px;max-height:220px}.advisor-btn{font-size:12px;padding:8px 4px;letter-spacing:0;gap:3px}.advisor-btn-tag{width:14px;height:14px;font-size:9px}.advisor-btn-spacer{min-height:32px}}
-@media(max-width:480px){.advisor-ai-standalone{left:calc(50% + 40px);top:108px;width:calc(100vw - 122px);padding:15px 14px 13px;border-radius:0 14px 14px 14px}.advisor-ai-portrait{left:-112px;top:-31px;width:124px}.advisor-ai-portrait-img{max-height:168px}.advisor-ai-head-row{grid-template-columns:auto minmax(0,1fr);gap:7px;margin-right:28px;margin-bottom:14px}.advisor-ai-agenda-btn{font-size:11px;padding:7px 9px;letter-spacing:0}.advisor-ai-head-row>.advisor-ai-quick-select{width:112px;font-size:13px;padding:8px 9px;letter-spacing:0;text-align:center;text-align-last:center}.advisor-ai-title-wrap{justify-content:flex-start;gap:6px}.advisor-ai-standalone .advisor-shortcut-title{font-size:20px;line-height:1.35;text-align:left}.advisor-ai-funds{justify-content:flex-start;font-size:10px}.advisor-ai-fund-pill{min-height:22px;padding:3px 6px}.advisor-ai-input{flex-basis:calc(100% - 66px)}.advisor-ai-examples-grid{grid-template-columns:1fr}}
+@media(max-width:480px){.advisor-ai-standalone{left:calc(50% + 40px);top:108px;width:calc(100vw - 122px);padding:15px 14px 13px;border-radius:0 14px 14px 14px}.advisor-ai-portrait{left:-112px;top:-31px;width:124px}.advisor-ai-portrait-img{max-height:168px}.advisor-ai-head-row{grid-template-columns:auto minmax(0,1fr);gap:7px;margin-right:28px;margin-bottom:14px}.advisor-ai-agenda-btn{font-size:11px;padding:7px 9px;letter-spacing:0}.advisor-ai-head-row>.advisor-ai-quick-select{width:112px;font-size:13px;padding:8px 9px;letter-spacing:0;text-align:center;text-align-last:center}.advisor-ai-title-wrap{justify-content:flex-start;gap:6px}.advisor-ai-standalone .advisor-shortcut-title{font-size:20px;line-height:1.35;text-align:left}.advisor-ai-funds{justify-content:flex-start;font-size:10px}.advisor-ai-fund-pill{min-height:22px;padding:3px 6px}.advisor-ai-input{flex-basis:calc(100% - 66px)}.advisor-ai-tool-row{grid-template-columns:1fr}.advisor-ai-examples-grid{grid-template-columns:1fr}}
 
 .military-lord{
   position:absolute;
@@ -11054,6 +11056,10 @@ function openAdvisorAI(targetPanel){
       <input class="advisor-ai-input" id="advisor-ai-input" type="text" placeholder="輸入指令…" onkeydown="advisorAIKey(event)">
       <button class="advisor-shortcut-submit" id="advisor-ai-submit" type="button" onclick="runAdvisorAICommand(this)">執行</button>
     </div>
+    <div class="advisor-ai-tool-row">
+      <button class="advisor-shortcut-secondary advisor-ai-video-download" type="button" onclick="advisorAIOpenVideoDownload()">影片下載</button>
+      <button class="advisor-shortcut-secondary" type="button" onclick="advisorAIShowSchedule()">行程待辦</button>
+    </div>
     ${advisorAIExamplesHtml()}
     <div class="advisor-shortcut-msg" id="advisor-ai-msg"></div>`;
   setTimeout(function(){
@@ -11475,6 +11481,72 @@ function advisorAISetMessage(text,type){
 
 function advisorAIResultHtml(title,lines){
   return `<div class="advisor-ai-result"><strong>${esc(title)}</strong><br>${(lines||[]).map(esc).join('<br>')}</div>`;
+}
+
+function advisorAIVideoDownloaderUrl(sourceUrl){
+  var value=String(sourceUrl||'').trim().toLowerCase();
+  if(value.indexOf('tiktok.com')>=0)return 'https://tiksave.io/zh-tw';
+  if(value.indexOf('threads.net')>=0||value.indexOf('threads.com')>=0)return 'https://lovethreads.net/zh-tw';
+  if(value.indexOf('facebook.com')>=0||value.indexOf('fb.watch')>=0||value.indexOf('fb.com')>=0)return 'https://fdownloader.net/zh-tw';
+  return '';
+}
+
+function advisorAIOpenVideoDownload(){
+  var panel=advisorAIActivePanel();
+  if(!panel)return;
+  advisorShortcutOpenKind='ai-video-download';
+  advisorDividendSelection=null;
+  advisorDividendMemoPending=null;
+  advisorAIScheduleOpen=false;
+  panel.innerHTML=`${advisorAIHeaderHtml()}
+    <div class="advisor-ai-portrait"><img class="advisor-ai-portrait-img" src="pangtong.png" alt="龐統軍師"></div>
+    <div class="advisor-shortcut-hint">貼上 TikTok、Threads 或 Facebook 影片連結；軍師會複製原連結，並開啟對應下載頁。</div>
+    <div class="advisor-shortcut-field">
+      <label>影片連結</label>
+      <input class="advisor-shortcut-input" id="advisor-ai-video-url" type="url" placeholder="https://..." onkeydown="advisorAIVideoDownloadKey(event)">
+    </div>
+    <div class="advisor-dividend-actions">
+      <button class="advisor-shortcut-secondary" type="button" onclick="openAdvisorAI()">返回</button>
+      <button class="advisor-shortcut-submit" id="advisor-ai-video-submit" type="button" onclick="advisorAISubmitVideoDownload(this)">開啟下載頁</button>
+    </div>
+    <div class="advisor-shortcut-msg" id="advisor-ai-msg"></div>`;
+  setTimeout(function(){
+    var input=document.getElementById('advisor-ai-video-url');
+    if(input)input.focus();
+  },0);
+}
+
+function advisorAIVideoDownloadKey(e){
+  if(e&&e.key==='Enter'){
+    e.preventDefault();
+    advisorAISubmitVideoDownload(document.getElementById('advisor-ai-video-submit'));
+  }
+}
+
+async function advisorAISubmitVideoDownload(btn){
+  var input=document.getElementById('advisor-ai-video-url');
+  var msg=document.getElementById('advisor-ai-msg');
+  var sourceUrl=String(input&&input.value||'').trim();
+  var downloaderUrl=advisorAIVideoDownloaderUrl(sourceUrl);
+  if(!downloaderUrl){
+    if(msg){msg.textContent='請貼上 TikTok、Threads 或 Facebook 連結。';msg.className='advisor-shortcut-msg err';}
+    return;
+  }
+  if(btn&&btn.disabled)return;
+  if(btn){btn.disabled=true;btn.textContent='開啟中…';}
+  try{
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      await navigator.clipboard.writeText(sourceUrl);
+      if(msg){msg.textContent='✓ 已複製連結，下載頁開啟後可直接貼上。';msg.className='advisor-shortcut-msg ok';}
+    }else{
+      if(msg){msg.textContent='下載頁已開啟；若未自動複製，請手動複製上方連結。';msg.className='advisor-shortcut-msg';}
+    }
+  }catch(err){
+    if(msg){msg.textContent='下載頁已開啟；瀏覽器未允許自動複製，請手動複製上方連結。';msg.className='advisor-shortcut-msg';}
+  }finally{
+    window.open(downloaderUrl,'_blank','noopener,noreferrer');
+    if(btn){btn.disabled=false;btn.textContent='開啟下載頁';}
+  }
 }
 
 function advisorAISavingRateNumber(value){
