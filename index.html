@@ -729,10 +729,10 @@ body::after{
   object-position:center center;
 }
 .finance-card-caption,.empire-card-caption{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-family:'Noto Sans TC',sans-serif;font-size:11px;color:#c09a50;letter-spacing:3px}
-.finance-card-status-dot,.empire-card-status-dot,.finance-panel-status-dot{width:9px;height:9px;border-radius:999px;display:inline-block;flex-shrink:0;border:1px solid rgba(255,238,190,.44);background:var(--coral);box-shadow:0 0 13px rgba(231,87,71,.55),inset 0 1px 0 rgba(255,255,255,.22)}
-.finance-panel-status-dot{width:10px;height:10px;margin-left:2px}
-.finance-card-status-dot.ok,.empire-card-status-dot.ok,.finance-panel-status-dot.ok{background:var(--teal);box-shadow:0 0 14px rgba(29,158,117,.62),inset 0 1px 0 rgba(255,255,255,.22)}
-.finance-card-status-dot.pending,.empire-card-status-dot.pending,.finance-panel-status-dot.pending{background:var(--gold);box-shadow:0 0 14px rgba(232,192,80,.58),inset 0 1px 0 rgba(255,255,255,.22)}
+.finance-card-status-dot,.empire-card-status-dot,.finance-panel-status-dot,.empire-panel-status-dot{width:9px;height:9px;border-radius:999px;display:inline-block;flex-shrink:0;border:1px solid rgba(255,238,190,.44);background:var(--coral);box-shadow:0 0 13px rgba(231,87,71,.55),inset 0 1px 0 rgba(255,255,255,.22)}
+.finance-panel-status-dot,.empire-panel-status-dot{width:10px;height:10px;margin-left:2px}
+.finance-card-status-dot.ok,.empire-card-status-dot.ok,.finance-panel-status-dot.ok,.empire-panel-status-dot.ok{background:var(--teal);box-shadow:0 0 14px rgba(29,158,117,.62),inset 0 1px 0 rgba(255,255,255,.22)}
+.finance-card-status-dot.pending,.empire-card-status-dot.pending,.finance-panel-status-dot.pending,.empire-panel-status-dot.pending{background:var(--gold);box-shadow:0 0 14px rgba(232,192,80,.58),inset 0 1px 0 rgba(255,255,255,.22)}
 .market-lord{
   position:absolute;
   top:-65px;
@@ -4270,6 +4270,7 @@ function setEmpireCardStatus(key,status,message){
   var targets=key==='finance'
     ? [{id:'finance-card-status-dot',cls:'finance-card-status-dot'},{id:'finance-panel-status-dot',cls:'finance-panel-status-dot'}]
     : [{id:key+'-card-status-dot',cls:'empire-card-status-dot'}];
+  if(key==='council')targets.push({id:'council-panel-status-dot',cls:'empire-panel-status-dot'});
   targets.forEach(function(target){
     var dot=document.getElementById(target.id);
     if(dot){
@@ -8549,6 +8550,9 @@ function renderMarketPanel(){
 // ══════════════════════════════════════════
 function renderCouncilPanel(){
   setPanelHead('📜','War Room · Command','軍機處');
+  var panelExtra=document.getElementById('p-extra');
+  if(panelExtra)panelExtra.innerHTML='<span class="empire-panel-status-dot err" id="council-panel-status-dot" title="軍機處連線失敗" aria-label="軍機處連線失敗"></span>';
+  setEmpireCardStatus('council',hasMainApiCredentials()?'pending':'err',hasMainApiCredentials()?'':'尚未設定 API');
   setTabs([
     {key:'council-roster',label:'部隊陣容'},
     {key:'market-watch',label:'快捷戰報'},
@@ -8558,11 +8562,6 @@ function renderCouncilPanel(){
   var lockedNotice=setupNotice();
   document.getElementById('p-body').innerHTML=`
     <div class="pane active" id="pane-council-roster">
-      <div class="api-bar">
-        <div class="api-dot ${apiReady?'ok':'err'}" id="council-dot"></div>
-        <span class="api-label" id="council-label">${apiReady?'讀取武將與持股資料…':'尚未設定 API'}</span>
-        <span class="api-action">⚙ 設定</span>
-      </div>
       <div id="council-content">${apiReady?'':lockedNotice}</div>
     </div>
     <div class="pane" id="pane-market-watch">
