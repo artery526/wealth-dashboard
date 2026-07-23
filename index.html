@@ -3283,12 +3283,17 @@ var HERO_SHEET_NAME = '武將資料';
 var HEALTH_JOURNAL_URL = 'https://artery526.github.io/health-app/medical-journal.html';
 var medicalOptionsCache = null;
 var ziweiChartsCache = [];
+var ziweiChartsPromise = null;
 var ziweiSelectedId = '';
 var ziweiZoom = 1;
 var ziweiBirthVisible = false;
 var eventChronicleCache = [];
 var eventChronicleSortedCache = [];
+var eventChroniclePromise = null;
 var eventChronicleRenderTimer = null;
+var STARS_CACHE_TTL = 10 * 60 * 1000;
+var STARS_ZIWEI_CACHE_KEY = 'wealth_stars_ziwei_v1';
+var STARS_CHRONICLE_CACHE_KEY = 'wealth_stars_chronicle_v1';
 
 var DEFAULT_MEDICAL_OPTIONS = {
   emotions: ['😎開心','🤔思考疑惑','🤕頭痛','😴想睡疲累','🥲難過','😡生氣','😮‍💨無奈','🫶感恩','😁豁然開朗'],
@@ -4023,6 +4028,8 @@ async function saveCfg(){
   localStorage.removeItem('wealth_market_macro_v2');
   localStorage.removeItem('wealth_market_macro_v3');
   localStorage.removeItem('wealth_market_macro_v4');
+  localStorage.removeItem('wealth_stars_ziwei_v1');
+  localStorage.removeItem('wealth_stars_chronicle_v1');
   localStorage.removeItem('health_api_url');
   localStorage.removeItem('health_secret_key');
   localStorage.removeItem('wealth_advisor_ai_passcode');
@@ -4307,6 +4314,25 @@ function writeTimedMarketCache(key,data){
   try{localStorage.setItem(key,JSON.stringify({savedAt:Date.now(),data:data}));}catch(e){}
 }
 
+function readStarsCache(key,allowExpired){
+  try{
+    var cached=JSON.parse(localStorage.getItem(key)||'null');
+    if(cached&&cached.data&&(allowExpired||Date.now()-Number(cached.savedAt||0)<STARS_CACHE_TTL))return cached;
+  }catch(e){}
+  return null;
+}
+
+function writeStarsCache(key,data){
+  try{localStorage.setItem(key,JSON.stringify({savedAt:Date.now(),data:data}));}catch(e){}
+}
+
+function starsCacheLabel(cached,prefix){
+  var saved=cached&&Number(cached.savedAt||0);
+  if(!saved)return prefix||'快取先顯示';
+  var age=Math.max(0,Math.round((Date.now()-saved)/60000));
+  return (prefix||'快取先顯示')+' · '+(age<1?'剛剛':age+' 分前');
+}
+
 function buildCouncilRosterGroupSummaries(active,totalCost){
   var used=[];
   var groups=councilRosterGroups().map(function(group){
@@ -4372,20 +4398,47 @@ async function loadZiweiCharts(){
   var label=document.getElementById('ziwei-label');
   var dot=document.getElementById('ziwei-dot');
   if(!content)return;
-  setEmpireCardStatus('stars',hasMainApiCredentials()?'pending':'err',hasMainApiCredentials()?'':'尚未設定 API');
-  try{
+  if(!API_URL){
+    content.innerHTML=setupNotice();
+    if(dot)dot.className='api-dot err';
+    if(label)label.textContent='尚未設定 API';
+    setEmpireCardStatus('stars','err','尚未設定 API');
+    return;
+  }
+  var cached=readStarsCache(STARS_ZIWEI_CACHE_KEY,true);
+  if(cached&&Array.isArray(cached.data)&&cached.data.length){
+    ziweiChartsCache=cached.data;
+    renderZiweiLayout();
+    if(dot)dot.className='api-dot pending';
+    if(label)label.textContent=starsCacheLabel(cached,'命盤快取先顯示')+'，背景更新中';
+    setEmpireCardStatus('stars','pending','命盤快取先顯示');
+  }else{
+    setEmpireCardStatus('stars','pending');
     content.innerHTML='<div class="skel-line skel"></div><div class="skel-line skel" style="width:78%"></div><div class="skel-line skel" style="width:62%"></div>';
-    var data=await apiGet({action:'ziweiCharts'});
+  }
+  try{
+    if(!ziweiChartsPromise){
+      ziweiChartsPromise=apiGet({action:'ziweiCharts'},20000).finally(function(){ziweiChartsPromise=null;});
+    }
+    var data=await ziweiChartsPromise;
     ziweiChartsCache=data.rows||[];
+    writeStarsCache(STARS_ZIWEI_CACHE_KEY,ziweiChartsCache);
     if(dot)dot.className='api-dot ok';
     if(label)label.textContent='已連線 · '+ziweiChartsCache.length+' 筆命盤索引';
     setEmpireCardStatus('stars','ok',ziweiChartsCache.length+' 筆命盤索引');
     renderZiweiLayout();
   }catch(e){
-    if(dot)dot.className='api-dot err';
-    if(label)label.textContent='讀取失敗';
-    setEmpireCardStatus('stars','err',e.message||'讀取失敗');
-    content.innerHTML='<div class="battle-empty" style="color:var(--coral)">讀取紫微星盤失敗：'+esc(e.message)+'</div>';
+    if(cached&&Array.isArray(cached.data)&&cached.data.length){
+      if(dot)dot.className='api-dot ok';
+      if(label)label.textContent=starsCacheLabel(cached,'命盤快取先顯示')+'，更新失敗';
+      setEmpireCardStatus('stars','ok','命盤快取可用');
+      console.warn(e);
+    }else{
+      if(dot)dot.className='api-dot err';
+      if(label)label.textContent='讀取失敗';
+      setEmpireCardStatus('stars','err',e.message||'讀取失敗');
+      content.innerHTML='<div class="battle-empty" style="color:var(--coral)">讀取紫微星盤失敗：'+esc(e.message)+'</div>';
+    }
   }
 }
 
@@ -4401,21 +4454,42 @@ async function loadEventChronicle(){
     setEmpireCardStatus('stars','err','尚未設定 API');
     return;
   }
-  setEmpireCardStatus('stars','pending');
-  try{
+  var cached=readStarsCache(STARS_CHRONICLE_CACHE_KEY,true);
+  if(cached&&Array.isArray(cached.data)&&cached.data.length){
+    eventChronicleCache=cached.data;
+    eventChronicleSortedCache=sortEventChronicleRows(eventChronicleCache);
+    renderEventChronicle();
+    if(dot)dot.className='api-dot pending';
+    if(label)label.textContent=starsCacheLabel(cached,'事件快取先顯示')+'，背景更新中';
+    setEmpireCardStatus('stars','pending','事件快取先顯示');
+  }else{
+    setEmpireCardStatus('stars','pending');
     content.innerHTML='<div class="skel-line skel"></div><div class="skel-line skel" style="width:72%"></div><div class="skel-line skel" style="width:54%"></div>';
-    var data=await apiGet({action:'eventChronicle'},30000);
+  }
+  try{
+    if(!eventChroniclePromise){
+      eventChroniclePromise=apiGet({action:'eventChronicle'},30000).finally(function(){eventChroniclePromise=null;});
+    }
+    var data=await eventChroniclePromise;
     eventChronicleCache=data.rows||[];
     eventChronicleSortedCache=sortEventChronicleRows(eventChronicleCache);
+    writeStarsCache(STARS_CHRONICLE_CACHE_KEY,eventChronicleCache);
     if(dot)dot.className='api-dot ok';
     if(label)label.textContent='已連線 · '+eventChronicleCache.length+' 筆事件';
     setEmpireCardStatus('stars','ok',eventChronicleCache.length+' 筆事件');
     renderEventChronicle();
   }catch(e){
-    if(dot)dot.className='api-dot err';
-    if(label)label.textContent='讀取失敗';
-    setEmpireCardStatus('stars','err',e.message||'讀取失敗');
-    content.innerHTML='<div class="battle-empty" style="color:var(--coral)">讀取事件編年史失敗：'+esc(e.message)+'</div>';
+    if(cached&&Array.isArray(cached.data)&&cached.data.length){
+      if(dot)dot.className='api-dot ok';
+      if(label)label.textContent=starsCacheLabel(cached,'事件快取先顯示')+'，更新失敗';
+      setEmpireCardStatus('stars','ok','事件快取可用');
+      console.warn(e);
+    }else{
+      if(dot)dot.className='api-dot err';
+      if(label)label.textContent='讀取失敗';
+      setEmpireCardStatus('stars','err',e.message||'讀取失敗');
+      content.innerHTML='<div class="battle-empty" style="color:var(--coral)">讀取事件編年史失敗：'+esc(e.message)+'</div>';
+    }
   }
 }
 
@@ -8423,6 +8497,31 @@ function prefetchMarketDashboard(){
   }
 }
 
+function prefetchStarsPanelData(){
+  if(!API_URL)return;
+  if(!readStarsCache(STARS_ZIWEI_CACHE_KEY,false)&&!ziweiChartsPromise){
+    ziweiChartsPromise=apiGet({action:'ziweiCharts'},20000).then(function(data){
+      var rows=(data&&data.rows)||[];
+      writeStarsCache(STARS_ZIWEI_CACHE_KEY,rows);
+      if(!ziweiChartsCache.length)ziweiChartsCache=rows;
+      return data||{rows:rows};
+    }).finally(function(){ziweiChartsPromise=null;});
+    ziweiChartsPromise.catch(function(e){console.warn(e);});
+  }
+  if(!readStarsCache(STARS_CHRONICLE_CACHE_KEY,false)&&!eventChroniclePromise){
+    eventChroniclePromise=apiGet({action:'eventChronicle'},30000).then(function(data){
+      var rows=(data&&data.rows)||[];
+      writeStarsCache(STARS_CHRONICLE_CACHE_KEY,rows);
+      if(!eventChronicleCache.length){
+        eventChronicleCache=rows;
+        eventChronicleSortedCache=sortEventChronicleRows(eventChronicleCache);
+      }
+      return data||{rows:rows};
+    }).finally(function(){eventChroniclePromise=null;});
+    eventChroniclePromise.catch(function(e){console.warn(e);});
+  }
+}
+
 // booking-recent 與配息試算已整合至 switchTab
 
 async function loadHoldings(){
@@ -10567,6 +10666,9 @@ function setupNotice(){
   setTimeout(function(){
     if(API_URL)prefetchMarketDashboard();
   },3200);
+  setTimeout(function(){
+    if(API_URL)prefetchStarsPanelData();
+  },4200);
   // 彰化天氣（Open-Meteo，無需 API key）
   (function(){
     var WMO={
