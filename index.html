@@ -4647,27 +4647,6 @@ function selectZiweiChart(id){
   ziweiZoom=1;
   renderZiweiList();
   renderZiweiPreview();
-  return;
-  var img=ziweiImageUrl(row,'large');
-  var original=ziweiOriginalUrl(row);
-  var meta=[row.gender,row.birthDate,row.birthTime].filter(Boolean).join(' · ');
-  viewer.innerHTML=`
-    <div class="ziwei-viewer-head">
-      <div>
-        <div class="ziwei-title">${esc(row.name)}</div>
-        <div class="ziwei-meta">${esc(meta||'未填出生資料')}${row.updatedAt?' · 更新 '+esc(row.updatedAt):''}</div>
-      </div>
-      <div class="ziwei-tools">
-        <button class="ziwei-tool" type="button" onclick="zoomZiwei(-0.15)">縮小</button>
-        <button class="ziwei-tool" type="button" onclick="zoomZiwei(0.15)">放大</button>
-        <button class="ziwei-tool" type="button" onclick="fitZiwei()">適合寬度</button>
-        ${original?`<a class="ziwei-tool" href="${esc(original)}" target="_blank" rel="noopener">開原圖</a>`:''}
-      </div>
-    </div>
-    <div class="ziwei-stage">
-      ${img?`<img class="ziwei-img" id="ziwei-img" src="${esc(img)}" alt="${esc(row.name)} 紫微命盤">`:'<div class="battle-empty">這筆資料尚未填入雲端硬碟圖片連結。</div>'}
-    </div>
-    ${row.note?`<div class="ziwei-note">${esc(row.note)}</div>`:''}`;
 }
 
 function renderZiweiPreview(){
@@ -5870,7 +5849,6 @@ async function initBookingForm(){
     setEmpireCardStatus('domestic','err',e.message||'設定載入失敗');
     return cfg;
   });
-  if(initSeq!==bookingFormInitSeq||el!==document.getElementById('pane-booking-form'))return;
   if(initSeq!==bookingFormInitSeq||el!==document.getElementById('pane-booking-form'))return;
   var cats=prioritizeBookingOption((cfg.categories&&cfg.categories.length)?cfg.categories:BOOKING_FALLBACK_CATEGORIES,'超商外食');
   var sources=prioritizeBookingOption((cfg.sources&&cfg.sources.length)?cfg.sources:BOOKING_FALLBACK_SOURCES,'投資理財');
@@ -10100,140 +10078,6 @@ function advisorWorldToneFromText(text){
   if(text.indexOf('紅')>=0||text.indexOf('黑')>=0||text.indexOf('防守')>=0||text.indexOf('警戒')>=0)return 'defense';
   if(text.indexOf('綠')>=0||text.indexOf('進攻')>=0||text.indexOf('強力')>=0)return 'attack';
   return 'watch';
-}
-function advisorWorldBuild(market,macro){
-  market=market||{};
-  macro=macro||{};
-  var rows=market.rows||[];
-  var twse=advisorWorldMarketRow(market,function(r){return r&&(r.isTWSE||r.code==='^TWII');});
-  var qqq=advisorWorldMarketRow(market,function(r){return /QQQ/i.test(String(r&&r.symbol||r&&r.code||''));});
-  var spy=advisorWorldMarketRow(market,function(r){return /SPY/i.test(String(r&&r.symbol||r&&r.code||''));});
-  var gold=advisorWorldMarketRow(market,function(r){return /GLD/i.test(String(r&&r.symbol||r&&r.code||''));});
-  var vix=advisorWorldIndicator(macro,'vix');
-  var dxy=advisorWorldIndicator(macro,'dxy');
-  var yield10y=advisorWorldIndicator(macro,'yield10y');
-  var yield2y=advisorWorldIndicator(macro,'yield2y');
-  var oil=advisorWorldIndicator(macro,'oil');
-  var cpi=advisorWorldIndicator(macro,'cpi');
-  var sofrIorbSpread=advisorWorldIndicator(macro,'sofrIorbSpread');
-  var liquidity=advisorWorldIndicator(macro,'liquidityScore');
-  var risks=[];
-  var chances=[];
-  function risk(weight,text){risks.push({weight:weight,text:text});}
-  function chance(weight,text){chances.push({weight:weight,text:text});}
-  var sofrIorbVal=advisorWorldValue(sofrIorbSpread);
-  if(sofrIorbVal!=null){
-    if(sofrIorbVal>=0.25)risk(3,'SOFR-IORB '+sofrIorbVal.toFixed(2)+'%，短端資金出現搶錢警訊。');
-    else if(sofrIorbVal>0)risk(2,'SOFR-IORB '+sofrIorbVal.toFixed(2)+'%，短端資金開始轉緊。');
-    else chance(1,'SOFR-IORB '+sofrIorbVal.toFixed(2)+'%，短端資金仍偏平穩。');
-  }
-  var vixVal=advisorWorldValue(vix);
-  if(vixVal!=null){
-    if(vixVal>=30)risk(3,'VIX 升至 '+vixVal.toFixed(2)+'，市場恐慌已進入警戒。');
-    else if(vixVal>=20)risk(2,'VIX 位於 '+vixVal.toFixed(2)+'，風險情緒偏緊。');
-    else if(vixVal<18)chance(1,'VIX 仍在低檔，市場尚未進入恐慌。');
-  }
-  var dxyVal=advisorWorldValue(dxy);
-  if(dxyVal!=null){
-    if(dxyVal>=110)risk(3,'美元指數過強，資金回流美元壓抑風險資產。');
-    else if(dxyVal>=105)risk(2,'DXY 偏強，非美資產與科技估值承壓。');
-    else chance(1,'DXY 未見強壓，風險資產仍有喘息空間。');
-  }
-  var y10=advisorWorldValue(yield10y);
-  if(y10!=null){
-    if(y10>=5)risk(3,'美國十年期殖利率逼近高壓區，估值折現壓力大。');
-    else if(y10>=4.5)risk(2,'十年期殖利率偏高，長天期資產仍受壓。');
-    else chance(1,'十年期殖利率未入高壓區，估值壓力較可控。');
-  }
-  var oilVal=advisorWorldValue(oil);
-  if(oilVal!=null){
-    if(oilVal>=100)risk(3,'油價站上百元級別，通膨與企業成本風險升高。');
-    else if(oilVal>=85)risk(2,'油價偏高，通膨降溫路徑受干擾。');
-  }
-  var cpiVal=advisorWorldValue(cpi);
-  if(cpiVal!=null){
-    if(cpiVal>=4)risk(2,'CPI年增率仍高，聯準會難以快速轉鴿。');
-    else if(cpiVal<3)chance(1,'CPI年增率接近舒緩區，政策壓力下降。');
-  }
-  var y2=advisorWorldValue(yield2y);
-  var liq=advisorWorldValue(liquidity);
-  var fedPolicy='中性觀望';
-  if((y2!=null&&y2>=5)||(liq!=null&&liq<=1)){
-    fedPolicy='偏鷹／流動性緊縮';
-    risk(3,'聯準會政策環境偏鷹，流動性不利進攻。');
-  }else if((y2!=null&&y2>=4.5)||(liq!=null&&liq<=3)){
-    fedPolicy='偏緊觀察';
-    risk(1,'聯準會政策仍偏緊，須等待利率壓力降溫。');
-  }else if(liq!=null&&liq>=4){
-    fedPolicy='偏鴿／流動性改善';
-    chance(2,'流動性分數改善，風險資產有進攻條件。');
-  }
-  [twse,qqq,spy].forEach(function(row){
-    if(!row)return;
-    var tone=marketTone(row.signal||row.status);
-    var name=row.isTWSE?'台股':(/QQQ/i.test(String(row.symbol||row.code||''))?'美股科技':'美股大盤');
-    if(tone==='defense')risk(2,name+' 技術面轉弱，短線不宜追擊。');
-    if(tone==='attack')chance(2,name+' 趨勢偏多，可保留分批進攻彈性。');
-  });
-  if(gold){
-    var goldTone=marketTone(gold.signal||gold.status);
-    if(goldTone==='attack')chance(1,'黃金維持強勢，避險與抗通膨配置有支撐。');
-    if(goldTone==='defense')risk(1,'黃金轉弱，避險需求暫未形成支撐。');
-  }
-  if(!risks.length)risk(1,'目前未見單一指標進入紅色危險區，但仍需等待市場方向確認。');
-  if(!chances.length)chance(1,'機會尚未明確，宜等待 VIX、美元與股市趨勢同步轉佳。');
-  risks.sort(function(a,b){return b.weight-a.weight;});
-  chances.sort(function(a,b){return b.weight-a.weight;});
-  var riskScore=risks.reduce(function(s,r){return s+r.weight;},0);
-  var chanceScore=chances.reduce(function(s,r){return s+r.weight;},0);
-  var stance='觀望';
-  if(riskScore>=6||risks[0].weight>=3&&riskScore>=4)stance='防守';
-  else if(chanceScore>=5&&riskScore<=3)stance='進攻';
-  var quote=stance==='進攻'
-    ? '敵陣露隙，可遣輕騎試探；但糧草未滿，不可孤軍深入。'
-    : stance==='防守'
-      ? '風急雲重，先固城池；待旗色轉明，再議出兵。'
-      : '霧未散，鼓勿急鳴；守住陣腳，等天下自露破綻。';
-  return {
-    stance:stance,
-    stanceTone:marketTone(stance),
-    risk:risks[0].text,
-    chance:chances[0].text,
-    fedPolicy:fedPolicy,
-    quote:quote,
-    updatedAt:(market.summary&&market.summary.updatedAt)||(macro.judgment&&macro.judgment.updatedAt)||'--',
-    sourceDate:macro.sourceDate||(macro.judgment&&macro.judgment.date)||'--',
-    pills:[
-      {label:'台股',value:twse?marketSignalText(twse.signal):'--',tone:twse?marketTone(twse.signal):'watch'},
-      {label:'美股',value:qqq?marketSignalText(qqq.signal):(spy?marketSignalText(spy.signal):'--'),tone:qqq?marketTone(qqq.signal):(spy?marketTone(spy.signal):'watch')},
-      {label:'VIX',value:advisorWorldDisplay(vix,2),tone:advisorWorldToneFromText(vix&&vix.status)},
-      {label:'DXY',value:advisorWorldDisplay(dxy,2),tone:advisorWorldToneFromText(dxy&&dxy.status)},
-      {label:'10Y',value:advisorWorldDisplay(yield10y,2,'%'),tone:advisorWorldToneFromText(yield10y&&yield10y.status)},
-      {label:'Fed',value:fedPolicy,tone:fedPolicy.indexOf('鷹')>=0||fedPolicy.indexOf('緊')>=0?'defense':fedPolicy.indexOf('鴿')>=0?'attack':'watch'},
-      {label:'黃金',value:gold?marketSignalText(gold.signal):'--',tone:gold?marketTone(gold.signal):'watch'},
-      {label:'油價',value:advisorWorldDisplay(oil,2),tone:advisorWorldToneFromText(oil&&oil.status)},
-      {label:'SOFR-IORB',value:advisorWorldDisplay(sofrIorbSpread,2,'%'),tone:advisorWorldToneFromText(sofrIorbSpread&&sofrIorbSpread.status)}
-    ]
-  };
-}
-function advisorWorldHtml(view){
-  return `<div class="advisor-world-card">
-    <div class="advisor-world-title">目前頁面為【天下局勢】</div>
-    <div class="advisor-world-stance ${esc(view.stanceTone)}"><span>軍師判斷</span><strong>${esc(view.stance)}</strong></div>
-    <div class="advisor-world-section">
-      <div class="advisor-world-label">最大風險</div>
-      <div class="advisor-world-text">${esc(view.risk)}</div>
-    </div>
-    <div class="advisor-world-section">
-      <div class="advisor-world-label">最大機會</div>
-      <div class="advisor-world-text">${esc(view.chance)}</div>
-    </div>
-    <div class="advisor-world-indicators">${view.pills.map(function(p){
-      return `<div class="advisor-world-pill ${esc(p.tone)}">${esc(p.label)}<strong>${esc(p.value)}</strong></div>`;
-    }).join('')}</div>
-    <div class="advisor-world-quote">${esc(view.quote)}</div>
-    <div class="advisor-summary-sub" style="position:relative;z-index:1;text-align:center;margin-top:7px">更新 ${esc(view.updatedAt)} · 指標 ${esc(view.sourceDate)}</div>
-  </div>`;
 }
 function advisorWorldBriefDate(value){
   var text=String(value||'').trim();
