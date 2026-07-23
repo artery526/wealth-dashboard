@@ -1916,11 +1916,14 @@ body::after{
 .chronicle-count{font-family:var(--mono);font-size:11px;color:#8a6a30;white-space:nowrap}
 .chronicle-list{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
 .chronicle-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:start;gap:8px;border:1px solid rgba(184,137,46,.32);border-radius:8px;background:rgba(10,8,4,.76);padding:10px 12px;min-width:0}
+.chronicle-row.is-toggle{cursor:pointer}
 .chronicle-cell{min-width:0;font-family:var(--sans);font-size:12px;font-weight:800;color:#c09a50;line-height:1.35;overflow-wrap:anywhere}
 .chronicle-cell:before{content:attr(data-label);display:block;font-family:var(--sans);font-size:9px;font-weight:900;color:#5a4018;letter-spacing:1px;margin-bottom:3px}
 .chronicle-name{grid-column:1/-1;font-size:14px;font-weight:900;color:var(--gold)}
 .chronicle-date{display:block;margin-top:4px;font-family:var(--mono);font-size:10px;font-weight:800;color:#8a6a30;letter-spacing:0}
 .chronicle-cost-value{font-family:var(--mono);font-size:15px;font-weight:900;color:#e7f9ff;text-shadow:0 0 10px rgba(78,217,255,.3)}
+.chronicle-note-detail{display:none;grid-column:1/-1;border-top:1px solid rgba(184,137,46,.22);padding-top:8px;white-space:pre-wrap}
+.chronicle-row.is-open .chronicle-note-detail{display:block}
 @media(max-width:760px){.ziwei-overview{grid-template-columns:1fr}.ziwei-sidebar{border-right:0;border-bottom:1px solid rgba(232,192,80,.62)}.ziwei-main:before{border-left:0;border-top:1px solid rgba(78,217,255,.75)}.ziwei-list{max-height:220px}.ziwei-viewer-head{flex-direction:column}.ziwei-tools{justify-content:flex-start}.ziwei-stage{min-height:260px;padding:10px}.chronicle-toolbar{align-items:stretch;flex-direction:column}.chronicle-search{width:100%}.chronicle-count{white-space:normal}}
 @media(max-width:980px){.chronicle-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:540px){.chronicle-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.chronicle-row{grid-template-columns:1fr;padding:9px}.chronicle-cell{font-size:12px}.chronicle-cell:before{font-size:9px}.chronicle-row .chronicle-name{font-size:14px}.chronicle-date{font-size:10px}.chronicle-cost-value{font-size:14px}}
@@ -4541,17 +4544,23 @@ function formatChronicleDurationDays(value){
   return text+' 日';
 }
 
+function toggleChronicleNote(el){
+  if(!el)return;
+  el.classList.toggle('is-open');
+}
+
 function renderChronicleCard(row){
   var mode=getChronicleMode(row);
   var date=String(row.date||'').trim()||'--';
   var note=String(row.note||'').trim();
   if(mode==='duration'){
     var durationDays=formatChronicleDurationDays(row.durationDays);
-    var tail=note||'--';
-    return `<div class="chronicle-row">
+    var tail=note||'尚無備註';
+    return `<div class="chronicle-row is-toggle" role="button" tabindex="0" onclick="toggleChronicleNote(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleChronicleNote(this)}">
       <div class="chronicle-cell chronicle-name" data-label="事件名稱">${esc(row.name||'未命名')}<span class="chronicle-date">${esc(date)}</span></div>
       <div class="chronicle-cell chronicle-cost-value" data-label="持續多少日">${esc(durationDays)}</div>
-      <div class="chronicle-cell" data-label="備註">${esc(tail)}</div>
+      <div class="chronicle-cell" data-label="備註">點擊顯示</div>
+      <div class="chronicle-cell chronicle-note-detail" data-label="備註">${esc(tail)}</div>
     </div>`;
   }
   var months=String(row.months||'').trim()||'--';
