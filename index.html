@@ -728,6 +728,10 @@ body::after{
   object-fit:cover;
   object-position:center center;
 }
+.finance-card-caption{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-family:'Noto Sans TC',sans-serif;font-size:11px;color:#c09a50;letter-spacing:3px}
+.finance-card-status-dot{width:9px;height:9px;border-radius:999px;display:inline-block;flex-shrink:0;border:1px solid rgba(255,238,190,.44);background:var(--coral);box-shadow:0 0 13px rgba(231,87,71,.55),inset 0 1px 0 rgba(255,255,255,.22)}
+.finance-card-status-dot.ok{background:var(--teal);box-shadow:0 0 14px rgba(29,158,117,.62),inset 0 1px 0 rgba(255,255,255,.22)}
+.finance-card-status-dot.pending{background:var(--gold);box-shadow:0 0 14px rgba(232,192,80,.58),inset 0 1px 0 rgba(255,255,255,.22)}
 .market-lord{
   position:absolute;
   top:-65px;
@@ -2964,7 +2968,7 @@ body::after{
           <div style="position:absolute;bottom:0;left:0;right:0;z-index:4;
             background:linear-gradient(to top,rgba(8,5,3,.95) 0%,rgba(8,5,3,.5) 50%,transparent 100%);
             padding:16px 12px 12px;text-align:center;pointer-events:none;">
-            <span style="font-family:'Noto Sans TC',sans-serif;font-size:11px;color:#c09a50;letter-spacing:3px;">&#x570B;&#x5EAB;&#x8CA1;&#x5831;</span>
+            <span class="finance-card-caption">&#x570B;&#x5EAB;&#x8CA1;&#x5831;<span class="finance-card-status-dot err" id="finance-card-status-dot" title="財政連線失敗" aria-label="財政連線失敗"></span></span>
           </div>
         </div>
       </div>
@@ -4248,6 +4252,18 @@ function writeTimedFinanceCache(key,data){
   try{localStorage.setItem(key,JSON.stringify({savedAt:Date.now(),data:data}));}catch(e){}
 }
 
+function setFinanceCardStatus(status,message){
+  status=status==='ok'?'ok':(status==='pending'?'pending':'err');
+  var text=status==='ok'?'財政連線成功':(status==='pending'?'財政連線中':'財政連線失敗');
+  if(message)text+='：'+message;
+  var dot=document.getElementById('finance-card-status-dot');
+  if(dot){
+    dot.className='finance-card-status-dot '+status;
+    dot.title=text;
+    dot.setAttribute('aria-label',text);
+  }
+}
+
 function readTimedMarketCache(key){
   try{
     var cached=JSON.parse(localStorage.getItem(key)||'null');
@@ -5402,17 +5418,21 @@ async function loadAccounts(){
   }
   var cached=readTimedFinanceCache(FINANCE_TREASURY_CACHE_KEY)||readStaleFinanceCache(FINANCE_TREASURY_CACHE_KEY);
   if(cached)renderAccounts(cached.accs,cached.monthly,el,cached.financeStatus,cached.assetSnapshot,cached.bills,true);
+  setFinanceCardStatus('pending');
   if(financeTreasuryPromise){
     return financeTreasuryPromise.then(function(data){
       if(data&&data.accs&&document.getElementById('acc-content'))renderAccounts(data.accs,data.monthly,document.getElementById('acc-content'),data.financeStatus,data.assetSnapshot,data.bills,false);
+      if(data&&data.accs)setFinanceCardStatus('ok');
       return data;
     });
   }
   financeTreasuryPromise=fetchFinanceTreasuryData(cached).then(function(data){
     writeTimedFinanceCache(FINANCE_TREASURY_CACHE_KEY,data);
     if(document.getElementById('acc-content'))renderAccounts(data.accs,data.monthly,document.getElementById('acc-content'),data.financeStatus,data.assetSnapshot,data.bills,false);
+    setFinanceCardStatus('ok');
     return data;
   }).catch(function(e){
+    setFinanceCardStatus('err',e.message||'讀取失敗');
     if(!cached)el.innerHTML=`<div style="color:var(--coral);font-family:var(--sans);font-size:12px;padding:12px 0">${esc(e.message)}</div>`;
     return null;
   }).finally(function(){
@@ -8293,13 +8313,17 @@ function annualHistoryRows(history){
 }
 
 function prefetchFinanceDashboard(){
-  if(!API_URL)return;
-  if(!readTimedFinanceCache(FINANCE_TREASURY_CACHE_KEY)&&!financeTreasuryPromise){
+  if(!API_URL){setFinanceCardStatus('err','尚未設定 API');return;}
+  var cachedTreasury=readTimedFinanceCache(FINANCE_TREASURY_CACHE_KEY);
+  if(cachedTreasury)setFinanceCardStatus('ok');
+  if(!cachedTreasury&&!financeTreasuryPromise){
+    setFinanceCardStatus('pending');
     var cached=readStaleFinanceCache(FINANCE_TREASURY_CACHE_KEY);
     financeTreasuryPromise=fetchFinanceTreasuryData(cached).then(function(data){
       writeTimedFinanceCache(FINANCE_TREASURY_CACHE_KEY,data);
+      setFinanceCardStatus('ok');
       return data;
-    }).catch(function(e){console.warn(e)}).finally(function(){financeTreasuryPromise=null;});
+    }).catch(function(e){setFinanceCardStatus('err',e.message||'讀取失敗');console.warn(e)}).finally(function(){financeTreasuryPromise=null;});
   }
   if(!readTimedFinanceCache(FINANCE_PLEDGE_CACHE_KEY)&&!financePledgePromise){
     financePledgePromise=apiGet({action:'pledgeLoans'}).then(function(data){
@@ -10478,6 +10502,7 @@ function setupNotice(){
   }
   updateDateDisplay();
   initTodayAgenda();
+  setFinanceCardStatus(hasMainApiCredentials()?'pending':'err',hasMainApiCredentials()?'':'尚未設定 API');
   setTimeout(function(){
     if(hasMainApiCredentials())prefetchFinanceDashboard();
   },2200);
