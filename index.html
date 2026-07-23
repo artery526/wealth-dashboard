@@ -7270,6 +7270,72 @@ function applyIncomeDividendAutofill(row){
   closeBookingDividendPicker();
 }
 
+function findAdvisorDividendIncomeRow(symbol,data){
+  var k=normalizeKey(symbol);
+  data=data||{};
+  var pending=((data.pending||[]).filter(Boolean)).find(function(row){
+    return normalizeKey(row.symbol||row.displaySymbol)===k&&!isDividendPendingHidden(row);
+  });
+  if(pending)return pending;
+  var latest=((data.rows||[]).filter(Boolean)).find(function(row){
+    return normalizeKey(row.symbol||row.displaySymbol)===k;
+  });
+  if(!latest)return null;
+  return Object.assign({},latest,{rowId:''});
+}
+
+function advisorAIOpenPanelTab(panel,tab){
+  closeAdvisorDialog();
+  if(currentPanel!==panel)openPanel(panel);
+  else document.getElementById('overlay').classList.add('open');
+  if(tab){
+    setTimeout(function(){
+      var btn=document.querySelector('.ptab[onclick*="'+tab+'"]');
+      if(btn)switchTab(btn,tab);
+    },80);
+  }
+}
+
+async function advisorAIWaitForBookingForm(){
+  var pane=document.getElementById('pane-booking-form');
+  if(!pane||pane.dataset.bookingReady!=='1')await initBookingForm();
+  for(var i=0;i<30;i++){
+    if(document.getElementById('i-source')&&document.getElementById('i-amount'))return true;
+    await new Promise(function(resolve){setTimeout(resolve,100);});
+  }
+  return false;
+}
+
+async function advisorAIPrefillDividendIncome(cmd){
+  closeAdvisorAIStandalone();
+  advisorAIOpenPanelTab('domestic','booking-form');
+  var ready=await advisorAIWaitForBookingForm();
+  if(!ready)throw new Error('快速記帳尚未載入完成，請稍後再試。');
+  setBookingEntryMode('income');
+  selectBookingOptionByText('i-source','投資理財');
+  selectBookingOptionByText('i-account','國泰Stock');
+  var data=await loadDividendCenter(false).catch(function(){return dividendCenterCache||{};});
+  var row=findAdvisorDividendIncomeRow(cmd.symbol,data)||{
+    symbol:cmd.symbol,
+    displaySymbol:advisorAIResolveStockTradeLabel(cmd.symbol)||cmd.symbol,
+    dividendUsd:'',
+    estimatedTwd:cmd.amount,
+    rowId:''
+  };
+  applyIncomeDividendAutofill(row);
+  var amount=document.getElementById('i-amount');
+  if(amount)amount.value=Number(cmd.amount)||'';
+  selectBookingOptionByText('i-account','國泰Stock');
+  syncBookingQuickChip('i-source');
+  syncBookingQuickChip('i-account');
+  syncDivNote();
+  showMsg('msg-income','已依龐統口令帶入配息收入，請確認後按「記錄收入」。','ok');
+  setTimeout(function(){
+    var amountEl=document.getElementById('i-amount');
+    if(amountEl){amountEl.focus();amountEl.select();}
+  },0);
+}
+
 function clearTransferDividendAutofill(){
   var auto=document.getElementById('t-dividend-autofill');
   if(auto){auto.classList.add('hidden');auto.textContent='';auto.dataset.dividendRowId='';auto.dataset.holdingTradeRowId='';}
@@ -11555,6 +11621,33 @@ function advisorAIDividendMemoCommand(raw){
   return {intent:'advisorDividendMemo',market:advisorAIDividendMemoMarket(symbol),symbol:symbol,dividendPerShare:perShare};
 }
 
+function advisorAIIsInvestmentKeyword(raw,resolved){
+  var key=advisorAICompact(raw);
+  if(!key)return false;
+  if(key.indexOf('985b')>=0||key.indexOf('00985b')>=0)return true;
+  if(key.indexOf('997a')>=0||key.indexOf('00997a')>=0)return true;
+  if(key.indexOf('高股息')>=0||key.indexOf('台灣5g')>=0||key.indexOf('路博邁')>=0||key.indexOf('施羅德')>=0)return true;
+  var symbols=['AIPI','IAU','QQQI','MLPI','SPYI','PLTY','CHPY','GDXW','GLDW'];
+  var up=String(raw||resolved||'').toUpperCase();
+  if(symbols.some(function(symbol){return up.indexOf(symbol)>=0;}))return true;
+  var resolvedKey=normalizeKey(resolved);
+  if(resolvedKey&&(HOLDING_META&&HOLDING_META[resolvedKey]))return true;
+  return false;
+}
+
+function advisorAIDividendIncomeDraftCommand(raw){
+  var text=advisorAINormalize(raw);
+  if(!text||/[?？]/.test(text))return null;
+  if(/(?:配息|買入|買進|賣出|轉|提款|花費|使用)/.test(text))return null;
+  var m=text.match(/^(.+?)\s+(\d+(?:\.\d+)?)\s*(?:元)?$/i);
+  if(!m)return null;
+  var amount=parseFloat(m[2]);
+  if(!(amount>=100))return null;
+  var symbol=advisorAIResolveInvestmentSymbol(m[1]);
+  if(!advisorAIIsInvestmentKeyword(m[1],symbol))return null;
+  return {intent:'advisorDividendIncomeDraft',symbol:symbol,amount:amount};
+}
+
 function advisorAICommand(raw){
   var text=advisorAINormalize(raw);
   var compact=advisorAICompact(raw);
@@ -11590,6 +11683,8 @@ function advisorAICommand(raw){
     var memoSymbol2=advisorAIResolveInvestmentSymbol(dividendMemo2[1]);
     return {intent:'advisorDividendMemo',market:advisorAIDividendMemoMarket(memoSymbol2),symbol:memoSymbol2,dividendPerShare:parseFloat(dividendMemo2[2])};
   }
+  var dividendIncomeDraft=advisorAIDividendIncomeDraftCommand(raw);
+  if(dividendIncomeDraft)return dividendIncomeDraft;
   var quickDividendMemo=advisorAIDividendMemoCommand(raw);
   if(quickDividendMemo)return quickDividendMemo;
   var dividendCommand=advisorAIDividendCommand(raw);
@@ -11919,6 +12014,10 @@ async function runAdvisorAICommand(btn){
     }
     if(cmd.intent==='advisorDividendMemo'){
       await advisorAIShowDividendMemoPreview(cmd);
+      return;
+    }
+    if(cmd.intent==='advisorDividendIncomeDraft'){
+      await advisorAIPrefillDividendIncome(cmd);
       return;
     }
     if(cmd.intent==='accountLookup'){
