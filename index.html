@@ -3292,7 +3292,7 @@ var eventChroniclePromise = null;
 var eventChronicleRenderTimer = null;
 var STARS_CACHE_TTL = 10 * 60 * 1000;
 var STARS_ZIWEI_CACHE_KEY = 'wealth_stars_ziwei_v1';
-var STARS_CHRONICLE_CACHE_KEY = 'wealth_stars_chronicle_v3';
+var STARS_CHRONICLE_CACHE_KEY = 'wealth_stars_chronicle_v4';
 
 var DEFAULT_MEDICAL_OPTIONS = {
   emotions: ['😎開心','🤔思考疑惑','🤕頭痛','😴想睡疲累','🥲難過','😡生氣','😮‍💨無奈','🫶感恩','😁豁然開朗'],
@@ -4546,12 +4546,14 @@ function renderChronicleCard(row){
   var date=String(row.date||'').trim()||'--';
   var note=String(row.note||'').trim();
   if(mode==='duration'){
+    var startTime=String(row.startTime||'').trim()||'--';
     var durationDays=formatChronicleDurationDays(row.durationDays);
     var status=String(row.status||'').trim();
     var endDate=String(row.endDate||'').trim();
     var tail=status||note||'單一事件';
     return `<div class="chronicle-row">
       <div class="chronicle-cell chronicle-name" data-label="事件名稱">${esc(row.name||'未命名')}<span class="chronicle-date">${esc(date)}</span></div>
+      <div class="chronicle-cell" data-label="開始時間">${esc(startTime)}</div>
       <div class="chronicle-cell chronicle-cost-value" data-label="持續多少日">${esc(durationDays)}</div>
       <div class="chronicle-cell" data-label="結束日期">${esc(endDate||'--')}</div>
       <div class="chronicle-cell" data-label="${status?'狀態':'類型'}">${esc(tail)}</div>
