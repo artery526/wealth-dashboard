@@ -978,6 +978,9 @@ body::after{
 .advisor-ai-agenda-btn:disabled{opacity:.55;cursor:wait}
 .advisor-ai-title-wrap{display:flex;align-items:center;justify-content:center;gap:10px;min-width:0;flex-wrap:wrap}
 .advisor-ai-standalone .advisor-shortcut-title{font-family:'Noto Serif TC',serif;font-size:26px;letter-spacing:2px;text-align:center;margin:0;color:#f4e5b7;text-shadow:0 0 16px rgba(232,192,80,.22)}
+.advisor-web-verify-dot{width:12px;height:12px;border-radius:999px;flex-shrink:0;border:1px solid rgba(255,238,190,.45);background:var(--coral);box-shadow:0 0 13px rgba(231,87,71,.55),inset 0 1px 0 rgba(255,255,255,.24)}
+.advisor-web-verify-dot.ok{background:var(--teal);box-shadow:0 0 14px rgba(29,158,117,.62),inset 0 1px 0 rgba(255,255,255,.24)}
+.advisor-web-verify-dot.pending{background:var(--gold);box-shadow:0 0 14px rgba(232,192,80,.55),inset 0 1px 0 rgba(255,255,255,.24)}
 .advisor-ai-funds{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:0;flex-wrap:wrap;font-family:var(--sans);font-size:11px;font-weight:950;line-height:1.2;color:#f1d883}
 .advisor-ai-fund-pill{display:inline-flex;align-items:center;justify-content:center;min-height:24px;border:1px solid rgba(232,192,80,.32);border-radius:999px;background:rgba(232,192,80,.08);padding:4px 8px;white-space:nowrap;box-shadow:0 0 12px rgba(232,192,80,.09)}
 .advisor-ai-fund-pill strong{font-family:var(--mono);font-size:12px;color:#fff0b0;margin:0 1px}
@@ -1398,6 +1401,7 @@ body::after{
   cursor:pointer;transition:all .25s;
 }
 .setup-btn:hover{box-shadow:0 0 14px rgba(200,150,62,.3);background:linear-gradient(180deg,#3e2a0a,#2e1e06)}
+.setup-hint{display:inline-flex;align-items:center;justify-content:center;margin-top:4px;font-family:var(--sans);font-size:12px;font-weight:850;line-height:1.6;color:var(--gold)}
 
 /* ── Finance: Accounts ── */
 /* ── 水庫水位 ────────────────────────────────────────────────── */
@@ -2006,13 +2010,13 @@ body::after{
 .api-bar{
   display:flex;align-items:center;gap:8px;margin-bottom:14px;
   background:#0a0804;border:1px solid #2a1c08;border-radius:6px;padding:8px 12px;
-  cursor:pointer;transition:border-color .2s;
+  cursor:default;transition:border-color .2s;
 }
-.api-bar:hover{border-color:var(--gold3)}
+.api-bar:hover{border-color:#2a1c08}
 .api-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;background:#5a4018}
 .api-dot.ok{background:var(--teal)}.api-dot.err{background:var(--coral)}.api-dot.pending{background:var(--gold)}
 .api-label{font-family:var(--sans);font-size:11px;color:#7a5c28;flex:1}
-.api-action{font-family:var(--sans);font-size:10px;color:var(--gold2)}
+.api-action{display:none;font-family:var(--sans);font-size:10px;color:var(--gold2)}
 
 /* ── Top Status Bar ── */
 /* ── Top Nav ── */
@@ -3227,6 +3231,9 @@ if(API_URL && API_URL !== (localStorage.getItem('wealth_api_url') || '')){
   localStorage.removeItem('wealth_market_macro_v4');
 }
 var WRITE_TOKEN = localStorage.getItem('wealth_write_token') || '';
+var WEB_VERIFY_STATUS_KEY='wealth_web_verify_status';
+var WEB_VERIFY_MESSAGE_KEY='wealth_web_verify_message';
+var WEB_VERIFY_CHECKED_AT_KEY='wealth_web_verify_checked_at';
 var cfg = (function(){
   try{
     var cached=JSON.parse(localStorage.getItem('wealth_booking_config_v1')||'null');
@@ -3958,6 +3965,49 @@ function openCfg(){
 }
 function closeCfg(){document.getElementById('cfg-overlay').classList.remove('open')}
 function cfgOverlayClick(e){if(e.target===document.getElementById('cfg-overlay'))closeCfg()}
+
+function webVerifyStoredStatus(){
+  try{return localStorage.getItem(WEB_VERIFY_STATUS_KEY)||'err';}catch(e){return 'err';}
+}
+function webVerifyStoredMessage(){
+  try{return localStorage.getItem(WEB_VERIFY_MESSAGE_KEY)||'';}catch(e){return '';}
+}
+function setWebVerifyStatus(status,message){
+  status=status==='ok'?'ok':(status==='pending'?'pending':'err');
+  try{
+    localStorage.setItem(WEB_VERIFY_STATUS_KEY,status);
+    localStorage.setItem(WEB_VERIFY_MESSAGE_KEY,message||'');
+    localStorage.setItem(WEB_VERIFY_CHECKED_AT_KEY,String(Date.now()));
+  }catch(e){}
+  advisorAIUpdateWebVerifyStatus();
+}
+function advisorAIWebVerifyStatusHtml(){
+  var status=webVerifyStoredStatus();
+  var cls=status==='ok'?'ok':(status==='pending'?'pending':'err');
+  var title=status==='ok'?'網頁驗證通過':(status==='pending'?'網頁驗證中':'網頁驗證未通過');
+  var msg=webVerifyStoredMessage();
+  if(msg)title+='：'+msg;
+  return `<span class="advisor-web-verify-dot ${cls}" id="advisor-web-verify-dot" title="${esc(title)}" aria-label="${esc(title)}"></span>`;
+}
+function advisorAIUpdateWebVerifyStatus(){
+  var status=webVerifyStoredStatus();
+  var cls=status==='ok'?'ok':(status==='pending'?'pending':'err');
+  var title=status==='ok'?'網頁驗證通過':(status==='pending'?'網頁驗證中':'網頁驗證未通過');
+  var msg=webVerifyStoredMessage();
+  if(msg)title+='：'+msg;
+  document.querySelectorAll('.advisor-web-verify-dot').forEach(function(dot){
+    dot.className='advisor-web-verify-dot '+cls;
+    dot.title=title;
+    dot.setAttribute('aria-label',title);
+  });
+}
+async function verifyWebAccess(){
+  if(!API_URL)throw new Error('尚未設定 Web App API URL');
+  if(!cleanToken(WRITE_TOKEN))throw new Error('尚未設定 WRITE_TOKEN');
+  await apiGet({action:'config'},20000);
+  await apiPost({action:'verifyWriteToken'});
+  return true;
+}
 async function saveCfg(){
   var url=normalizeWealthApiUrl(document.getElementById('cfg-url').value.trim());
   var token=cleanToken(document.getElementById('cfg-token').value);
@@ -3975,10 +4025,15 @@ async function saveCfg(){
   localStorage.removeItem('wealth_advisor_ai_verified_for');
   medicalOptionsCache=null;
   closeCfg();
+  setWebVerifyStatus('pending','正在驗證 API 與 WRITE_TOKEN');
   try{
     cfg=await apiGet({action:'config'});
     await apiPost({action:'verifyWriteToken'});
-  }catch(e){console.error(e)}
+    setWebVerifyStatus('ok','API 與 WRITE_TOKEN 已通過');
+  }catch(e){
+    console.error(e);
+    setWebVerifyStatus('err',e.message||'驗證失敗');
+  }
   if(currentPanel==='council')renderCouncilPanel();
 }
 
@@ -4101,7 +4156,7 @@ function renderStarsPanel(){
   setTabs([{key:'stars-home',label:'命盤總覽'},{key:'stars-chronicle',label:'事件編年'}]);
   document.getElementById('p-body').innerHTML=`
     <div class="pane active" id="pane-stars-home">
-      <div class="api-bar" onclick="openCfg()">
+      <div class="api-bar">
         <div class="api-dot ${API_URL?'ok':'err'}" id="ziwei-dot"></div>
         <span class="api-label" id="ziwei-label">${API_URL?'讀取紫微星盤資料…':'尚未設定 API'}</span>
         <span class="api-action">⚙ 設定</span>
@@ -4109,7 +4164,7 @@ function renderStarsPanel(){
       <div id="ziwei-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:78%"></div></div>
     </div>
     <div class="pane" id="pane-stars-chronicle">
-      <div class="api-bar" onclick="openCfg()">
+      <div class="api-bar">
         <div class="api-dot ${API_URL?'ok':'err'}" id="chronicle-dot"></div>
         <span class="api-label" id="chronicle-label">${API_URL?'讀取事件編年史…':'尚未設定 API'}</span>
         <span class="api-action">⚙ 設定</span>
@@ -4557,7 +4612,7 @@ function renderMedicalPanel(){
   if(!hasMainApiCredentials()){
     el.innerHTML=`<div class="setup-notice">
       <p>尚未設定 API，無法使用醫館功能。<br>請填入 Google Apps Script Web App URL 與記帳密鑰。</p>
-      <button class="setup-btn" onclick="openCfg()">⚙ 立即設定</button>
+      <div class="setup-hint">請至龐統軍師 > 常用查詢 > 網頁驗證</div>
     </div>`;
     return;
   }
@@ -4897,7 +4952,7 @@ async function loadTodayCalendar(mode){
   var btn=document.getElementById('today-agenda-refresh');
   if(dateEl)dateEl.textContent=agendaDateLabel(agendaMode);
   if(!API_URL){
-    setAgendaState('尚未設定 Web App API，無法調閱朝中政務。<br><button class="setup-btn" style="margin-top:10px" onclick="openCfg()">⚙ 立即設定</button>','empty');
+    setAgendaState('尚未設定 Web App API，無法調閱朝中政務。<br><div class="setup-hint" style="margin-top:10px">請至龐統軍師 > 常用查詢 > 網頁驗證</div>','empty');
     return;
   }
   try{
@@ -5307,14 +5362,14 @@ function renderFinancePanel(){
   setTabs([{key:'finance-accs',label:'國庫現況'},{key:'domestic-yearly',label:'年度財報'},{key:'div-calc',label:'配息試算'}]);
   document.getElementById('p-body').innerHTML=`
     <div class="pane active" id="pane-finance-accs">
-      <div class="api-bar" onclick="openCfg()">
+      <div class="api-bar">
         <div class="api-dot ${API_URL?'ok':'err'}" id="acc-dot"></div>
         <span class="api-label" id="acc-label">${API_URL?'API 已連線，載入中…':'尚未設定 API'}</span>
         <span class="api-action">⚙ 設定</span>
       </div>
       <div id="acc-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:75%"></div><div class="skel-line skel" style="width:85%"></div></div>
       <div class="res-section-title" style="margin-top:22px">🏦 質押信貸</div>
-      <div class="api-bar" onclick="openCfg()">
+      <div class="api-bar">
         <div class="api-dot ${API_URL?'ok':'err'}" id="pledge-dot"></div>
         <span class="api-label" id="pledge-label">${API_URL?'載入質押信貸…':'尚未設定 API'}</span>
         <span class="api-action">⚙ 設定</span>
@@ -5322,7 +5377,7 @@ function renderFinancePanel(){
       <div id="pledge-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:75%"></div></div>
     </div>
     <div class="pane" id="pane-domestic-yearly">
-      <div class="api-bar" onclick="openCfg()">
+      <div class="api-bar">
         <div class="api-dot ${API_URL?'ok':'err'}"></div>
         <span class="api-label">${API_URL?'年度財報 API 已連線':'尚未設定 API'}</span>
         <span class="api-action">⚙ 設定</span>
@@ -5651,7 +5706,7 @@ function renderDomesticPanel(){
   document.getElementById('p-body').innerHTML=`
     <div class="pane active" id="pane-booking-form"></div>
     <div class="pane" id="pane-booking-recent">
-      <div class="api-bar" onclick="openCfg()">
+      <div class="api-bar">
         <div class="api-dot ${API_URL?'ok':'err'}"></div>
         <span class="api-label">${API_URL?'已連線':'尚未設定 API'}</span>
         <span class="api-action">⚙ 設定</span>
@@ -5748,7 +5803,7 @@ async function initBookingForm(){
     {label:'💳Cube',value:'💳Cube'},
     {label:'🧚Sis 國泰',value:'🧚Sis 國泰世華'}
   ]);
-  var bookingApiStatus=`<div class="api-bar booking-api-under-button" onclick="openCfg()">
+  var bookingApiStatus=`<div class="api-bar booking-api-under-button">
       <div class="api-dot ok"></div>
       <span class="api-label">已連線 · 資料直接寫入試算表</span>
       <span class="api-action">⚙ 設定</span>
@@ -8394,7 +8449,7 @@ function renderMarketPanel(){
   ]);
   document.getElementById('p-body').innerHTML=`
     <div class="pane active" id="pane-market-watch">
-      <div class="api-bar" onclick="openCfg()">
+      <div class="api-bar">
         <div class="api-dot ${API_URL?'ok':'err'}" id="market-dot"></div>
         <span class="api-label" id="market-label">${API_URL?'載入市場快報…':'尚未設定 API'}</span>
         <span class="api-action">⚙ 設定</span>
@@ -8402,7 +8457,7 @@ function renderMarketPanel(){
       <div id="market-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:82%"></div><div class="skel-line skel" style="width:68%"></div></div>
     </div>
     <div class="pane" id="pane-macro-overview">
-      <div class="api-bar" onclick="openCfg()">
+      <div class="api-bar">
         <div class="api-dot ${API_URL?'ok':'err'}" id="macro-dot"></div>
         <span class="api-label" id="macro-label">${API_URL?'載入總經戰情…':'尚未設定 API'}</span>
         <span class="api-action">⚙ 設定</span>
@@ -8427,7 +8482,7 @@ function renderCouncilPanel(){
   var lockedNotice=setupNotice();
   document.getElementById('p-body').innerHTML=`
     <div class="pane active" id="pane-council-roster">
-      <div class="api-bar" onclick="openCfg()">
+      <div class="api-bar">
         <div class="api-dot ${apiReady?'ok':'err'}" id="council-dot"></div>
         <span class="api-label" id="council-label">${apiReady?'讀取武將與持股資料…':'尚未設定 API'}</span>
         <span class="api-action">⚙ 設定</span>
@@ -8435,7 +8490,7 @@ function renderCouncilPanel(){
       <div id="council-content">${apiReady?'':lockedNotice}</div>
     </div>
     <div class="pane" id="pane-market-watch">
-      <div class="api-bar" onclick="openCfg()">
+      <div class="api-bar">
         <div class="api-dot ${API_URL?'ok':'err'}" id="market-dot"></div>
         <span class="api-label" id="market-label">${API_URL?'載入快捷戰報…':'尚未設定 API'}</span>
         <span class="api-action">⚙ 設定</span>
@@ -8443,7 +8498,7 @@ function renderCouncilPanel(){
       <div id="market-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:82%"></div><div class="skel-line skel" style="width:68%"></div></div>
     </div>
     <div class="pane" id="pane-macro-overview">
-      <div class="api-bar" onclick="openCfg()">
+      <div class="api-bar">
         <div class="api-dot ${API_URL?'ok':'err'}" id="macro-dot"></div>
         <span class="api-label" id="macro-label">${API_URL?'載入總經戰情…':'尚未設定 API'}</span>
         <span class="api-action">⚙ 設定</span>
@@ -9637,7 +9692,7 @@ async function createMacroSample(){
     });
     await loadMacroOverview();
   }catch(e){
-    if(el)el.innerHTML=`<div style="color:var(--coral);font-family:var(--sans);font-size:12px;line-height:1.8;padding:12px 0">測試資料寫入失敗：${esc(e.message)}<br><button class="setup-btn" style="margin-top:10px" onclick="openCfg()">檢查 API 設定</button></div>`;
+    if(el)el.innerHTML=`<div style="color:var(--coral);font-family:var(--sans);font-size:12px;line-height:1.8;padding:12px 0">測試資料寫入失敗：${esc(e.message)}<br><div class="setup-hint" style="margin-top:10px">請至龐統軍師 > 常用查詢 > 網頁驗證</div></div>`;
   }
 }
 
@@ -10380,7 +10435,7 @@ function renderMacroOverview(data,el){
 function setupNotice(){
   return `<div class="setup-notice">
     <p>尚未設定 API，無法讀取資料。<br>請填入 Google Apps Script Web App URL 與記帳密鑰。</p>
-    <button class="setup-btn" onclick="openCfg()">⚙ 立即設定</button>
+    <div class="setup-hint">請至龐統軍師 > 常用查詢 > 網頁驗證</div>
   </div>`;
 }
 
@@ -10985,6 +11040,7 @@ function advisorAIHeaderHtml(title){
       ${advisorAIQuickCommandSelectHtml()}
       <div class="advisor-ai-title-wrap">
         <div class="advisor-shortcut-title">🗡️主公，今日有何吩咐?</div>
+        ${advisorAIWebVerifyStatusHtml()}
         <div class="advisor-ai-funds" id="advisor-ai-funds">${advisorAIHeaderFundsHtml(advisorAIHeaderFundsCache&&advisorAIHeaderFundsCache.cash,advisorAIHeaderFundsCache&&advisorAIHeaderFundsCache.stock)}</div>
       </div>
     </div>`;
@@ -11017,7 +11073,8 @@ function advisorAIQuickCommands(){
     {label:'提款1000',command:'提款1000'},
     {label:'年度財報',command:'年度財報'},
     {label:'國庫現況',command:'國庫現況'},
-    {label:'部隊陣容',command:'部隊陣容'}
+    {label:'部隊陣容',command:'部隊陣容'},
+    {label:'網頁驗證',command:'__web_verify__'}
   ];
 }
 
@@ -11033,6 +11090,11 @@ function advisorAIQuickCommandSelectHtml(){
 function advisorAIRunQuickCommand(select){
   var command=String(select&&select.value||'').trim();
   if(!command)return;
+  if(command==='__web_verify__'){
+    if(select)select.value='';
+    advisorAIRunWebVerify();
+    return;
+  }
   var input=document.getElementById('advisor-ai-input');
   if(input){
     input.value=command;
@@ -11040,6 +11102,22 @@ function advisorAIRunQuickCommand(select){
   }
   if(select)select.value='';
   runAdvisorAICommand(document.getElementById('advisor-ai-submit'));
+}
+
+async function advisorAIRunWebVerify(){
+  var panel=advisorAIActivePanel();
+  setWebVerifyStatus('pending','正在驗證 API 與 WRITE_TOKEN');
+  if(panel)panel.innerHTML=`${advisorAIHeaderHtml()}${advisorAIResultHtml('網頁驗證',['驗證 API 讀取與 WRITE_TOKEN 寫入權限中...'])}`;
+  try{
+    await verifyWebAccess();
+    setWebVerifyStatus('ok','API 與 WRITE_TOKEN 已通過');
+    if(panel)panel.innerHTML=`${advisorAIHeaderHtml()}${advisorAIResultHtml('網頁驗證成功',['API 讀取通過','WRITE_TOKEN 寫入權限通過'])}`;
+  }catch(e){
+    var msg=e.message||'驗證失敗';
+    setWebVerifyStatus('err',msg);
+    if(panel)panel.innerHTML=`${advisorAIHeaderHtml()}${advisorAIResultHtml('網頁驗證未通過',[msg,'請更新 API URL / WRITE_TOKEN 後再驗證。'])}`;
+    if(msg.indexOf('尚未設定')>=0)setTimeout(openCfg,0);
+  }
 }
 
 function openAdvisorAI(targetPanel){
@@ -12262,7 +12340,7 @@ async function openLordPanel(){
   if(!API_URL){
     el.innerHTML=`<div class="setup-notice" style="margin:24px 0">
       <p>尚未設定 API，無法讀取主公即時資料。<br>請填入 Google Apps Script Web App URL 與記帳密鑰。</p>
-      <button class="setup-btn" onclick="closeLordPanel();openCfg()">⚙ 立即設定</button>
+      <div class="setup-hint">請至龐統軍師 > 常用查詢 > 網頁驗證</div>
     </div>`;
     return;
   }
