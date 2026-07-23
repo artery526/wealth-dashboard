@@ -4065,11 +4065,11 @@ function openPanel(key){
   document.getElementById('panel').classList.toggle('stars-wide',key==='stars');
   currentPanel=key;
   if(key==='finance')renderFinancePanel();
-  else if(key==='domestic'){setEmpireCardStatus('domestic',hasMainApiCredentials()?'pending':'err',hasMainApiCredentials()?'':'尚未設定 API');renderDomesticPanel();}
+  else if(key==='domestic'){setEmpireCardApiPendingStatus('domestic');renderDomesticPanel();}
   else if(key==='market')renderMarketPanel();
-  else if(key==='council'){setEmpireCardStatus('council',hasMainApiCredentials()?'pending':'err',hasMainApiCredentials()?'':'尚未設定 API');renderCouncilPanel();}
-  else if(key==='medical'){setEmpireCardStatus('medical',hasMainApiCredentials()?'pending':'err',hasMainApiCredentials()?'':'尚未設定 API');renderMedicalPanel();}
-  else if(key==='stars'){setEmpireCardStatus('stars',hasMainApiCredentials()?'pending':'err',hasMainApiCredentials()?'':'尚未設定 API');renderStarsPanel();}
+  else if(key==='council'){setEmpireCardApiPendingStatus('council');renderCouncilPanel();}
+  else if(key==='medical'){setEmpireCardApiPendingStatus('medical');renderMedicalPanel();}
+  else if(key==='stars'){setEmpireCardApiPendingStatus('stars');renderStarsPanel();}
   document.getElementById('overlay').classList.add('open');
 }
 function closePanel(){
@@ -4143,7 +4143,7 @@ function switchTab(btn,key){
     else{
       var extra=document.getElementById('p-extra');
       if(extra)extra.innerHTML=domesticPanelStatusDotHtml();
-      setEmpireCardStatus('domestic',hasMainApiCredentials()?'pending':'err',hasMainApiCredentials()?'':'尚未設定 API');
+      setEmpireCardApiPendingStatus('domestic');
     }
   }
   if(key==='finance-accs'){
@@ -4294,10 +4294,14 @@ function setFinanceCardStatus(status,message){
   setEmpireCardStatus('finance',status,message);
 }
 
+function setEmpireCardApiPendingStatus(key){
+  setEmpireCardStatus(key,hasMainApiCredentials()?'pending':'err',hasMainApiCredentials()?'':'尚未設定 API');
+}
+
 function initEmpireCardStatuses(){
-  setFinanceCardStatus(hasMainApiCredentials()?'pending':'err',hasMainApiCredentials()?'':'尚未設定 API');
+  setEmpireCardApiPendingStatus('finance');
   ['domestic','council','medical','stars'].forEach(function(key){
-    setEmpireCardStatus(key,hasMainApiCredentials()?'pending':'err',hasMainApiCredentials()?'':'尚未設定 API');
+    setEmpireCardApiPendingStatus(key);
   });
   setEmpireCardStatus('wall','pending','尚未讀取城牆');
 }
@@ -5157,7 +5161,7 @@ async function loadMedicalOptions(){
     setEmpireCardStatus('medical',medicalOptionsCache===DEFAULT_MEDICAL_OPTIONS?'err':'ok',medicalOptionsCache===DEFAULT_MEDICAL_OPTIONS?'使用備援選項':'設定選項已載入');
     return medicalOptionsCache;
   }
-  setEmpireCardStatus('medical',hasMainApiCredentials()?'pending':'err',hasMainApiCredentials()?'':'尚未設定 API');
+  setEmpireCardApiPendingStatus('medical');
   try{
     var data=await medicalPost({_action:'getOptions'});
     var options=data.options||{};
@@ -5476,7 +5480,7 @@ function renderFinancePanel(){
   setPanelHead('⚱️','Finance · Treasury','財政');
   var panelExtra=document.getElementById('p-extra');
   if(panelExtra)panelExtra.innerHTML='<span class="finance-panel-status-dot err" id="finance-panel-status-dot" title="財政連線失敗" aria-label="財政連線失敗"></span>';
-  setFinanceCardStatus(hasMainApiCredentials()?'pending':'err',hasMainApiCredentials()?'':'尚未設定 API');
+  setEmpireCardApiPendingStatus('finance');
   setTabs([{key:'finance-accs',label:'國庫現況'},{key:'domestic-yearly',label:'年度財報'},{key:'div-calc',label:'配息試算'}]);
   document.getElementById('p-body').innerHTML=`
     <div class="pane active" id="pane-finance-accs">
@@ -5815,7 +5819,7 @@ function renderTreasuryAccountTotalAssetCard(assetSnapshot){
 function renderDomesticPanel(){
   setPanelHead('⚖️','Domestic · Policy','內政');
   renderBookingHeaderDate();
-  setEmpireCardStatus('domestic',hasMainApiCredentials()?'pending':'err',hasMainApiCredentials()?'':'尚未設定 API');
+  setEmpireCardApiPendingStatus('domestic');
   setTabs([{key:'booking-form',label:'快速記帳'},{key:'booking-recent',label:'最近記錄'},{key:'dividend-center',label:'持股備忘錄'}]);
   document.getElementById('p-body').innerHTML=`
     <div class="pane active" id="pane-booking-form"></div>
@@ -6065,7 +6069,7 @@ function renderBookingHeaderDate(){
     <button class="booking-date-btn" id="booking-date-btn" type="button" onclick="openBookingHeaderDatePicker()">${formatBookingHeaderDate(value)}</button>
     <input class="booking-date-native" type="date" id="booking-date-native" value="${esc(value)}" onchange="setBookingDateForAll(this.value)">
   </div>`;
-  setEmpireCardStatus('domestic',hasMainApiCredentials()?'pending':'err',hasMainApiCredentials()?'':'尚未設定 API');
+  setEmpireCardApiPendingStatus('domestic');
 }
 
 function syncBookingHeaderDate(){
@@ -8632,7 +8636,7 @@ function renderCouncilPanel(){
   setPanelHead('📜','War Room · Command','軍機處');
   var panelExtra=document.getElementById('p-extra');
   if(panelExtra)panelExtra.innerHTML='<span class="empire-panel-status-dot err" id="council-panel-status-dot" title="軍機處連線失敗" aria-label="軍機處連線失敗"></span>';
-  setEmpireCardStatus('council',hasMainApiCredentials()?'pending':'err',hasMainApiCredentials()?'':'尚未設定 API');
+  setEmpireCardApiPendingStatus('council');
   setTabs([
     {key:'council-roster',label:'部隊陣容'},
     {key:'market-watch',label:'快捷戰報'},
@@ -10503,7 +10507,7 @@ function setupNotice(){
   }
   updateDateDisplay();
   initTodayAgenda();
-  setFinanceCardStatus(hasMainApiCredentials()?'pending':'err',hasMainApiCredentials()?'':'尚未設定 API');
+  setEmpireCardApiPendingStatus('finance');
   setTimeout(function(){
     if(hasMainApiCredentials())prefetchFinanceDashboard();
   },2200);
