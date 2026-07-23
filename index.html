@@ -728,11 +728,11 @@ body::after{
   object-fit:cover;
   object-position:center center;
 }
-.finance-card-caption{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-family:'Noto Sans TC',sans-serif;font-size:11px;color:#c09a50;letter-spacing:3px}
-.finance-card-status-dot,.finance-panel-status-dot{width:9px;height:9px;border-radius:999px;display:inline-block;flex-shrink:0;border:1px solid rgba(255,238,190,.44);background:var(--coral);box-shadow:0 0 13px rgba(231,87,71,.55),inset 0 1px 0 rgba(255,255,255,.22)}
+.finance-card-caption,.empire-card-caption{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-family:'Noto Sans TC',sans-serif;font-size:11px;color:#c09a50;letter-spacing:3px}
+.finance-card-status-dot,.empire-card-status-dot,.finance-panel-status-dot{width:9px;height:9px;border-radius:999px;display:inline-block;flex-shrink:0;border:1px solid rgba(255,238,190,.44);background:var(--coral);box-shadow:0 0 13px rgba(231,87,71,.55),inset 0 1px 0 rgba(255,255,255,.22)}
 .finance-panel-status-dot{width:10px;height:10px;margin-left:2px}
-.finance-card-status-dot.ok,.finance-panel-status-dot.ok{background:var(--teal);box-shadow:0 0 14px rgba(29,158,117,.62),inset 0 1px 0 rgba(255,255,255,.22)}
-.finance-card-status-dot.pending,.finance-panel-status-dot.pending{background:var(--gold);box-shadow:0 0 14px rgba(232,192,80,.58),inset 0 1px 0 rgba(255,255,255,.22)}
+.finance-card-status-dot.ok,.empire-card-status-dot.ok,.finance-panel-status-dot.ok{background:var(--teal);box-shadow:0 0 14px rgba(29,158,117,.62),inset 0 1px 0 rgba(255,255,255,.22)}
+.finance-card-status-dot.pending,.empire-card-status-dot.pending,.finance-panel-status-dot.pending{background:var(--gold);box-shadow:0 0 14px rgba(232,192,80,.58),inset 0 1px 0 rgba(255,255,255,.22)}
 .market-lord{
   position:absolute;
   top:-65px;
@@ -3001,7 +3001,7 @@ body::after{
           <div style="position:absolute;bottom:0;left:0;right:0;z-index:4;
             background:linear-gradient(to top,rgba(8,5,3,.95) 0%,rgba(8,5,3,.5) 50%,transparent 100%);
             padding:16px 12px 12px;text-align:center;pointer-events:none;">
-            <span style="font-family:'Noto Sans TC',sans-serif;font-size:11px;color:#c09a50;letter-spacing:3px;">交易</span>
+            <span class="empire-card-caption">交易<span class="empire-card-status-dot err" id="domestic-card-status-dot" title="交易連線失敗" aria-label="交易連線失敗"></span></span>
           </div>
         </div>
       </div>
@@ -3032,7 +3032,7 @@ body::after{
           <div style="position:absolute;bottom:0;left:0;right:0;z-index:4;
             background:linear-gradient(to top,rgba(8,5,3,.95) 0%,rgba(8,5,3,.5) 50%,transparent 100%);
             padding:16px 12px 12px;text-align:center;pointer-events:none;">
-            <span style="font-family:'Noto Sans TC',sans-serif;font-size:11px;color:#c09a50;letter-spacing:3px;">軍機處</span>
+            <span class="empire-card-caption">軍機處<span class="empire-card-status-dot err" id="council-card-status-dot" title="軍機處連線失敗" aria-label="軍機處連線失敗"></span></span>
           </div>
         </div>
       </div>
@@ -3063,7 +3063,7 @@ body::after{
           <div style="position:absolute;bottom:0;left:0;right:0;z-index:4;
             background:linear-gradient(to top,rgba(8,5,3,.95) 0%,rgba(8,5,3,.5) 50%,transparent 100%);
             padding:16px 12px 12px;text-align:center;pointer-events:none;">
-            <span style="font-family:'Noto Sans TC',sans-serif;font-size:11px;color:#c09a50;letter-spacing:3px;">醫館</span>
+            <span class="empire-card-caption">醫館<span class="empire-card-status-dot err" id="medical-card-status-dot" title="醫館連線失敗" aria-label="醫館連線失敗"></span></span>
           </div>
         </div>
       </div>
@@ -3095,7 +3095,7 @@ body::after{
           <div style="position:absolute;bottom:0;left:0;right:0;z-index:4;
             background:linear-gradient(to top,rgba(8,5,3,.95) 0%,rgba(8,5,3,.5) 50%,transparent 100%);
             padding:16px 12px 12px;text-align:center;pointer-events:none;">
-            <span style="font-family:'Noto Sans TC',sans-serif;font-size:11px;color:#c09a50;letter-spacing:3px;">司天監</span>
+            <span class="empire-card-caption">司天監<span class="empire-card-status-dot err" id="stars-card-status-dot" title="司天監連線失敗" aria-label="司天監連線失敗"></span></span>
           </div>
         </div>
       </div>
@@ -3125,7 +3125,7 @@ body::after{
           <div style="position:absolute;bottom:0;left:0;right:0;z-index:4;
             background:linear-gradient(to top,rgba(8,5,3,.95) 0%,rgba(8,5,3,.5) 50%,transparent 100%);
             padding:16px 12px 12px;text-align:center;pointer-events:none;">
-            <span style="font-family:'Noto Sans TC',sans-serif;font-size:11px;color:#c09a50;letter-spacing:3px;">城牆</span>
+            <span class="empire-card-caption">城牆<span class="empire-card-status-dot err" id="wall-card-status-dot" title="城牆連線失敗" aria-label="城牆連線失敗"></span></span>
           </div>
         </div>
       </div>
@@ -4039,6 +4039,7 @@ async function saveCfg(){
     console.error(e);
     setWebVerifyStatus('err',e.message||'驗證失敗');
   }
+  initEmpireCardStatuses();
   if(currentPanel==='council')renderCouncilPanel();
 }
 
@@ -4057,11 +4058,11 @@ function openPanel(key){
   document.getElementById('panel').classList.toggle('stars-wide',key==='stars');
   currentPanel=key;
   if(key==='finance')renderFinancePanel();
-  else if(key==='domestic')renderDomesticPanel();
+  else if(key==='domestic'){setEmpireCardStatus('domestic',hasMainApiCredentials()?'pending':'err',hasMainApiCredentials()?'':'尚未設定 API');renderDomesticPanel();}
   else if(key==='market')renderMarketPanel();
-  else if(key==='council')renderCouncilPanel();
-  else if(key==='medical')renderMedicalPanel();
-  else if(key==='stars')renderStarsPanel();
+  else if(key==='council'){setEmpireCardStatus('council',hasMainApiCredentials()?'pending':'err',hasMainApiCredentials()?'':'尚未設定 API');renderCouncilPanel();}
+  else if(key==='medical'){setEmpireCardStatus('medical',hasMainApiCredentials()?'pending':'err',hasMainApiCredentials()?'':'尚未設定 API');renderMedicalPanel();}
+  else if(key==='stars'){setEmpireCardStatus('stars',hasMainApiCredentials()?'pending':'err',hasMainApiCredentials()?'':'尚未設定 API');renderStarsPanel();}
   document.getElementById('overlay').classList.add('open');
 }
 function closePanel(){
@@ -4253,14 +4254,23 @@ function writeTimedFinanceCache(key,data){
   try{localStorage.setItem(key,JSON.stringify({savedAt:Date.now(),data:data}));}catch(e){}
 }
 
-function setFinanceCardStatus(status,message){
+function setEmpireCardStatus(key,status,message){
   status=status==='ok'?'ok':(status==='pending'?'pending':'err');
-  var text=status==='ok'?'財政連線成功':(status==='pending'?'財政連線中':'財政連線失敗');
+  var labels={
+    finance:'財政',
+    domestic:'交易',
+    council:'軍機處',
+    medical:'醫館',
+    stars:'司天監',
+    wall:'城牆'
+  };
+  var label=labels[key]||'卡片';
+  var text=status==='ok'?label+'連線成功':(status==='pending'?label+'連線中':label+'連線失敗');
   if(message)text+='：'+message;
-  [
-    {id:'finance-card-status-dot',cls:'finance-card-status-dot'},
-    {id:'finance-panel-status-dot',cls:'finance-panel-status-dot'}
-  ].forEach(function(target){
+  var targets=key==='finance'
+    ? [{id:'finance-card-status-dot',cls:'finance-card-status-dot'},{id:'finance-panel-status-dot',cls:'finance-panel-status-dot'}]
+    : [{id:key+'-card-status-dot',cls:'empire-card-status-dot'}];
+  targets.forEach(function(target){
     var dot=document.getElementById(target.id);
     if(dot){
       dot.className=target.cls+' '+status;
@@ -4268,6 +4278,18 @@ function setFinanceCardStatus(status,message){
       dot.setAttribute('aria-label',text);
     }
   });
+}
+
+function setFinanceCardStatus(status,message){
+  setEmpireCardStatus('finance',status,message);
+}
+
+function initEmpireCardStatuses(){
+  setFinanceCardStatus(hasMainApiCredentials()?'pending':'err',hasMainApiCredentials()?'':'尚未設定 API');
+  ['domestic','council','medical','stars'].forEach(function(key){
+    setEmpireCardStatus(key,hasMainApiCredentials()?'pending':'err',hasMainApiCredentials()?'':'尚未設定 API');
+  });
+  setEmpireCardStatus('wall','pending','尚未讀取城牆');
 }
 
 function readTimedMarketCache(key){
@@ -4347,16 +4369,19 @@ async function loadZiweiCharts(){
   var label=document.getElementById('ziwei-label');
   var dot=document.getElementById('ziwei-dot');
   if(!content)return;
+  setEmpireCardStatus('stars',hasMainApiCredentials()?'pending':'err',hasMainApiCredentials()?'':'尚未設定 API');
   try{
     content.innerHTML='<div class="skel-line skel"></div><div class="skel-line skel" style="width:78%"></div><div class="skel-line skel" style="width:62%"></div>';
     var data=await apiGet({action:'ziweiCharts'});
     ziweiChartsCache=data.rows||[];
     if(dot)dot.className='api-dot ok';
     if(label)label.textContent='已連線 · '+ziweiChartsCache.length+' 筆命盤索引';
+    setEmpireCardStatus('stars','ok',ziweiChartsCache.length+' 筆命盤索引');
     renderZiweiLayout();
   }catch(e){
     if(dot)dot.className='api-dot err';
     if(label)label.textContent='讀取失敗';
+    setEmpireCardStatus('stars','err',e.message||'讀取失敗');
     content.innerHTML='<div class="battle-empty" style="color:var(--coral)">讀取紫微星盤失敗：'+esc(e.message)+'</div>';
   }
 }
@@ -4370,8 +4395,10 @@ async function loadEventChronicle(){
     content.innerHTML=setupNotice();
     if(dot)dot.className='api-dot err';
     if(label)label.textContent='尚未設定 API';
+    setEmpireCardStatus('stars','err','尚未設定 API');
     return;
   }
+  setEmpireCardStatus('stars','pending');
   try{
     content.innerHTML='<div class="skel-line skel"></div><div class="skel-line skel" style="width:72%"></div><div class="skel-line skel" style="width:54%"></div>';
     var data=await apiGet({action:'eventChronicle'},30000);
@@ -4379,10 +4406,12 @@ async function loadEventChronicle(){
     eventChronicleSortedCache=sortEventChronicleRows(eventChronicleCache);
     if(dot)dot.className='api-dot ok';
     if(label)label.textContent='已連線 · '+eventChronicleCache.length+' 筆事件';
+    setEmpireCardStatus('stars','ok',eventChronicleCache.length+' 筆事件');
     renderEventChronicle();
   }catch(e){
     if(dot)dot.className='api-dot err';
     if(label)label.textContent='讀取失敗';
+    setEmpireCardStatus('stars','err',e.message||'讀取失敗');
     content.innerHTML='<div class="battle-empty" style="color:var(--coral)">讀取事件編年史失敗：'+esc(e.message)+'</div>';
   }
 }
@@ -5068,7 +5097,11 @@ function renderGoogleTasks(tasks){
 }
 
 async function loadMedicalOptions(){
-  if(medicalOptionsCache)return medicalOptionsCache;
+  if(medicalOptionsCache){
+    setEmpireCardStatus('medical',medicalOptionsCache===DEFAULT_MEDICAL_OPTIONS?'err':'ok',medicalOptionsCache===DEFAULT_MEDICAL_OPTIONS?'使用備援選項':'設定選項已載入');
+    return medicalOptionsCache;
+  }
+  setEmpireCardStatus('medical',hasMainApiCredentials()?'pending':'err',hasMainApiCredentials()?'':'尚未設定 API');
   try{
     var data=await medicalPost({_action:'getOptions'});
     var options=data.options||{};
@@ -5086,9 +5119,11 @@ async function loadMedicalOptions(){
     };
     _mcsCardImages=medicalOptionsCache.cardImages;
     _mcsOracleImages=medicalOptionsCache.oracleImages;
+    setEmpireCardStatus('medical','ok','設定選項已載入');
   }catch(e){
     console.warn(e);
     medicalOptionsCache=DEFAULT_MEDICAL_OPTIONS;
+    setEmpireCardStatus('medical','err',e.message||'載入備援選項');
   }
   return medicalOptionsCache;
 }
@@ -5144,10 +5179,12 @@ async function submitMedicalQuickRecord(e){
       notes:notes
     });
     setMedicalStatus('已同步到情緒倉庫，第 '+(data.row||'新')+' 列','ok');
+    setEmpireCardStatus('medical','ok','同步完成');
     if(btn)btn.disabled=false;
   }catch(err){
     if(btn)btn.disabled=false;
     setMedicalStatus(err.message||'同步失敗','err');
+    setEmpireCardStatus('medical','err',err.message||'同步失敗');
   }
 }
 
@@ -5743,18 +5780,21 @@ function renderDomesticPanel(){
 async function initBookingForm(){
   var el=document.getElementById('pane-booking-form');
   if(!el)return;
-  if(!API_URL){el.innerHTML=setupNotice();return}
-  if(el.dataset.bookingReady==='1')return;
+  if(!API_URL){setEmpireCardStatus('domestic','err','尚未設定 API');el.innerHTML=setupNotice();return}
+  if(el.dataset.bookingReady==='1'){setEmpireCardStatus('domestic','ok','記帳設定已載入');return;}
   if(el.dataset.bookingLoading==='1'&&bookingFormInitPromise)return bookingFormInitPromise;
   var initSeq=++bookingFormInitSeq;
   el.dataset.bookingLoading='1';
+  setEmpireCardStatus('domestic','pending');
   bookingFormInitPromise=(async function(){
   var configRefresh=apiGet({action:'config'}).then(function(nextCfg){
     cfg=nextCfg||{categories:[],sources:[],accounts:[],holdings:[],dividendSymbols:[]};
     try{localStorage.setItem('wealth_booking_config_v1',JSON.stringify(cfg));}catch(e){}
+    setEmpireCardStatus('domestic','ok','記帳設定已載入');
     return cfg;
   }).catch(function(e){
     console.error(e);
+    setEmpireCardStatus('domestic','err',e.message||'設定載入失敗');
     return cfg;
   });
   if(initSeq!==bookingFormInitSeq||el!==document.getElementById('pane-booking-form'))return;
@@ -6665,10 +6705,15 @@ function renderArkWallList(){
 
 function loadArkWallEntries(force){
   if(arkWallLoaded&&!force)return Promise.resolve(arkWallEntries);
+  setEmpireCardStatus('wall','pending');
   return arkWallFetch('/api/expeditions').then(function(data){
     arkWallEntries=Array.isArray(data.entries)?data.entries:[];
     arkWallLoaded=true;
+    setEmpireCardStatus('wall','ok',arkWallEntries.length+' 筆紀錄');
     return arkWallEntries;
+  }).catch(function(err){
+    setEmpireCardStatus('wall','err',err&&err.status===401?'需要通行令':(err&&err.message||'讀取失敗'));
+    throw err;
   });
 }
 
@@ -6740,6 +6785,7 @@ function openArkWall(){
   if(wallCard)wallCard.classList.add('active');
   if(overlay)overlay.classList.add('open');
   if(body)body.innerHTML='<div class="travel-status">載入城牆紀錄中...</div>';
+  setEmpireCardStatus('wall','pending');
   loadArkWallEntries(true).then(renderArkWallList).catch(function(err){
     if(err&&err.status===401){
       renderArkWallGate('這座城牆已上鎖。請輸入通行令後讀取紀錄。');
@@ -7319,9 +7365,11 @@ async function submitTransfer(e){
 async function loadRecentBooking(){
   var el=document.getElementById('recent-content');
   if(!el)return;
-  if(!API_URL){el.innerHTML=setupNotice();return}
+  if(!API_URL){setEmpireCardStatus('domestic','err','尚未設定 API');el.innerHTML=setupNotice();return}
+  setEmpireCardStatus('domestic','pending');
   try{
     var txns=await apiGet({action:'transactions',ym:currentYM()});
+    setEmpireCardStatus('domestic','ok','最近記錄已載入');
     if(txns&&txns.length){
       el.innerHTML='<div class="txn-list-title">最近紀錄｜'+currentYM()+'</div>'+
         txns.map(function(t){
@@ -7346,6 +7394,7 @@ async function loadRecentBooking(){
     }
     el.innerHTML='<div style="color:#5a4018;font-family:var(--sans);font-size:12px;padding:20px 0;text-align:center">本月沒有最近紀錄</div>';
   }catch(e){
+    setEmpireCardStatus('domestic','err',e.message||'最近記錄讀取失敗');
     el.innerHTML='<div style="color:var(--coral);font-family:var(--sans);font-size:12px;padding:12px 0">'+esc(e.message)+'</div>';
   }
 }
@@ -7408,13 +7457,16 @@ async function voidStockTrade(rowId,btn){
 async function loadDividendCenterPanel(force){
   var el=document.getElementById('dividend-center-content');
   if(!el)return;
-  if(!API_URL){el.innerHTML=setupNotice();return}
+  if(!API_URL){setEmpireCardStatus('domestic','err','尚未設定 API');el.innerHTML=setupNotice();return}
+  setEmpireCardStatus('domestic','pending');
   try{
     el.innerHTML='<div class="skel-line skel"></div><div class="skel-line skel" style="width:80%"></div><div class="skel-line skel" style="width:60%"></div>';
     var data=await loadDividendCenter(!!force);
     el.innerHTML=renderDividendCenter(data,true);
     initDividendEntryForm(data);
+    setEmpireCardStatus('domestic','ok','持股備忘錄已載入');
   }catch(e){
+    setEmpireCardStatus('domestic','err',e.message||'持股備忘錄讀取失敗');
     el.innerHTML=`<div style="color:var(--coral);font-family:var(--sans);font-size:12px;padding:12px 0">${esc(e.message)}</div>`;
   }
 }
@@ -8545,8 +8597,10 @@ async function loadCouncilDashboard(){
     var lbl=document.getElementById('council-label');
     if(dot)dot.className='api-dot err';
     if(lbl)lbl.textContent='尚未設定 API';
+    setEmpireCardStatus('council','err','尚未設定 API');
     return;
   }
+  setEmpireCardStatus('council','pending');
   el.innerHTML='<div class="skel-line skel"></div><div class="skel-line skel" style="width:82%"></div><div class="skel-line skel" style="width:70%"></div>';
   try{
     var results=await Promise.allSettled([
@@ -8565,7 +8619,9 @@ async function loadCouncilDashboard(){
     var lbl=document.getElementById('council-label');
     if(dot)dot.className='api-dot '+(results[1].status==='fulfilled'&&API_URL?'ok':'err');
     if(lbl)lbl.textContent=(results[1].status==='fulfilled'&&API_URL)?'已連線 · 武將與持股同步':'已載入武將資料 · 尚未連接持股 API';
+    setEmpireCardStatus('council',results[1].status==='fulfilled'&&API_URL?'ok':'err',results[1].status==='fulfilled'&&API_URL?'武將與持股同步':'持股 API 未連接');
   }catch(e){
+    setEmpireCardStatus('council','err',e.message||'讀取失敗');
     el.innerHTML=`<div style="color:var(--coral);font-family:var(--sans);font-size:12px;padding:12px 0">${esc(e.message)}</div>`;
   }
 }
