@@ -4172,9 +4172,19 @@ function invalidateMarketDashboardCache(){
 }
 
 function readTimedFinanceCache(key){
+  var cached=readFinanceCacheEntry(key,false);
+  return cached?cached.data:null;
+}
+
+function readStaleFinanceCache(key){
+  var cached=readFinanceCacheEntry(key,true);
+  return cached?cached.data:null;
+}
+
+function readFinanceCacheEntry(key,allowExpired){
   try{
     var cached=JSON.parse(localStorage.getItem(key)||'null');
-    if(cached&&cached.data&&Date.now()-Number(cached.savedAt||0)<FINANCE_CACHE_TTL)return cached.data;
+    if(cached&&cached.data&&(allowExpired||Date.now()-Number(cached.savedAt||0)<FINANCE_CACHE_TTL))return cached;
   }catch(e){}
   return null;
 }
@@ -5335,7 +5345,7 @@ async function loadAccounts(){
   if(!API_URL){
     el.innerHTML=setupNotice();return;
   }
-  var cached=readTimedFinanceCache(FINANCE_TREASURY_CACHE_KEY);
+  var cached=readTimedFinanceCache(FINANCE_TREASURY_CACHE_KEY)||readStaleFinanceCache(FINANCE_TREASURY_CACHE_KEY);
   if(cached)renderAccounts(cached.accs,cached.monthly,el,cached.financeStatus,cached.assetSnapshot,cached.bills,true);
   if(financeTreasuryPromise){
     return financeTreasuryPromise.then(function(data){
@@ -5343,7 +5353,21 @@ async function loadAccounts(){
       return data;
     });
   }
-  financeTreasuryPromise=Promise.allSettled([
+  financeTreasuryPromise=fetchFinanceTreasuryData(cached).then(function(data){
+    writeTimedFinanceCache(FINANCE_TREASURY_CACHE_KEY,data);
+    if(document.getElementById('acc-content'))renderAccounts(data.accs,data.monthly,document.getElementById('acc-content'),data.financeStatus,data.assetSnapshot,data.bills,false);
+    return data;
+  }).catch(function(e){
+    if(!cached)el.innerHTML=`<div style="color:var(--coral);font-family:var(--sans);font-size:12px;padding:12px 0">${esc(e.message)}</div>`;
+    return null;
+  }).finally(function(){
+    financeTreasuryPromise=null;
+  });
+  return financeTreasuryPromise;
+}
+
+function fetchFinanceTreasuryData(cached){
+  return Promise.allSettled([
     apiGet({action:'accounts'}),
     apiGet({action:'monthly',ym:currentYM()}),
     apiGet({action:'financeStatus'}),
@@ -5366,16 +5390,8 @@ async function loadAccounts(){
     if(!financeStatusHasData(data.financeStatus)&&cached&&financeStatusHasData(cached.financeStatus)){
       data.financeStatus=cached.financeStatus;
     }
-    writeTimedFinanceCache(FINANCE_TREASURY_CACHE_KEY,data);
-    if(document.getElementById('acc-content'))renderAccounts(data.accs,data.monthly,document.getElementById('acc-content'),data.financeStatus,data.assetSnapshot,data.bills,false);
     return data;
-  }).catch(function(e){
-    if(!cached)el.innerHTML=`<div style="color:var(--coral);font-family:var(--sans);font-size:12px;padding:12px 0">${esc(e.message)}</div>`;
-    return null;
-  }).finally(function(){
-    financeTreasuryPromise=null;
   });
-  return financeTreasuryPromise;
 }
 
 function financeMonthlyFromTransactions(txns,baseMonthly){
@@ -8224,26 +8240,10 @@ function annualHistoryRows(history){
 function prefetchFinanceDashboard(){
   if(!API_URL)return;
   if(!readTimedFinanceCache(FINANCE_TREASURY_CACHE_KEY)&&!financeTreasuryPromise){
-    financeTreasuryPromise=Promise.allSettled([
-      apiGet({action:'accounts'}),
-      apiGet({action:'monthly',ym:currentYM()}),
-      apiGet({action:'financeStatus'}),
-      apiGet({action:'transactions',ym:currentYM()}),
-      apiGet({action:'assetSnapshot'})
-    ]).then(function(results){
-      if(results[0].status==='fulfilled'){
-        var monthly=results[1].status==='fulfilled'?(results[1].value||{}):{};
-        if(results[3].status==='fulfilled')monthly=financeMonthlyFromTransactions(results[3].value||[],monthly);
-        var data={
-          accs:results[0].value||[],
-          monthly:monthly,
-          financeStatus:results[2].status==='fulfilled'?results[2].value:null,
-          assetSnapshot:results[4].status==='fulfilled'?results[4].value:null
-        };
-        writeTimedFinanceCache(FINANCE_TREASURY_CACHE_KEY,data);
-        return data;
-      }
-      return null;
+    var cached=readStaleFinanceCache(FINANCE_TREASURY_CACHE_KEY);
+    financeTreasuryPromise=fetchFinanceTreasuryData(cached).then(function(data){
+      writeTimedFinanceCache(FINANCE_TREASURY_CACHE_KEY,data);
+      return data;
     }).catch(function(e){console.warn(e)}).finally(function(){financeTreasuryPromise=null;});
   }
   if(!readTimedFinanceCache(FINANCE_PLEDGE_CACHE_KEY)&&!financePledgePromise){
