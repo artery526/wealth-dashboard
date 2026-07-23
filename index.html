@@ -1648,7 +1648,6 @@ body::after{
 .booking-dividend-toggle:hover{box-shadow:0 0 12px rgba(232,192,80,.16)}
 .booking-dividend-summary{font-family:var(--sans);font-size:12px;font-weight:800;color:var(--gold);padding:6px 0}
 .booking-dividend-backdrop{position:fixed;inset:0;z-index:210;background:rgba(0,0,0,.28)}
-.booking-api-under-button{margin:7px 0 0}
 .booking-chip-row{display:flex;flex-wrap:wrap;gap:7px;margin:0 0 8px}
 .booking-chip{border:1px solid rgba(184,137,46,.34);border-radius:999px;background:rgba(10,8,4,.66);color:#b99550;font-family:var(--sans);font-size:12px;font-weight:900;line-height:1;padding:8px 10px;cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s,color .15s,box-shadow .15s,transform .12s}
 .booking-chip:hover{border-color:rgba(232,192,80,.56);color:var(--gold);background:rgba(232,192,80,.08)}
@@ -5916,12 +5915,6 @@ async function initBookingForm(){
     {label:'💳Cube',value:'💳Cube'},
     {label:'🧚Sis 國泰',value:'🧚Sis 國泰世華'}
   ]);
-  var bookingApiStatus=`<div class="api-bar booking-api-under-button">
-      <div class="api-dot ok"></div>
-      <span class="api-label">已連線 · 資料直接寫入試算表</span>
-      <span class="api-action">⚙ 設定</span>
-    </div>`;
-
   el.innerHTML=`
     <div class="btabs">
       <button class="btab expense active" type="button" onclick="switchBTab(this,'expense')">收入支出</button>
@@ -5942,7 +5935,6 @@ async function initBookingForm(){
         <div class="form-group full"><label class="form-label">備註（選填）</label><input class="form-control" type="text" id="e-note" placeholder="備註..."></div>
       </div>
       <button class="submit-btn expense" id="btn-expense" type="button" onclick="submitExpense(event)">記錄支出</button>
-      ${bookingApiStatus}
       <span class="result-msg" id="msg-expense"></span>
     </div>
 
@@ -5963,7 +5955,6 @@ async function initBookingForm(){
         <div class="form-group full"><label class="form-label">備註</label><input class="form-control" type="text" id="i-note" placeholder="配息標的" readonly></div>
       </div>
       <button class="submit-btn income" id="btn-income" type="button" onclick="submitIncome(event)">記錄收入</button>
-      ${bookingApiStatus}
       <span class="result-msg" id="msg-income"></span>
     </div>
 
@@ -5991,7 +5982,6 @@ async function initBookingForm(){
           <div class="dividend-autofill-note hidden" id="t-dividend-autofill"></div>
         </div>
         <button class="submit-btn transfer" id="btn-transfer" type="button" onclick="submitAccountTransfer(event)">記錄轉帳</button>
-        ${bookingApiStatus}
         <span class="result-msg" id="msg-transfer"></span>
       </div>
     </div>`;
