@@ -4135,7 +4135,8 @@ function switchTab(btn,key){
     if(key==='booking-form')renderBookingHeaderDate();
     else{
       var extra=document.getElementById('p-extra');
-      if(extra)extra.innerHTML='';
+      if(extra)extra.innerHTML=domesticPanelStatusDotHtml();
+      setEmpireCardStatus('domestic',hasMainApiCredentials()?'pending':'err',hasMainApiCredentials()?'':'尚未設定 API');
     }
   }
   if(key==='finance-accs'){
@@ -4258,7 +4259,7 @@ function setEmpireCardStatus(key,status,message){
   status=status==='ok'?'ok':(status==='pending'?'pending':'err');
   var labels={
     finance:'財政',
-    domestic:'交易',
+    domestic:'內政',
     council:'軍機處',
     medical:'醫館',
     stars:'司天監',
@@ -4270,6 +4271,7 @@ function setEmpireCardStatus(key,status,message){
   var targets=key==='finance'
     ? [{id:'finance-card-status-dot',cls:'finance-card-status-dot'},{id:'finance-panel-status-dot',cls:'finance-panel-status-dot'}]
     : [{id:key+'-card-status-dot',cls:'empire-card-status-dot'}];
+  if(key==='domestic')targets.push({id:'domestic-panel-status-dot',cls:'empire-panel-status-dot'});
   if(key==='council')targets.push({id:'council-panel-status-dot',cls:'empire-panel-status-dot'});
   targets.forEach(function(target){
     var dot=document.getElementById(target.id);
@@ -5760,15 +5762,11 @@ function renderTreasuryAccountTotalAssetCard(assetSnapshot){
 function renderDomesticPanel(){
   setPanelHead('⚖️','Domestic · Policy','內政');
   renderBookingHeaderDate();
+  setEmpireCardStatus('domestic',hasMainApiCredentials()?'pending':'err',hasMainApiCredentials()?'':'尚未設定 API');
   setTabs([{key:'booking-form',label:'快速記帳'},{key:'booking-recent',label:'最近記錄'},{key:'dividend-center',label:'持股備忘錄'}]);
   document.getElementById('p-body').innerHTML=`
     <div class="pane active" id="pane-booking-form"></div>
     <div class="pane" id="pane-booking-recent">
-      <div class="api-bar">
-        <div class="api-dot ${API_URL?'ok':'err'}"></div>
-        <span class="api-label">${API_URL?'已連線':'尚未設定 API'}</span>
-        <span class="api-action">⚙ 設定</span>
-      </div>
       <div id="recent-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:80%"></div></div>
     </div>
     <div class="pane" id="pane-dividend-center">
@@ -6003,14 +6001,19 @@ function currentBookingDateValue(){
   return today();
 }
 
+function domesticPanelStatusDotHtml(){
+  return '<span class="empire-panel-status-dot err" id="domestic-panel-status-dot" title="內政連線失敗" aria-label="內政連線失敗"></span>';
+}
+
 function renderBookingHeaderDate(){
   var extra=document.getElementById('p-extra');
   if(!extra)return;
   var value=currentBookingDateValue();
-  extra.innerHTML=`<div class="booking-date-pill">
+  extra.innerHTML=domesticPanelStatusDotHtml()+`<div class="booking-date-pill">
     <button class="booking-date-btn" id="booking-date-btn" type="button" onclick="openBookingHeaderDatePicker()">${formatBookingHeaderDate(value)}</button>
     <input class="booking-date-native" type="date" id="booking-date-native" value="${esc(value)}" onchange="setBookingDateForAll(this.value)">
   </div>`;
+  setEmpireCardStatus('domestic',hasMainApiCredentials()?'pending':'err',hasMainApiCredentials()?'':'尚未設定 API');
 }
 
 function syncBookingHeaderDate(){
