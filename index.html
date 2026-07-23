@@ -3292,7 +3292,7 @@ var eventChroniclePromise = null;
 var eventChronicleRenderTimer = null;
 var STARS_CACHE_TTL = 10 * 60 * 1000;
 var STARS_ZIWEI_CACHE_KEY = 'wealth_stars_ziwei_v1';
-var STARS_CHRONICLE_CACHE_KEY = 'wealth_stars_chronicle_v5';
+var STARS_CHRONICLE_CACHE_KEY = 'wealth_stars_chronicle_v6';
 
 var DEFAULT_MEDICAL_OPTIONS = {
   emotions: ['😎開心','🤔思考疑惑','🤕頭痛','😴想睡疲累','🥲難過','😡生氣','😮‍💨無奈','🫶感恩','😁豁然開朗'],
@@ -4546,16 +4546,12 @@ function renderChronicleCard(row){
   var date=String(row.date||'').trim()||'--';
   var note=String(row.note||'').trim();
   if(mode==='duration'){
-    var startTime=String(row.startTime||'').trim()||'--';
     var durationDays=formatChronicleDurationDays(row.durationDays);
-    var endDate=String(row.endDate||'').trim();
-    var tail=endDate||note||'--';
-    var tailLabel=endDate?'結束日期':'備註';
+    var tail=note||'--';
     return `<div class="chronicle-row">
       <div class="chronicle-cell chronicle-name" data-label="事件名稱">${esc(row.name||'未命名')}<span class="chronicle-date">${esc(date)}</span></div>
-      <div class="chronicle-cell" data-label="開始時間">${esc(startTime)}</div>
       <div class="chronicle-cell chronicle-cost-value" data-label="持續多少日">${esc(durationDays)}</div>
-      <div class="chronicle-cell" data-label="${tailLabel}">${esc(tail)}</div>
+      <div class="chronicle-cell" data-label="備註">${esc(tail)}</div>
     </div>`;
   }
   var months=String(row.months||'').trim()||'--';
@@ -4577,7 +4573,7 @@ function renderEventChronicleList(){
   var source=eventChronicleSortedCache.length?eventChronicleSortedCache:eventChronicleCache;
   var rows=source.filter(function(row){
     if(!q)return true;
-    return [row.name,row.mode,row.date,row.endDate,row.note].some(function(value){
+    return [row.name,row.mode,row.date,row.note].some(function(value){
       return String(value||'').toLowerCase().indexOf(q)>=0;
     });
   });
