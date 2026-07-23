@@ -4167,22 +4167,15 @@ function switchTab(btn,key){
 
 function renderStarsPanel(){
   setPanelHead('★','Zi Wei · Star Chart','司天監');
+  var panelExtra=document.getElementById('p-extra');
+  if(panelExtra)panelExtra.innerHTML='<span class="empire-panel-status-dot err" id="stars-panel-status-dot" title="司天監連線失敗" aria-label="司天監連線失敗"></span>';
+  setEmpireCardApiPendingStatus('stars');
   setTabs([{key:'stars-home',label:'命盤總覽'},{key:'stars-chronicle',label:'事件編年'}]);
   document.getElementById('p-body').innerHTML=`
     <div class="pane active" id="pane-stars-home">
-      <div class="api-bar">
-        <div class="api-dot ${API_URL?'ok':'err'}" id="ziwei-dot"></div>
-        <span class="api-label" id="ziwei-label">${API_URL?'讀取紫微星盤資料…':'尚未設定 API'}</span>
-        <span class="api-action">⚙ 設定</span>
-      </div>
       <div id="ziwei-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:78%"></div></div>
     </div>
     <div class="pane" id="pane-stars-chronicle">
-      <div class="api-bar">
-        <div class="api-dot ${API_URL?'ok':'err'}" id="chronicle-dot"></div>
-        <span class="api-label" id="chronicle-label">${API_URL?'讀取事件編年史…':'尚未設定 API'}</span>
-        <span class="api-action">⚙ 設定</span>
-      </div>
       <div id="chronicle-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:72%"></div></div>
     </div>`;
   if(API_URL)loadZiweiCharts();
@@ -4280,6 +4273,7 @@ function setEmpireCardStatus(key,status,message){
     : [{id:key+'-card-status-dot',cls:'empire-card-status-dot'}];
   if(key==='domestic')targets.push({id:'domestic-panel-status-dot',cls:'empire-panel-status-dot'});
   if(key==='council')targets.push({id:'council-panel-status-dot',cls:'empire-panel-status-dot'});
+  if(key==='stars')targets.push({id:'stars-panel-status-dot',cls:'empire-panel-status-dot'});
   targets.forEach(function(target){
     var dot=document.getElementById(target.id);
     if(dot){
