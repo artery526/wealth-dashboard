@@ -4298,6 +4298,10 @@ function setEmpireCardApiPendingStatus(key){
   setEmpireCardStatus(key,hasMainApiCredentials()?'pending':'err',hasMainApiCredentials()?'':'尚未設定 API');
 }
 
+function setCouncilPanelStatusIfActive(status,message){
+  if(currentPanel==='council')setEmpireCardStatus('council',status,message);
+}
+
 function initEmpireCardStatuses(){
   setEmpireCardApiPendingStatus('finance');
   ['domestic','council','medical','stars'].forEach(function(key){
@@ -8649,19 +8653,9 @@ function renderCouncilPanel(){
       <div id="council-content">${apiReady?'':lockedNotice}</div>
     </div>
     <div class="pane" id="pane-market-watch">
-      <div class="api-bar">
-        <div class="api-dot ${API_URL?'ok':'err'}" id="market-dot"></div>
-        <span class="api-label" id="market-label">${API_URL?'載入快捷戰報…':'尚未設定 API'}</span>
-        <span class="api-action">⚙ 設定</span>
-      </div>
       <div id="market-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:82%"></div><div class="skel-line skel" style="width:68%"></div></div>
     </div>
     <div class="pane" id="pane-macro-overview">
-      <div class="api-bar">
-        <div class="api-dot ${API_URL?'ok':'err'}" id="macro-dot"></div>
-        <span class="api-label" id="macro-label">${API_URL?'載入總經戰情…':'尚未設定 API'}</span>
-        <span class="api-action">⚙ 設定</span>
-      </div>
       <div id="macro-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:82%"></div><div class="skel-line skel" style="width:68%"></div></div>
     </div>
     <div class="pane" id="pane-council-task">
@@ -9640,9 +9634,14 @@ async function divSaveToSheet(){
 async function loadMarketDashboard(){
   var el=document.getElementById('market-content');
   if(!el)return;
-  if(!API_URL){el.innerHTML=setupNotice();return}
+  if(!API_URL){
+    setCouncilPanelStatusIfActive('err','尚未設定 API');
+    el.innerHTML=setupNotice();
+    return;
+  }
   var cached=readTimedMarketCache(MARKET_DASHBOARD_CACHE_KEY);
   if(cached)renderMarketDashboard(cached,el);
+  setCouncilPanelStatusIfActive('pending',cached?'快取資料更新中':'快捷戰報讀取中');
   var dot=document.getElementById('market-dot');
   var lbl=document.getElementById('market-label');
   if(cached&&lbl)lbl.textContent='快取資料 · 更新中…';
@@ -9666,6 +9665,7 @@ async function loadMarketDashboard(){
     var lbl=document.getElementById('market-label');
     if(dot)dot.className='api-dot ok';
     if(lbl)lbl.textContent='已連線 · 市場快報';
+    setCouncilPanelStatusIfActive('ok','快捷戰報已連線');
     ensureMarketMarginData(data).then(function(){
       writeTimedMarketCache(MARKET_DASHBOARD_CACHE_KEY,data);
       var current=document.getElementById('market-content');
@@ -9678,6 +9678,7 @@ async function loadMarketDashboard(){
     var lbl=document.getElementById('market-label');
     if(dot)dot.className='api-dot err';
     if(lbl)lbl.textContent=cached?'快取資料 · 更新失敗':'市場快報讀取失敗';
+    setCouncilPanelStatusIfActive(cached?'pending':'err',cached?'快取資料可用':'快捷戰報讀取失敗');
     return null;
   }).finally(function(){
     marketDashboardPromise=null;
@@ -9792,10 +9793,15 @@ async function ensureMarketMarginData(data){
 async function loadMacroOverview(){
   var el=document.getElementById('macro-content');
   if(!el)return;
-  if(!API_URL){el.innerHTML=setupNotice();return}
+  if(!API_URL){
+    setCouncilPanelStatusIfActive('err','尚未設定 API');
+    el.innerHTML=setupNotice();
+    return;
+  }
   var cached=readTimedMarketCache(MARKET_MACRO_CACHE_KEY);
   if(cached)renderMacroOverview(cached,el);
   else el.innerHTML='<div class="skel-line skel"></div><div class="skel-line skel" style="width:82%"></div><div class="skel-line skel" style="width:68%"></div>';
+  setCouncilPanelStatusIfActive('pending',cached?'快取資料更新中':'總經戰情讀取中');
   var lbl=document.getElementById('macro-label');
   if(cached&&lbl)lbl.textContent='快取資料 · 更新中…';
   if(macroOverviewPromise){
@@ -9811,6 +9817,7 @@ async function loadMacroOverview(){
     var lbl=document.getElementById('macro-label');
     if(dot)dot.className='api-dot ok';
     if(lbl)lbl.textContent=data&&data.hasData?'已連線 · 總經戰情':'已連線 · 尚未建立總經資料';
+    setCouncilPanelStatusIfActive('ok',data&&data.hasData?'總經戰情已連線':'尚未建立總經資料');
     return data;
   }).catch(function(e){
     if(!cached)el.innerHTML=`<div style="color:var(--coral);font-family:var(--sans);font-size:12px;padding:12px 0">${esc(e.message)}</div>`;
@@ -9818,6 +9825,7 @@ async function loadMacroOverview(){
     var lbl=document.getElementById('macro-label');
     if(dot)dot.className='api-dot err';
     if(lbl)lbl.textContent=cached?'快取資料 · 更新失敗':'總經戰情讀取失敗';
+    setCouncilPanelStatusIfActive(cached?'pending':'err',cached?'快取資料可用':'總經戰情讀取失敗');
     return null;
   }).finally(function(){
     macroOverviewPromise=null;
