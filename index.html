@@ -3292,7 +3292,7 @@ var eventChroniclePromise = null;
 var eventChronicleRenderTimer = null;
 var STARS_CACHE_TTL = 10 * 60 * 1000;
 var STARS_ZIWEI_CACHE_KEY = 'wealth_stars_ziwei_v1';
-var STARS_CHRONICLE_CACHE_KEY = 'wealth_stars_chronicle_v1';
+var STARS_CHRONICLE_CACHE_KEY = 'wealth_stars_chronicle_v2';
 
 var DEFAULT_MEDICAL_OPTIONS = {
   emotions: ['😎開心','🤔思考疑惑','🤕頭痛','😴想睡疲累','🥲難過','😡生氣','😮‍💨無奈','🫶感恩','😁豁然開朗'],
@@ -4498,7 +4498,7 @@ function renderEventChronicle(){
   var content=document.getElementById('chronicle-content');
   if(!content)return;
   if(!eventChronicleCache.length){
-    content.innerHTML='<div class="battle-empty">事件編年史目前沒有資料。請先在試算表填入項目名稱、經歷日數、經歷月數與每日花費。</div>';
+    content.innerHTML='<div class="battle-empty">事件編年史目前沒有資料。請先在試算表填入事件名稱、事件模式與對應日期欄位。</div>';
     return;
   }
   content.innerHTML=`
@@ -4527,6 +4527,89 @@ function queueEventChronicleRender(){
   },80);
 }
 
+function getChronicleMode(row){
+  var mode=String((row&&row.mode)||'').trim();
+  if(/倒數/.test(mode))return 'countdown';
+  if(/單一|單次|耗時/.test(mode))return 'duration';
+  if(!mode&&row&&(row.targetDate||row.countdownDays))return 'countdown';
+  if(!mode&&row&&(row.startTime||row.durationDays))return 'duration';
+  return 'cost';
+}
+
+function formatChronicleDurationDays(value){
+  var text=String(value||'').trim();
+  if(!text)return '--';
+  if(/日|天/.test(text))return text;
+  return text+' 日';
+}
+
+function parseChronicleDateValue(value){
+  var raw=String(value||'').trim();
+  if(!raw)return null;
+  var match=raw.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+  if(!match)return null;
+  var date=new Date(Number(match[1]),Number(match[2])-1,Number(match[3]));
+  return isNaN(date.getTime())?null:date;
+}
+
+function getChronicleCountdownText(row){
+  var raw=String((row&&row.countdownDays)||'').trim();
+  if(raw)return raw;
+  var target=parseChronicleDateValue(row&&row.targetDate);
+  if(!target)return '--';
+  var today=new Date();
+  today=new Date(today.getFullYear(),today.getMonth(),today.getDate());
+  return String(Math.round((target-today)/86400000));
+}
+
+function formatChronicleCountdown(value){
+  var text=String(value||'').trim();
+  if(!text)return '--';
+  var days=Number(text.replace(/[^\-0-9.]/g,''));
+  if(isNaN(days))return text;
+  if(days>0)return '倒數 '+days+' 日';
+  if(days<0)return '已過 '+Math.abs(days)+' 日';
+  return '今日';
+}
+
+function renderChronicleCard(row){
+  var mode=getChronicleMode(row);
+  var date=String(row.date||'').trim()||'--';
+  var note=String(row.note||'').trim();
+  if(mode==='duration'){
+    var startTime=String(row.startTime||'').trim()||'--';
+    var durationDays=formatChronicleDurationDays(row.durationDays);
+    var status=String(row.status||'').trim();
+    var tail=status||note||'單一事件';
+    return `<div class="chronicle-row">
+      <div class="chronicle-cell chronicle-name" data-label="事件名稱">${esc(row.name||'未命名')}<span class="chronicle-date">${esc(date)}</span></div>
+      <div class="chronicle-cell" data-label="開始時間">${esc(startTime)}</div>
+      <div class="chronicle-cell chronicle-cost-value" data-label="持續多少日">${esc(durationDays)}</div>
+      <div class="chronicle-cell" data-label="${status?'狀態':'類型'}">${esc(tail)}</div>
+    </div>`;
+  }
+  if(mode==='countdown'){
+    var targetDate=String(row.targetDate||row.date||'').trim()||'--';
+    var countdown=formatChronicleCountdown(getChronicleCountdownText(row));
+    var countdownStatus=String(row.status||'').trim()||note||'倒數日';
+    return `<div class="chronicle-row">
+      <div class="chronicle-cell chronicle-name" data-label="事件名稱">${esc(row.name||'未命名')}<span class="chronicle-date">${esc(targetDate)}</span></div>
+      <div class="chronicle-cell chronicle-cost-value" data-label="倒數日">${esc(countdown)}</div>
+      <div class="chronicle-cell" data-label="目標日期">${esc(targetDate)}</div>
+      <div class="chronicle-cell" data-label="狀態">${esc(countdownStatus)}</div>
+    </div>`;
+  }
+  var months=String(row.months||'').trim()||'--';
+  var days=String(row.days||'').trim()||'--';
+  var dailyCost=String(row.dailyCost||'').trim()||'--';
+  return `<div class="chronicle-row">
+    <div class="chronicle-cell chronicle-name" data-label="項目名稱">${esc(row.name||'未命名')}<span class="chronicle-date">${esc(date)}</span></div>
+    <div class="chronicle-cell" data-label="經歷月">${esc(months)}</div>
+    <div class="chronicle-cell" data-label="經歷日">${esc(days)}</div>
+    <div class="chronicle-cell chronicle-cost-value" data-label="每日花費">${esc(dailyCost)}</div>
+  </div>`;
+}
+
 function renderEventChronicleList(){
   var list=document.getElementById('chronicle-list');
   var count=document.getElementById('chronicle-count');
@@ -4534,25 +4617,17 @@ function renderEventChronicleList(){
   var q=String((document.getElementById('chronicle-search')||{}).value||'').trim().toLowerCase();
   var source=eventChronicleSortedCache.length?eventChronicleSortedCache:eventChronicleCache;
   var rows=source.filter(function(row){
-    return !q||String(row.name||'').toLowerCase().indexOf(q)>=0;
+    if(!q)return true;
+    return [row.name,row.mode,row.date,row.targetDate,row.status,row.note].some(function(value){
+      return String(value||'').toLowerCase().indexOf(q)>=0;
+    });
   });
   if(count)count.textContent=rows.length+' / '+eventChronicleCache.length+' 筆';
   if(!rows.length){
     list.innerHTML='<div class="battle-empty">查無符合的事件</div>';
     return;
   }
-  list.innerHTML=rows.map(function(row){
-    var date=String(row.date||'').trim()||'--';
-    var months=String(row.months||'').trim()||'--';
-    var days=String(row.days||'').trim()||'--';
-    var dailyCost=String(row.dailyCost||'').trim()||'--';
-    return `<div class="chronicle-row">
-      <div class="chronicle-cell chronicle-name" data-label="項目名稱">${esc(row.name||'未命名')}<span class="chronicle-date">${esc(date)}</span></div>
-      <div class="chronicle-cell" data-label="經歷月">${esc(months)}</div>
-      <div class="chronicle-cell" data-label="經歷日">${esc(days)}</div>
-      <div class="chronicle-cell chronicle-cost-value" data-label="每日花費">${esc(dailyCost)}</div>
-    </div>`;
-  }).join('');
+  list.innerHTML=rows.map(renderChronicleCard).join('');
 }
 
 function renderZiweiLayout(){
