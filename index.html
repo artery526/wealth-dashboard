@@ -5524,7 +5524,7 @@ function renderFinancePanel(){
     <div class="pane active" id="pane-finance-accs">
       <div id="acc-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:75%"></div><div class="skel-line skel" style="width:85%"></div></div>
       <details class="finance-collapse finance-pledge-collapse">
-        <summary><span class="finance-collapse-title">🏦 質押信貸</span><span class="finance-collapse-meta">國庫現況</span></summary>
+        <summary><span class="finance-collapse-title">🏦 質押信貸</span><span class="finance-collapse-meta" id="pledge-collapse-meta">讀取中</span></summary>
         <div class="finance-collapse-body">
           <div id="pledge-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:75%"></div></div>
         </div>
@@ -10034,9 +10034,17 @@ function loanElapsedSummary(loans){
   return fmtWholeNumberText(elapsed)+'(本金'+fmtPlainAmount(principal)+'/利息'+fmtPlainAmount(interest)+')';
 }
 
+function updatePledgeCollapseMeta(data){
+  var meta=document.getElementById('pledge-collapse-meta');
+  if(!meta)return;
+  data=data||{};
+  meta.textContent='質押'+((data.pledges||[]).length)+'筆/信貸'+((data.loans||[]).length)+'筆';
+}
+
 function renderPledgePanel(data,el){
   var pledges=data.pledges||[];
   var loans=data.loans||[];
+  updatePledgeCollapseMeta(data);
 
   // ── 質押總覽數字 ──
   var totalLoan=pledges.reduce(function(s,p){return s+(parseFloat(p.loanAmount)||0);},0);
