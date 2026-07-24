@@ -10033,35 +10033,6 @@ function renderPledgePanel(data,el){
   var loanRemain=loans.reduce(function(s,l){return s+(parseFloat(l.remainingAmount)||0);},0);
   var loanPayment=loans.reduce(function(s,l){return s+(parseFloat(l.monthlyPayment)||0);},0);
 
-  // ── 質押各筆卡片 ──
-  var pledgeCards=pledges.length?pledges.map(function(p){
-    var st=pledgeMaintStatus(p.latestMaintenance);
-    var barW=Math.min(100,Math.max(0,(st.pct-100)/2)).toFixed(1);
-    return `<div class="pledge-row">
-      <div class="pledge-row-head">
-        <div class="pledge-row-name">🔐 ${esc(p.target)}</div>
-        <div class="pledge-row-badge ${st.key}">${st.label} ${st.pct.toFixed(2)}%</div>
-      </div>
-      <div class="pledge-metas">
-        <span>📅</span>${esc(p.pledgeDate||'--')} 起 · 經過 ${fmtWholeNumberText(p.elapsedDays||0)} 天 ·
-        <span>📦</span>${(p.lots||0).toLocaleString('zh-TW')} 張 ·
-        <span>📈</span>利率 ${(parseFloat(p.rate)||0).toFixed(2)}%<br>
-        <span>💰</span>現價 ${p.currentPrice?Number(p.currentPrice).toFixed(2):'--'}
-      </div>
-      <div class="pledge-bar"><div class="pledge-bar-fill ${st.key}" style="width:${barW}%"></div></div>
-      <div class="pledge-amounts">
-        <div class="pledge-amt-box">
-          <div class="pledge-amt-label">借款金額</div>
-          <div class="pledge-amt-val">${fmtFull(p.loanAmount)}</div>
-        </div>
-        <div class="pledge-amt-box">
-          <div class="pledge-amt-label">累積利息</div>
-          <div class="pledge-amt-val red">${fmtFull(p.accruedInterest)}</div>
-        </div>
-      </div>
-    </div>`;
-  }).join(''):`<div style="color:#5a4018;font-family:var(--sans);font-size:12px;padding:10px 0">尚無質押紀錄</div>`;
-
   // ── 信貸各筆卡片 ──
   var loanCards=loans.length?loans.map(function(l){
     var elapsed=parseFloat(l.elapsedMonths)||0;
@@ -10136,10 +10107,6 @@ function renderPledgePanel(data,el){
         <div class="pledge-stat-value split">${esc(splitRates)}</div>
       </div>
     </div>
-    <details class="finance-collapse pledge-detail-collapse">
-      <summary><span class="finance-collapse-title">🔐 質押細項</span><span class="finance-collapse-meta">${pledges.length?esc(pledges.map(function(p){return p.target||'未命名';}).join('、')):'0 筆'}</span></summary>
-      <div class="finance-collapse-body">${pledgeCards}</div>
-    </details>
     <div class="pledge-section-title" style="margin-top:18px">🏦 信貸總覽</div>
     <div class="pledge-stats-grid">
       <div class="pledge-stat">
