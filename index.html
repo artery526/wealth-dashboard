@@ -5524,11 +5524,6 @@ function renderFinancePanel(){
     <div class="pane active" id="pane-finance-accs">
       <div id="acc-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:75%"></div><div class="skel-line skel" style="width:85%"></div></div>
       <div class="res-section-title" style="margin-top:22px">🏦 質押信貸</div>
-      <div class="api-bar">
-        <div class="api-dot ${API_URL?'ok':'err'}" id="pledge-dot"></div>
-        <span class="api-label" id="pledge-label">${API_URL?'載入質押信貸…':'尚未設定 API'}</span>
-        <span class="api-action">⚙ 設定</span>
-      </div>
       <div id="pledge-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:75%"></div></div>
     </div>
     <div class="pane" id="pane-domestic-yearly">
@@ -9974,12 +9969,18 @@ async function createMacroSample(){
 async function loadPledgePanel(){
   var el=document.getElementById('pledge-content');
   if(!el)return;
-  if(!API_URL){el.innerHTML=setupNotice();return}
+  if(!API_URL){
+    setFinanceCardStatus('err','尚未設定 API');
+    el.innerHTML=setupNotice();
+    return;
+  }
   var cached=readTimedFinanceCache(FINANCE_PLEDGE_CACHE_KEY);
   if(cached)renderPledgePanel(cached,el);
+  setFinanceCardStatus('pending',cached?'質押信貸快取更新中':'質押信貸讀取中');
   if(financePledgePromise){
     return financePledgePromise.then(function(data){
       if(data&&document.getElementById('pledge-content'))renderPledgePanel(data,document.getElementById('pledge-content'));
+      if(data)setFinanceCardStatus('ok','質押信貸已連線');
       return data;
     });
   }
@@ -9987,13 +9988,11 @@ async function loadPledgePanel(){
     data=data||{pledges:[],loans:[]};
     writeTimedFinanceCache(FINANCE_PLEDGE_CACHE_KEY,data);
     if(document.getElementById('pledge-content'))renderPledgePanel(data,document.getElementById('pledge-content'));
-    var dot=document.getElementById('pledge-dot');
-    var lbl=document.getElementById('pledge-label');
-    if(dot)dot.className='api-dot ok';
-    if(lbl)lbl.textContent='已連線 · 質押信貸';
+    setFinanceCardStatus('ok','質押信貸已連線');
     return data;
   }).catch(function(e){
     if(!cached)el.innerHTML=`<div style="color:var(--coral);font-family:var(--sans);font-size:12px;padding:12px 0">${esc(e.message)}</div>`;
+    setFinanceCardStatus(cached?'pending':'err',cached?'質押信貸快取可用':'質押信貸讀取失敗');
     return null;
   }).finally(function(){
     financePledgePromise=null;
