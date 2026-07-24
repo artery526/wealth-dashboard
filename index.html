@@ -1940,6 +1940,7 @@ body::after{
 .pledge-stat{background:rgba(10,8,4,.72);border:1px solid #2a1c08;border-radius:9px;padding:10px}
 .pledge-stat-label{font-family:var(--sans);font-size:9px;color:#5a4018;letter-spacing:1px;margin-bottom:4px}
 .pledge-stat-value{font-family:var(--mono);font-size:16px;font-weight:700;color:var(--gold)}
+.pledge-stat-value.split{font-size:15px;line-height:1.35;word-break:break-word}
 .pledge-stat-value.red{color:var(--coral)}
 .pledge-stat-value.green{color:var(--teal)}
 .pledge-stat-value.yellow{color:#d4a820}
@@ -3672,7 +3673,7 @@ var ADVISOR_REMINDER_CACHE_KEY='empire_today_advisor_reminder_v1';
 var advisorReminderPromise=null;
 var FINANCE_TREASURY_CACHE_KEY='wealth_finance_treasury_v6';
 var FINANCE_TREASURY_CACHE_PREFIX='wealth_finance_treasury_v';
-var FINANCE_PLEDGE_CACHE_KEY='wealth_finance_pledge_v1';
+var FINANCE_PLEDGE_CACHE_KEY='wealth_finance_pledge_v2';
 var FINANCE_YEARLY_CACHE_PREFIX='wealth_finance_yearly_v2_';
 var FINANCE_MONTH_DETAIL_CACHE_PREFIX='wealth_finance_month_detail_v1_';
 var FINANCE_YEARLY_LEGACY_CACHE_PREFIXES=['wealth_finance_yearly_v1_'];
@@ -10006,13 +10007,23 @@ function pledgeMaintStatus(val){
   return{key:'safe',label:'✓ 安全',color:'green',pct:n};
 }
 
+function pledgeSplitValues(pledges,field,formatter){
+  var values=(pledges||[]).map(function(p){return p&&p[field];}).filter(function(value){
+    return value!==null&&value!==undefined&&value!==''&&!isNaN(Number(value));
+  });
+  if(!values.length)return '--';
+  return values.map(function(value){return formatter?formatter(value):fmtWholeNumberText(value);}).join(', ');
+}
+
 function renderPledgePanel(data,el){
   var pledges=data.pledges||[];
   var loans=data.loans||[];
 
   // ── 質押總覽數字 ──
   var totalLoan=pledges.reduce(function(s,p){return s+(parseFloat(p.loanAmount)||0);},0);
-  var totalInterest=pledges.reduce(function(s,p){return s+(parseFloat(p.accruedInterest)||0);},0);
+  var splitInterest=pledgeSplitValues(pledges,'accruedInterest',function(value){return fmtPlainAmount(value);});
+  var splitRates=pledgeSplitValues(pledges,'rate',function(value){return (parseFloat(value)||0).toFixed(2)+'%';});
+  var splitElapsedDays=pledgeSplitValues(pledges,'elapsedDays',function(value){return fmtWholeNumberText(value);});
   var avgMaint=pledges.length?pledges.reduce(function(s,p){return s+(parseFloat(p.latestMaintenance)||0);},0)/pledges.length:0;
   var avgMaintStatus=pledgeMaintStatus(avgMaint);
   var totalLots=pledges.reduce(function(s,p){return s+(parseFloat(p.lots)||0);},0);
@@ -10032,7 +10043,7 @@ function renderPledgePanel(data,el){
         <div class="pledge-row-badge ${st.key}">${st.label} ${st.pct.toFixed(2)}%</div>
       </div>
       <div class="pledge-metas">
-        <span>📅</span>${esc(p.pledgeDate||'--')} 起 · 經過 ${p.elapsedMonths||0} 個月 ·
+        <span>📅</span>${esc(p.pledgeDate||'--')} 起 · 經過 ${fmtWholeNumberText(p.elapsedDays||0)} 天 ·
         <span>📦</span>${(p.lots||0).toLocaleString('zh-TW')} 張 ·
         <span>📈</span>利率 ${(parseFloat(p.rate)||0).toFixed(2)}%<br>
         <span>💰</span>現價 ${p.currentPrice?Number(p.currentPrice).toFixed(2):'--'}
@@ -10106,19 +10117,23 @@ function renderPledgePanel(data,el){
       </div>
       <div class="pledge-stat">
         <div class="pledge-stat-label">累積利息</div>
-        <div class="pledge-stat-value red">${fmtFull(totalInterest)}</div>
+        <div class="pledge-stat-value red split">${esc(splitInterest)}</div>
       </div>
       <div class="pledge-stat">
         <div class="pledge-stat-label">平均維持率</div>
         <div class="pledge-stat-value ${pledges.length?avgMaintStatus.color:''}">${pledges.length?avgMaint.toFixed(2)+'%':'--'}</div>
       </div>
       <div class="pledge-stat">
-        <div class="pledge-stat-label">質押筆數</div>
-        <div class="pledge-stat-value">${pledges.length}</div>
+        <div class="pledge-stat-label">經過天數</div>
+        <div class="pledge-stat-value split">${esc(splitElapsedDays)}</div>
       </div>
       <div class="pledge-stat">
         <div class="pledge-stat-label">總質押張數</div>
         <div class="pledge-stat-value">${totalLots.toLocaleString('zh-TW')}</div>
+      </div>
+      <div class="pledge-stat">
+        <div class="pledge-stat-label">質押利率</div>
+        <div class="pledge-stat-value split">${esc(splitRates)}</div>
       </div>
     </div>
     <details class="finance-collapse pledge-detail-collapse">
