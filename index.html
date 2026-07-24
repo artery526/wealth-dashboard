@@ -5523,8 +5523,12 @@ function renderFinancePanel(){
   document.getElementById('p-body').innerHTML=`
     <div class="pane active" id="pane-finance-accs">
       <div id="acc-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:75%"></div><div class="skel-line skel" style="width:85%"></div></div>
-      <div class="res-section-title" style="margin-top:22px">🏦 質押信貸</div>
-      <div id="pledge-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:75%"></div></div>
+      <details class="finance-collapse finance-pledge-collapse">
+        <summary><span class="finance-collapse-title">🏦 質押信貸</span><span class="finance-collapse-meta">國庫現況</span></summary>
+        <div class="finance-collapse-body">
+          <div id="pledge-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:75%"></div></div>
+        </div>
+      </details>
     </div>
     <div class="pane" id="pane-domestic-yearly">
       <div class="api-bar">
@@ -5801,7 +5805,7 @@ function renderAccounts(accs,monthly,el,financeStatus,assetSnapshot,bills,stale)
   if(totalAssetHtml&&!totalAssetInserted)accCards.push(totalAssetHtml);
   var accHtml=accCards.join('');
   var accountListHtml=`
-    <details class="finance-collapse finance-accounts-collapse">
+    <details class="finance-collapse finance-accounts-collapse" open>
       <summary><span class="finance-collapse-title">帳戶一覽</span><span class="finance-collapse-meta">${accCards.length} 張卡</span></summary>
       <div class="finance-collapse-body">
         <div class="acc-grid">${accHtml}</div>
