@@ -7323,56 +7323,66 @@ function findAdvisorDividendIncomeRow(symbol,data){
   return Object.assign({},latest,{rowId:''});
 }
 
-function advisorAIOpenPanelTab(panel,tab){
-  closeAdvisorDialog();
-  if(currentPanel!==panel)openPanel(panel);
-  else document.getElementById('overlay').classList.add('open');
-  if(tab){
-    setTimeout(function(){
-      var btn=document.querySelector('.ptab[onclick*="'+tab+'"]');
-      if(btn)switchTab(btn,tab);
-    },80);
-  }
-}
-
-async function advisorAIWaitForBookingForm(){
-  var pane=document.getElementById('pane-booking-form');
-  if(!pane||pane.dataset.bookingReady!=='1')await initBookingForm();
-  for(var i=0;i<30;i++){
-    if(document.getElementById('i-source')&&document.getElementById('i-amount'))return true;
-    await new Promise(function(resolve){setTimeout(resolve,100);});
-  }
-  return false;
-}
-
-async function advisorAIPrefillDividendIncome(cmd){
-  closeAdvisorAIStandalone();
-  advisorAIOpenPanelTab('domestic','booking-form');
-  var ready=await advisorAIWaitForBookingForm();
-  if(!ready)throw new Error('快速記帳尚未載入完成，請稍後再試。');
-  setBookingEntryMode('income');
-  selectBookingOptionByText('i-source','投資理財');
-  selectBookingOptionByText('i-account','國泰Stock');
-  var data=await loadDividendCenter(false).catch(function(){return dividendCenterCache||{};});
-  var row=findAdvisorDividendIncomeRow(cmd.symbol,data)||{
-    symbol:cmd.symbol,
-    displaySymbol:advisorAIResolveStockTradeLabel(cmd.symbol)||cmd.symbol,
-    dividendUsd:'',
-    estimatedTwd:cmd.amount,
-    rowId:''
+async function advisorAIShowDividendIncomeDraft(cmd){
+  if(!advisorAIRequireWrite())return;
+  var panel=advisorAIActivePanel();
+  var data=await loadDividendCenter(false);
+  var row=findAdvisorDividendIncomeRow(cmd.symbol,data);
+  if(!row)throw new Error('找不到 '+cmd.symbol+' 的持股備忘錄配息紀錄。');
+  var displaySymbol=row.displaySymbol||advisorAIResolveStockTradeLabel(row.symbol||cmd.symbol)||row.symbol||cmd.symbol;
+  var rate=formatDividendUsdForInput(row.dividendUsd);
+  if(!rate)throw new Error('找不到 '+displaySymbol+' 的每股配息紀錄。');
+  advisorDividendIncomeDraftPending={
+    symbol:row.symbol||cmd.symbol,
+    displaySymbol:displaySymbol,
+    amount:Number(cmd.amount)||0,
+    divRate:rate,
+    dividendRowId:row.rowId||''
   };
-  applyIncomeDividendAutofill(row);
-  var amount=document.getElementById('i-amount');
-  if(amount)amount.value=Number(cmd.amount)||'';
-  selectBookingOptionByText('i-account','國泰Stock');
-  syncBookingQuickChip('i-source');
-  syncBookingQuickChip('i-account');
-  syncDivNote();
-  showMsg('msg-income','已依龐統口令帶入配息收入，請確認後按「記錄收入」。','ok');
-  setTimeout(function(){
-    var amountEl=document.getElementById('i-amount');
-    if(amountEl){amountEl.focus();amountEl.select();}
-  },0);
+  if(panel)panel.innerHTML=`${advisorAIHeaderHtml()}
+    ${advisorAIResultHtml('請確認配息入帳',[
+      '標的：'+displaySymbol,
+      '收入來源：💰投資理財',
+      '入帳帳戶：💵國泰Stock',
+      '金額：'+fmtFull(cmd.amount),
+      '配息比例：'+rate,
+      '配息標的：'+displaySymbol,
+      '備註：'+displaySymbol
+    ])}
+    <div class="advisor-dividend-actions">
+      <button class="advisor-shortcut-secondary" type="button" onclick="openAdvisorAI()">返回</button>
+      <button class="advisor-shortcut-submit" type="button" onclick="advisorAIConfirmDividendIncome(this)">記錄配息</button>
+    </div>
+    <div class="advisor-shortcut-msg" id="advisor-ai-msg"></div>`;
+}
+
+async function advisorAIConfirmDividendIncome(btn){
+  if(!advisorDividendIncomeDraftPending){advisorAISetMessage('找不到待記錄的配息資料','err');return;}
+  if(btn&&btn.disabled)return;
+  if(btn){btn.disabled=true;btn.textContent='記錄中…';}
+  var pending=advisorDividendIncomeDraftPending;
+  try{
+    await apiPost({
+      action:'income',
+      date:today().replace(/-/g,'/'),
+      source:'💰投資理財',
+      account:'💵國泰Stock',
+      amount:pending.amount,
+      note:pending.displaySymbol,
+      divRate:pending.divRate,
+      divSymbol:pending.symbol,
+      dividendIncome:'1',
+      dividendRowId:pending.dividendRowId||''
+    });
+    invalidateDividendCenter();
+    advisorDividendIncomeDraftPending=null;
+    var panel=advisorAIActivePanel();
+    if(panel)panel.innerHTML=`${advisorAIHeaderHtml()}${advisorAIResultHtml('已記錄配息入帳',['標的：'+pending.displaySymbol,'金額：'+fmtFull(pending.amount),'配息比例：'+pending.divRate])}`;
+  }catch(err){
+    advisorAISetMessage('✗ '+(err&&err.message?err.message:'寫入失敗'),'err');
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='記錄配息';}
+  }
 }
 
 function clearTransferDividendAutofill(){
@@ -11029,6 +11039,7 @@ async function openAdvisorWorldSituation(event,auto){
   if(!panel)return;
   advisorDividendSelection=null;
   advisorDividendMemoPending=null;
+  advisorDividendIncomeDraftPending=null;
   advisorAIScheduleOpen=false;
   var cachedMarket=readTimedMarketCache(MARKET_DASHBOARD_CACHE_KEY);
   var cachedMacro=readTimedMarketCache(MARKET_MACRO_CACHE_KEY);
@@ -11079,6 +11090,7 @@ function advisorShortcutCategoryOptions(){
 
 var advisorDividendSelection=null;
 var advisorDividendMemoPending=null;
+var advisorDividendIncomeDraftPending=null;
 var advisorShortcutOpenKind='';
 var advisorAIScheduleOpen=false;
 var advisorAIHeaderFundsCache=null;
@@ -11091,6 +11103,7 @@ function closeAdvisorShortcutPanel(){
   advisorShortcutOpenKind='';
   advisorDividendSelection=null;
   advisorDividendMemoPending=null;
+  advisorDividendIncomeDraftPending=null;
   advisorAIScheduleOpen=false;
 }
 
@@ -12056,7 +12069,7 @@ async function runAdvisorAICommand(btn){
       return;
     }
     if(cmd.intent==='advisorDividendIncomeDraft'){
-      await advisorAIPrefillDividendIncome(cmd);
+      await advisorAIShowDividendIncomeDraft(cmd);
       return;
     }
     if(cmd.intent==='accountLookup'){
