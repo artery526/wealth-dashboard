@@ -10055,52 +10055,6 @@ function renderPledgePanel(data,el){
   var loanYears=loanYearSummary(loans);
   var loanElapsed=loanElapsedSummary(loans);
 
-  // ── 信貸各筆卡片 ──
-  var loanCards=loans.length?loans.map(function(l){
-    var elapsed=parseFloat(l.elapsedMonths)||0;
-    var term=parseFloat(l.termMonths)||84;
-    var cells=[];var lbls=[];
-    var yearCount=Math.ceil(term/12);
-    for(var i=1;i<=yearCount;i++){
-      var done=elapsed>=(i*12);
-      var cur=!done&&elapsed>((i-1)*12);
-      cells.push(`<div class="loan-stage-cell${done?' done':cur?' current':''}"></div>`);
-      lbls.push(`<span>${i}年</span>`);
-    }
-    return `<div class="pledge-row">
-      <div class="pledge-row-head">
-        <div class="pledge-row-name">🏦 ${esc(l.bank)}</div>
-        <div class="pledge-row-badge watch" style="color:var(--gold);background:rgba(232,192,80,.1)">第 ${Math.ceil(elapsed/12)||1} / ${yearCount} 年</div>
-      </div>
-      <div class="pledge-metas">
-        <span>📅</span>${esc(l.loanDate||'--')} 借款 · 已過 ${elapsed} / ${term} 期 ·
-        <span>💸</span>利率 ${(parseFloat(l.rate)||0).toFixed(2)}%
-      </div>
-      <div class="loan-stage-wrap">
-        <div class="loan-stage-row">${cells.join('')}</div>
-        <div class="loan-stage-labels">${lbls.join('')}</div>
-      </div>
-      <div class="pledge-amounts">
-        <div class="pledge-amt-box">
-          <div class="pledge-amt-label">每月還款</div>
-          <div class="pledge-amt-val">${fmtFull(l.monthlyPayment)}</div>
-        </div>
-        <div class="pledge-amt-box">
-          <div class="pledge-amt-label">剩餘金額</div>
-          <div class="pledge-amt-val red">${fmtFull(l.remainingAmount)}</div>
-        </div>
-        <div class="pledge-amt-box">
-          <div class="pledge-amt-label">已還本金</div>
-          <div class="pledge-amt-val">${fmtFull(l.principalPaid)}</div>
-        </div>
-        <div class="pledge-amt-box">
-          <div class="pledge-amt-label">已付利息</div>
-          <div class="pledge-amt-val red">${fmtFull(l.interestPaid)}</div>
-        </div>
-      </div>
-    </div>`;
-  }).join(''):`<div style="color:#5a4018;font-family:var(--sans);font-size:12px;padding:10px 0">尚無信貸紀錄</div>`;
-
   el.innerHTML=`
     <div class="pledge-section-title">🔐 質押總覽</div>
     <div class="pledge-stats-grid">
@@ -10147,11 +10101,7 @@ function renderPledgePanel(data,el){
         <div class="pledge-stat-label">已過期數</div>
         <div class="pledge-stat-value split">${esc(loanElapsed)}</div>
       </div>
-    </div>
-    <details class="finance-collapse pledge-detail-collapse">
-      <summary><span class="finance-collapse-title">🏦 信貸細項</span><span class="finance-collapse-meta">${loans.length?esc(loans.map(function(l){return l.bank||'未命名';}).join('、')):'0 筆'}</span></summary>
-      <div class="finance-collapse-body">${loanCards}</div>
-    </details>`;
+    </div>`;
 }
 
 function marketTone(signal){
