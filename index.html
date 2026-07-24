@@ -1941,6 +1941,7 @@ body::after{
 .pledge-stat-label{font-family:var(--sans);font-size:9px;color:#5a4018;letter-spacing:1px;margin-bottom:4px}
 .pledge-stat-value{font-family:var(--mono);font-size:16px;font-weight:700;color:var(--gold)}
 .pledge-stat-value.split{font-size:15px;line-height:1.35;word-break:break-word}
+.pledge-stat-sub{font-family:var(--sans);font-size:10px;font-weight:800;color:#8e7038;white-space:nowrap}
 .pledge-stat-value.red{color:var(--coral)}
 .pledge-stat-value.green{color:var(--teal)}
 .pledge-stat-value.yellow{color:#d4a820}
@@ -10007,12 +10008,27 @@ function pledgeMaintStatus(val){
   return{key:'safe',label:'✓ 安全',color:'green',pct:n};
 }
 
-function pledgeSplitValues(pledges,field,formatter){
+function pledgeSplitValues(pledges,field,formatter,separator){
   var values=(pledges||[]).map(function(p){return p&&p[field];}).filter(function(value){
     return value!==null&&value!==undefined&&value!==''&&!isNaN(Number(value));
   });
   if(!values.length)return '--';
-  return values.map(function(value){return formatter?formatter(value):fmtWholeNumberText(value);}).join(', ');
+  return values.map(function(value){return formatter?formatter(value):fmtWholeNumberText(value);}).join(separator||' / ');
+}
+
+function loanYearSummary(loans){
+  if(!loans||!loans.length)return '';
+  var elapsed=loans.reduce(function(sum,l){return sum+(parseFloat(l.elapsedMonths)||0);},0);
+  var term=loans.reduce(function(sum,l){return sum+(parseFloat(l.termMonths)||0);},0);
+  return '已還'+Math.ceil(elapsed/12)+'年/總還'+Math.ceil(term/12)+'年';
+}
+
+function loanElapsedSummary(loans){
+  if(!loans||!loans.length)return '--';
+  var elapsed=loans.reduce(function(sum,l){return sum+(parseFloat(l.elapsedMonths)||0);},0);
+  var principal=loans.reduce(function(sum,l){return sum+(parseFloat(l.principalPaid)||0);},0);
+  var interest=loans.reduce(function(sum,l){return sum+(parseFloat(l.interestPaid)||0);},0);
+  return fmtWholeNumberText(elapsed)+'(本金'+fmtPlainAmount(principal)+'/利息'+fmtPlainAmount(interest)+')';
 }
 
 function renderPledgePanel(data,el){
@@ -10024,14 +10040,20 @@ function renderPledgePanel(data,el){
   var splitInterest=pledgeSplitValues(pledges,'accruedInterest',function(value){return fmtPlainAmount(value);});
   var splitRates=pledgeSplitValues(pledges,'rate',function(value){return (parseFloat(value)||0).toFixed(2)+'%';});
   var splitElapsedDays=pledgeSplitValues(pledges,'elapsedDays',function(value){return fmtWholeNumberText(value);});
-  var avgMaint=pledges.length?pledges.reduce(function(s,p){return s+(parseFloat(p.latestMaintenance)||0);},0)/pledges.length:0;
-  var avgMaintStatus=pledgeMaintStatus(avgMaint);
+  var splitMaint=pledgeSplitValues(pledges,'latestMaintenance',function(value){return (parseFloat(value)||0).toFixed(2)+'%';});
+  var minMaint=pledges.length?pledges.reduce(function(min,p){
+    var value=parseFloat(p.latestMaintenance)||0;
+    return min===null?value:Math.min(min,value);
+  },null):0;
+  var maintStatus=pledgeMaintStatus(minMaint);
   var totalLots=pledges.reduce(function(s,p){return s+(parseFloat(p.lots)||0);},0);
 
   // ── 信貸總覽數字 ──
   var loanTotal=loans.reduce(function(s,l){return s+(parseFloat(l.loanAmount)||0);},0);
   var loanRemain=loans.reduce(function(s,l){return s+(parseFloat(l.remainingAmount)||0);},0);
   var loanPayment=loans.reduce(function(s,l){return s+(parseFloat(l.monthlyPayment)||0);},0);
+  var loanYears=loanYearSummary(loans);
+  var loanElapsed=loanElapsedSummary(loans);
 
   // ── 信貸各筆卡片 ──
   var loanCards=loans.length?loans.map(function(l){
@@ -10092,7 +10114,7 @@ function renderPledgePanel(data,el){
       </div>
       <div class="pledge-stat">
         <div class="pledge-stat-label">平均維持率</div>
-        <div class="pledge-stat-value ${pledges.length?avgMaintStatus.color:''}">${pledges.length?avgMaint.toFixed(2)+'%':'--'}</div>
+        <div class="pledge-stat-value ${pledges.length?maintStatus.color:''} split">${esc(splitMaint)}</div>
       </div>
       <div class="pledge-stat">
         <div class="pledge-stat-label">經過天數</div>
@@ -10111,7 +10133,7 @@ function renderPledgePanel(data,el){
     <div class="pledge-stats-grid">
       <div class="pledge-stat">
         <div class="pledge-stat-label">信貸總借款</div>
-        <div class="pledge-stat-value">${fmtFull(loanTotal)}</div>
+        <div class="pledge-stat-value">${fmtFull(loanTotal)}${loanYears?' <span class="pledge-stat-sub">('+esc(loanYears)+')</span>':''}</div>
       </div>
       <div class="pledge-stat">
         <div class="pledge-stat-label">剩餘金額</div>
@@ -10120,6 +10142,10 @@ function renderPledgePanel(data,el){
       <div class="pledge-stat">
         <div class="pledge-stat-label">每月還款</div>
         <div class="pledge-stat-value">${fmtFull(loanPayment)}</div>
+      </div>
+      <div class="pledge-stat">
+        <div class="pledge-stat-label">已過期數</div>
+        <div class="pledge-stat-value split">${esc(loanElapsed)}</div>
       </div>
     </div>
     <details class="finance-collapse pledge-detail-collapse">
