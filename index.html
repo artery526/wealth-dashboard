@@ -11719,6 +11719,9 @@ function advisorAICommand(raw){
     if(compact.indexOf('訂閱')>=0||compact.indexOf('app')>=0)return {intent:'expense',category:'📱APP訂閱',account:account||'🏔️玉山銀行',amount:amount,note:'APP訂閱'};
     if(compact.indexOf('網購')>=0||compact.indexOf('3c')>=0)return {intent:'expense',category:'💻3C產品',account:account||'💳Cube',amount:amount,note:'PX網購'};
     if(compact.indexOf('超商')>=0)return {intent:'expense',category:'🍴超商外食',account:account||'🔖中國信託',amount:amount,note:'超商消費'};
+    var category=advisorAIResolveCategory(raw);
+    var resolvedAccount=advisorAIResolveAccount(raw);
+    if(category&&resolvedAccount)return {intent:'expense',category:category,account:resolvedAccount,amount:amount,note:'軍師AI'};
   }
   return {intent:'unknown'};
 }
