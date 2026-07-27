@@ -11186,6 +11186,7 @@ function advisorAIQuickCommands(){
     {label:'年度財報',command:'年度財報'},
     {label:'國庫現況',command:'國庫現況'},
     {label:'部隊陣容',command:'部隊陣容'},
+    {label:'退稅查詢',command:'__etf_tax_lookup__'},
     {label:'網頁驗證',command:'__web_verify__'}
   ];
 }
@@ -11205,6 +11206,11 @@ function advisorAIRunQuickCommand(select){
   if(command==='__web_verify__'){
     if(select)select.value='';
     advisorAIRunWebVerify();
+    return;
+  }
+  if(command==='__etf_tax_lookup__'){
+    if(select)select.value='';
+    advisorAIOpenTaxLookup();
     return;
   }
   var input=document.getElementById('advisor-ai-input');
@@ -11229,6 +11235,88 @@ async function advisorAIRunWebVerify(){
     setWebVerifyStatus('err',msg);
     if(panel)panel.innerHTML=`${advisorAIHeaderHtml()}${advisorAIResultHtml('網頁驗證未通過',[msg,'請更新 API URL / WRITE_TOKEN 後再驗證。'])}`;
     if(msg.indexOf('尚未設定')>=0)setTimeout(openCfg,0);
+  }
+}
+
+function advisorAIOpenTaxLookup(){
+  var panel=advisorAIActivePanel();
+  if(!panel)return;
+  advisorAIScheduleOpen=false;
+  panel.innerHTML=`${advisorAIHeaderHtml()}
+    <div class="advisor-ai-portrait"><img class="advisor-ai-portrait-img" src="pangtong.png" alt="龐統軍師"></div>
+    <div class="advisor-shortcut-hint">輸入 ETF 代號，軍師會查詢國泰、富邦與 2024 退稅分頁中的退稅比例。</div>
+    <div class="advisor-shortcut-field">
+      <label>ETF 代號</label>
+      <input class="advisor-shortcut-input" id="advisor-ai-tax-symbol" type="text" placeholder="例如 QQQI" autocomplete="off" onkeydown="advisorAITaxLookupKey(event)">
+    </div>
+    <div class="advisor-dividend-actions">
+      <button class="advisor-shortcut-secondary" type="button" onclick="openAdvisorAI()">返回</button>
+      <button class="advisor-shortcut-submit" id="advisor-ai-tax-submit" type="button" onclick="advisorAISubmitTaxLookup(this)">查詢</button>
+    </div>
+    <div class="advisor-shortcut-msg" id="advisor-ai-msg"></div>`;
+  setTimeout(function(){
+    var input=document.getElementById('advisor-ai-tax-symbol');
+    if(input)input.focus();
+  },0);
+}
+
+function advisorAITaxLookupKey(e){
+  if(e&&e.key==='Enter'){
+    e.preventDefault();
+    advisorAISubmitTaxLookup(document.getElementById('advisor-ai-tax-submit'));
+  }
+}
+
+function advisorAITaxLookupLines(data){
+  var lines=[];
+  (data.sources||[]).forEach(function(source){
+    if(source.type==='experience'){
+      (source.rows||[]).forEach(function(row){
+        var refund=row.refundRate||'查無退稅';
+        var tax=row.taxRate?('，稅率 '+row.taxRate):'';
+        lines.push(source.source+' '+row.year+'：退稅比率 '+refund+tax);
+      });
+      return;
+    }
+    (source.rows||[]).forEach(function(row){
+      var span=row.firstDate&&row.latestDate&&row.firstDate!==row.latestDate
+        ?row.firstDate+' - '+row.latestDate
+        :(row.latestDate||row.firstDate||'');
+      var meta=[];
+      if(row.market)meta.push(row.market);
+      if(row.bank)meta.push(row.bank);
+      if(row.taxPool)meta.push(row.taxPool);
+      if(row.count>1)meta.push(row.count+'筆');
+      if(span)meta.push(span);
+      lines.push(source.source+'：退稅率 '+(row.refundRate||'查無退稅')+(meta.length?'（'+meta.join(' / ')+'）':''));
+    });
+  });
+  return lines.length?lines:['查無退稅'];
+}
+
+async function advisorAISubmitTaxLookup(btn){
+  var input=document.getElementById('advisor-ai-tax-symbol');
+  var panel=advisorAIActivePanel();
+  var symbol=String(input&&input.value||'').trim().toUpperCase().replace(/[^A-Z0-9.\-]/g,'');
+  if(!symbol){advisorAISetMessage('請輸入 ETF 代號。','err');return;}
+  if(!API_URL){advisorAISetMessage('尚未設定 API URL，無法查詢退稅。','err');return;}
+  if(btn&&btn.disabled)return;
+  if(btn){btn.disabled=true;btn.textContent='查詢中…';}
+  try{
+    var data=await apiGet({action:'etfTaxLookup',symbol:symbol},30000);
+    var lines=data&&data.found?advisorAITaxLookupLines(data):['查無退稅'];
+    if(panel)panel.innerHTML=`${advisorAIHeaderHtml()}
+      <div class="advisor-ai-portrait"><img class="advisor-ai-portrait-img" src="pangtong.png" alt="龐統軍師"></div>
+      ${advisorAIResultHtml(symbol+' 退稅查詢',lines)}
+      <div class="advisor-dividend-actions">
+        <button class="advisor-shortcut-secondary" type="button" onclick="advisorAIOpenTaxLookup()">再查一次</button>
+        <button class="advisor-shortcut-submit" type="button" onclick="openAdvisorAI()">返回</button>
+      </div>
+      <div class="advisor-shortcut-msg" id="advisor-ai-msg"></div>`;
+  }catch(e){
+    advisorAISetMessage(e&&e.message?e.message:'退稅查詢失敗','err');
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='查詢';}
   }
 }
 
