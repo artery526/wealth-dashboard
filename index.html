@@ -3259,6 +3259,7 @@ var dividendCenterFetchedAt = 0;
 var bookingDividendHiddenRows = {};
 var bookingDividendExpanded = false;
 var bookingDividendPickerOpen = false;
+var bookingHoldingTradePickerOpen = false;
 var DIVIDEND_CACHE_TTL = 5 * 60 * 1000;
 var DIVIDEND_AUTOFILL_SYMBOLS = ['CHPY','AIPI','QQQI','MLPI','PLTY','00997A'];
 var heroCache = [];
@@ -6003,7 +6004,7 @@ async function initBookingForm(){
       <div class="booking-transfer-section bank booking-transfer-pane active" id="transfer-account-pane">
         <div class="form-grid booking-transfer-grid">
           <div class="form-group hidden"><label class="form-label">記帳日期</label><input class="form-control" type="date" id="a-date" value="${today()}"></div>
-          <div class="form-group"><label class="form-label">轉出帳戶</label>${transferFromChips}<div class="booking-chip-select-wrap hidden" data-booking-select-wrap="a-from"><select class="form-control" id="a-from" onchange="syncBookingQuickChip('a-from')">${accOpts}</select></div></div>
+          <div class="form-group"><div class="form-label booking-source-label"><span>轉出帳戶</span><span class="booking-dividend-anchor"><button class="booking-dividend-mini" type="button" onclick="event.stopPropagation();openBookingHoldingTradePicker()">待入帳</button><span class="booking-dividend-pending" id="booking-holding-trade-picker"></span></span></div>${transferFromChips}<div class="booking-chip-select-wrap hidden" data-booking-select-wrap="a-from"><select class="form-control" id="a-from" onchange="syncBookingQuickChip('a-from')">${accOpts}</select></div></div>
           <div class="form-group"><label class="form-label">轉入帳戶</label>${transferToChips}<div class="booking-chip-select-wrap hidden" data-booking-select-wrap="a-to"><select class="form-control" id="a-to" onchange="syncBookingQuickChip('a-to')">${accOpts}</select></div></div>
           <div class="form-group"><label class="form-label">金額 (TWD)</label><input class="form-control" type="number" id="a-amount" placeholder="0" min="1"></div>
           <div class="form-group full"><button class="booking-stock-toggle" id="btn-stock-toggle" type="button" onclick="toggleMergedStockTrade()">股票交易</button></div>
@@ -7201,13 +7202,35 @@ function closeBookingDividendPicker(){
   refreshBookingDividendPendingView();
 }
 
+async function openBookingHoldingTradePicker(){
+  bookingHoldingTradePickerOpen=true;
+  try{
+    await loadDividendCenter(false);
+  }catch(e){console.warn(e)}
+  refreshBookingHoldingTradePickerView();
+}
+
+function closeBookingHoldingTradePicker(){
+  if(!bookingHoldingTradePickerOpen)return;
+  bookingHoldingTradePickerOpen=false;
+  refreshBookingHoldingTradePickerView();
+}
+
+function refreshBookingHoldingTradePickerView(){
+  var slot=document.getElementById('booking-holding-trade-picker');
+  if(slot)slot.innerHTML=renderBookingHoldingTradePicker(dividendCenterCache||{holdingTradePending:[]});
+}
+
 function refreshBookingDividendPendingView(){
   var booking=document.getElementById('booking-dividend-pending');
   if(booking)booking.innerHTML=renderBookingDividendPending(dividendCenterCache||{pending:[],holdingTradePending:[]});
 }
 
 document.addEventListener('keydown',function(e){
-  if(e.key==='Escape')closeBookingDividendPicker();
+  if(e.key==='Escape'){
+    closeBookingDividendPicker();
+    closeBookingHoldingTradePicker();
+  }
 });
 
 function isDividendAutofillSymbol(value){
@@ -7230,6 +7253,22 @@ function getDividendDisplayValue(symbol,selectEl){
     return normalizeKey(option.value)===key||normalizeKey(option.textContent)===key;
   });
   return opt?opt.value:key;
+}
+
+function setBookingSelectHoldingValue(selectEl,symbol,display){
+  if(!selectEl)return;
+  var key=normalizeKey(symbol||display);
+  var opt=Array.from(selectEl.options||[]).find(function(option){
+    return normalizeKey(option.value)===key||normalizeKey(option.textContent)===key;
+  });
+  if(!opt){
+    opt=document.createElement('option');
+    opt.value=String(symbol||display||'').trim();
+    opt.textContent=String(display||symbol||'').trim();
+    selectEl.appendChild(opt);
+  }
+  selectEl.value=opt.value;
+  selectEl.dispatchEvent(new Event('change',{bubbles:true}));
 }
 
 async function loadDividendCenter(force){
@@ -7393,6 +7432,45 @@ function clearTransferDividendAutofill(){
     var el=document.getElementById(id);
     if(el){el.dataset.dividendRowId='';el.dataset.holdingTradeRowId='';}
   });
+}
+
+function applyHoldingTradeAutofill(row){
+  if(!row)return;
+  setTransferEntryMode('stock');
+  var shares=Number(row.shares)||0;
+  var isSell=shares<0;
+  setMergedStockType(isSell?'sell':'buy');
+  var from=document.getElementById('a-from');
+  var to=document.getElementById('a-to');
+  var amount=document.getElementById('a-amount');
+  var shareEl=document.getElementById('t-stock-shares');
+  var note=document.getElementById('a-note');
+  var auto=document.getElementById('t-dividend-autofill');
+  var symbolValue=row.symbol||row.displaySymbol||'';
+  if(from){
+    if(isSell)setBookingSelectHoldingValue(from,symbolValue,row.displaySymbol||symbolValue);
+    else from.value='💵國泰Stock';
+  }
+  if(to){
+    if(isSell)to.value='💵國泰Stock';
+    else setBookingSelectHoldingValue(to,symbolValue,row.displaySymbol||symbolValue);
+  }
+  if(amount){
+    amount.value=Math.round(Number(row.estimatedTwd)||0);
+    amount.dataset.holdingTradeRowId=row.rowId||'';
+    amount.dataset.dividendRowId='';
+  }
+  if(shareEl)shareEl.value=Math.abs(shares)||'';
+  if(note)note.value='待入帳持股記錄';
+  syncBookingQuickChip('a-from');
+  syncBookingQuickChip('a-to');
+  if(auto){
+    auto.classList.remove('hidden');
+    auto.dataset.holdingTradeRowId=row.rowId||'';
+    auto.dataset.dividendRowId='';
+    auto.innerHTML='已帶入 '+esc(row.displaySymbol||row.symbol)+' 待入帳持股記錄：'+(isSell?'賣出':'買入')+' '+esc(Math.abs(shares)||'--')+' 股 · 金額 '+fmtFull(row.estimatedTwd)+'。';
+  }
+  closeBookingHoldingTradePicker();
 }
 
 function inferStockTransferSymbol(stockType,from,to){
@@ -7658,6 +7736,7 @@ async function refreshDividendViewsAfterEntry(){
     }
     var booking=document.getElementById('booking-dividend-pending');
     if(booking)booking.innerHTML=renderBookingDividendPending(data);
+    refreshBookingHoldingTradePickerView();
   }catch(e){
     console.warn(e);
   }
@@ -7697,6 +7776,22 @@ function renderBookingDividendPending(data){
         <button class="booking-dividend-toggle" type="button" onclick="event.stopPropagation();toggleBookingDividendExpanded()">${expanded?'收合':'展開'}</button>
       </div>
       ${expanded?tradeList+dividendList:summary}
+    </div>`;
+}
+
+function renderBookingHoldingTradePicker(data){
+  if(!bookingHoldingTradePickerOpen)return '';
+  data=data||{};
+  var rows=dividendPendingDisplayRows((data.holdingTradePending||[]).filter(Boolean));
+  var list=rows.map(function(row){return renderHoldingTradePendingRow(row,'pick');}).join('')||'<div class="dividend-empty">目前沒有待入帳持股記錄。</div>';
+  return `<div class="booking-dividend-backdrop" onclick="closeBookingHoldingTradePicker()"></div>
+    <div class="booking-dividend-panel is-floating">
+      <div class="booking-dividend-head">
+        <div class="booking-dividend-title">待入帳持股</div>
+        <button class="booking-dividend-close" type="button" onclick="event.stopPropagation();closeBookingHoldingTradePicker()">×</button>
+      </div>
+      <div class="booking-dividend-summary">點選一筆後會自動帶入網銀股票交易欄位</div>
+      ${list}
     </div>`;
 }
 
@@ -8123,19 +8218,27 @@ async function submitHoldingTradeEntry(e){
   }
 }
 
-function renderHoldingTradePendingRow(row){
+function renderHoldingTradePendingRow(row,mode){
   var direction=Number(row.shares)<0?'賣出':'買入';
   var fxText=row.fxIncluded===false?'匯率未計':'匯率 '+esc(row.fx||'--');
   var feeUsd=(row.feeUsd===0||row.feeUsd==='0')?0:(row.feeUsd||3);
   var rowId=String(row.rowId||'');
-  return `<div class="dividend-pending-row">
+  var pickAttrs=mode==='pick'?` is-selectable" data-holding-trade-pick-id="${esc(rowId)}" onclick="selectBookingHoldingTradePending(this.dataset.holdingTradePickId)"`:'"';
+  var deleteAction=mode==='pick'?'':`<div class="dividend-pending-actions"><button class="dividend-dismiss-btn" type="button" data-holding-trade-row-id="${esc(rowId)}" onclick="event.stopPropagation();deleteHoldingTradePending(this.dataset.holdingTradeRowId,this)">刪除</button></div>`;
+  return `<div class="dividend-pending-row${pickAttrs}>
     <div>
       <div class="dividend-pending-name">${esc(row.displaySymbol||row.symbol)} · ${direction} ${esc(row.shares||'--')} 股</div>
       <div class="dividend-pending-meta">股價 ${esc(row.priceUsd||'--')} · ${fxText} · 手續費 ${esc(feeUsd)} · 日期 ${esc(row.tradeDate||'--')}</div>
     </div>
     <div class="dividend-pending-amt">${fmtFull(row.estimatedTwd)}</div>
-    <div class="dividend-pending-actions"><button class="dividend-dismiss-btn" type="button" data-holding-trade-row-id="${esc(rowId)}" onclick="event.stopPropagation();deleteHoldingTradePending(this.dataset.holdingTradeRowId,this)">刪除</button></div>
+    ${deleteAction}
   </div>`;
+}
+
+function selectBookingHoldingTradePending(rowId){
+  var rows=((dividendCenterCache&&dividendCenterCache.holdingTradePending)||[]).filter(Boolean);
+  var row=rows.find(function(item){return String(item.rowId||'')===String(rowId||'');});
+  if(row)applyHoldingTradeAutofill(row);
 }
 
 async function deleteHoldingTradePending(rowId,btn){
