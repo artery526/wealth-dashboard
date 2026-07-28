@@ -7291,14 +7291,22 @@ function getDividendDisplayValue(symbol,selectEl){
 
 function setBookingSelectHoldingValue(selectEl,symbol,display){
   if(!selectEl)return;
-  var key=normalizeKey(symbol||display);
-  var opt=Array.from(selectEl.options||[]).find(function(option){
+  var wantedSymbol=String(symbol||display||'').trim();
+  var wantedDisplay=String(display||symbol||'').trim();
+  var key=normalizeKey(wantedSymbol||wantedDisplay);
+  var options=Array.from(selectEl.options||[]);
+  var opt=options.find(function(option){
+    return String(option.value||'').trim()===wantedDisplay||String(option.textContent||'').trim()===wantedDisplay;
+  })||options.find(function(option){
     return normalizeKey(option.value)===key||normalizeKey(option.textContent)===key;
   });
+  if(wantedDisplay&&wantedDisplay!==wantedSymbol&&(!opt||String(opt.value||'').trim()!==wantedDisplay)){
+    opt=null;
+  }
   if(!opt){
     opt=document.createElement('option');
-    opt.value=String(symbol||display||'').trim();
-    opt.textContent=String(display||symbol||'').trim();
+    opt.value=wantedDisplay||wantedSymbol;
+    opt.textContent=wantedDisplay||wantedSymbol;
     selectEl.appendChild(opt);
   }
   selectEl.value=opt.value;
