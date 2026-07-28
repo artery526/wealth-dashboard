@@ -6639,9 +6639,18 @@ function arkWallEntriesForSelection(){
 }
 
 var ARK_WALL_MEMO_TAGS=['生活隨筆','待辦記錄','父母相關'];
+var ARK_WALL_MARKET_TAGS=['股市教室','市場觀察','持股紀錄','交易檢討','投資心得','台股','美股','個股','大盤'];
+
+function arkWallTagsForView(view){
+  if(view==='market')return ARK_WALL_MARKET_TAGS;
+  if(view==='memo')return ARK_WALL_MEMO_TAGS;
+  return [];
+}
 
 function setArkWallView(view){
-  arkWallView=view==='memo'?'memo':'wall';
+  arkWallView=view==='memo'||view==='market'?view:'wall';
+  var tags=arkWallTagsForView(arkWallView);
+  if(tags.length&&arkWallMemoTag!=='全部'&&tags.indexOf(arkWallMemoTag)<0)arkWallMemoTag='全部';
   renderArkWallList();
 }
 
@@ -6679,10 +6688,12 @@ function arkWallSectionHtml(content,kind){
   return '<div class="'+cls+'">'+(content||'')+'</div>';
 }
 
-function arkWallMemoEntries(){
+function arkWallTaggedEntries(categoryTags){
   var query=String(arkWallMemoSearch||'').trim().toLowerCase();
+  categoryTags=Array.isArray(categoryTags)?categoryTags:[];
   return arkWallSortEntries(arkWallEntries.filter(function(entry){
     var tags=Array.isArray(entry&&entry.tags)?entry.tags:[];
+    if(categoryTags.length&&!tags.some(function(tag){return categoryTags.indexOf(tag)>=0;}))return false;
     if(arkWallMemoTag&&arkWallMemoTag!=='全部'&&tags.indexOf(arkWallMemoTag)<0)return false;
     if(query&&arkWallEntrySearchText(entry).indexOf(query)<0)return false;
     return true;
@@ -6693,12 +6704,17 @@ function renderArkWallViewTabs(){
   return '<div class="ark-wall-view-tabs" role="tablist" aria-label="城牆分頁">'
     +'<button class="ark-wall-view-tab '+(arkWallView==='wall'?'active':'')+'" type="button" onclick="setArkWallView(\'wall\')">生活日記</button>'
     +'<button class="ark-wall-view-tab '+(arkWallView==='memo'?'active':'')+'" type="button" onclick="setArkWallView(\'memo\')">備忘隨筆</button>'
+    +'<button class="ark-wall-view-tab '+(arkWallView==='market'?'active':'')+'" type="button" onclick="setArkWallView(\'market\')">股市教室</button>'
   +'</div>';
 }
 
-function renderArkWallMemoList(){
-  var entries=arkWallMemoEntries();
-  var tags=['全部'].concat(ARK_WALL_MEMO_TAGS);
+function renderArkWallTaggedList(options){
+  options=options||{};
+  var title=options.title||'備忘隨筆';
+  var emptyText=options.emptyText||'沒有符合條件的備忘隨筆。';
+  var categoryTags=options.tags||ARK_WALL_MEMO_TAGS;
+  var entries=arkWallTaggedEntries(categoryTags);
+  var tags=['全部'].concat(categoryTags);
   var tagButtons=tags.map(function(tag){
     return '<button class="ark-wall-memo-tag '+(arkWallMemoTag===tag?'active':'')+'" type="button" data-memo-tag="'+esc(tag)+'" onclick="setArkWallMemoTag(\''+esc(tag)+'\')">'+esc(tag)+'</button>';
   }).join('');
@@ -6706,8 +6722,24 @@ function renderArkWallMemoList(){
     +'<div class="ark-wall-memo-tags">'+tagButtons+'</div>'
     +'<input class="ark-wall-search" id="ark-wall-memo-search" type="search" value="'+esc(arkWallMemoSearch)+'" placeholder="搜尋文章內容" oninput="setArkWallMemoSearch(this.value)">'
   +'</div>'
-  +'<div class="ark-wall-count">備忘隨筆 · '+entries.length+' 篇</div>'
-  +(entries.length?'<div class="ark-wall-grid">'+entries.map(arkWallEntryCard).join('')+'</div>':'<div class="travel-status">沒有符合條件的備忘隨筆。</div>');
+  +'<div class="ark-wall-count">'+esc(title)+' · '+entries.length+' 篇</div>'
+  +(entries.length?'<div class="ark-wall-grid">'+entries.map(arkWallEntryCard).join('')+'</div>':'<div class="travel-status">'+esc(emptyText)+'</div>');
+}
+
+function renderArkWallMemoList(){
+  return renderArkWallTaggedList({
+    title:'備忘隨筆',
+    tags:ARK_WALL_MEMO_TAGS,
+    emptyText:'沒有符合條件的備忘隨筆。'
+  });
+}
+
+function renderArkWallMarketList(){
+  return renderArkWallTaggedList({
+    title:'股市教室',
+    tags:ARK_WALL_MARKET_TAGS,
+    emptyText:'沒有符合條件的股市教室文章。'
+  });
 }
 
 function arkWallIndexRow(entry){
@@ -6761,7 +6793,7 @@ function renderArkWallList(){
     : '<section class="ark-wall-library" id="ark-wall-library"><div class="ark-wall-library-status" id="ark-wall-library-status">時光長廊索引讀取中...</div></section>';
   if(!arkWallEntries.length){
     body.innerHTML=renderArkWallViewTabs()
-      +arkWallSectionHtml(arkWallView==='memo'?renderArkWallMemoList():'<div class="travel-status">城牆尚無紀錄。可由右上角「新增紀錄」寫入 NAS。</div>','main')
+      +arkWallSectionHtml(arkWallView==='memo'?renderArkWallMemoList():(arkWallView==='market'?renderArkWallMarketList():'<div class="travel-status">城牆尚無紀錄。可由右上角「新增紀錄」寫入 NAS。</div>'),'main')
       +(arkWallView==='wall'?arkWallSectionHtml(libraryHtml,'timeline'):'');
     if(arkWallView==='wall'){
       if(!arkWallLibrarySummary)loadArkWallLibrarySummary().then(renderArkWallList).catch(function(err){arkWallLibraryStatus('時光長廊讀取失敗：'+(err&&err.message?err.message:err));});
@@ -6777,6 +6809,8 @@ function renderArkWallList(){
   var content='';
   if(arkWallView==='memo'){
     content=renderArkWallMemoList();
+  }else if(arkWallView==='market'){
+    content=renderArkWallMarketList();
   }else{
     content='<div class="ark-wall-filter" data-wall-index="year-month">'
     +'<label class="ark-wall-select-wrap"><span class="ark-wall-select-label">年份</span><select class="ark-wall-select" onchange="changeArkWallYear(this.value)">'+arkWallSelectOptions(years,arkWallSelectedYear,function(year){return /^\d{4}$/.test(year)?year+'年':year;})+'</select></label>'
