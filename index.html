@@ -1253,6 +1253,7 @@ body::after{
 .council-snapshot-date{display:inline-flex;align-items:center;height:18px;padding:0 7px;border:1px solid rgba(184,137,46,.78);border-radius:5px;background:rgba(184,137,46,.11);font-family:var(--mono);font-size:11px;font-weight:800;letter-spacing:0;color:#d8b45d;line-height:1}
 .council-stat-v{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--ink);line-height:1.18;overflow-wrap:anywhere}
 .council-stat-sub{margin-top:7px;font-family:var(--mono);font-size:13px;font-weight:800;line-height:1.35;color:var(--gold);overflow-wrap:anywhere}
+.council-stat-trial{color:var(--coral)}
 .council-stat-sub.up{color:var(--teal)}.council-stat-sub.down{color:var(--coral)}
 .council-stat-v.up{color:var(--teal)}.council-stat-v.down{color:var(--coral)}
 .council-stat-delta{margin-top:7px;font-family:var(--sans);font-size:12px;font-weight:800;line-height:1.45;color:#8f7441}
@@ -3276,6 +3277,7 @@ var MACRO_SHEET_ID = '1BPnjwZKlBmxMkHmLDk6MSV28kfcAtQhGuZdufv5T7FY';
 var COMMAND_SETTING_GID = '1479341396';
 var MONTHLY_HOLDINGS_SHEET_NAME = '\u6708\u5EA6\u6230\u60C5\u5BA4';
 var MONTHLY_HOLDINGS_RANGE = 'A12:N24';
+var MONTHLY_DIVIDEND_PROJECTION_RANGE = 'J2';
 var COMMAND_MARKET_VALUE_RANGE = 'I2:I2';
 var COMMAND_TOTAL_ASSET_RANGE = 'H2:H2';
 var COMMAND_EXPOSURE_VALUE_RANGE = 'G2:H2';
@@ -8929,14 +8931,16 @@ async function loadCouncilDashboard(){
       loadHeroSheet(true),
       loadCouncilHoldingsOverview(),
       loadArmySettingsSheet(),
-      loadAssetSnapshot()
+      loadAssetSnapshot(),
+      loadMonthlyDividendProjection()
     ]);
     var heroes=results[0].status==='fulfilled'?results[0].value:[];
     var holdings=results[1].status==='fulfilled'?(results[1].value||[]):[];
     var armySettings=results[2].status==='fulfilled'?(results[2].value||{}):{};
     var assetSnapshot=results[3].status==='fulfilled'?results[3].value:null;
+    var dividendProjection=results[4].status==='fulfilled'?results[4].value:null;
     holdingsCache=holdings.length?holdings:holdingsCache;
-    renderCouncilRoster(mergeCouncilRows(holdings,heroes,armySettings),el,assetSnapshot);
+    renderCouncilRoster(mergeCouncilRows(holdings,heroes,armySettings),el,assetSnapshot,dividendProjection);
     var dot=document.getElementById('council-dot');
     var lbl=document.getElementById('council-label');
     if(dot)dot.className='api-dot '+(results[1].status==='fulfilled'&&API_URL?'ok':'err');
@@ -9087,7 +9091,19 @@ function renderCouncilMarketDelta(snapshot){
   return `<div class="council-stat-delta ${tone}">日漲跌 ${pctText}${arrow?' '+arrow:''}</div><div class="council-stat-note">較昨${verb} ${amountText}</div>`;
 }
 
-function renderCouncilRoster(rows,el,assetSnapshot){
+function renderCouncilMonthlyDividendHtml(totalMonthly,projection){
+  var projectionValue=projection&&Number(projection.value);
+  var projectionText='';
+  if(!isNaN(projectionValue)&&isFinite(projectionValue)&&projectionValue>0){
+    projectionText=fmtFull(projectionValue);
+  }else if(projection&&projection.displayValue){
+    projectionText=String(projection.displayValue||'').trim();
+    if(projectionText&&!/^\$/.test(projectionText))projectionText='$'+projectionText;
+  }
+  return '月總配息 '+fmtFull(totalMonthly)+(projectionText?`<span class="council-stat-trial">(~${esc(projectionText)})</span>`:'');
+}
+
+function renderCouncilRoster(rows,el,assetSnapshot,dividendProjection){
   var active=rows.filter(function(r){return r.holding||r.enabled;});
   var holdings=active.filter(function(r){return r.holding;}).map(function(r){return r.holding;});
   var totalCost=holdings.reduce(function(s,r){return s+toNum(r.cost);},0);
@@ -9102,7 +9118,7 @@ function renderCouncilRoster(rows,el,assetSnapshot){
       ${renderFoodhouseCouncilRosterSummary(active)}
     </div>
     <div class="council-summary">
-      <div class="council-stat"><div class="council-stat-l">持有數</div><div class="council-stat-v">${holdings.length||active.length} 檔</div><div class="council-stat-sub">月總配息 ${fmtFull(totalMonthly)}</div></div>
+      <div class="council-stat"><div class="council-stat-l">持有數</div><div class="council-stat-v">${holdings.length||active.length} 檔</div><div class="council-stat-sub">${renderCouncilMonthlyDividendHtml(totalMonthly,dividendProjection)}</div></div>
       <div class="council-stat"><div class="council-stat-l">總投資成本</div><div class="council-stat-v">${fmtFull(totalCost)}</div><div class="council-stat-sub ${totalReturn>=0?'up':'down'}">含息報酬 ${totalReturn>=0?'+':'-'}${fmtFull(Math.abs(totalReturn))}</div></div>
       <div class="council-stat"><div class="council-stat-l council-stat-label-row"><span>投資市值</span>${snapshotDateBadge}</div><div class="council-stat-v">${fmtFull(totalMarket)}</div>${renderCouncilMarketDelta(assetSnapshot)}</div>
     </div>
@@ -9345,6 +9361,18 @@ async function loadMonthlyHoldingsSheet(){
   }).filter(function(row){
     return row.symbol&&(row.shares>0||row.cost>0||row.marketValue>0||normalizeKey(row.symbol)==='00997A');
   });
+}
+
+async function loadMonthlyDividendProjection(){
+  var url='https://docs.google.com/spreadsheets/d/'+COMMAND_SHEET_ID+'/gviz/tq?tqx=out:json&sheet='+encodeURIComponent(MONTHLY_HOLDINGS_SHEET_NAME)+'&range='+encodeURIComponent(MONTHLY_DIVIDEND_PROJECTION_RANGE);
+  var json=await readGvizJson(url);
+  var row=((json.table.rows||[])[0]||{});
+  var cell=(row.c||[])[0];
+  var value=gvizCellValue(cell);
+  return {
+    value:toNum(value),
+    displayValue:gvizCellDisplayValue(cell)
+  };
 }
 
 async function loadDailyAssetSnapshotSheet(){
