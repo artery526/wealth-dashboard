@@ -3266,7 +3266,6 @@ var bookingHoldingTradePickerOpen = false;
 var DIVIDEND_CACHE_TTL = 5 * 60 * 1000;
 var DIVIDEND_AUTOFILL_SYMBOLS = ['CHPY','AIPI','QQQI','MLPI','PLTY','00997A'];
 var heroCache = [];
-var armySettingCache = null;
 var stockTradeMode = false;
 var bookingAutoDate = '';
 var bookingFormInitPromise = null;
@@ -3276,7 +3275,6 @@ var currentTab = null;
 var COMMAND_SHEET_ID = '1MTPLhPA9j4kb2pllDDL1z7xaCD1UmIZutT0eVOHZd30';
 var COMMAND_MONTHLY_GID = '1525278727';
 var MACRO_SHEET_ID = '1BPnjwZKlBmxMkHmLDk6MSV28kfcAtQhGuZdufv5T7FY';
-var COMMAND_SETTING_GID = '1479341396';
 var MONTHLY_HOLDINGS_SHEET_NAME = '\u6708\u5EA6\u6230\u60C5\u5BA4';
 var MONTHLY_HOLDINGS_RANGE = 'A12:N24';
 var MONTHLY_DIVIDEND_PROJECTION_RANGE = 'J2';
@@ -8934,15 +8932,14 @@ async function loadCouncilDashboard(){
     var results=await Promise.allSettled([
       loadHeroSheet(true),
       loadCouncilHoldingsOverview(),
-      loadArmySettingsSheet(),
       loadAssetSnapshot(),
       loadMonthlyDividendProjection()
     ]);
     var heroes=results[0].status==='fulfilled'?results[0].value:[];
     var holdings=results[1].status==='fulfilled'?(results[1].value||[]):[];
-    var armySettings=results[2].status==='fulfilled'?(results[2].value||{}):{};
-    var assetSnapshot=results[3].status==='fulfilled'?results[3].value:null;
-    var dividendProjection=results[4].status==='fulfilled'?results[4].value:null;
+    var armySettings={};
+    var assetSnapshot=results[2].status==='fulfilled'?results[2].value:null;
+    var dividendProjection=results[3].status==='fulfilled'?results[3].value:null;
     holdingsCache=holdings.length?holdings:holdingsCache;
     renderCouncilRoster(mergeCouncilRows(holdings,heroes,armySettings),el,assetSnapshot,dividendProjection);
     var dot=document.getElementById('council-dot');
@@ -8972,31 +8969,6 @@ async function loadHeroSheet(force){
   var rows=await readSheetRows(HERO_SHEET_NAME);
   heroCache=rows.map(normalizeHeroRow).filter(function(h){return h.symbol&&h.enabled;}).sort(function(a,b){return a.sortOrder-b.sortOrder;});
   return heroCache;
-}
-
-async function loadArmySettingsSheet(){
-  if(!hasMainApiCredentials())return {};
-  if(armySettingCache)return armySettingCache;
-    var url='https://docs.google.com/spreadsheets/d/'+COMMAND_SHEET_ID+'/gviz/tq?tqx=out:json&gid='+COMMAND_SETTING_GID+'&range='+encodeURIComponent('H11:K21');
-  try{
-    var json=await readGvizJson(url);
-    var map={};
-    (json.table.rows||[]).forEach(function(row){
-      var cells=row.c||[];
-      var account=cells[0]?(cells[0].f!=null?cells[0].f:cells[0].v):'';
-      var key=normalizeKey(stripIconText(account));
-      if(!key)return;
-      map[key]={
-        formationDate:cells[1]?(cells[1].f!=null?cells[1].f:cells[1].v):'',
-        elapsedDays:cells[2]?(cells[2].f!=null?cells[2].f:cells[2].v):'',
-        yuanPerDay:cells[3]?(cells[3].f!=null?cells[3].f:cells[3].v):''
-      };
-    });
-    armySettingCache=map;
-  }catch(e){
-    armySettingCache={};
-  }
-  return armySettingCache;
 }
 
 function normalizeHeroRow(row){
