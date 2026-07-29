@@ -973,6 +973,8 @@ body::after{
 .advisor-ai-granary-brief::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 10% 0,rgba(232,192,80,.16),transparent 34%);pointer-events:none}
 .advisor-ai-granary-brief span{position:relative;z-index:1}
 .advisor-ai-granary-brief.loading,.advisor-ai-granary-brief.error{font-family:var(--sans);font-size:12px;font-weight:850;color:#9f8248;text-align:center}
+.advisor-ai-granary-brief.cached{border-color:rgba(232,192,80,.24);color:#e4d19a}
+.advisor-ai-granary-meta{position:relative;z-index:1;margin-top:5px;font-family:var(--sans);font-size:10px;font-weight:850;line-height:1.45;color:#9f8248;text-align:right;text-shadow:none}
 .advisor-ai-standalone{position:fixed;left:calc(50% + 44px);top:116px;z-index:2950;width:min(690px,calc(100vw - 150px));border:1.5px solid rgba(232,192,80,.55);border-radius:0 16px 16px 16px;background:linear-gradient(145deg,rgba(26,16,5,.96),rgba(10,7,3,.96));backdrop-filter:blur(8px);padding:18px 20px 16px;box-shadow:0 18px 42px rgba(0,0,0,.62),0 0 28px rgba(232,192,80,.18),0 0 0 9999px rgba(0,0,0,.52);opacity:0;pointer-events:none;transform:translateX(-50%) translateY(-8px);transition:opacity .18s,transform .18s}
 .advisor-ai-standalone::before{content:'';position:absolute;left:-10px;top:42px;border:5px solid transparent;border-right-color:rgba(232,192,80,.55)}
 .advisor-ai-standalone::after{content:'';position:absolute;left:-8px;top:43px;border:4px solid transparent;border-right-color:#1a1005}
@@ -3674,7 +3676,9 @@ async function apiPostJson(body,timeoutMs){
 }
 
 var ADVISOR_REMINDER_CACHE_KEY='empire_today_advisor_reminder_v1';
+var ADVISOR_AI_GRANARY_CACHE_KEY='empire_advisor_ai_granary_brief_v1';
 var advisorReminderPromise=null;
+var advisorAIGranaryPromise=null;
 var FINANCE_TREASURY_CACHE_KEY='wealth_finance_treasury_v6';
 var FINANCE_TREASURY_CACHE_PREFIX='wealth_finance_treasury_v';
 var FINANCE_PLEDGE_CACHE_KEY='wealth_finance_pledge_v2';
@@ -12106,29 +12110,77 @@ function advisorAIGranarySentence(monthly,dividend){
   }
   return '🪶 主公，本月糧草局勢尚稱平穩；宜維持節制開支，等待更明確的擴張時機。';
 }
+function advisorAIReadGranaryCache(){
+  try{
+    var packed=localStorage.getItem(ADVISOR_AI_GRANARY_CACHE_KEY);
+    if(!packed)return null;
+    var cached=JSON.parse(packed);
+    return cached&&cached.message?cached:null;
+  }catch(e){
+    return null;
+  }
+}
+function advisorAIWriteGranaryCache(data){
+  try{
+    if(data&&data.message)localStorage.setItem(ADVISOR_AI_GRANARY_CACHE_KEY,JSON.stringify(data));
+  }catch(e){}
+}
+function advisorAIGranaryCacheTimeText(ts){
+  var n=Number(ts||0);
+  if(!n)return '';
+  var d=new Date(n);
+  if(isNaN(d.getTime()))return '';
+  return d.getMonth()+1+'/'+d.getDate()+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+}
+function advisorAIRenderGranaryBrief(el,data,state,meta){
+  if(!el)return;
+  data=data||{};
+  var message=data.message||'龐統正在檢視帝國糧倉…';
+  var metaText=meta||'';
+  el.className='advisor-ai-granary-brief '+(state||'');
+  el.innerHTML='<span>'+esc(message)+'</span>'+(metaText?'<div class="advisor-ai-granary-meta">'+esc(metaText)+'</div>':'');
+}
 async function loadAdvisorAIGranaryBrief(){
   var el=document.getElementById('advisor-ai-granary-brief');
   if(!el)return;
+  var cached=advisorAIReadGranaryCache();
+  if(cached){
+    var cachedTime=advisorAIGranaryCacheTimeText(cached.updatedAt);
+    advisorAIRenderGranaryBrief(el,cached,'cached','上次評估'+(cachedTime?' '+cachedTime:'')+' · 更新中…');
+  }
   if(!API_URL){
-    el.className='advisor-ai-granary-brief error';
-    el.innerHTML='<span>🪶 主公，糧倉戰情暫不可得；請先完成 API 設定。</span>';
+    if(cached)advisorAIRenderGranaryBrief(el,cached,'cached','API 尚未設定，顯示上次評估');
+    else advisorAIRenderGranaryBrief(el,{message:'🪶 主公，糧倉戰情暫不可得；請先完成 API 設定。'},'error');
     return;
   }
-  try{
+  if(!cached)advisorAIRenderGranaryBrief(el,{message:'龐統正在檢視帝國糧倉…'},'loading');
+  if(!advisorAIGranaryPromise){
     var ym=currentYM();
-    var results=await Promise.allSettled([
+    advisorAIGranaryPromise=Promise.allSettled([
       apiGet({action:'foodhouseDashboard',ym:ym}),
       loadDividendCenter(false)
-    ]);
-    if(results[0].status!=='fulfilled')throw results[0].reason||new Error('糧倉讀取失敗');
-    var foodhouse=results[0].value||{};
-    var monthly=((foodhouse.core||{}).monthly)||foodhouse.monthly||{};
-    var dividend=results[1].status==='fulfilled'?(results[1].value||{}):{};
-    el.className='advisor-ai-granary-brief';
-    el.innerHTML='<span>'+esc(advisorAIGranarySentence(monthly,dividend))+'</span>';
+    ]).then(function(results){
+      if(results[0].status!=='fulfilled')throw results[0].reason||new Error('糧倉讀取失敗');
+      var foodhouse=results[0].value||{};
+      var monthly=((foodhouse.core||{}).monthly)||foodhouse.monthly||{};
+      var dividend=results[1].status==='fulfilled'?(results[1].value||{}):{};
+      var data={
+        ym:ym,
+        message:advisorAIGranarySentence(monthly,dividend),
+        updatedAt:Date.now()
+      };
+      advisorAIWriteGranaryCache(data);
+      return data;
+    }).finally(function(){
+      advisorAIGranaryPromise=null;
+    });
+  }
+  try{
+    var data=await advisorAIGranaryPromise;
+    advisorAIRenderGranaryBrief(el,data,'','已更新 '+advisorAIGranaryCacheTimeText(data.updatedAt));
   }catch(err){
-    el.className='advisor-ai-granary-brief error';
-    el.innerHTML='<span>🪶 主公，糧倉戰情暫不可得；龐統仍可聽令辦事。</span>';
+    if(cached)advisorAIRenderGranaryBrief(el,cached,'cached','糧倉資料暫未更新，顯示上次評估');
+    else advisorAIRenderGranaryBrief(el,{message:'🪶 主公，糧倉戰情暫不可得；龐統仍可聽令辦事。'},'error');
   }
 }
 
