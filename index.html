@@ -449,6 +449,90 @@ body::after{
 }
 .task-title{font-family:var(--font);font-size:15px;font-weight:900;color:#fff2c4;line-height:1.5}
 .task-meta{margin-top:4px;font-family:var(--sans);font-size:11px;color:#bda36d;line-height:1.55}
+.home-agenda{
+  width:min(1026px,100%);
+  margin:0 auto 22px;
+  display:grid;
+  grid-template-columns:minmax(276px,304px) minmax(0,1fr);
+  gap:14px;
+  align-items:stretch;
+}
+.home-agenda-calendar,.home-agenda-court{
+  position:relative;
+  overflow:hidden;
+  border:1px solid rgba(232,192,80,.34);
+  border-radius:8px;
+  background:radial-gradient(circle at 10% 0,rgba(232,192,80,.14),transparent 34%),linear-gradient(145deg,rgba(29,19,7,.94),rgba(8,6,3,.96));
+  box-shadow:0 12px 32px rgba(0,0,0,.32),inset 0 1px 0 rgba(255,238,190,.1);
+}
+.home-agenda-calendar{padding:13px 14px 14px}
+.home-agenda-court{padding:13px 14px 12px;min-width:0}
+.home-agenda-head{
+  position:relative;z-index:1;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  margin-bottom:11px;padding-bottom:10px;
+  border-bottom:1px solid rgba(232,192,80,.18);
+}
+.home-agenda-title{
+  font-family:var(--font);font-size:17px;font-weight:950;line-height:1.35;
+  color:#f0dfa0;letter-spacing:1.5px;text-shadow:0 0 12px rgba(232,192,80,.18);
+}
+.home-agenda-date{
+  font-family:var(--mono);font-size:12px;font-weight:900;color:#bda36d;white-space:nowrap;
+}
+.home-calendar-grid{
+  position:relative;z-index:1;
+  display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;
+}
+.home-calendar-weekday{
+  display:flex;align-items:center;justify-content:center;
+  min-height:22px;
+  font-family:var(--sans);font-size:10px;font-weight:900;color:#9a7430;
+}
+.home-calendar-day{
+  display:flex;align-items:center;justify-content:center;
+  aspect-ratio:1;
+  min-width:0;
+  border:1px solid rgba(232,192,80,.1);
+  border-radius:5px;
+  background:rgba(0,0,0,.14);
+  font-family:var(--mono);font-size:12px;font-weight:900;color:#d7c28b;
+}
+.home-calendar-day.muted{opacity:.28}
+.home-calendar-day.today{
+  color:#fff2c4;
+  border-color:rgba(255,230,150,.72);
+  background:linear-gradient(180deg,#3b2610,#100904);
+  box-shadow:0 0 18px rgba(232,192,80,.28),inset 0 0 0 1px rgba(255,238,190,.12);
+}
+.home-agenda-body{
+  position:relative;z-index:1;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+  min-width:0;
+  max-height:286px;
+  overflow-y:auto;
+  padding-right:4px;
+}
+.home-agenda-body::-webkit-scrollbar{width:4px}
+.home-agenda-body::-webkit-scrollbar-thumb{background:#3a2a10;border-radius:4px}
+.home-agenda-body .agenda-section{min-width:0}
+.home-agenda-body .agenda-section+.agenda-section{
+  margin-top:0;padding-top:0;border-top:0;
+  border-left:1px solid rgba(232,192,80,.18);
+  padding-left:14px;
+}
+.home-agenda-body .today-agenda-empty,
+.home-agenda-body .today-agenda-loading,
+.home-agenda-body .today-agenda-error{font-size:14px;padding:14px 6px 6px}
+.home-agenda-refresh{
+  border:1px solid rgba(196,151,61,.64);border-radius:4px;
+  background:linear-gradient(180deg,#33240e,#171007);
+  color:#f4d783;font-family:var(--sans);font-size:11px;font-weight:900;
+  padding:6px 10px;cursor:pointer;white-space:nowrap;
+}
+.home-agenda-refresh:disabled{opacity:.55;cursor:wait}
 @media(max-width:960px){
   .today-agenda{
     margin:0 0 10px;
@@ -457,6 +541,7 @@ body::after{
     width:min(220px,38vw);
     margin:0;
   }
+  .home-agenda{grid-template-columns:1fr}
 }
 @media(max-width:540px){
   .today-agenda{width:100%;margin-top:0}
@@ -472,6 +557,13 @@ body::after{
   .today-agenda-title{font-size:22px}
   .agenda-item{grid-template-columns:1fr}
   .agenda-time{width:max-content;max-width:100%;min-height:0}
+  .home-agenda{margin-bottom:16px}
+  .home-calendar-day{aspect-ratio:auto;min-height:34px}
+  .home-agenda-body{grid-template-columns:1fr}
+  .home-agenda-body{max-height:340px}
+  .home-agenda-body .agenda-section+.agenda-section{border-left:0;border-top:1px solid rgba(232,192,80,.18);padding-left:0;padding-top:14px}
+  .home-agenda-head{align-items:flex-start;flex-direction:column}
+  .home-agenda-date{white-space:normal}
 }
 
 /* 中央：標題 + 日期橫排 */
@@ -2954,6 +3046,38 @@ body::after{
 
   </div>
 
+  <section class="home-agenda" aria-label="本月月曆與朝中政務">
+    <div class="home-agenda-calendar">
+      <div class="home-agenda-head">
+        <div>
+          <div class="home-agenda-title">本月月曆</div>
+          <div class="home-agenda-date" id="home-calendar-month">--</div>
+        </div>
+        <div class="home-agenda-date" id="home-calendar-today">--</div>
+      </div>
+      <div class="home-calendar-grid" id="home-calendar-grid" aria-live="polite"></div>
+    </div>
+    <div class="home-agenda-court">
+      <div class="home-agenda-head">
+        <div>
+          <div class="home-agenda-title">今日政務</div>
+          <div class="home-agenda-date" id="home-agenda-date">--</div>
+        </div>
+        <button class="home-agenda-refresh" id="home-agenda-refresh" type="button" onclick="loadHomeAgenda()">更新</button>
+      </div>
+      <div class="home-agenda-body" id="home-agenda-body">
+        <section class="agenda-section">
+          <div class="agenda-section-title">今日行程</div>
+          <div class="today-agenda-loading">軍師正在調閱今日行程…</div>
+        </section>
+        <section class="agenda-section">
+          <div class="agenda-section-title">待辦事項</div>
+          <div class="today-agenda-loading">軍師正在調閱待辦事項…</div>
+        </section>
+      </div>
+    </div>
+  </section>
+
   <div class="cards">
 
     <!-- 財政 -->
@@ -5033,6 +5157,7 @@ async function medicalPost(body){
 
 var currentAgendaMode='today';
 var agendaLoadSeq=0;
+var homeAgendaLoadSeq=0;
 function agendaDateLabel(mode){
   var d=new Date();
   d.setDate(d.getDate()+(mode==='today'?0:1));
@@ -5055,6 +5180,83 @@ function setAgendaMode(mode){
   currentAgendaMode=mode==='tomorrow'||mode==='week'?mode:'today';
   updateAgendaModeButtons();
   loadTodayCalendar(currentAgendaMode);
+}
+
+function renderHomeCalendar(){
+  var grid=document.getElementById('home-calendar-grid');
+  if(!grid)return;
+  var now=new Date();
+  var year=now.getFullYear();
+  var month=now.getMonth();
+  var todayDate=now.getDate();
+  var weeks=['日','一','二','三','四','五','六'];
+  var monthEl=document.getElementById('home-calendar-month');
+  var todayEl=document.getElementById('home-calendar-today');
+  if(monthEl)monthEl.textContent=year+'年'+(month+1)+'月';
+  if(todayEl)todayEl.textContent='今日 '+(month+1)+'/'+todayDate+' 星期'+weeks[now.getDay()];
+  var first=new Date(year,month,1);
+  var startOffset=first.getDay();
+  var daysInMonth=new Date(year,month+1,0).getDate();
+  var prevDays=new Date(year,month,0).getDate();
+  var cells=[];
+  weeks.forEach(function(w){
+    cells.push('<div class="home-calendar-weekday">'+esc(w)+'</div>');
+  });
+  for(var i=0;i<42;i++){
+    var day=i-startOffset+1;
+    var label=day;
+    var cls='home-calendar-day';
+    if(day<1){
+      label=prevDays+day;
+      cls+=' muted';
+    }else if(day>daysInMonth){
+      label=day-daysInMonth;
+      cls+=' muted';
+    }else if(day===todayDate){
+      cls+=' today';
+    }
+    cells.push('<div class="'+cls+'">'+label+'</div>');
+  }
+  grid.innerHTML=cells.join('');
+}
+
+function initHomeAgenda(){
+  renderHomeCalendar();
+  var dateEl=document.getElementById('home-agenda-date');
+  if(dateEl)dateEl.textContent=agendaDateLabel('today');
+  loadHomeAgenda();
+}
+
+async function loadHomeAgenda(){
+  var body=document.getElementById('home-agenda-body');
+  var btn=document.getElementById('home-agenda-refresh');
+  if(!body)return;
+  var loadSeq=++homeAgendaLoadSeq;
+  if(!API_URL){
+    body.innerHTML='<section class="agenda-section"><div class="agenda-section-title">今日行程</div><div class="today-agenda-empty">尚未設定 Web App API。</div></section><section class="agenda-section"><div class="agenda-section-title">待辦事項</div><div class="today-agenda-empty">請至龐統軍師 > 常用查詢 > 網頁驗證</div></section>';
+    return;
+  }
+  try{
+    if(btn)btn.disabled=true;
+    body.innerHTML='<section class="agenda-section"><div class="agenda-section-title">今日行程</div><div class="today-agenda-loading">軍師正在調閱今日行程…</div></section><section class="agenda-section"><div class="agenda-section-title">待辦事項</div><div class="today-agenda-loading">軍師正在調閱待辦事項…</div></section>';
+    var results=await Promise.allSettled([
+      apiGet({action:'todayCalendar',mode:'today'}),
+      apiGet({action:'todayTasks'})
+    ]);
+    if(loadSeq!==homeAgendaLoadSeq)return;
+    var calendarHtml=results[0].status==='fulfilled'
+      ? renderCalendarAgenda(results[0].value.events||[],'today')
+      : '<div class="today-agenda-error">'+esc(results[0].reason&&results[0].reason.message||'行程讀取失敗')+'</div>';
+    var taskHtml=results[1].status==='fulfilled'
+      ? renderGoogleTasks(results[1].value.tasks||[])
+      : '<div class="today-agenda-error">'+esc(results[1].reason&&results[1].reason.message||'Google Tasks 讀取失敗')+'</div>';
+    body.innerHTML='<section class="agenda-section"><div class="agenda-section-title">今日行程</div>'+calendarHtml+'</section><section class="agenda-section"><div class="agenda-section-title">待辦事項</div>'+taskHtml+'</section>';
+  }catch(err){
+    if(loadSeq!==homeAgendaLoadSeq)return;
+    body.innerHTML='<section class="agenda-section"><div class="agenda-section-title">今日行程</div><div class="today-agenda-error">'+esc(err.message||'朝中政務讀取失敗')+'</div></section><section class="agenda-section"><div class="agenda-section-title">待辦事項</div><div class="today-agenda-error">請確認主 Web App 已完成 Calendar / Tasks 授權。</div></section>';
+  }finally{
+    if(loadSeq===homeAgendaLoadSeq&&btn)btn.disabled=false;
+  }
 }
 
 function toggleTodayAgenda(force){
@@ -10732,6 +10934,7 @@ function setupNotice(){
   }
   updateDateDisplay();
   initTodayAgenda();
+  initHomeAgenda();
   setEmpireCardApiPendingStatus('finance');
   setTimeout(function(){
     if(hasMainApiCredentials())prefetchFinanceDashboard();
