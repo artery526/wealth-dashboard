@@ -474,8 +474,13 @@ body::after{
   border-bottom:1px solid rgba(232,192,80,.18);
 }
 .home-agenda-title{
+  display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;
   font-family:var(--font);font-size:17px;font-weight:950;line-height:1.35;
   color:#f0dfa0;letter-spacing:1.5px;text-shadow:0 0 12px rgba(232,192,80,.18);
+}
+.home-lunar-date{
+  font-family:var(--sans);font-size:11px;font-weight:900;letter-spacing:.8px;
+  color:#d8b45d;text-shadow:none;white-space:nowrap;
 }
 .home-agenda-date{
   font-family:var(--mono);font-size:12px;font-weight:900;color:#bda36d;white-space:nowrap;
@@ -3050,7 +3055,7 @@ body::after{
     <div class="home-agenda-calendar">
       <div class="home-agenda-head">
         <div>
-          <div class="home-agenda-title">本月月曆</div>
+          <div class="home-agenda-title">本月月曆<span class="home-lunar-date" id="home-calendar-lunar">--</span></div>
           <div class="home-agenda-date" id="home-calendar-month">--</div>
         </div>
         <div class="home-agenda-date" id="home-calendar-today">--</div>
@@ -5158,6 +5163,7 @@ async function medicalPost(body){
 var currentAgendaMode='today';
 var agendaLoadSeq=0;
 var homeAgendaLoadSeq=0;
+var LUNAR_DAYS=['','初一','初二','初三','初四','初五','初六','初七','初八','初九','初十','十一','十二','十三','十四','十五','十六','十七','十八','十九','二十','廿一','廿二','廿三','廿四','廿五','廿六','廿七','廿八','廿九','三十'];
 function agendaDateLabel(mode){
   var d=new Date();
   d.setDate(d.getDate()+(mode==='today'?0:1));
@@ -5182,6 +5188,18 @@ function setAgendaMode(mode){
   loadTodayCalendar(currentAgendaMode);
 }
 
+function lunarDateLabel(date){
+  try{
+    var parts=new Intl.DateTimeFormat('zh-TW-u-ca-chinese',{month:'long',day:'numeric'}).formatToParts(date);
+    var month=parts.find(function(part){return part.type==='month';});
+    var day=parts.find(function(part){return part.type==='day';});
+    var dayName=day?LUNAR_DAYS[Number(day.value)]||day.value:'';
+    return month&&dayName?'農曆'+month.value+dayName:'';
+  }catch(e){
+    return '';
+  }
+}
+
 function renderHomeCalendar(){
   var grid=document.getElementById('home-calendar-grid');
   if(!grid)return;
@@ -5192,8 +5210,10 @@ function renderHomeCalendar(){
   var weeks=['日','一','二','三','四','五','六'];
   var monthEl=document.getElementById('home-calendar-month');
   var todayEl=document.getElementById('home-calendar-today');
+  var lunarEl=document.getElementById('home-calendar-lunar');
   if(monthEl)monthEl.textContent=year+'年'+(month+1)+'月';
   if(todayEl)todayEl.textContent='今日 '+(month+1)+'/'+todayDate+' 星期'+weeks[now.getDay()];
+  if(lunarEl)lunarEl.textContent=lunarDateLabel(now);
   var first=new Date(year,month,1);
   var startOffset=first.getDay();
   var daysInMonth=new Date(year,month+1,0).getDate();
@@ -10899,18 +10919,6 @@ function setupNotice(){
 // ══════════════════════════════════════════
 (function(){
   var WEEKS=['日','一','二','三','四','五','六'];
-  var LUNAR_DAYS=['','初一','初二','初三','初四','初五','初六','初七','初八','初九','初十','十一','十二','十三','十四','十五','十六','十七','十八','十九','二十','廿一','廿二','廿三','廿四','廿五','廿六','廿七','廿八','廿九','三十'];
-  function lunarDateLabel(date){
-    try{
-      var parts=new Intl.DateTimeFormat('zh-TW-u-ca-chinese',{month:'long',day:'numeric'}).formatToParts(date);
-      var month=parts.find(function(part){return part.type==='month';});
-      var day=parts.find(function(part){return part.type==='day';});
-      var dayName=day?LUNAR_DAYS[Number(day.value)]||day.value:'';
-      return month&&dayName?'農曆'+month.value+dayName:'';
-    }catch(e){
-      return '';
-    }
-  }
   function updateDateDisplay(){
     var now=new Date();
     var y=now.getFullYear();
