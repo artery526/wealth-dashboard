@@ -2673,6 +2673,7 @@ body::after{
 .div-calc-form{margin-bottom:16px}
 .div-input-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
 .div-input-row.full-row{grid-template-columns:1fr}
+.div-readonly-field{min-height:38px;border:1px solid #2a1c08;border-radius:6px;background:#080603;color:var(--teal);font-family:var(--mono);font-size:16px;font-weight:900;display:flex;align-items:center;padding:0 11px}
 .div-result-box{
   border:1px solid rgba(232,192,80,.3);border-radius:10px;
   background:linear-gradient(135deg,rgba(232,192,80,.08),rgba(20,14,6,.7));
@@ -2683,34 +2684,6 @@ body::after{
 .div-result-label{font-family:var(--sans);font-size:9px;color:#7a6030;letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:4px}
 .div-result-val{font-family:var(--mono);font-size:15px;font-weight:700;color:var(--gold);display:block}
 .div-result-val.teal{color:var(--teal)}
-.div-save-btn{
-  width:100%;padding:10px;border:none;border-radius:6px;
-  background:linear-gradient(180deg,#2e1e06,#1c1204);
-  border:1px solid var(--gold2);color:var(--gold);
-  font-family:var(--sans);font-size:12px;font-weight:700;letter-spacing:1px;
-  cursor:pointer;transition:all .25s;margin-top:8px;
-}
-.div-save-btn:hover{box-shadow:0 0 14px rgba(200,150,62,.3)}
-.div-save-btn:disabled{opacity:.5;cursor:not-allowed}
-.div-recent-item{
-  display:grid;grid-template-columns:1fr auto auto;gap:8px;
-  padding:9px 0;border-bottom:1px solid #1e1408;align-items:center;
-}
-.div-recent-item:last-child{border:none}
-.div-recent-name{font-family:var(--sans);font-size:12px;font-weight:700;color:var(--ink)}
-.div-recent-meta{font-family:var(--sans);font-size:10px;color:#5a4018;margin-top:2px}
-.div-recent-right{text-align:right}
-.div-recent-monthly{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--teal)}
-.div-recent-cost{font-family:var(--sans);font-size:10px;color:#5a4018;margin-top:2px}
-.div-recent-delete{width:30px;height:30px;border:1px solid rgba(216,90,48,.34);border-radius:6px;background:rgba(216,90,48,.08);color:var(--coral);font-family:var(--sans);font-size:13px;font-weight:900;cursor:pointer;transition:all .2s}
-.div-recent-delete:hover{background:rgba(216,90,48,.16);box-shadow:0 0 10px rgba(216,90,48,.18)}
-.div-freq-badge{
-  font-family:var(--sans);font-size:10px;font-weight:700;
-  padding:2px 7px;border-radius:999px;border:1px solid;display:inline-block;
-}
-.div-freq-badge.monthly{color:var(--teal);border-color:rgba(29,158,117,.4);background:rgba(29,158,117,.08)}
-.div-freq-badge.weekly{color:var(--gold);border-color:rgba(232,192,80,.4);background:rgba(232,192,80,.08)}
-.div-freq-badge.quarterly{color:var(--purple);border-color:rgba(124,111,192,.4);background:rgba(124,111,192,.08)}
 .div-market-select{display:flex;gap:6px;margin-bottom:8px}
 .div-market-btn{
   flex:1;padding:7px;border:1px solid #2a1c08;border-radius:6px;
@@ -9930,25 +9903,12 @@ function renderHeroCard(row,totalCost){
 //  DIVIDEND CALCULATOR
 // ══════════════════════════════════════════
 
-// 儲存近期試算記錄（最多10筆，localStorage）
-var DIV_RECENT_KEY='div_calc_recent';
-function divGetRecent(){
-  try{return JSON.parse(localStorage.getItem(DIV_RECENT_KEY)||'[]');}catch(e){return [];}
-}
-function divSaveRecent(arr){
-  try{localStorage.setItem(DIV_RECENT_KEY,JSON.stringify(arr.slice(0,10)));}catch(e){}
-}
-
 var divCalcMarket='tw'; // 'tw' or 'us'
 var divCalcFreq='monthly'; // 'monthly','weekly','quarterly'
-var divCalcLastResult=null;
 
 function initDivCalc(){
   var el=document.getElementById('div-calc-content');
   if(!el)return;
-
-  var recent=divGetRecent();
-  var recentHtml=divBuildRecentHtml(recent);
 
   el.innerHTML=`
     <!-- 市場選擇 -->
@@ -9957,10 +9917,23 @@ function initDivCalc(){
       <button class="div-market-btn us" id="div-btn-us" onclick="divSetMarket('us')">🇺🇸 美股</button>
     </div>
 
-    <!-- 股票名稱 -->
-    <div class="form-group">
-      <label class="form-label">股票名稱</label>
-      <input class="form-control" type="text" id="div-name" placeholder="例：00985B、QQQI">
+    <!-- 投入金額 + 股價 -->
+    <div class="div-input-row">
+      <div class="form-group" style="margin:0">
+        <label class="form-label">投入金額（台幣）</label>
+        <input class="form-control" type="number" id="div-investment" placeholder="例：100000" step="1" min="0" oninput="divLiveCalc()">
+      </div>
+      <div class="form-group" style="margin:0">
+        <label class="form-label">輸入股價</label>
+        <input class="form-control" type="number" id="div-price" placeholder="例：52.20" step="0.01" min="0" oninput="divLiveCalc()">
+      </div>
+    </div>
+
+    <div class="div-input-row full-row">
+      <div class="form-group" style="margin:0">
+        <label class="form-label">可購買股數</label>
+        <div class="div-readonly-field" id="div-shares">—</div>
+      </div>
     </div>
 
     <!-- 配息頻率 -->
@@ -9970,18 +9943,6 @@ function initDivCalc(){
         <button class="div-market-btn active monthly" id="div-freq-monthly" onclick="divSetFreq('monthly')">月配</button>
         <button class="div-market-btn" id="div-freq-weekly" onclick="divSetFreq('weekly')">週配</button>
         <button class="div-market-btn" id="div-freq-quarterly" onclick="divSetFreq('quarterly')">季配</button>
-      </div>
-    </div>
-
-    <!-- 股數 + 股價 -->
-    <div class="div-input-row">
-      <div class="form-group" style="margin:0">
-        <label class="form-label">購入股數</label>
-        <input class="form-control" type="number" id="div-shares" placeholder="例：200" step="1" min="0" oninput="divLiveCalc()">
-      </div>
-      <div class="form-group" style="margin:0">
-        <label class="form-label">股價</label>
-        <input class="form-control" type="number" id="div-price" placeholder="例：52.20" step="0.01" min="0" oninput="divLiveCalc()">
       </div>
     </div>
 
@@ -10007,7 +9968,7 @@ function initDivCalc(){
           <span class="div-result-val teal" id="div-r-monthly" style="font-size:22px">—</span>
         </div>
         <div class="div-result-item">
-          <span class="div-result-label">所需本金</span>
+          <span class="div-result-label">實際投入</span>
           <span class="div-result-val" id="div-r-capital">—</span>
         </div>
         <div class="div-result-item">
@@ -10019,52 +9980,19 @@ function initDivCalc(){
           <span class="div-result-val" id="div-r-once">—</span>
         </div>
         <div class="div-result-item">
-          <span class="div-result-label">本金回收率</span>
+          <span class="div-result-label">可購買股數</span>
+          <span class="div-result-val" id="div-r-shares">—</span>
+        </div>
+        <div class="div-result-item">
+          <span class="div-result-label">年化配息率</span>
           <span class="div-result-val" id="div-r-yield">—</span>
         </div>
       </div>
-      <button class="div-save-btn" id="div-save-btn" onclick="divSaveToSheet()">📋 記錄至配息試算表</button>
-      <span class="result-msg" id="div-save-msg"></span>
     </div>
-
-    <!-- 近期試算 -->
-    <div class="sec-title" style="margin-top:16px">近期試算記錄</div>
-    <div id="div-recent-list">${recentHtml}</div>
   `;
 
   divUpdateMarketUI();
   divUpdateFreqUI();
-}
-
-function divBuildRecentHtml(recent){
-  if(!recent.length) return '<div style="color:#5a4018;font-family:var(--sans);font-size:12px;padding:12px 0;text-align:center">尚無試算記錄</div>';
-  return recent.map(function(r,index){
-    var freqLabel=r.freq==='monthly'?'月配':r.freq==='weekly'?'週配':'季配';
-    var freqCls=r.freq==='monthly'?'monthly':r.freq==='weekly'?'weekly':'quarterly';
-    return `<div class="div-recent-item">
-      <div>
-        <div class="div-recent-name">${esc(r.name||'未命名')}</div>
-        <div class="div-recent-meta">
-          <span class="div-freq-badge ${freqCls}">${freqLabel}</span>
-          ${r.market==='us'?'🇺🇸':'🇹🇼'} · ${Number(r.shares).toLocaleString('zh-TW')} 股 · 每股 ${r.divAmt}
-        </div>
-      </div>
-      <div class="div-recent-right">
-        <div class="div-recent-monthly">月配 ${fmtFull(r.monthlyDiv)}</div>
-        <div class="div-recent-cost">本金 ${fmtN(r.requiredCapital)}</div>
-      </div>
-      <button class="div-recent-delete" type="button" title="delete" onclick="divDeleteRecent(${index})">x</button>
-    </div>`;
-  }).join('');
-}
-
-function divDeleteRecent(index){
-  var rows=divGetRecent();
-  index=Number(index);
-  if(index<0||index>=rows.length)return;
-  rows.splice(index,1);
-  divSaveRecent(rows);
-  divRefreshRecent();
 }
 
 function divSetMarket(m){
@@ -10100,28 +10028,44 @@ function divUpdateFreqUI(){
 
 function divLiveCalc(){
   // 即時計算（不儲存、不提示錯誤）
-  var shares=parseFloat(document.getElementById('div-shares')&&document.getElementById('div-shares').value)||0;
+  var investment=parseFloat(document.getElementById('div-investment')&&document.getElementById('div-investment').value)||0;
   var price=parseFloat(document.getElementById('div-price')&&document.getElementById('div-price').value)||0;
   var divAmt=parseFloat(document.getElementById('div-divamt')&&document.getElementById('div-divamt').value)||0;
+  var fx=parseFloat(document.getElementById('div-fx')&&document.getElementById('div-fx').value)||31.48;
+  var shares=divCalcShares(investment,price,fx);
+  divRenderShares(shares);
   if(!shares||!price||!divAmt)return;
-  divCalcCore(false);
+  divCalcCore();
 }
 
 function divCalc(){
-  // 完整計算並儲存記錄
-  var shares=parseFloat(document.getElementById('div-shares')&&document.getElementById('div-shares').value)||0;
+  // 完整計算（不儲存）
+  var investment=parseFloat(document.getElementById('div-investment')&&document.getElementById('div-investment').value)||0;
   var price=parseFloat(document.getElementById('div-price')&&document.getElementById('div-price').value)||0;
   var divAmt=parseFloat(document.getElementById('div-divamt')&&document.getElementById('div-divamt').value)||0;
-  if(!shares||!price||!divAmt){showMsg('div-msg','請填寫股數、股價及單次配息','err');return;}
-  divCalcCore(true);
+  var fx=parseFloat(document.getElementById('div-fx')&&document.getElementById('div-fx').value)||31.48;
+  var shares=divCalcShares(investment,price,fx);
+  if(!shares||!price||!divAmt){showMsg('div-msg','請填寫投入金額、股價及單次配息','err');return;}
+  divCalcCore();
 }
 
-function divCalcCore(save){
-  var name=(document.getElementById('div-name')&&document.getElementById('div-name').value.trim())||'';
-  var shares=parseFloat(document.getElementById('div-shares').value)||0;
+function divCalcShares(investment,price,fx){
+  var fxRate=divCalcMarket==='us'?(parseFloat(fx)||31.48):1;
+  var unitCost=price*fxRate;
+  return investment>0&&unitCost>0?Math.floor(investment/unitCost):0;
+}
+
+function divRenderShares(shares){
+  var el=document.getElementById('div-shares');
+  if(el)el.textContent=shares>0?shares.toLocaleString('zh-TW')+' 股':'—';
+}
+
+function divCalcCore(){
+  var investment=parseFloat(document.getElementById('div-investment').value)||0;
   var price=parseFloat(document.getElementById('div-price').value)||0;
-  var divAmt=parseFloat(document.getElementById('div-divamt').value)||0;
   var fx=parseFloat(document.getElementById('div-fx')&&document.getElementById('div-fx').value)||31.48;
+  var shares=divCalcShares(investment,price,fx);
+  var divAmt=parseFloat(document.getElementById('div-divamt').value)||0;
 
   var isUS=divCalcMarket==='us';
   var fxRate=isUS?fx:1;
@@ -10141,77 +10085,18 @@ function divCalcCore(save){
   // 年殖利率（反算）
   var annualYield=requiredCapital>0?annualDiv/requiredCapital*100:0;
 
-  divCalcLastResult={
-    name:name||'未命名標的',
-    market:divCalcMarket,
-    freq:divCalcFreq,
-    divAmt:divAmt,
-    price:price,
-    shares:shares,
-    fx:isUS?fx:1,
-    requiredCapital:Math.round(requiredCapital),
-    onceDiv:Math.round(onceDiv),
-    monthlyDiv:Math.round(monthlyDiv),
-    annualDiv:Math.round(annualDiv),
-    annualYield:annualYield,
-    calcAt:new Date().toISOString().slice(0,16).replace('T',' ')
-  };
-
   // 顯示
   var resBox=document.getElementById('div-result');
   if(resBox)resBox.style.display='';
+  divRenderShares(shares);
   var setTxt=function(id,v){var el=document.getElementById(id);if(el)el.textContent=v;};
-  setTxt('div-result-name',(name||'試算結果')+(isUS?' 🇺🇸':' 🇹🇼'));
+  setTxt('div-result-name',(isUS?'美股':'台股')+'配息試算'+(isUS?' 🇺🇸':' 🇹🇼'));
   setTxt('div-r-monthly',fmtFull(monthlyDiv));
   setTxt('div-r-capital',fmtN(requiredCapital));
   setTxt('div-r-annual',fmtN(annualDiv));
   setTxt('div-r-once',fmtFull(onceDiv));
+  setTxt('div-r-shares',shares.toLocaleString('zh-TW')+' 股');
   setTxt('div-r-yield',annualYield.toFixed(2)+'%');
-
-  if(save){
-    var recent=divGetRecent();
-    recent.unshift(divCalcLastResult);
-    divSaveRecent(recent);
-    divRefreshRecent();
-    showMsg('div-msg','✓ 已計算並記錄','ok');
-  }
-}
-
-function divRefreshRecent(){
-  var el=document.getElementById('div-recent-list');
-  if(!el)return;
-  el.innerHTML=divBuildRecentHtml(divGetRecent());
-}
-
-async function divSaveToSheet(){
-  if(!divCalcLastResult){showMsg('div-save-msg','請先計算','err');return;}
-  if(!API_URL){showMsg('div-save-msg','請先設定 API','err');return;}
-  var btn=document.getElementById('div-save-btn');
-  if(btn){btn.disabled=true;btn.textContent='寫入中…';}
-  try{
-    var r=divCalcLastResult;
-    var freqLabel=r.freq==='monthly'?'月配':r.freq==='weekly'?'週配':'季配';
-    await apiPost({
-      action:'divCalc',
-      name:r.name,
-      market:r.market==='us'?'美股':'台股',
-      freq:freqLabel,
-      divAmt:r.divAmt,
-      price:r.price,
-      shares:r.shares,
-      fx:r.fx,
-      requiredCapital:r.requiredCapital,
-      onceDiv:r.onceDiv,
-      monthlyDiv:r.monthlyDiv,
-      annualDiv:r.annualDiv,
-      annualYield:r.annualYield.toFixed(2),
-      calcAt:r.calcAt
-    });
-    showMsg('div-save-msg','✓ 已寫入配息試算表！','ok');
-  }catch(e){
-    showMsg('div-save-msg','✗ '+e.message,'err');
-  }
-  if(btn){btn.disabled=false;btn.textContent='📋 記錄至配息試算表';}
 }
 
 async function loadMarketDashboard(){
