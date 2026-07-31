@@ -1696,6 +1696,14 @@ body::after{
 .booking-transfer-section.stock .booking-transfer-title{color:#4fa985}
 .booking-transfer-pane{display:none}
 .booking-transfer-pane.active{display:block}
+.booking-preset-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0 0 11px}
+.booking-preset-card{min-height:58px;border:1px solid rgba(184,137,46,.32);border-radius:8px;background:linear-gradient(145deg,rgba(18,13,6,.9),rgba(9,7,4,.78));color:#d9bd78;font-family:var(--sans);font-size:13px;font-weight:950;line-height:1.25;padding:10px 9px;text-align:left;cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,238,190,.06);transition:background .16s,border-color .16s,box-shadow .16s,transform .12s}
+.booking-preset-card span{display:block;margin-top:3px;font-size:10px;font-weight:850;color:#8f7134;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.booking-preset-card:hover{border-color:rgba(232,192,80,.58);background:rgba(232,192,80,.09);box-shadow:0 0 14px rgba(232,192,80,.12);transform:translateY(-1px)}
+.booking-focus-amount .form-control[type="number"]{border-color:rgba(232,192,80,.48);box-shadow:inset 0 0 0 1px rgba(232,192,80,.08)}
+.booking-transfer-mode{grid-template-columns:repeat(3,minmax(0,1fr))}
+.booking-transfer-mode .booking-mode-btn.buy.active{border-color:rgba(216,90,48,.65);background:var(--coral-l);color:var(--coral);box-shadow:0 0 12px rgba(216,90,48,.16)}
+.booking-transfer-mode .booking-mode-btn.sell.active{border-color:rgba(29,158,117,.62);background:var(--teal-l);color:var(--teal);box-shadow:0 0 12px rgba(29,158,117,.16)}
 .booking-stock-toggle{width:100%;border:1px solid rgba(124,111,192,.45);border-radius:8px;background:rgba(124,111,192,.08);color:#bcb5ff;font-family:var(--sans);font-size:13px;font-weight:900;letter-spacing:1px;padding:10px 12px;margin-top:8px;cursor:pointer}
 .booking-stock-toggle.active{border-color:rgba(124,111,192,.72);background:rgba(124,111,192,.16);box-shadow:0 0 14px rgba(124,111,192,.16)}
 .booking-stock-fields{border:1px solid rgba(124,111,192,.24);border-radius:8px;background:rgba(10,8,4,.48);padding:10px;margin-top:9px}
@@ -1708,6 +1716,8 @@ body::after{
 .stock-symbol-label{display:flex;align-items:center;justify-content:space-between;gap:8px}
 @media(max-width:560px){
   .booking-entry-grid,.booking-transfer-grid{grid-template-columns:1fr}
+  .booking-preset-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .booking-transfer-mode{grid-template-columns:1fr}
   .stock-symbol-label{align-items:flex-start;flex-direction:column}
 }
 .hidden{display:none!important}
@@ -3587,6 +3597,37 @@ function bookingQuickChipsHtml(selectId,items){
     bookingQuickOtherHtml(selectId)+
   `</div>`;
 }
+function bookingExpensePresetsHtml(){
+  var items=[
+    {label:'外食',cat:'🍔大餐簡餐',account:'🏔️玉山銀行',note:'外食簡餐'},
+    {label:'超商',cat:'🍴超商外食',account:'🔖中國信託',note:'超商消費'},
+    {label:'加油',cat:'⛽機車加油',account:'🟥永豐銀行',note:'日常加油'},
+    {label:'PX網購',cat:'💻3C產品',account:'💳Cube',note:'PX網購'},
+    {label:'現金',cat:'🍴超商外食',account:'💰Cash',note:'現金支付'},
+    {label:'APP',cat:'📱APP訂閱',account:'🏔️玉山銀行',note:'APP訂閱'}
+  ];
+  return `<div class="booking-preset-grid">`+items.map(function(item){
+    return `<button class="booking-preset-card" type="button" onclick="applyBookingExpensePreset('${esc(item.cat)}','${esc(item.account)}','${esc(item.note)}')">${esc(item.label)}<span>${esc(stripIconText(item.account))}</span></button>`;
+  }).join('')+`</div>`;
+}
+function focusBookingField(id){
+  setTimeout(function(){
+    var el=document.getElementById(id);
+    if(!el)return;
+    el.focus();
+    if(typeof el.select==='function')el.select();
+  },0);
+}
+function applyBookingExpensePreset(cat,account,note){
+  setBookingEntryMode('expense');
+  selectBookingOptionByText('e-cat',cat);
+  selectBookingOptionByText('e-account',account);
+  var noteEl=document.getElementById('e-note');
+  if(noteEl)noteEl.value=note||'';
+  syncBookingQuickChip('e-cat');
+  syncBookingQuickChip('e-account');
+  focusBookingField('e-amount');
+}
 function revealBookingQuickSelect(selectId,show){
   var wrap=document.querySelector('[data-booking-select-wrap="'+selectId+'"]');
   if(wrap)wrap.classList.toggle('hidden',!show);
@@ -3628,6 +3669,9 @@ function selectBookingQuickChip(btn){
   if(selectBookingOptionByText(selectId,target)){
     revealBookingQuickSelect(selectId,false);
     syncBookingQuickChip(selectId);
+    if(selectId==='e-cat'||selectId==='e-account')focusBookingField('e-amount');
+    if(selectId==='i-source'||selectId==='i-account')focusBookingField('i-amount');
+    if(selectId==='a-from'||selectId==='a-to')focusBookingField(isMergedStockTrade()?'t-stock-shares':'a-amount');
   }
 }
 function normalizeBookingSymbolList(list){
@@ -6245,6 +6289,7 @@ async function initBookingForm(){
     {label:'🔖中國',value:'🔖中國信託'},
     {label:'🧚Sis 國泰',value:'🧚Sis 國泰世華'}
   ]);
+  var expensePresetsHtml=bookingExpensePresetsHtml();
   var transferFromChips=bookingQuickChipsHtml('a-from',[
     {label:'💰Cash',value:'💰Cash'},
     {label:'💵國泰S',value:'💵國泰Stock'},
@@ -6276,11 +6321,12 @@ async function initBookingForm(){
         <button class="booking-mode-btn expense active" type="button" onclick="setBookingEntryMode('expense')">💸 支出</button>
         <button class="booking-mode-btn income" type="button" onclick="setBookingEntryMode('income')">💰 收入</button>
       </div>
+      ${expensePresetsHtml}
       <div class="form-grid booking-entry-grid">
         <div class="form-group hidden"><label class="form-label">記帳日期</label><input class="form-control" type="date" id="e-date" value="${today()}"></div>
+        <div class="form-group booking-focus-amount"><label class="form-label">金額 (TWD)</label><input class="form-control" type="number" id="e-amount" placeholder="0" min="1"></div>
         <div class="form-group"><label class="form-label">消費項目</label>${expenseCatChips}<div class="booking-chip-select-wrap hidden" data-booking-select-wrap="e-cat"><select class="form-control" id="e-cat" onchange="syncBookingQuickChip('e-cat')">${catOpts}</select></div></div>
         <div class="form-group"><label class="form-label">支出帳戶</label>${expenseAccountChips}<div class="booking-chip-select-wrap hidden" data-booking-select-wrap="e-account"><select class="form-control" id="e-account" onchange="syncBookingQuickChip('e-account')">${accOpts}</select></div></div>
-        <div class="form-group"><label class="form-label">金額 (TWD)</label><input class="form-control" type="number" id="e-amount" placeholder="0" min="1"></div>
         <div class="form-group full"><label class="form-label">備註（選填）</label><input class="form-control" type="text" id="e-note" placeholder="備註..."></div>
       </div>
       <button class="submit-btn expense" id="btn-expense" type="button" onclick="submitExpense(event)">記錄支出</button>
@@ -6295,9 +6341,9 @@ async function initBookingForm(){
       </div>
       <div class="form-grid booking-entry-grid">
         <div class="form-group hidden"><label class="form-label">記帳日期</label><input class="form-control" type="date" id="i-date" value="${today()}"></div>
+        <div class="form-group booking-focus-amount"><label class="form-label">金額 (TWD)</label><input class="form-control" type="number" id="i-amount" placeholder="0" min="1"></div>
         <div class="form-group"><div class="form-label booking-source-label"><span>收入來源</span><span class="booking-dividend-anchor"><button class="booking-dividend-mini" type="button" onclick="event.stopPropagation();openBookingDividendPicker()">配息</button><span class="booking-dividend-pending" id="booking-dividend-pending"></span></span></div>${incomeSourceChips}<div class="booking-chip-select-wrap hidden" data-booking-select-wrap="i-source"><select class="form-control" id="i-source" onchange="toggleDivFields();syncBookingQuickChip('i-source')">${srcOpts}</select></div></div>
         <div class="form-group"><label class="form-label">入帳帳戶</label>${incomeAccountChips}<div class="booking-chip-select-wrap hidden" data-booking-select-wrap="i-account"><select class="form-control" id="i-account" onchange="onIncomeAccountChange();syncBookingQuickChip('i-account')">${incomeAccOpts}</select></div></div>
-        <div class="form-group"><label class="form-label">金額 (TWD)</label><input class="form-control" type="number" id="i-amount" placeholder="0" min="1"></div>
         <div class="form-group hidden" id="i-div-rate-grp"><label class="form-label">配息比例</label><input class="form-control" type="number" id="i-div-rate" placeholder="例：0.35" step="0.001" min="0"></div>
         <div class="form-group hidden" id="i-div-sym-grp"><label class="form-label">配息標的</label><select class="form-control" id="i-div-sym" onclick="openBookingDividendPicker()" onfocus="openBookingDividendPicker()" onchange="syncDivNote()">${divOpts}</select></div>
         <div class="dividend-autofill-note hidden" id="i-dividend-autofill"></div>
@@ -6310,12 +6356,16 @@ async function initBookingForm(){
     <!-- 轉帳 -->
     <div class="bform" id="bf-transfer">
       <div class="booking-transfer-section bank booking-transfer-pane active" id="transfer-account-pane">
+        <div class="booking-mode-switch booking-transfer-mode">
+          <button class="booking-mode-btn transfer active" type="button" data-transfer-mode="account" onclick="setTransferEntryMode('account')">轉帳</button>
+          <button class="booking-mode-btn buy" type="button" data-transfer-mode="buy" onclick="setTransferEntryMode('buy')">買入</button>
+          <button class="booking-mode-btn sell" type="button" data-transfer-mode="sell" onclick="setTransferEntryMode('sell')">賣出</button>
+        </div>
         <div class="form-grid booking-transfer-grid">
           <div class="form-group hidden"><label class="form-label">記帳日期</label><input class="form-control" type="date" id="a-date" value="${today()}"></div>
-          <div class="form-group"><div class="form-label booking-source-label"><span>轉出帳戶</span><span class="booking-dividend-anchor"><button class="booking-dividend-mini" type="button" onclick="event.stopPropagation();openBookingHoldingTradePicker()">待入帳</button><span class="booking-dividend-pending" id="booking-holding-trade-picker"></span></span></div>${transferFromChips}<div class="booking-chip-select-wrap hidden" data-booking-select-wrap="a-from"><select class="form-control" id="a-from" onchange="syncBookingQuickChip('a-from')">${accOpts}</select></div></div>
-          <div class="form-group"><label class="form-label">轉入帳戶</label>${transferToChips}<div class="booking-chip-select-wrap hidden" data-booking-select-wrap="a-to"><select class="form-control" id="a-to" onchange="syncBookingQuickChip('a-to')">${accOpts}</select></div></div>
-          <div class="form-group"><label class="form-label">金額 (TWD)</label><input class="form-control" type="number" id="a-amount" placeholder="0" min="1"></div>
-          <div class="form-group full"><button class="booking-stock-toggle" id="btn-stock-toggle" type="button" onclick="toggleMergedStockTrade()">股票交易</button></div>
+          <div class="form-group booking-focus-amount"><label class="form-label">金額 (TWD)</label><input class="form-control" type="number" id="a-amount" placeholder="0" min="1"></div>
+          <div class="form-group"><div class="form-label booking-source-label"><span id="a-from-label">轉出帳戶</span><span class="booking-dividend-anchor"><button class="booking-dividend-mini" type="button" onclick="event.stopPropagation();openBookingHoldingTradePicker()">待入帳</button><span class="booking-dividend-pending" id="booking-holding-trade-picker"></span></span></div>${transferFromChips}<div class="booking-chip-select-wrap hidden" data-booking-select-wrap="a-from"><select class="form-control" id="a-from" onchange="syncBookingQuickChip('a-from')">${accOpts}</select></div></div>
+          <div class="form-group"><label class="form-label" id="a-to-label">轉入帳戶</label>${transferToChips}<div class="booking-chip-select-wrap hidden" data-booking-select-wrap="a-to"><select class="form-control" id="a-to" onchange="syncBookingQuickChip('a-to')">${accOpts}</select></div></div>
           <div class="form-group full hidden" id="merged-stock-fields">
             <div class="booking-stock-fields">
               <div class="form-label">交易類型</div>
@@ -6483,19 +6533,70 @@ function setBookingEntryMode(key){
     selectBookingOptionByText('e-cat','超商外食');
     syncBookingQuickChip('e-cat');
     syncBookingQuickChip('e-account');
+    focusBookingField('e-amount');
   }
   if(key==='income'){
     selectBookingOptionByText('i-source','投資理財');
     syncBookingQuickChip('i-source');
     syncBookingQuickChip('i-account');
+    focusBookingField('i-amount');
   }
 }
 
+function bookingKnownCashAccounts(){
+  return uniqueBookingOptions(((cfg&&cfg.accounts&&cfg.accounts.length)?cfg.accounts:BOOKING_FALLBACK_ACCOUNTS).concat(BOOKING_FALLBACK_ACCOUNTS));
+}
+function isBookingKnownCashAccount(value){
+  return bookingKnownCashAccounts().some(function(account){return bookingOptionMatches(value,account);});
+}
+function firstBookingHoldingValue(selectEl){
+  var options=Array.from((selectEl&&selectEl.options)||[]);
+  var opt=options.find(function(option){
+    var value=String(option.value||'').trim();
+    return value&&!option.disabled&&!isBookingKnownCashAccount(value);
+  });
+  return opt?opt.value:'';
+}
+function ensureBookingHoldingSide(selectId){
+  var el=document.getElementById(selectId);
+  if(!el)return;
+  if(!el.value||isBookingKnownCashAccount(el.value)){
+    var holding=firstBookingHoldingValue(el);
+    if(holding){
+      el.value=holding;
+      el.dispatchEvent(new Event('change',{bubbles:true}));
+    }
+  }
+}
+function setTransferModeButtons(mode){
+  document.querySelectorAll('[data-transfer-mode]').forEach(function(btn){
+    btn.classList.toggle('active',btn.dataset.transferMode===mode);
+  });
+}
+function setTransferLabels(mode){
+  var fromLabel=document.getElementById('a-from-label');
+  var toLabel=document.getElementById('a-to-label');
+  if(fromLabel)fromLabel.textContent=mode==='buy'?'資金來源':(mode==='sell'?'賣出標的':'轉出帳戶');
+  if(toLabel)toLabel.textContent=mode==='buy'?'買入標的':(mode==='sell'?'入帳帳戶':'轉入帳戶');
+}
 function setTransferEntryMode(key){
-  setMergedStockTrade(key==='stock');
+  var mode=key==='sell'?'sell':(key==='buy'||key==='stock'?'buy':'account');
+  setMergedStockTrade(mode!=='account');
+  setTransferModeButtons(mode);
+  setTransferLabels(mode);
+  if(mode==='buy'){
+    selectBookingOptionByText('a-from','國泰Stock');
+    ensureBookingHoldingSide('a-to');
+    setMergedStockType('buy');
+  }else if(mode==='sell'){
+    ensureBookingHoldingSide('a-from');
+    selectBookingOptionByText('a-to','國泰Stock');
+    setMergedStockType('sell');
+  }
   syncBookingQuickChip('a-from');
   syncBookingQuickChip('a-to');
   initBookingDateInputs(false);
+  focusBookingField(mode==='account'?'a-amount':'t-stock-shares');
 }
 
 function isMergedStockTrade(){
@@ -6530,6 +6631,7 @@ function setMergedStockType(type){
   document.querySelectorAll('.booking-trade-type').forEach(function(btn){
     btn.classList.toggle('active',btn.dataset.stockType===value);
   });
+  if(isMergedStockTrade())setTransferModeButtons(value);
 }
 
 function switchBTab(btn,key){
@@ -7871,6 +7973,7 @@ async function submitExpense(e){
     showMsg('msg-expense','✓ 已記錄！','ok');
     document.getElementById('e-amount').value='';
     document.getElementById('e-note').value='';
+    focusBookingField('e-amount');
   }catch(e){showMsg('msg-expense','✗ '+e.message,'err')}
   btn.disabled=false;btn.textContent='記錄支出';
 }
@@ -7899,6 +8002,7 @@ async function submitIncome(e){
     document.getElementById('i-amount').value='';
     syncDivNote();
     clearIncomeDividendAutofill();
+    focusBookingField('i-amount');
   }catch(e){showMsg('msg-income','✗ '+e.message,'err')}
   btn.disabled=false;btn.textContent='記錄收入';
 }
@@ -7921,6 +8025,7 @@ async function submitAccountTransfer(e){
     showMsg('msg-transfer','✓ 已記錄！','ok');
     document.getElementById('a-amount').value='';
     document.getElementById('a-note').value='';
+    focusBookingField('a-amount');
   }catch(e){showMsg('msg-transfer','✗ '+e.message,'err')}
   btn.disabled=false;btn.textContent=isMergedStockTrade()?'記錄交易':'記錄轉帳';
 }
@@ -7955,6 +8060,7 @@ async function submitStockTransfer(e){
     document.getElementById('a-amount').value='';
     document.getElementById('t-stock-shares').value='';
     clearTransferDividendAutofill();
+    focusBookingField('t-stock-shares');
   }catch(e){showMsg('msg-transfer','✗ '+e.message,'err')}
   btn.disabled=false;btn.textContent=isMergedStockTrade()?'記錄交易':'記錄轉帳';
 }
