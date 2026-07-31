@@ -538,6 +538,31 @@ body::after{
   padding:6px 10px;cursor:pointer;white-space:nowrap;
 }
 .home-agenda-refresh:disabled{opacity:.55;cursor:wait}
+.home-agenda-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.home-agenda-mode-toggle{
+  border:1px solid rgba(29,158,117,.5);border-radius:4px;
+  background:linear-gradient(180deg,rgba(20,54,43,.88),rgba(7,23,18,.92));
+  color:#8ff0c1;font-family:var(--sans);font-size:11px;font-weight:900;
+  padding:6px 10px;cursor:pointer;white-space:nowrap;
+  box-shadow:0 0 12px rgba(29,158,117,.12),inset 0 1px 0 rgba(255,255,255,.1);
+}
+.home-agenda-mode-toggle:hover,.home-agenda-refresh:hover{filter:brightness(1.08)}
+.home-agenda-court.is-briefing .home-agenda-mode-toggle{
+  border-color:rgba(232,192,80,.58);
+  background:linear-gradient(180deg,#33240e,#171007);
+  color:#f4d783;
+}
+.home-agenda-body.is-briefing{
+  display:block;
+}
+.home-agenda-body.is-briefing .advisor-world-card{
+  border:0;
+  background:transparent;
+  box-shadow:none;
+  padding:0;
+}
+.home-agenda-body.is-briefing .advisor-world-card::before{display:none}
+.home-agenda-body.is-briefing .advisor-world-title{text-align:left;font-size:17px}
 @media(max-width:960px){
   .today-agenda{
     margin:0 0 10px;
@@ -568,6 +593,7 @@ body::after{
   .home-agenda-body{max-height:340px}
   .home-agenda-body .agenda-section+.agenda-section{border-left:0;border-top:1px solid rgba(232,192,80,.18);padding-left:0;padding-top:14px}
   .home-agenda-head{align-items:flex-start;flex-direction:column}
+  .home-agenda-actions{width:100%;justify-content:flex-start}
   .home-agenda-date{white-space:normal}
 }
 
@@ -3062,13 +3088,16 @@ body::after{
       </div>
       <div class="home-calendar-grid" id="home-calendar-grid" aria-live="polite"></div>
     </div>
-    <div class="home-agenda-court">
+    <div class="home-agenda-court" id="home-agenda-court">
       <div class="home-agenda-head">
         <div>
-          <div class="home-agenda-title">今日政務</div>
+          <div class="home-agenda-title" id="home-agenda-title">今日政務</div>
           <div class="home-agenda-date" id="home-agenda-date">--</div>
         </div>
-        <button class="home-agenda-refresh" id="home-agenda-refresh" type="button" onclick="loadHomeAgenda()">更新</button>
+        <div class="home-agenda-actions">
+          <button class="home-agenda-mode-toggle" id="home-agenda-mode-toggle" type="button" onclick="toggleHomeAgendaMode()">帝國晨報</button>
+          <button class="home-agenda-refresh" id="home-agenda-refresh" type="button" onclick="refreshHomeAgenda()">更新</button>
+        </div>
       </div>
       <div class="home-agenda-body" id="home-agenda-body">
         <section class="agenda-section">
@@ -5163,6 +5192,7 @@ async function medicalPost(body){
 var currentAgendaMode='today';
 var agendaLoadSeq=0;
 var homeAgendaLoadSeq=0;
+var homeAgendaMode='agenda';
 var LUNAR_DAYS=['','初一','初二','初三','初四','初五','初六','初七','初八','初九','初十','十一','十二','十三','十四','十五','十六','十七','十八','十九','二十','廿一','廿二','廿三','廿四','廿五','廿六','廿七','廿八','廿九','三十'];
 function agendaDateLabel(mode){
   var d=new Date();
@@ -5244,7 +5274,32 @@ function initHomeAgenda(){
   renderHomeCalendar();
   var dateEl=document.getElementById('home-agenda-date');
   if(dateEl)dateEl.textContent=agendaDateLabel('today');
-  loadHomeAgenda();
+  updateHomeAgendaModeView();
+  refreshHomeAgenda();
+}
+
+function updateHomeAgendaModeView(){
+  var title=document.getElementById('home-agenda-title');
+  var dateEl=document.getElementById('home-agenda-date');
+  var toggle=document.getElementById('home-agenda-mode-toggle');
+  var court=document.getElementById('home-agenda-court');
+  var body=document.getElementById('home-agenda-body');
+  var isBriefing=homeAgendaMode==='briefing';
+  if(title)title.textContent=isBriefing?'帝國晨報':'今日政務';
+  if(dateEl)dateEl.textContent=isBriefing?'諸葛亮軍情摘要':agendaDateLabel('today');
+  if(toggle)toggle.textContent=isBriefing?'今日政務':'帝國晨報';
+  if(court)court.classList.toggle('is-briefing',isBriefing);
+  if(body)body.classList.toggle('is-briefing',isBriefing);
+}
+
+function toggleHomeAgendaMode(){
+  homeAgendaMode=homeAgendaMode==='briefing'?'agenda':'briefing';
+  updateHomeAgendaModeView();
+  refreshHomeAgenda();
+}
+
+function refreshHomeAgenda(){
+  return homeAgendaMode==='briefing'?loadHomeBriefing():loadHomeAgenda();
 }
 
 async function loadHomeAgenda(){
@@ -5252,6 +5307,8 @@ async function loadHomeAgenda(){
   var btn=document.getElementById('home-agenda-refresh');
   if(!body)return;
   var loadSeq=++homeAgendaLoadSeq;
+  homeAgendaMode='agenda';
+  updateHomeAgendaModeView();
   if(!API_URL){
     body.innerHTML='<section class="agenda-section"><div class="agenda-section-title">今日行程</div><div class="today-agenda-empty">尚未設定 Web App API。</div></section><section class="agenda-section"><div class="agenda-section-title">待辦事項</div><div class="today-agenda-empty">請至龐統軍師 > 常用查詢 > 網頁驗證</div></section>';
     return;
@@ -5274,6 +5331,47 @@ async function loadHomeAgenda(){
   }catch(err){
     if(loadSeq!==homeAgendaLoadSeq)return;
     body.innerHTML='<section class="agenda-section"><div class="agenda-section-title">今日行程</div><div class="today-agenda-error">'+esc(err.message||'朝中政務讀取失敗')+'</div></section><section class="agenda-section"><div class="agenda-section-title">待辦事項</div><div class="today-agenda-error">請確認主 Web App 已完成 Calendar / Tasks 授權。</div></section>';
+  }finally{
+    if(loadSeq===homeAgendaLoadSeq&&btn)btn.disabled=false;
+  }
+}
+
+async function loadHomeBriefing(){
+  var body=document.getElementById('home-agenda-body');
+  var btn=document.getElementById('home-agenda-refresh');
+  if(!body)return;
+  var loadSeq=++homeAgendaLoadSeq;
+  homeAgendaMode='briefing';
+  updateHomeAgendaModeView();
+  var cachedMarket=readTimedMarketCache(MARKET_DASHBOARD_CACHE_KEY);
+  var cachedMacro=readTimedMarketCache(MARKET_MACRO_CACHE_KEY);
+  var hasCached=!!(cachedMarket||cachedMacro);
+  if(hasCached){
+    body.innerHTML=advisorWorldHtml(advisorWorldBuild(cachedMarket||{},cachedMacro||{}));
+  }else{
+    body.innerHTML='<div class="advisor-world-card"><div class="advisor-world-title">🏛 帝國晨報</div><div class="advisor-world-text" style="position:relative;z-index:1;text-align:center">諸葛亮正在整理流動性、經濟、通膨與信用戰報…</div></div>';
+  }
+  if(!API_URL){
+    body.innerHTML='<div class="advisor-world-card"><div class="advisor-world-title">🏛 帝國晨報</div><div class="advisor-world-text" style="position:relative;z-index:1;text-align:center;color:var(--coral)">尚未設定 API URL，無法調閱晨報。</div></div>';
+    return;
+  }
+  try{
+    if(btn)btn.disabled=true;
+    var results=await Promise.allSettled([
+      advisorWorldMarketRequest(),
+      advisorWorldMacroRequest()
+    ]);
+    if(loadSeq!==homeAgendaLoadSeq||homeAgendaMode!=='briefing')return;
+    if(results[0].status!=='fulfilled'&&results[1].status!=='fulfilled'){
+      if(hasCached)return;
+      throw new Error('市場與總經資料讀取失敗');
+    }
+    var market=results[0].status==='fulfilled'?(results[0].value||{}):(cachedMarket||{});
+    var macro=results[1].status==='fulfilled'?(results[1].value||{}):(cachedMacro||{});
+    body.innerHTML=advisorWorldHtml(advisorWorldBuild(market,macro));
+  }catch(err){
+    if(loadSeq!==homeAgendaLoadSeq||homeAgendaMode!=='briefing')return;
+    body.innerHTML='<div class="advisor-world-card"><div class="advisor-world-title">🏛 帝國晨報</div><div class="advisor-world-text" style="position:relative;z-index:1;text-align:center;color:var(--coral)">讀取失敗：'+esc(err&&err.message?err.message:'請稍後再試')+'</div></div>';
   }finally{
     if(loadSeq===homeAgendaLoadSeq&&btn)btn.disabled=false;
   }
