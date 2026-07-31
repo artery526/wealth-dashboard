@@ -11697,7 +11697,7 @@ function openAdvisorAI(targetPanel){
     </div>
     <div class="advisor-ai-tool-row">
       <div class="advisor-ai-database-stack">
-        <a class="advisor-shortcut-secondary advisor-ai-sheet-button" href="https://docs.google.com/spreadsheets/d/1MTPLhPA9j4kb2pllDDL1z7xaCD1UmIZutT0eVOHZd30/edit?gid=482251636#gid=482251636" target="_blank" rel="noopener noreferrer">進入資料庫</a>
+        <button class="advisor-shortcut-secondary advisor-ai-sheet-button" type="button" onclick="advisorAIOpenDatabaseSheet()">進入資料庫</button>
         <button class="advisor-shortcut-secondary advisor-ai-dividend-calc" type="button" onclick="openEmpireCardShortcut(event,'finance','div-calc')">配息試算</button>
       </div>
       <button class="advisor-shortcut-secondary advisor-ai-video-download" type="button" onclick="advisorAIOpenVideoDownload()">影片下載</button>
@@ -11709,6 +11709,29 @@ function openAdvisorAI(targetPanel){
     if(input)input.focus();
   },0);
   loadAdvisorAIGranaryBrief();
+}
+
+function advisorAIDatabaseSheetUrl(range){
+  var gid='482251636';
+  var url='https://docs.google.com/spreadsheets/d/1MTPLhPA9j4kb2pllDDL1z7xaCD1UmIZutT0eVOHZd30/edit?gid='+gid;
+  if(range)url+='&range='+encodeURIComponent(range);
+  url+='#gid='+gid;
+  if(range)url+='&range='+encodeURIComponent(range);
+  return url;
+}
+
+async function advisorAIOpenDatabaseSheet(){
+  var opened=window.open(advisorAIDatabaseSheetUrl(),'_blank');
+  try{
+    if(!API_URL)return;
+    var pos=await apiGet({action:'databasePosition'},12000);
+    var row=Math.max(1,Number(pos&&pos.lastRow)||1);
+    var url=advisorAIDatabaseSheetUrl('A'+row);
+    if(opened&&!opened.closed)opened.location.href=url;
+    else window.open(url,'_blank');
+  }catch(e){
+    if(!opened)window.open(advisorAIDatabaseSheetUrl(),'_blank');
+  }
 }
 
 function advisorAIKey(e){
