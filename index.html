@@ -7250,19 +7250,20 @@ function renderArkWallList(){
   if(!arkWallSelectedMonth||months.indexOf(arkWallSelectedMonth)<0)arkWallSelectedMonth=months[0]||'';
   var entries=arkWallEntriesForSelection();
   var content='';
+  var filterHtml='';
   if(arkWallView==='memo'){
     content=renderArkWallMemoList();
   }else if(arkWallView==='market'){
     content=renderArkWallMarketList();
   }else{
-    content='<div class="ark-wall-filter" data-wall-index="year-month">'
+    filterHtml='<div class="ark-wall-filter" data-wall-index="year-month">'
     +'<label class="ark-wall-select-wrap"><span class="ark-wall-select-label">年份</span><select class="ark-wall-select" onchange="changeArkWallYear(this.value)">'+arkWallSelectOptions(years,arkWallSelectedYear,function(year){return /^\d{4}$/.test(year)?year+'年':year;})+'</select></label>'
     +'<label class="ark-wall-select-wrap"><span class="ark-wall-select-label">月份</span><select class="ark-wall-select" onchange="changeArkWallMonth(this.value)">'+arkWallSelectOptions(months,arkWallSelectedMonth,function(month){return /^\d{2}$/.test(month)?Number(month)+'月':month;})+'</select></label>'
-  +'</div>'
-  +'<div class="ark-wall-month-title">'+esc(arkWallMonthLabel(arkWallSelectedYear,arkWallSelectedMonth))+'</div>'
+  +'</div>';
+    content='<div class="ark-wall-month-title">'+esc(arkWallMonthLabel(arkWallSelectedYear,arkWallSelectedMonth))+'</div>'
   +(entries.length?'<div class="ark-wall-index">'+entries.map(arkWallIndexRow).join('')+'</div>':'<div class="travel-status">這個月份尚無紀錄。</div>');
   }
-  body.innerHTML=renderArkWallViewTabs()+arkWallSectionHtml(content,'main')+(arkWallView==='wall'?arkWallSectionHtml(libraryHtml,'timeline'):'');
+  body.innerHTML=renderArkWallViewTabs()+arkWallSectionHtml(content,'main')+(arkWallView==='wall'?arkWallSectionHtml(filterHtml+libraryHtml,'timeline'):'');
   if(arkWallView==='wall'){
     if(!arkWallLibrarySummary)loadArkWallLibrarySummary().then(renderArkWallList).catch(function(err){arkWallLibraryStatus('時光長廊讀取失敗：'+(err&&err.message?err.message:err));});
     else loadArkWallLibraryMonth();
