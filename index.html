@@ -2016,8 +2016,8 @@ body::after{
   border:1px solid rgba(184,137,46,.34);border-radius:8px;background:rgba(10,8,4,.72);
   padding:14px;margin-bottom:12px;
 }
-.battle-report-title{font-family:var(--sans);font-size:18px;font-weight:900;color:var(--gold);letter-spacing:2px}
-.battle-report-date{font-family:var(--mono);font-size:11px;color:#7a6030;margin-top:4px}
+.battle-report-title{font-family:var(--sans);font-size:22px;font-weight:900;color:var(--gold);letter-spacing:2px}
+.battle-report-date{font-family:var(--mono);font-size:12px;color:#7a6030;margin-top:4px}
 .battle-report-refresh{
   border:1px solid rgba(184,137,46,.42);border-radius:6px;background:rgba(184,137,46,.12);
   color:var(--gold);font-family:var(--sans);font-size:12px;font-weight:800;padding:7px 10px;cursor:pointer;white-space:nowrap;
@@ -2029,25 +2029,27 @@ body::after{
 }
 .battle-section.wide{grid-column:1/-1}
 .battle-section.quote{border-color:rgba(232,192,80,.45);background:linear-gradient(135deg,rgba(184,137,46,.18),rgba(10,8,4,.72))}
-.battle-section-title{font-family:var(--sans);font-size:12px;font-weight:900;color:var(--gold2);letter-spacing:1px;margin-bottom:8px}
-.battle-section-body{font-family:var(--sans);font-size:13px;color:var(--ink);line-height:1.75;white-space:pre-wrap}
-.battle-empty{font-family:var(--sans);font-size:12px;color:#7a6030;text-align:center;padding:18px 8px}
+.battle-section-title{font-family:var(--sans);font-size:15px;font-weight:900;color:var(--gold2);letter-spacing:1px;margin-bottom:10px}
+.battle-section-body{font-family:var(--sans);font-size:15px;color:var(--ink);line-height:1.75;white-space:pre-wrap}
+.battle-empty{font-family:var(--sans);font-size:14px;color:#7a6030;text-align:center;padding:18px 8px}
 .battle-kpis{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:wrap}
-.battle-kpi{font-family:var(--sans);font-size:11px;font-weight:900;border:1px solid #3a2a10;border-radius:999px;background:#120c05;color:#8d7138;padding:5px 8px;white-space:nowrap}
+.battle-kpi{font-family:var(--sans);font-size:12px;font-weight:900;border:1px solid #3a2a10;border-radius:999px;background:#120c05;color:#8d7138;padding:6px 9px;white-space:nowrap}
 .battle-kpi.up{color:var(--teal);border-color:rgba(29,158,117,.45);background:rgba(29,158,117,.08)}
 .battle-kpi.down{color:var(--coral);border-color:rgba(216,90,48,.45);background:rgba(216,90,48,.08)}
 .battle-list{display:grid;gap:8px}
 .battle-line{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;border:1px solid #251808;border-radius:8px;background:#0c0804;padding:9px 10px}
-.battle-line-name{font-family:var(--sans);font-size:13px;font-weight:900;color:var(--ink);line-height:1.35;overflow-wrap:anywhere}
-.battle-line-code{font-family:var(--mono);font-size:10px;color:#5a4018;margin-top:2px}
-.battle-line-value{text-align:right;min-width:108px}
-.battle-line-current{font-family:var(--mono);font-size:16px;font-weight:900;color:var(--gold)}
-.battle-line-delta{font-family:var(--sans);font-size:11px;font-weight:900;margin-top:3px;color:#8d7138}
+.battle-line-name{font-family:var(--sans);font-size:15px;font-weight:900;color:var(--ink);line-height:1.35;overflow-wrap:anywhere}
+.battle-line-code{font-family:var(--mono);font-size:11px;color:#5a4018;margin-top:2px}
+.battle-line-value{text-align:right;min-width:124px}
+.battle-line-current{font-family:var(--mono);font-size:19px;font-weight:900;color:var(--gold)}
+.battle-line-delta{font-family:var(--sans);font-size:13px;font-weight:900;margin-top:3px;color:#8d7138}
 .battle-line-delta.up{color:var(--teal)}.battle-line-delta.down{color:var(--coral)}.battle-line-delta.flat{color:#8d7138}
 .battle-table{display:grid;gap:6px}
 .battle-table-row{display:grid;grid-template-columns:minmax(0,1.25fr) repeat(3,minmax(82px,.8fr));gap:8px;align-items:center;border:1px solid #251808;border-radius:8px;background:#0c0804;padding:8px 10px}
-.battle-table-row.head{background:transparent;border-color:#1e1408;color:#7a6030;font-family:var(--sans);font-size:10px;font-weight:900;letter-spacing:1px}
-.battle-cell{font-family:var(--sans);font-size:12px;font-weight:800;color:var(--ink);min-width:0;overflow-wrap:anywhere}
+.battle-table-row.head{background:transparent;border-color:#1e1408;color:#7a6030;font-family:var(--sans);font-size:12px;font-weight:900;letter-spacing:1px}
+.battle-table-row.head>div{min-width:0}
+.battle-table-row.head>div:not(:first-child){text-align:right}
+.battle-cell{font-family:var(--sans);font-size:14px;font-weight:800;color:var(--ink);min-width:0;overflow-wrap:anywhere}
 .battle-cell.num{font-family:var(--mono);text-align:right;color:var(--gold)}
 .battle-cell.delta.up{color:var(--teal)}.battle-cell.delta.down{color:var(--coral)}.battle-cell.delta.flat{color:#8d7138}
 .ziwei-layout{display:block;min-height:520px}
@@ -3228,8 +3230,8 @@ body::after{
       </div>
       <button class="card-scroll-toggle" type="button" aria-expanded="false" onclick="toggleCardScroll(event,this)">打開卷軸</button>
       <div class="card-shortcuts" aria-label="&#x8ECD;&#x6A5F;&#x8655;&#x5FEB;&#x6377;&#x5165;&#x53E3;">
-        <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'council','council-roster')">&#x90E8;&#x968A;&#x9663;&#x5BB9;</button>
         <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'council','battle-brief')">&#x6230;&#x60C5;&#x7E3D;&#x532F;&#x5831;</button>
+        <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'council','council-roster')">&#x90E8;&#x968A;&#x9663;&#x5BB9;</button>
         <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'council','market-watch')">&#x5FEB;&#x6377;&#x6230;&#x5831;</button>
         <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'council','macro-overview')">&#x7E3D;&#x7D93;&#x6230;&#x60C5;</button>
       </div>
@@ -9634,19 +9636,20 @@ function renderCouncilPanel(){
   if(panelExtra)panelExtra.innerHTML='<span class="empire-panel-status-dot err" id="council-panel-status-dot" title="軍機處連線失敗" aria-label="軍機處連線失敗"></span>';
   setEmpireCardApiPendingStatus('council');
   setTabs([
-    {key:'council-roster',label:'部隊陣容'},
     {key:'battle-brief',label:'戰情總匯報'},
+    {key:'council-roster',label:'部隊陣容'},
     {key:'market-watch',label:'快捷戰報'},
     {key:'macro-overview',label:'總經戰情'}
   ]);
+  currentTab='battle-brief';
   var apiReady=hasMainApiCredentials();
   var lockedNotice=setupNotice();
   document.getElementById('p-body').innerHTML=`
-    <div class="pane active" id="pane-council-roster">
-      <div id="council-content">${apiReady?'':lockedNotice}</div>
-    </div>
-    <div class="pane" id="pane-battle-brief">
+    <div class="pane active" id="pane-battle-brief">
       <div id="battle-brief-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:82%"></div><div class="skel-line skel" style="width:68%"></div></div>
+    </div>
+    <div class="pane" id="pane-council-roster">
+      <div id="council-content">${apiReady?'':lockedNotice}</div>
     </div>
     <div class="pane" id="pane-market-watch">
       <div id="market-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:82%"></div><div class="skel-line skel" style="width:68%"></div></div>
@@ -9657,7 +9660,7 @@ function renderCouncilPanel(){
     <div class="pane" id="pane-council-task">
       ${renderRetiredTaskNotice()}
     </div>`;
-  if(apiReady)loadCouncilDashboard();
+  if(apiReady)loadBattleBrief();
   if(API_URL)setTimeout(prefetchMarketDashboard,300);
 }
 
