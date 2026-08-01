@@ -2032,6 +2032,24 @@ body::after{
 .battle-section-title{font-family:var(--sans);font-size:12px;font-weight:900;color:var(--gold2);letter-spacing:1px;margin-bottom:8px}
 .battle-section-body{font-family:var(--sans);font-size:13px;color:var(--ink);line-height:1.75;white-space:pre-wrap}
 .battle-empty{font-family:var(--sans);font-size:12px;color:#7a6030;text-align:center;padding:18px 8px}
+.battle-kpis{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:wrap}
+.battle-kpi{font-family:var(--sans);font-size:11px;font-weight:900;border:1px solid #3a2a10;border-radius:999px;background:#120c05;color:#8d7138;padding:5px 8px;white-space:nowrap}
+.battle-kpi.up{color:var(--teal);border-color:rgba(29,158,117,.45);background:rgba(29,158,117,.08)}
+.battle-kpi.down{color:var(--coral);border-color:rgba(216,90,48,.45);background:rgba(216,90,48,.08)}
+.battle-list{display:grid;gap:8px}
+.battle-line{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;border:1px solid #251808;border-radius:8px;background:#0c0804;padding:9px 10px}
+.battle-line-name{font-family:var(--sans);font-size:13px;font-weight:900;color:var(--ink);line-height:1.35;overflow-wrap:anywhere}
+.battle-line-code{font-family:var(--mono);font-size:10px;color:#5a4018;margin-top:2px}
+.battle-line-value{text-align:right;min-width:108px}
+.battle-line-current{font-family:var(--mono);font-size:16px;font-weight:900;color:var(--gold)}
+.battle-line-delta{font-family:var(--sans);font-size:11px;font-weight:900;margin-top:3px;color:#8d7138}
+.battle-line-delta.up{color:var(--teal)}.battle-line-delta.down{color:var(--coral)}.battle-line-delta.flat{color:#8d7138}
+.battle-table{display:grid;gap:6px}
+.battle-table-row{display:grid;grid-template-columns:minmax(0,1.25fr) repeat(3,minmax(82px,.8fr));gap:8px;align-items:center;border:1px solid #251808;border-radius:8px;background:#0c0804;padding:8px 10px}
+.battle-table-row.head{background:transparent;border-color:#1e1408;color:#7a6030;font-family:var(--sans);font-size:10px;font-weight:900;letter-spacing:1px}
+.battle-cell{font-family:var(--sans);font-size:12px;font-weight:800;color:var(--ink);min-width:0;overflow-wrap:anywhere}
+.battle-cell.num{font-family:var(--mono);text-align:right;color:var(--gold)}
+.battle-cell.delta.up{color:var(--teal)}.battle-cell.delta.down{color:var(--coral)}.battle-cell.delta.flat{color:#8d7138}
 .ziwei-layout{display:block;min-height:520px}
 .ziwei-overview{display:grid;grid-template-columns:128px minmax(0,1fr);gap:0;border:1px solid rgba(232,192,80,.64);border-radius:10px;background:rgba(14,14,13,.86);overflow:hidden;min-height:560px}
 .ziwei-sidebar{border-right:1px solid rgba(232,192,80,.62);padding:12px 10px;min-width:0}
@@ -2087,6 +2105,7 @@ body::after{
 @media(max-width:360px){.chronicle-list{gap:6px}.chronicle-row{gap:7px;padding:7px}.chronicle-cell{font-size:11px}.chronicle-cell:before{font-size:8px}.chronicle-cost-value{font-size:13px}}
 @media(max-width:540px){.market-command{grid-template-columns:1fr}.market-counts{justify-content:flex-start}.market-metrics{grid-template-columns:1fr 1fr}.macro-actions,.macro-grid{grid-template-columns:1fr}.macro-scenario{font-size:24px}}
 @media(max-width:640px){.battle-report-grid{grid-template-columns:1fr}.battle-report-head{flex-direction:column}.battle-report-refresh{width:100%}}
+@media(max-width:560px){.battle-kpis{justify-content:flex-start}.battle-table-row{grid-template-columns:1fr 1fr}.battle-table-row.head{display:none}.battle-cell.num{text-align:left}.battle-cell[data-label]:before{content:attr(data-label);display:block;font-family:var(--sans);font-size:9px;color:#5a4018;letter-spacing:1px;margin-bottom:2px}}
 
 /* ── 質押信貸卡片 ── */
 .pledge-section-title{
@@ -3210,6 +3229,7 @@ body::after{
       <button class="card-scroll-toggle" type="button" aria-expanded="false" onclick="toggleCardScroll(event,this)">打開卷軸</button>
       <div class="card-shortcuts" aria-label="&#x8ECD;&#x6A5F;&#x8655;&#x5FEB;&#x6377;&#x5165;&#x53E3;">
         <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'council','council-roster')">&#x90E8;&#x968A;&#x9663;&#x5BB9;</button>
+        <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'council','battle-brief')">&#x6230;&#x60C5;&#x7E3D;&#x532F;&#x5831;</button>
         <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'council','market-watch')">&#x5FEB;&#x6377;&#x6230;&#x5831;</button>
         <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'council','macro-overview')">&#x7E3D;&#x7D93;&#x6230;&#x60C5;</button>
       </div>
@@ -3891,9 +3911,11 @@ var financeYearlySelectedYear='';
 var financeMonthDetailPromises={};
 var MARKET_DASHBOARD_CACHE_KEY='wealth_market_dashboard_v1';
 var MARKET_MACRO_CACHE_KEY='wealth_market_macro_v4';
+var BATTLE_BRIEF_CACHE_KEY='wealth_battle_brief_v1';
 var MARKET_CACHE_TTL=2*60*60*1000;
 var marketDashboardPromise=null;
 var macroOverviewPromise=null;
+var battleBriefPromise=null;
 function clearLegacyAdvisorReminderCache(){
   try{localStorage.removeItem(ADVISOR_REMINDER_CACHE_KEY);}catch(e){}
 }
@@ -4362,6 +4384,7 @@ function switchTab(btn,key){
   else if(key==='booking-recent')loadRecentBooking();
   else if(key==='dividend-center')loadDividendCenterPanel();
   else if(key==='domestic-yearly')loadDomesticYearly();
+  else if(key==='battle-brief')loadBattleBrief();
   else if(key==='market-watch')loadMarketDashboard();
   else if(key==='macro-overview')loadMacroOverview();
   else if(key==='council-roster')loadCouncilDashboard();
@@ -4438,6 +4461,7 @@ function invalidateMarketDashboardCache(){
   try{
     localStorage.removeItem(MARKET_DASHBOARD_CACHE_KEY);
     localStorage.removeItem(MARKET_MACRO_CACHE_KEY);
+    localStorage.removeItem(BATTLE_BRIEF_CACHE_KEY);
   }catch(e){}
 }
 
@@ -9314,6 +9338,12 @@ function prefetchMarketDashboard(){
       return data;
     }).catch(function(e){console.warn(e)}).finally(function(){macroOverviewPromise=null;});
   }
+  if(!readTimedMarketCache(BATTLE_BRIEF_CACHE_KEY)&&!battleBriefPromise){
+    battleBriefPromise=apiGet({action:'battleBrief'},45000).then(function(data){
+      writeTimedMarketCache(BATTLE_BRIEF_CACHE_KEY,data);
+      return data;
+    }).catch(function(e){console.warn(e)}).finally(function(){battleBriefPromise=null;});
+  }
 }
 
 function prefetchStarsPanelData(){
@@ -9342,6 +9372,135 @@ function prefetchStarsPanelData(){
 }
 
 // booking-recent 與配息試算已整合至 switchTab
+
+function battleNumberText(value,digits,suffix){
+  if(value===null||value===undefined||value==='')return '--';
+  var n=Number(value);
+  if(isNaN(n))return String(value);
+  var d=digits==null?2:digits;
+  return n.toLocaleString('zh-TW',{minimumFractionDigits:d,maximumFractionDigits:d})+(suffix||'');
+}
+
+function battleChangeClass(value){
+  var n=Number(value);
+  if(isNaN(n)||n===0)return 'flat';
+  return n>0?'up':'down';
+}
+
+function battleDeltaText(row,percentOnly){
+  row=row||{};
+  if(row.changePct===null||row.changePct===undefined||row.changePct==='')return '--';
+  var pct=Number(row.changePct);
+  if(isNaN(pct))return '--';
+  var sign=pct>0?'+':'';
+  if(percentOnly)return sign+pct.toFixed(2)+'%';
+  var change=row.change===null||row.change===undefined||row.change===''?'':Number(row.change);
+  var changeText=isNaN(change)?'':((change>0?'+':'')+change.toLocaleString('zh-TW',{maximumFractionDigits:4})+' / ');
+  return changeText+sign+pct.toFixed(2)+'%';
+}
+
+function battleLineHtml(row,options){
+  row=row||{};
+  options=options||{};
+  var cls=battleChangeClass(row.change);
+  var value=battleNumberText(row.current,options.digits,options.suffix);
+  return `<div class="battle-line">
+    <div>
+      <div class="battle-line-name">${esc(row.name||row.code||'--')}</div>
+      <div class="battle-line-code">${esc(row.code||row.source||'')}</div>
+    </div>
+    <div class="battle-line-value">
+      <div class="battle-line-current">${esc(value)}</div>
+      <div class="battle-line-delta ${cls}">${esc(battleDeltaText(row,options.percentOnly))}</div>
+    </div>
+  </div>`;
+}
+
+function battleTableRowHtml(row){
+  row=row||{};
+  var cls=battleChangeClass(row.change);
+  return `<div class="battle-table-row">
+    <div class="battle-cell" data-label="標的">${esc(row.name||row.code||'--')}<div class="battle-line-code">${esc(row.code||'')}</div></div>
+    <div class="battle-cell num" data-label="現價">${esc(battleNumberText(row.current,2,''))}</div>
+    <div class="battle-cell num" data-label="昨日">${esc(battleNumberText(row.previous,2,''))}</div>
+    <div class="battle-cell num delta ${cls}" data-label="增減">${esc(battleDeltaText(row,false))}</div>
+  </div>`;
+}
+
+function renderBattleBrief(data,el){
+  data=data||{};
+  var summary=data.summary||{};
+  var funds=(data.funds||[]);
+  var market=(data.market||[]);
+  var holdings=(data.holdings||[]);
+  var marginRows=market.filter(function(row){return row&&row.category!=='台股維持率';});
+  var maintenanceRows=market.filter(function(row){return row&&row.category==='台股維持率';});
+  var fundHtml=funds.length?funds.map(function(row){return battleLineHtml(row,{digits:4});}).join(''):'<div class="battle-empty">尚未讀到基金淨值。</div>';
+  var marginHtml=(marginRows.concat(maintenanceRows)).length?(marginRows.concat(maintenanceRows)).map(function(row){
+    var isRatio=row.category==='台股維持率';
+    return battleLineHtml(row,{digits:isRatio?2:0,suffix:isRatio?'%':'',percentOnly:false});
+  }).join(''):'<div class="battle-empty">尚未讀到台股融資資料。</div>';
+  var holdingsHtml=holdings.length?`<div class="battle-table">
+    <div class="battle-table-row head"><div>標的</div><div>現價</div><div>昨日</div><div>增減</div></div>
+    ${holdings.map(battleTableRowHtml).join('')}
+  </div>`:'<div class="battle-empty">尚未讀到持股股價。</div>';
+  el.innerHTML=`<div class="battle-report-head">
+    <div>
+      <div class="battle-report-title">戰情總匯報</div>
+      <div class="battle-report-date">日期 ${esc(data.date||'--')} · 更新 ${esc(data.updatedAt||'--')} · 快照 ${esc(summary.sheetName||'戰情總匯報')}</div>
+    </div>
+    <div class="battle-kpis">
+      <span class="battle-kpi">${esc(summary.marketStance||'觀望')}</span>
+      <span class="battle-kpi up">上漲 ${esc(summary.upCount||0)}</span>
+      <span class="battle-kpi down">下跌 ${esc(summary.downCount||0)}</span>
+      <button class="battle-report-refresh" type="button" onclick="loadBattleBrief(true)">重新整理</button>
+    </div>
+  </div>
+  <div class="battle-report-grid">
+    <div class="battle-section">
+      <div class="battle-section-title">基金淨值</div>
+      <div class="battle-list">${fundHtml}</div>
+    </div>
+    <div class="battle-section">
+      <div class="battle-section-title">台股融資與維持率</div>
+      <div class="battle-list">${marginHtml}</div>
+    </div>
+    <div class="battle-section wide">
+      <div class="battle-section-title">持股股價對比</div>
+      ${holdingsHtml}
+    </div>
+  </div>`;
+}
+
+async function loadBattleBrief(force){
+  var el=document.getElementById('battle-brief-content');
+  if(!el)return null;
+  if(!API_URL){
+    el.innerHTML=setupNotice();
+    setCouncilPanelStatusIfActive('err','尚未設定 API');
+    return null;
+  }
+  var cached=readTimedMarketCache(BATTLE_BRIEF_CACHE_KEY);
+  if(cached&&!force)renderBattleBrief(cached,el);
+  setCouncilPanelStatusIfActive('pending',cached&&!force?'戰情快取更新中':'戰情總匯報讀取中');
+  if(battleBriefPromise&&!force)return battleBriefPromise.then(function(data){
+    if(data&&document.getElementById('battle-brief-content'))renderBattleBrief(data,document.getElementById('battle-brief-content'));
+    return data;
+  });
+  battleBriefPromise=apiGet({action:'battleBrief'},45000).then(function(data){
+    writeTimedMarketCache(BATTLE_BRIEF_CACHE_KEY,data);
+    renderBattleBrief(data,el);
+    setCouncilPanelStatusIfActive('ok','戰情總匯報已更新');
+    return data;
+  }).catch(function(e){
+    if(!cached||force)el.innerHTML=`<div style="color:var(--coral);font-family:var(--sans);font-size:12px;padding:12px 0">${esc(e.message||'戰情總匯報讀取失敗')}</div>`;
+    setCouncilPanelStatusIfActive(cached&&!force?'pending':'err',cached&&!force?'顯示戰情快取':'戰情總匯報讀取失敗');
+    return null;
+  }).finally(function(){
+    battleBriefPromise=null;
+  });
+  return battleBriefPromise;
+}
 
 async function loadHoldings(){
   var el=document.getElementById('holdings-content');
@@ -9476,6 +9635,7 @@ function renderCouncilPanel(){
   setEmpireCardApiPendingStatus('council');
   setTabs([
     {key:'council-roster',label:'部隊陣容'},
+    {key:'battle-brief',label:'戰情總匯報'},
     {key:'market-watch',label:'快捷戰報'},
     {key:'macro-overview',label:'總經戰情'}
   ]);
@@ -9484,6 +9644,9 @@ function renderCouncilPanel(){
   document.getElementById('p-body').innerHTML=`
     <div class="pane active" id="pane-council-roster">
       <div id="council-content">${apiReady?'':lockedNotice}</div>
+    </div>
+    <div class="pane" id="pane-battle-brief">
+      <div id="battle-brief-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:82%"></div><div class="skel-line skel" style="width:68%"></div></div>
     </div>
     <div class="pane" id="pane-market-watch">
       <div id="market-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:82%"></div><div class="skel-line skel" style="width:68%"></div></div>
@@ -11533,6 +11696,7 @@ initAdvisorDuoVideoPlayback();
           <button class="advisor-menu-toggle" type="button" onclick="toggleAdvisorMenuGroup(this)" aria-expanded="false"><span class="advisor-menu-mark">軍</span>軍機處<span class="advisor-menu-caret">▼</span></button>
           <div class="advisor-btn-group">
             <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'council','council-roster')"><span class="advisor-btn-tag">隊</span>部隊陣容</button>
+            <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'council','battle-brief')"><span class="advisor-btn-tag">戰</span>戰情總匯報</button>
           </div>
         </section>
         <section class="advisor-menu-section">
@@ -11843,6 +12007,7 @@ function advisorAIQuickCommands(){
     {label:'年度財報',command:'年度財報'},
     {label:'國庫現況',command:'國庫現況'},
     {label:'部隊陣容',command:'部隊陣容'},
+    {label:'戰情總匯報',command:'戰情總匯報'},
     {label:'退稅查詢',command:'__etf_tax_lookup__'},
     {label:'網頁驗證',command:'__web_verify__'}
   ];
@@ -12259,6 +12424,7 @@ function advisorAIOpenTarget(text){
   if(key.indexOf('糧')>=0)return {intent:'open',panel:'finance',tab:'finance-accs',label:'國庫現況'};
   if(key.indexOf('年度財報')>=0||key.indexOf('財報')>=0)return {intent:'open',panel:'finance',tab:'domestic-yearly',label:'年度財報'};
   if(key.indexOf('部隊陣容')>=0||key.indexOf('陣容')>=0)return {intent:'open',panel:'council',tab:'council-roster',label:'部隊陣容'};
+  if(key.indexOf('戰情總匯報')>=0||key.indexOf('總匯報')>=0)return {intent:'open',panel:'council',tab:'battle-brief',label:'戰情總匯報'};
   if(key.indexOf('總經')>=0)return {intent:'open',panel:'council',tab:'macro-overview',label:'總經戰情'};
   if(key.indexOf('市集')>=0||key.indexOf('市場')>=0)return {intent:'open',panel:'council',tab:'market-watch',label:'快捷戰報'};
   if(key.indexOf('內政')>=0||key.indexOf('記帳')>=0)return {intent:'open',panel:'domestic',tab:'booking-form',label:'快速記帳'};
@@ -12463,6 +12629,7 @@ function advisorAICommand(raw){
   if(compact.indexOf('年度財報')>=0)return {intent:'open',panel:'finance',tab:'domestic-yearly',label:'年度財報'};
   if(compact==='糧'||compact.indexOf('糧倉')>=0)return {intent:'open',panel:'finance',tab:'finance-accs',label:'國庫現況'};
   if(compact.indexOf('部隊陣容')>=0||compact.indexOf('陣容')>=0)return {intent:'open',panel:'council',tab:'council-roster',label:'部隊陣容'};
+  if(compact.indexOf('戰情總匯報')>=0||compact.indexOf('總匯報')>=0)return {intent:'open',panel:'council',tab:'battle-brief',label:'戰情總匯報'};
   if(compact.indexOf('總經')>=0)return {intent:'open',panel:'council',tab:'macro-overview',label:'總經戰情'};
   if(compact.indexOf('維持率')>=0)return {intent:'maintenance'};
   if(compact.indexOf('複製載具')>=0)return {intent:'copyCarrier'};
