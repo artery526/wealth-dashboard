@@ -1,0 +1,4 @@
+interface:
+  display_name: "持股標的管理"
+  short_description: "同步管理帝國財務試算表、網頁與龐統別名中的投資標的"
+  default_prompt: "Use $manage-wealth-holding to safely add or remove a holding across the spreadsheet, Web App, and Pangtong aliases."

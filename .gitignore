@@ -1,0 +1,32 @@
+# Local Codex workspace state and uploaded task attachments.
+.codex/
+.agents/
+.codex-remote-attachments/
+
+# Generated analysis/export artifacts. Keep source scripts under tools/.
+outputs/
+*.inspect.ndjson
+
+# Local scratch or mistaken clasp configuration.
+.clasp.wrong.json
+
+# Local clasp project binding. Keep the script id local unless a private remote is chosen.
+.clasp.json
+
+# Root copies of frontend media belong in D:\wealth-dashboard.
+Kongmingmenuv2.mp4
+domestic-cardv2.mp4
+finance-cardv2.mp4
+medical-cardv2.mp4
+military-controlv2.mp4
+pangtongmenuv2.mp4
+starsv2.mp4
+wallv2.mp4
+
+# Common OS/editor noise.
+.DS_Store
+Thumbs.db
+desktop.ini
+*.tmp
+*.temp
+*.log
