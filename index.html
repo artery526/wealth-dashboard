@@ -7661,7 +7661,8 @@ function carrierOverlayClick(event){
 function showMemberCard(type){
   var map={
     seven:{src:'小7會員.jpg',alt:'7-11會員條碼'},
-    family:{src:'全家會員.jpg',alt:'全家會員條碼'}
+    family:{src:'全家會員.jpg',alt:'全家會員條碼'},
+    hilife:{src:'HILIFE.jpg',alt:'萊爾富會員條碼'}
   };
   var data=map[type];
   var overlay=document.getElementById('member-card-overlay');
@@ -12012,6 +12013,7 @@ function advisorAIQuickCommands(){
     {label:'複製載具',command:'複製載具'},
     {label:'7-11',command:'711'},
     {label:'全家',command:'全'},
+    {label:'萊爾富',command:'萊爾富'},
     {label:'本月資產',command:'本月資產'},
     {label:'提款1000',command:'提款1000'},
     {label:'年度財報',command:'年度財報'},
@@ -12454,7 +12456,7 @@ function advisorAIDeepSeekSystemPrompt(){
     'advisorDividendMemo 欄位: market, symbol, dividendPerShare。可省略 market；只輸入「ETF關鍵字 配息比率」也可回 advisorDividendMemo，例如「台灣5G 0.12」或「AIPI 0.234」。美股只有 QQQI, AIPI, PLTY, CHPY, GDXW, GLDW；其餘為台股；施羅德收益成長A2 是美股但免先扣 30%。',
     'stockBuy/stockSell 欄位: symbol, shares, amount。',
     'open 欄位: panel, tab, label。panel 只能 finance, foodhouse, market, domestic, council, stars, medical。',
-    'member 欄位: type，只能 seven 或 family。',
+    'member 欄位: type，只能 seven, family 或 hilife。',
     '帳戶/標的請盡量用使用者原文，例如 國泰s, 現金, 玉山, cube, AIPI；前端會再轉換成正式名稱。',
     '如果金額不明或意圖不明，回 {"intent":"unknown"}。'
   ].join('\\n');
@@ -12514,6 +12516,7 @@ function advisorAINormalizeDeepSeekCommand(cmd,raw){
     var type=String(cmd.type||'').toLowerCase();
     if(type==='seven'||type==='7'||type==='711')return {intent:'member',type:'seven',label:'7-11會員'};
     if(type==='family'||type==='全'||type==='全家')return {intent:'member',type:'family',label:'全家會員'};
+    if(type==='hilife'||type==='萊爾富')return {intent:'member',type:'hilife',label:'萊爾富會員'};
     return {intent:'unknown'};
   }
   if(intent==='transfer'){
@@ -12648,6 +12651,7 @@ function advisorAICommand(raw){
   if(compact==='載具'||compact.indexOf('顯示載具')>=0)return {intent:'showCarrier'};
   if(compact==='711'||compact==='7'||compact.indexOf('7-11')>=0||compact.indexOf('小7')>=0)return {intent:'member',type:'seven',label:'7-11會員'};
   if(compact==='全'||compact.indexOf('全家')>=0)return {intent:'member',type:'family',label:'全家會員'};
+  if(compact.indexOf('萊爾富')>=0||compact.indexOf('hilife')>=0)return {intent:'member',type:'hilife',label:'萊爾富會員'};
   var dividendMemo=text.match(/(美股|台股)\s*([^\s]+)\s*(\d+(?:\.\d+)?)/i);
   if(dividendMemo)return {intent:'advisorDividendMemo',market:dividendMemo[1]==='台股'?'tw':'us',symbol:dividendMemo[2],dividendPerShare:parseFloat(dividendMemo[3])};
   var dividendMemo2=text.match(/([A-Za-z0-9\u4e00-\u9fff]+)\s*(?:配息備忘|配息紀錄)\s*(\d+(?:\.\d+)?)/i);
