@@ -75,6 +75,24 @@ git clean -nd
 
 The dry run must be reviewed because important current source files may still be untracked.
 
+## One-command safe cleanup
+
+Use the guarded cleanup command instead of manual deletion:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File D:\WebApp\clean-webapp.ps1
+```
+
+The default mode is a dry run. It only lists cleanup candidates.
+
+To archive confirmed duplicate/legacy files:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File D:\WebApp\clean-webapp.ps1 -Apply
+```
+
+The cleanup tool moves files to `D:\EmpireArchive\<date>-webapp-cleanup`; it does not delete files.
+
 ## Suggested next maintenance steps
 
 1. Decide whether to track `.clasp.json`.
