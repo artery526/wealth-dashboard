@@ -1094,6 +1094,7 @@ body::after{
 .advisor-ai-example code{font-family:var(--mono);font-size:11px;color:#e7c77a;background:rgba(232,192,80,.08);border-radius:5px;padding:1px 4px}
 .advisor-ai-tool-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
 .advisor-ai-database-stack{display:grid;gap:8px}
+.advisor-ai-video-stack{display:grid;gap:8px}
 .advisor-ai-tool-row .advisor-shortcut-secondary{min-height:42px;display:flex;align-items:center;justify-content:center}
 .advisor-ai-result{border:1px solid rgba(232,192,80,.24);border-radius:8px;background:rgba(232,192,80,.05);padding:9px 10px;margin-top:9px;font-family:var(--sans);font-size:12px;font-weight:850;line-height:1.7;color:#d8c18a}
 .advisor-ai-granary-brief{position:relative;overflow:hidden;border:1px solid rgba(232,192,80,.28);border-radius:9px;background:linear-gradient(135deg,rgba(36,24,8,.84),rgba(8,6,3,.88));padding:10px 11px;margin:0 0 10px;font-family:var(--font);font-size:14px;font-weight:850;line-height:1.75;color:#ead9a8;text-shadow:0 0 9px rgba(232,192,80,.08)}
@@ -9375,12 +9376,13 @@ function prefetchStarsPanelData(){
 
 // booking-recent 與配息試算已整合至 switchTab
 
-function battleNumberText(value,digits,suffix){
+function battleNumberText(value,digits,suffix,minDigits){
   if(value===null||value===undefined||value==='')return '--';
   var n=Number(value);
   if(isNaN(n))return String(value);
   var d=digits==null?2:digits;
-  return n.toLocaleString('zh-TW',{minimumFractionDigits:d,maximumFractionDigits:d})+(suffix||'');
+  var min=minDigits==null?d:minDigits;
+  return n.toLocaleString('zh-TW',{minimumFractionDigits:min,maximumFractionDigits:d})+(suffix||'');
 }
 
 function battleChangeClass(value){
@@ -9389,15 +9391,18 @@ function battleChangeClass(value){
   return n>0?'up':'down';
 }
 
-function battleDeltaText(row,percentOnly){
+function battleDeltaText(row,percentOnly,options){
   row=row||{};
+  options=options||{};
   if(row.changePct===null||row.changePct===undefined||row.changePct==='')return '--';
   var pct=Number(row.changePct);
   if(isNaN(pct))return '--';
   var sign=pct>0?'+':'';
   if(percentOnly)return sign+pct.toFixed(2)+'%';
   var change=row.change===null||row.change===undefined||row.change===''?'':Number(row.change);
-  var changeText=isNaN(change)?'':((change>0?'+':'')+change.toLocaleString('zh-TW',{maximumFractionDigits:4})+' / ');
+  if(!isNaN(change)&&options.changeScale)change=change/options.changeScale;
+  var changeDigits=options.changeDigits==null?4:options.changeDigits;
+  var changeText=isNaN(change)?'':((change>0?'+':'')+change.toLocaleString('zh-TW',{maximumFractionDigits:changeDigits})+(options.changeSuffix||'')+' / ');
   return changeText+sign+pct.toFixed(2)+'%';
 }
 
@@ -9405,7 +9410,8 @@ function battleLineHtml(row,options){
   row=row||{};
   options=options||{};
   var cls=battleChangeClass(row.change);
-  var value=battleNumberText(row.current,options.digits,options.suffix);
+  var current=options.scale&&row.current!==''&&row.current!=null?Number(row.current)/options.scale:row.current;
+  var value=battleNumberText(current,options.digits,options.suffix,options.minDigits);
   return `<div class="battle-line">
     <div>
       <div class="battle-line-name">${esc(row.name||row.code||'--')}</div>
@@ -9413,7 +9419,7 @@ function battleLineHtml(row,options){
     </div>
     <div class="battle-line-value">
       <div class="battle-line-current">${esc(value)}</div>
-      <div class="battle-line-delta ${cls}">${esc(battleDeltaText(row,options.percentOnly))}</div>
+      <div class="battle-line-delta ${cls}">${esc(battleDeltaText(row,options.percentOnly,options))}</div>
     </div>
   </div>`;
 }
@@ -9435,12 +9441,13 @@ function renderBattleBrief(data,el){
   var funds=(data.funds||[]);
   var market=(data.market||[]);
   var holdings=(data.holdings||[]);
-  var marginRows=market.filter(function(row){return row&&row.category!=='台股維持率';});
-  var maintenanceRows=market.filter(function(row){return row&&row.category==='台股維持率';});
-  var fundHtml=funds.length?funds.map(function(row){return battleLineHtml(row,{digits:4});}).join(''):'<div class="battle-empty">尚未讀到基金淨值。</div>';
+  var isMaintenanceRow=function(row){return row&&(row.category==='台股維持率'||row.name==='台股維持率');};
+  var marginRows=market.filter(function(row){return row&&!isMaintenanceRow(row);});
+  var maintenanceRows=market.filter(isMaintenanceRow);
+  var fundHtml=funds.length?funds.map(function(row){return battleLineHtml(row,{digits:2,minDigits:0});}).join(''):'<div class="battle-empty">尚未讀到基金淨值。</div>';
   var marginHtml=(marginRows.concat(maintenanceRows)).length?(marginRows.concat(maintenanceRows)).map(function(row){
-    var isRatio=row.category==='台股維持率';
-    return battleLineHtml(row,{digits:isRatio?2:0,suffix:isRatio?'%':'',percentOnly:false});
+    var isRatio=isMaintenanceRow(row);
+    return battleLineHtml(row,isRatio?{digits:2,suffix:'%',percentOnly:false}:{scale:100000000,digits:2,minDigits:2,suffix:' 億',changeScale:100000000,changeDigits:2,changeSuffix:' 億'});
   }).join(''):'<div class="battle-empty">尚未讀到台股融資資料。</div>';
   var holdingsHtml=holdings.length?`<div class="battle-table">
     <div class="battle-table-row head"><div>標的</div><div>現價</div><div>昨日</div><div>增減</div></div>
@@ -12010,7 +12017,6 @@ function advisorAIQuickCommands(){
     {label:'年度財報',command:'年度財報'},
     {label:'國庫現況',command:'國庫現況'},
     {label:'部隊陣容',command:'部隊陣容'},
-    {label:'戰情總匯報',command:'戰情總匯報'},
     {label:'退稅查詢',command:'__etf_tax_lookup__'},
     {label:'網頁驗證',command:'__web_verify__'}
   ];
@@ -12163,7 +12169,10 @@ function openAdvisorAI(targetPanel){
         <button class="advisor-shortcut-secondary advisor-ai-sheet-button" type="button" onclick="advisorAIOpenDatabaseSheet()">進入資料庫</button>
         <button class="advisor-shortcut-secondary advisor-ai-dividend-calc" type="button" onclick="openEmpireCardShortcut(event,'finance','div-calc')">配息試算</button>
       </div>
-      <button class="advisor-shortcut-secondary advisor-ai-video-download" type="button" onclick="advisorAIOpenVideoDownload()">影片下載</button>
+      <div class="advisor-ai-video-stack">
+        <button class="advisor-shortcut-secondary advisor-ai-video-download" type="button" onclick="advisorAIOpenVideoDownload()">影片下載</button>
+        <button class="advisor-shortcut-secondary advisor-ai-battle-brief" type="button" onclick="openEmpireCardShortcut(event,'council','battle-brief')">戰情總匯報</button>
+      </div>
     </div>
     ${advisorAIExamplesHtml()}
     <div class="advisor-shortcut-msg" id="advisor-ai-msg"></div>`;
