@@ -2443,6 +2443,8 @@ body::after{
 .travel-add-msg{font-family:var(--sans);font-size:12px;color:#9a7430;min-height:18px}
 .travel-add-msg.ok{color:#8fd0b8}.travel-add-msg.err{color:#ef9a77}
 .ark-wall-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+.ark-wall-search-button{width:34px;height:34px;border:1px solid rgba(78,217,255,.34);border-radius:8px;background:rgba(78,217,255,.08);color:#aeefff;font-family:var(--sans);font-size:15px;font-weight:900;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:border-color .18s,background .18s,box-shadow .18s}
+.ark-wall-search-button:hover,.ark-wall-search-button.active{border-color:rgba(78,217,255,.68);background:rgba(78,217,255,.15);box-shadow:0 0 13px rgba(78,217,255,.16)}
 .ark-wall-today-date{border:1px solid rgba(232,192,80,.34);border-radius:8px;background:rgba(232,192,80,.08);color:#f0dfa0;font-family:var(--mono);font-size:12px;font-weight:900;line-height:1;padding:8px 10px;white-space:nowrap}
 .ark-wall-admin{border:1px solid rgba(29,158,117,.48);border-radius:8px;background:rgba(29,158,117,.13);color:#a8f1d6;font-family:var(--sans);font-size:12px;font-weight:900;padding:7px 10px;text-decoration:none;white-space:nowrap;transition:border-color .2s,background .2s,box-shadow .2s}
 .ark-wall-admin:hover{border-color:rgba(29,158,117,.72);background:rgba(29,158,117,.2);box-shadow:0 0 13px rgba(29,158,117,.16)}
@@ -2466,8 +2468,11 @@ body::after{
 .ark-wall-memo-tag[data-memo-tag="待辦記錄"].active{border-color:rgba(216,90,48,.78);background:rgba(216,90,48,.2);color:#ffd0c2}
 .ark-wall-memo-tag[data-memo-tag="父母相關"],.ark-wall-tag[data-wall-tag="父母相關"]{border-color:rgba(29,158,117,.46);background:rgba(29,158,117,.12);color:#a8f1d6}
 .ark-wall-memo-tag[data-memo-tag="父母相關"].active{border-color:rgba(29,158,117,.78);background:rgba(29,158,117,.22);color:#d6ffed}
+.ark-wall-search-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-bottom:12px}
 .ark-wall-search{width:100%;height:38px;border:1px solid rgba(184,137,46,.36);border-radius:8px;background:rgba(10,8,4,.82);color:#f0dfa0;font-family:var(--sans);font-size:14px;font-weight:850;padding:0 11px;outline:none}
 .ark-wall-search:focus{border-color:rgba(232,192,80,.72);box-shadow:0 0 0 2px rgba(232,192,80,.12)}
+.ark-wall-search-clear{height:38px;border:1px solid rgba(184,137,46,.3);border-radius:8px;background:rgba(10,8,4,.72);color:#bda36d;font-family:var(--sans);font-size:12px;font-weight:900;padding:0 10px;cursor:pointer;white-space:nowrap}
+.ark-wall-search-clear:hover{border-color:rgba(232,192,80,.58);color:#f0dfa0}
 .ark-wall-count{font-family:var(--sans);font-size:12px;font-weight:800;color:#9a7430;margin:-4px 0 10px}
 .ark-wall-library{display:grid;gap:11px;border:1px solid rgba(78,217,255,.22);border-radius:8px;background:rgba(4,10,12,.58);padding:12px;margin-bottom:15px}
 .ark-wall-library-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap}
@@ -3360,6 +3365,7 @@ body::after{
       </div>
       <div class="ark-wall-actions">
         <button class="ark-wall-back" id="ark-wall-back" type="button" onclick="renderArkWallList()" hidden>&#x8FD4;&#x56DE;&#x5217;&#x8868;</button>
+        <button class="ark-wall-search-button" id="ark-wall-search-button" type="button" onclick="toggleArkWallSearch(event)" aria-label="搜尋城牆" title="搜尋城牆"><span aria-hidden="true">&#128269;</span></button>
         <span class="empire-panel-status-dot err" id="wall-panel-status-dot" title="城牆連線失敗" aria-label="城牆連線失敗"></span>
         <span class="ark-wall-today-date" id="ark-wall-today-date"></span>
         <a class="ark-wall-admin" href="https://wall-admin.ark-os26.cc/admin" target="_blank" rel="noopener">&#x65B0;&#x589E;&#x7D00;&#x9304;</a>
@@ -6785,6 +6791,7 @@ var arkWallSelectedYear='';
 var arkWallSelectedMonth='';
 var arkWallMemoTag='全部';
 var arkWallMemoSearch='';
+var arkWallSearchOpen=false;
 var arkWallLibrarySummary=null;
 var arkWallLibrarySelectedYear='';
 var arkWallLibrarySelectedMonth='';
@@ -7131,7 +7138,9 @@ function arkWallMonthsForYear(year){
 }
 
 function arkWallEntriesForSelection(){
+  var query=String(arkWallMemoSearch||'').trim().toLowerCase();
   return arkWallSortEntries(arkWallEntries.filter(function(entry){
+    if(query)return arkWallEntrySearchText(entry).indexOf(query)>=0;
     var parts=arkWallDateParts(entry);
     return parts.year===arkWallSelectedYear&&parts.month===arkWallSelectedMonth;
   }));
@@ -7153,6 +7162,44 @@ function setArkWallView(view){
   renderArkWallList();
 }
 
+function syncArkWallSearchButton(){
+  var button=document.getElementById('ark-wall-search-button');
+  if(!button)return;
+  var active=arkWallSearchOpen||String(arkWallMemoSearch||'').trim();
+  button.classList.toggle('active',!!active);
+  button.setAttribute('aria-pressed',active?'true':'false');
+}
+
+function focusArkWallSearchInput(){
+  setTimeout(function(){
+    var input=document.getElementById('ark-wall-search-input');
+    if(input){
+      input.focus();
+      var end=input.value.length;
+      try{input.setSelectionRange(end,end);}catch(e){}
+    }
+  },0);
+}
+
+function toggleArkWallSearch(event){
+  if(event&&event.stopPropagation)event.stopPropagation();
+  arkWallSearchOpen=!arkWallSearchOpen;
+  if(arkWallSearchOpen){
+    renderArkWallList();
+    focusArkWallSearchInput();
+  }else{
+    arkWallMemoSearch='';
+    renderArkWallList();
+  }
+}
+
+function clearArkWallSearch(){
+  arkWallMemoSearch='';
+  arkWallSearchOpen=true;
+  renderArkWallList();
+  focusArkWallSearchInput();
+}
+
 function setArkWallMemoTag(tag){
   arkWallMemoTag=String(tag||'全部');
   renderArkWallList();
@@ -7160,15 +7207,9 @@ function setArkWallMemoTag(tag){
 
 function setArkWallMemoSearch(value){
   arkWallMemoSearch=String(value||'');
+  arkWallSearchOpen=true;
   renderArkWallList();
-  setTimeout(function(){
-    var input=document.getElementById('ark-wall-memo-search');
-    if(input){
-      input.focus();
-      var end=input.value.length;
-      try{input.setSelectionRange(end,end);}catch(e){}
-    }
-  },0);
+  focusArkWallSearchInput();
 }
 
 function arkWallEntrySearchText(entry){
@@ -7185,6 +7226,14 @@ function arkWallEntrySearchText(entry){
 function arkWallSectionHtml(content,kind){
   var cls=kind==='timeline'?'ark-wall-timeline-block':'ark-wall-main-content';
   return '<div class="'+cls+'">'+(content||'')+'</div>';
+}
+
+function renderArkWallSearchBox(){
+  if(!arkWallSearchOpen&&!String(arkWallMemoSearch||'').trim())return '';
+  return '<div class="ark-wall-search-row">'
+    +'<input class="ark-wall-search" id="ark-wall-search-input" type="search" value="'+esc(arkWallMemoSearch)+'" placeholder="搜尋標題或內文" oninput="setArkWallMemoSearch(this.value)">'
+    +'<button class="ark-wall-search-clear" type="button" onclick="clearArkWallSearch()">清除</button>'
+  +'</div>';
 }
 
 function arkWallTaggedEntries(categoryTags){
@@ -7219,7 +7268,7 @@ function renderArkWallTaggedList(options){
   }).join('');
   return '<div class="ark-wall-memo-tools">'
     +'<div class="ark-wall-memo-tags">'+tagButtons+'</div>'
-    +'<input class="ark-wall-search" id="ark-wall-memo-search" type="search" value="'+esc(arkWallMemoSearch)+'" placeholder="搜尋文章內容" oninput="setArkWallMemoSearch(this.value)">'
+    +renderArkWallSearchBox()
   +'</div>'
   +'<div class="ark-wall-count">'+esc(title)+' · '+entries.length+' 篇</div>'
   +(entries.length?'<div class="ark-wall-grid">'+entries.map(arkWallEntryCard).join('')+'</div>':'<div class="travel-status">'+esc(emptyText)+'</div>');
@@ -7286,6 +7335,7 @@ function renderArkWallList(){
   var body=document.getElementById('ark-wall-body');
   var back=document.getElementById('ark-wall-back');
   if(back)back.hidden=true;
+  syncArkWallSearchButton();
   if(!body)return;
   var libraryHtml=arkWallLibrarySummary
     ? renderArkWallLibraryBlock()
@@ -7312,14 +7362,18 @@ function renderArkWallList(){
   }else if(arkWallView==='market'){
     content=renderArkWallMarketList();
   }else{
+    var query=String(arkWallMemoSearch||'').trim();
     filterHtml='<div class="ark-wall-filter" data-wall-index="year-month">'
     +'<label class="ark-wall-select-wrap"><span class="ark-wall-select-label">年份</span><select class="ark-wall-select" onchange="changeArkWallYear(this.value)">'+arkWallSelectOptions(years,arkWallSelectedYear,function(year){return /^\d{4}$/.test(year)?year+'年':year;})+'</select></label>'
     +'<label class="ark-wall-select-wrap"><span class="ark-wall-select-label">月份</span><select class="ark-wall-select" onchange="changeArkWallMonth(this.value)">'+arkWallSelectOptions(months,arkWallSelectedMonth,function(month){return /^\d{2}$/.test(month)?Number(month)+'月':month;})+'</select></label>'
   +'</div>';
-    content='<div class="ark-wall-month-title">'+esc(arkWallMonthLabel(arkWallSelectedYear,arkWallSelectedMonth))+'</div>'
-  +(entries.length?'<div class="ark-wall-index">'+entries.map(arkWallIndexRow).join('')+'</div>':'<div class="travel-status">這個月份尚無紀錄。</div>');
+    content=renderArkWallSearchBox()
+  +'<div class="ark-wall-month-title">'+esc(query?'搜尋結果':arkWallMonthLabel(arkWallSelectedYear,arkWallSelectedMonth))+'</div>'
+  +(query?'<div class="ark-wall-count">關鍵字「'+esc(query)+'」 · '+entries.length+' 篇</div>':'')
+  +(entries.length?'<div class="ark-wall-index">'+entries.map(arkWallIndexRow).join('')+'</div>':'<div class="travel-status">'+esc(query?'沒有符合關鍵字的文章。':'這個月份尚無紀錄。')+'</div>');
   }
   body.innerHTML=renderArkWallViewTabs()+arkWallSectionHtml(content,'main')+(arkWallView==='wall'?arkWallSectionHtml(filterHtml+libraryHtml,'timeline'):'');
+  syncArkWallSearchButton();
   if(arkWallView==='wall'){
     if(!arkWallLibrarySummary)loadArkWallLibrarySummary().then(renderArkWallList).catch(function(err){arkWallLibraryStatus('時光長廊讀取失敗：'+(err&&err.message?err.message:err));});
     else loadArkWallLibraryMonth();
