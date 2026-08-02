@@ -7086,8 +7086,7 @@ function renderArkWallGate(message){
   if(!body)return;
   body.innerHTML='<div class="ark-wall-lock" data-wall-lock>'
     +'<div class="ark-wall-lock-title">城牆通行令</div>'
-    +'<div class="ark-wall-lock-text">'+esc(message||'請至龐統軍師右上角齒輪輸入城牆通行令。')+'</div>'
-    +'<button class="ark-wall-lock-submit" type="button" onclick="openCfg()">前往龐統齒輪設定</button>'
+    +'<div class="ark-wall-lock-text">'+esc(message||'城門已關閉請輸入通關文牒！')+'</div>'
   +'</div>';
 }
 
@@ -7412,7 +7411,7 @@ function openArkWall(){
   setEmpireCardStatus('wall','pending');
   loadArkWallEntries(true).then(renderArkWallList).catch(function(err){
     if(err&&err.status===401){
-      renderArkWallGate('這座城牆已上鎖。請至龐統軍師右上角齒輪輸入城牆通行令。');
+      renderArkWallGate('城門已關閉請輸入通關文牒！');
       return;
     }
     if(body)body.innerHTML='<div class="travel-status">城牆讀取失敗：'+esc(err.message||err)+'</div>';
@@ -7469,7 +7468,7 @@ function openArkWallEntry(id){
     });
   }).catch(function(err){
     if(err&&err.status===401){
-      renderArkWallGate('通行令已失效或尚未輸入。請至龐統軍師右上角齒輪更新城牆通行令。');
+      renderArkWallGate('城門已關閉請輸入通關文牒！');
       return;
     }
     if(body)body.innerHTML='<div class="travel-status">紀錄讀取失敗：'+esc(err.message||err)+'</div>';
