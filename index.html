@@ -7341,7 +7341,7 @@ function arkWallEntryCard(entry){
   var id=entry.id||entry.slug||'';
   var cover=arkWallUrl(entry.coverImageUrl||((entry.images&&entry.images[0]&&entry.images[0].thumbnailUrl)||''));
   var tags=Array.isArray(entry.tags)?entry.tags:[];
-  var pinBadge=entry.pinned?'<span class="ark-wall-pin-badge">置頂</span>':'';
+  var pinBadge=entry.pinned?'<span class="ark-wall-pin-badge" title="置頂">&#9733;</span>':'';
   return '<article class="ark-wall-entry '+(entry.pinned?'pinned':'')+'" role="button" tabindex="0" onclick="openArkWallEntry(\''+esc(id)+'\')" onkeydown="arkWallEntryKey(event,\''+esc(id)+'\')">'
     +(cover?'<img class="ark-wall-cover" src="'+esc(cover)+'" alt="'+esc(entry.title||'')+'" loading="lazy">':'')
     +'<div class="ark-wall-entry-body">'
