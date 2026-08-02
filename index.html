@@ -3424,7 +3424,9 @@ var LEGACY_API_DEPLOYMENT_IDS = [
 ];
 function normalizeWealthApiUrl(url){
   url=String(url||'').trim();
-  if(!url)return url;
+  if(!url)return CANONICAL_API_URL;
+  if(/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?\//i.test(url))return url.replace(/\/$/,'');
+  if(/script\.google\.com\/macros\/s\//i.test(url))return CANONICAL_API_URL;
   if(LEGACY_API_DEPLOYMENT_IDS.some(function(id){return url.indexOf(id)>=0;}))return CANONICAL_API_URL;
   return url;
 }
@@ -3537,7 +3539,12 @@ var HOLDING_META = {
 //  Utilities
 // ══════════════════════════════════════════
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
-function cleanToken(s){return String(s||'').replace(/[\u200B-\u200D\uFEFF]/g,'').trim()}
+function cleanToken(s){
+  var value=String(s||'').replace(/[\u200B-\u200D\uFEFF]/g,'').replace(/[\u00A0\u202F\u3000]/g,' ').trim();
+  var labeled=value.match(/(?:WRITE_TOKEN|記帳密鑰|密鑰|密碼)\s*[:：=]\s*(.+)$/i);
+  if(labeled)value=labeled[1];
+  return String(value||'').replace(/[\u200B-\u200D\uFEFF]/g,'').replace(/[\u00A0\u202F\u3000]/g,' ').trim();
+}
 function hasMainApiCredentials(){
   return !!(String(API_URL||'').trim()&&cleanToken(WRITE_TOKEN));
 }
