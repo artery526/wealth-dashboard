@@ -3881,13 +3881,13 @@ async function apiPost(body){
   if(!API_URL)throw new Error('未設定 API 網址');
   WRITE_TOKEN=cleanToken(WRITE_TOKEN);
   if(!WRITE_TOKEN)throw new Error('未設定記帳密鑰');
-  if(body&&/^(advisorAiParse|advisorDividendMemo|income|transfer)$/.test(body.action||'')){
-    var jsonTimeout=(body.action==='transfer'||(body.action==='income'&&String(body.dividendIncome||'')==='1'))?45000:undefined;
+  if(body&&/^(advisorAiParse|advisorDividendMemo|expense|income|transfer)$/.test(body.action||'')){
+    var jsonTimeout=(isApiWriteAction(body.action||'')||body.action==='advisorDividendMemo')?45000:undefined;
     return apiPostJson(body,jsonTimeout);
   }
   var params=Object.assign({},body,{token:WRITE_TOKEN});
   var qs=Object.entries(params).filter(kv=>kv[1]!==undefined&&kv[1]!==null&&kv[1]!=='').map(kv=>encodeURIComponent(kv[0])+'='+encodeURIComponent(kv[1])).join('&');
-  var r=await fetch(API_URL+'?'+qs,{redirect:'follow'});
+  var r=await fetchWithTimeout(API_URL+'?'+qs,{redirect:'follow'},isApiWriteAction(body&&body.action||'')?45000:15000);
   var text=await r.text();var d;
   try{d=parseApiJsonText(text)}catch(e){throw new Error(apiNonJsonMessage(text))}
   if(!d.ok)throw new Error(d.error||'寫入失敗');
@@ -3909,7 +3909,9 @@ async function apiPostJson(body,timeoutMs){
       body:JSON.stringify(payload)
     },timeoutMs||15000);
   }catch(e){
-    if(e&&(e.name==='AbortError'||String(e.message||'').toLowerCase().indexOf('abort')>=0)){
+    var msg=String(e&&e.message||'').toLowerCase();
+    var writeLike=isApiWriteAction(body&&body.action||'')||body&&body.action==='advisorDividendMemo';
+    if(writeLike&&(isAbortLikeError(e)||msg.indexOf('逾時')>=0||msg.indexOf('timeout')>=0)){
       throw new Error('後端已送出但回應逾時，請先查看最近紀錄，避免重複寫入。');
     }
     throw e;
@@ -13174,16 +13176,19 @@ async function runAdvisorAICommand(btn){
     }
     if(!advisorAIRequireWrite())return;
     if(cmd.intent==='transfer'){
+      advisorAISetMessage('寫入轉帳中…','pending');
       await apiPost({action:'transfer',date:today().replace(/-/g,'/'),from:cmd.from,to:cmd.to,amount:cmd.amount,label:'',note:cmd.note||'軍師AI轉帳'});
       if(panel)panel.innerHTML=`${advisorAIHeaderHtml()}${advisorAIResultHtml('已記錄轉帳',[cmd.from+' → '+cmd.to,'金額：'+fmtFull(cmd.amount)])}`;
       return;
     }
     if(cmd.intent==='withdraw'){
+      advisorAISetMessage('寫入提款中…','pending');
       await apiPost({action:'transfer',date:today().replace(/-/g,'/'),from:'💵國泰Stock',to:'💰Cash',amount:cmd.amount,label:'',note:'日常提款'});
       if(panel)panel.innerHTML=`${advisorAIHeaderHtml()}${advisorAIResultHtml('已記錄日常提款',['國泰Stock → Cash','金額：'+fmtFull(cmd.amount)])}`;
       return;
     }
     if(cmd.intent==='expense'){
+      advisorAISetMessage('寫入支出中…','pending');
       await apiPost({action:'expense',date:today().replace(/-/g,'/'),cat:cmd.category,account:cmd.account,amount:cmd.amount,note:cmd.note||'軍師AI'});
       if(panel)panel.innerHTML=`${advisorAIHeaderHtml()}${advisorAIResultHtml('已記錄支出',['項目：'+cmd.category,'帳戶：'+cmd.account,'金額：'+fmtFull(cmd.amount)])}`;
       return;
