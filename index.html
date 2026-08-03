@@ -3783,6 +3783,12 @@ function parseApiJsonText(text){
 function isApiWriteAction(action){
   return /^(expense|income|transfer|transactionUndo|stockTradeVoid|dividendEntry|dividendDelete|holdingTradeEntry|holdingTradeDelete|macroLongReportGenerate|macroLongReportTriggerInstall)$/.test(action||'');
 }
+function apiWriteTimeoutMs(action){
+  action=String(action||'');
+  if(action==='macroLongReportGenerate')return 150000;
+  if(action==='macroLongReportTriggerInstall')return 45000;
+  return isApiWriteAction(action)?45000:15000;
+}
 function apiNonJsonMessage(text){
   if(/<!doctype html|<html[\s>]/i.test(String(text||''))){
     return '後端已回傳 Google HTML 頁面，請稍後到紀錄確認是否已寫入，避免重複送出。';
@@ -3905,7 +3911,7 @@ async function apiPost(body){
   }
   var params=Object.assign({},body,{token:WRITE_TOKEN});
   var qs=Object.entries(params).filter(kv=>kv[1]!==undefined&&kv[1]!==null&&kv[1]!=='').map(kv=>encodeURIComponent(kv[0])+'='+encodeURIComponent(kv[1])).join('&');
-  var r=await fetchWithTimeout(API_URL+'?'+qs,{redirect:'follow'},isApiWriteAction(body&&body.action||'')?45000:15000);
+  var r=await fetchWithTimeout(API_URL+'?'+qs,{redirect:'follow'},apiWriteTimeoutMs(body&&body.action||''));
   var text=await r.text();var d;
   try{d=parseApiJsonText(text)}catch(e){throw new Error(apiNonJsonMessage(text))}
   if(!d.ok)throw new Error(d.error||'寫入失敗');
@@ -12049,7 +12055,7 @@ function advisorWorldLoadLongReport(){
 
 async function advisorWorldGenerateLongReport(event){
   if(event&&event.stopPropagation)event.stopPropagation();
-  advisorWorldFillLongReport({latest:{summary:'正在產出30日戰略報告...',keyTrends:[],watchlist:[],strategy:'請稍候，軍師正在整理長期資料。',conclusion:'觀望',signal:'黃燈',dataPoints:0}});
+  advisorWorldFillLongReport({latest:{summary:'正在產出30日戰略報告，第一次可能需要 1 到 2 分鐘...',keyTrends:[],watchlist:[],strategy:'請稍候，不要重複點擊；軍師正在整理長期資料並產出結論。',conclusion:'觀望',signal:'黃燈',dataPoints:0}});
   try{
     await apiPost({action:'macroLongReportGenerate',days:30});
     try{localStorage.removeItem(MARKET_LONG_REPORT_CACHE_KEY);}catch(e){}
@@ -12057,7 +12063,7 @@ async function advisorWorldGenerateLongReport(event){
     advisorWorldFillLongReport(data);
   }catch(err){
     document.querySelectorAll('.advisor-long-report-slot').forEach(function(slot){
-      slot.innerHTML='<div class="advisor-long-report"><div class="advisor-long-report-summary" style="color:var(--coral)">報告產出失敗：'+esc(err&&err.message?err.message:'請確認 WRITE_TOKEN 後再試')+'</div></div>';
+      slot.innerHTML='<div class="advisor-long-report"><div class="advisor-long-report-summary" style="color:var(--coral)">報告產出失敗：'+esc(err&&err.message?err.message:'請確認 WRITE_TOKEN 後再試')+'</div><div class="advisor-long-report-strategy">如果訊息是連線逾時，請先按一次帝國晨報重新整理；若仍未出現報告，再重新建立。</div></div>';
     });
   }
 }
