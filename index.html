@@ -598,6 +598,9 @@ body::after{
   .home-agenda-actions{width:100%;justify-content:flex-start}
   .home-agenda-date{white-space:normal}
   .home-agenda-date .nav-weather-row{margin-left:0;margin-top:5px;display:flex;justify-content:flex-start}
+  .advisor-long-report-grid{grid-template-columns:1fr}
+  .advisor-long-report-head{flex-direction:column}
+  .advisor-long-report-date{white-space:normal}
 }
 
 /* 中央：標題 + 日期橫排 */
@@ -930,6 +933,19 @@ body::after{
 .advisor-brief-date{position:relative;z-index:1;margin-top:-4px;margin-bottom:12px;text-align:center;font-family:var(--mono);font-size:12px;font-weight:900;color:#bda36d}
 .advisor-brief-divider{position:relative;z-index:1;height:1px;margin:12px 0;background:linear-gradient(90deg,transparent,rgba(232,192,80,.35),transparent)}
 .advisor-brief-section{position:relative;z-index:1;padding:2px 0}
+.advisor-long-report{position:relative;z-index:1;border:1px solid rgba(232,192,80,.26);border-radius:8px;background:rgba(10,8,4,.38);padding:10px 11px;margin-top:10px}
+.advisor-long-report-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:8px}
+.advisor-long-report-title{font-family:var(--font);font-size:14px;font-weight:900;color:#f0dfa0}
+.advisor-long-report-date{font-family:var(--sans);font-size:11px;color:#c8b07a;white-space:nowrap}
+.advisor-long-report-signal{font-family:var(--sans);font-size:11px;font-weight:900;border-radius:4px;padding:3px 6px;border:1px solid rgba(232,192,80,.28);color:#f4d783}
+.advisor-long-report-signal.attack{color:#8ff0c1;border-color:rgba(29,158,117,.46)}
+.advisor-long-report-signal.defense{color:#ffad8f;border-color:rgba(216,90,48,.46)}
+.advisor-long-report-summary{font-family:var(--sans);font-size:12px;line-height:1.65;color:#f3e2b2;margin-bottom:8px}
+.advisor-long-report-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.advisor-long-report-box{border-top:1px solid rgba(232,192,80,.18);padding-top:7px}
+.advisor-long-report-label{font-family:var(--sans);font-size:10px;font-weight:900;color:#c8b07a;margin-bottom:4px}
+.advisor-long-report-list{margin:0;padding-left:15px;color:#ead7a2;font-family:var(--sans);font-size:11px;line-height:1.55}
+.advisor-long-report-strategy{border-top:1px solid rgba(232,192,80,.18);margin-top:8px;padding-top:8px;color:#f4d783;font-family:var(--sans);font-size:12px;line-height:1.6}
 .advisor-brief-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:7px}
 .advisor-brief-heading{font-family:var(--font);font-size:15px;font-weight:950;line-height:1.35;color:#f0dfa0;letter-spacing:1px}
 .advisor-brief-status{font-family:var(--font);font-size:15px;font-weight:950;line-height:1.35;color:#f3df9a;white-space:nowrap}
@@ -3765,7 +3781,7 @@ function parseApiJsonText(text){
   throw new Error('API returned non-JSON response');
 }
 function isApiWriteAction(action){
-  return /^(expense|income|transfer|transactionUndo|stockTradeVoid|dividendEntry|dividendDelete|holdingTradeEntry|holdingTradeDelete)$/.test(action||'');
+  return /^(expense|income|transfer|transactionUndo|stockTradeVoid|dividendEntry|dividendDelete|holdingTradeEntry|holdingTradeDelete|macroLongReportGenerate|macroLongReportTriggerInstall)$/.test(action||'');
 }
 function apiNonJsonMessage(text){
   if(/<!doctype html|<html[\s>]/i.test(String(text||''))){
@@ -3896,7 +3912,7 @@ async function apiPost(body){
   if(isApiWriteAction(body.action||'')){
     invalidateFinanceDashboardCache();
   }
-  if(/^(macroWebhook)$/.test(body.action||''))invalidateMarketDashboardCache();
+  if(/^(macroWebhook|macroLongReportGenerate|macroLongReportTriggerInstall)$/.test(body.action||''))invalidateMarketDashboardCache();
   return d.data;
 }
 async function apiPostJson(body,timeoutMs){
@@ -3947,10 +3963,12 @@ var financeYearlySelectedYear='';
 var financeMonthDetailPromises={};
 var MARKET_DASHBOARD_CACHE_KEY='wealth_market_dashboard_v1';
 var MARKET_MACRO_CACHE_KEY='wealth_market_macro_v4';
+var MARKET_LONG_REPORT_CACHE_KEY='wealth_market_long_report_v1';
 var BATTLE_BRIEF_CACHE_KEY='wealth_battle_brief_v1';
 var MARKET_CACHE_TTL=2*60*60*1000;
 var marketDashboardPromise=null;
 var macroOverviewPromise=null;
+var macroLongReportPromise=null;
 var battleBriefPromise=null;
 function clearLegacyAdvisorReminderCache(){
   try{localStorage.removeItem(ADVISOR_REMINDER_CACHE_KEY);}catch(e){}
@@ -4513,6 +4531,7 @@ function invalidateMarketDashboardCache(){
   try{
     localStorage.removeItem(MARKET_DASHBOARD_CACHE_KEY);
     localStorage.removeItem(MARKET_MACRO_CACHE_KEY);
+    localStorage.removeItem(MARKET_LONG_REPORT_CACHE_KEY);
     localStorage.removeItem(BATTLE_BRIEF_CACHE_KEY);
   }catch(e){}
 }
@@ -5469,6 +5488,7 @@ async function loadHomeBriefing(){
   var hasCached=!!(cachedMarket||cachedMacro);
   if(hasCached){
     body.innerHTML=advisorWorldHtml(advisorWorldBuild(cachedMarket||{},cachedMacro||{}));
+    advisorWorldLoadLongReport();
   }else{
     body.innerHTML='<div class="advisor-world-card"><div class="advisor-world-title">🏛 帝國晨報</div><div class="advisor-world-text" style="position:relative;z-index:1;text-align:center">諸葛亮正在整理流動性、經濟、通膨與信用戰報…</div></div>';
   }
@@ -5490,6 +5510,7 @@ async function loadHomeBriefing(){
     var market=results[0].status==='fulfilled'?(results[0].value||{}):(cachedMarket||{});
     var macro=results[1].status==='fulfilled'?(results[1].value||{}):(cachedMacro||{});
     body.innerHTML=advisorWorldHtml(advisorWorldBuild(market,macro));
+    advisorWorldLoadLongReport();
   }catch(err){
     if(loadSeq!==homeAgendaLoadSeq||homeAgendaMode!=='briefing')return;
     body.innerHTML='<div class="advisor-world-card"><div class="advisor-world-title">🏛 帝國晨報</div><div class="advisor-world-text" style="position:relative;z-index:1;text-align:center;color:var(--coral)">讀取失敗：'+esc(err&&err.message?err.message:'請稍後再試')+'</div></div>';
@@ -11301,6 +11322,11 @@ function advisorWorldHtml(view){
       <div class="advisor-world-label">📌 今日一句</div>
       <div class="advisor-world-quote">${esc(view.todayLine)}</div>
     </div>
+    <div class="advisor-long-report-slot">
+      <div class="advisor-long-report">
+        <div class="advisor-long-report-summary">正在調閱30日戰略報告...</div>
+      </div>
+    </div>
     <div class="advisor-summary-sub" style="position:relative;z-index:1;text-align:center;margin-top:7px">更新 ${esc(view.updatedAt)} · 指標 ${esc(view.sourceDate)}</div>
   </div>`;
 }
@@ -11937,6 +11963,118 @@ function advisorWorldMacroRequest(){
   return macroOverviewPromise;
 }
 
+function advisorWorldLongReportRequest(){
+  if(macroLongReportPromise)return macroLongReportPromise;
+  macroLongReportPromise=apiGet({action:'macroLongReport'},45000).then(function(data){
+    writeTimedMarketCache(MARKET_LONG_REPORT_CACHE_KEY,data);
+    return data;
+  }).finally(function(){
+    macroLongReportPromise=null;
+  });
+  return macroLongReportPromise;
+}
+
+function advisorWorldLongReportList(items){
+  items=Array.isArray(items)?items:[];
+  if(!items.length)return '<li>等待下一期資料累積</li>';
+  return items.slice(0,4).map(function(item){return '<li>'+esc(item)+'</li>';}).join('');
+}
+
+function advisorWorldLongReportButtons(data){
+  var trigger=data&&data.trigger||{};
+  var triggerBtn=trigger.installed?'':'<button class="home-agenda-refresh" type="button" onclick="advisorWorldInstallLongReportTrigger(event)">安裝30日排程</button>';
+  return `<div class="home-agenda-actions" style="margin-top:9px">${triggerBtn}</div>`;
+}
+
+function advisorWorldLongReportHtml(data){
+  data=data||{};
+  var report=data.latest||null;
+  if(!report){
+    return `<div class="advisor-long-report">
+      <div class="advisor-long-report-head">
+        <div class="advisor-long-report-title">30日戰略報告</div>
+        <div class="advisor-long-report-date">尚未建立</div>
+      </div>
+      <div class="advisor-long-report-summary">長期總經資料正在累積；第一份報告產出後會在這裡顯示。</div>
+      <div class="home-agenda-actions" style="margin-top:9px">
+        <button class="home-agenda-refresh" type="button" onclick="advisorWorldGenerateLongReport(event)">建立第一份報告</button>
+        ${data.trigger&&data.trigger.installed?'':'<button class="home-agenda-refresh" type="button" onclick="advisorWorldInstallLongReportTrigger(event)">安裝30日排程</button>'}
+      </div>
+    </div>`;
+  }
+  var tone=macroTone(report.signal||report.conclusion);
+  return `<div class="advisor-long-report">
+    <div class="advisor-long-report-head">
+      <div>
+        <div class="advisor-long-report-title">30日戰略報告</div>
+        <div class="advisor-long-report-date">${esc(report.startDate||'--')} - ${esc(report.endDate||'--')} · ${esc(report.dataPoints||0)} 筆資料</div>
+      </div>
+      <div class="advisor-long-report-signal ${esc(tone)}">${esc(report.conclusion||'觀望')} · ${esc(report.signal||'黃燈')}</div>
+    </div>
+    <div class="advisor-long-report-summary">${esc(report.summary||'尚未產出摘要')}</div>
+    <div class="advisor-long-report-grid">
+      <div class="advisor-long-report-box">
+        <div class="advisor-long-report-label">主要趨勢</div>
+        <ul class="advisor-long-report-list">${advisorWorldLongReportList(report.keyTrends)}</ul>
+      </div>
+      <div class="advisor-long-report-box">
+        <div class="advisor-long-report-label">下期觀察</div>
+        <ul class="advisor-long-report-list">${advisorWorldLongReportList(report.watchlist)}</ul>
+      </div>
+    </div>
+    <div class="advisor-long-report-strategy">${esc(report.strategy||'維持既有策略，等待下一期報告確認。')}</div>
+    ${advisorWorldLongReportButtons(data)}
+  </div>`;
+}
+
+function advisorWorldFillLongReport(data){
+  document.querySelectorAll('.advisor-long-report-slot').forEach(function(slot){
+    slot.innerHTML=advisorWorldLongReportHtml(data);
+  });
+}
+
+function advisorWorldLoadLongReport(){
+  var cached=readTimedMarketCache(MARKET_LONG_REPORT_CACHE_KEY);
+  if(cached)advisorWorldFillLongReport(cached);
+  if(!API_URL)return;
+  advisorWorldLongReportRequest().then(function(data){
+    advisorWorldFillLongReport(data);
+  }).catch(function(err){
+    document.querySelectorAll('.advisor-long-report-slot').forEach(function(slot){
+      if(cached)return;
+      slot.innerHTML='<div class="advisor-long-report"><div class="advisor-long-report-summary" style="color:var(--coral)">30日戰略報告讀取失敗：'+esc(err&&err.message?err.message:'請稍後再試')+'</div></div>';
+    });
+  });
+}
+
+async function advisorWorldGenerateLongReport(event){
+  if(event&&event.stopPropagation)event.stopPropagation();
+  advisorWorldFillLongReport({latest:{summary:'正在產出30日戰略報告...',keyTrends:[],watchlist:[],strategy:'請稍候，軍師正在整理長期資料。',conclusion:'觀望',signal:'黃燈',dataPoints:0}});
+  try{
+    await apiPost({action:'macroLongReportGenerate',days:30});
+    try{localStorage.removeItem(MARKET_LONG_REPORT_CACHE_KEY);}catch(e){}
+    var data=await advisorWorldLongReportRequest();
+    advisorWorldFillLongReport(data);
+  }catch(err){
+    document.querySelectorAll('.advisor-long-report-slot').forEach(function(slot){
+      slot.innerHTML='<div class="advisor-long-report"><div class="advisor-long-report-summary" style="color:var(--coral)">報告產出失敗：'+esc(err&&err.message?err.message:'請確認 WRITE_TOKEN 後再試')+'</div></div>';
+    });
+  }
+}
+
+async function advisorWorldInstallLongReportTrigger(event){
+  if(event&&event.stopPropagation)event.stopPropagation();
+  try{
+    await apiPost({action:'macroLongReportTriggerInstall'});
+    try{localStorage.removeItem(MARKET_LONG_REPORT_CACHE_KEY);}catch(e){}
+    advisorWorldLoadLongReport();
+  }catch(err){
+    document.querySelectorAll('.advisor-long-report-slot').forEach(function(slot){
+      slot.innerHTML='<div class="advisor-long-report"><div class="advisor-long-report-summary" style="color:var(--coral)">排程安裝失敗：'+esc(err&&err.message?err.message:'請確認 WRITE_TOKEN 後再試')+'</div></div>';
+    });
+  }
+}
+
 async function openAdvisorWorldSituation(event,auto){
   if(event&&event.stopPropagation)event.stopPropagation();
   var panel=document.getElementById('advisor-world-slot')||document.getElementById('advisor-shortcut-panel');
@@ -11950,6 +12088,7 @@ async function openAdvisorWorldSituation(event,auto){
   var hasCachedWorld=!!(cachedMarket||cachedMacro);
   if(hasCachedWorld){
     panel.innerHTML=advisorWorldHtml(advisorWorldBuild(cachedMarket||{},cachedMacro||{}));
+    advisorWorldLoadLongReport();
   }else{
     panel.innerHTML='<div class="advisor-world-card"><div class="advisor-world-title">🏛 帝國晨報</div><div class="advisor-world-text" style="position:relative;z-index:1;text-align:center">諸葛亮正在整理流動性、經濟、通膨與信用戰報…</div></div>';
   }
@@ -11971,6 +12110,7 @@ async function openAdvisorWorldSituation(event,auto){
     var macro=results[1].status==='fulfilled'?(results[1].value||{}):(cachedMacro||{});
     var view=advisorWorldBuild(market,macro);
     panel.innerHTML=advisorWorldHtml(view);
+    advisorWorldLoadLongReport();
   }catch(err){
     panel.innerHTML='<div class="advisor-world-card"><div class="advisor-world-title">🏛 帝國晨報</div><div class="advisor-world-text" style="position:relative;z-index:1;text-align:center;color:var(--coral)">讀取失敗：'+esc(err&&err.message?err.message:'請稍後再試')+'</div></div>';
   }
