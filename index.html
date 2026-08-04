@@ -2494,6 +2494,10 @@ body::after{
 .ark-wall-library-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .ark-wall-library-title{font-family:var(--font);font-size:20px;font-weight:900;color:#aeefff;letter-spacing:1px}
 .ark-wall-library-sub{font-family:var(--sans);font-size:12px;font-weight:800;color:#8aa7a9;line-height:1.6;margin-top:3px}
+.ark-wall-disclosure{display:flex;align-items:center;gap:8px;border:1px solid rgba(78,217,255,.34);border-radius:8px;background:rgba(78,217,255,.09);color:#aeefff;font-family:var(--sans);font-size:12px;font-weight:900;padding:8px 10px;cursor:pointer;white-space:nowrap}
+.ark-wall-disclosure:hover{border-color:rgba(78,217,255,.58);background:rgba(78,217,255,.14)}
+.ark-wall-disclosure-icon{font-family:var(--mono);font-size:12px;line-height:1}
+.ark-wall-library-panel[hidden],.ark-wall-history-body[hidden]{display:none}
 .ark-wall-library-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
 .ark-wall-library-load{height:38px;border:1px solid rgba(78,217,255,.34);border-radius:8px;background:rgba(78,217,255,.09);color:#aeefff;font-family:var(--sans);font-size:12px;font-weight:900;padding:0 10px;cursor:pointer}
 .ark-wall-library-status{font-family:var(--sans);font-size:12px;font-weight:800;color:#9a7430;min-height:18px}
@@ -6836,6 +6840,8 @@ var arkWallLibrarySelectedMonth='';
 var arkWallLibraryItems=[];
 var arkWallLibraryShowAll=false;
 var arkWallHistoryItems=[];
+var arkWallLibraryOpen=false;
+var arkWallHistoryTodayOpen=false;
 
 function arkWallReadToken(){
   try{return localStorage.getItem(ARK_WALL_READ_TOKEN_KEY)||'';}catch(e){return '';}
@@ -7009,6 +7015,16 @@ function showAllArkWallLibraryItems(){
   arkWallLibraryStatus('已顯示本月全部 '+arkWallLibraryItems.length+' 個影像。');
 }
 
+function toggleArkWallLibrary(open){
+  arkWallLibraryOpen=typeof open==='boolean'?open:!arkWallLibraryOpen;
+  renderArkWallList();
+}
+
+function toggleArkWallHistoryToday(open){
+  arkWallHistoryTodayOpen=typeof open==='boolean'?open:!arkWallHistoryTodayOpen;
+  renderArkWallList();
+}
+
 function renderArkWallHistoryTodayItems(items){
   var grid=document.getElementById('ark-wall-history-grid');
   if(!grid)return;
@@ -7055,11 +7071,11 @@ function loadArkWallLibraryMonth(){
     var items=Array.isArray(data.items)?data.items:[];
     renderArkWallLibraryItems(items);
     arkWallLibraryStatus(arkWallLibrarySelectedYear+'-'+arkWallLibrarySelectedMonth+'，共 '+items.length+' 個影像');
-    loadArkWallHistoryToday();
+    if(arkWallHistoryTodayOpen)loadArkWallHistoryToday();
   }).catch(function(err){
     arkWallLibraryStatus('時光長廊讀取失敗：'+(err&&err.message?err.message:err));
     renderArkWallLibraryItems([]);
-    loadArkWallHistoryToday();
+    if(arkWallHistoryTodayOpen)loadArkWallHistoryToday();
   });
 }
 
@@ -7084,18 +7100,29 @@ function renderArkWallLibraryBlock(){
   return '<section class="ark-wall-library" id="ark-wall-library">'
     +'<div class="ark-wall-library-head">'
       +'<div><div class="ark-wall-library-title">時光長廊</div></div>'
-      +'<div class="ark-wall-library-actions">'
-        +'<select class="ark-wall-select" onchange="changeArkWallLibraryYear(this.value)">'+arkWallSelectOptions(years,arkWallLibrarySelectedYear,function(year){return year+'年';})+'</select>'
-        +'<select class="ark-wall-select" onchange="changeArkWallLibraryMonth(this.value)">'+arkWallSelectOptions(months,arkWallLibrarySelectedMonth,function(month){return Number(month)+'月';})+'</select>'
-        +'<button class="ark-wall-library-load" type="button" onclick="loadArkWallLibraryMonth()">載入影像</button>'
-      +'</div>'
+      +'<button class="ark-wall-disclosure" type="button" onclick="toggleArkWallLibrary()" aria-expanded="'+(arkWallLibraryOpen?'true':'false')+'" aria-controls="ark-wall-library-panel"><span class="ark-wall-disclosure-icon">'+(arkWallLibraryOpen?'−':'+')+'</span>'+(arkWallLibraryOpen?'關閉':'展開')+'</button>'
     +'</div>'
-    +'<div class="ark-wall-library-status" id="ark-wall-library-status">準備載入影像...</div>'
-    +'<div class="ark-wall-library-grid" id="ark-wall-library-grid"></div>'
-    +'<div class="ark-wall-library-more" id="ark-wall-library-more"></div>'
+    +'<div class="ark-wall-library-panel" id="ark-wall-library-panel"'+(arkWallLibraryOpen?'':' hidden')+'>'
+      +'<div class="ark-wall-library-head">'
+        +'<div><div class="ark-wall-library-sub">選擇月份瀏覽 NAS 照片與影片。</div></div>'
+        +'<div class="ark-wall-library-actions">'
+          +'<select class="ark-wall-select" onchange="changeArkWallLibraryYear(this.value)">'+arkWallSelectOptions(years,arkWallLibrarySelectedYear,function(year){return year+'年';})+'</select>'
+          +'<select class="ark-wall-select" onchange="changeArkWallLibraryMonth(this.value)">'+arkWallSelectOptions(months,arkWallLibrarySelectedMonth,function(month){return Number(month)+'月';})+'</select>'
+          +'<button class="ark-wall-library-load" type="button" onclick="loadArkWallLibraryMonth()">載入影像</button>'
+        +'</div>'
+      +'</div>'
+      +'<div class="ark-wall-library-status" id="ark-wall-library-status">準備載入影像...</div>'
+      +'<div class="ark-wall-library-grid" id="ark-wall-library-grid"></div>'
+      +'<div class="ark-wall-library-more" id="ark-wall-library-more"></div>'
+    +'</div>'
     +'<div class="ark-wall-history-today">'
-      +'<div><div class="ark-wall-history-title">歷史的今日</div><div class="ark-wall-history-sub" id="ark-wall-history-status">列出今天同月同日的歷年照片。</div></div>'
-      +'<div class="ark-wall-library-grid ark-wall-history-grid" id="ark-wall-history-grid"></div>'
+      +'<div class="ark-wall-library-head">'
+        +'<div><div class="ark-wall-history-title">歷史上的今天</div><div class="ark-wall-history-sub" id="ark-wall-history-status">列出今天同月同日的歷年照片。</div></div>'
+        +'<button class="ark-wall-disclosure" type="button" onclick="toggleArkWallHistoryToday()" aria-expanded="'+(arkWallHistoryTodayOpen?'true':'false')+'" aria-controls="ark-wall-history-body"><span class="ark-wall-disclosure-icon">'+(arkWallHistoryTodayOpen?'−':'+')+'</span>'+(arkWallHistoryTodayOpen?'關閉':'展開')+'</button>'
+      +'</div>'
+      +'<div class="ark-wall-history-body" id="ark-wall-history-body"'+(arkWallHistoryTodayOpen?'':' hidden')+'>'
+        +'<div class="ark-wall-library-grid ark-wall-history-grid" id="ark-wall-history-grid"></div>'
+      +'</div>'
     +'</div>'
   +'</section>';
 }
@@ -7395,7 +7422,10 @@ function renderArkWallList(){
       +(arkWallView==='wall'?arkWallSectionHtml(libraryHtml,'timeline'):'');
     if(arkWallView==='wall'){
       if(!arkWallLibrarySummary)loadArkWallLibrarySummary().then(renderArkWallList).catch(function(err){arkWallLibraryStatus('時光長廊讀取失敗：'+(err&&err.message?err.message:err));});
-      else loadArkWallLibraryMonth();
+      else{
+        if(arkWallLibraryOpen)loadArkWallLibraryMonth();
+        else if(arkWallHistoryTodayOpen)loadArkWallHistoryToday();
+      }
     }
     return;
   }
@@ -7425,7 +7455,10 @@ function renderArkWallList(){
   syncArkWallSearchButton();
   if(arkWallView==='wall'){
     if(!arkWallLibrarySummary)loadArkWallLibrarySummary().then(renderArkWallList).catch(function(err){arkWallLibraryStatus('時光長廊讀取失敗：'+(err&&err.message?err.message:err));});
-    else loadArkWallLibraryMonth();
+    else{
+      if(arkWallLibraryOpen)loadArkWallLibraryMonth();
+      else if(arkWallHistoryTodayOpen)loadArkWallHistoryToday();
+    }
   }
 }
 
