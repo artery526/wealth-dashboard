@@ -3793,8 +3793,9 @@ function apiWriteTimeoutMs(action){
   if(action==='macroLongReportTriggerInstall')return 45000;
   return isApiWriteAction(action)?45000:15000;
 }
-function apiNonJsonMessage(text){
+function apiNonJsonMessage(text,context){
   if(/<!doctype html|<html[\s>]/i.test(String(text||''))){
+    if(context==='read')return '後端暫時回傳 Google 頁面，請再按一次更新。';
     return '後端已回傳 Google HTML 頁面，請稍後到紀錄確認是否已寫入，避免重複送出。';
   }
   return '回傳非JSON：'+String(text||'').slice(0,100);
@@ -3879,7 +3880,11 @@ function normalizeImageUrl(url){
 async function apiGet(params,timeoutMs){
   if(!API_URL)throw new Error('未設定 API 網址');
   var url=API_URL+'?'+Object.entries(params).map(([k,v])=>k+'='+encodeURIComponent(v)).join('&');
-  var r=await fetchWithTimeout(url,{cache:'no-store'},timeoutMs||15000);var d=await r.json();
+  var r=await fetchWithTimeout(url,{cache:'no-store',redirect:'follow'},timeoutMs||15000);
+  var text=await r.text();
+  if(!r.ok)throw new Error('讀取失敗：HTTP '+r.status);
+  var d;
+  try{d=parseApiJsonText(text)}catch(e){throw new Error(apiNonJsonMessage(text,'read'))}
   if(!d.ok)throw new Error(d.error||'讀取失敗');
   return d.data;
 }
