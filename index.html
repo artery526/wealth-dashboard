@@ -3477,6 +3477,7 @@ var BOOKING_FALLBACK_ACCOUNTS = ['💰Cash','💵國泰Stock','🔖中國信託'
 var holdingsCache = [];
 var dividendCenterCache = null;
 var dividendCenterFetchedAt = 0;
+var DIVIDEND_CENTER_TIMEOUT_MS = 45000;
 var bookingDividendHiddenRows = {};
 var bookingDividendExpanded = false;
 var bookingDividendPickerOpen = false;
@@ -7985,7 +7986,7 @@ async function loadDividendCenter(force){
     updateBookingPendingBadges(dividendCenterCache);
     return dividendCenterCache;
   }
-  var data=await apiGet({action:'dividendCenter'});
+  var data=await apiGet({action:'dividendCenter'},DIVIDEND_CENTER_TIMEOUT_MS);
   dividendCenterCache=data||{rows:[],pending:[],holdingTradePending:[],monthlyTotal:0,settingFx:32.5,dividendHoldings:[]};
   dividendCenterFetchedAt=now;
   updateBookingPendingBadges(dividendCenterCache);
@@ -8531,8 +8532,10 @@ async function loadDividendCenterPanel(force){
     initDividendEntryForm(data);
     setEmpireCardStatus('domestic','ok','持股備忘錄已載入');
   }catch(e){
-    setEmpireCardStatus('domestic','err',e.message||'持股備忘錄讀取失敗');
-    el.innerHTML=`<div style="color:var(--coral);font-family:var(--sans);font-size:12px;padding:12px 0">${esc(e.message)}</div>`;
+    var msg=(e&&e.message)||'持股備忘錄讀取失敗';
+    if(msg.indexOf('連線逾時')>=0)msg='持股備忘錄讀取較慢，請再按一次重新整理。';
+    setEmpireCardStatus('domestic','err',msg);
+    el.innerHTML=`<div style="color:var(--coral);font-family:var(--sans);font-size:12px;padding:12px 0">${esc(msg)}</div>`;
   }
 }
 
