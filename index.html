@@ -9130,7 +9130,25 @@ async function deleteDividendPending(key,btn){
     refreshBookingDividendPendingView();
     showMsg('dividend-center-msg','已刪除待入帳配息','ok');
   }catch(err){
-    showMsg('dividend-center-msg',(err&&err.message)||'刪除失敗','err');
+    var msg=(err&&err.message)||'刪除失敗';
+    if(msg.indexOf('找不到待刪除的配息資料')>=0){
+      bookingDividendHiddenRows[String(key)]=true;
+      invalidateDividendCenter();
+      try{
+        var refreshed=await loadDividendCenter(true);
+        var refreshedCenter=document.getElementById('dividend-center-content');
+        if(refreshedCenter){
+          refreshedCenter.innerHTML=renderDividendCenter(refreshed,true);
+          initDividendEntryForm(refreshed);
+        }
+        refreshBookingDividendPendingView();
+      }catch(refreshErr){
+        refreshBookingDividendPendingView();
+      }
+      showMsg('dividend-center-msg','這筆配息已刪除，清單已更新','ok');
+    }else{
+      showMsg('dividend-center-msg',msg,'err');
+    }
   }finally{
     if(btn){btn.disabled=false;btn.textContent=oldText||'刪除';}
   }
