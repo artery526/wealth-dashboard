@@ -3880,14 +3880,41 @@ function normalizeImageUrl(url){
 // ══════════════════════════════════════════
 async function apiGet(params,timeoutMs){
   if(!API_URL)throw new Error('未設定 API 網址');
-  var url=API_URL+'?'+Object.entries(params).map(([k,v])=>k+'='+encodeURIComponent(v)).join('&');
-  var r=await fetchWithTimeout(url,{cache:'no-store',redirect:'follow'},timeoutMs||15000);
-  var text=await r.text();
-  if(!r.ok)throw new Error('讀取失敗：HTTP '+r.status);
-  var d;
-  try{d=parseApiJsonText(text)}catch(e){throw new Error(apiNonJsonMessage(text,'read'))}
-  if(!d.ok)throw new Error(d.error||'讀取失敗');
-  return d.data;
+  var baseParams=Object.assign({},params||{});
+  var attempts=String(baseParams.action||'')==='todayCalendar'||String(baseParams.action||'')==='todayTasks'?3:1;
+  var lastErr=null;
+  for(var attempt=0;attempt<attempts;attempt++){
+    var requestParams=Object.assign({},baseParams,{_ts:Date.now(),_try:attempt+1});
+    var url=API_URL+'?'+Object.entries(requestParams).map(([k,v])=>k+'='+encodeURIComponent(v)).join('&');
+    try{
+      var r=await fetchWithTimeout(url,{cache:'no-store',redirect:'follow'},timeoutMs||15000);
+      var text=await r.text();
+      if(!r.ok){
+        var httpErr=new Error('讀取失敗：HTTP '+r.status);
+        httpErr.status=r.status;
+        throw httpErr;
+      }
+      var d;
+      try{d=parseApiJsonText(text)}catch(e){throw new Error(apiNonJsonMessage(text,'read'))}
+      if(!d.ok)throw new Error(d.error||'讀取失敗');
+      return d.data;
+    }catch(err){
+      lastErr=err;
+      if(attempt>=attempts-1||!isTransientApiError(err))break;
+      await delay(650*(attempt+1));
+    }
+  }
+  throw lastErr||new Error('讀取失敗');
+}
+
+function isTransientApiError(err){
+  var msg=String(err&&err.message||'');
+  var status=Number(err&&err.status);
+  return status===404||status===429||status===502||status===503||status===504||/HTTP (404|429|502|503|504)|Failed to fetch|Load failed|NetworkError|連線逾時/.test(msg);
+}
+
+function delay(ms){
+  return new Promise(function(resolve){setTimeout(resolve,ms);});
 }
 
 function fetchWithTimeout(url,options,timeoutMs){
