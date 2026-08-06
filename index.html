@@ -5990,6 +5990,8 @@ async function submitMedicalTarotRecord(e){
       keywords:_selectedTarotKws,
       tarotNotes:tarotNotes
     });
+    _mcsCache=null;
+    _mcsPromise=null;
     setTarotStatus('已同步抽牌紀錄：牌卡統計 +'+(data.cardRows||0)+' 列；奧修禪卡統計 +'+(data.oshoRows||0)+' 列','ok');
     if(btn)btn.disabled=false;
   }catch(err){
@@ -14040,17 +14042,19 @@ function renderLordPanel(d){
 // ── 牌卡統計分頁 (醫館第三頁) ────────────────────────────────
 // ══════════════════════════════════════════════════════════════
 var _mcsCache=null; // 全域快取，避免重複 fetch
+var _mcsPromise=null;
 var _mcsCardImages={};
 var _mcsOracleImages={};
+var MCS_MONTHS_LIMIT=12;
 
 function mcsEsc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
 function mcsConvertDriveUrl(url){
   if(!url)return url;
   var m1=url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
-  if(m1)return 'https://drive.google.com/thumbnail?id='+m1[1]+'&sz=w400';
+  if(m1)return 'https://drive.google.com/thumbnail?id='+m1[1]+'&sz=w160';
   var m2=url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-  if(m2)return 'https://drive.google.com/thumbnail?id='+m2[1]+'&sz=w400';
+  if(m2)return 'https://drive.google.com/thumbnail?id='+m2[1]+'&sz=w160';
   return url;
 }
 
@@ -14072,25 +14076,58 @@ function mcsFormatMonth(m){
   return p.length===2?p[0]+'年'+parseInt(p[1])+'月':m;
 }
 
-async function initMedicalCardStats(){
-  // 載入卡片圖案（若尚未載入）
-  if(!Object.keys(_mcsCardImages).length||!Object.keys(_mcsOracleImages).length){
-    try{
-      var optData=await medicalPost({_action:'getOptions'});
-      var opts=optData.options||{};
-      if(opts.cardImages&&typeof opts.cardImages==='object')_mcsCardImages=opts.cardImages;
-      if(opts.oracleImages&&typeof opts.oracleImages==='object')_mcsOracleImages=opts.oracleImages;
-    }catch(e){console.warn('mcs: getOptions failed',e);}
+function mcsHasImageMaps(){
+  return Object.keys(_mcsCardImages).length&&Object.keys(_mcsOracleImages).length;
+}
+
+function mcsApplyImageOptions(options){
+  options=options||{};
+  if(options.cardImages&&typeof options.cardImages==='object')_mcsCardImages=options.cardImages;
+  if(options.oracleImages&&typeof options.oracleImages==='object')_mcsOracleImages=options.oracleImages;
+}
+
+function mcsLoadCardImages(){
+  if(mcsHasImageMaps())return Promise.resolve(true);
+  if(medicalOptionsCache){
+    mcsApplyImageOptions(medicalOptionsCache);
+    return Promise.resolve(mcsHasImageMaps());
   }
+  return loadMedicalOptions().then(function(options){
+    mcsApplyImageOptions(options);
+    return mcsHasImageMaps();
+  }).catch(function(e){
+    console.warn('mcs: getOptions failed',e);
+    return false;
+  });
+}
+
+async function initMedicalCardStats(){
+  var imagePromise=mcsLoadCardImages();
   // 若已有快取直接渲染
-  if(_mcsCache){mcsPopulateMonthSel(_mcsCache);return;}
+  if(_mcsCache){
+    mcsPopulateMonthSel(_mcsCache);
+    imagePromise.then(function(loaded){
+      if(loaded){
+        var sel=document.getElementById('mcs-month-sel');
+        mcRenderByMonth(sel&&sel.value);
+      }
+    });
+    return;
+  }
   // 顯示載入狀態
   var charts=['mcs-osho-chart','mcs-tarot-chart','mcs-osho-records','mcs-tarot-records'];
   charts.forEach(function(id){var el=document.getElementById(id);if(el)el.innerHTML='<div class="mcs-empty">⏳ 載入中…</div>';});
   try{
-    var result=await medicalPost({_action:'getCardStats'});
+    if(!_mcsPromise)_mcsPromise=medicalPost({_action:'getCardStats',monthsLimit:MCS_MONTHS_LIMIT}).finally(function(){_mcsPromise=null;});
+    var result=await _mcsPromise;
     _mcsCache=result.cardStats||{tarot:[],osho:[]};
     mcsPopulateMonthSel(_mcsCache);
+    imagePromise.then(function(loaded){
+      if(loaded&&_mcsCache){
+        var sel=document.getElementById('mcs-month-sel');
+        mcRenderByMonth(sel&&sel.value);
+      }
+    });
   }catch(err){
     console.error('mcs: getCardStats failed',err);
     charts.forEach(function(id){
@@ -14172,7 +14209,7 @@ function mcsRenderChart(containerId,rows,emptyText,imagesMap,sortMode){
     var url=rawUrl?mcsConvertDriveUrl(rawUrl):'';
     var pct=Math.round(info.count/max*100);
     var imgHtml=url
-      ?'<img class="mcs-card-thumb" src="'+mcsEsc(url)+'" alt="'+mcsEsc(label)+'" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">'
+      ?'<img class="mcs-card-thumb" src="'+mcsEsc(url)+'" alt="'+mcsEsc(label)+'" loading="lazy" decoding="async" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">'
         +'<div class="mcs-card-thumb-ph" style="display:none">🃏</div>'
       :'<div class="mcs-card-thumb-ph">🃏</div>';
     return '<div class="mcs-card-item">'
