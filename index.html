@@ -3947,16 +3947,24 @@ async function apiPost(body){
     return apiPostJson(body,jsonTimeout);
   }
   var params=Object.assign({},body,{token:WRITE_TOKEN});
-  var qs=Object.entries(params).filter(kv=>kv[1]!==undefined&&kv[1]!==null&&kv[1]!=='').map(kv=>encodeURIComponent(kv[0])+'='+encodeURIComponent(kv[1])).join('&');
-  var r=await fetchWithTimeout(API_URL+'?'+qs,{redirect:'follow'},apiWriteTimeoutMs(body&&body.action||''));
-  var text=await r.text();var d;
-  try{d=parseApiJsonText(text)}catch(e){throw new Error(apiNonJsonMessage(text))}
+  var d=await apiPostGetFallback(params,apiWriteTimeoutMs(body&&body.action||''));
   if(!d.ok)throw new Error(d.error||'寫入失敗');
   if(isApiWriteAction(body.action||'')){
     invalidateFinanceDashboardCache();
   }
   if(/^(macroWebhook|macroLongReportGenerate|macroLongReportTriggerInstall)$/.test(body.action||''))invalidateMarketDashboardCache();
   return d.data;
+}
+async function apiPostGetFallback(params,timeoutMs){
+  var qs=Object.entries(params||{}).filter(kv=>kv[1]!==undefined&&kv[1]!==null&&kv[1]!=='').map(kv=>encodeURIComponent(kv[0])+'='+encodeURIComponent(kv[1])).join('&');
+  var r=await fetchWithTimeout(API_URL+'?'+qs,{redirect:'follow'},timeoutMs||15000);
+  var text=await r.text();
+  if(!r.ok){
+    var httpErr=new Error('讀取失敗：HTTP '+r.status);
+    httpErr.status=r.status;
+    throw httpErr;
+  }
+  try{return parseApiJsonText(text)}catch(e){throw new Error(apiNonJsonMessage(text))}
 }
 async function apiPostJson(body,timeoutMs){
   WRITE_TOKEN=cleanToken(WRITE_TOKEN);
@@ -3978,13 +3986,26 @@ async function apiPostJson(body,timeoutMs){
     throw e;
   }
   var text=await r.text();var d;
-  try{d=parseApiJsonText(text)}catch(e){throw new Error(apiNonJsonMessage(text))}
+  if(!r.ok&&shouldRetryPostAsGet(body&&body.action,r.status,text)){
+    d=await apiPostGetFallback(payload,timeoutMs||15000);
+  }else{
+    try{d=parseApiJsonText(text)}catch(e){
+      if(shouldRetryPostAsGet(body&&body.action,r&&r.status,text))d=await apiPostGetFallback(payload,timeoutMs||15000);
+      else throw new Error(apiNonJsonMessage(text));
+    }
+  }
   if(!d.ok)throw new Error(d.error||'寫入失敗');
   if(isApiWriteAction(body.action||'')){
     invalidateFinanceDashboardCache();
   }
   if(/^(macroWebhook)$/.test(body.action||''))invalidateMarketDashboardCache();
   return d.data;
+}
+function shouldRetryPostAsGet(action,status,text){
+  action=String(action||'');
+  if(!/^(advisorAiParse|advisorDividendMemo|expense|income|transfer)$/.test(action))return false;
+  if(Number(status)===404||Number(status)===405)return true;
+  return /<!doctype html|<html[\s>]|not found/i.test(String(text||''));
 }
 
 var ADVISOR_REMINDER_CACHE_KEY='empire_today_advisor_reminder_v1';
