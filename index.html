@@ -1668,6 +1668,8 @@ body::after{
 .kpi-label{font-family:var(--sans);font-size:9px;color:#5a4018;letter-spacing:.5px;margin-bottom:5px;text-transform:uppercase}
 .kpi-val{font-family:var(--mono);font-size:15px;font-weight:400;color:var(--ink)}
 .kpi-val.up{color:var(--teal)}.kpi-val.down{color:var(--coral)}.kpi-val.gold{color:var(--gold)}
+.kpi-sub{margin-top:4px;font-family:var(--mono);font-size:11px;line-height:1.25;color:#8d6a2a;white-space:nowrap}
+.kpi-sub.up{color:var(--teal)}.kpi-sub.down{color:var(--coral)}
 @media(max-width:680px){.kpi-row{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
 /* ── Quick Booking ── */
@@ -4079,6 +4081,29 @@ function advisorSnapshotDelta(snapshot,key){
   if(isNaN(latestValue)||isNaN(previousValue)||!isFinite(latestValue)||!isFinite(previousValue))return null;
   return latestValue-previousValue;
 }
+function treasuryDebtNetAssetKpi(assetSnapshot){
+  var latest=assetSnapshot&&assetSnapshot.latest;
+  var previous=assetSnapshot&&assetSnapshot.previous;
+  var latestPct=Number(latest&&latest.debtToNetAssetPct);
+  if(isNaN(latestPct)||!isFinite(latestPct)){
+    var latestRatio=Number(latest&&latest.debtToNetAsset);
+    latestPct=!isNaN(latestRatio)&&isFinite(latestRatio)?latestRatio*100:null;
+  }
+  if(latestPct===null||latestPct===undefined||isNaN(latestPct)||!isFinite(latestPct))return {html:'',delta:null};
+  var previousPct=Number(previous&&previous.debtToNetAssetPct);
+  if(isNaN(previousPct)||!isFinite(previousPct)){
+    var previousRatio=Number(previous&&previous.debtToNetAsset);
+    previousPct=!isNaN(previousRatio)&&isFinite(previousRatio)?previousRatio*100:null;
+  }
+  var delta=(!isNaN(previousPct)&&isFinite(previousPct))?latestPct-previousPct:0;
+  var roundedDelta=Math.round(delta*10)/10;
+  var deltaText=(roundedDelta>=0?'+':'')+roundedDelta.toFixed(1)+'%';
+  var cls=roundedDelta<0?'down':'up';
+  return {
+    html:'<div class="kpi-sub '+cls+'">債／淨資 '+latestPct.toFixed(1)+'% ('+deltaText+')</div>',
+    delta:delta
+  };
+}
 function advisorSnapshotDeltaFullText(snapshot,key){
   var latest=snapshot&&snapshot.latest;
   var previous=snapshot&&snapshot.previous;
@@ -6346,13 +6371,14 @@ function renderAccounts(accs,monthly,el,financeStatus,assetSnapshot,bills,stale)
     </details>`;
 
   var statusHtml=renderFinanceStatusHud(financeStatus);
+  var debtNetAssetKpi=treasuryDebtNetAssetKpi(assetSnapshot);
   var kpisHtml=`
     <div class="kpi-row">
       <div class="kpi"><div class="kpi-label">今日收入</div><div class="kpi-val up">${fmtFull(monthly.todayIncome||0)}</div></div>
       <div class="kpi"><div class="kpi-label">今日支出</div><div class="kpi-val down">${fmtFull(monthly.todayExpense||0)}</div></div>
       <div class="kpi"><div class="kpi-label">本月收入</div><div class="kpi-val up">${fmtFull(monthly.income)}</div></div>
       <div class="kpi"><div class="kpi-label">本月支出</div><div class="kpi-val down">${fmtFull(monthly.expense)}</div></div>
-      <div class="kpi"><div class="kpi-label">儲蓄率</div><div class="kpi-val gold">${monthly.savingRate||'—'}</div></div>
+      <div class="kpi"><div class="kpi-label">儲蓄率</div><div class="kpi-val gold">${monthly.savingRate||'—'}</div>${debtNetAssetKpi.html}</div>
     </div>`;
   var billsHtml=renderBillReservoirHtml(bills);
 
