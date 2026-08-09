@@ -419,7 +419,7 @@ body::after{
 }
 .today-agenda-error{color:var(--coral)}
 .agenda-item{
-  display:grid;grid-template-columns:68px minmax(0,1fr);gap:10px;align-items:start;
+  display:grid;grid-template-columns:68px minmax(0,1fr) auto;gap:10px;align-items:start;
   padding:10px 0 11px;border-bottom:1px solid rgba(232,192,80,.18);
   background:linear-gradient(90deg,rgba(255,246,204,.08),transparent 44%,rgba(92,56,16,.08));
 }
@@ -437,6 +437,19 @@ body::after{
 .agenda-meta{
   margin-top:4px;font-family:var(--sans);font-size:11px;color:#bda36d;line-height:1.55;
 }
+.agenda-delete-btn{align-self:start;border:1px solid rgba(190,76,55,.5);border-radius:4px;background:rgba(102,32,21,.24);color:#e8a58b;font-family:var(--sans);font-size:11px;padding:4px 7px;cursor:pointer}
+.agenda-delete-btn:hover{background:rgba(150,47,28,.4);color:#fff0df}
+.calendar-create-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr)) auto;gap:6px;margin:2px 0 4px;padding-bottom:4px}
+.calendar-create-form input,.calendar-create-form textarea{min-width:0;border:1px solid rgba(232,192,80,.3);border-radius:4px;background:rgba(0,0,0,.28);color:#fff2c4;font-family:var(--sans);font-size:12px;padding:7px 8px}
+.calendar-create-form input::placeholder,.calendar-create-form textarea::placeholder{color:#9b8459}
+.calendar-create-title{grid-column:1/-1}
+.calendar-create-location{grid-column:1/-1}
+.calendar-create-description{grid-column:1/-1;min-height:42px;resize:vertical}
+.calendar-create-form label{display:flex;align-items:center;gap:5px;color:#bda36d;font-family:var(--sans);font-size:11px;white-space:nowrap}
+.calendar-create-form input[type="checkbox"]{accent-color:#c79b43}
+.calendar-create-form input[type="time"]:disabled{opacity:.45;cursor:not-allowed}
+.calendar-create-btn{align-self:end;border:1px solid rgba(232,192,80,.5);border-radius:4px;background:rgba(184,137,46,.22);color:#f0dfa0;font-family:var(--sans);font-size:11px;font-weight:900;padding:6px 9px;cursor:pointer}
+.calendar-create-btn:disabled,.agenda-delete-btn:disabled{opacity:.5;cursor:wait}
 .task-item{
   display:grid;grid-template-columns:24px minmax(0,1fr) auto;gap:10px;align-items:start;
   padding:9px 0 10px;border-bottom:1px solid rgba(232,192,80,.14);
@@ -3864,7 +3877,7 @@ function parseApiJsonText(text){
   throw new Error('API returned non-JSON response');
 }
 function isApiWriteAction(action){
-  return /^(expense|income|transfer|transactionUndo|stockTradeVoid|dividendEntry|dividendDelete|holdingTradeEntry|holdingTradeDelete|taskCreate|taskDelete|macroLongReportGenerate|macroLongReportTriggerInstall)$/.test(action||'');
+  return /^(expense|income|transfer|transactionUndo|stockTradeVoid|dividendEntry|dividendDelete|holdingTradeEntry|holdingTradeDelete|calendarCreate|calendarDelete|taskCreate|taskDelete|macroLongReportGenerate|macroLongReportTriggerInstall)$/.test(action||'');
 }
 function apiWriteTimeoutMs(action){
   action=String(action||'');
@@ -5830,7 +5843,8 @@ async function loadTodayCalendar(mode){
 }
 
 function renderCalendarAgenda(events,mode){
-  if(!events.length)return '<div class="today-agenda-empty">'+(mode==='week'?'七日內無行程。':(mode==='tomorrow'?'明日無行程。':'今日無行程。'))+'</div>';
+  var createForm=mode==='week'?'':renderGoogleCalendarCreateForm(mode);
+  if(!events.length)return createForm+'<div class="today-agenda-empty">'+(mode==='week'?'七日內無行程。':(mode==='tomorrow'?'明日無行程。':'今日無行程。'))+'</div>';
   if(mode==='week'){
     var grouped={};
     var order=[];
@@ -5847,7 +5861,35 @@ function renderCalendarAgenda(events,mode){
         grouped[key].events.map(renderCalendarEvent).join('');
     }).join('');
   }
-  return events.map(renderCalendarEvent).join('');
+  return createForm+events.map(renderCalendarEvent).join('');
+}
+
+function agendaFormDate_(mode){
+  if(mode!=='tomorrow')return today();
+  var d=new Date();
+  d.setDate(d.getDate()+1);
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+function renderGoogleCalendarCreateForm(mode){
+  return '<form class="calendar-create-form" onsubmit="submitGoogleCalendarEvent(event)">'+
+    '<input class="calendar-create-title" name="title" type="text" maxlength="200" placeholder="新增行程標題" aria-label="新增行程標題" required>'+
+    '<input name="date" type="date" aria-label="行程日期" value="'+agendaFormDate_(mode)+'" required>'+
+    '<label><input name="allDay" type="checkbox" onchange="toggleGoogleCalendarAllDay(this)">整日行程</label>'+
+    '<input name="startTime" type="time" aria-label="開始時間" value="09:00" required>'+
+    '<input name="endTime" type="time" aria-label="結束時間" value="10:00" required>'+
+    '<button class="calendar-create-btn" type="submit">新增</button>'+
+    '<input class="calendar-create-location" name="location" type="text" maxlength="300" placeholder="地點（可選）" aria-label="地點（可選）">'+
+    '<textarea class="calendar-create-description" name="description" maxlength="2000" placeholder="備註（可選）" aria-label="備註（可選）"></textarea>'+
+  '</form>';
+}
+
+function toggleGoogleCalendarAllDay(checkbox){
+  var form=checkbox&&checkbox.form;
+  if(!form)return;
+  ['startTime','endTime'].forEach(function(name){
+    if(form.elements[name])form.elements[name].disabled=checkbox.checked;
+  });
 }
 
 function renderCalendarEvent(ev){
@@ -5861,7 +5903,49 @@ function renderCalendarEvent(ev){
         <div class="agenda-title">${esc(ev.title||'未命名行程')}</div>
         ${meta.length?`<div class="agenda-meta">${meta.join('<br>')}</div>`:''}
       </div>
+      <button class="agenda-delete-btn" type="button" onclick="deleteGoogleCalendarEvent(this,'${esc(ev.eventId||'')}','${esc(ev.calendarId||'')}')">刪除</button>
     </div>`;
+}
+
+async function submitGoogleCalendarEvent(event){
+  event.preventDefault();
+  if(!advisorAIRequireWrite())return;
+  var form=event.currentTarget;
+  var allDay=!!(form.elements.allDay&&form.elements.allDay.checked);
+  var payload={
+    action:'calendarCreate',
+    title:form.elements.title.value.trim(),
+    date:form.elements.date.value||'',
+    allDay:allDay?'1':'0',
+    startTime:allDay?'':(form.elements.startTime.value||''),
+    endTime:allDay?'':(form.elements.endTime.value||''),
+    location:form.elements.location.value.trim(),
+    description:form.elements.description.value.trim()
+  };
+  if(!payload.title||!payload.date){alert('請填寫行程標題與日期');return;}
+  if(!allDay&&(!payload.startTime||!payload.endTime)){alert('請填寫開始與結束時間，或勾選整日行程');return;}
+  var btn=form.querySelector('button[type="submit"]');
+  if(btn){btn.disabled=true;btn.textContent='新增中';}
+  try{
+    await apiPost(payload);
+    await refreshAgendaTaskViews();
+  }catch(err){
+    alert(err.message||'新增行程失敗');
+    if(btn){btn.disabled=false;btn.textContent='新增';}
+  }
+}
+
+async function deleteGoogleCalendarEvent(btn,eventId,calendarId){
+  if(!eventId||!calendarId||!advisorAIRequireWrite())return;
+  if(!confirm('確定刪除此 Google Calendar 行程？'))return;
+  if(btn){btn.disabled=true;btn.textContent='刪除中';}
+  try{
+    await apiPost({action:'calendarDelete',eventId:eventId,calendarId:calendarId});
+    await refreshAgendaTaskViews();
+  }catch(err){
+    alert(err.message||'刪除行程失敗');
+    if(btn){btn.disabled=false;btn.textContent='刪除';}
+  }
 }
 
 function renderGoogleTasks(tasks){
