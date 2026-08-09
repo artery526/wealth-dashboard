@@ -438,7 +438,7 @@ body::after{
   margin-top:4px;font-family:var(--sans);font-size:11px;color:#bda36d;line-height:1.55;
 }
 .task-item{
-  display:grid;grid-template-columns:24px minmax(0,1fr);gap:10px;align-items:start;
+  display:grid;grid-template-columns:24px minmax(0,1fr) auto;gap:10px;align-items:start;
   padding:9px 0 10px;border-bottom:1px solid rgba(232,192,80,.14);
   background:linear-gradient(90deg,rgba(232,192,80,.07),transparent 42%,rgba(255,246,204,.04));
 }
@@ -449,6 +449,13 @@ body::after{
 }
 .task-title{font-family:var(--font);font-size:15px;font-weight:900;color:#fff2c4;line-height:1.5}
 .task-meta{margin-top:4px;font-family:var(--sans);font-size:11px;color:#bda36d;line-height:1.55}
+.task-delete-btn{border:1px solid rgba(190,76,55,.5);border-radius:4px;background:rgba(102,32,21,.24);color:#e8a58b;font-family:var(--sans);font-size:11px;padding:4px 7px;cursor:pointer}
+.task-delete-btn:hover{background:rgba(150,47,28,.4);color:#fff0df}
+.task-create-form{display:grid;grid-template-columns:minmax(0,1fr) 120px auto;gap:6px;margin:2px 0 4px}
+.task-create-form input{min-width:0;border:1px solid rgba(232,192,80,.3);border-radius:4px;background:rgba(0,0,0,.28);color:#fff2c4;font-family:var(--sans);font-size:12px;padding:7px 8px}
+.task-create-form input::placeholder{color:#9b8459}
+.task-create-btn{border:1px solid rgba(232,192,80,.5);border-radius:4px;background:rgba(184,137,46,.22);color:#f0dfa0;font-family:var(--sans);font-size:11px;font-weight:900;padding:6px 9px;cursor:pointer}
+.task-create-btn:disabled,.task-delete-btn:disabled{opacity:.5;cursor:wait}
 .home-agenda{
   width:min(1026px,100%);
   margin:0 auto 22px;
@@ -3851,7 +3858,7 @@ function parseApiJsonText(text){
   throw new Error('API returned non-JSON response');
 }
 function isApiWriteAction(action){
-  return /^(expense|income|transfer|transactionUndo|stockTradeVoid|dividendEntry|dividendDelete|holdingTradeEntry|holdingTradeDelete|macroLongReportGenerate|macroLongReportTriggerInstall)$/.test(action||'');
+  return /^(expense|income|transfer|transactionUndo|stockTradeVoid|dividendEntry|dividendDelete|holdingTradeEntry|holdingTradeDelete|taskCreate|taskDelete|macroLongReportGenerate|macroLongReportTriggerInstall)$/.test(action||'');
 }
 function apiWriteTimeoutMs(action){
   action=String(action||'');
@@ -5645,6 +5652,10 @@ function refreshHomeAgenda(){
   return homeAgendaMode==='briefing'?loadHomeBriefing():loadHomeAgenda();
 }
 
+async function refreshAgendaTaskViews(){
+  await Promise.allSettled([loadTodayCalendar(currentAgendaMode),refreshHomeAgenda()]);
+}
+
 async function loadHomeAgenda(){
   var body=document.getElementById('home-agenda-body');
   var btn=document.getElementById('home-agenda-refresh');
@@ -5848,8 +5859,12 @@ function renderCalendarEvent(ev){
 }
 
 function renderGoogleTasks(tasks){
-  if(!tasks.length)return '<div class="today-agenda-empty">目前沒有未完成待辦。</div>';
-  return tasks.map(function(task){
+  var form='<form class="task-create-form" onsubmit="submitGoogleTask(event)">'+
+    '<input name="title" type="text" maxlength="200" placeholder="新增待辦事項" aria-label="新增待辦事項" required>'+
+    '<input name="due" type="date" aria-label="截止日期">'+
+    '<button class="task-create-btn" type="submit">新增</button></form>';
+  if(!tasks.length)return form+'<div class="today-agenda-empty">目前沒有未完成待辦。</div>';
+  return form+tasks.map(function(task){
     var meta=[];
     if(task.dueText)meta.push('期限 '+esc(task.dueText));
     if(task.taskListName)meta.push('清單 '+esc(task.taskListName));
@@ -5860,8 +5875,40 @@ function renderGoogleTasks(tasks){
         <div class="task-title">${esc(task.title||'未命名待辦')}</div>
         ${meta.length?`<div class="task-meta">${meta.join('<br>')}</div>`:''}
       </div>
+      <button class="task-delete-btn" type="button" onclick="deleteGoogleTask(this,'${esc(task.id||'')}','${esc(task.taskListId||'')}')">刪除</button>
     </div>`;
   }).join('');
+}
+
+async function submitGoogleTask(event){
+  event.preventDefault();
+  if(!advisorAIRequireWrite())return;
+  var form=event.currentTarget;
+  var title=form.elements.title.value.trim();
+  var due=form.elements.due.value||'';
+  var btn=form.querySelector('button[type="submit"]');
+  if(!title)return;
+  if(btn){btn.disabled=true;btn.textContent='新增中';}
+  try{
+    await apiPost({action:'taskCreate',title:title,due:due});
+    await refreshAgendaTaskViews();
+  }catch(err){
+    alert(err.message||'新增待辦事項失敗');
+    if(btn){btn.disabled=false;btn.textContent='新增';}
+  }
+}
+
+async function deleteGoogleTask(btn,taskId,taskListId){
+  if(!taskId||!taskListId||!advisorAIRequireWrite())return;
+  if(!confirm('確定刪除此待辦事項？'))return;
+  if(btn){btn.disabled=true;btn.textContent='刪除中';}
+  try{
+    await apiPost({action:'taskDelete',taskId:taskId,taskListId:taskListId});
+    await refreshAgendaTaskViews();
+  }catch(err){
+    alert(err.message||'刪除待辦事項失敗');
+    if(btn){btn.disabled=false;btn.textContent='刪除';}
+  }
 }
 
 async function loadMedicalOptions(){
