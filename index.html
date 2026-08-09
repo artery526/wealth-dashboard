@@ -8512,7 +8512,7 @@ async function loadRecentBooking(){
   if(!API_URL){setEmpireCardStatus('domestic','err','尚未設定 API');el.innerHTML=setupNotice();return}
   setEmpireCardStatus('domestic','pending');
   try{
-    var txns=await apiGet({action:'transactions',ym:currentYM()});
+    var txns=await apiGet({action:'transactions',ym:currentYM(),recentDays:14});
     bookingRecentRows=Array.isArray(txns)?txns:[];
     setEmpireCardStatus('domestic','ok','最近記錄已載入');
     if(txns&&txns.length){
