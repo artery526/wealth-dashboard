@@ -2038,6 +2038,8 @@ body::after{
 .market-metric-l{font-family:var(--sans);font-size:9px;color:#5a4018;letter-spacing:1px}
 .market-metric-v{font-family:var(--mono);font-size:13px;color:var(--gold);font-weight:700;margin-top:2px}
 .market-metric-v.up{color:var(--teal)}.market-metric-v.down{color:var(--coral)}
+.market-ma-inline{font-size:10px;color:#8d7138;white-space:nowrap}
+.market-ma-inline.up{color:var(--teal)}.market-ma-inline.down{color:var(--coral)}
 .market-metric-d{margin-top:4px;font-family:var(--sans);font-size:10px;font-weight:900;color:#8d7138;line-height:1.35}
 .market-metric-d.up{color:var(--teal)}.market-metric-d.down{color:var(--coral)}
 .market-note{font-family:var(--sans);font-size:9px;color:#7a6030;line-height:1.45}
@@ -12015,6 +12017,7 @@ function renderTWSECard(r){
   // 點位格式：加權指數通常 > 1000，用整數+小數兩位
   var priceStr=Number(r.price||0).toLocaleString('zh-TW',{minimumFractionDigits:2,maximumFractionDigits:2});
   var ma20Str=Number(r.ma20||0).toLocaleString('zh-TW',{minimumFractionDigits:2,maximumFractionDigits:2});
+  var maArrow=maGap>=0?'↑':'↓';
   var prevStr=Number(r.previous||0).toLocaleString('zh-TW',{minimumFractionDigits:2,maximumFractionDigits:2});
   var marginText=(r.marginBalanceText||'').trim();
   if(!marginText&&r.marginBalance)marginText=Number(r.marginBalance||0).toLocaleString('zh-TW');
@@ -12034,15 +12037,11 @@ function renderTWSECard(r){
     <div class="market-metrics twse">
       <div class="market-metric">
         <div class="market-metric-l">目前點位</div>
-        <div class="market-metric-v">${priceStr}</div>
+        <div class="market-metric-v">${priceStr} <span class="market-ma-inline ${maGap>=0?'up':'down'}">(${ma20Str} ${maArrow})</span></div>
       </div>
       <div class="market-metric">
         <div class="market-metric-l">日漲跌</div>
         <div class="market-metric-v ${up?'up':'down'}">${up?'+':''}${ch.toFixed(2)}<br>${up?'+':''}${cp.toFixed(2)}%</div>
-      </div>
-      <div class="market-metric">
-        <div class="market-metric-l">20MA</div>
-        <div class="market-metric-v ${maGap>=0?'up':'down'}">${ma20Str}</div>
       </div>
       <div class="market-metric">
         <div class="market-metric-l">台股融資餘額</div>
@@ -12089,6 +12088,7 @@ function renderMarketDashboard(data,el){
     var changePct=parseFloat(r.changePct)||0;
     var maGap=parseFloat(r.maGapPct)||0;
     var changeCls=change>=0?'up':'down';
+    var maArrow=maGap>=0?'↑':'↓';
     return `<div class="market-row">
       <div class="market-row-head">
         <div>
@@ -12103,12 +12103,8 @@ function renderMarketDashboard(data,el){
           <div class="market-metric-v ${changeCls}">${change>=0?'+':''}${change.toFixed(2)} / ${changePct>=0?'+':''}${changePct.toFixed(2)}%</div>
         </div>
         <div class="market-metric">
-          <div class="market-metric-l">20MA</div>
-          <div class="market-metric-v ${maGap>=0?'up':'down'}">${Number(r.ma20||0).toFixed(2)}</div>
-        </div>
-        <div class="market-metric">
           <div class="market-metric-l">目前數值</div>
-          <div class="market-metric-v">${Number(r.price||0).toFixed(2)}</div>
+          <div class="market-metric-v">${Number(r.price||0).toFixed(2)} <span class="market-ma-inline ${maGap>=0?'up':'down'}">(${Number(r.ma20||0).toFixed(2)} ${maArrow})</span></div>
         </div>
       </div>
       <div class="market-note">${esc(r.status)} · ${esc(r.maDirection)}${r.note?'｜'+esc(r.note):''}</div>
