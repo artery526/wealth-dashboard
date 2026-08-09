@@ -2053,6 +2053,15 @@ body::after{
 .battle-section-title{font-family:var(--sans);font-size:15px;font-weight:900;color:var(--gold2);letter-spacing:1px;margin-bottom:10px}
 .battle-section-body{font-family:var(--sans);font-size:15px;color:var(--ink);line-height:1.75;white-space:pre-wrap}
 .battle-empty{font-family:var(--sans);font-size:14px;color:#7a6030;text-align:center;padding:18px 8px}
+.battle-etf-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px}
+.battle-etf-meta{font-family:var(--mono);font-size:11px;color:#7a6030;margin-top:3px;line-height:1.45}
+.battle-etf-comment{font-family:var(--sans);font-size:14px;line-height:1.7;color:var(--ink);border:1px solid #251808;border-radius:8px;background:#0c0804;padding:10px 12px;margin-bottom:10px}
+.battle-etf-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.battle-etf-box{border:1px solid #251808;border-radius:8px;background:rgba(12,8,4,.72);padding:9px 10px;min-width:0}
+.battle-etf-label{font-family:var(--sans);font-size:12px;font-weight:900;color:#7a6030;margin-bottom:5px}
+.battle-etf-list{font-family:var(--sans);font-size:12px;line-height:1.55;color:var(--ink);overflow-wrap:anywhere}
+.battle-etf-link{display:inline-flex;align-items:center;justify-content:center;border:1px solid rgba(232,192,80,.35);border-radius:8px;padding:6px 9px;color:var(--gold);font-family:var(--sans);font-size:12px;font-weight:900;text-decoration:none;white-space:nowrap}
+.battle-etf-link:hover{border-color:var(--gold);background:rgba(232,192,80,.08)}
 .battle-kpis{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:wrap}
 .battle-kpi{font-family:var(--sans);font-size:12px;font-weight:900;border:1px solid #3a2a10;border-radius:999px;background:#120c05;color:#8d7138;padding:6px 9px;white-space:nowrap}
 .battle-kpi.up{color:var(--teal);border-color:rgba(29,158,117,.45);background:rgba(29,158,117,.08)}
@@ -2128,6 +2137,7 @@ body::after{
 @media(max-width:360px){.chronicle-list{gap:6px}.chronicle-row{gap:7px;padding:7px}.chronicle-cell{font-size:11px}.chronicle-cell:before{font-size:8px}.chronicle-cost-value{font-size:13px}}
 @media(max-width:540px){.market-command{grid-template-columns:1fr}.market-counts{justify-content:flex-start}.market-metrics{grid-template-columns:1fr 1fr}.macro-actions,.macro-grid{grid-template-columns:1fr}.macro-scenario{font-size:24px}}
 @media(max-width:640px){.battle-report-grid{grid-template-columns:1fr}.battle-report-head{flex-direction:column}.battle-report-refresh{width:100%}}
+@media(max-width:640px){.battle-etf-head{flex-direction:column}.battle-etf-link{width:100%}.battle-etf-grid{grid-template-columns:1fr}}
 @media(max-width:560px){.battle-kpis{justify-content:flex-start}.battle-table-row{grid-template-columns:1fr 1fr}.battle-table-row.head{display:none}.battle-cell.num{text-align:left}.battle-cell[data-label]:before{content:attr(data-label);display:block;font-family:var(--sans);font-size:9px;color:#5a4018;letter-spacing:1px;margin-bottom:2px}}
 
 /* ── 質押信貸卡片 ── */
@@ -9760,12 +9770,67 @@ function battleTableRowHtml(row){
   </div>`;
 }
 
+function battleEtfShortList(text,emptyText){
+  var raw=String(text||'').trim();
+  if(!raw)return esc(emptyText||'暫無明顯變化');
+  return raw.split('；').filter(Boolean).slice(0,5).map(function(item){
+    return '<div>'+esc(item)+'</div>';
+  }).join('');
+}
+
+function battleEtfChangeHtml(data){
+  data=data||{};
+  var latest=data.latest||null;
+  var official=data.officialUrl||'https://www.capitalfund.com.tw/etf/product/detail/502/portfolio';
+  if(!data.hasData||!latest){
+    return `<div class="battle-section wide">
+      <div class="battle-etf-head">
+        <div>
+          <div class="battle-section-title">00997A 持股每日變化</div>
+          <div class="battle-etf-meta">等待每日 19:00 快照</div>
+        </div>
+        <a class="battle-etf-link" href="${esc(official)}" target="_blank" rel="noreferrer">全部持股</a>
+      </div>
+      <div class="battle-empty">尚未建立 00997A 持股異動資料。</div>
+    </div>`;
+  }
+  return `<div class="battle-section wide">
+    <div class="battle-etf-head">
+      <div>
+        <div class="battle-section-title">00997A 持股每日變化</div>
+        <div class="battle-etf-meta">資料日 ${esc(latest.sourceDate||latest.date||'--')} · 比較 ${esc(latest.previousDate||'首筆快照')} · 股票合計 ${esc(battleNumberText(latest.totalWeight,2,'%'))}</div>
+      </div>
+      <a class="battle-etf-link" href="${esc(latest.sourceUrl||official)}" target="_blank" rel="noreferrer">全部持股</a>
+    </div>
+    <div class="battle-etf-comment">${esc(latest.commentary||'待 DeepSeek 產生評論。')}</div>
+    <div class="battle-etf-grid">
+      <div class="battle-etf-box">
+        <div class="battle-etf-label">加碼前五</div>
+        <div class="battle-etf-list">${battleEtfShortList(latest.topAddsText,'暫無加碼')}</div>
+      </div>
+      <div class="battle-etf-box">
+        <div class="battle-etf-label">減碼前五</div>
+        <div class="battle-etf-list">${battleEtfShortList(latest.topReducesText,'暫無減碼')}</div>
+      </div>
+      <div class="battle-etf-box">
+        <div class="battle-etf-label">主題變化</div>
+        <div class="battle-etf-list">${battleEtfShortList(latest.themesText,'待累積第二筆快照')}</div>
+      </div>
+      <div class="battle-etf-box">
+        <div class="battle-etf-label">新增 / 移除</div>
+        <div class="battle-etf-list">${battleEtfShortList([latest.addedText,latest.removedText].filter(Boolean).join('；'),'無新增或移除')}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
 function renderBattleBrief(data,el){
   data=data||{};
   var summary=data.summary||{};
   var funds=(data.funds||[]);
   var market=(data.market||[]);
   var holdings=(data.holdings||[]);
+  var etfHoldingChange=data.etfHoldingChange||{};
   var isMaintenanceRow=function(row){return row&&(row.category==='台股維持率'||row.name==='台股維持率');};
   var marginRows=market.filter(function(row){return row&&!isMaintenanceRow(row);});
   var maintenanceRows=market.filter(isMaintenanceRow);
@@ -9803,6 +9868,7 @@ function renderBattleBrief(data,el){
       <div class="battle-section-title">持股股價對比</div>
       ${holdingsHtml}
     </div>
+    ${battleEtfChangeHtml(etfHoldingChange)}
   </div>`;
 }
 
