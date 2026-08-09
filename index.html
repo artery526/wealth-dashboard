@@ -3179,12 +3179,12 @@ body::after{
       </div>
       <div class="today-agenda-list" id="today-calendar-list">
         <section class="agenda-section">
-          <div class="agenda-section-title">待辦事項</div>
-          <div class="today-agenda-loading">軍師正在調閱待辦事項…</div>
-        </section>
-        <section class="agenda-section">
           <div class="agenda-section-title">今日行程</div>
           <div class="today-agenda-loading">軍師正在調閱今日行程…</div>
+        </section>
+        <section class="agenda-section">
+          <div class="agenda-section-title">待辦事項</div>
+          <div class="today-agenda-loading">軍師正在調閱待辦事項…</div>
         </section>
       </div>
       <button class="today-agenda-refresh" id="today-agenda-refresh" type="button" onclick="loadTodayCalendar(currentAgendaMode)">更新</button>
@@ -5772,11 +5772,11 @@ function agendaLoadingHtml(mode){
     <div class="today-agenda-loading">軍師正在調閱${scope}行程…</div>
   </section>`;
   if(mode!=='today')return calendarSection;
-  return `<section class="agenda-section">
+  return `${calendarSection}
+  <section class="agenda-section">
     <div class="agenda-section-title">待辦事項</div>
     <div class="today-agenda-loading">軍師正在調閱待辦事項…</div>
-  </section>
-  ${calendarSection}`;
+  </section>`;
 }
 
 function setAgendaState(html,type){
@@ -5829,11 +5829,11 @@ async function loadTodayCalendar(mode){
     var taskHtml=results[1].status==='fulfilled'
       ? renderGoogleTasks(results[1].value.tasks||[])
       : `<div class="today-agenda-error">${esc(results[1].reason&&results[1].reason.message||'Google Tasks 讀取失敗')}</div>`;
-    box.innerHTML=`<section class="agenda-section">
+    box.innerHTML=`${calendarSection}
+    <section class="agenda-section">
       <div class="agenda-section-title">待辦事項</div>
       ${taskHtml}
-    </section>
-    ${calendarSection}`;
+    </section>`;
   }catch(err){
     if(loadSeq!==agendaLoadSeq||agendaMode!==currentAgendaMode)return;
     setAgendaState((err.message||'朝中政務讀取失敗')+'<br>請確認主 Web App 已完成 Calendar 授權。','error');
@@ -5844,7 +5844,7 @@ async function loadTodayCalendar(mode){
 
 function renderCalendarAgenda(events,mode){
   var createForm=mode==='week'?'':renderGoogleCalendarCreateForm(mode);
-  if(!events.length)return createForm+'<div class="today-agenda-empty">'+(mode==='week'?'七日內無行程。':(mode==='tomorrow'?'明日無行程。':'今日無行程。'))+'</div>';
+  if(!events.length)return '<div class="today-agenda-empty">'+(mode==='week'?'七日內無行程。':(mode==='tomorrow'?'明日無行程。':'今日無行程。'))+'</div>'+createForm;
   if(mode==='week'){
     var grouped={};
     var order=[];
@@ -5861,7 +5861,7 @@ function renderCalendarAgenda(events,mode){
         grouped[key].events.map(renderCalendarEvent).join('');
     }).join('');
   }
-  return createForm+events.map(renderCalendarEvent).join('');
+  return events.map(renderCalendarEvent).join('')+createForm;
 }
 
 function agendaFormDate_(mode){
@@ -5955,8 +5955,8 @@ function renderGoogleTasks(tasks){
     '<label><input name="hasDue" type="checkbox" onchange="toggleGoogleTaskDue(this)">設定預計完成日</label>'+
     '<input name="due" type="date" aria-label="預計完成日" disabled></div>'+
     '<button class="task-create-btn" type="submit">新增</button></form>';
-  if(!tasks.length)return form+'<div class="today-agenda-empty">目前沒有未完成待辦。</div>';
-  return form+tasks.map(function(task){
+  if(!tasks.length)return '<div class="today-agenda-empty">目前沒有未完成待辦。</div>'+form;
+  return tasks.map(function(task){
     var meta=[];
     if(task.dueText)meta.push('期限 '+esc(task.dueText));
     if(task.taskListName)meta.push('清單 '+esc(task.taskListName));
@@ -5969,7 +5969,7 @@ function renderGoogleTasks(tasks){
       </div>
       <button class="task-delete-btn" type="button" onclick="deleteGoogleTask(this,'${esc(task.id||'')}','${esc(task.taskListId||'')}')">刪除</button>
     </div>`;
-  }).join('');
+  }).join('')+form;
 }
 
 function toggleGoogleTaskDue(checkbox){
@@ -14025,12 +14025,12 @@ async function advisorAIShowSchedule(btn){
       <div class="advisor-ai-result">
         <strong>朝中政務</strong>
         <section class="agenda-section">
-          <div class="agenda-section-title">待辦事項</div>
-          ${taskHtml}
-        </section>
-        <section class="agenda-section">
           <div class="agenda-section-title">今日行程</div>
           ${calendarHtml}
+        </section>
+        <section class="agenda-section">
+          <div class="agenda-section-title">待辦事項</div>
+          ${taskHtml}
         </section>
       </div>
       <div class="advisor-shortcut-msg" id="advisor-ai-msg"></div>`;
