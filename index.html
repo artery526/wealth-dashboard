@@ -2087,6 +2087,7 @@ body::after{
 .battle-section.wide{grid-column:1/-1}
 .battle-section.quote{border-color:rgba(232,192,80,.45);background:linear-gradient(135deg,rgba(184,137,46,.18),rgba(10,8,4,.72))}
 .battle-section-title{font-family:var(--sans);font-size:15px;font-weight:900;color:var(--gold2);letter-spacing:1px;margin-bottom:10px}
+.battle-subsection{border-top:1px solid #251808;margin-top:12px;padding-top:12px}
 .battle-section-body{font-family:var(--sans);font-size:15px;color:var(--ink);line-height:1.75;white-space:pre-wrap}
 .battle-empty{font-family:var(--sans);font-size:14px;color:#7a6030;text-align:center;padding:18px 8px}
 .battle-etf-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px}
@@ -10241,13 +10242,18 @@ function renderBattleBrief(data,el){
   var holdings=(data.holdings||[]);
   var etfHoldingChange=data.etfHoldingChange||{};
   var isMaintenanceRow=function(row){return row&&(row.category==='台股維持率'||row.name==='台股維持率');};
-  var marginRows=market.filter(function(row){return row&&!isMaintenanceRow(row);});
+  var isForeignTxNetShortRow=function(row){return row&&(row.category==='外資台指期'||row.name==='外資台指期淨空單');};
+  var marginRows=market.filter(function(row){return row&&!isMaintenanceRow(row)&&!isForeignTxNetShortRow(row);});
   var maintenanceRows=market.filter(isMaintenanceRow);
+  var foreignTxNetShortRows=market.filter(isForeignTxNetShortRow);
   var fundHtml=funds.length?funds.map(function(row){return battleLineHtml(row,{digits:2,minDigits:0});}).join(''):'<div class="battle-empty">尚未讀到基金淨值。</div>';
   var marginHtml=(marginRows.concat(maintenanceRows)).length?(marginRows.concat(maintenanceRows)).map(function(row){
     var isRatio=isMaintenanceRow(row);
     return battleLineHtml(row,isRatio?{digits:2,suffix:'%',percentOnly:false}:{scale:100000000,digits:2,minDigits:2,suffix:' 億',changeScale:100000000,changeDigits:2,changeSuffix:' 億'});
   }).join(''):'<div class="battle-empty">尚未讀到台股融資資料。</div>';
+  var foreignTxNetShortHtml=foreignTxNetShortRows.length?foreignTxNetShortRows.map(function(row){
+    return battleLineHtml(row,{digits:0,minDigits:0,suffix:' 口',changeDigits:0,changeSuffix:' 口'});
+  }).join(''):'<div class="battle-empty">尚未讀到外資台指期淨空單。</div>';
   var holdingsHtml=holdings.length?`<div class="battle-table">
     <div class="battle-table-row head"><div>標的</div><div>現價</div><div>昨日</div><div>增減</div></div>
     ${holdings.map(battleTableRowHtml).join('')}
@@ -10273,6 +10279,10 @@ function renderBattleBrief(data,el){
     <div class="battle-section">
       <div class="battle-section-title">台股融資與維持率</div>
       <div class="battle-list">${marginHtml}</div>
+      <div class="battle-subsection">
+        <div class="battle-section-title">外資台指期淨空單</div>
+        <div class="battle-list">${foreignTxNetShortHtml}</div>
+      </div>
     </div>
     <div class="battle-section wide">
       <div class="battle-section-title">持股股價對比</div>
