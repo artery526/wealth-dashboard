@@ -5861,7 +5861,7 @@ function renderCalendarEvent(ev){
 function renderGoogleTasks(tasks){
   var form='<form class="task-create-form" onsubmit="submitGoogleTask(event)">'+
     '<input name="title" type="text" maxlength="200" placeholder="新增待辦事項" aria-label="新增待辦事項" required>'+
-    '<input name="due" type="date" aria-label="截止日期">'+
+    '<input name="due" type="date" aria-label="截止日期" value="'+today()+'">'+
     '<button class="task-create-btn" type="submit">新增</button></form>';
   if(!tasks.length)return form+'<div class="today-agenda-empty">目前沒有未完成待辦。</div>';
   return form+tasks.map(function(task){
