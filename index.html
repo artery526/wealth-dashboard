@@ -2195,6 +2195,14 @@ body::after{
   transition:border-color .2s;
 }
 .cfg-input:focus{border-color:var(--gold2)}
+.cfg-verify-row{display:flex;align-items:center;gap:8px;margin:10px 0 12px}
+.cfg-verify-btn{border:1px solid rgba(232,192,80,.38);border-radius:7px;background:rgba(232,192,80,.08);color:var(--gold);font-family:var(--sans);font-size:12px;font-weight:900;letter-spacing:1px;padding:9px 12px;cursor:pointer;white-space:nowrap}
+.cfg-verify-btn:hover{background:rgba(232,192,80,.15)}
+.cfg-verify-btn:disabled{opacity:.58;cursor:wait}
+.cfg-verify-status{min-height:18px;font-family:var(--sans);font-size:11px;font-weight:850;line-height:1.55;color:#9a7430}
+.cfg-verify-status.ok{color:var(--teal)}
+.cfg-verify-status.err{color:var(--coral)}
+.cfg-verify-status.pending{color:var(--gold)}
 .cfg-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:4px}
 .cfg-cancel{
   background:transparent;border:1px solid #2a1c08;color:#7a5c28;
@@ -3427,6 +3435,10 @@ body::after{
     <input class="cfg-input" type="text" id="cfg-url" placeholder="https://script.google.com/macros/s/.../exec">
     <label class="cfg-label">記帳密鑰（WRITE_TOKEN）</label>
     <input class="cfg-input" type="password" id="cfg-token" placeholder="輸入你設定的密碼">
+    <div class="cfg-verify-row">
+      <button class="cfg-verify-btn" id="cfg-verify-btn" type="button" onclick="verifyCfgWebAccess()">驗證連線</button>
+      <div class="cfg-verify-status" id="cfg-verify-status"></div>
+    </div>
     <label class="cfg-label">城牆通行令</label>
     <input class="cfg-input" type="password" id="cfg-wall-token" placeholder="輸入城牆通行令">
     <div class="cfg-actions">
@@ -4346,6 +4358,7 @@ function openCfg(){
   document.getElementById('cfg-token').value=WRITE_TOKEN;
   var wallTokenInput=document.getElementById('cfg-wall-token');
   if(wallTokenInput)wallTokenInput.value=arkWallReadToken();
+  renderCfgWebVerifyStatus();
   document.getElementById('cfg-overlay').classList.add('open');
 }
 function closeCfg(){document.getElementById('cfg-overlay').classList.remove('open')}
@@ -4371,6 +4384,7 @@ function setWebVerifyStatus(status,message){
     localStorage.setItem(WEB_VERIFY_CHECKED_AT_KEY,String(Date.now()));
   }catch(e){}
   advisorAIUpdateWebVerifyStatus();
+  renderCfgWebVerifyStatus();
 }
 function advisorAIWebVerifyStatusHtml(){
   var status=webVerifyStoredStatus();
@@ -4399,15 +4413,60 @@ async function verifyWebAccess(){
   await apiPost({action:'verifyWriteToken'});
   return true;
 }
-async function saveCfg(){
-  var url=normalizeWealthApiUrl(document.getElementById('cfg-url').value.trim());
-  var token=cleanToken(document.getElementById('cfg-token').value);
+function cfgWebVerifyStatusText(){
+  var status=webVerifyStoredStatus();
+  var msg=webVerifyStoredMessage();
+  if(status==='ok')return msg||'網頁驗證成功';
+  if(status==='pending')return msg||'網頁驗證中';
+  return msg||'尚未完成網頁驗證';
+}
+function renderCfgWebVerifyStatus(status,message){
+  var el=document.getElementById('cfg-verify-status');
+  if(!el)return;
+  status=status||webVerifyStoredStatus();
+  status=status==='ok'?'ok':(status==='pending'?'pending':'err');
+  el.className='cfg-verify-status '+status;
+  el.textContent=message||cfgWebVerifyStatusText();
+}
+function readCfgInputs(){
   var wallTokenInput=document.getElementById('cfg-wall-token');
-  var wallToken=wallTokenInput?String(wallTokenInput.value||'').trim():'';
-  API_URL=url;WRITE_TOKEN=token;
-  localStorage.setItem('wealth_api_url',url);
-  localStorage.setItem('wealth_write_token',token);
-  setArkWallReadToken(wallToken);
+  return {
+    url:normalizeWealthApiUrl(document.getElementById('cfg-url').value.trim()),
+    token:cleanToken(document.getElementById('cfg-token').value),
+    wallToken:wallTokenInput?String(wallTokenInput.value||'').trim():''
+  };
+}
+function persistCfgInputs(values){
+  values=values||readCfgInputs();
+  API_URL=values.url;
+  WRITE_TOKEN=values.token;
+  localStorage.setItem('wealth_api_url',values.url);
+  localStorage.setItem('wealth_write_token',values.token);
+  setArkWallReadToken(values.wallToken);
+  return values;
+}
+async function verifyCfgWebAccess(){
+  var btn=document.getElementById('cfg-verify-btn');
+  persistCfgInputs(readCfgInputs());
+  setWebVerifyStatus('pending','正在驗證 API 與 WRITE_TOKEN');
+  renderCfgWebVerifyStatus('pending','正在驗證 API 與 WRITE_TOKEN');
+  if(btn)btn.disabled=true;
+  try{
+    cfg=await apiGet({action:'config'});
+    await apiPost({action:'verifyWriteToken'});
+    setWebVerifyStatus('ok','API 與 WRITE_TOKEN 已通過');
+    renderCfgWebVerifyStatus('ok','網頁驗證成功');
+  }catch(e){
+    console.error(e);
+    var msg=e.message||'驗證失敗';
+    setWebVerifyStatus('err',msg);
+    renderCfgWebVerifyStatus('err',msg);
+  }finally{
+    if(btn)btn.disabled=false;
+  }
+}
+async function saveCfg(){
+  persistCfgInputs(readCfgInputs());
   localStorage.removeItem('wealth_market_macro_v1');
   localStorage.removeItem('wealth_market_macro_v2');
   localStorage.removeItem('wealth_market_macro_v3');
@@ -5153,7 +5212,7 @@ function renderMedicalPanel(){
   if(!hasMainApiCredentials()){
     el.innerHTML=`<div class="setup-notice">
       <p>尚未設定 API，無法使用醫館功能。<br>請填入 Google Apps Script Web App URL 與記帳密鑰。</p>
-      <div class="setup-hint">請至龐統軍師 > 常用查詢 > 網頁驗證</div>
+      <div class="setup-hint">請至龐統軍師 > 齒輪 > 驗證連線</div>
     </div>`;
     return;
   }
@@ -5539,7 +5598,7 @@ async function loadHomeAgenda(){
   homeAgendaMode='agenda';
   updateHomeAgendaModeView();
   if(!API_URL){
-    body.innerHTML='<section class="agenda-section"><div class="agenda-section-title">今日行程</div><div class="today-agenda-empty">尚未設定 Web App API。</div></section><section class="agenda-section"><div class="agenda-section-title">待辦事項</div><div class="today-agenda-empty">請至龐統軍師 > 常用查詢 > 網頁驗證</div></section>';
+    body.innerHTML='<section class="agenda-section"><div class="agenda-section-title">今日行程</div><div class="today-agenda-empty">尚未設定 Web App API。</div></section><section class="agenda-section"><div class="agenda-section-title">待辦事項</div><div class="today-agenda-empty">請至龐統軍師 > 齒輪 > 驗證連線</div></section>';
     return;
   }
   try{
@@ -5657,7 +5716,7 @@ async function loadTodayCalendar(mode){
   var btn=document.getElementById('today-agenda-refresh');
   if(dateEl)dateEl.textContent=agendaDateLabel(agendaMode);
   if(!API_URL){
-    setAgendaState('尚未設定 Web App API，無法調閱朝中政務。<br><div class="setup-hint" style="margin-top:10px">請至龐統軍師 > 常用查詢 > 網頁驗證</div>','empty');
+    setAgendaState('尚未設定 Web App API，無法調閱朝中政務。<br><div class="setup-hint" style="margin-top:10px">請至龐統軍師 > 齒輪 > 驗證連線</div>','empty');
     return;
   }
   try{
@@ -11063,7 +11122,7 @@ async function createMacroSample(){
     });
     await loadMacroOverview();
   }catch(e){
-    if(el)el.innerHTML=`<div style="color:var(--coral);font-family:var(--sans);font-size:12px;line-height:1.8;padding:12px 0">測試資料寫入失敗：${esc(e.message)}<br><div class="setup-hint" style="margin-top:10px">請至龐統軍師 > 常用查詢 > 網頁驗證</div></div>`;
+    if(el)el.innerHTML=`<div style="color:var(--coral);font-family:var(--sans);font-size:12px;line-height:1.8;padding:12px 0">測試資料寫入失敗：${esc(e.message)}<br><div class="setup-hint" style="margin-top:10px">請至龐統軍師 > 齒輪 > 驗證連線</div></div>`;
   }
 }
 
@@ -11653,7 +11712,7 @@ function renderMacroOverview(data,el){
 function setupNotice(){
   return `<div class="setup-notice">
     <p>尚未設定 API，無法讀取資料。<br>請填入 Google Apps Script Web App URL 與記帳密鑰。</p>
-    <div class="setup-hint">請至龐統軍師 > 常用查詢 > 網頁驗證</div>
+    <div class="setup-hint">請至龐統軍師 > 齒輪 > 驗證連線</div>
   </div>`;
 }
 
@@ -12404,8 +12463,7 @@ function advisorAIQuickCommands(){
     {label:'年度財報',command:'年度財報'},
     {label:'國庫現況',command:'國庫現況'},
     {label:'部隊陣容',command:'部隊陣容'},
-    {label:'退稅查詢',command:'__etf_tax_lookup__'},
-    {label:'網頁驗證',command:'__web_verify__'}
+    {label:'退稅查詢',command:'__etf_tax_lookup__'}
   ];
 }
 
@@ -12421,11 +12479,6 @@ function advisorAIQuickCommandSelectHtml(){
 function advisorAIRunQuickCommand(select){
   var command=String(select&&select.value||'').trim();
   if(!command)return;
-  if(command==='__web_verify__'){
-    if(select)select.value='';
-    advisorAIRunWebVerify();
-    return;
-  }
   if(command==='__etf_tax_lookup__'){
     if(select)select.value='';
     advisorAIOpenTaxLookup();
@@ -12438,22 +12491,6 @@ function advisorAIRunQuickCommand(select){
   }
   if(select)select.value='';
   runAdvisorAICommand(document.getElementById('advisor-ai-submit'));
-}
-
-async function advisorAIRunWebVerify(){
-  var panel=advisorAIActivePanel();
-  setWebVerifyStatus('pending','正在驗證 API 與 WRITE_TOKEN');
-  if(panel)panel.innerHTML=`${advisorAIHeaderHtml()}${advisorAIResultHtml('網頁驗證',['驗證 API 讀取與 WRITE_TOKEN 寫入權限中...'])}`;
-  try{
-    await verifyWebAccess();
-    setWebVerifyStatus('ok','API 與 WRITE_TOKEN 已通過');
-    if(panel)panel.innerHTML=`${advisorAIHeaderHtml()}${advisorAIResultHtml('網頁驗證成功',['API 讀取通過','WRITE_TOKEN 寫入權限通過'])}`;
-  }catch(e){
-    var msg=e.message||'驗證失敗';
-    setWebVerifyStatus('err',msg);
-    if(panel)panel.innerHTML=`${advisorAIHeaderHtml()}${advisorAIResultHtml('網頁驗證未通過',[msg,'請更新 API URL / WRITE_TOKEN 後再驗證。'])}`;
-    if(msg.indexOf('尚未設定')>=0)setTimeout(openCfg,0);
-  }
 }
 
 function advisorAIOpenTaxLookup(){
@@ -13922,7 +13959,7 @@ async function openLordPanel(){
   if(!API_URL){
     el.innerHTML=`<div class="setup-notice" style="margin:24px 0">
       <p>尚未設定 API，無法讀取主公即時資料。<br>請填入 Google Apps Script Web App URL 與記帳密鑰。</p>
-      <div class="setup-hint">請至龐統軍師 > 常用查詢 > 網頁驗證</div>
+      <div class="setup-hint">請至龐統軍師 > 齒輪 > 驗證連線</div>
     </div>`;
     return;
   }
