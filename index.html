@@ -2612,10 +2612,15 @@ body::after{
 .ark-wall-lightbox.open{opacity:1;pointer-events:auto}
 .ark-wall-lightbox-img,.ark-wall-lightbox-video{display:block;max-width:min(96vw,1100px);max-height:88vh;border:1px solid rgba(232,192,80,.34);border-radius:8px;background:#050403;object-fit:contain;box-shadow:0 18px 48px rgba(0,0,0,.55)}
 .ark-wall-lightbox-video{width:min(96vw,1100px)}
-.ark-wall-lightbox-img[hidden],.ark-wall-lightbox-video[hidden],.ark-wall-lightbox-caption[hidden]{display:none}
+.ark-wall-lightbox-img[hidden],.ark-wall-lightbox-video[hidden],.ark-wall-lightbox-caption[hidden],.ark-wall-lightbox-nav[hidden],.ark-wall-lightbox-count[hidden]{display:none}
 .ark-wall-lightbox-caption{max-width:min(96vw,1100px);border:1px solid rgba(78,217,255,.24);border-radius:8px;background:rgba(3,8,10,.86);color:#d9fbff;font-family:var(--sans);font-size:12px;font-weight:800;line-height:1.65;padding:8px 10px;text-align:left;overflow-wrap:anywhere}
 .ark-wall-lightbox-caption b{color:#f0dfa0}
 .ark-wall-lightbox-close{position:absolute;top:18px;right:18px;width:42px;height:42px;border:1px solid rgba(232,192,80,.38);border-radius:8px;background:rgba(8,6,3,.86);color:#f0dfa0;font-family:var(--sans);font-size:18px;font-weight:900;cursor:pointer}
+.ark-wall-lightbox-nav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:54px;border:1px solid rgba(232,192,80,.38);border-radius:8px;background:rgba(8,6,3,.78);color:#f0dfa0;font-family:var(--sans);font-size:28px;font-weight:900;line-height:1;cursor:pointer}
+.ark-wall-lightbox-nav:hover,.ark-wall-lightbox-close:hover{border-color:rgba(232,192,80,.72);background:rgba(18,13,5,.92)}
+.ark-wall-lightbox-prev{left:18px}
+.ark-wall-lightbox-next{right:18px}
+.ark-wall-lightbox-count{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);border:1px solid rgba(78,217,255,.26);border-radius:8px;background:rgba(3,8,10,.86);color:#d9fbff;font-family:var(--sans);font-size:12px;font-weight:900;padding:6px 9px}
 .ark-wall-back{border:1px solid rgba(78,217,255,.34);border-radius:8px;background:rgba(78,217,255,.08);color:#aeefff;font-family:var(--sans);font-size:12px;font-weight:900;padding:7px 10px;cursor:pointer}
 .ark-wall-back:hover{border-color:rgba(78,217,255,.62);background:rgba(78,217,255,.14)}
 @media(max-width:760px){#ark-wall-body{display:flex;flex-direction:column}.ark-wall-grid,.ark-wall-photo-grid{grid-template-columns:1fr}.ark-wall-index-row{grid-template-columns:84px minmax(0,1fr);gap:7px}.ark-wall-library-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.ark-wall-memo-tools{grid-template-columns:1fr}.ark-wall-main-content{order:1}.ark-wall-timeline-block{order:2}.ark-wall-detail-top{align-items:flex-start}.ark-wall-detail-title{font-size:22px}.ark-wall-detail-text{font-size:14px;line-height:1.9;padding:14px 13px 13px}.ark-wall-copy-hint{position:static;display:inline-flex;margin-bottom:8px}}
@@ -7032,6 +7037,10 @@ var arkWallLibraryShowAll=false;
 var arkWallHistoryItems=[];
 var arkWallLibraryOpen=false;
 var arkWallHistoryTodayOpen=false;
+var arkWallLightboxItems=[];
+var arkWallLightboxIndex=-1;
+var arkWallLightboxTouchStart=null;
+var arkWallLightboxEventsBound=false;
 
 function arkWallReadToken(){
   try{return localStorage.getItem(ARK_WALL_READ_TOKEN_KEY)||'';}catch(e){return '';}
@@ -7318,6 +7327,7 @@ function renderArkWallLibraryBlock(){
 }
 
 function openArkWallLibraryMedia(id){
+  if(openArkWallMediaSequence(arkWallLibraryItems,id,'Wall media'))return;
   var item=arkWallLibraryItems.find(function(candidate){return candidate.id===id;});
   if(!item)return;
   var url=item.type==='video'?arkWallLibraryOriginalUrl(item):arkWallLibraryMediaUrl(item);
@@ -7330,6 +7340,7 @@ function openArkWallLibraryMedia(id){
 }
 
 function openArkWallHistoryMedia(id){
+  if(openArkWallMediaSequence(arkWallHistoryItems,id,'History Today'))return;
   var item=arkWallHistoryItems.find(function(candidate){return candidate.id===id;});
   if(!item)return;
   var url=item.type==='video'?arkWallLibraryOriginalUrl(item):arkWallLibraryMediaUrl(item);
@@ -7808,6 +7819,93 @@ function arkWallEntryKey(event,id){
   }
 }
 
+function arkWallMediaFromItem(item,fallbackTitle){
+  if(!item)return null;
+  var isVideo=item.type==='video'||String(item.mimeType||'').indexOf('video/')===0;
+  var url=isVideo?arkWallLibraryOriginalUrl(item):arkWallLibraryMediaUrl(item);
+  if(!url)return null;
+  return {
+    id:item.id||'',
+    type:isVideo?'video':'photo',
+    url:url,
+    title:item.fileName||item.date||fallbackTitle||'Wall media',
+    item:item
+  };
+}
+
+function openArkWallMediaSequence(items,id,fallbackTitle){
+  var media=(Array.isArray(items)?items:[]).map(function(item){
+    return arkWallMediaFromItem(item,fallbackTitle);
+  }).filter(Boolean);
+  if(!media.length)return false;
+  var index=media.findIndex(function(item){return item.id===id;});
+  if(index<0)return false;
+  arkWallLightboxItems=media;
+  arkWallLightboxIndex=index;
+  arkWallShowLightboxIndex(index);
+  return true;
+}
+
+function updateArkWallLightboxControls(box){
+  if(!box)return;
+  var hasMany=arkWallLightboxItems.length>1;
+  box.querySelectorAll('[data-lightbox-sequence]').forEach(function(btn){
+    btn.hidden=!hasMany;
+  });
+  var count=box.querySelector('[data-lightbox-count]');
+  if(count){
+    count.hidden=!arkWallLightboxItems.length;
+    count.textContent=arkWallLightboxItems.length?((arkWallLightboxIndex+1)+' / '+arkWallLightboxItems.length):'';
+  }
+}
+
+function arkWallShowLightboxIndex(index){
+  if(!arkWallLightboxItems.length)return;
+  arkWallLightboxIndex=(index+arkWallLightboxItems.length)%arkWallLightboxItems.length;
+  var media=arkWallLightboxItems[arkWallLightboxIndex];
+  if(media.type==='video')openArkWallVideo(media.url,media.title,media.item,true);
+  else openArkWallPhoto(media.url,media.title,media.item,true);
+}
+
+function arkWallLightboxStep(delta,event){
+  if(event){
+    event.preventDefault();
+    event.stopPropagation();
+  }
+  if(arkWallLightboxItems.length<2)return;
+  arkWallShowLightboxIndex(arkWallLightboxIndex+delta);
+}
+
+function bindArkWallLightboxEvents(box){
+  if(!box)return;
+  box.addEventListener('touchstart',function(event){
+    var touch=event.touches&&event.touches[0];
+    arkWallLightboxTouchStart=touch?{x:touch.clientX,y:touch.clientY}:null;
+  },{passive:true});
+  box.addEventListener('touchend',function(event){
+    if(!arkWallLightboxTouchStart||arkWallLightboxItems.length<2)return;
+    var touch=event.changedTouches&&event.changedTouches[0];
+    if(!touch)return;
+    var dx=touch.clientX-arkWallLightboxTouchStart.x;
+    var dy=touch.clientY-arkWallLightboxTouchStart.y;
+    arkWallLightboxTouchStart=null;
+    if(Math.abs(dx)<48||Math.abs(dx)<Math.abs(dy)*1.2)return;
+    arkWallLightboxStep(dx<0?1:-1,event);
+  },{passive:false});
+  if(arkWallLightboxEventsBound)return;
+  arkWallLightboxEventsBound=true;
+  document.addEventListener('keydown',function(event){
+    var active=document.getElementById('ark-wall-lightbox');
+    if(!active||!active.classList.contains('open'))return;
+    if(event.key==='Escape'){
+      closeArkWallPhoto();
+      return;
+    }
+    if(event.key==='ArrowLeft')arkWallLightboxStep(-1,event);
+    if(event.key==='ArrowRight')arkWallLightboxStep(1,event);
+  });
+}
+
 function ensureArkWallLightbox(){
   var box=document.getElementById('ark-wall-lightbox');
   if(box)return box;
@@ -7815,8 +7913,9 @@ function ensureArkWallLightbox(){
   box.className='ark-wall-lightbox';
   box.id='ark-wall-lightbox';
   box.onclick=function(event){if(event.target===box)closeArkWallPhoto();};
-  box.innerHTML='<button class="ark-wall-lightbox-close" type="button" onclick="closeArkWallPhoto()" aria-label="關閉媒體">x</button><img class="ark-wall-lightbox-img" alt=""><video class="ark-wall-lightbox-video" controls playsinline preload="metadata" hidden></video><div class="ark-wall-lightbox-caption" hidden></div>';
+  box.innerHTML='<button class="ark-wall-lightbox-close" type="button" onclick="closeArkWallPhoto()" aria-label="Close media">x</button><button class="ark-wall-lightbox-nav ark-wall-lightbox-prev" data-lightbox-sequence type="button" onclick="arkWallLightboxStep(-1,event)" aria-label="Previous media">&#8249;</button><button class="ark-wall-lightbox-nav ark-wall-lightbox-next" data-lightbox-sequence type="button" onclick="arkWallLightboxStep(1,event)" aria-label="Next media">&#8250;</button><img class="ark-wall-lightbox-img" alt=""><video class="ark-wall-lightbox-video" controls playsinline preload="metadata" hidden></video><div class="ark-wall-lightbox-caption" hidden></div><div class="ark-wall-lightbox-count" data-lightbox-count hidden></div>';
   document.body.appendChild(box);
+  bindArkWallLightboxEvents(box);
   return box;
 }
 
@@ -7872,7 +7971,11 @@ function setArkWallMediaCaption(box,item,title){
   caption.hidden=!html;
 }
 
-function openArkWallPhoto(url,title,item){
+function openArkWallPhoto(url,title,item,preserveSequence){
+  if(!preserveSequence){
+    arkWallLightboxItems=[];
+    arkWallLightboxIndex=-1;
+  }
   var box=ensureArkWallLightbox();
   var img=box.querySelector('.ark-wall-lightbox-img');
   var video=box.querySelector('.ark-wall-lightbox-video');
@@ -7888,10 +7991,15 @@ function openArkWallPhoto(url,title,item){
     img.alt=title||'城牆照片';
   }
   setArkWallMediaCaption(box,item,title);
+  updateArkWallLightboxControls(box);
   box.classList.add('open');
 }
 
-function openArkWallVideo(url,title,item){
+function openArkWallVideo(url,title,item,preserveSequence){
+  if(!preserveSequence){
+    arkWallLightboxItems=[];
+    arkWallLightboxIndex=-1;
+  }
   var box=ensureArkWallLightbox();
   var img=box.querySelector('.ark-wall-lightbox-img');
   var video=box.querySelector('.ark-wall-lightbox-video');
@@ -7907,6 +8015,7 @@ function openArkWallVideo(url,title,item){
     video.play().catch(function(){});
   }
   setArkWallMediaCaption(box,item,title);
+  updateArkWallLightboxControls(box);
   box.classList.add('open');
 }
 
@@ -7914,6 +8023,9 @@ function closeArkWallPhoto(){
   var box=document.getElementById('ark-wall-lightbox');
   if(!box)return;
   box.classList.remove('open');
+  arkWallLightboxItems=[];
+  arkWallLightboxIndex=-1;
+  arkWallLightboxTouchStart=null;
   var img=box.querySelector('.ark-wall-lightbox-img');
   if(img)img.removeAttribute('src');
   var video=box.querySelector('.ark-wall-lightbox-video');
