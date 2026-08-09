@@ -10419,7 +10419,7 @@ function renderMarketPanel(){
   setPanelHead('🏮','Market · Dashboard','市集');
   setTabs([
     {key:'market-watch',label:'市場快報'},
-    {key:'macro-overview',label:'總經戰情'}
+    {key:'macro-overview',label:'美股總經'}
   ]);
   document.getElementById('p-body').innerHTML=`
     <div class="pane active" id="pane-market-watch">
@@ -10433,7 +10433,7 @@ function renderMarketPanel(){
     <div class="pane" id="pane-macro-overview">
       <div class="api-bar">
         <div class="api-dot ${API_URL?'ok':'err'}" id="macro-dot"></div>
-        <span class="api-label" id="macro-label">${API_URL?'載入總經戰情…':'尚未設定 API'}</span>
+        <span class="api-label" id="macro-label">${API_URL?'載入美股總經…':'尚未設定 API'}</span>
         <span class="api-action">⚙ 設定</span>
       </div>
       <div id="macro-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:82%"></div><div class="skel-line skel" style="width:68%"></div></div>
@@ -10453,8 +10453,8 @@ function renderCouncilPanel(){
   setTabs([
     {key:'battle-brief',label:'戰情總匯報'},
     {key:'council-roster',label:'部隊陣容'},
-    {key:'market-watch',label:'快捷戰報'},
-    {key:'macro-overview',label:'總經戰情'}
+    {key:'market-watch',label:'台美股大盤'},
+    {key:'macro-overview',label:'美股總經'}
   ]);
   currentTab='battle-brief';
   var apiReady=hasMainApiCredentials();
@@ -11367,7 +11367,7 @@ async function loadMarketDashboard(){
   }
   var cached=readTimedMarketCache(MARKET_DASHBOARD_CACHE_KEY);
   if(cached)renderMarketDashboard(cached,el);
-  setCouncilPanelStatusIfActive('pending',cached?'快取資料更新中':'快捷戰報讀取中');
+  setCouncilPanelStatusIfActive('pending',cached?'快取資料更新中':'台美股大盤讀取中');
   var dot=document.getElementById('market-dot');
   var lbl=document.getElementById('market-label');
   if(cached&&lbl)lbl.textContent='快取資料 · 更新中…';
@@ -11391,7 +11391,7 @@ async function loadMarketDashboard(){
     var lbl=document.getElementById('market-label');
     if(dot)dot.className='api-dot ok';
     if(lbl)lbl.textContent='已連線 · 市場快報';
-    setCouncilPanelStatusIfActive('ok','快捷戰報已連線');
+    setCouncilPanelStatusIfActive('ok','台美股大盤已連線');
     ensureMarketMarginData(data).then(function(){
       writeTimedMarketCache(MARKET_DASHBOARD_CACHE_KEY,data);
       var current=document.getElementById('market-content');
@@ -11404,7 +11404,7 @@ async function loadMarketDashboard(){
     var lbl=document.getElementById('market-label');
     if(dot)dot.className='api-dot err';
     if(lbl)lbl.textContent=cached?'快取資料 · 更新失敗':'市場快報讀取失敗';
-    setCouncilPanelStatusIfActive(cached?'pending':'err',cached?'快取資料可用':'快捷戰報讀取失敗');
+    setCouncilPanelStatusIfActive(cached?'pending':'err',cached?'快取資料可用':'台美股大盤讀取失敗');
     return null;
   }).finally(function(){
     marketDashboardPromise=null;
@@ -11543,7 +11543,7 @@ async function loadMacroOverview(){
   var cached=readTimedMarketCache(MARKET_MACRO_CACHE_KEY);
   if(cached)renderMacroOverview(cached,el);
   else el.innerHTML='<div class="skel-line skel"></div><div class="skel-line skel" style="width:82%"></div><div class="skel-line skel" style="width:68%"></div>';
-  setCouncilPanelStatusIfActive('pending',cached?'快取資料更新中':'總經戰情讀取中');
+  setCouncilPanelStatusIfActive('pending',cached?'快取資料更新中':'美股總經讀取中');
   var lbl=document.getElementById('macro-label');
   if(cached&&lbl)lbl.textContent='快取資料 · 更新中…';
   if(macroOverviewPromise){
@@ -11558,16 +11558,16 @@ async function loadMacroOverview(){
     var dot=document.getElementById('macro-dot');
     var lbl=document.getElementById('macro-label');
     if(dot)dot.className='api-dot ok';
-    if(lbl)lbl.textContent=data&&data.hasData?'已連線 · 總經戰情':'已連線 · 尚未建立總經資料';
-    setCouncilPanelStatusIfActive('ok',data&&data.hasData?'總經戰情已連線':'尚未建立總經資料');
+    if(lbl)lbl.textContent=data&&data.hasData?'已連線 · 美股總經':'已連線 · 尚未建立總經資料';
+    setCouncilPanelStatusIfActive('ok',data&&data.hasData?'美股總經已連線':'尚未建立總經資料');
     return data;
   }).catch(function(e){
     if(!cached)el.innerHTML=`<div style="color:var(--coral);font-family:var(--sans);font-size:12px;padding:12px 0">${esc(e.message)}</div>`;
     var dot=document.getElementById('macro-dot');
     var lbl=document.getElementById('macro-label');
     if(dot)dot.className='api-dot err';
-    if(lbl)lbl.textContent=cached?'快取資料 · 更新失敗':'總經戰情讀取失敗';
-    setCouncilPanelStatusIfActive(cached?'pending':'err',cached?'快取資料可用':'總經戰情讀取失敗');
+    if(lbl)lbl.textContent=cached?'快取資料 · 更新失敗':'美股總經讀取失敗';
+    setCouncilPanelStatusIfActive(cached?'pending':'err',cached?'快取資料可用':'美股總經讀取失敗');
     return null;
   }).finally(function(){
     macroOverviewPromise=null;
@@ -12166,7 +12166,7 @@ function renderMacroOverview(data,el){
         </div>
         <div class="macro-signal ${tone}">${esc(judgment.signal||'無資料')}</div>
       </div>
-      <div class="macro-summary">${esc(judgment.summary||'尚未建立總經戰情判斷。')}</div>
+      <div class="macro-summary">${esc(judgment.summary||'尚未建立美股總經判斷。')}</div>
       <div class="macro-actions">
         <div class="macro-action">
           <div class="macro-action-l">主要風險</div>
@@ -13336,7 +13336,7 @@ function advisorAIResolveAccount(text){
 function advisorAIOpenTarget(text){
   var key=advisorAICompact(text);
   if(key==='foodhouse')return {intent:'open',panel:'finance',tab:'finance-accs',label:'國庫現況'};
-  if(key==='market')return {intent:'open',panel:'council',tab:'market-watch',label:'快捷戰報'};
+  if(key==='market')return {intent:'open',panel:'council',tab:'market-watch',label:'台美股大盤'};
   if(key==='finance')return {intent:'open',panel:'finance',tab:'finance-accs',label:'財政'};
   if(key==='domestic')return {intent:'open',panel:'domestic',tab:'booking-form',label:'快速記帳'};
   if(key==='council')return {intent:'open',panel:'council',label:'軍機處'};
@@ -13347,8 +13347,8 @@ function advisorAIOpenTarget(text){
   if(key.indexOf('年度財報')>=0||key.indexOf('財報')>=0)return {intent:'open',panel:'finance',tab:'domestic-yearly',label:'年度財報'};
   if(key.indexOf('部隊陣容')>=0||key.indexOf('陣容')>=0)return {intent:'open',panel:'council',tab:'council-roster',label:'部隊陣容'};
   if(key.indexOf('戰情總匯報')>=0||key.indexOf('總匯報')>=0)return {intent:'open',panel:'council',tab:'battle-brief',label:'戰情總匯報'};
-  if(key.indexOf('總經')>=0)return {intent:'open',panel:'council',tab:'macro-overview',label:'總經戰情'};
-  if(key.indexOf('市集')>=0||key.indexOf('市場')>=0)return {intent:'open',panel:'council',tab:'market-watch',label:'快捷戰報'};
+  if(key.indexOf('總經')>=0)return {intent:'open',panel:'council',tab:'macro-overview',label:'美股總經'};
+  if(key.indexOf('市集')>=0||key.indexOf('市場')>=0)return {intent:'open',panel:'council',tab:'market-watch',label:'台美股大盤'};
   if(key.indexOf('內政')>=0||key.indexOf('記帳')>=0)return {intent:'open',panel:'domestic',tab:'booking-form',label:'快速記帳'};
   return null;
 }
@@ -13553,7 +13553,7 @@ function advisorAICommand(raw){
   if(compact==='糧'||compact.indexOf('糧倉')>=0)return {intent:'open',panel:'finance',tab:'finance-accs',label:'國庫現況'};
   if(compact.indexOf('部隊陣容')>=0||compact.indexOf('陣容')>=0)return {intent:'open',panel:'council',tab:'council-roster',label:'部隊陣容'};
   if(compact.indexOf('戰情總匯報')>=0||compact.indexOf('總匯報')>=0)return {intent:'open',panel:'council',tab:'battle-brief',label:'戰情總匯報'};
-  if(compact.indexOf('總經')>=0)return {intent:'open',panel:'council',tab:'macro-overview',label:'總經戰情'};
+  if(compact.indexOf('總經')>=0)return {intent:'open',panel:'council',tab:'macro-overview',label:'美股總經'};
   if(compact.indexOf('維持率')>=0)return {intent:'maintenance'};
   if(compact.indexOf('複製載具')>=0)return {intent:'copyCarrier'};
   if(compact==='載具'||compact.indexOf('顯示載具')>=0)return {intent:'showCarrier'};
