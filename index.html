@@ -9657,7 +9657,7 @@ function annualNetFlowTrendChart(history,currentEntry,manifest){
   var min=Math.min(0,...rows.map(function(row){return row.netWan;}));
   var max=Math.max(0,...rows.map(function(row){return row.netWan;}));
   if(min===max){min-=1;max+=1;}
-  var left=18,right=86,top=16,rowH=13,bottom=12;
+  var left=26,right=78,top=16,rowH=13,bottom=12;
   var height=top+Math.max(1,rows.length-1)*rowH+bottom;
   function x(value){return left+(value-min)/(max-min)*(right-left);}
   function y(index){return top+index*rowH;}
@@ -9672,8 +9672,8 @@ function annualNetFlowTrendChart(history,currentEntry,manifest){
     var xx=x(row.netWan);
     var cls=row.netWan>=0?'pos':'neg';
     var label=annualArchiveWanText(row.netWan,true);
-    var labelX=row.netWan>=0?Math.min(96,xx+2):Math.max(2,xx-2);
-    var anchor=row.netWan>=0?'start':'end';
+    var labelX=Math.min(94,Math.max(left+2,xx+2));
+    var anchor='start';
     return '<text class="annual-netflow-label" x="2" y="'+(yy+1.4).toFixed(2)+'">'+esc(row.year)+'</text>'
       +'<circle class="annual-netflow-dot '+cls+'" cx="'+xx.toFixed(2)+'" cy="'+yy.toFixed(2)+'" r="1.9"></circle>'
       +'<text class="annual-netflow-val '+cls+'" x="'+labelX.toFixed(2)+'" y="'+(yy+1.4).toFixed(2)+'" text-anchor="'+anchor+'">'+esc(label)+'</text>';
