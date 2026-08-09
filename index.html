@@ -2034,6 +2034,7 @@ body::after{
 .market-signal.watch{color:var(--gold);background:rgba(232,192,80,.12)}
 .market-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-bottom:6px}
 .market-metrics.twse{grid-template-columns:repeat(2,minmax(0,1fr))}
+.market-card-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .market-metric{background:#0c0804;border:1px solid #251808;border-radius:7px;padding:6px}
 .market-metric-l{font-family:var(--sans);font-size:9px;color:#5a4018;letter-spacing:1px}
 .market-metric-v{font-family:var(--mono);font-size:13px;color:var(--gold);font-weight:700;margin-top:2px}
@@ -2170,7 +2171,7 @@ body::after{
 @media(max-width:980px){.chronicle-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:540px){.chronicle-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.chronicle-row{grid-template-columns:1fr;padding:9px}.chronicle-cell{font-size:12px}.chronicle-cell:before{font-size:9px}.chronicle-row .chronicle-name{font-size:14px}.chronicle-date{font-size:10px}.chronicle-cost-value{font-size:14px}}
 @media(max-width:360px){.chronicle-list{gap:6px}.chronicle-row{gap:7px;padding:7px}.chronicle-cell{font-size:11px}.chronicle-cell:before{font-size:8px}.chronicle-cost-value{font-size:13px}}
-@media(max-width:540px){.market-command{grid-template-columns:1fr}.market-counts{justify-content:flex-start}.market-metrics{grid-template-columns:1fr 1fr}.macro-actions,.macro-grid{grid-template-columns:1fr}.macro-scenario{font-size:24px}}
+@media(max-width:540px){.market-command{grid-template-columns:1fr}.market-counts{justify-content:flex-start}.market-metrics{grid-template-columns:1fr 1fr}.market-card-grid{grid-template-columns:1fr}.macro-actions,.macro-grid{grid-template-columns:1fr}.macro-scenario{font-size:24px}}
 @media(max-width:640px){.battle-report-grid{grid-template-columns:1fr}.battle-report-head{flex-direction:column}.battle-report-refresh{width:100%}}
 @media(max-width:640px){.battle-etf-head{flex-direction:column}.battle-etf-link{width:100%}.battle-etf-grid{grid-template-columns:1fr}}
 @media(max-width:560px){.battle-kpis{justify-content:flex-start}.battle-table-row{grid-template-columns:1fr 1fr}.battle-table-row.head{display:none}.battle-cell.num{text-align:left}.battle-cell[data-label]:before{content:attr(data-label);display:block;font-family:var(--sans);font-size:9px;color:#5a4018;letter-spacing:1px;margin-bottom:2px}}
@@ -12082,7 +12083,7 @@ function renderMarketDashboard(data,el){
 
   var twseHtml=twseRow?`<div class="sec-title">台股指標</div>${renderTWSECard(twseRow)}`:'';
   var otherHtml=otherRows.length?`<div class="sec-title" style="margin-top:${twseRow?14:0}px">指標風向</div>`:'';
-  otherHtml+=otherRows.map(function(r){
+  if(otherRows.length)otherHtml+=`<div class="market-card-grid">${otherRows.map(function(r){
     var tone=marketTone(r.signal);
     var change=parseFloat(r.change)||0;
     var changePct=parseFloat(r.changePct)||0;
@@ -12109,7 +12110,7 @@ function renderMarketDashboard(data,el){
       </div>
       <div class="market-note">${esc(r.status)} · ${esc(r.maDirection)}${r.note?'｜'+esc(r.note):''}</div>
     </div>`;
-  }).join('');
+  }).join('')}</div>`;
 
   el.innerHTML=`
     ${staleWarning}
