@@ -31,9 +31,12 @@ test('battle brief panel renders with stable formatting', async ({ page }) => {
   });
 
   await expect(page.locator('.ptab.active')).toHaveAttribute('onclick', /battle-brief/);
-  await expect(page.locator('.battle-section').first().locator('.battle-line-current')).toHaveText(['50.1', '140.81']);
-  await expect(page.locator('.battle-section').nth(1).locator('.battle-line-current')).toHaveText(['5,074.63 億', '169.81%']);
-  await expect(page.locator('.battle-section').nth(1).locator('.battle-line-delta').first()).toContainText('74.63 億');
+  await expect(page.locator('.battle-section').first().locator('.battle-section-title')).toHaveText('00997A 持股每日變化');
+  const fundSection = page.locator('.battle-section', { hasText: '基金淨值' });
+  const marginSection = page.locator('.battle-section', { hasText: '台股融資與維持率' });
+  await expect(fundSection.locator('.battle-line-current')).toHaveText(['50.1', '140.81']);
+  await expect(marginSection.locator('.battle-line-current')).toHaveText(['5,074.63 億', '169.81%']);
+  await expect(marginSection.locator('.battle-line-delta').first()).toContainText('74.63 億');
   expect(pageErrors).toEqual([]);
 });
 

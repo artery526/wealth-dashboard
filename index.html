@@ -9782,6 +9782,7 @@ function battleEtfChangeHtml(data){
   data=data||{};
   var latest=data.latest||null;
   var official=data.officialUrl||'https://www.capitalfund.com.tw/etf/product/detail/502/portfolio';
+  var updatedText=latest&&(latest.createdAt||latest.updatedAt||latest.fetchedAt||data.updatedAt);
   if(!data.hasData||!latest){
     return `<div class="battle-section wide">
       <div class="battle-etf-head">
@@ -9798,11 +9799,11 @@ function battleEtfChangeHtml(data){
     <div class="battle-etf-head">
       <div>
         <div class="battle-section-title">00997A 持股每日變化</div>
-        <div class="battle-etf-meta">資料日 ${esc(latest.sourceDate||latest.date||'--')} · 比較 ${esc(latest.previousDate||'首筆快照')} · 股票合計 ${esc(battleNumberText(latest.totalWeight,2,'%'))}</div>
+        <div class="battle-etf-meta">資料日 ${esc(latest.sourceDate||latest.date||'--')} · 更新 ${esc(updatedText||'--')} · 比較 ${esc(latest.previousDate||'首筆快照')} · 股票合計 ${esc(battleNumberText(latest.totalWeight,2,'%'))}</div>
       </div>
       <a class="battle-etf-link" href="${esc(latest.sourceUrl||official)}" target="_blank" rel="noreferrer">全部持股</a>
     </div>
-    <div class="battle-etf-comment">${esc(latest.commentary||'待 DeepSeek 產生評論。')}</div>
+    <div class="battle-etf-comment"><strong>DeepSeek 短評</strong><br>${esc(latest.commentary||'待 DeepSeek 產生評論。')}</div>
     <div class="battle-etf-grid">
       <div class="battle-etf-box">
         <div class="battle-etf-label">加碼前五</div>
@@ -9856,6 +9857,7 @@ function renderBattleBrief(data,el){
     </div>
   </div>
   <div class="battle-report-grid">
+    ${battleEtfChangeHtml(etfHoldingChange)}
     <div class="battle-section">
       <div class="battle-section-title">基金淨值</div>
       <div class="battle-list">${fundHtml}</div>
@@ -9868,7 +9870,6 @@ function renderBattleBrief(data,el){
       <div class="battle-section-title">持股股價對比</div>
       ${holdingsHtml}
     </div>
-    ${battleEtfChangeHtml(etfHoldingChange)}
   </div>`;
 }
 
