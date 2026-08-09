@@ -3591,7 +3591,7 @@ var DEFAULT_MEDICAL_OPTIONS = {
   emotions: ['😎開心','🤔思考疑惑','🤕頭痛','😴想睡疲累','🥲難過','😡生氣','😮‍💨無奈','🫶感恩','😁豁然開朗'],
   causes: ['🫂伴侶','🎅家人','🗣️頭部','🤷‍♂️身體','🍔腸胃','💰金錢','👁️陌生人','👽陌生事物','🌳自然環境','☕咖啡&茶'],
   meds: ['✨EVE 三重','⚪EVE銀白','🎗️EVE黃金DX','🩹普拿疼加強錠','💊阿德比膠囊','🏥其他'],
-  painAreas: ['左眼窩','右眼窩','左額頭','中間額頭','右邊額頭','太陽穴','風池穴','枕下肌','上斜方肌','膏肓穴','腸胃','胸大肌','無痛'],
+  painAreas: ['左眼窩','右眼窩','左額頭','中間額頭','右邊額頭','太陽穴','膏肓穴','無痛'],
   tarots: ['未抽取','0.愚者','1.魔術師','2.​女祭司','3.皇后','4.國王 (皇帝)','5.教皇 (大祭司)','6.戀人','7.戰車','8.力量','9.隱士','10.命運之輪','11.正義','12.吊人','13.死神','14.節制','15.惡魔','16.高塔','17.星星','18.月亮','19.太陽','20.審判','21.世界','權杖1','權杖2','權杖3','權杖4','權杖5','權杖6','權杖7','權杖8','權杖9','權杖10','聖杯1','聖杯2','聖杯3','聖杯4','聖杯5','聖杯6','聖杯7','聖杯8','聖杯9','聖杯10','寶劍1','寶劍2','寶劍3','寶劍4','寶劍5','寶劍6','寶劍7','寶劍8','寶劍9','寶劍10','錢幣1','錢幣2','錢幣3','錢幣4','錢幣5','錢幣6','錢幣7','錢幣8','錢幣9','錢幣10'],
   positions: ['❌','正位','逆位'],
   oracles: ['❌','0.愚者','1.存在','2.內在的聲音','3.創造力','4.叛逆者','5.空','6.愛人','7.覺知','8.勇氣','9.單獨','10.改變','11.突破','12.新的洞見','13.蛻變','14.整合','15.制約','16.雷電','17.寧靜','18.前世','19.天真','20.超越幻象','21.完成','22.師父','火之1─源頭','火之2─可能性','火之3─正在經驗','火之4─參與','火之5─全然','火之6─成功','火之7─壓力','火之8─旅行','火之9─精疲力竭','火之10─壓抑','水之1─順著流走','水之2─友誼','水之3─慶祝','水之4─轉入內在','水之5─執著於過去','水之6─愛情夢','水之7─投射','水之8─放手','水之9─懶惰','水之10─和諧','雲之1─意識','雲之2─精神分裂','雲之3─封閉','雲之4─延緩','雲之5─比較','雲之6─重擔','雲之7 ─政治手腕','雲之8─罪惡感','雲之9─憂傷','雲之10─再生','彩虹之1─心智圓熟','彩虹之2 ─ 一個片刻接著一個片刻','彩虹之3─引導','彩虹之4─守財奴','彩虹之5─局外人','彩虹之6─妥協','彩虹之7─耐心','彩虹之8─平凡','彩虹之9─成熟','彩虹之10─四海一家'],
@@ -5873,11 +5873,13 @@ async function loadMedicalOptions(){
   try{
     var data=await medicalPost({_action:'getOptions'});
     var options=data.options||{};
+    var removedPainAreas=['風池穴','枕下肌','上斜方肌','腸胃','胸大肌'];
+    var configuredPainAreas=options.painAreas&&options.painAreas.length?options.painAreas:DEFAULT_MEDICAL_OPTIONS.painAreas;
     medicalOptionsCache={
       emotions: options.emotions&&options.emotions.length?options.emotions:DEFAULT_MEDICAL_OPTIONS.emotions,
       causes: options.causes&&options.causes.length?options.causes:DEFAULT_MEDICAL_OPTIONS.causes,
       meds: options.meds&&options.meds.length?options.meds:DEFAULT_MEDICAL_OPTIONS.meds,
-      painAreas: options.painAreas&&options.painAreas.length?options.painAreas:DEFAULT_MEDICAL_OPTIONS.painAreas,
+      painAreas: configuredPainAreas.filter(function(area){return removedPainAreas.indexOf(area)<0;}),
       tarots: options.tarots&&options.tarots.length?options.tarots:DEFAULT_MEDICAL_OPTIONS.tarots,
       positions: options.positions&&options.positions.length?options.positions:DEFAULT_MEDICAL_OPTIONS.positions,
       oracles: options.oracles&&options.oracles.length?options.oracles:DEFAULT_MEDICAL_OPTIONS.oracles,
