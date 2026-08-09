@@ -1935,7 +1935,11 @@ body::after{
 .annual-detail-amt{font-family:var(--mono);font-size:11px;font-weight:800;text-align:right;color:var(--ink)}
 .annual-detail-pct{font-family:var(--sans);font-size:10px;color:#5a4018;text-align:right}
 .annual-empty{font-family:var(--sans);font-size:12px;color:#5a4018;padding:10px 0;text-align:center}
-@media(max-width:760px){.annual-grid{grid-template-columns:1fr}.annual-kpis{grid-template-columns:1fr 1fr}.annual-head{align-items:flex-start;flex-direction:column}.annual-tools{width:100%}.annual-tools select{flex:1}.annual-txn-row{grid-template-columns:74px minmax(0,1fr) 78px}.annual-txn-type,.annual-txn-account{display:none}.annual-txn-amount{text-align:right}}
+.annual-archive-card{border:1px solid #2a1c08;border-radius:7px;background:#0a0804;padding:10px;overflow:hidden}
+.annual-archive-frame{display:grid;place-items:center;min-height:280px;border:1px solid rgba(232,192,80,.13);border-radius:7px;background:#050403;overflow:hidden}
+.annual-archive-img{display:block;width:100%;height:auto;max-height:76vh;object-fit:contain}
+.annual-archive-note{font-family:var(--sans);font-size:11px;font-weight:800;color:#7a6030;line-height:1.6;margin-top:8px}
+@media(max-width:760px){.annual-grid{grid-template-columns:1fr}.annual-kpis{grid-template-columns:1fr 1fr}.annual-head{align-items:flex-start;flex-direction:column}.annual-tools{width:100%}.annual-tools select{flex:1}.annual-txn-row{grid-template-columns:74px minmax(0,1fr) 78px}.annual-txn-type,.annual-txn-account{display:none}.annual-txn-amount{text-align:right}.annual-archive-frame{min-height:180px}.annual-archive-img{max-height:none}}
 
 /* ── Holdings ── */
 .holding-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;padding:12px 0;border-bottom:1px solid #1e1408;align-items:start}
@@ -4042,10 +4046,13 @@ var FINANCE_PLEDGE_CACHE_KEY='wealth_finance_pledge_v2';
 var FINANCE_YEARLY_CACHE_PREFIX='wealth_finance_yearly_v3_';
 var FINANCE_MONTH_DETAIL_CACHE_PREFIX='wealth_finance_month_detail_v1_';
 var FINANCE_YEARLY_LEGACY_CACHE_PREFIXES=['wealth_finance_yearly_v1_'];
+var FINANCE_YEARLY_ARCHIVE_PATH='/api/finance/yearly-archive';
 var FINANCE_CACHE_TTL=6*60*60*1000;
 var financeTreasuryPromise=null;
 var financePledgePromise=null;
 var financeYearlyPromises={};
+var financeYearlyArchiveManifest=null;
+var financeYearlyArchivePromise=null;
 var financeYearlyActiveRequest=0;
 var financeYearlySelectedYear='';
 var financeMonthDetailPromises={};
@@ -9338,10 +9345,79 @@ async function useDividendFromCenter(rowId){
   }catch(e){console.warn(e)}
 }
 
+function financeYearValue(year){
+  var value=parseInt(String(year||'').trim(),10);
+  return isNaN(value)?0:value;
+}
+
+function isFinanceArchivedYear(year){
+  var value=financeYearValue(year);
+  return value>0&&value<new Date().getFullYear();
+}
+
+function normalizeFinanceYearlyArchiveManifest(raw){
+  var manifest=raw||{};
+  var entries=[];
+  if(Array.isArray(manifest.years)){
+    entries=manifest.years.map(function(item){
+      if(typeof item==='string'||typeof item==='number')return {year:String(item),imageUrl:'/media/finance/yearly-archive/'+String(item)+'.webp'};
+      return item||{};
+    });
+  }else if(manifest.years&&typeof manifest.years==='object'){
+    entries=Object.keys(manifest.years).map(function(year){
+      var item=manifest.years[year];
+      if(typeof item==='string')return {year:year,imageUrl:item};
+      return Object.assign({year:year},item||{});
+    });
+  }
+  entries=entries.map(function(item){
+    var year=String(item.year||'').trim();
+    if(!/^\d{4}$/.test(year))return null;
+    return {
+      year:year,
+      title:item.title||year+' 年度財報',
+      imageUrl:item.imageUrl||item.url||('/media/finance/yearly-archive/'+year+'.webp'),
+      updatedAt:item.updatedAt||item.generatedAt||''
+    };
+  }).filter(Boolean);
+  var byYear={};
+  entries.forEach(function(entry){byYear[entry.year]=entry;});
+  return {years:entries.map(function(entry){return entry.year;}),entries:entries,byYear:byYear};
+}
+
+function loadFinanceYearlyArchiveManifest(forceRefresh){
+  if(forceRefresh){
+    financeYearlyArchiveManifest=null;
+    financeYearlyArchivePromise=null;
+  }
+  if(financeYearlyArchiveManifest)return Promise.resolve(financeYearlyArchiveManifest);
+  if(financeYearlyArchivePromise)return financeYearlyArchivePromise;
+  financeYearlyArchivePromise=arkWallFetch(FINANCE_YEARLY_ARCHIVE_PATH).then(function(data){
+    financeYearlyArchiveManifest=normalizeFinanceYearlyArchiveManifest(data);
+    return financeYearlyArchiveManifest;
+  }).catch(function(e){
+    console.warn(e);
+    financeYearlyArchiveManifest=normalizeFinanceYearlyArchiveManifest({years:[]});
+    financeYearlyArchiveManifest.error=e&&e.message||String(e||'');
+    return financeYearlyArchiveManifest;
+  }).finally(function(){
+    financeYearlyArchivePromise=null;
+  });
+  return financeYearlyArchivePromise;
+}
+
+function financeYearlySelectYears(history,selected,manifest){
+  var years=(history||[]).map(function(r){return String(r.year||'');}).filter(Boolean);
+  if(manifest&&manifest.years)years=years.concat(manifest.years);
+  if(selected)years.push(String(selected));
+  years.push(String(new Date().getFullYear()));
+  return [...new Set(years.filter(function(year){return /^\d{4}$/.test(year);}))]
+    .sort(function(a,b){return Number(b)-Number(a);});
+}
+
 async function loadDomesticYearly(forceRefresh){
   var el=document.getElementById('annual-content');
   if(!el)return;
-  if(!API_URL){el.innerHTML=setupNotice();return}
   clearLegacyFinanceYearlyCache();
   var sel=document.getElementById('annual-year-sel');
   var selected=sel&&sel.value?sel.value:String(new Date().getFullYear());
@@ -9355,6 +9431,34 @@ async function loadDomesticYearly(forceRefresh){
     try{localStorage.removeItem(cacheKey);}catch(e){}
     delete financeYearlyPromises[selected];
   }
+  var archiveSelected=isFinanceArchivedYear(selected);
+  if(archiveSelected){
+    el.innerHTML='<div class="skel-line skel"></div><div class="skel-line skel" style="width:80%"></div><div class="skel-line skel" style="width:65%"></div>';
+    if(financeYearlyPromises[selected]){
+      return financeYearlyPromises[selected].then(function(packed){
+        if(packed&&isCurrentRequest())renderFinanceYearlyArchive(packed.manifest,packed.history,packed.years,selected);
+        return packed;
+      });
+    }
+    financeYearlyPromises[selected]=Promise.all([
+      loadFinanceYearlyArchiveManifest(forceRefresh),
+      API_URL?apiGet({action:'history'},25000).catch(function(){return [];}):Promise.resolve([])
+    ]).then(function(results){
+      var manifest=results[0]||normalizeFinanceYearlyArchiveManifest({years:[]});
+      var history=results[1]||[];
+      var years=financeYearlySelectYears(history,selected,manifest);
+      var packed={manifest:manifest,history:history,years:years};
+      if(isCurrentRequest())renderFinanceYearlyArchive(manifest,history,years,selected);
+      return packed;
+    }).catch(function(e){
+      if(isCurrentRequest())el.innerHTML=`<div style="color:var(--coral);font-family:var(--sans);font-size:12px;padding:12px 0">${esc(e.message||e)}</div>`;
+      return null;
+    }).finally(function(){
+      delete financeYearlyPromises[selected];
+    });
+    return financeYearlyPromises[selected];
+  }
+  if(!API_URL){el.innerHTML=setupNotice();return}
   var cached=forceRefresh?null:readTimedFinanceCache(cacheKey);
   if(cached)renderDomesticYearly(cached.data,cached.history,cached.years,selected,true);
   else el.innerHTML='<div class="skel-line skel"></div><div class="skel-line skel" style="width:80%"></div><div class="skel-line skel" style="width:65%"></div>';
@@ -9366,13 +9470,13 @@ async function loadDomesticYearly(forceRefresh){
   }
   financeYearlyPromises[selected]=Promise.all([
     apiGet({action:'history'},25000),
-    apiGet({action:'yearly',year:selected},45000)
+    apiGet({action:'yearly',year:selected},45000),
+    loadFinanceYearlyArchiveManifest(forceRefresh)
   ]).then(function(results){
     var history=results[0]||[];
     var data=results[1]||{};
-    var years=(history||[]).map(r=>String(r.year)).filter(Boolean);
-    if(years.indexOf(selected)===-1)years.push(selected);
-    years=[...new Set(years)].sort((a,b)=>Number(b)-Number(a));
+    var manifest=results[2]||normalizeFinanceYearlyArchiveManifest({years:[]});
+    var years=financeYearlySelectYears(history,selected,manifest);
     var packed={data:data,history:history,years:years};
     writeTimedFinanceCache(cacheKey,packed);
     if(isCurrentRequest())renderDomesticYearly(data,history,years,selected,false);
@@ -9384,6 +9488,43 @@ async function loadDomesticYearly(forceRefresh){
     delete financeYearlyPromises[selected];
   });
   return financeYearlyPromises[selected];
+}
+
+function renderFinanceYearlyArchive(manifest,history,years,selected){
+  var el=document.getElementById('annual-content');
+  if(!el)return;
+  manifest=manifest||normalizeFinanceYearlyArchiveManifest({years:[]});
+  var entry=manifest.byYear&&manifest.byYear[String(selected)];
+  var imageUrl=entry&&entry.imageUrl?entry.imageUrl:'/media/finance/yearly-archive/'+String(selected)+'.webp';
+  var title=entry&&entry.title?entry.title:String(selected)+' 年度財報';
+  var yearOptions=(years||[selected]).map(function(y){
+    return `<option value="${esc(y)}" ${String(y)===String(selected)?'selected':''}>${esc(y)}</option>`;
+  }).join('');
+  var note=entry&&entry.updatedAt?'封存更新：'+entry.updatedAt:'舊年度封存圖由 NAS 提供；明細仍回專屬舊帳試算表查詢。';
+  el.innerHTML=`
+    <div class="annual-head">
+      <div>
+        <div class="annual-title">年度財報</div>
+        <div class="txn-list-title" style="margin:6px 0 0;border:0;padding:0">${esc(title)}</div>
+      </div>
+      <div class="annual-tools">
+        <select class="form-control" id="annual-year-sel" onchange="loadDomesticYearly()">${yearOptions}</select>
+        <button class="submit-btn" style="width:auto;margin:0;padding:9px 12px;background:var(--gold);color:#0a0804" onclick="loadDomesticYearly(true)">重新整理</button>
+      </div>
+    </div>
+    <div class="annual-archive-card">
+      <div class="annual-archive-frame" data-archive-year="${esc(selected)}">
+        <img class="annual-archive-img" src="${esc(arkWallUrl(imageUrl))}" alt="${esc(title)}" loading="lazy" decoding="async" onerror="annualArchiveImageError(this)">
+      </div>
+      <div class="annual-archive-note">${esc(note)}</div>
+    </div>`;
+}
+
+function annualArchiveImageError(img){
+  var frame=img&&img.closest?img.closest('.annual-archive-frame'):null;
+  if(!frame)return;
+  var year=frame.getAttribute('data-archive-year')||'';
+  frame.innerHTML='<div class="annual-empty" style="color:var(--coral)">找不到 '+esc(year)+' 年度封存圖，請確認 NAS yearly-archive 圖檔已放置。</div>';
 }
 
 function renderDomesticYearly(d,history,years,selected,stale){
