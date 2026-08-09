@@ -1935,11 +1935,28 @@ body::after{
 .annual-detail-amt{font-family:var(--mono);font-size:11px;font-weight:800;text-align:right;color:var(--ink)}
 .annual-detail-pct{font-family:var(--sans);font-size:10px;color:#5a4018;text-align:right}
 .annual-empty{font-family:var(--sans);font-size:12px;color:#5a4018;padding:10px 0;text-align:center}
-.annual-archive-card{border:1px solid #2a1c08;border-radius:7px;background:#0a0804;padding:10px;overflow:hidden}
+.annual-archive-card{border:1px solid #2a1c08;border-radius:7px;background:#0a0804;padding:12px;overflow:hidden}
+.annual-archive-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:12px}
+.annual-archive-stat{border:1px solid rgba(232,192,80,.14);border-radius:7px;background:#070503;padding:10px;min-width:0}
+.annual-archive-stat-label{font-family:var(--sans);font-size:9px;font-weight:900;color:#6b4d1e;letter-spacing:1px;margin-bottom:5px}
+.annual-archive-stat-val{font-family:var(--mono);font-size:16px;font-weight:900;color:var(--ink);white-space:nowrap}
+.annual-archive-stat-val.income{color:var(--teal)}.annual-archive-stat-val.expense{color:var(--coral)}.annual-archive-stat-val.net{color:var(--gold)}
+.annual-archive-flow{display:grid;gap:10px}
+.annual-archive-flow-head,.annual-archive-flow-row{display:grid;grid-template-columns:58px minmax(0,1fr) 76px 54px;gap:10px;align-items:center}
+.annual-archive-flow-head{font-family:var(--sans);font-size:9px;font-weight:900;color:#6b4d1e;letter-spacing:1px;padding:0 2px}
+.annual-archive-flow-row{border:1px solid rgba(232,192,80,.1);border-radius:7px;background:#070503;padding:9px 10px}
+.annual-archive-month{font-family:var(--mono);font-size:12px;font-weight:900;color:#bda36d}
+.annual-archive-bars{display:grid;gap:6px;min-width:0}
+.annual-archive-track{height:8px;border-radius:99px;background:#1e1408;overflow:hidden}
+.annual-archive-fill{height:100%;border-radius:99px;background:var(--teal)}
+.annual-archive-fill.expense{background:var(--coral)}
+.annual-archive-values{display:grid;gap:2px;text-align:right;font-family:var(--mono);font-size:11px;font-weight:900}
+.annual-archive-values .income{color:var(--teal)}.annual-archive-values .expense{color:var(--coral)}
+.annual-archive-rate{font-family:var(--mono);font-size:12px;font-weight:900;text-align:right;color:var(--gold)}
 .annual-archive-frame{display:grid;place-items:center;min-height:280px;border:1px solid rgba(232,192,80,.13);border-radius:7px;background:#050403;overflow:hidden}
 .annual-archive-img{display:block;width:100%;height:auto;max-height:76vh;object-fit:contain}
 .annual-archive-note{font-family:var(--sans);font-size:11px;font-weight:800;color:#7a6030;line-height:1.6;margin-top:8px}
-@media(max-width:760px){.annual-grid{grid-template-columns:1fr}.annual-kpis{grid-template-columns:1fr 1fr}.annual-head{align-items:flex-start;flex-direction:column}.annual-tools{width:100%}.annual-tools select{flex:1}.annual-txn-row{grid-template-columns:74px minmax(0,1fr) 78px}.annual-txn-type,.annual-txn-account{display:none}.annual-txn-amount{text-align:right}.annual-archive-frame{min-height:180px}.annual-archive-img{max-height:none}}
+@media(max-width:760px){.annual-grid{grid-template-columns:1fr}.annual-kpis{grid-template-columns:1fr 1fr}.annual-head{align-items:flex-start;flex-direction:column}.annual-tools{width:100%}.annual-tools select{flex:1}.annual-txn-row{grid-template-columns:74px minmax(0,1fr) 78px}.annual-txn-type,.annual-txn-account{display:none}.annual-txn-amount{text-align:right}.annual-archive-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.annual-archive-flow-head{display:none}.annual-archive-flow-row{grid-template-columns:50px minmax(0,1fr) 62px 46px;gap:7px;padding:8px}.annual-archive-month{font-size:11px}.annual-archive-values{font-size:10px}.annual-archive-rate{font-size:11px}.annual-archive-frame{min-height:180px}.annual-archive-img{max-height:none}}
 
 /* ── Holdings ── */
 .holding-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;padding:12px 0;border-bottom:1px solid #1e1408;align-items:start}
@@ -9377,7 +9394,9 @@ function normalizeFinanceYearlyArchiveManifest(raw){
       year:year,
       title:item.title||year+' 年度財報',
       imageUrl:item.imageUrl||item.url||('/media/finance/yearly-archive/'+year+'.webp'),
-      updatedAt:item.updatedAt||item.generatedAt||''
+      updatedAt:item.updatedAt||item.generatedAt||'',
+      total:item.total||null,
+      months:Array.isArray(item.months)?item.months:[]
     };
   }).filter(Boolean);
   var byYear={};
@@ -9490,41 +9509,124 @@ async function loadDomesticYearly(forceRefresh){
   return financeYearlyPromises[selected];
 }
 
+function annualArchiveWanValue(value){
+  var n=Number(value);
+  if(isNaN(n)||!isFinite(n))return 0;
+  return n;
+}
+
+function annualArchiveWanText(value,sign){
+  var n=annualArchiveWanValue(value);
+  var abs=Math.abs(n);
+  var text=(Math.round(abs*10)/10).toFixed(abs%1===0?0:1)+'\u842C';
+  if(sign&&n>0)return '+'+text;
+  if(sign&&n<0)return '-'+text;
+  return text;
+}
+
+function annualArchiveRateText(value){
+  if(value===null||value===undefined||value==='')return '--';
+  if(typeof value==='string')return value.indexOf('%')>=0?value:value+'%';
+  var n=Number(value);
+  if(isNaN(n)||!isFinite(n))return '--';
+  return n.toFixed(1)+'%';
+}
+
+function annualArchiveMonthLabel(year,month){
+  var yy=String(year||'').slice(-2);
+  var mm=String(month||'').padStart(2,'0');
+  return yy+'.'+mm;
+}
+
+function annualArchiveTotals(entry){
+  var total=entry&&entry.total||{};
+  var months=entry&&entry.months||[];
+  var income=total.incomeWan!=null?annualArchiveWanValue(total.incomeWan):months.reduce(function(sum,row){return sum+annualArchiveWanValue(row.incomeWan);},0);
+  var expense=total.expenseWan!=null?annualArchiveWanValue(total.expenseWan):months.reduce(function(sum,row){return sum+annualArchiveWanValue(row.expenseWan);},0);
+  var net=total.netWan!=null?annualArchiveWanValue(total.netWan):income-expense;
+  var savingRate=total.savingRate!=null?total.savingRate:(income>0?net/income*100:0);
+  return {incomeWan:income,expenseWan:expense,netWan:net,savingRate:savingRate};
+}
+
+function annualArchiveFlowRows(entry){
+  var months=entry&&entry.months||[];
+  var maxFlow=Math.max(1,...months.map(function(row){
+    return Math.max(annualArchiveWanValue(row.incomeWan),annualArchiveWanValue(row.expenseWan));
+  }));
+  return months.map(function(row){
+    var income=annualArchiveWanValue(row.incomeWan);
+    var expense=annualArchiveWanValue(row.expenseWan);
+    var rate=row.savingRate!=null?row.savingRate:(income>0?(income-expense)/income*100:0);
+    return `<div class="annual-archive-flow-row">
+      <div class="annual-archive-month">${esc(annualArchiveMonthLabel(entry.year,row.month))}</div>
+      <div class="annual-archive-bars">
+        <div class="annual-archive-track"><div class="annual-archive-fill" style="width:${Math.max(3,income/maxFlow*100)}%"></div></div>
+        <div class="annual-archive-track"><div class="annual-archive-fill expense" style="width:${Math.max(3,expense/maxFlow*100)}%"></div></div>
+      </div>
+      <div class="annual-archive-values">
+        <span class="income">${esc(annualArchiveWanText(income))}</span>
+        <span class="expense">${esc(annualArchiveWanText(expense))}</span>
+      </div>
+      <div class="annual-archive-rate">${esc(annualArchiveRateText(rate))}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderFinanceYearlyArchiveChart(entry,note){
+  var total=annualArchiveTotals(entry);
+  return `<div class="annual-archive-card">
+    <div class="annual-archive-summary">
+      <div class="annual-archive-stat"><div class="annual-archive-stat-label">&#x6536;&#x5165;</div><div class="annual-archive-stat-val income">${esc(annualArchiveWanText(total.incomeWan))}</div></div>
+      <div class="annual-archive-stat"><div class="annual-archive-stat-label">&#x652F;&#x51FA;</div><div class="annual-archive-stat-val expense">${esc(annualArchiveWanText(total.expenseWan))}</div></div>
+      <div class="annual-archive-stat"><div class="annual-archive-stat-label">&#x6DE8;&#x6D41;</div><div class="annual-archive-stat-val net">${esc(annualArchiveWanText(total.netWan,true))}</div></div>
+      <div class="annual-archive-stat"><div class="annual-archive-stat-label">&#x5132;&#x84C4;&#x7387;</div><div class="annual-archive-stat-val">${esc(annualArchiveRateText(total.savingRate))}</div></div>
+    </div>
+    <div class="annual-archive-flow">
+      <div class="annual-archive-flow-head"><div>&#x6708;&#x4EFD;</div><div>&#x6536;&#x652F;&#x8D70;&#x52E2;</div><div style="text-align:right">&#x6536;&#x5165; / &#x652F;&#x51FA;</div><div style="text-align:right">&#x5132;&#x84C4;</div></div>
+      ${annualArchiveFlowRows(entry)}
+    </div>
+    <div class="annual-archive-note">${esc(note)}</div>
+  </div>`;
+}
+
 function renderFinanceYearlyArchive(manifest,history,years,selected){
   var el=document.getElementById('annual-content');
   if(!el)return;
   manifest=manifest||normalizeFinanceYearlyArchiveManifest({years:[]});
   var entry=manifest.byYear&&manifest.byYear[String(selected)];
   var imageUrl=entry&&entry.imageUrl?entry.imageUrl:'/media/finance/yearly-archive/'+String(selected)+'.webp';
-  var title=entry&&entry.title?entry.title:String(selected)+' 年度財報';
+  var title=entry&&entry.title?entry.title:String(selected)+' annual report';
   var yearOptions=(years||[selected]).map(function(y){
     return `<option value="${esc(y)}" ${String(y)===String(selected)?'selected':''}>${esc(y)}</option>`;
   }).join('');
-  var note=entry&&entry.updatedAt?'封存更新：'+entry.updatedAt:'舊年度封存圖由 NAS 提供；明細仍回專屬舊帳試算表查詢。';
-  el.innerHTML=`
-    <div class="annual-head">
-      <div>
-        <div class="annual-title">年度財報</div>
-        <div class="txn-list-title" style="margin:6px 0 0;border:0;padding:0">${esc(title)}</div>
-      </div>
-      <div class="annual-tools">
-        <select class="form-control" id="annual-year-sel" onchange="loadDomesticYearly()">${yearOptions}</select>
-        <button class="submit-btn" style="width:auto;margin:0;padding:9px 12px;background:var(--gold);color:#0a0804" onclick="loadDomesticYearly(true)">重新整理</button>
-      </div>
-    </div>
-    <div class="annual-archive-card">
+  var note=entry&&entry.updatedAt?'Archive updated: '+entry.updatedAt:'Archive view is served by NAS; old ledger details stay in the source spreadsheet.';
+  var body=entry&&entry.months&&entry.months.length
+    ? renderFinanceYearlyArchiveChart(entry,note)
+    : `<div class="annual-archive-card">
       <div class="annual-archive-frame" data-archive-year="${esc(selected)}">
         <img class="annual-archive-img" src="${esc(arkWallUrl(imageUrl))}" alt="${esc(title)}" loading="lazy" decoding="async" onerror="annualArchiveImageError(this)">
       </div>
       <div class="annual-archive-note">${esc(note)}</div>
     </div>`;
+  el.innerHTML=`
+    <div class="annual-head">
+      <div>
+        <div class="annual-title">&#x5E74;&#x5EA6;&#x8CA1;&#x5831;</div>
+        <div class="txn-list-title" style="margin:6px 0 0;border:0;padding:0">${esc(title)}</div>
+      </div>
+      <div class="annual-tools">
+        <select class="form-control" id="annual-year-sel" onchange="loadDomesticYearly()">${yearOptions}</select>
+        <button class="submit-btn" style="width:auto;margin:0;padding:9px 12px;background:var(--gold);color:#0a0804" onclick="loadDomesticYearly(true)">&#x91CD;&#x65B0;&#x6574;&#x7406;</button>
+      </div>
+    </div>
+    ${body}`;
 }
 
 function annualArchiveImageError(img){
   var frame=img&&img.closest?img.closest('.annual-archive-frame'):null;
   if(!frame)return;
   var year=frame.getAttribute('data-archive-year')||'';
-  frame.innerHTML='<div class="annual-empty" style="color:var(--coral)">找不到 '+esc(year)+' 年度封存圖，請確認 NAS yearly-archive 圖檔已放置。</div>';
+  frame.innerHTML='<div class="annual-empty" style="color:var(--coral)">Missing '+esc(year)+' archive data. Check NAS yearly-archive files.</div>';
 }
 
 function renderDomesticYearly(d,history,years,selected,stale){
