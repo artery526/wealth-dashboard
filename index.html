@@ -1953,10 +1953,24 @@ body::after{
 .annual-archive-values{display:grid;gap:2px;text-align:right;font-family:var(--mono);font-size:11px;font-weight:900}
 .annual-archive-values .income{color:var(--teal)}.annual-archive-values .expense{color:var(--coral)}
 .annual-archive-rate{font-family:var(--mono);font-size:12px;font-weight:900;text-align:right;color:var(--gold)}
+.annual-netflow-chart{border:1px solid #2a1c08;border-radius:7px;background:#0a0804;padding:12px;margin-top:12px}
+.annual-netflow-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:8px}
+.annual-netflow-title{font-family:var(--sans);font-size:10px;font-weight:900;letter-spacing:1px;color:#7a5c28}
+.annual-netflow-sub{font-family:var(--mono);font-size:10px;font-weight:800;color:#5a4018}
+.annual-netflow-svg{display:block;width:100%;height:auto;min-height:230px}
+.annual-netflow-grid{stroke:rgba(232,192,80,.12);stroke-width:.45}
+.annual-netflow-zero{stroke:rgba(232,192,80,.46);stroke-width:.7}
+.annual-netflow-line{fill:none;stroke:var(--gold);stroke-width:1.25;stroke-linecap:round;stroke-linejoin:round}
+.annual-netflow-dot{fill:#0a0804;stroke:var(--gold);stroke-width:1}
+.annual-netflow-dot.pos{stroke:var(--teal)}.annual-netflow-dot.neg{stroke:var(--coral)}
+.annual-netflow-label{font-family:var(--mono);font-size:4px;font-weight:800;fill:#8d7138}
+.annual-netflow-val{font-family:var(--mono);font-size:4px;font-weight:900;fill:var(--gold)}
+.annual-netflow-val.pos{fill:var(--teal)}.annual-netflow-val.neg{fill:var(--coral)}
+.annual-netflow-empty{font-family:var(--sans);font-size:12px;color:#5a4018;padding:10px 0;text-align:center}
 .annual-archive-frame{display:grid;place-items:center;min-height:280px;border:1px solid rgba(232,192,80,.13);border-radius:7px;background:#050403;overflow:hidden}
 .annual-archive-img{display:block;width:100%;height:auto;max-height:76vh;object-fit:contain}
 .annual-archive-note{font-family:var(--sans);font-size:11px;font-weight:800;color:#7a6030;line-height:1.6;margin-top:8px}
-@media(max-width:760px){.annual-grid{grid-template-columns:1fr}.annual-kpis{grid-template-columns:1fr 1fr}.annual-head{align-items:flex-start;flex-direction:column}.annual-tools{width:100%}.annual-tools select{flex:1}.annual-txn-row{grid-template-columns:74px minmax(0,1fr) 78px}.annual-txn-type,.annual-txn-account{display:none}.annual-txn-amount{text-align:right}.annual-archive-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.annual-archive-flow-head{display:none}.annual-archive-flow-row{grid-template-columns:50px minmax(0,1fr) 62px 46px;gap:7px;padding:8px}.annual-archive-month{font-size:11px}.annual-archive-values{font-size:10px}.annual-archive-rate{font-size:11px}.annual-archive-frame{min-height:180px}.annual-archive-img{max-height:none}}
+@media(max-width:760px){.annual-grid{grid-template-columns:1fr}.annual-kpis{grid-template-columns:1fr 1fr}.annual-head{align-items:flex-start;flex-direction:column}.annual-tools{width:100%}.annual-tools select{flex:1}.annual-txn-row{grid-template-columns:74px minmax(0,1fr) 78px}.annual-txn-type,.annual-txn-account{display:none}.annual-txn-amount{text-align:right}.annual-archive-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.annual-archive-flow-head{display:none}.annual-archive-flow-row{grid-template-columns:50px minmax(0,1fr) 62px 46px;gap:7px;padding:8px}.annual-archive-month{font-size:11px}.annual-archive-values{font-size:10px}.annual-archive-rate{font-size:11px}.annual-netflow-chart{padding:10px}.annual-netflow-head{align-items:flex-start;flex-direction:column;gap:3px}.annual-netflow-svg{min-height:260px}.annual-archive-frame{min-height:180px}.annual-archive-img{max-height:none}}
 
 /* ── Holdings ── */
 .holding-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;padding:12px 0;border-bottom:1px solid #1e1408;align-items:start}
@@ -9616,6 +9630,68 @@ function renderFinanceYearlyArchiveChart(entry,note){
   </div>`;
 }
 
+function annualNetFlowTrendSources(history,currentEntry,manifest){
+  var byYear={};
+  (history||[]).forEach(function(row){
+    var year=String(row&&row.year||'');
+    var net=Number(row&&row.net);
+    if(/^\d{4}$/.test(year)&&!isNaN(net)&&isFinite(net)){
+      byYear[year]={year:year,netWan:Math.round(net/1000)/10};
+    }
+  });
+  manifest=manifest||financeYearlyArchiveManifest;
+  ((manifest&&manifest.entries)||[]).forEach(function(entry){
+    var total=annualArchiveTotals(entry);
+    byYear[String(entry.year)]={year:String(entry.year),netWan:annualArchiveWanValue(total.netWan)};
+  });
+  if(currentEntry&&currentEntry.year){
+    var currentTotal=annualArchiveTotals(currentEntry);
+    byYear[String(currentEntry.year)]={year:String(currentEntry.year),netWan:annualArchiveWanValue(currentTotal.netWan)};
+  }
+  return Object.keys(byYear).sort(function(a,b){return Number(a)-Number(b);}).map(function(year){return byYear[year];});
+}
+
+function annualNetFlowTrendChart(history,currentEntry,manifest){
+  var rows=annualNetFlowTrendSources(history,currentEntry,manifest);
+  if(!rows.length)return '<div class="annual-netflow-chart"><div class="annual-netflow-empty">No yearly net flow data.</div></div>';
+  var min=Math.min(0,...rows.map(function(row){return row.netWan;}));
+  var max=Math.max(0,...rows.map(function(row){return row.netWan;}));
+  if(min===max){min-=1;max+=1;}
+  var left=18,right=86,top=16,rowH=13,bottom=12;
+  var height=top+Math.max(1,rows.length-1)*rowH+bottom;
+  function x(value){return left+(value-min)/(max-min)*(right-left);}
+  function y(index){return top+index*rowH;}
+  var zeroX=x(0);
+  var points=rows.map(function(row,index){return x(row.netWan).toFixed(2)+','+y(index).toFixed(2);}).join(' ');
+  var grid=rows.map(function(row,index){
+    var yy=y(index);
+    return '<line class="annual-netflow-grid" x1="'+left+'" y1="'+yy+'" x2="'+right+'" y2="'+yy+'"></line>';
+  }).join('');
+  var nodes=rows.map(function(row,index){
+    var yy=y(index);
+    var xx=x(row.netWan);
+    var cls=row.netWan>=0?'pos':'neg';
+    var label=annualArchiveWanText(row.netWan,true);
+    var labelX=row.netWan>=0?Math.min(96,xx+2):Math.max(2,xx-2);
+    var anchor=row.netWan>=0?'start':'end';
+    return '<text class="annual-netflow-label" x="2" y="'+(yy+1.4).toFixed(2)+'">'+esc(row.year)+'</text>'
+      +'<circle class="annual-netflow-dot '+cls+'" cx="'+xx.toFixed(2)+'" cy="'+yy.toFixed(2)+'" r="1.9"></circle>'
+      +'<text class="annual-netflow-val '+cls+'" x="'+labelX.toFixed(2)+'" y="'+(yy+1.4).toFixed(2)+'" text-anchor="'+anchor+'">'+esc(label)+'</text>';
+  }).join('');
+  return `<div class="annual-netflow-chart">
+    <div class="annual-netflow-head">
+      <div class="annual-netflow-title">&#x5E74;&#x5EA6;&#x6DE8;&#x6D41;&#x8D70;&#x52E2;</div>
+      <div class="annual-netflow-sub">${esc(annualArchiveWanText(min))} ~ ${esc(annualArchiveWanText(max))}</div>
+    </div>
+    <svg class="annual-netflow-svg" viewBox="0 0 100 ${height}" role="img" aria-label="yearly net flow trend" preserveAspectRatio="none">
+      ${grid}
+      <line class="annual-netflow-zero" x1="${zeroX.toFixed(2)}" y1="${(top-8).toFixed(2)}" x2="${zeroX.toFixed(2)}" y2="${(height-bottom+5).toFixed(2)}"></line>
+      <polyline class="annual-netflow-line" points="${points}"></polyline>
+      ${nodes}
+    </svg>
+  </div>`;
+}
+
 function renderFinanceYearlyArchive(manifest,history,years,selected){
   var el=document.getElementById('annual-content');
   if(!el)return;
@@ -9646,7 +9722,8 @@ function renderFinanceYearlyArchive(manifest,history,years,selected){
         <button class="submit-btn" style="width:auto;margin:0;padding:9px 12px;background:var(--gold);color:#0a0804" onclick="loadDomesticYearly(true)">&#x91CD;&#x65B0;&#x6574;&#x7406;</button>
       </div>
     </div>
-    ${body}`;
+    ${body}
+    ${annualNetFlowTrendChart(history,entry,manifest)}`;
 }
 
 function annualArchiveImageError(img){
@@ -9708,10 +9785,7 @@ function renderDomesticYearly(d,history,years,selected,stale){
       <div class="annual-card"><div class="annual-card-title">&#x5E74;&#x5EA6;&#x652F;&#x51FA;&#x7D30;&#x9805;</div>${annualDetailRows(d.detail&&d.detail.expenses,'&#x9019;&#x500B;&#x5E74;&#x4EFD;&#x6C92;&#x6709;&#x652F;&#x51FA;&#x7D30;&#x9805;')}</div>
       <div class="annual-card"><div class="annual-card-title">&#x5E74;&#x5EA6;&#x6536;&#x5165;&#x7D30;&#x9805;</div>${annualDetailRows(d.detail&&d.detail.incomes,'&#x9019;&#x500B;&#x5E74;&#x4EFD;&#x6C92;&#x6709;&#x6536;&#x5165;&#x7D30;&#x9805;')}</div>
     </div>
-    <div class="annual-card">
-      <div class="annual-card-title">&#x6B77;&#x5E74;&#x6982;&#x89BD;</div>
-      ${annualHistoryRows(history)}
-    </div>`;
+    ${annualNetFlowTrendChart(history,entry,financeYearlyArchiveManifest)}`;
 }
 
 function annualMonthKey(ym){
@@ -9842,31 +9916,6 @@ function formatAnnualPct(v){
   if(isNaN(n))return String(v);
   if(Math.abs(n)<=1)n=n*100;
   return n.toFixed(1)+'%';
-}
-
-function annualHistoryRows(history){
-  var rows=(history||[]).filter(r=>(Number(r.income)||0)>0).slice(-8);
-  if(!rows.length)return '<div class="annual-empty">尚無歷年概覽資料</div>';
-  var metrics=[
-    {key:'income',title:'總收入',cls:'annual-pos'},
-    {key:'expense',title:'生活支出',cls:'annual-neg'},
-    {key:'net',title:'淨現金流',cls:'annual-gold'},
-    {key:'asset',title:'資產紀錄',cls:''}
-  ];
-  return '<div class="annual-grid" style="margin:0">'+metrics.map(metric=>{
-    var max=Math.max(1,...rows.map(r=>Math.abs(Number(r[metric.key])||0)));
-    var bars=rows.map(r=>{
-      var value=Number(r[metric.key]);
-      var display=isNaN(value)?'—':((metric.key==='net'&&value>=0?'+':'')+fmtN(value));
-      var width=isNaN(value)?0:Math.max(3,Math.abs(value)/max*100);
-      return `<div class="annual-bar-row">
-        <div class="annual-bar-label">${esc(r.year)}</div>
-        <div class="annual-bar-track"><div class="annual-bar-fill" style="width:${width}%;background:${metric.key==='expense'?'var(--coral)':metric.key==='net'?'var(--gold)':metric.key==='asset'?'var(--purple)':'var(--teal)'}"></div></div>
-        <div class="annual-bar-val ${metric.cls}">${display}</div>
-      </div>`;
-    }).join('');
-    return `<div><div class="annual-card-title">${metric.title}</div>${bars}</div>`;
-  }).join('')+'</div>';
 }
 
 function prefetchFinanceDashboard(){
