@@ -4064,6 +4064,7 @@ var FINANCE_YEARLY_CACHE_PREFIX='wealth_finance_yearly_v3_';
 var FINANCE_MONTH_DETAIL_CACHE_PREFIX='wealth_finance_month_detail_v1_';
 var FINANCE_YEARLY_LEGACY_CACHE_PREFIXES=['wealth_finance_yearly_v1_'];
 var FINANCE_YEARLY_ARCHIVE_PATH='/api/finance/yearly-archive';
+var FINANCE_YEARLY_ARCHIVE_CACHE_KEY='wealth_finance_yearly_archive_v1';
 var FINANCE_CACHE_TTL=6*60*60*1000;
 var financeTreasuryPromise=null;
 var financePledgePromise=null;
@@ -9408,11 +9409,22 @@ function loadFinanceYearlyArchiveManifest(forceRefresh){
   if(forceRefresh){
     financeYearlyArchiveManifest=null;
     financeYearlyArchivePromise=null;
+    try{localStorage.removeItem(FINANCE_YEARLY_ARCHIVE_CACHE_KEY);}catch(e){}
   }
   if(financeYearlyArchiveManifest)return Promise.resolve(financeYearlyArchiveManifest);
+  if(!forceRefresh){
+    try{
+      var cached=localStorage.getItem(FINANCE_YEARLY_ARCHIVE_CACHE_KEY);
+      if(cached){
+        financeYearlyArchiveManifest=normalizeFinanceYearlyArchiveManifest(JSON.parse(cached));
+        if(financeYearlyArchiveManifest.years.length)return Promise.resolve(financeYearlyArchiveManifest);
+      }
+    }catch(e){}
+  }
   if(financeYearlyArchivePromise)return financeYearlyArchivePromise;
   financeYearlyArchivePromise=arkWallFetch(FINANCE_YEARLY_ARCHIVE_PATH).then(function(data){
     financeYearlyArchiveManifest=normalizeFinanceYearlyArchiveManifest(data);
+    try{localStorage.setItem(FINANCE_YEARLY_ARCHIVE_CACHE_KEY,JSON.stringify(data));}catch(e){}
     return financeYearlyArchiveManifest;
   }).catch(function(e){
     console.warn(e);
@@ -9423,6 +9435,17 @@ function loadFinanceYearlyArchiveManifest(forceRefresh){
     financeYearlyArchivePromise=null;
   });
   return financeYearlyArchivePromise;
+}
+
+function readFinanceYearlyArchiveManifestCache(){
+  if(financeYearlyArchiveManifest)return financeYearlyArchiveManifest;
+  try{
+    var cached=localStorage.getItem(FINANCE_YEARLY_ARCHIVE_CACHE_KEY);
+    if(!cached)return null;
+    var manifest=normalizeFinanceYearlyArchiveManifest(JSON.parse(cached));
+    if(manifest.years.length)return manifest;
+  }catch(e){}
+  return null;
 }
 
 function financeYearlySelectYears(history,selected,manifest){
@@ -9452,6 +9475,13 @@ async function loadDomesticYearly(forceRefresh){
   }
   var archiveSelected=isFinanceArchivedYear(selected);
   if(archiveSelected){
+    var instantManifest=!forceRefresh?readFinanceYearlyArchiveManifestCache():null;
+    if(instantManifest){
+      financeYearlyArchiveManifest=instantManifest;
+      var instantYears=financeYearlySelectYears([],selected,instantManifest);
+      renderFinanceYearlyArchive(instantManifest,[],instantYears,selected);
+      return Promise.resolve({manifest:instantManifest,history:[],years:instantYears});
+    }
     el.innerHTML='<div class="skel-line skel"></div><div class="skel-line skel" style="width:80%"></div><div class="skel-line skel" style="width:65%"></div>';
     if(financeYearlyPromises[selected]){
       return financeYearlyPromises[selected].then(function(packed){
@@ -9459,12 +9489,9 @@ async function loadDomesticYearly(forceRefresh){
         return packed;
       });
     }
-    financeYearlyPromises[selected]=Promise.all([
-      loadFinanceYearlyArchiveManifest(forceRefresh),
-      API_URL?apiGet({action:'history'},25000).catch(function(){return [];}):Promise.resolve([])
-    ]).then(function(results){
-      var manifest=results[0]||normalizeFinanceYearlyArchiveManifest({years:[]});
-      var history=results[1]||[];
+    financeYearlyPromises[selected]=loadFinanceYearlyArchiveManifest(forceRefresh).then(function(manifest){
+      manifest=manifest||normalizeFinanceYearlyArchiveManifest({years:[]});
+      var history=[];
       var years=financeYearlySelectYears(history,selected,manifest);
       var packed={manifest:manifest,history:history,years:years};
       if(isCurrentRequest())renderFinanceYearlyArchive(manifest,history,years,selected);
