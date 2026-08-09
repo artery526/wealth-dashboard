@@ -538,6 +538,9 @@ body::after{
   background:linear-gradient(180deg,#3b2610,#100904);
   box-shadow:0 0 18px rgba(232,192,80,.28),inset 0 0 0 1px rgba(255,238,190,.12);
 }
+.home-calendar-day.selectable{cursor:pointer;transition:border-color .16s ease,background .16s ease,transform .16s ease}
+.home-calendar-day.selectable:hover{border-color:rgba(255,230,150,.72);background:rgba(184,137,46,.22);transform:translateY(-1px)}
+.home-calendar-day.selected{border-color:#f0dfa0;box-shadow:0 0 0 2px rgba(232,192,80,.35),0 0 16px rgba(232,192,80,.2);color:#fff8d9}
 .home-agenda-body{
   position:relative;z-index:1;
   display:grid;
@@ -5562,6 +5565,7 @@ var currentAgendaMode='today';
 var agendaLoadSeq=0;
 var homeAgendaLoadSeq=0;
 var homeAgendaMode='agenda';
+var homeAgendaSelectedDate='';
 var LUNAR_DAYS=['','初一','初二','初三','初四','初五','初六','初七','初八','初九','初十','十一','十二','十三','十四','十五','十六','十七','十八','十九','二十','廿一','廿二','廿三','廿四','廿五','廿六','廿七','廿八','廿九','三十'];
 function agendaDateLabel(mode){
   var d=new Date();
@@ -5572,6 +5576,18 @@ function agendaDateLabel(mode){
     return (d.getMonth()+1)+'/'+d.getDate()+' - '+(end.getMonth()+1)+'/'+end.getDate();
   }
   return d.getFullYear()+'年'+(d.getMonth()+1)+'月'+d.getDate()+'日 星期'+weeks[d.getDay()];
+}
+
+function localDateText_(date){
+  return date.getFullYear()+'-'+String(date.getMonth()+1).padStart(2,'0')+'-'+String(date.getDate()).padStart(2,'0');
+}
+
+function agendaDateLabelFromText_(dateText){
+  var match=String(dateText||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if(!match)return '指定日期';
+  var date=new Date(Number(match[1]),Number(match[2])-1,Number(match[3]));
+  var weeks=['日','一','二','三','四','五','六'];
+  return (date.getMonth()+1)+'月'+date.getDate()+'日 星期'+weeks[date.getDay()];
 }
 
 function updateAgendaModeButtons(){
@@ -5606,6 +5622,8 @@ function renderHomeCalendar(){
   var year=now.getFullYear();
   var month=now.getMonth();
   var todayDate=now.getDate();
+  var todayText=localDateText_(now);
+  if(!homeAgendaSelectedDate)homeAgendaSelectedDate=todayText;
   var weeks=['日','一','二','三','四','五','六'];
   var monthEl=document.getElementById('home-calendar-month');
   var todayEl=document.getElementById('home-calendar-today');
@@ -5625,26 +5643,43 @@ function renderHomeCalendar(){
     var day=i-startOffset+1;
     var label=day;
     var cls='home-calendar-day';
+    var attrs='';
     if(day<1){
       label=prevDays+day;
       cls+=' muted';
     }else if(day>daysInMonth){
       label=day-daysInMonth;
       cls+=' muted';
-    }else if(day===todayDate){
-      cls+=' today';
+    }else{
+      var dateKey=year+'-'+String(month+1).padStart(2,'0')+'-'+String(day).padStart(2,'0');
+      cls+=' selectable';
+      attrs=' role="button" tabindex="0" aria-label="查看'+esc(agendaDateLabelFromText_(dateKey))+'行程" onclick="selectHomeCalendarDate(\''+dateKey+'\')"';
+      if(dateKey===todayText)cls+=' today';
+      if(dateKey===homeAgendaSelectedDate)cls+=' selected';
     }
-    cells.push('<div class="'+cls+'">'+label+'</div>');
+    cells.push('<div class="'+cls+'"'+attrs+'>'+label+'</div>');
   }
   grid.innerHTML=cells.join('');
 }
 
 function initHomeAgenda(){
+  homeAgendaSelectedDate=localDateText_(new Date());
   renderHomeCalendar();
   var dateEl=document.getElementById('home-agenda-date-text');
   if(dateEl)dateEl.textContent=agendaDateLabel('today');
   updateHomeAgendaModeView();
   refreshHomeAgenda();
+}
+
+function selectHomeCalendarDate(dateText){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(String(dateText||'')))return;
+  homeAgendaSelectedDate=String(dateText);
+  homeAgendaMode='agenda';
+  renderHomeCalendar();
+  updateHomeAgendaModeView();
+  var dateEl=document.getElementById('home-agenda-date-text');
+  if(dateEl)dateEl.textContent=agendaDateLabelFromText_(homeAgendaSelectedDate);
+  loadHomeAgenda(homeAgendaSelectedDate);
 }
 
 function updateHomeAgendaModeView(){
@@ -5655,7 +5690,7 @@ function updateHomeAgendaModeView(){
   var body=document.getElementById('home-agenda-body');
   var isBriefing=homeAgendaMode==='briefing';
   if(title)title.textContent=isBriefing?'帝國晨報':'今日政務';
-  if(dateEl)dateEl.textContent=isBriefing?'諸葛亮軍情摘要':agendaDateLabel('today');
+  if(dateEl)dateEl.textContent=isBriefing?'諸葛亮軍情摘要':(homeAgendaSelectedDate?agendaDateLabelFromText_(homeAgendaSelectedDate):agendaDateLabel('today'));
   if(toggle)toggle.textContent=isBriefing?'今日政務':'帝國晨報';
   if(court)court.classList.toggle('is-briefing',isBriefing);
   if(body)body.classList.toggle('is-briefing',isBriefing);
@@ -5668,17 +5703,19 @@ function toggleHomeAgendaMode(){
 }
 
 function refreshHomeAgenda(){
-  return homeAgendaMode==='briefing'?loadHomeBriefing():loadHomeAgenda();
+  return homeAgendaMode==='briefing'?loadHomeBriefing():loadHomeAgenda(homeAgendaSelectedDate);
 }
 
 async function refreshAgendaTaskViews(){
   await Promise.allSettled([loadTodayCalendar(currentAgendaMode),refreshHomeAgenda()]);
 }
 
-async function loadHomeAgenda(){
+async function loadHomeAgenda(selectedDate){
   var body=document.getElementById('home-agenda-body');
   var btn=document.getElementById('home-agenda-refresh');
   if(!body)return;
+  var agendaDate=selectedDate||homeAgendaSelectedDate||localDateText_(new Date());
+  homeAgendaSelectedDate=agendaDate;
   var loadSeq=++homeAgendaLoadSeq;
   homeAgendaMode='agenda';
   updateHomeAgendaModeView();
@@ -5688,19 +5725,19 @@ async function loadHomeAgenda(){
   }
   try{
     if(btn)btn.disabled=true;
-    body.innerHTML='<section class="agenda-section"><div class="agenda-section-title">今日行程</div><div class="today-agenda-loading">軍師正在調閱今日行程…</div></section><section class="agenda-section"><div class="agenda-section-title">待辦事項</div><div class="today-agenda-loading">軍師正在調閱待辦事項…</div></section>';
+    body.innerHTML='<section class="agenda-section"><div class="agenda-section-title">'+esc(agendaDateLabelFromText_(agendaDate))+' 行程</div><div class="today-agenda-loading">軍師正在調閱'+esc(agendaDateLabelFromText_(agendaDate))+' 行程…</div></section><section class="agenda-section"><div class="agenda-section-title">待辦事項</div><div class="today-agenda-loading">軍師正在調閱待辦事項…</div></section>';
     var results=await Promise.allSettled([
-      apiGet({action:'todayCalendar',mode:'today'},30000),
+      apiGet({action:'todayCalendar',date:agendaDate},30000),
       apiGet({action:'todayTasks'},30000)
     ]);
     if(loadSeq!==homeAgendaLoadSeq)return;
     var calendarHtml=results[0].status==='fulfilled'
-      ? renderCalendarAgenda(results[0].value.events||[],'today')
+      ? renderCalendarAgenda(results[0].value.events||[],agendaDate)
       : '<div class="today-agenda-error">'+esc(results[0].reason&&results[0].reason.message||'行程讀取失敗')+'</div>';
     var taskHtml=results[1].status==='fulfilled'
       ? renderGoogleTasks(results[1].value.tasks||[])
       : '<div class="today-agenda-error">'+esc(results[1].reason&&results[1].reason.message||'Google Tasks 讀取失敗')+'</div>';
-    body.innerHTML='<section class="agenda-section"><div class="agenda-section-title">今日行程</div>'+calendarHtml+'</section><section class="agenda-section"><div class="agenda-section-title">待辦事項</div>'+taskHtml+'</section>';
+    body.innerHTML='<section class="agenda-section"><div class="agenda-section-title">'+esc(agendaDateLabelFromText_(agendaDate))+' 行程</div>'+calendarHtml+'</section><section class="agenda-section"><div class="agenda-section-title">待辦事項</div>'+taskHtml+'</section>';
   }catch(err){
     if(loadSeq!==homeAgendaLoadSeq)return;
     body.innerHTML='<section class="agenda-section"><div class="agenda-section-title">今日行程</div><div class="today-agenda-error">'+esc(err.message||'朝中政務讀取失敗')+'</div></section><section class="agenda-section"><div class="agenda-section-title">待辦事項</div><div class="today-agenda-error">請確認主 Web App 已完成 Calendar / Tasks 授權。</div></section>';
@@ -5844,7 +5881,8 @@ async function loadTodayCalendar(mode){
 
 function renderCalendarAgenda(events,mode){
   var createForm=mode==='week'?'':renderGoogleCalendarCreateForm(mode);
-  if(!events.length)return '<div class="today-agenda-empty">'+(mode==='week'?'七日內無行程。':(mode==='tomorrow'?'明日無行程。':'今日無行程。'))+'</div>'+createForm;
+  var emptyText=mode==='week'?'七日內無行程。':(agendaDateLabelFromText_(agendaFormDate_(mode))+'無行程。');
+  if(!events.length)return '<div class="today-agenda-empty">'+emptyText+'</div>'+createForm;
   if(mode==='week'){
     var grouped={};
     var order=[];
@@ -5865,6 +5903,7 @@ function renderCalendarAgenda(events,mode){
 }
 
 function agendaFormDate_(mode){
+  if(/^\d{4}-\d{2}-\d{2}$/.test(String(mode||'')))return String(mode);
   if(mode!=='tomorrow')return today();
   var d=new Date();
   d.setDate(d.getDate()+1);
