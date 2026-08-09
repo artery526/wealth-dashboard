@@ -9629,84 +9629,60 @@ function annualArchiveImageError(img){
   frame.innerHTML='<div class="annual-empty" style="color:var(--coral)">Missing '+esc(year)+' archive data. Check NAS yearly-archive files.</div>';
 }
 
+function annualLiveArchiveEntry(d,selected){
+  d=d||{};
+  var total=d.total||{income:0,expense:0,net:0,savingRate:'0%'};
+  var months=(d.months||[]).filter(function(m){return (Number(m.income)||0)>0||(Number(m.expense)||0)>0;}).map(function(m){
+    var key=annualMonthKey(m.ym);
+    var parts=key.split('-');
+    var income=Number(m.income)||0;
+    var expense=Number(m.expense)||0;
+    return {
+      month:parseInt(parts[1]||String(m.ym||'').split('/')[1]||'0',10)||0,
+      incomeWan:Math.round(income/1000)/10,
+      expenseWan:Math.round(expense/1000)/10,
+      savingRate:m.savingRate!=null?m.savingRate:(income>0?((income-expense)/income*100):0)
+    };
+  }).filter(function(m){return m.month>0;});
+  return {
+    year:String(selected||d.year||new Date().getFullYear()),
+    title:String(selected||d.year||new Date().getFullYear())+' annual report',
+    total:{
+      incomeWan:Math.round((Number(total.income)||0)/1000)/10,
+      expenseWan:Math.round((Number(total.expense)||0)/1000)/10,
+      netWan:Math.round((Number(total.net)||0)/1000)/10,
+      savingRate:total.savingRate||'0%'
+    },
+    months:months
+  };
+}
+
 function renderDomesticYearly(d,history,years,selected,stale){
   var el=document.getElementById('annual-content');
   if(!el)return;
   d=d||{};
-  var total=d.total||{income:0,expense:0,net:0,savingRate:'0%'};
-  var months=(d.months||[]).filter(m=>(Number(m.income)||0)>0||(Number(m.expense)||0)>0);
-  var maxFlow=Math.max(1,...months.map(m=>Math.max(Number(m.income)||0,Number(m.expense)||0)));
-  var yearOptions=(years||[selected]).map(y=>`<option value="${esc(y)}" ${String(y)===String(selected)?'selected':''}>${esc(y)}</option>`).join('');
-  var monthRows=months.map(m=>{
-    var net=Number(m.net)||0;
-    var monthKey=annualMonthKey(m.ym);
-    var detailId=annualMonthDetailId(monthKey);
-    return `<tr class="annual-month-row" data-ym="${esc(monthKey)}" onclick="loadAnnualMonthDetails('${esc(monthKey)}')">
-      <td><span class="annual-month-key"><span class="annual-month-toggle">+</span>${esc(m.ym)}</span></td>
-      <td class="annual-pos">${fmtN(Number(m.income)||0)}</td>
-      <td class="annual-neg">${fmtN(Number(m.expense)||0)}</td>
-      <td class="${net>=0?'annual-pos':'annual-neg'}">${net>=0?'+':''}${fmtN(net)}</td>
-      <td>${esc(m.savingRate||'0%')}</td>
-    </tr>
-    <tr class="annual-month-detail-row is-hidden" id="${detailId}">
-      <td colspan="5" class="annual-month-detail-cell"><div class="annual-empty">載入中</div></td>
-    </tr>`;
-  }).join('')||'<tr><td colspan="5" class="annual-empty">這個年份尚無月份資料</td></tr>';
-  var monthBars=months.map(m=>{
-    var income=Number(m.income)||0;
-    var expense=Number(m.expense)||0;
-    return `<div>
-      <div class="annual-bar-row">
-        <div class="annual-bar-label">${esc(String(m.ym).split('/')[1]||m.ym)}</div>
-        <div class="annual-bar-track"><div class="annual-bar-fill" style="width:${Math.max(3,income/maxFlow*100)}%"></div></div>
-        <div class="annual-bar-val annual-pos">${fmtN(income)}</div>
-      </div>
-      <div class="annual-bar-row">
-        <div class="annual-bar-label"></div>
-        <div class="annual-bar-track"><div class="annual-bar-fill expense" style="width:${Math.max(3,expense/maxFlow*100)}%"></div></div>
-        <div class="annual-bar-val annual-neg">${fmtN(expense)}</div>
-      </div>
-    </div>`;
-  }).join('')||'<div class="annual-empty">尚無收支趨勢資料</div>';
-
+  var yearOptions=(years||[selected]).map(function(y){return `<option value="${esc(y)}" ${String(y)===String(selected)?'selected':''}>${esc(y)}</option>`;}).join('');
+  var entry=annualLiveArchiveEntry(d,selected);
+  var note=stale?'Cached live yearly report':'Live yearly report from Apps Script';
+  var chart=entry.months.length?renderFinanceYearlyArchiveChart(entry,note):'<div class="annual-empty">No monthly flow data yet.</div>';
   el.innerHTML=`
     <div class="annual-head">
       <div>
-        <div class="annual-title">年度財報</div>
-        <div class="txn-list-title" style="margin:6px 0 0;border:0;padding:0">${stale?'快取先顯示，背景更新中':'年度收支統計與歷年趨勢'}</div>
+        <div class="annual-title">&#x5E74;&#x5EA6;&#x8CA1;&#x5831;</div>
+        <div class="txn-list-title" style="margin:6px 0 0;border:0;padding:0">${stale?'&#x5FEB;&#x53D6;&#x8CC7;&#x6599;':'&#x5373;&#x6642;&#x5E74;&#x5EA6;&#x8CC7;&#x6599;'}</div>
       </div>
       <div class="annual-tools">
         <select class="form-control" id="annual-year-sel" onchange="loadDomesticYearly()">${yearOptions}</select>
-        <button class="submit-btn" style="width:auto;margin:0;padding:9px 12px;background:var(--gold);color:#0a0804" onclick="loadDomesticYearly(true)">重新整理</button>
+        <button class="submit-btn" style="width:auto;margin:0;padding:9px 12px;background:var(--gold);color:#0a0804" onclick="loadDomesticYearly(true)">&#x91CD;&#x65B0;&#x6574;&#x7406;</button>
       </div>
     </div>
-    <div class="kpi-row annual-kpis">
-      <div class="kpi"><div class="kpi-label">年度總收入</div><div class="kpi-val up">${fmtN(total.income)}</div></div>
-      <div class="kpi"><div class="kpi-label">年度生活支出</div><div class="kpi-val down">${fmtN(total.expense)}</div></div>
-      <div class="kpi"><div class="kpi-label">年度淨現金流</div><div class="kpi-val ${Number(total.net)>=0?'up':'down'}">${Number(total.net)>=0?'+':''}${fmtN(total.net)}</div></div>
-      <div class="kpi"><div class="kpi-label">年度儲蓄率</div><div class="kpi-val gold">${esc(total.savingRate||'0%')}</div></div>
-    </div>
+    ${chart}
     <div class="annual-grid">
-      <div class="annual-card">
-        <div class="annual-card-title">月份明細</div>
-        <table class="annual-table">
-          <thead><tr><th>月份</th><th>收入</th><th>支出</th><th>淨流</th><th>儲蓄</th></tr></thead>
-          <tbody>${monthRows}
-            <tr><td>全年合計</td><td class="annual-pos">${fmtN(total.income)}</td><td class="annual-neg">${fmtN(total.expense)}</td><td class="${Number(total.net)>=0?'annual-pos':'annual-neg'}">${Number(total.net)>=0?'+':''}${fmtN(total.net)}</td><td>${esc(total.savingRate||'0%')}</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="annual-card">
-        <div class="annual-card-title">收支趨勢</div>
-        <div class="annual-bars">${monthBars}</div>
-      </div>
-    </div>
-    <div class="annual-grid">
-      <div class="annual-card"><div class="annual-card-title">年度支出細項</div>${annualDetailRows(d.detail&&d.detail.expenses,'這個年份沒有支出細項')}</div>
-      <div class="annual-card"><div class="annual-card-title">年度收入細項</div>${annualDetailRows(d.detail&&d.detail.incomes,'這個年份沒有收入細項')}</div>
+      <div class="annual-card"><div class="annual-card-title">&#x5E74;&#x5EA6;&#x652F;&#x51FA;&#x7D30;&#x9805;</div>${annualDetailRows(d.detail&&d.detail.expenses,'&#x9019;&#x500B;&#x5E74;&#x4EFD;&#x6C92;&#x6709;&#x652F;&#x51FA;&#x7D30;&#x9805;')}</div>
+      <div class="annual-card"><div class="annual-card-title">&#x5E74;&#x5EA6;&#x6536;&#x5165;&#x7D30;&#x9805;</div>${annualDetailRows(d.detail&&d.detail.incomes,'&#x9019;&#x500B;&#x5E74;&#x4EFD;&#x6C92;&#x6709;&#x6536;&#x5165;&#x7D30;&#x9805;')}</div>
     </div>
     <div class="annual-card">
-      <div class="annual-card-title">歷年概覽</div>
+      <div class="annual-card-title">&#x6B77;&#x5E74;&#x6982;&#x89BD;</div>
       ${annualHistoryRows(history)}
     </div>`;
 }
