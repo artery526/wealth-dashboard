@@ -3512,8 +3512,10 @@ body::after{
       </div>
       <button class="card-scroll-toggle" type="button" aria-expanded="false" onclick="toggleCardScroll(event,this)">打開卷軸</button>
       <div class="card-shortcuts" aria-label="&#x57CE;&#x7246;&#x5FEB;&#x6377;&#x5165;&#x53E3;">
+        <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'wall','wall')">生活日記</button>
+        <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'wall','memo')">備忘隨筆</button>
+        <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'wall','market')">股市教室</button>
         <button class="card-shortcut" type="button" onclick="openArkWallAdminShortcut(event)">新增記錄</button>
-        <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'wall')">進入城牆</button>
       </div>
     </div>
 
@@ -4721,7 +4723,7 @@ function openEmpireCardShortcut(event,panel,tab){
   closeAdvisorAIStandalone();
   closeAdvisorDialog();
   if(panel==='wall'){
-    openArkWall();
+    openArkWall(tab);
     return;
   }
   if(currentPanel!==panel){
@@ -8170,7 +8172,8 @@ function bindArkWallCopyText(body){
   });
 }
 
-function openArkWall(){
+function openArkWall(view){
+  if(view==='memo'||view==='market'||view==='wall')arkWallView=view;
   updateArkWallTodayDate();
   setupArkWallViewMenu();
   var overlay=document.getElementById('ark-wall-overlay');
