@@ -242,10 +242,10 @@ body::after{
 }
 .global-scroll-overlay{position:fixed;inset:0;z-index:2900;display:none;align-items:center;justify-content:center;padding:22px;background:rgba(3,2,1,.72);backdrop-filter:blur(5px)}
 .global-scroll-overlay.open{display:flex}
-.global-scroll-menu{display:flex;flex-direction:column;width:min(760px,100%);height:min(calc(100vh - 44px),760px);overflow:hidden;border:1px solid rgba(232,192,80,.68);border-radius:18px;background:radial-gradient(ellipse at 50% 0,rgba(255,235,169,.14),transparent 48%),linear-gradient(135deg,rgba(53,36,15,.98),rgba(12,8,4,.98));box-shadow:0 24px 70px rgba(0,0,0,.62),inset 0 1px 0 rgba(255,245,202,.2);padding:18px}
+.global-scroll-menu{display:flex;flex-direction:column;width:min(760px,100%);height:auto;max-height:min(calc(100vh - 44px),760px);overflow:hidden;border:1px solid rgba(232,192,80,.68);border-radius:18px;background:radial-gradient(ellipse at 50% 0,rgba(255,235,169,.14),transparent 48%),linear-gradient(135deg,rgba(53,36,15,.98),rgba(12,8,4,.98));box-shadow:0 24px 70px rgba(0,0,0,.62),inset 0 1px 0 rgba(255,245,202,.2);padding:18px}
 .global-scroll-menu-head{position:relative;z-index:5;flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 -1px 13px;border-bottom:1px solid rgba(232,192,80,.27);background:linear-gradient(180deg,rgba(40,28,12,.99),rgba(28,19,8,.97));padding:12px 1px 12px}
 .global-scroll-menu-head>div{flex:1;min-width:0}
-.global-scroll-menu-title{position:absolute;left:50%;transform:translateX(-50%);color:#f7e6b2;font-family:var(--font);font-size:22px;font-weight:900;letter-spacing:2px;white-space:nowrap;text-align:center}
+.global-scroll-menu-title{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#f7e6b2;font-family:var(--font);font-size:22px;font-weight:900;letter-spacing:2px;line-height:1;white-space:nowrap;text-align:center}
 .global-scroll-menu-subtitle{margin-top:3px;color:#bca66f;font-family:var(--sans);font-size:12px;font-weight:700}
 .global-scroll-menu-close{position:relative;z-index:6;flex:0 0 auto;width:36px;height:36px;border:1px solid rgba(232,192,80,.58);border-radius:50%;background:rgba(0,0,0,.42);color:#f6df9c;font-size:23px;line-height:1;cursor:pointer;pointer-events:auto;touch-action:manipulation}
 .global-scroll-menu-close:hover{border-color:rgba(255,220,112,.9);background:rgba(232,192,80,.12)}
