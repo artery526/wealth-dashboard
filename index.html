@@ -868,6 +868,16 @@ body::after{
 #c-wall.wall-landscape{
   width:502px;
 }
+/* 桌機縮窄時保留雙欄，讓主卡隨容器等比例收窄；平板以下再改單欄。 */
+@media(min-width:769px){
+  .cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}
+  #c-finance.finance-landscape,
+  #c-domestic.domestic-landscape,
+  #c-council.military-landscape,
+  #c-medical.medical-landscape,
+  #c-stars.stars-landscape,
+  #c-wall.wall-landscape{width:100%;min-width:0;max-width:502px;justify-self:center}
+}
 #c-finance.finance-landscape .art,
 #c-domestic.domestic-landscape .art,
 #c-council.military-landscape .art,
