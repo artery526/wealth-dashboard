@@ -1714,7 +1714,9 @@ body::after{
 .kpi-sub.up{color:var(--teal)}.kpi-sub.down{color:var(--coral)}
 @media(max-width:680px){
   .kpi-row{grid-template-columns:repeat(2,minmax(0,1fr));}
-  .finance-monthly-kpi{grid-column:1/-1}
+  .finance-target-kpi{grid-column:1;grid-row:1}
+  .finance-performance-kpi{grid-column:2;grid-row:1}
+  .finance-monthly-kpi{grid-column:1/-1;grid-row:2}
 }
 
 /* ── Quick Booking ── */
