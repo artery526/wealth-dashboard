@@ -240,11 +240,10 @@ body::after{
   color:var(--gold);
   font-size:10px;
 }
-.advisor-scroll-launcher{position:absolute;left:calc(50% + 108px);bottom:20px;z-index:8}
-.advisor-scroll-launcher-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;width:76px;min-height:92px;border:1px solid rgba(232,192,80,.58);border-radius:12px;background:linear-gradient(180deg,rgba(34,24,11,.92),rgba(9,7,4,.94));box-shadow:0 8px 18px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,244,194,.17);color:#f4e5b7;cursor:pointer;padding:4px 3px 5px;transition:transform .18s,border-color .18s,box-shadow .18s}
-.advisor-scroll-launcher-btn:hover,.advisor-scroll-launcher-btn:focus-visible{transform:translateY(-3px);border-color:rgba(255,218,105,.92);box-shadow:0 10px 22px rgba(0,0,0,.42),0 0 18px rgba(232,192,80,.2),inset 0 1px 0 rgba(255,244,194,.2);outline:none}
-.advisor-scroll-launcher-btn video{display:block;width:58px;height:62px;object-fit:contain;pointer-events:none}
-.advisor-scroll-launcher-label{font-family:var(--sans);font-size:10px;font-weight:900;letter-spacing:.8px;line-height:1.1;text-shadow:0 1px 3px #000}
+.advisor-scroll-launcher{position:absolute;left:calc(50% - 142px);top:18px;z-index:8}
+.advisor-scroll-launcher-btn{display:block;width:68px;height:78px;border:0;border-radius:0;background:transparent;box-shadow:none;color:inherit;cursor:pointer;padding:0;transition:transform .18s,filter .18s}
+.advisor-scroll-launcher-btn:hover,.advisor-scroll-launcher-btn:focus-visible{transform:translateY(-3px) scale(1.06);filter:brightness(1.12) drop-shadow(0 0 10px rgba(232,192,80,.28));outline:none}
+.advisor-scroll-launcher-btn video{display:block;width:68px;height:78px;object-fit:contain;pointer-events:none;filter:drop-shadow(0 7px 9px rgba(0,0,0,.42))}
 .global-scroll-overlay{position:fixed;inset:0;z-index:2900;display:none;align-items:center;justify-content:center;padding:22px;background:rgba(3,2,1,.72);backdrop-filter:blur(5px)}
 .global-scroll-overlay.open{display:flex}
 .global-scroll-menu{width:min(760px,100%);max-height:calc(100vh - 44px);overflow:auto;border:1px solid rgba(232,192,80,.68);border-radius:18px;background:radial-gradient(ellipse at 50% 0,rgba(255,235,169,.14),transparent 48%),linear-gradient(135deg,rgba(53,36,15,.98),rgba(12,8,4,.98));box-shadow:0 24px 70px rgba(0,0,0,.62),inset 0 1px 0 rgba(255,245,202,.2);padding:18px}
@@ -2775,10 +2774,8 @@ body::after{
   .advisor-duo-role.pangtong .advisor-duo-stage,
   .advisor-duo-role.zhuge .advisor-duo-stage{height:190px}
   .advisor-duo-label{min-width:96px;font-size:11px;padding:5px 8px}
-  .advisor-scroll-launcher{left:calc(50% + 92px);bottom:13px}
-  .advisor-scroll-launcher-btn{width:62px;min-height:76px;border-radius:10px}
-  .advisor-scroll-launcher-btn video{width:48px;height:49px}
-  .advisor-scroll-launcher-label{font-size:9px;letter-spacing:.4px}
+  .advisor-scroll-launcher{left:calc(50% - 125px);top:13px}
+  .advisor-scroll-launcher-btn,.advisor-scroll-launcher-btn video{width:58px;height:68px}
   .global-scroll-overlay{align-items:flex-end;padding:10px}
   .global-scroll-menu{max-height:calc(100vh - 20px);border-radius:15px;padding:14px}
   .global-scroll-menu-title{font-size:19px}
@@ -2874,10 +2871,8 @@ body::after{
   .advisor-duo-role.pangtong .advisor-duo-stage,
   .advisor-duo-role.zhuge .advisor-duo-stage{height:180px}
   .advisor-duo-label{min-width:94px;font-size:11px;letter-spacing:.3px;padding:5px 8px}
-  .advisor-scroll-launcher{left:calc(50% + 84px);bottom:11px}
-  .advisor-scroll-launcher-btn{width:57px;min-height:69px}
-  .advisor-scroll-launcher-btn video{width:43px;height:43px}
-  .advisor-scroll-launcher-label{font-size:8px}
+  .advisor-scroll-launcher{left:calc(50% - 116px);top:10px}
+  .advisor-scroll-launcher-btn,.advisor-scroll-launcher-btn video{width:52px;height:62px}
   .cards{
     grid-template-columns:minmax(0,1fr);
     gap:14px;
@@ -3317,7 +3312,6 @@ body::after{
           <div class="advisor-scroll-launcher">
             <button class="advisor-scroll-launcher-btn" id="global-scroll-launcher" type="button" aria-expanded="false" aria-controls="global-scroll-overlay" onclick="toggleGlobalScrollMenu(event)" title="&#x5361;&#x7247;&#x5FEB;&#x6377;&#x5377;&#x8EF8;">
               <video src="menu.mp4" muted playsinline preload="metadata" aria-hidden="true"></video>
-              <span class="advisor-scroll-launcher-label">&#x5FEB;&#x6377;&#x5377;&#x8EF8;</span>
             </button>
           </div>
         </div>
