@@ -10713,7 +10713,7 @@ function battleEtfChangeHtml(data){
     return `<div class="battle-section wide">
       <div class="battle-etf-head">
         <div>
-          <div class="battle-section-title">00997A 持股每日變化</div>
+          <div class="battle-section-title">00997A 持股變化與軍師短評</div>
           <div class="battle-etf-meta">等待每日 19:00 快照</div>
         </div>
         <a class="battle-etf-link" href="${esc(official)}" target="_blank" rel="noreferrer">全部持股</a>
@@ -10724,12 +10724,12 @@ function battleEtfChangeHtml(data){
   return `<div class="battle-section wide">
     <div class="battle-etf-head">
       <div>
-        <div class="battle-section-title">00997A 持股每日變化</div>
+        <div class="battle-section-title">00997A 持股變化與軍師短評</div>
         <div class="battle-etf-meta">資料日 ${esc(latest.sourceDate||latest.date||'--')} · 更新 ${esc(updatedText||'--')} · 比較 ${esc(latest.previousDate||'首筆快照')} · 股票合計 ${esc(battleNumberText(latest.totalWeight,2,'%'))}</div>
       </div>
       <a class="battle-etf-link" href="${esc(latest.sourceUrl||official)}" target="_blank" rel="noreferrer">全部持股</a>
     </div>
-    <div class="battle-etf-comment"><strong>DeepSeek 短評</strong><br>${esc(latest.commentary||'待 DeepSeek 產生評論。')}</div>
+    <div class="battle-etf-comment">${esc(latest.commentary||'待 DeepSeek 產生評論。')}</div>
     <div class="battle-etf-grid">
       <div class="battle-etf-box">
         <div class="battle-etf-label">加碼前五</div>
