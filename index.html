@@ -3597,6 +3597,10 @@ var bookingHoldingTradePickerOpen = false;
 var DIVIDEND_CACHE_TTL = 5 * 60 * 1000;
 var DIVIDEND_AUTOFILL_SYMBOLS = ['CHPY','AIPI','QQQI','MLPI','PLTY','00997A'];
 var heroCache = [];
+var councilDashboardCache = null;
+var councilDashboardFetchedAt = 0;
+var councilDashboardPromise = null;
+var COUNCIL_DASHBOARD_CACHE_TTL = 45 * 1000;
 var stockTradeMode = false;
 var bookingAutoDate = '';
 var bookingFormInitPromise = null;
@@ -10714,30 +10718,63 @@ async function loadCouncilDashboard(){
     return;
   }
   setEmpireCardStatus('council','pending');
-  el.innerHTML='<div class="skel-line skel"></div><div class="skel-line skel" style="width:82%"></div><div class="skel-line skel" style="width:70%"></div>';
+  var cached=councilDashboardCache;
+  var cacheFresh=cached&&(Date.now()-councilDashboardFetchedAt<COUNCIL_DASHBOARD_CACHE_TTL);
+  if(cached){
+    holdingsCache=cached.holdings.length?cached.holdings:holdingsCache;
+    renderCouncilRoster(mergeCouncilRows(cached.holdings,cached.heroes,{}),el,cached.assetSnapshot,cached.dividendProjection);
+    setEmpireCardStatus('council',cached.holdingsLoaded&&API_URL?'ok':'err',cached.holdingsLoaded&&API_URL?'武將與持股同步':'已載入武將資料 · 尚未連接持股 API');
+    if(cacheFresh)return;
+  }else{
+    el.innerHTML='<div class="skel-line skel"></div><div class="skel-line skel" style="width:82%"></div><div class="skel-line skel" style="width:70%"></div>';
+  }
   try{
-    var results=await Promise.allSettled([
-      loadHeroSheet(true),
-      loadCouncilHoldingsOverview(),
-      loadAssetSnapshot(),
-      loadMonthlyDividendProjection()
-    ]);
-    var heroes=results[0].status==='fulfilled'?results[0].value:[];
-    var holdings=results[1].status==='fulfilled'?(results[1].value||[]):[];
+    var results=await loadCouncilDashboardData();
+    var heroes=results.heroes;
+    var holdings=results.holdings;
     var armySettings={};
-    var assetSnapshot=results[2].status==='fulfilled'?results[2].value:null;
-    var dividendProjection=results[3].status==='fulfilled'?results[3].value:null;
+    var assetSnapshot=results.assetSnapshot;
+    var dividendProjection=results.dividendProjection;
+    councilDashboardCache={
+      heroes:heroes,
+      holdings:holdings,
+      assetSnapshot:assetSnapshot,
+      dividendProjection:dividendProjection,
+      holdingsLoaded:results.holdingsLoaded
+    };
+    councilDashboardFetchedAt=Date.now();
     holdingsCache=holdings.length?holdings:holdingsCache;
     renderCouncilRoster(mergeCouncilRows(holdings,heroes,armySettings),el,assetSnapshot,dividendProjection);
     var dot=document.getElementById('council-dot');
     var lbl=document.getElementById('council-label');
-    if(dot)dot.className='api-dot '+(results[1].status==='fulfilled'&&API_URL?'ok':'err');
-    if(lbl)lbl.textContent=(results[1].status==='fulfilled'&&API_URL)?'已連線 · 武將與持股同步':'已載入武將資料 · 尚未連接持股 API';
-    setEmpireCardStatus('council',results[1].status==='fulfilled'&&API_URL?'ok':'err',results[1].status==='fulfilled'&&API_URL?'武將與持股同步':'持股 API 未連接');
+    if(dot)dot.className='api-dot '+(results.holdingsLoaded&&API_URL?'ok':'err');
+    if(lbl)lbl.textContent=(results.holdingsLoaded&&API_URL)?'已連線 · 武將與持股同步':'已載入武將資料 · 尚未連接持股 API';
+    setEmpireCardStatus('council',results.holdingsLoaded&&API_URL?'ok':'err',results.holdingsLoaded&&API_URL?'武將與持股同步':'持股 API 未連接');
   }catch(e){
     setEmpireCardStatus('council','err',e.message||'讀取失敗');
     el.innerHTML=`<div style="color:var(--coral);font-family:var(--sans);font-size:12px;padding:12px 0">${esc(e.message)}</div>`;
   }
+}
+
+function loadCouncilDashboardData(){
+  if(councilDashboardPromise)return councilDashboardPromise;
+  councilDashboardPromise=Promise.allSettled([
+      loadHeroSheet(),
+      loadCouncilHoldingsOverview(),
+      loadAssetSnapshot(),
+      loadMonthlyDividendProjection()
+    ]).then(function(results){
+      return {
+        heroes:results[0].status==='fulfilled'?results[0].value:[],
+        holdings:results[1].status==='fulfilled'?(results[1].value||[]):[],
+        assetSnapshot:results[2].status==='fulfilled'?results[2].value:null,
+        dividendProjection:results[3].status==='fulfilled'?results[3].value:null,
+        holdingsLoaded:results[1].status==='fulfilled'
+      };
+    }).finally(function(){
+      councilDashboardPromise=null;
+    });
+  return councilDashboardPromise;
 }
 
 function renderRetiredTaskNotice(){
@@ -11271,18 +11308,15 @@ function buildAssetSnapshotFromCommand(commandLatest,sheetSnapshot){
 }
 
 async function loadAssetSnapshot(){
-  var sheetSnapshot=null;
-  try{
-    sheetSnapshot=await loadDailyAssetSnapshotSheet();
-  }catch(e){
-    console.warn('asset snapshot sheet fallback:',e);
-  }
-  try{
-    var commandLatest=await loadCommandMarketSnapshot();
-    if(commandLatest)return buildAssetSnapshotFromCommand(commandLatest,sheetSnapshot);
-  }catch(e){
-    console.warn('command market value fallback:',e);
-  }
+  var snapshots=await Promise.allSettled([
+    loadDailyAssetSnapshotSheet(),
+    loadCommandMarketSnapshot()
+  ]);
+  var sheetSnapshot=snapshots[0].status==='fulfilled'?snapshots[0].value:null;
+  var commandLatest=snapshots[1].status==='fulfilled'?snapshots[1].value:null;
+  if(snapshots[0].status!=='fulfilled')console.warn('asset snapshot sheet fallback:',snapshots[0].reason);
+  if(commandLatest)return buildAssetSnapshotFromCommand(commandLatest,sheetSnapshot);
+  if(snapshots[1].status!=='fulfilled')console.warn('command market value fallback:',snapshots[1].reason);
   if(sheetSnapshot&&sheetSnapshot.latest)return sheetSnapshot;
   if(!API_URL)return null;
   try{
