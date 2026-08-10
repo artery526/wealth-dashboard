@@ -240,10 +240,10 @@ body::after{
   color:var(--gold);
   font-size:10px;
 }
-.advisor-scroll-launcher{position:absolute;left:calc(50% - 142px);top:18px;z-index:8}
+.advisor-scroll-launcher{position:fixed;left:0;top:clamp(48px,8vh,92px);z-index:8;opacity:.78;mix-blend-mode:screen;filter:saturate(.78) sepia(.16)}
 .advisor-scroll-launcher-btn{display:block;width:68px;height:78px;border:0;border-radius:0;background:transparent;box-shadow:none;color:inherit;cursor:pointer;padding:0;transition:transform .18s,filter .18s}
-.advisor-scroll-launcher-btn:hover,.advisor-scroll-launcher-btn:focus-visible{transform:translateY(-3px) scale(1.06);filter:brightness(1.12) drop-shadow(0 0 10px rgba(232,192,80,.28));outline:none}
-.advisor-scroll-launcher-btn video{display:block;width:68px;height:78px;object-fit:contain;pointer-events:none;filter:drop-shadow(0 7px 9px rgba(0,0,0,.42))}
+.advisor-scroll-launcher-btn:hover,.advisor-scroll-launcher-btn:focus-visible{transform:translateX(3px) scale(1.06);filter:brightness(1.18) drop-shadow(0 0 10px rgba(232,192,80,.28));outline:none}
+.advisor-scroll-launcher-btn video{display:block;width:68px;height:78px;object-fit:contain;pointer-events:none;filter:drop-shadow(0 5px 8px rgba(0,0,0,.28))}
 .global-scroll-overlay{position:fixed;inset:0;z-index:2900;display:none;align-items:center;justify-content:center;padding:22px;background:rgba(3,2,1,.72);backdrop-filter:blur(5px)}
 .global-scroll-overlay.open{display:flex}
 .global-scroll-menu{width:min(760px,100%);max-height:calc(100vh - 44px);overflow:auto;border:1px solid rgba(232,192,80,.68);border-radius:18px;background:radial-gradient(ellipse at 50% 0,rgba(255,235,169,.14),transparent 48%),linear-gradient(135deg,rgba(53,36,15,.98),rgba(12,8,4,.98));box-shadow:0 24px 70px rgba(0,0,0,.62),inset 0 1px 0 rgba(255,245,202,.2);padding:18px}
@@ -2774,7 +2774,7 @@ body::after{
   .advisor-duo-role.pangtong .advisor-duo-stage,
   .advisor-duo-role.zhuge .advisor-duo-stage{height:190px}
   .advisor-duo-label{min-width:96px;font-size:11px;padding:5px 8px}
-  .advisor-scroll-launcher{left:calc(50% - 125px);top:13px}
+  .advisor-scroll-launcher{left:0;top:clamp(46px,7vh,74px)}
   .advisor-scroll-launcher-btn,.advisor-scroll-launcher-btn video{width:58px;height:68px}
   .global-scroll-overlay{align-items:flex-end;padding:10px}
   .global-scroll-menu{max-height:calc(100vh - 20px);border-radius:15px;padding:14px}
@@ -2871,7 +2871,7 @@ body::after{
   .advisor-duo-role.pangtong .advisor-duo-stage,
   .advisor-duo-role.zhuge .advisor-duo-stage{height:180px}
   .advisor-duo-label{min-width:94px;font-size:11px;letter-spacing:.3px;padding:5px 8px}
-  .advisor-scroll-launcher{left:calc(50% - 116px);top:10px}
+  .advisor-scroll-launcher{left:0;top:clamp(42px,6vh,62px)}
   .advisor-scroll-launcher-btn,.advisor-scroll-launcher-btn video{width:52px;height:62px}
   .cards{
     grid-template-columns:minmax(0,1fr);
@@ -3309,14 +3309,15 @@ body::after{
           <button class="advisor-duo-role pangtong" type="button" onclick="openAdvisorAIFromOrb(event)" title="龐統 · 軍師AI">
             <span class="advisor-duo-stage"><video class="advisor-duo-video" src="pangtongmenuv2.mp4" poster="pangtong.png" muted playsinline preload="auto" aria-label="龐統軍師"></video></span>
           </button>
-          <div class="advisor-scroll-launcher">
-            <button class="advisor-scroll-launcher-btn" id="global-scroll-launcher" type="button" aria-expanded="false" aria-controls="global-scroll-overlay" onclick="toggleGlobalScrollMenu(event)" title="&#x5361;&#x7247;&#x5FEB;&#x6377;&#x5377;&#x8EF8;">
-              <video src="menu.mp4" muted playsinline preload="metadata" aria-hidden="true"></video>
-            </button>
-          </div>
         </div>
         <div class="hdr-char-vignette"></div>
       </div>
+    </div>
+
+    <div class="advisor-scroll-launcher">
+      <button class="advisor-scroll-launcher-btn" id="global-scroll-launcher" type="button" aria-expanded="false" aria-controls="global-scroll-overlay" onclick="toggleGlobalScrollMenu(event)" title="&#x5361;&#x7247;&#x5FEB;&#x6377;&#x5377;&#x8EF8;">
+        <video class="global-scroll-video" src="menu.mp4" muted playsinline preload="auto" aria-hidden="true"></video>
+      </button>
     </div>
 
   </div>
@@ -12998,6 +12999,34 @@ function initAdvisorDuoVideoPlayback(){
   });
 }
 initAdvisorDuoVideoPlayback();
+
+function initGlobalScrollVideoPlayback(){
+  var button=document.getElementById('global-scroll-launcher');
+  var video=button&&button.querySelector('video.global-scroll-video');
+  if(!button||!video)return;
+  video.muted=true;
+  video.playsInline=true;
+  video.loop=false;
+  function playScrollVideo(){
+    try{
+      video.currentTime=0;
+      var result=video.play();
+      if(result&&result.catch)result.catch(function(){});
+    }catch(e){}
+  }
+  function playOnLoad(){
+    if(video.dataset.initialPlayed==='1')return;
+    video.dataset.initialPlayed='1';
+    playScrollVideo();
+  }
+  if(video.readyState>=2){setTimeout(playOnLoad,120)}
+  else video.addEventListener('loadeddata',function(){setTimeout(playOnLoad,120)},{once:true});
+  video.addEventListener('ended',function(){try{video.pause()}catch(e){}});
+  button.addEventListener('mouseenter',playScrollVideo);
+  button.addEventListener('focusin',playScrollVideo);
+  button.addEventListener('pointerdown',playScrollVideo);
+}
+initGlobalScrollVideoPlayback();
 
 // ══════════════════════════════════════════
 //  Particles
