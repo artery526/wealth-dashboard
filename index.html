@@ -240,6 +240,26 @@ body::after{
   color:var(--gold);
   font-size:10px;
 }
+.advisor-scroll-launcher{position:absolute;left:calc(50% + 108px);bottom:20px;z-index:8}
+.advisor-scroll-launcher-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;width:76px;min-height:92px;border:1px solid rgba(232,192,80,.58);border-radius:12px;background:linear-gradient(180deg,rgba(34,24,11,.92),rgba(9,7,4,.94));box-shadow:0 8px 18px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,244,194,.17);color:#f4e5b7;cursor:pointer;padding:4px 3px 5px;transition:transform .18s,border-color .18s,box-shadow .18s}
+.advisor-scroll-launcher-btn:hover,.advisor-scroll-launcher-btn:focus-visible{transform:translateY(-3px);border-color:rgba(255,218,105,.92);box-shadow:0 10px 22px rgba(0,0,0,.42),0 0 18px rgba(232,192,80,.2),inset 0 1px 0 rgba(255,244,194,.2);outline:none}
+.advisor-scroll-launcher-btn video{display:block;width:58px;height:62px;object-fit:contain;pointer-events:none}
+.advisor-scroll-launcher-label{font-family:var(--sans);font-size:10px;font-weight:900;letter-spacing:.8px;line-height:1.1;text-shadow:0 1px 3px #000}
+.global-scroll-overlay{position:fixed;inset:0;z-index:2900;display:none;align-items:center;justify-content:center;padding:22px;background:rgba(3,2,1,.72);backdrop-filter:blur(5px)}
+.global-scroll-overlay.open{display:flex}
+.global-scroll-menu{width:min(760px,100%);max-height:calc(100vh - 44px);overflow:auto;border:1px solid rgba(232,192,80,.68);border-radius:18px;background:radial-gradient(ellipse at 50% 0,rgba(255,235,169,.14),transparent 48%),linear-gradient(135deg,rgba(53,36,15,.98),rgba(12,8,4,.98));box-shadow:0 24px 70px rgba(0,0,0,.62),inset 0 1px 0 rgba(255,245,202,.2);padding:18px}
+.global-scroll-menu-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:13px;border-bottom:1px solid rgba(232,192,80,.27);padding:0 1px 12px}
+.global-scroll-menu-title{color:#f7e6b2;font-family:var(--font);font-size:22px;font-weight:900;letter-spacing:2px}
+.global-scroll-menu-subtitle{margin-top:3px;color:#bca66f;font-family:var(--sans);font-size:12px;font-weight:700}
+.global-scroll-menu-close{width:32px;height:32px;border:1px solid rgba(232,192,80,.4);border-radius:50%;background:rgba(0,0,0,.2);color:#f6df9c;font-size:20px;line-height:1;cursor:pointer}
+.global-scroll-menu-close:hover{border-color:rgba(255,220,112,.9);background:rgba(232,192,80,.12)}
+.global-scroll-groups{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+.global-scroll-group{border:1px solid rgba(190,144,50,.3);border-radius:11px;background:rgba(9,6,3,.42);padding:10px}
+.global-scroll-group-title{margin-bottom:8px;color:#e9c965;font-family:var(--font);font-size:16px;font-weight:900;letter-spacing:1.5px}
+.global-scroll-buttons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.global-scroll-button{min-height:38px;border:1px solid rgba(196,155,62,.36);border-radius:7px;background:linear-gradient(180deg,rgba(78,52,18,.58),rgba(18,12,6,.8));color:#f1de9e;font-family:var(--sans);font-size:13px;font-weight:900;line-height:1.2;padding:6px;cursor:pointer;transition:transform .14s,border-color .14s,background .14s}
+.global-scroll-button:hover,.global-scroll-button:focus-visible{transform:translateY(-1px);border-color:rgba(255,218,105,.83);background:linear-gradient(180deg,rgba(112,77,26,.72),rgba(30,20,8,.88));outline:none}
+.card-scroll-toggle,.card-shortcuts{display:none!important}
 .hdr-char-vignette{
   position:absolute;inset:0;
   background:transparent;
@@ -2755,6 +2775,17 @@ body::after{
   .advisor-duo-role.pangtong .advisor-duo-stage,
   .advisor-duo-role.zhuge .advisor-duo-stage{height:190px}
   .advisor-duo-label{min-width:96px;font-size:11px;padding:5px 8px}
+  .advisor-scroll-launcher{left:calc(50% + 92px);bottom:13px}
+  .advisor-scroll-launcher-btn{width:62px;min-height:76px;border-radius:10px}
+  .advisor-scroll-launcher-btn video{width:48px;height:49px}
+  .advisor-scroll-launcher-label{font-size:9px;letter-spacing:.4px}
+  .global-scroll-overlay{align-items:flex-end;padding:10px}
+  .global-scroll-menu{max-height:calc(100vh - 20px);border-radius:15px;padding:14px}
+  .global-scroll-menu-title{font-size:19px}
+  .global-scroll-groups{grid-template-columns:1fr;gap:8px}
+  .global-scroll-group{padding:9px}
+  .global-scroll-group-title{font-size:15px;margin-bottom:7px}
+  .global-scroll-button{min-height:36px;font-size:12px}
   .hdr-char{
     width:100%;
     height:auto;
@@ -2843,6 +2874,10 @@ body::after{
   .advisor-duo-role.pangtong .advisor-duo-stage,
   .advisor-duo-role.zhuge .advisor-duo-stage{height:180px}
   .advisor-duo-label{min-width:94px;font-size:11px;letter-spacing:.3px;padding:5px 8px}
+  .advisor-scroll-launcher{left:calc(50% + 84px);bottom:11px}
+  .advisor-scroll-launcher-btn{width:57px;min-height:69px}
+  .advisor-scroll-launcher-btn video{width:43px;height:43px}
+  .advisor-scroll-launcher-label{font-size:8px}
   .cards{
     grid-template-columns:minmax(0,1fr);
     gap:14px;
@@ -3279,6 +3314,12 @@ body::after{
           <button class="advisor-duo-role pangtong" type="button" onclick="openAdvisorAIFromOrb(event)" title="龐統 · 軍師AI">
             <span class="advisor-duo-stage"><video class="advisor-duo-video" src="pangtongmenuv2.mp4" poster="pangtong.png" muted playsinline preload="auto" aria-label="龐統軍師"></video></span>
           </button>
+          <div class="advisor-scroll-launcher">
+            <button class="advisor-scroll-launcher-btn" id="global-scroll-launcher" type="button" aria-expanded="false" aria-controls="global-scroll-overlay" onclick="toggleGlobalScrollMenu(event)" title="&#x5361;&#x7247;&#x5FEB;&#x6377;&#x5377;&#x8EF8;">
+              <video src="menu.mp4" muted playsinline preload="metadata" aria-hidden="true"></video>
+              <span class="advisor-scroll-launcher-label">&#x5FEB;&#x6377;&#x5377;&#x8EF8;</span>
+            </button>
+          </div>
         </div>
         <div class="hdr-char-vignette"></div>
       </div>
@@ -3523,6 +3564,20 @@ body::after{
 </div><!-- /wrap -->
 
 <!-- ══ Panel Overlay ══ -->
+<div class="global-scroll-overlay" id="global-scroll-overlay" onclick="closeGlobalScrollMenu()" aria-hidden="true">
+  <section class="global-scroll-menu" role="dialog" aria-modal="true" aria-labelledby="global-scroll-menu-title" onclick="event.stopPropagation()">
+    <div class="global-scroll-menu-head"><div><div class="global-scroll-menu-title" id="global-scroll-menu-title">&#x5377;&#x8EF8;&#x5FEB;&#x6377;&#x5165;&#x53E3;</div><div class="global-scroll-menu-subtitle">&#x5404;&#x5361;&#x7247;&#x5206;&#x9801;&#x4E00;&#x6B21;&#x76F4;&#x9054;</div></div><button class="global-scroll-menu-close" type="button" aria-label="&#x95DC;&#x9589;" onclick="closeGlobalScrollMenu()">&#x00D7;</button></div>
+    <div class="global-scroll-groups">
+      <section class="global-scroll-group"><div class="global-scroll-group-title">&#x8CA1;&#x653F;</div><div class="global-scroll-buttons"><button class="global-scroll-button" type="button" data-global-panel="finance" data-global-tab="finance-accs" onclick="openGlobalScrollShortcut(event,'finance','finance-accs')">&#x570B;&#x5EAB;&#x73FE;&#x6CC1;</button><button class="global-scroll-button" type="button" data-global-panel="finance" data-global-tab="domestic-yearly" onclick="openGlobalScrollShortcut(event,'finance','domestic-yearly')">&#x5E74;&#x5EA6;&#x8CA1;&#x5831;</button><button class="global-scroll-button" type="button" data-global-panel="finance" data-global-tab="div-calc" onclick="openGlobalScrollShortcut(event,'finance','div-calc')">&#x914D;&#x606F;&#x8A66;&#x7B97;</button></div></section>
+      <section class="global-scroll-group"><div class="global-scroll-group-title">&#x5167;&#x653F;</div><div class="global-scroll-buttons"><button class="global-scroll-button" type="button" data-global-panel="domestic" data-global-tab="booking-form" onclick="openGlobalScrollShortcut(event,'domestic','booking-form')">&#x5FEB;&#x901F;&#x8A18;&#x5E33;</button><button class="global-scroll-button" type="button" data-global-panel="domestic" data-global-tab="booking-recent" onclick="openGlobalScrollShortcut(event,'domestic','booking-recent')">&#x6700;&#x8FD1;&#x8A18;&#x9304;</button><button class="global-scroll-button" type="button" data-global-panel="domestic" data-global-tab="dividend-center" onclick="openGlobalScrollShortcut(event,'domestic','dividend-center')">&#x6301;&#x80A1;&#x5099;&#x5FD8;</button></div></section>
+      <section class="global-scroll-group"><div class="global-scroll-group-title">&#x8ECD;&#x6A5F;&#x8655;</div><div class="global-scroll-buttons"><button class="global-scroll-button" type="button" data-global-panel="council" data-global-tab="battle-brief" onclick="openGlobalScrollShortcut(event,'council','battle-brief')">&#x6230;&#x60C5;&#x7E3D;&#x532F;&#x5831;</button><button class="global-scroll-button" type="button" data-global-panel="council" data-global-tab="council-roster" onclick="openGlobalScrollShortcut(event,'council','council-roster')">&#x90E8;&#x968A;&#x9663;&#x5BB9;</button><button class="global-scroll-button" type="button" data-global-panel="council" data-global-tab="market-watch" onclick="openGlobalScrollShortcut(event,'council','market-watch')">&#x53F0;&#x7F8E;&#x80A1;&#x5927;&#x76E4;</button><button class="global-scroll-button" type="button" data-global-panel="council" data-global-tab="macro-overview" onclick="openGlobalScrollShortcut(event,'council','macro-overview')">&#x7F8E;&#x80A1;&#x7E3D;&#x7D93;</button></div></section>
+      <section class="global-scroll-group"><div class="global-scroll-group-title">&#x91AB;&#x9928;</div><div class="global-scroll-buttons"><button class="global-scroll-button" type="button" data-global-panel="medical" data-global-tab="medical-quick" onclick="openGlobalScrollShortcut(event,'medical','medical-quick')">&#x5FEB;&#x901F;&#x8A18;&#x9304;</button><button class="global-scroll-button" type="button" data-global-panel="medical" data-global-tab="medical-tarot" onclick="openGlobalScrollShortcut(event,'medical','medical-tarot')">&#x62BD;&#x724C;&#x8A18;&#x9304;</button><button class="global-scroll-button" type="button" data-global-panel="medical" data-global-tab="medical-stats" onclick="openGlobalScrollShortcut(event,'medical','medical-stats')">&#x724C;&#x5361;&#x7D71;&#x8A08;</button><button class="global-scroll-button" type="button" data-global-panel="medical" data-global-tab="medical-painmap" onclick="openGlobalScrollShortcut(event,'medical','medical-painmap')">&#x75BC;&#x75DB;&#x5730;&#x5716;</button></div></section>
+      <section class="global-scroll-group"><div class="global-scroll-group-title">&#x53F8;&#x5929;&#x76E3;</div><div class="global-scroll-buttons"><button class="global-scroll-button" type="button" data-global-panel="stars" data-global-tab="stars-home" onclick="openGlobalScrollShortcut(event,'stars','stars-home')">&#x547D;&#x76E4;&#x7E3D;&#x89BD;</button><button class="global-scroll-button" type="button" data-global-panel="stars" data-global-tab="stars-chronicle" onclick="openGlobalScrollShortcut(event,'stars','stars-chronicle')">&#x4E8B;&#x4EF6;&#x7DE8;&#x5E74;</button></div></section>
+      <section class="global-scroll-group"><div class="global-scroll-group-title">&#x57CE;&#x7246;</div><div class="global-scroll-buttons"><button class="global-scroll-button" type="button" data-global-panel="wall" data-global-tab="wall" onclick="openGlobalScrollShortcut(event,'wall','wall')">&#x751F;&#x6D3B;&#x65E5;&#x8A18;</button><button class="global-scroll-button" type="button" data-global-panel="wall" data-global-tab="memo" onclick="openGlobalScrollShortcut(event,'wall','memo')">&#x5099;&#x5FD8;&#x96A8;&#x7B46;</button><button class="global-scroll-button" type="button" data-global-panel="wall" data-global-tab="market" onclick="openGlobalScrollShortcut(event,'wall','market')">&#x80A1;&#x5E02;&#x6559;&#x5BA4;</button><button class="global-scroll-button" type="button" onclick="openGlobalScrollAdmin(event)">&#x65B0;&#x589E;&#x8A18;&#x9304;</button></div></section>
+    </div>
+  </section>
+</div>
+
 <div class="overlay" id="overlay" onclick="overlayClick(event)">
   <div class="panel" id="panel">
     <div class="panel-head">
@@ -4700,6 +4755,41 @@ function openFinanceCard(event){
   openPanel('finance');
 }
 
+function globalScrollMenu(){return document.getElementById('global-scroll-overlay')}
+function closeGlobalScrollMenu(){
+  var menu=globalScrollMenu();
+  var launcher=document.getElementById('global-scroll-launcher');
+  if(menu){menu.classList.remove('open');menu.setAttribute('aria-hidden','true')}
+  if(launcher)launcher.setAttribute('aria-expanded','false');
+}
+function toggleGlobalScrollMenu(event){
+  if(event){event.preventDefault();event.stopPropagation()}
+  var menu=globalScrollMenu();
+  var launcher=document.getElementById('global-scroll-launcher');
+  if(!menu)return;
+  var willOpen=!menu.classList.contains('open');
+  if(willOpen){
+    closeAdvisorAIStandalone();
+    closeAdvisorDialog();
+    menu.classList.add('open');
+    menu.setAttribute('aria-hidden','false');
+  }else{
+    menu.classList.remove('open');
+    menu.setAttribute('aria-hidden','true');
+  }
+  if(launcher)launcher.setAttribute('aria-expanded',willOpen?'true':'false');
+}
+function openGlobalScrollShortcut(event,panel,tab){
+  if(event){event.preventDefault();event.stopPropagation()}
+  closeGlobalScrollMenu();
+  openEmpireCardShortcut(event,panel,tab);
+}
+function openGlobalScrollAdmin(event){
+  if(event){event.preventDefault();event.stopPropagation()}
+  closeGlobalScrollMenu();
+  openArkWallAdminShortcut(event);
+}
+
 function toggleCardScroll(event,btn){
   if(event){
     if(event.preventDefault)event.preventDefault();
@@ -4827,6 +4917,7 @@ document.addEventListener('keydown',function(event){
   if(event.key==='Escape'){
     closePanelTitleMenu();
     closeArkWallViewMenu();
+    closeGlobalScrollMenu();
   }
 });
 
