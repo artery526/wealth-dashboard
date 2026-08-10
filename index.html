@@ -1725,6 +1725,8 @@ body::after{
   .kpi-val{font-family:var(--mono);font-size:15px;font-weight:400;color:var(--ink)}
   .kpi-dual-line{display:flex;align-items:center;justify-content:flex-start;gap:8px;font-family:var(--sans);font-size:11px;font-weight:800;color:#8d6a2a;line-height:1.7;white-space:nowrap}
   .kpi-dual-line strong{font-family:var(--mono);font-size:15px}
+  .finance-monthly-income{color:var(--coral)}
+  .finance-monthly-expense{color:var(--teal)}
   .kpi-inline-note{font-family:var(--sans);font-size:13px;font-weight:900;color:#8d6a2a;margin-left:auto;line-height:1.35;min-width:0;overflow:hidden;text-overflow:ellipsis}
   .kpi-inline-note.up{color:var(--teal)}.kpi-inline-note.down{color:var(--coral)}
 .kpi-val.up{color:var(--teal)}.kpi-val.down{color:var(--coral)}.kpi-val.gold{color:var(--gold)}
@@ -6735,8 +6737,8 @@ function renderAccounts(accs,monthly,el,financeStatus,assetSnapshot,bills,stale)
       ${targetKpiHtml}
       <div class="kpi finance-monthly-kpi">
         <div class="kpi-label">本月收入／支出</div>
-        <div class="kpi-dual-line"><span>收入</span><strong class="up">${fmtFull(monthly.income)}</strong><span class="kpi-inline-note">🪙儲蓄${esc(monthly.savingRate||'—')}</span></div>
-        <div class="kpi-dual-line"><span>支出</span><strong class="down">${fmtFull(monthly.expense)}</strong><span class="kpi-inline-note ${debtNetAssetKpi.cls||''}">🎲${esc(debtNetAssetKpi.text||'債／淨資 --')}</span></div>
+        <div class="kpi-dual-line"><span>收入</span><strong class="finance-monthly-income">${fmtFull(monthly.income)}</strong><span class="kpi-inline-note">🪙儲蓄${esc(monthly.savingRate||'—')}</span></div>
+        <div class="kpi-dual-line"><span>支出</span><strong class="finance-monthly-expense">${fmtFull(monthly.expense)}</strong><span class="kpi-inline-note ${debtNetAssetKpi.cls||''}">🎲${esc(debtNetAssetKpi.text||'債／淨資 --')}</span></div>
       </div>
       ${statusHtml}
     </div>`;
