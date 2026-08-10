@@ -1609,6 +1609,7 @@ body::after{
 .finance-status-dual-line strong{font-family:var(--mono);font-size:17px;color:var(--teal);margin-left:3px}
 .finance-target-kpi{border-color:rgba(232,192,80,.52);background:radial-gradient(circle at 8% 0,rgba(232,192,80,.12),transparent 28%),linear-gradient(180deg,rgba(20,15,7,.96),rgba(8,6,3,.98));}
 .finance-target-kpi .finance-status-main{margin-top:3px}
+.finance-performance-kpi{border-color:rgba(232,192,80,.3);background:#0a0804}
 .finance-status-icon{font-size:17px;line-height:1;filter:drop-shadow(0 0 7px rgba(29,158,117,.35))}
 .finance-status-bar{display:grid;grid-template-columns:repeat(10,1fr);gap:3px;margin-top:8px}
 .finance-status-seg{height:7px;border-radius:2px;background:#211a10;border:1px solid rgba(232,192,80,.12);box-shadow:inset 0 1px 0 rgba(255,255,255,.03)}
@@ -1700,18 +1701,18 @@ body::after{
 .treasury-card-note{margin-top:4px;font-family:var(--sans);font-size:10px;font-weight:700;color:#5a4018;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media(max-width:680px){.treasury-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.treasury-main{font-size:25px}}
 
-.kpi-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:14px}
+.kpi-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:14px}
 .kpi{background:#0a0804;border:1px solid #2a1c08;border-radius:7px;padding:10px 10px}
 .kpi-label{font-family:var(--sans);font-size:9px;color:#5a4018;letter-spacing:.5px;margin-bottom:5px;text-transform:uppercase}
   .kpi-val{font-family:var(--mono);font-size:15px;font-weight:400;color:var(--ink)}
   .kpi-dual-line{display:flex;align-items:center;justify-content:flex-start;gap:8px;font-family:var(--sans);font-size:11px;font-weight:800;color:#8d6a2a;line-height:1.7;white-space:nowrap}
   .kpi-dual-line strong{font-family:var(--mono);font-size:15px}
-  .kpi-inline-note{font-family:var(--sans);font-size:10px;font-weight:800;color:#8d6a2a;margin-left:auto}
+  .kpi-inline-note{font-family:var(--sans);font-size:13px;font-weight:900;color:#8d6a2a;margin-left:auto;line-height:1.35}
   .kpi-inline-note.up{color:var(--teal)}.kpi-inline-note.down{color:var(--coral)}
 .kpi-val.up{color:var(--teal)}.kpi-val.down{color:var(--coral)}.kpi-val.gold{color:var(--gold)}
 .kpi-sub{margin-top:4px;font-family:var(--mono);font-size:11px;line-height:1.25;color:#8d6a2a;white-space:nowrap}
 .kpi-sub.up{color:var(--teal)}.kpi-sub.down{color:var(--coral)}
-@media(max-width:680px){.kpi-row{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:680px){.kpi-row{grid-template-columns:1fr}}
 
 /* ── Quick Booking ── */
 .btabs{display:flex;gap:0;margin-bottom:14px;background:#0a0804;border:1px solid #2a1c08;border-radius:6px;overflow:hidden}
@@ -6576,14 +6577,10 @@ function renderFinanceStatusHud(data){
   var annual=metric('年化');
   var monthDisplay=metricDisplay(month);
   var annualDisplay=metricDisplay(annual);
-  return `<div class="finance-status-hud">
-    <div class="finance-status-grid">
-      <div class="finance-status-item">
-        <div class="finance-status-label">資產報酬表現</div>
-        <div class="finance-status-dual-line"><span class="finance-status-icon">↗</span><span>月資產增長率 <strong>${esc(monthDisplay)}</strong></span></div>
-        <div class="finance-status-dual-line"><span class="finance-status-icon">▟</span><span>年化報酬率 <strong>${esc(annualDisplay)}</strong></span></div>
-      </div>
-    </div>
+  return `<div class="kpi finance-performance-kpi">
+    <div class="finance-status-label">資產報酬表現</div>
+    <div class="finance-status-dual-line"><span class="finance-status-icon">↗</span><span>月資產增長率 <strong>${esc(monthDisplay)}</strong></span></div>
+    <div class="finance-status-dual-line"><span class="finance-status-icon">▟</span><span>年化報酬率 <strong>${esc(annualDisplay)}</strong></span></div>
   </div>`;
 }
 
@@ -6714,10 +6711,11 @@ function renderAccounts(accs,monthly,el,financeStatus,assetSnapshot,bills,stale)
         <div class="kpi-dual-line"><span>收入</span><strong class="up">${fmtFull(monthly.income)}</strong><span class="kpi-inline-note">🪙儲蓄${esc(monthly.savingRate||'—')}</span></div>
         <div class="kpi-dual-line"><span>支出</span><strong class="down">${fmtFull(monthly.expense)}</strong><span class="kpi-inline-note ${debtNetAssetKpi.cls||''}">🎲${esc(debtNetAssetKpi.text||'債／淨資 --')}</span></div>
       </div>
+      ${statusHtml}
     </div>`;
   var billsHtml=renderBillReservoirHtml(bills);
 
-  el.innerHTML=statusHtml+kpisHtml+`
+  el.innerHTML=kpisHtml+`
     ${accountListHtml}
     ${billsHtml?`<div class="finance-bills-wrap">${billsHtml}</div>`:''}`;
 }
