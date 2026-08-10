@@ -13115,8 +13115,8 @@ function toggleAdvisorAI(){
 function advisorAIHeaderFundsHtml(cash,stock){
   var cashText=(cash===null||cash===undefined||isNaN(Number(cash)))?'--':Math.round(Number(cash)).toLocaleString('zh-TW');
   var stockText=(stock===null||stock===undefined||isNaN(Number(stock)))?'--':Math.round(Number(stock)).toLocaleString('zh-TW');
-  return `<span class="advisor-ai-fund-pill">元寶<strong>${esc(cashText)}</strong>兩</span>
-    <span class="advisor-ai-fund-pill">金庫<strong>${esc(stockText)}</strong>兩</span>`;
+  return `<span class="advisor-ai-fund-pill">💰 <strong>${esc(cashText)}</strong></span>
+    <span class="advisor-ai-fund-pill">💲 <strong>${esc(stockText)}</strong></span>`;
 }
 
 function advisorAIUpdateHeaderFunds(data){
