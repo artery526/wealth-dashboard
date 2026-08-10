@@ -1185,6 +1185,8 @@ body::after{
   .advisor-ai-tool-row{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin:8px 0}
   .advisor-ai-database-stack,.advisor-ai-video-stack{gap:6px}
   .advisor-ai-tool-row .advisor-shortcut-secondary{min-height:34px;font-size:11px;letter-spacing:.4px;padding:6px}
+  .advisor-ai-tool-row.advisor-ai-tool-squares{grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
+  .advisor-ai-tool-row .advisor-ai-tool-square{aspect-ratio:1;min-height:0;padding:4px;font-size:11px;letter-spacing:0}
 }
 
 .military-lord{
@@ -13331,15 +13333,11 @@ function openAdvisorAI(targetPanel){
       <input class="advisor-ai-input" id="advisor-ai-input" type="text" placeholder="輸入指令…" onkeydown="advisorAIKey(event)">
       <button class="advisor-shortcut-submit" id="advisor-ai-submit" type="button" onclick="runAdvisorAICommand(this)">執行</button>
     </div>
-    <div class="advisor-ai-tool-row">
-      <div class="advisor-ai-database-stack">
-        <button class="advisor-shortcut-secondary advisor-ai-sheet-button" type="button" onclick="advisorAIOpenDatabaseSheet()">進入資料庫</button>
-        <button class="advisor-shortcut-secondary advisor-ai-dividend-calc" type="button" onclick="openEmpireCardShortcut(event,'finance','div-calc')">配息試算</button>
-      </div>
-      <div class="advisor-ai-video-stack">
-        <button class="advisor-shortcut-secondary advisor-ai-video-download" type="button" onclick="advisorAIOpenVideoDownload()">影片下載</button>
-        <button class="advisor-shortcut-secondary advisor-ai-battle-brief" type="button" onclick="openEmpireCardShortcut(event,'council','battle-brief')">戰情總匯報</button>
-      </div>
+    <div class="advisor-ai-tool-row advisor-ai-tool-squares">
+      <button class="advisor-shortcut-secondary advisor-ai-tool-square advisor-ai-sheet-button" type="button" onclick="advisorAIOpenDatabaseSheet()">資料</button>
+      <button class="advisor-shortcut-secondary advisor-ai-tool-square advisor-ai-video-download" type="button" onclick="advisorAIOpenVideoDownload()">下載</button>
+      <button class="advisor-shortcut-secondary advisor-ai-tool-square advisor-ai-dividend-calc" type="button" onclick="openEmpireCardShortcut(event,'finance','div-calc')">試算</button>
+      <button class="advisor-shortcut-secondary advisor-ai-tool-square advisor-ai-battle-brief" type="button" onclick="openEmpireCardShortcut(event,'council','battle-brief')">戰情</button>
     </div>
     ${advisorAIExamplesHtml()}
     <div class="advisor-shortcut-msg" id="advisor-ai-msg"></div>`;
