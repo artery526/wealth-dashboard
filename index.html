@@ -1586,7 +1586,7 @@ body::after{
 
 /* Panel tabs */
 .panel-tabs{display:flex;gap:0;border-bottom:1px solid #2a1c08;flex-shrink:0;background:#0a0804}
-.panel-tabs.finance-tabs-hidden{display:none}
+.panel-tabs.panel-tabs-hidden{display:none}
 .ptab{
   flex:1;padding:11px;border:none;background:transparent;
   font-family:var(--sans);font-size:12px;font-weight:700;
@@ -1595,16 +1595,16 @@ body::after{
 }
 .ptab.active{color:var(--gold);border-bottom-color:var(--gold);background:rgba(232,192,80,.05)}
 .ptab:hover:not(.active){color:var(--gold2);background:rgba(232,192,80,.03)}
-.finance-menu-anchor{position:relative}
-.finance-menu-trigger{display:inline-flex;align-items:center;gap:6px;border:0;background:transparent;color:var(--gold);font:inherit;letter-spacing:inherit;padding:0;cursor:pointer;text-shadow:0 0 8px rgba(232,192,80,.3)}
-.finance-menu-trigger:hover,.finance-menu-trigger:focus-visible{color:var(--gold2);outline:none}
-.finance-menu-caret{font-family:var(--sans);font-size:10px;letter-spacing:0;transition:transform .18s ease}
-.finance-menu-anchor.is-open .finance-menu-caret{transform:rotate(180deg)}
-.finance-panel-menu{position:absolute;z-index:12;top:calc(100% + 10px);left:-5px;display:none;width:164px;padding:6px;border:1px solid rgba(232,192,80,.5);border-radius:8px;background:linear-gradient(145deg,rgba(34,24,9,.98),rgba(8,6,3,.99));box-shadow:0 14px 32px rgba(0,0,0,.48),0 0 18px rgba(232,192,80,.12)}
-.finance-menu-anchor.is-open .finance-panel-menu{display:grid;gap:3px}
-.finance-menu-item{width:100%;border:1px solid transparent;border-radius:5px;background:transparent;color:#bda36d;font-family:var(--sans);font-size:12px;font-weight:850;letter-spacing:.5px;text-align:left;padding:9px 10px;cursor:pointer}
-.finance-menu-item:hover,.finance-menu-item:focus-visible{border-color:rgba(232,192,80,.34);background:rgba(232,192,80,.1);color:#f0dfa0;outline:none}
-.finance-menu-item.active{border-color:rgba(232,192,80,.44);background:rgba(232,192,80,.15);color:var(--gold)}
+.panel-menu-anchor{position:relative}
+.panel-menu-trigger{display:inline-flex;align-items:center;gap:6px;border:0;background:transparent;color:var(--gold);font:inherit;letter-spacing:inherit;padding:0;cursor:pointer;text-shadow:0 0 8px rgba(232,192,80,.3)}
+.panel-menu-trigger:hover,.panel-menu-trigger:focus-visible{color:var(--gold2);outline:none}
+.panel-menu-caret{font-family:var(--sans);font-size:10px;letter-spacing:0;transition:transform .18s ease}
+.panel-menu-anchor.is-open .panel-menu-caret{transform:rotate(180deg)}
+.panel-title-menu{position:absolute;z-index:12;top:calc(100% + 10px);left:-5px;display:none;width:172px;padding:6px;border:1px solid rgba(232,192,80,.5);border-radius:8px;background:linear-gradient(145deg,rgba(34,24,9,.98),rgba(8,6,3,.99));box-shadow:0 14px 32px rgba(0,0,0,.48),0 0 18px rgba(232,192,80,.12)}
+.panel-menu-anchor.is-open .panel-title-menu{display:grid;gap:3px}
+.panel-menu-item{width:100%;border:1px solid transparent;border-radius:5px;background:transparent;color:#bda36d;font-family:var(--sans);font-size:12px;font-weight:850;letter-spacing:.5px;text-align:left;padding:9px 10px;cursor:pointer}
+.panel-menu-item:hover,.panel-menu-item:focus-visible{border-color:rgba(232,192,80,.34);background:rgba(232,192,80,.1);color:#f0dfa0;outline:none}
+.panel-menu-item.active{border-color:rgba(232,192,80,.44);background:rgba(232,192,80,.15);color:var(--gold)}
 
 .panel-body{flex:1;overflow-y:auto;padding:16px 18px 20px}
 .panel-body::-webkit-scrollbar{width:4px}
@@ -2621,6 +2621,16 @@ body::after{
 .ark-wall-view-tab{border:1px solid rgba(184,137,46,.34);border-radius:8px;background:rgba(10,8,4,.74);color:#bda36d;font-family:var(--sans);font-size:12px;font-weight:900;padding:8px 11px;cursor:pointer;transition:border-color .18s,background .18s,color .18s}
 .ark-wall-view-tab:hover{border-color:rgba(232,192,80,.58);color:#f0dfa0}
 .ark-wall-view-tab.active{border-color:rgba(232,192,80,.72);background:rgba(232,192,80,.12);color:#f0dfa0}
+.ark-wall-menu-anchor{position:relative}
+.ark-wall-menu-trigger{display:inline-flex;align-items:center;gap:6px;border:0;background:transparent;color:inherit;font:inherit;letter-spacing:inherit;padding:0;cursor:pointer}
+.ark-wall-menu-trigger:focus-visible{outline:1px solid rgba(232,192,80,.7);outline-offset:4px}
+.ark-wall-menu-caret{font-family:var(--sans);font-size:10px;letter-spacing:0;transition:transform .18s ease}
+.ark-wall-menu-anchor.is-open .ark-wall-menu-caret{transform:rotate(180deg)}
+.ark-wall-title-menu{position:absolute;z-index:12;top:calc(100% + 10px);left:-5px;display:none;width:154px;padding:6px;border:1px solid rgba(232,192,80,.5);border-radius:8px;background:linear-gradient(145deg,rgba(34,24,9,.99),rgba(8,6,3,.99));box-shadow:0 14px 32px rgba(0,0,0,.48),0 0 18px rgba(232,192,80,.12)}
+.ark-wall-menu-anchor.is-open .ark-wall-title-menu{display:grid;gap:3px}
+.ark-wall-menu-item{width:100%;border:1px solid transparent;border-radius:5px;background:transparent;color:#bda36d;font-family:var(--sans);font-size:12px;font-weight:850;letter-spacing:.5px;text-align:left;padding:9px 10px;cursor:pointer}
+.ark-wall-menu-item:hover,.ark-wall-menu-item:focus-visible{border-color:rgba(232,192,80,.34);background:rgba(232,192,80,.1);color:#f0dfa0;outline:none}
+.ark-wall-menu-item.active{border-color:rgba(232,192,80,.44);background:rgba(232,192,80,.15);color:var(--gold)}
 .ark-wall-memo-tools{display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,320px);gap:10px;align-items:start;margin-bottom:12px}
 .ark-wall-memo-tags{display:flex;gap:7px;flex-wrap:wrap}
 .ark-wall-memo-tag{border:1px solid rgba(29,158,117,.28);border-radius:999px;background:rgba(29,158,117,.08);color:#a8f1d6;font-family:var(--sans);font-size:12px;font-weight:900;padding:7px 10px;cursor:pointer;transition:border-color .18s,background .18s,color .18s}
@@ -4672,7 +4682,7 @@ function openPanel(key){
   document.getElementById('overlay').classList.add('open');
 }
 function closePanel(){
-  closeFinancePanelMenu();
+  closePanelTitleMenu();
   document.getElementById('overlay').classList.remove('open');
   document.getElementById('panel').classList.remove('council-wide');
   document.getElementById('panel').classList.remove('domestic-wide');
@@ -4733,8 +4743,8 @@ function setPanelHead(icon,en,zh){
   title.onkeydown=null;
   var titleWrap=title.parentElement;
   if(titleWrap){
-    titleWrap.classList.remove('finance-menu-anchor','is-open');
-    var existingMenu=titleWrap.querySelector('.finance-panel-menu');
+    titleWrap.classList.remove('panel-menu-anchor','is-open');
+    var existingMenu=titleWrap.querySelector('.panel-title-menu');
     if(existingMenu)existingMenu.remove();
   }
   var extra=document.getElementById('p-extra');
@@ -4743,78 +4753,83 @@ function setPanelHead(icon,en,zh){
 
 function setTabs(tabs){
   var el=document.getElementById('p-tabs');
-  el.classList.remove('finance-tabs-hidden');
+  el.classList.remove('panel-tabs-hidden');
   el.innerHTML=tabs.map((t,i)=>`<button class="ptab ${i===0?'active':''}" type="button" onclick="switchTab(this,'${t.key}')">${t.label}</button>`).join('');
 }
 
-function setFinanceMenuTabs(tabs){
+function setPanelMenuTabs(tabs){
   setTabs(tabs);
   var tabBar=document.getElementById('p-tabs');
-  tabBar.classList.add('finance-tabs-hidden');
+  tabBar.classList.add('panel-tabs-hidden');
   var title=document.getElementById('p-zh');
   var titleWrap=title.parentElement;
   if(!titleWrap)return;
-  titleWrap.classList.add('finance-menu-anchor');
-  title.classList.add('finance-menu-trigger');
+  titleWrap.classList.add('panel-menu-anchor');
+  title.classList.add('panel-menu-trigger');
   title.setAttribute('role','button');
   title.setAttribute('tabindex','0');
   title.setAttribute('aria-expanded','false');
-  title.setAttribute('aria-controls','finance-panel-menu');
-  title.innerHTML='財政 <span class="finance-menu-caret" aria-hidden="true">▼</span>';
-  title.onclick=toggleFinancePanelMenu;
+  title.setAttribute('aria-controls','panel-title-menu');
+  var titleText=title.textContent.trim();
+  title.innerHTML=titleText+' <span class="panel-menu-caret" aria-hidden="true">▼</span>';
+  title.onclick=togglePanelTitleMenu;
   title.onkeydown=function(event){
-    if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleFinancePanelMenu(event);}
+    if(event.key==='Enter'||event.key===' '){event.preventDefault();togglePanelTitleMenu(event);}
   };
   var menu=document.createElement('div');
-  menu.className='finance-panel-menu';
-  menu.id='finance-panel-menu';
+  menu.className='panel-title-menu';
+  menu.id='panel-title-menu';
   menu.setAttribute('role','menu');
   menu.innerHTML=tabs.map(function(tab,index){
-    return `<button class="finance-menu-item ${index===0?'active':''}" type="button" role="menuitem" data-finance-tab="${tab.key}" onclick="switchTab(this,'${tab.key}')">${tab.label}</button>`;
+    return `<button class="panel-menu-item ${index===0?'active':''}" type="button" role="menuitem" data-panel-tab="${tab.key}" onclick="switchTab(this,'${tab.key}')">${tab.label}</button>`;
   }).join('');
   titleWrap.appendChild(menu);
 }
 
-function toggleFinancePanelMenu(event){
+function togglePanelTitleMenu(event){
   if(event)event.stopPropagation();
-  var titleWrap=document.querySelector('.finance-menu-anchor');
+  var titleWrap=document.querySelector('.panel-menu-anchor');
   if(!titleWrap)return;
   var isOpen=titleWrap.classList.toggle('is-open');
   var title=document.getElementById('p-zh');
   if(title)title.setAttribute('aria-expanded',isOpen?'true':'false');
 }
 
-function closeFinancePanelMenu(){
-  var titleWrap=document.querySelector('.finance-menu-anchor');
+function closePanelTitleMenu(){
+  var titleWrap=document.querySelector('.panel-menu-anchor');
   if(!titleWrap)return;
   titleWrap.classList.remove('is-open');
   var title=document.getElementById('p-zh');
   if(title)title.setAttribute('aria-expanded','false');
 }
 
-function syncFinanceMenuTab(key){
-  document.querySelectorAll('.finance-menu-item').forEach(function(item){
-    item.classList.toggle('active',item.getAttribute('data-finance-tab')===key);
+function syncPanelMenuTab(key){
+  document.querySelectorAll('.panel-menu-item').forEach(function(item){
+    item.classList.toggle('active',item.getAttribute('data-panel-tab')===key);
   });
 }
 
 document.addEventListener('click',function(event){
-  if(!event.target.closest('.finance-menu-anchor'))closeFinancePanelMenu();
+  if(!event.target.closest('.panel-menu-anchor'))closePanelTitleMenu();
+  if(!event.target.closest('.ark-wall-menu-anchor'))closeArkWallViewMenu();
 });
 document.addEventListener('keydown',function(event){
-  if(event.key==='Escape')closeFinancePanelMenu();
+  if(event.key==='Escape'){
+    closePanelTitleMenu();
+    closeArkWallViewMenu();
+  }
 });
 
 function switchTab(btn,key){
-  document.querySelectorAll('.ptab,.finance-menu-item').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.ptab,.panel-menu-item').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   document.querySelectorAll('.pane').forEach(p=>p.classList.remove('active'));
   var el=document.getElementById('pane-'+key);
   if(el)el.classList.add('active');
   currentTab=key;
-  if(currentPanel==='finance'){
-    syncFinanceMenuTab(key);
-    closeFinancePanelMenu();
+  if(document.querySelector('.panel-menu-anchor')){
+    syncPanelMenuTab(key);
+    closePanelTitleMenu();
   }
   if(currentPanel==='domestic'){
     if(key==='booking-form')renderBookingHeaderDate();
@@ -4849,7 +4864,7 @@ function renderStarsPanel(){
   var panelExtra=document.getElementById('p-extra');
   if(panelExtra)panelExtra.innerHTML='<span class="empire-panel-status-dot err" id="stars-panel-status-dot" title="司天監連線失敗" aria-label="司天監連線失敗"></span>';
   setEmpireCardApiPendingStatus('stars');
-  setTabs([{key:'stars-home',label:'命盤總覽'},{key:'stars-chronicle',label:'事件編年'}]);
+  setPanelMenuTabs([{key:'stars-home',label:'命盤總覽'},{key:'stars-chronicle',label:'事件編年'}]);
   document.getElementById('p-body').innerHTML=`
     <div class="pane active" id="pane-stars-home">
       <div id="ziwei-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:78%"></div></div>
@@ -5445,7 +5460,7 @@ function renderMedicalPanel(){
   setPanelHead('✚','Clinic · Recovery','醫館');
   var panelExtra=document.getElementById('p-extra');
   if(panelExtra)panelExtra.innerHTML='<span class="empire-panel-status-dot err" id="medical-panel-status-dot" title="醫館連線失敗" aria-label="醫館連線失敗"></span>';
-  setTabs([{key:'medical-quick',label:'快速記錄'},{key:'medical-tarot',label:'抽牌記錄'},{key:'medical-stats',label:'牌卡統計'},{key:'medical-painmap',label:'疼痛地圖'}]);
+  setPanelMenuTabs([{key:'medical-quick',label:'快速記錄'},{key:'medical-tarot',label:'抽牌記錄'},{key:'medical-stats',label:'牌卡統計'},{key:'medical-painmap',label:'疼痛地圖'}]);
   var el=document.getElementById('p-body');
   if(!hasMainApiCredentials()){
     el.innerHTML=`<div class="setup-notice">
@@ -6535,7 +6550,7 @@ function renderFinancePanel(){
   var panelExtra=document.getElementById('p-extra');
   if(panelExtra)panelExtra.innerHTML='<span class="finance-panel-status-dot err" id="finance-panel-status-dot" title="財政連線失敗" aria-label="財政連線失敗"></span>';
   setEmpireCardApiPendingStatus('finance');
-  setFinanceMenuTabs([{key:'finance-accs',label:'國庫現況'},{key:'domestic-yearly',label:'年度財報'},{key:'div-calc',label:'配息試算'}]);
+  setPanelMenuTabs([{key:'finance-accs',label:'國庫現況'},{key:'domestic-yearly',label:'年度財報'},{key:'div-calc',label:'配息試算'}]);
   document.getElementById('p-body').innerHTML=`
     <div class="pane active" id="pane-finance-accs">
       <div id="acc-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:75%"></div><div class="skel-line skel" style="width:85%"></div></div>
@@ -6889,7 +6904,7 @@ function renderDomesticPanel(){
   setPanelHead('⚖️','Domestic · Policy','內政');
   renderBookingHeaderDate();
   setEmpireCardApiPendingStatus('domestic');
-  setTabs([{key:'booking-form',label:'快速記帳'},{key:'booking-recent',label:'最近記錄'},{key:'dividend-center',label:'持股備忘錄'}]);
+  setPanelMenuTabs([{key:'booking-form',label:'快速記帳'},{key:'booking-recent',label:'最近記錄'},{key:'dividend-center',label:'持股備忘錄'}]);
   document.getElementById('p-body').innerHTML=`
     <div class="pane active" id="pane-booking-form"></div>
     <div class="pane" id="pane-booking-recent">
@@ -7795,6 +7810,8 @@ function setArkWallView(view){
   arkWallView=view==='memo'||view==='market'?view:'wall';
   var tags=arkWallTagsForView(arkWallView);
   if(tags.length&&arkWallMemoTag!=='全部'&&tags.indexOf(arkWallMemoTag)<0)arkWallMemoTag='全部';
+  syncArkWallViewMenu();
+  closeArkWallViewMenu();
   renderArkWallList();
 }
 
@@ -7885,11 +7902,60 @@ function arkWallTaggedEntries(categoryTags){
 }
 
 function renderArkWallViewTabs(){
-  return '<div class="ark-wall-view-tabs" role="tablist" aria-label="城牆分頁">'
-    +'<button class="ark-wall-view-tab '+(arkWallView==='wall'?'active':'')+'" type="button" onclick="setArkWallView(\'wall\')">生活日記</button>'
-    +'<button class="ark-wall-view-tab '+(arkWallView==='memo'?'active':'')+'" type="button" onclick="setArkWallView(\'memo\')">備忘隨筆</button>'
-    +'<button class="ark-wall-view-tab '+(arkWallView==='market'?'active':'')+'" type="button" onclick="setArkWallView(\'market\')">股市教室</button>'
-  +'</div>';
+  return '';
+}
+
+function setupArkWallViewMenu(){
+  var title=document.getElementById('ark-wall-title');
+  if(!title)return;
+  var wrap=title.parentElement;
+  if(!wrap)return;
+  wrap.classList.add('ark-wall-menu-anchor');
+  title.classList.add('ark-wall-menu-trigger');
+  title.setAttribute('role','button');
+  title.setAttribute('tabindex','0');
+  title.setAttribute('aria-expanded','false');
+  title.setAttribute('aria-controls','ark-wall-title-menu');
+  title.innerHTML='城牆 <span class="ark-wall-menu-caret" aria-hidden="true">▼</span>';
+  title.onclick=toggleArkWallViewMenu;
+  title.onkeydown=function(event){
+    if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleArkWallViewMenu(event);}
+  };
+  var menu=wrap.querySelector('.ark-wall-title-menu');
+  if(!menu){
+    menu=document.createElement('div');
+    menu.className='ark-wall-title-menu';
+    menu.id='ark-wall-title-menu';
+    menu.setAttribute('role','menu');
+    menu.innerHTML='<button class="ark-wall-menu-item" type="button" role="menuitem" data-wall-view="wall" onclick="setArkWallView(\'wall\')">生活日記</button>'
+      +'<button class="ark-wall-menu-item" type="button" role="menuitem" data-wall-view="memo" onclick="setArkWallView(\'memo\')">備忘隨筆</button>'
+      +'<button class="ark-wall-menu-item" type="button" role="menuitem" data-wall-view="market" onclick="setArkWallView(\'market\')">股市教室</button>';
+    wrap.appendChild(menu);
+  }
+  syncArkWallViewMenu();
+}
+
+function toggleArkWallViewMenu(event){
+  if(event)event.stopPropagation();
+  var wrap=document.querySelector('.ark-wall-menu-anchor');
+  if(!wrap)return;
+  var isOpen=wrap.classList.toggle('is-open');
+  var title=document.getElementById('ark-wall-title');
+  if(title)title.setAttribute('aria-expanded',isOpen?'true':'false');
+}
+
+function closeArkWallViewMenu(){
+  var wrap=document.querySelector('.ark-wall-menu-anchor');
+  if(!wrap)return;
+  wrap.classList.remove('is-open');
+  var title=document.getElementById('ark-wall-title');
+  if(title)title.setAttribute('aria-expanded','false');
+}
+
+function syncArkWallViewMenu(){
+  document.querySelectorAll('.ark-wall-menu-item').forEach(function(item){
+    item.classList.toggle('active',item.getAttribute('data-wall-view')===arkWallView);
+  });
 }
 
 function renderArkWallTaggedList(options){
@@ -8098,6 +8164,7 @@ function bindArkWallCopyText(body){
 
 function openArkWall(){
   updateArkWallTodayDate();
+  setupArkWallViewMenu();
   var overlay=document.getElementById('ark-wall-overlay');
   var body=document.getElementById('ark-wall-body');
   document.querySelectorAll('.card').forEach(function(card){card.classList.remove('active');});
@@ -8404,6 +8471,7 @@ function closeArkWallPhoto(){
 
 function closeArkWall(){
   closeArkWallPhoto();
+  closeArkWallViewMenu();
   var overlay=document.getElementById('ark-wall-overlay');
   if(overlay)overlay.classList.remove('open');
   var wallCard=document.getElementById('c-wall');
@@ -10807,7 +10875,7 @@ function renderCouncilPanel(){
   var panelExtra=document.getElementById('p-extra');
   if(panelExtra)panelExtra.innerHTML='<span class="empire-panel-status-dot err" id="council-panel-status-dot" title="軍機處連線失敗" aria-label="軍機處連線失敗"></span>';
   setEmpireCardApiPendingStatus('council');
-  setTabs([
+  setPanelMenuTabs([
     {key:'battle-brief',label:'戰情總匯報'},
     {key:'council-roster',label:'部隊陣容'},
     {key:'market-watch',label:'台美股大盤'},
