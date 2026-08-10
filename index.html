@@ -13003,34 +13003,6 @@ function initAdvisorDuoVideoPlayback(){
 }
 initAdvisorDuoVideoPlayback();
 
-function initGlobalScrollVideoPlayback(){
-  var button=document.getElementById('global-scroll-launcher');
-  var video=button&&button.querySelector('video.global-scroll-video');
-  if(!button||!video)return;
-  video.muted=true;
-  video.playsInline=true;
-  video.loop=false;
-  function playScrollVideo(){
-    try{
-      video.currentTime=0;
-      var result=video.play();
-      if(result&&result.catch)result.catch(function(){});
-    }catch(e){}
-  }
-  function playOnLoad(){
-    if(video.dataset.initialPlayed==='1')return;
-    video.dataset.initialPlayed='1';
-    playScrollVideo();
-  }
-  if(video.readyState>=2){setTimeout(playOnLoad,120)}
-  else video.addEventListener('loadeddata',function(){setTimeout(playOnLoad,120)},{once:true});
-  video.addEventListener('ended',function(){try{video.pause()}catch(e){}});
-  button.addEventListener('mouseenter',playScrollVideo);
-  button.addEventListener('focusin',playScrollVideo);
-  button.addEventListener('pointerdown',playScrollVideo);
-}
-initGlobalScrollVideoPlayback();
-
 // ══════════════════════════════════════════
 //  Particles
 // ══════════════════════════════════════════
