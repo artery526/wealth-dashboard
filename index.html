@@ -13114,18 +13114,20 @@ function toggleAdvisorAI(){
   openAdvisorAI();
 }
 
-function advisorAIHeaderFundsHtml(cash,stock){
+function advisorAIHeaderFundsHtml(cash,stock,cube){
   var cashText=(cash===null||cash===undefined||isNaN(Number(cash)))?'--':Math.round(Number(cash)).toLocaleString('zh-TW');
   var stockText=(stock===null||stock===undefined||isNaN(Number(stock)))?'--':Math.round(Number(stock)).toLocaleString('zh-TW');
+  var cubeText=(cube===null||cube===undefined||isNaN(Number(cube)))?'--':Math.round(Number(cube)).toLocaleString('zh-TW');
   return `<span class="advisor-ai-fund-pill">💰 <strong>${esc(cashText)}</strong></span>
-    <span class="advisor-ai-fund-pill">💲 <strong>${esc(stockText)}</strong></span>`;
+    <span class="advisor-ai-fund-pill">💲 <strong>${esc(stockText)}</strong></span>
+    <span class="advisor-ai-fund-pill">💳 <strong>${esc(cubeText)}</strong></span>`;
 }
 
 function advisorAIUpdateHeaderFunds(data){
   var el=document.getElementById('advisor-ai-funds');
   if(!el)return;
   data=data||advisorAIHeaderFundsCache||{};
-  el.innerHTML=advisorAIHeaderFundsHtml(data.cash,data.stock);
+  el.innerHTML=advisorAIHeaderFundsHtml(data.cash,data.stock,data.cube);
 }
 
 function advisorAIFindAccountRow(rows,target){
@@ -13147,9 +13149,11 @@ async function advisorAILoadHeaderFunds(force){
   advisorAIHeaderFundsPromise=apiGet({action:'accounts'}).then(function(rows){
     var cashRow=advisorAIFindAccountRow(rows,'💰Cash');
     var stockRow=advisorAIFindAccountRow(rows,'💵國泰Stock');
+    var cubeRow=(rows||[]).find(function(row){return advisorAIAccountMatches(row&&row.name,'Cube');});
     advisorAIHeaderFundsCache={
       cash: cashRow?Number(cashRow.value):NaN,
-      stock: stockRow?Number(stockRow.value):NaN
+      stock: stockRow?Number(stockRow.value):NaN,
+      cube: cubeRow?Number(cubeRow.value):NaN
     };
     advisorAIHeaderFundsFetchedAt=Date.now();
     advisorAIUpdateHeaderFunds(advisorAIHeaderFundsCache);
@@ -13179,7 +13183,7 @@ function advisorAIHeaderHtml(title){
       <div class="advisor-ai-title-wrap">
         <div class="advisor-shortcut-title">🗡️主公，今日有何吩咐?</div>
         ${advisorAIWebVerifyStatusHtml()}
-        <div class="advisor-ai-funds" id="advisor-ai-funds">${advisorAIHeaderFundsHtml(advisorAIHeaderFundsCache&&advisorAIHeaderFundsCache.cash,advisorAIHeaderFundsCache&&advisorAIHeaderFundsCache.stock)}</div>
+        <div class="advisor-ai-funds" id="advisor-ai-funds">${advisorAIHeaderFundsHtml(advisorAIHeaderFundsCache&&advisorAIHeaderFundsCache.cash,advisorAIHeaderFundsCache&&advisorAIHeaderFundsCache.stock,advisorAIHeaderFundsCache&&advisorAIHeaderFundsCache.cube)}</div>
       </div>
     </div>`;
 }
