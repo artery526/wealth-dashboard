@@ -240,10 +240,6 @@ body::after{
   color:var(--gold);
   font-size:10px;
 }
-.advisor-scroll-launcher{position:fixed;left:0;top:clamp(48px,8vh,92px);z-index:8;opacity:.78;mix-blend-mode:screen;filter:saturate(.78) sepia(.16)}
-.advisor-scroll-launcher-btn{display:block;width:68px;height:78px;border:0;border-radius:0;background:transparent;box-shadow:none;color:inherit;cursor:pointer;padding:0;transition:transform .18s,filter .18s}
-.advisor-scroll-launcher-btn:hover,.advisor-scroll-launcher-btn:focus-visible{transform:translateX(3px) scale(1.06);filter:brightness(1.18) drop-shadow(0 0 10px rgba(232,192,80,.28));outline:none}
-.advisor-scroll-launcher-btn img{display:block;width:180px;height:120px;object-fit:contain;pointer-events:none;filter:drop-shadow(0 5px 8px rgba(0,0,0,.28))}
 .global-scroll-overlay{position:fixed;inset:0;z-index:2900;display:none;align-items:center;justify-content:center;padding:22px;background:rgba(3,2,1,.72);backdrop-filter:blur(5px)}
 .global-scroll-overlay.open{display:flex}
 .global-scroll-menu{width:min(760px,100%);max-height:calc(100vh - 44px);overflow:auto;scroll-padding-top:58px;border:1px solid rgba(232,192,80,.68);border-radius:18px;background:radial-gradient(ellipse at 50% 0,rgba(255,235,169,.14),transparent 48%),linear-gradient(135deg,rgba(53,36,15,.98),rgba(12,8,4,.98));box-shadow:0 24px 70px rgba(0,0,0,.62),inset 0 1px 0 rgba(255,245,202,.2);padding:18px}
@@ -252,6 +248,8 @@ body::after{
 .global-scroll-menu-subtitle{margin-top:3px;color:#bca66f;font-family:var(--sans);font-size:12px;font-weight:700}
 .global-scroll-menu-close{position:relative;z-index:6;flex:0 0 auto;width:36px;height:36px;border:1px solid rgba(232,192,80,.58);border-radius:50%;background:rgba(0,0,0,.42);color:#f6df9c;font-size:23px;line-height:1;cursor:pointer;pointer-events:auto}
 .global-scroll-menu-close:hover{border-color:rgba(255,220,112,.9);background:rgba(232,192,80,.12)}
+.advisor-ai-palace-nav{width:100%;min-height:40px;margin:8px 0 12px;border:1px solid rgba(232,192,80,.48);border-radius:8px;background:linear-gradient(180deg,rgba(82,57,20,.74),rgba(22,14,6,.9));color:#f4e5b7;font-family:var(--sans);font-size:14px;font-weight:900;letter-spacing:2px;cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,246,216,.14),0 5px 14px rgba(0,0,0,.25);transition:border-color .18s,filter .18s,transform .18s}
+.advisor-ai-palace-nav:hover,.advisor-ai-palace-nav:focus-visible{border-color:rgba(255,218,105,.9);filter:brightness(1.08);transform:translateY(-1px);outline:none}
 .global-scroll-groups{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
 .global-scroll-group{border:1px solid rgba(190,144,50,.3);border-radius:11px;background:rgba(9,6,3,.42);padding:10px}
 .global-scroll-group-title{margin-bottom:8px;color:#e9c965;font-family:var(--font);font-size:16px;font-weight:900;letter-spacing:1.5px}
@@ -2774,8 +2772,6 @@ body::after{
   .advisor-duo-role.pangtong .advisor-duo-stage,
   .advisor-duo-role.zhuge .advisor-duo-stage{height:190px}
   .advisor-duo-label{min-width:96px;font-size:11px;padding:5px 8px}
-  .advisor-scroll-launcher{left:0;top:clamp(46px,7vh,74px)}
-  .advisor-scroll-launcher-btn img{width:145px;height:97px}
   .global-scroll-overlay{align-items:flex-end;padding:10px}
   .global-scroll-menu{max-height:calc(100vh - 20px);border-radius:15px;padding:14px;scroll-padding-top:56px}
   .global-scroll-menu-head{top:-14px;padding-top:10px;padding-bottom:10px;background:linear-gradient(180deg,rgba(40,28,12,.99),rgba(28,19,8,.98))}
@@ -2873,8 +2869,6 @@ body::after{
   .advisor-duo-role.pangtong .advisor-duo-stage,
   .advisor-duo-role.zhuge .advisor-duo-stage{height:180px}
   .advisor-duo-label{min-width:94px;font-size:11px;letter-spacing:.3px;padding:5px 8px}
-  .advisor-scroll-launcher{left:0;top:clamp(42px,6vh,62px)}
-  .advisor-scroll-launcher-btn img{width:125px;height:84px}
   .cards{
     grid-template-columns:minmax(0,1fr);
     gap:14px;
@@ -3316,12 +3310,6 @@ body::after{
       </div>
     </div>
 
-    <div class="advisor-scroll-launcher">
-      <button class="advisor-scroll-launcher-btn" id="global-scroll-launcher" type="button" aria-expanded="false" aria-controls="global-scroll-overlay" onclick="toggleGlobalScrollMenu(event)" title="&#x5361;&#x7247;&#x5FEB;&#x6377;&#x5377;&#x8EF8;">
-        <img src="menu.png" alt="" aria-hidden="true">
-      </button>
-    </div>
-
   </div>
 
   <section class="home-agenda" aria-label="本月月曆與朝中政務">
@@ -3563,7 +3551,7 @@ body::after{
 <!-- ══ Panel Overlay ══ -->
 <div class="global-scroll-overlay" id="global-scroll-overlay" onclick="closeGlobalScrollMenu()" aria-hidden="true">
   <section class="global-scroll-menu" role="dialog" aria-modal="true" aria-labelledby="global-scroll-menu-title" onclick="event.stopPropagation()">
-    <div class="global-scroll-menu-head"><div><div class="global-scroll-menu-title" id="global-scroll-menu-title">&#x5377;&#x8EF8;&#x5FEB;&#x6377;&#x5165;&#x53E3;</div><div class="global-scroll-menu-subtitle">&#x5404;&#x5361;&#x7247;&#x5206;&#x9801;&#x4E00;&#x6B21;&#x76F4;&#x9054;</div></div><button class="global-scroll-menu-close" type="button" aria-label="&#x95DC;&#x9589;" onclick="closeGlobalScrollMenu()">&#x00D7;</button></div>
+    <div class="global-scroll-menu-head"><div><div class="global-scroll-menu-title" id="global-scroll-menu-title">&#x7687;&#x5BAE;&#x5C0E;&#x822A;</div></div><button class="global-scroll-menu-close" type="button" aria-label="&#x95DC;&#x9589;" onclick="closeGlobalScrollMenu()">&#x00D7;</button></div>
     <div class="global-scroll-groups">
       <section class="global-scroll-group"><div class="global-scroll-group-title">&#x8CA1;&#x653F;</div><div class="global-scroll-buttons"><button class="global-scroll-button" type="button" data-global-panel="finance" data-global-tab="finance-accs" onclick="openGlobalScrollShortcut(event,'finance','finance-accs')">&#x570B;&#x5EAB;&#x73FE;&#x6CC1;</button><button class="global-scroll-button" type="button" data-global-panel="finance" data-global-tab="domestic-yearly" onclick="openGlobalScrollShortcut(event,'finance','domestic-yearly')">&#x5E74;&#x5EA6;&#x8CA1;&#x5831;</button><button class="global-scroll-button" type="button" data-global-panel="finance" data-global-tab="div-calc" onclick="openGlobalScrollShortcut(event,'finance','div-calc')">&#x914D;&#x606F;&#x8A66;&#x7B97;</button></div></section>
       <section class="global-scroll-group"><div class="global-scroll-group-title">&#x5167;&#x653F;</div><div class="global-scroll-buttons"><button class="global-scroll-button" type="button" data-global-panel="domestic" data-global-tab="booking-form" onclick="openGlobalScrollShortcut(event,'domestic','booking-form')">&#x5FEB;&#x901F;&#x8A18;&#x5E33;</button><button class="global-scroll-button" type="button" data-global-panel="domestic" data-global-tab="booking-recent" onclick="openGlobalScrollShortcut(event,'domestic','booking-recent')">&#x6700;&#x8FD1;&#x8A18;&#x9304;</button><button class="global-scroll-button" type="button" data-global-panel="domestic" data-global-tab="dividend-center" onclick="openGlobalScrollShortcut(event,'domestic','dividend-center')">&#x6301;&#x80A1;&#x5099;&#x5FD8;</button></div></section>
@@ -13474,7 +13462,8 @@ function advisorAIHeaderHtml(title){
         ${advisorAIWebVerifyStatusHtml()}
         <div class="advisor-ai-funds" id="advisor-ai-funds">${advisorAIHeaderFundsHtml(advisorAIHeaderFundsCache&&advisorAIHeaderFundsCache.cash,advisorAIHeaderFundsCache&&advisorAIHeaderFundsCache.stock,advisorAIHeaderFundsCache&&advisorAIHeaderFundsCache.cube)}</div>
       </div>
-    </div>`;
+    </div>
+    <button class="advisor-ai-palace-nav" type="button" onclick="toggleGlobalScrollMenu(event)">&#x7687;&#x5BAE;&#x5C0E;&#x822A;</button>`;
 }
 
 function advisorAIExamplesHtml(){
