@@ -1586,6 +1586,7 @@ body::after{
 
 /* Panel tabs */
 .panel-tabs{display:flex;gap:0;border-bottom:1px solid #2a1c08;flex-shrink:0;background:#0a0804}
+.panel-tabs.finance-tabs-hidden{display:none}
 .ptab{
   flex:1;padding:11px;border:none;background:transparent;
   font-family:var(--sans);font-size:12px;font-weight:700;
@@ -1594,6 +1595,16 @@ body::after{
 }
 .ptab.active{color:var(--gold);border-bottom-color:var(--gold);background:rgba(232,192,80,.05)}
 .ptab:hover:not(.active){color:var(--gold2);background:rgba(232,192,80,.03)}
+.finance-menu-anchor{position:relative}
+.finance-menu-trigger{display:inline-flex;align-items:center;gap:6px;border:0;background:transparent;color:var(--gold);font:inherit;letter-spacing:inherit;padding:0;cursor:pointer;text-shadow:0 0 8px rgba(232,192,80,.3)}
+.finance-menu-trigger:hover,.finance-menu-trigger:focus-visible{color:var(--gold2);outline:none}
+.finance-menu-caret{font-family:var(--sans);font-size:10px;letter-spacing:0;transition:transform .18s ease}
+.finance-menu-anchor.is-open .finance-menu-caret{transform:rotate(180deg)}
+.finance-panel-menu{position:absolute;z-index:12;top:calc(100% + 10px);left:-5px;display:none;width:164px;padding:6px;border:1px solid rgba(232,192,80,.5);border-radius:8px;background:linear-gradient(145deg,rgba(34,24,9,.98),rgba(8,6,3,.99));box-shadow:0 14px 32px rgba(0,0,0,.48),0 0 18px rgba(232,192,80,.12)}
+.finance-menu-anchor.is-open .finance-panel-menu{display:grid;gap:3px}
+.finance-menu-item{width:100%;border:1px solid transparent;border-radius:5px;background:transparent;color:#bda36d;font-family:var(--sans);font-size:12px;font-weight:850;letter-spacing:.5px;text-align:left;padding:9px 10px;cursor:pointer}
+.finance-menu-item:hover,.finance-menu-item:focus-visible{border-color:rgba(232,192,80,.34);background:rgba(232,192,80,.1);color:#f0dfa0;outline:none}
+.finance-menu-item.active{border-color:rgba(232,192,80,.44);background:rgba(232,192,80,.15);color:var(--gold)}
 
 .panel-body{flex:1;overflow-y:auto;padding:16px 18px 20px}
 .panel-body::-webkit-scrollbar{width:4px}
@@ -4661,6 +4672,7 @@ function openPanel(key){
   document.getElementById('overlay').classList.add('open');
 }
 function closePanel(){
+  closeFinancePanelMenu();
   document.getElementById('overlay').classList.remove('open');
   document.getElementById('panel').classList.remove('council-wide');
   document.getElementById('panel').classList.remove('domestic-wide');
@@ -4710,23 +4722,100 @@ function openEmpireCardShortcut(event,panel,tab){
 function setPanelHead(icon,en,zh){
   document.getElementById('p-icon').textContent=icon;
   document.getElementById('p-en').textContent=en;
-  document.getElementById('p-zh').textContent=zh;
+  var title=document.getElementById('p-zh');
+  title.className='panel-zh';
+  title.textContent=zh;
+  title.removeAttribute('role');
+  title.removeAttribute('tabindex');
+  title.removeAttribute('aria-expanded');
+  title.removeAttribute('aria-controls');
+  title.onclick=null;
+  title.onkeydown=null;
+  var titleWrap=title.parentElement;
+  if(titleWrap){
+    titleWrap.classList.remove('finance-menu-anchor','is-open');
+    var existingMenu=titleWrap.querySelector('.finance-panel-menu');
+    if(existingMenu)existingMenu.remove();
+  }
   var extra=document.getElementById('p-extra');
   if(extra)extra.innerHTML='';
 }
 
 function setTabs(tabs){
   var el=document.getElementById('p-tabs');
+  el.classList.remove('finance-tabs-hidden');
   el.innerHTML=tabs.map((t,i)=>`<button class="ptab ${i===0?'active':''}" type="button" onclick="switchTab(this,'${t.key}')">${t.label}</button>`).join('');
 }
 
+function setFinanceMenuTabs(tabs){
+  setTabs(tabs);
+  var tabBar=document.getElementById('p-tabs');
+  tabBar.classList.add('finance-tabs-hidden');
+  var title=document.getElementById('p-zh');
+  var titleWrap=title.parentElement;
+  if(!titleWrap)return;
+  titleWrap.classList.add('finance-menu-anchor');
+  title.classList.add('finance-menu-trigger');
+  title.setAttribute('role','button');
+  title.setAttribute('tabindex','0');
+  title.setAttribute('aria-expanded','false');
+  title.setAttribute('aria-controls','finance-panel-menu');
+  title.innerHTML='財政 <span class="finance-menu-caret" aria-hidden="true">▼</span>';
+  title.onclick=toggleFinancePanelMenu;
+  title.onkeydown=function(event){
+    if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleFinancePanelMenu(event);}
+  };
+  var menu=document.createElement('div');
+  menu.className='finance-panel-menu';
+  menu.id='finance-panel-menu';
+  menu.setAttribute('role','menu');
+  menu.innerHTML=tabs.map(function(tab,index){
+    return `<button class="finance-menu-item ${index===0?'active':''}" type="button" role="menuitem" data-finance-tab="${tab.key}" onclick="switchTab(this,'${tab.key}')">${tab.label}</button>`;
+  }).join('');
+  titleWrap.appendChild(menu);
+}
+
+function toggleFinancePanelMenu(event){
+  if(event)event.stopPropagation();
+  var titleWrap=document.querySelector('.finance-menu-anchor');
+  if(!titleWrap)return;
+  var isOpen=titleWrap.classList.toggle('is-open');
+  var title=document.getElementById('p-zh');
+  if(title)title.setAttribute('aria-expanded',isOpen?'true':'false');
+}
+
+function closeFinancePanelMenu(){
+  var titleWrap=document.querySelector('.finance-menu-anchor');
+  if(!titleWrap)return;
+  titleWrap.classList.remove('is-open');
+  var title=document.getElementById('p-zh');
+  if(title)title.setAttribute('aria-expanded','false');
+}
+
+function syncFinanceMenuTab(key){
+  document.querySelectorAll('.finance-menu-item').forEach(function(item){
+    item.classList.toggle('active',item.getAttribute('data-finance-tab')===key);
+  });
+}
+
+document.addEventListener('click',function(event){
+  if(!event.target.closest('.finance-menu-anchor'))closeFinancePanelMenu();
+});
+document.addEventListener('keydown',function(event){
+  if(event.key==='Escape')closeFinancePanelMenu();
+});
+
 function switchTab(btn,key){
-  document.querySelectorAll('.ptab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.ptab,.finance-menu-item').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   document.querySelectorAll('.pane').forEach(p=>p.classList.remove('active'));
   var el=document.getElementById('pane-'+key);
   if(el)el.classList.add('active');
   currentTab=key;
+  if(currentPanel==='finance'){
+    syncFinanceMenuTab(key);
+    closeFinancePanelMenu();
+  }
   if(currentPanel==='domestic'){
     if(key==='booking-form')renderBookingHeaderDate();
     else{
@@ -6446,7 +6535,7 @@ function renderFinancePanel(){
   var panelExtra=document.getElementById('p-extra');
   if(panelExtra)panelExtra.innerHTML='<span class="finance-panel-status-dot err" id="finance-panel-status-dot" title="財政連線失敗" aria-label="財政連線失敗"></span>';
   setEmpireCardApiPendingStatus('finance');
-  setTabs([{key:'finance-accs',label:'國庫現況'},{key:'domestic-yearly',label:'年度財報'},{key:'div-calc',label:'配息試算'}]);
+  setFinanceMenuTabs([{key:'finance-accs',label:'國庫現況'},{key:'domestic-yearly',label:'年度財報'},{key:'div-calc',label:'配息試算'}]);
   document.getElementById('p-body').innerHTML=`
     <div class="pane active" id="pane-finance-accs">
       <div id="acc-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:75%"></div><div class="skel-line skel" style="width:85%"></div></div>
