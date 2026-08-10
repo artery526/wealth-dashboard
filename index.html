@@ -3331,7 +3331,7 @@ body::after{
   <div class="cards">
 
     <!-- 財政 -->
-    <div class="card finance-landscape" id="c-finance" onclick="openPanel('finance')">
+    <div class="card finance-landscape" id="c-finance" onclick="openFinanceCard(event)">
       <div class="frame">
         <div class="corner tl"></div><div class="corner tr"></div>
         <div class="corner bl"></div><div class="corner br"></div>
@@ -3357,7 +3357,6 @@ body::after{
       <button class="card-scroll-toggle" type="button" aria-expanded="false" onclick="toggleCardScroll(event,this)">打開卷軸</button>
       <div class="card-shortcuts" aria-label="&#x8CA1;&#x653F;&#x5FEB;&#x6377;&#x5165;&#x53E3;">
         <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'finance','finance-accs')">&#x570B;&#x5EAB;&#x73FE;&#x6CC1;</button>
-        <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'finance','finance-accs')">&#x7CE7;&#x5009;&#x6703;&#x5831;</button>
         <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'finance','domestic-yearly')">&#x5E74;&#x5EA6;&#x8CA1;&#x5831;</button>
         <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'finance','div-calc')">&#x914D;&#x606F;&#x8A66;&#x7B97;</button>
       </div>
@@ -4694,8 +4693,17 @@ function closePanel(){
 }
 function overlayClick(e){if(e.target===document.getElementById('overlay'))closePanel()}
 
+function openFinanceCard(event){
+  if(event&&event.target&&event.target.closest&&event.target.closest('.card-scroll-toggle,.card-shortcuts'))return;
+  openPanel('finance');
+}
+
 function toggleCardScroll(event,btn){
-  if(event&&event.stopPropagation)event.stopPropagation();
+  if(event){
+    if(event.preventDefault)event.preventDefault();
+    if(event.stopPropagation)event.stopPropagation();
+    if(event.stopImmediatePropagation)event.stopImmediatePropagation();
+  }
   var card=btn&&btn.closest?btn.closest('.card'):null;
   if(!card)return;
   var isOpen=card.classList.toggle('shortcuts-open');
