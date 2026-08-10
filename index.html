@@ -1055,6 +1055,10 @@ body::after{
 .foodhouse-roster-label{font-family:var(--sans);font-size:12px;font-weight:900;line-height:1.35;color:#f0dfa0;letter-spacing:.7px}
 .foodhouse-roster-meta{margin-top:6px;display:grid;grid-template-columns:minmax(0,1fr) 46px;align-items:center;gap:9px;font-family:var(--sans);font-size:11px;font-weight:800;line-height:1.45;color:#bda36d}
 .foodhouse-roster-meta strong{font-family:var(--mono);font-size:13px;color:#f3df9a}
+.foodhouse-roster-delta{display:inline-block;margin-left:4px;font-family:var(--mono);font-size:10px;font-weight:900;white-space:nowrap}
+.foodhouse-roster-delta.up{color:var(--teal)}
+.foodhouse-roster-delta.down{color:var(--coral)}
+.foodhouse-roster-delta.flat{color:#a9915b}
 .foodhouse-roster-reservoir{position:relative;width:42px;height:54px;border-radius:7px;background:rgba(0,0,0,.35);overflow:hidden;box-shadow:inset 0 0 0 1px rgba(232,192,80,.12)}
 .foodhouse-roster-reservoir .res-fill{border-radius:0 0 5px 5px}
 .foodhouse-roster-reservoir .res-pct{font-size:11px}
@@ -4949,7 +4953,15 @@ function buildCouncilRosterGroupSummaries(active,totalCost){
   });
 }
 
-function renderFoodhouseCouncilRosterSummary(rows){
+function councilRosterSnapshotDeltaHtml(snapshot,label){
+  var groups=snapshot&&Array.isArray(snapshot.groups)?snapshot.groups:[];
+  var group=groups.filter(function(item){return item&&item.label===label;})[0];
+  var amount=Number(group&&group.changeAmount);
+  if(!isFinite(amount))return '<span class="foodhouse-roster-delta flat">(較昨 --)</span>';
+  return `<span class="foodhouse-roster-delta ${amount>=0?'up':'down'}">(${amount>=0?'+':'-'}${fmtFull(Math.abs(amount))})</span>`;
+}
+
+function renderFoodhouseCouncilRosterSummary(rows,rosterSnapshot){
   var active=(rows||[]).filter(function(r){return r.holding||r.enabled;});
   var holdings=active.filter(function(r){return r.holding;}).map(function(r){return r.holding;});
   var totalCost=holdings.reduce(function(s,r){return s+toNum(r.cost);},0);
@@ -4964,7 +4976,7 @@ function renderFoodhouseCouncilRosterSummary(rows){
         return `<div class="foodhouse-roster-item">
           <div class="foodhouse-roster-label">${esc(group.label)}</div>
           <div class="foodhouse-roster-meta">
-            <div>加總現值 <strong>${fmtFull(group.market)}</strong></div>
+            <div>加總現值 <strong>${fmtFull(group.market)}</strong>${councilRosterSnapshotDeltaHtml(rosterSnapshot,group.label)}</div>
             <span class="foodhouse-roster-reservoir" aria-label="成本加總佔比 ${costPct.toFixed(1)}%">
               <span class="res-fill ${cls}" style="height:${fillPct.toFixed(1)}%"><span class="res-waves"></span></span>
               <span class="res-pct">${costPct.toFixed(1)}%</span>
@@ -10742,7 +10754,7 @@ async function loadCouncilDashboard(){
   var cacheFresh=cached&&(Date.now()-councilDashboardFetchedAt<COUNCIL_DASHBOARD_CACHE_TTL);
   if(cached){
     holdingsCache=cached.holdings.length?cached.holdings:holdingsCache;
-    renderCouncilRoster(mergeCouncilRows(cached.holdings,cached.heroes,{}),el,cached.assetSnapshot,cached.dividendProjection);
+    renderCouncilRoster(mergeCouncilRows(cached.holdings,cached.heroes,{}),el,cached.assetSnapshot,cached.dividendProjection,cached.councilRosterSnapshot);
     setEmpireCardStatus('council',cached.holdingsLoaded&&API_URL?'ok':'err',cached.holdingsLoaded&&API_URL?'武將與持股同步':'已載入武將資料 · 尚未連接持股 API');
     if(cacheFresh)return;
   }else{
@@ -10755,16 +10767,18 @@ async function loadCouncilDashboard(){
     var armySettings={};
     var assetSnapshot=results.assetSnapshot;
     var dividendProjection=results.dividendProjection;
+    var councilRosterSnapshot=results.councilRosterSnapshot;
     councilDashboardCache={
       heroes:heroes,
       holdings:holdings,
       assetSnapshot:assetSnapshot,
       dividendProjection:dividendProjection,
+      councilRosterSnapshot:councilRosterSnapshot,
       holdingsLoaded:results.holdingsLoaded
     };
     councilDashboardFetchedAt=Date.now();
     holdingsCache=holdings.length?holdings:holdingsCache;
-    renderCouncilRoster(mergeCouncilRows(holdings,heroes,armySettings),el,assetSnapshot,dividendProjection);
+    renderCouncilRoster(mergeCouncilRows(holdings,heroes,armySettings),el,assetSnapshot,dividendProjection,councilRosterSnapshot);
     var dot=document.getElementById('council-dot');
     var lbl=document.getElementById('council-label');
     if(dot)dot.className='api-dot '+(results.holdingsLoaded&&API_URL?'ok':'err');
@@ -10782,13 +10796,15 @@ function loadCouncilDashboardData(){
       loadHeroSheet(),
       loadCouncilHoldingsOverview(),
       loadAssetSnapshot(),
-      loadMonthlyDividendProjection()
+      loadMonthlyDividendProjection(),
+      loadCouncilRosterSnapshot()
     ]).then(function(results){
       return {
         heroes:results[0].status==='fulfilled'?results[0].value:[],
         holdings:results[1].status==='fulfilled'?(results[1].value||[]):[],
         assetSnapshot:results[2].status==='fulfilled'?results[2].value:null,
         dividendProjection:results[3].status==='fulfilled'?results[3].value:null,
+        councilRosterSnapshot:results[4].status==='fulfilled'?results[4].value:null,
         holdingsLoaded:results[1].status==='fulfilled'
       };
     }).finally(function(){
@@ -10923,7 +10939,7 @@ function renderCouncilMonthlyDividendHtml(totalMonthly,projection){
   return '月總配息 '+fmtFull(totalMonthly)+(projectionText?`<span class="council-stat-trial">(~${esc(projectionText)})</span>`:'');
 }
 
-function renderCouncilRoster(rows,el,assetSnapshot,dividendProjection){
+function renderCouncilRoster(rows,el,assetSnapshot,dividendProjection,councilRosterSnapshot){
   var active=rows.filter(function(r){return r.holding||r.enabled;});
   var holdings=active.filter(function(r){return r.holding;}).map(function(r){return r.holding;});
   var totalCost=holdings.reduce(function(s,r){return s+toNum(r.cost);},0);
@@ -10935,7 +10951,7 @@ function renderCouncilRoster(rows,el,assetSnapshot,dividendProjection){
   var totalReturn=holdings.reduce(function(s,r){return s+toNum(r.totalReturn);},0);
   el.innerHTML=`
     <div class="foodhouse-roster-wrap council-roster-summary">
-      ${renderFoodhouseCouncilRosterSummary(active)}
+      ${renderFoodhouseCouncilRosterSummary(active,councilRosterSnapshot)}
     </div>
     <div class="council-summary">
       <div class="council-stat"><div class="council-stat-l">持有數</div><div class="council-stat-v">${holdings.length||active.length} 檔</div><div class="council-stat-sub">${renderCouncilMonthlyDividendHtml(totalMonthly,dividendProjection)}</div></div>
@@ -11345,6 +11361,12 @@ async function loadAssetSnapshot(){
     console.warn('asset snapshot api fallback:',e);
     return null;
   }
+}
+
+async function loadCouncilRosterSnapshot(){
+  if(!API_URL)return null;
+  try{return await apiGet({action:'councilRosterSnapshot'},20000);}
+  catch(e){console.warn('Council roster snapshot unavailable',e);return null;}
 }
 
 async function loadCouncilHoldingsOverview(){
