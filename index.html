@@ -5547,8 +5547,8 @@ function renderZiweiPreview(){
   }
   var detailState=ziweiDetailCache[ziweiDetailKey(row)]||{};
   var detail=detailState.detail||{};
-  var img=detail.imageUrl||ziweiImageUrl(row,'large');
-  var original=ziweiOriginalUrl(row);
+  var img=detail.imageDataUrl||detail.imageUrl||ziweiImageUrl(row,'large');
+  var original=detail.imageDataUrl||ziweiOriginalUrl(row);
   var meta=ziweiBirthMeta(row);
   var interpretation=detailState.loaded?String(detail.interpretation||''):String(row.note||'');
   var chartTitle=detail.title||'\u7d2b\u5fae\u6597\u6578\u672c\u547d\u76e4';
