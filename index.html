@@ -5532,6 +5532,7 @@ async function loadZiweiDetail(row){
   }).catch(function(err){
     state.loading=null;
     state.error=err;
+    state.notFound=Number(err&&err.status)===404;
     if(ziweiSelectedId===row.id)renderZiweiPreview();
     return state;
   });
@@ -5554,7 +5555,8 @@ function renderZiweiPreview(){
   var meta=ziweiBirthMeta(row);
   var interpretation=detailState.loaded?String(detail.interpretation||''):String(row.note||'');
   var chartTitle=detail.title||'\u7d2b\u5fae\u6597\u6578\u672c\u547d\u76e4';
-  var detailError=detailState.error?'\u547d\u76e4\u89e3\u8aaa\u66ab\u6642\u7121\u6cd5\u8f09\u5165\uff1a'+esc(detailState.error.message||'\u9023\u7dda\u5931\u6557'):'';
+  var detailReady=detailState.loaded||detailState.notFound;
+  var detailError=detailState.error&&!detailState.notFound?'\u547d\u76e4\u89e3\u8aaa\u66ab\u6642\u7121\u6cd5\u8f09\u5165\uff1a'+esc(detailState.error.message||'\u9023\u7dda\u5931\u6557'):'';
   preview.innerHTML=`
     <div class="ziwei-preview-head">
       <div>
@@ -5568,7 +5570,7 @@ function renderZiweiPreview(){
     </div>
     <div class="ziwei-chart-tabs"><button class="ziwei-chart-tab active" type="button">${esc(chartTitle)}</button></div>
     <section class="ziwei-interpretation">
-      <div class="ziwei-interpretation-head"><div class="ziwei-interpretation-title">\u547d\u76e4\u89e3\u8aaa</div>${detailState.loaded?`<button class="ziwei-tool" type="button" onclick="toggleZiweiInterpretationEdit()">${ziweiEditing?'\u53d6\u6d88\u7de8\u8f2f':'\u7de8\u8f2f\u89e3\u8aaa'}</button>`:''}</div>
+      <div class="ziwei-interpretation-head"><div class="ziwei-interpretation-title">\u547d\u76e4\u89e3\u8aaa</div>${detailReady?`<button class="ziwei-tool" type="button" onclick="toggleZiweiInterpretationEdit()">${ziweiEditing?'\u53d6\u6d88\u7de8\u8f2f':(detailState.notFound?'\u65b0\u589e\u89e3\u8aaa':'\u7de8\u8f2f\u89e3\u8aaa')}</button>`:''}</div>
       ${detailError?`<div class="ziwei-preview-empty">${detailError}</div>`:(ziweiEditing?'<textarea id="ziwei-interpretation-editor" class="ziwei-interpretation-editor" aria-label="\u547d\u76e4\u89e3\u8aaa\u7de8\u8f2f\u5668"></textarea><div class="ziwei-interpretation-actions"><button class="ziwei-tool" type="button" onclick="saveZiweiInterpretation()">\u5132\u5b58\u6587\u5b57</button></div>':`<div class="ziwei-interpretation-body">${esc(interpretation||'\u5c1a\u672a\u5efa\u7acb\u547d\u76e4\u89e3\u8aaa\u3002')}</div>`)}
     </section>
   `;
@@ -5582,7 +5584,13 @@ function renderZiweiPreview(){
 function toggleZiweiInterpretationEdit(){
   var row=ziweiChartsCache.find(function(item){return item.id===ziweiSelectedId;})||ziweiChartsCache[0];
   var state=row&&ziweiDetailCache[ziweiDetailKey(row)];
-  if(!state||!state.loaded)return;
+  if(!state||(!state.loaded&&!state.notFound))return;
+  if(state.notFound){
+    state.detail={personKey:row.personKey,chartKey:row.chartKey||'ziwei',title:'\u7d2b\u5fae\u6597\u6578\u672c\u547d\u76e4',interpretation:String(row.note||''),updatedAt:null};
+    state.loaded=true;
+    state.notFound=false;
+    state.error=null;
+  }
   ziweiEditing=!ziweiEditing;
   renderZiweiPreview();
 }
@@ -5598,6 +5606,8 @@ async function saveZiweiInterpretation(){
     var saved=await apiPost({action:'ziweiInterpretationSave',personKey:row.personKey,chartKey:row.chartKey||'ziwei',content:editor.value,expectedUpdatedAt:state.detail.updatedAt||''});
     state.detail=saved||state.detail;
     state.loaded=true;
+    state.notFound=false;
+    state.error=null;
     ziweiEditing=false;
     renderZiweiPreview();
   }catch(err){
