@@ -5532,7 +5532,7 @@ async function loadZiweiDetail(row){
   }).catch(function(err){
     state.loading=null;
     state.error=err;
-    state.notFound=Number(err&&err.status)===404;
+    state.notFound=Number(err&&err.status)===404||/Astrology chart not found|命盤不存在/i.test(String(err&&err.message||''));
     if(ziweiSelectedId===row.id)renderZiweiPreview();
     return state;
   });
