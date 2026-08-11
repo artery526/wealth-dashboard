@@ -2730,6 +2730,7 @@ body::after{
 .ark-wall-detail-date{font-family:var(--mono);font-size:13px;font-weight:900;color:#aeefff;margin-bottom:5px}
 .ark-wall-detail-title{font-family:var(--font);font-size:28px;font-weight:900;color:#f0dfa0;line-height:1.35;letter-spacing:1px}
 .ark-wall-detail-text{position:relative;border:1px solid rgba(184,137,46,.24);border-radius:8px;background:rgba(3,4,3,.72);font-family:var(--sans);font-size:15px;font-weight:750;line-height:1.95;color:#d8c18a;white-space:pre-wrap;overflow-wrap:anywhere;padding:13px 14px;user-select:text;-webkit-user-select:text;touch-action:manipulation}
+.ark-wall-inline-photo{display:block;max-width:100%;max-height:680px;margin:12px 0;border-radius:8px;object-fit:contain}
 .ark-wall-detail-text.copy-ready{cursor:copy}
 .ark-wall-copy-hint{position:absolute;right:10px;top:8px;border:1px solid rgba(78,217,255,.3);border-radius:7px;background:rgba(3,8,10,.84);color:#aeefff;font-family:var(--sans);font-size:11px;font-weight:900;line-height:1;padding:6px 8px;opacity:.78;pointer-events:none}
 .ark-wall-copy-hint.ok{border-color:rgba(29,158,117,.52);background:rgba(5,22,16,.88);color:#d6ffed;opacity:1}
@@ -7842,6 +7843,26 @@ function arkWallTextFromMarkdown(markdown){
   return s;
 }
 
+function arkWallMarkdownHtml(markdown){
+  var body=arkWallTextFromMarkdown(markdown);
+  if(!body)return '';
+  return body.split(/\n{2,}/).map(function(block){
+    var source=String(block||'').trim();
+    if(!source)return '';
+    var html='';
+    var cursor=0;
+    var pattern=/!\[([^\]]*)\]\(([^)\s]+)\)/g;
+    var match;
+    while((match=pattern.exec(source))){
+      html+=esc(source.slice(cursor,match.index)).replace(/\n/g,'<br>');
+      html+='<img class="ark-wall-inline-photo" src="'+esc(arkWallUrl(match[2]))+'" alt="'+esc(match[1]||'照片')+'" loading="lazy">';
+      cursor=match.index+match[0].length;
+    }
+    html+=esc(source.slice(cursor)).replace(/\n/g,'<br>');
+    return html?'<p>'+html+'</p>':'';
+  }).filter(Boolean).join('');
+}
+
 function arkWallDateParts(entry){
   var date=String((entry&&entry.date)||'');
   var match=date.match(/^(\d{4})-(\d{2})-/);
@@ -8315,7 +8336,7 @@ function openArkWallEntry(id){
         +'</div>'
         +(Array.isArray(entry.tags)&&entry.tags.length?'<div class="ark-wall-tags">'+entry.tags.map(function(tag){return '<span class="ark-wall-tag" data-wall-tag="'+esc(tag)+'">'+esc(tag)+'</span>';}).join('')+'</div>':'')
       +'</div>'
-      +(text?'<div class="ark-wall-detail-text copy-ready" data-wall-copy-text="'+esc(text)+'"><span class="ark-wall-copy-hint">點兩下複製</span>\n'+esc(text)+'</div>':'')
+      +(text?'<div class="ark-wall-detail-text copy-ready" data-wall-copy-text="'+esc(text)+'"><span class="ark-wall-copy-hint">點兩下複製</span>\n'+arkWallMarkdownHtml(data.markdown||entry.excerpt||'')+'</div>':'')
       +(photos?'<div class="ark-wall-photo-grid">'+photos+'</div>':'')
     +'</div>';
     bindArkWallCopyText(body);
