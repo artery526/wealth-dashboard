@@ -2270,6 +2270,16 @@ body::after{
 .ziwei-stage{flex:1;min-height:320px;overflow:auto;display:flex;align-items:flex-start;justify-content:center;padding:16px;background:radial-gradient(circle at 50% 18%,rgba(184,137,46,.10),transparent 38%),#050403}
 .ziwei-img{max-width:none;width:min(100%,980px);height:auto;display:block;border:1px solid rgba(232,192,80,.22);border-radius:6px;box-shadow:0 10px 38px rgba(0,0,0,.55);transform-origin:top center}
 .ziwei-note{border-top:1px solid #1e1408;padding:10px 14px;font-family:var(--sans);font-size:12px;color:#8a6a30;line-height:1.7;white-space:pre-wrap}
+.ziwei-chart-tabs{display:flex;flex-wrap:wrap;gap:6px;padding:10px 14px;border-top:1px solid #1e1408;background:rgba(10,8,4,.42)}
+.ziwei-chart-tab{border:1px solid rgba(184,137,46,.4);border-radius:6px;background:rgba(184,137,46,.08);color:var(--gold);font:800 11px var(--sans);padding:6px 9px;cursor:pointer}
+.ziwei-chart-tab.active{background:rgba(184,137,46,.25);border-color:rgba(232,192,80,.8)}
+.ziwei-interpretation{border-top:1px solid #1e1408;background:rgba(6,5,3,.72);padding:12px 14px;text-align:left}
+.ziwei-interpretation-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.ziwei-interpretation-title{font:900 14px var(--sans);color:var(--gold)}
+.ziwei-interpretation-body{max-height:360px;overflow:auto;color:#d8c99e;font:400 13px/1.85 var(--sans);white-space:pre-wrap}
+.ziwei-interpretation-editor{width:100%;min-height:320px;box-sizing:border-box;resize:vertical;border:1px solid rgba(184,137,46,.48);border-radius:6px;background:#0a0804;color:#eadcae;font:400 13px/1.75 var(--sans);padding:10px;outline:none}
+.ziwei-interpretation-editor:focus{border-color:rgba(78,217,255,.8)}
+.ziwei-interpretation-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:8px}
 .chronicle-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 12px}
 .chronicle-search{width:min(320px,100%);background:#0a0804;border:1px solid #2a1c08;border-radius:6px;color:var(--ink);font-family:var(--sans);font-size:12px;padding:8px 10px;outline:none}
 .chronicle-search:focus{border-color:rgba(232,192,80,.55)}
@@ -3736,6 +3746,9 @@ var ziweiChartsPromise = null;
 var ziweiSelectedId = '';
 var ziweiZoom = 1;
 var ziweiBirthVisible = false;
+var ziweiDetailCache = {};
+var ziweiDetailPromise = null;
+var ziweiEditing = false;
 var eventChronicleCache = [];
 var eventChronicleSortedCache = [];
 var eventChroniclePromise = null;
@@ -5477,6 +5490,7 @@ function previewZiweiChart(id){
   if(!row)return;
   ziweiSelectedId=row.id;
   renderZiweiList();
+  loadZiweiDetail(row);
 }
 
 function selectZiweiChartEncoded(id){
@@ -5488,8 +5502,39 @@ function selectZiweiChart(id){
   if(!row)return;
   ziweiSelectedId=row.id;
   ziweiZoom=1;
+  ziweiEditing=false;
   renderZiweiList();
   renderZiweiPreview();
+  loadZiweiDetail(row);
+}
+
+function ziweiDetailKey(row){
+  return String(row&&row.personKey||'')+'::'+String(row&&row.chartKey||'ziwei');
+}
+
+async function loadZiweiDetail(row){
+  if(!row||!row.personKey||!API_URL)return null;
+  var key=ziweiDetailKey(row);
+  if(ziweiDetailCache[key]&&ziweiDetailCache[key].loaded){
+    if(ziweiSelectedId===row.id)renderZiweiPreview();
+    return ziweiDetailCache[key];
+  }
+  if(ziweiDetailCache[key]&&ziweiDetailCache[key].loading)return ziweiDetailCache[key].loading;
+  var state=ziweiDetailCache[key]||{};
+  state.loading=apiGet({action:'ziweiChartDetail',personKey:row.personKey,chartKey:row.chartKey||'ziwei'},20000).then(function(detail){
+    state.loaded=true;
+    state.loading=null;
+    state.detail=detail||{};
+    if(ziweiSelectedId===row.id)renderZiweiPreview();
+    return state;
+  }).catch(function(err){
+    state.loading=null;
+    state.error=err;
+    if(ziweiSelectedId===row.id)renderZiweiPreview();
+    return state;
+  });
+  ziweiDetailCache[key]=state;
+  return state.loading;
 }
 
 function renderZiweiPreview(){
@@ -5500,9 +5545,14 @@ function renderZiweiPreview(){
     preview.innerHTML='<div class="ziwei-preview-kicker">\u547d\u76e4\u9810\u89bd\u5340</div><div class="ziwei-preview-meta">\u5c1a\u7121\u547d\u76e4\u8cc7\u6599</div>';
     return;
   }
-  var img=ziweiImageUrl(row,'large');
+  var detailState=ziweiDetailCache[ziweiDetailKey(row)]||{};
+  var detail=detailState.detail||{};
+  var img=detail.imageUrl||ziweiImageUrl(row,'large');
   var original=ziweiOriginalUrl(row);
   var meta=ziweiBirthMeta(row);
+  var interpretation=detailState.loaded?String(detail.interpretation||''):String(row.note||'');
+  var chartTitle=detail.title||'\u7d2b\u5fae\u6597\u6578\u672c\u547d\u76e4';
+  var detailError=detailState.error?'\u547d\u76e4\u89e3\u8aaa\u66ab\u6642\u7121\u6cd5\u8f09\u5165\uff1a'+esc(detailState.error.message||'\u9023\u7dda\u5931\u6557'):'';
   preview.innerHTML=`
     <div class="ziwei-preview-head">
       <div>
@@ -5514,8 +5564,44 @@ function renderZiweiPreview(){
     <div class="ziwei-preview-stage">
       ${img?`<img class="ziwei-preview-img" src="${esc(img)}" alt="${esc(row.name)} \u7d2b\u5fae\u547d\u76e4">`:'<div class="ziwei-preview-empty">\u9019\u7b46\u8cc7\u6599\u5c1a\u672a\u586b\u5165\u5716\u7247\u9023\u7d50\u3002</div>'}
     </div>
-    ${row.note?`<div class="ziwei-preview-note">${esc(row.note)}</div>`:''}
+    <div class="ziwei-chart-tabs"><button class="ziwei-chart-tab active" type="button">${esc(chartTitle)}</button></div>
+    <section class="ziwei-interpretation">
+      <div class="ziwei-interpretation-head"><div class="ziwei-interpretation-title">\u547d\u76e4\u89e3\u8aaa</div>${detailState.loaded?`<button class="ziwei-tool" type="button" onclick="toggleZiweiInterpretationEdit()">${ziweiEditing?'\u53d6\u6d88\u7de8\u8f2f':'\u7de8\u8f2f\u89e3\u8aaa'}</button>`:''}</div>
+      ${detailError?`<div class="ziwei-preview-empty">${detailError}</div>`:(ziweiEditing?'<textarea id="ziwei-interpretation-editor" class="ziwei-interpretation-editor" aria-label="\u547d\u76e4\u89e3\u8aaa\u7de8\u8f2f\u5668"></textarea><div class="ziwei-interpretation-actions"><button class="ziwei-tool" type="button" onclick="saveZiweiInterpretation()">\u5132\u5b58\u6587\u5b57</button></div>':`<div class="ziwei-interpretation-body">${esc(interpretation||'\u5c1a\u672a\u5efa\u7acb\u547d\u76e4\u89e3\u8aaa\u3002')}</div>`)}
+    </section>
   `;
+  if(ziweiEditing){
+    var editor=document.getElementById('ziwei-interpretation-editor');
+    if(editor)editor.value=interpretation;
+  }
+  if(!detailState.loaded&&!detailState.loading&&!detailState.error)loadZiweiDetail(row);
+}
+
+function toggleZiweiInterpretationEdit(){
+  var row=ziweiChartsCache.find(function(item){return item.id===ziweiSelectedId;})||ziweiChartsCache[0];
+  var state=row&&ziweiDetailCache[ziweiDetailKey(row)];
+  if(!state||!state.loaded)return;
+  ziweiEditing=!ziweiEditing;
+  renderZiweiPreview();
+}
+
+async function saveZiweiInterpretation(){
+  var row=ziweiChartsCache.find(function(item){return item.id===ziweiSelectedId;})||ziweiChartsCache[0];
+  var state=row&&ziweiDetailCache[ziweiDetailKey(row)];
+  var editor=document.getElementById('ziwei-interpretation-editor');
+  if(!row||!state||!state.detail||!editor)return;
+  var button=document.querySelector('.ziwei-interpretation-actions .ziwei-tool');
+  if(button){button.disabled=true;button.textContent='\u5132\u5b58\u4e2d\u2026';}
+  try{
+    var saved=await apiPost({action:'ziweiInterpretationSave',personKey:row.personKey,chartKey:row.chartKey||'ziwei',content:editor.value,expectedUpdatedAt:state.detail.updatedAt||''});
+    state.detail=saved||state.detail;
+    state.loaded=true;
+    ziweiEditing=false;
+    renderZiweiPreview();
+  }catch(err){
+    if(button){button.disabled=false;button.textContent='\u5132\u5b58\u5931\u6557';}
+    alert('\u547d\u76e4\u89e3\u8aaa\u5132\u5b58\u5931\u6557\uff1a'+(err&&err.message?err.message:'\u8acb\u7a0d\u5f8c\u518d\u8a66'));
+  }
 }
 
 function ziweiImageUrl(row,size){
