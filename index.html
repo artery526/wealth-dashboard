@@ -1170,6 +1170,19 @@ body::after{
 .advisor-ai-quick-select option{background:#061f1a;color:#fff6c9;font-size:14px;font-weight:900;text-align:center}
 .advisor-ai-quick-select option:checked{background:#0f6b57;color:#fff}
 .advisor-ai-quick-select:focus{border-color:#fff2b8;box-shadow:0 0 0 2px rgba(29,158,117,.25),0 0 18px rgba(29,158,117,.22)}
+.advisor-ai-quick-tools{display:flex;align-items:center;gap:6px;min-width:0}
+.advisor-ai-dividend-select{width:178px;flex-shrink:1;border:1px solid rgba(232,192,80,.58);border-radius:999px;background:linear-gradient(145deg,#3d2a09,#1b1004);color:#fff0b0;font-family:var(--sans);font-size:12px;font-weight:900;text-align:center;text-align-last:center;padding:8px 9px;outline:none;cursor:pointer}
+.advisor-ai-dividend-select option{background:#1b1004;color:#fff0b0;font-size:12px}
+.advisor-ai-dividend-select:focus{border-color:#fff2b8;box-shadow:0 0 0 2px rgba(232,192,80,.2)}
+.advisor-ai-dividend-quick-row{display:flex;align-items:center;gap:7px;margin:0 0 10px}
+.advisor-ai-dividend-quick-input{width:130px;min-width:0;border:1px solid rgba(232,192,80,.34);border-radius:7px;background:#0a0804;color:var(--ink);font-family:var(--mono);font-size:13px;padding:9px 10px;outline:none}
+.advisor-ai-dividend-quick-input:focus{border-color:var(--gold2)}
+.advisor-ai-dividend-quick-btn{width:auto;min-width:92px;border:1px solid rgba(29,158,117,.48);border-radius:7px;background:rgba(29,158,117,.12);color:#a8f1d6;font-family:var(--sans);font-size:12px;font-weight:950;padding:9px 12px;cursor:pointer}
+.advisor-ai-dividend-quick-btn:hover{background:rgba(29,158,117,.2)}
+.advisor-ai-dividend-quick-btn:disabled{opacity:.55;cursor:wait}
+.advisor-ai-dividend-quick-status{flex:1;min-width:0;font-family:var(--sans);font-size:11px;line-height:1.5;color:#b99651;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.advisor-ai-dividend-quick-status.ok{color:#8ce6c6}
+.advisor-ai-dividend-quick-status.err{color:var(--coral)}
 .advisor-ai-input{flex:1;min-width:0;border:1px solid #2a1c08;border-radius:7px;background:#0a0804;color:var(--ink);font-family:var(--sans);font-size:14px;padding:10px 11px;outline:none}
 .advisor-ai-input:focus{border-color:var(--gold2)}
 .advisor-ai-portrait{position:absolute;left:-204px;top:-62px;width:220px;pointer-events:none;z-index:1}
@@ -1224,7 +1237,7 @@ body::after{
 .advisor-close{position:absolute;top:10px;right:12px;background:none;border:none;color:#5a4018;font-size:14px;cursor:pointer;transition:color .2s;line-height:1;padding:2px}
 .advisor-close:hover{color:var(--gold)}
 @media(max-width:480px){.advisor-overlay{padding:0;background:rgba(0,0,0,0);transition:background .18s}.advisor-overlay.open{background:rgba(0,0,0,.52)}.advisor-wrap{position:fixed;left:6px;top:108px;display:flex;align-items:flex-start;transform:translateY(-8px);opacity:0;pointer-events:none;transition:opacity .18s,transform .18s}.advisor-overlay.open .advisor-wrap{transform:translateY(0);opacity:1;pointer-events:auto}.advisor-img{width:124px;margin-top:-31px}.advisor-dialog{margin-top:0;margin-left:-14px;width:calc(100vw - 122px);max-height:calc(100vh - 128px);padding:12px 12px 10px;border-radius:0 14px 14px 14px}.advisor-dialog::before{top:42px}.advisor-dialog::after{top:43px}.advisor-command-head{gap:6px;margin-right:18px}.advisor-command-title{font-size:15px;letter-spacing:.5px}.advisor-reminder-card{padding:10px 11px 11px}.advisor-reminder-title{font-size:12px}.advisor-reminder-text{font-size:12px;line-height:1.68}.advisor-btn-grid{gap:8px}.advisor-menu-toggle{min-height:42px;font-size:16px;letter-spacing:2px}.advisor-menu-mark{width:20px;height:20px;font-size:11px}.advisor-btn-group{gap:6px;border-radius:7px}.advisor-menu-section.is-open .advisor-btn-group{padding:7px;max-height:220px}.advisor-btn{font-size:12px;padding:8px 4px;letter-spacing:0;gap:3px}.advisor-btn-tag{width:14px;height:14px;font-size:9px}.advisor-btn-spacer{min-height:32px}}
-@media(max-width:480px){.advisor-ai-standalone{left:calc(50% + 40px);top:108px;width:calc(100vw - 122px);padding:15px 14px 13px;border-radius:0 14px 14px 14px}.advisor-ai-portrait{left:-112px;top:-31px;width:124px}.advisor-ai-portrait-img{max-height:168px}.advisor-ai-head-row{grid-template-columns:auto minmax(0,1fr);gap:7px;margin-right:28px;margin-bottom:14px}.advisor-ai-agenda-btn{font-size:11px;padding:7px 9px;letter-spacing:0}.advisor-ai-head-row>.advisor-ai-quick-select{width:112px;font-size:13px;padding:8px 9px;letter-spacing:0;text-align:center;text-align-last:center}.advisor-ai-title-wrap{justify-content:flex-start;gap:6px}.advisor-ai-standalone .advisor-shortcut-title{font-size:20px;line-height:1.35;text-align:left}.advisor-ai-funds{justify-content:flex-start;font-size:10px}.advisor-ai-fund-pill{min-height:22px;padding:3px 6px}.advisor-ai-input{flex-basis:calc(100% - 66px)}.advisor-ai-tool-row{grid-template-columns:1fr}.advisor-ai-examples-grid{grid-template-columns:1fr}}
+@media(max-width:480px){.advisor-ai-standalone{left:calc(50% + 40px);top:108px;width:calc(100vw - 122px);padding:15px 14px 13px;border-radius:0 14px 14px 14px}.advisor-ai-portrait{left:-112px;top:-31px;width:124px}.advisor-ai-portrait-img{max-height:168px}.advisor-ai-head-row{grid-template-columns:auto minmax(0,1fr);gap:7px;margin-right:28px;margin-bottom:14px}.advisor-ai-quick-tools{width:100%;flex-wrap:wrap}.advisor-ai-agenda-btn{font-size:11px;padding:7px 9px;letter-spacing:0}.advisor-ai-head-row>.advisor-ai-quick-select{width:112px;font-size:13px;padding:8px 9px;letter-spacing:0;text-align:center;text-align-last:center}.advisor-ai-dividend-select{width:calc(100% - 4px);font-size:11px;padding:7px 8px}.advisor-ai-title-wrap{justify-content:flex-start;gap:6px}.advisor-ai-standalone .advisor-shortcut-title{font-size:20px;line-height:1.35;text-align:left}.advisor-ai-funds{justify-content:flex-start;font-size:10px}.advisor-ai-fund-pill{min-height:22px;padding:3px 6px}.advisor-ai-input{flex-basis:calc(100% - 66px)}.advisor-ai-dividend-quick-row{flex-wrap:wrap}.advisor-ai-dividend-quick-input{flex:1;width:auto}.advisor-ai-dividend-quick-btn{min-width:88px}.advisor-ai-dividend-quick-status{flex-basis:100%;white-space:normal}.advisor-ai-tool-row{grid-template-columns:1fr}.advisor-ai-examples-grid{grid-template-columns:1fr}}
 @media(max-width:480px){
   .advisor-ai-standalone{left:50%;top:142px;width:calc(100vw - 28px);padding:58px 14px 13px;border-radius:14px}
   .advisor-ai-portrait{left:50%;top:-62px;width:96px;transform:translateX(-50%)}
@@ -13674,6 +13687,8 @@ var advisorAIScheduleOpen=false;
 var advisorAIHeaderFundsCache=null;
 var advisorAIHeaderFundsFetchedAt=0;
 var advisorAIHeaderFundsPromise=null;
+var advisorDividendQuickSelection=null;
+var advisorDividendQuickPromise=null;
 
 function closeAdvisorShortcutPanel(){
   var panel=document.getElementById('advisor-shortcut-panel');
@@ -13764,11 +13779,19 @@ function advisorAIHeaderHtml(title){
     <button class="advisor-ai-login-btn" type="button" onclick="advisorAIDirectLogin(event)" title="直接登入龐統軍師" aria-label="直接登入龐統軍師">↪</button>
     <button class="advisor-ai-config-btn" type="button" onclick="openAdvisorAISettings(event)" title="API 與 WRITE_TOKEN 設定" aria-label="API 與 WRITE_TOKEN 設定">&#9881;</button>
     <div class="advisor-ai-head-row">
-      ${advisorAIQuickCommandSelectHtml()}
+      <div class="advisor-ai-quick-tools">
+        ${advisorAIQuickCommandSelectHtml()}
+        ${advisorAIDividendQuickSelectHtml()}
+      </div>
       <div class="advisor-ai-title-wrap">
         <div class="advisor-shortcut-title">🗡️主公，今日有何吩咐?</div>
         <div class="advisor-ai-funds" id="advisor-ai-funds">${advisorAIHeaderFundsHtml(advisorAIHeaderFundsCache&&advisorAIHeaderFundsCache.cash,advisorAIHeaderFundsCache&&advisorAIHeaderFundsCache.stock,advisorAIHeaderFundsCache&&advisorAIHeaderFundsCache.cube)}</div>
       </div>
+    </div>
+    <div class="advisor-ai-dividend-quick-row">
+      <input class="advisor-ai-dividend-quick-input" id="advisor-ai-dividend-quick-amount" type="number" min="1" step="1" placeholder="配息入帳金額" inputmode="decimal" onkeydown="advisorAIDividendQuickKey(event)">
+      <button class="advisor-ai-dividend-quick-btn" id="advisor-ai-dividend-quick-btn" type="button" onclick="advisorAIRecordQuickDividend(this)">記錄配息</button>
+      <div class="advisor-ai-dividend-quick-status" id="advisor-ai-dividend-quick-status">選擇持股後自動帶入待入帳配息</div>
     </div>
     <button class="advisor-ai-palace-nav" type="button" onclick="toggleGlobalScrollMenu(event)">&#x7687;&#x5BAE;&#x5C0E;&#x822A;</button>`;
 }
@@ -13812,6 +13835,111 @@ function advisorAIQuickCommandSelectHtml(){
       return `<option value="${esc(item.command)}">${esc(item.label)}</option>`;
     }).join('')}
   </select>`;
+}
+
+function advisorAIDividendQuickSelectHtml(){
+  var holdings=(dividendCenterCache&&dividendCenterCache.dividendHoldings)||[];
+  var options=holdings.map(function(row){
+    return `<option value="${esc(row.symbol||'')}">${esc(row.displaySymbol||row.symbol||'')}</option>`;
+  }).join('');
+  return `<select class="advisor-ai-dividend-select" id="advisor-ai-dividend-select" onchange="advisorAISelectQuickDividend(this)" aria-label="龐統配息標的">
+    <option value="">配息標的${holdings.length?'':'（載入中）'}</option>${options}
+  </select>`;
+}
+
+function advisorAISetQuickDividendStatus(message,type){
+  var el=document.getElementById('advisor-ai-dividend-quick-status');
+  if(el){el.textContent=message||'';el.className='advisor-ai-dividend-quick-status '+(type||'');}
+}
+
+function advisorAIRefreshDividendQuickSelect(data){
+  var select=document.getElementById('advisor-ai-dividend-select');
+  if(!select)return;
+  var current=String(select.value||'');
+  var holdings=(data&&data.dividendHoldings)||[];
+  select.innerHTML='<option value="">配息標的'+(holdings.length?'':'（無持股資料）')+'</option>'+holdings.map(function(row){
+    return `<option value="${esc(row.symbol||'')}">${esc(row.displaySymbol||row.symbol||'')}</option>`;
+  }).join('');
+  if(current&&holdings.some(function(row){return String(row.symbol||'')===current;}))select.value=current;
+}
+
+function advisorAILoadDividendQuickOptions(force){
+  if(!webVerifyIsAuthorized())return Promise.resolve(null);
+  if(!force&&dividendCenterCache){advisorAIRefreshDividendQuickSelect(dividendCenterCache);return Promise.resolve(dividendCenterCache);}
+  if(advisorDividendQuickPromise)return advisorDividendQuickPromise;
+  advisorDividendQuickPromise=loadDividendCenter(false).then(function(data){
+    advisorAIRefreshDividendQuickSelect(data);
+    return data;
+  }).catch(function(err){
+    advisorAISetQuickDividendStatus('配息資料讀取失敗，請稍後再試','err');
+    return null;
+  }).finally(function(){advisorDividendQuickPromise=null;});
+  return advisorDividendQuickPromise;
+}
+
+function advisorAIQuickDividendRow(symbol,data){
+  var key=normalizeKey(symbol);
+  var rows=((data&&data.pending)||[]).filter(function(row){
+    return normalizeKey(row.symbol||row.displaySymbol)===key&&!isDividendPendingHidden(row);
+  });
+  rows.sort(function(a,b){
+    return String(b.estimatedPayDate||b.announceDate||'').localeCompare(String(a.estimatedPayDate||a.announceDate||''))||(Number(b.rowId)||0)-(Number(a.rowId)||0);
+  });
+  return rows[0]||null;
+}
+
+function advisorAISelectQuickDividend(select){
+  var symbol=String(select&&select.value||'').trim();
+  advisorDividendQuickSelection=null;
+  if(!symbol){advisorAISetQuickDividendStatus('選擇持股後自動帶入待入帳配息');return;}
+  var row=advisorAIQuickDividendRow(symbol,dividendCenterCache||{});
+  if(!row){advisorAISetQuickDividendStatus('此標的目前沒有待入帳配息','err');return;}
+  advisorDividendQuickSelection=row;
+  var market=advisorAIDividendMemoMarket(row.symbol||symbol)==='us'?'美股':'台股';
+  var note=row.note||('軍師AI配息備忘｜'+market);
+  advisorAISetQuickDividendStatus((row.displaySymbol||row.symbol)+' · '+note+'｜'+market+' · 每股配息 USD '+(row.dividendUsd||'--')+' · 預估入帳 '+(row.estimatedPayDate||'--'));
+  var amount=document.getElementById('advisor-ai-dividend-quick-amount');
+  if(amount){amount.focus();amount.select();}
+}
+
+function advisorAIDividendQuickKey(e){
+  if(e&&e.key==='Enter'){
+    e.preventDefault();
+    advisorAIRecordQuickDividend(document.getElementById('advisor-ai-dividend-quick-btn'));
+  }
+}
+
+async function advisorAIRecordQuickDividend(btn){
+  var row=advisorDividendQuickSelection;
+  var amountEl=document.getElementById('advisor-ai-dividend-quick-amount');
+  var amount=parseFloat(amountEl&&amountEl.value)||0;
+  if(!row){advisorAISetQuickDividendStatus('請先選擇有待入帳配息的持股','err');return;}
+  if(!amount||amount<=0){advisorAISetQuickDividendStatus('請輸入大於 0 的入帳金額','err');return;}
+  if(btn&&btn.disabled)return;
+  if(btn){btn.disabled=true;btn.textContent='記錄中…';}
+  try{
+    await apiPost({
+      action:'income',
+      date:today().replace(/-/g,'/'),
+      source:'💰投資理財',
+      account:'💵國泰Stock',
+      amount:amount,
+      note:row.displaySymbol||row.symbol,
+      divRate:formatDividendUsdForInput(row.dividendUsd),
+      divSymbol:row.symbol,
+      dividendIncome:'1',
+      dividendRowId:row.rowId||''
+    });
+    invalidateDividendCenter();
+    advisorDividendQuickSelection=null;
+    if(amountEl)amountEl.value='';
+    advisorAISetQuickDividendStatus('✓ 已記錄 '+(row.displaySymbol||row.symbol)+' 配息 '+fmtFull(amount),'ok');
+    if(document.getElementById('advisor-ai-dividend-select'))document.getElementById('advisor-ai-dividend-select').value='';
+  }catch(err){
+    advisorAISetQuickDividendStatus('✗ '+(err&&err.message?err.message:'寫入失敗'),'err');
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='記錄配息';}
+  }
 }
 
 function advisorAIRunQuickCommand(select){
@@ -13934,6 +14062,7 @@ function openAdvisorAI(targetPanel){
     </div>
     ${advisorAIExamplesHtml()}
     <div class="advisor-shortcut-msg" id="advisor-ai-msg"></div>`;
+  advisorAILoadDividendQuickOptions(false);
   setTimeout(function(){
     var input=document.getElementById('advisor-ai-input');
     if(input)input.focus();
