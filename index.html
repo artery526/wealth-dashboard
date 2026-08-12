@@ -7314,8 +7314,9 @@ function renderTreasuryOverview(all,filtered,monthly,assetSnapshot,totalRow){
 function renderAccounts(accs,monthly,el,financeStatus,assetSnapshot,bills,stale){
   var all=accs||[];
   var filtered=all.filter(a=>a.name!=='總資產'&&a.name!=='總資產/總計');
+  var totalAssetAccount=all.find(function(a){return a.name==='總資產'||a.name==='總資產/總計';});
 
-  var totalAssetHtml=renderTreasuryAccountTotalAssetCard(assetSnapshot);
+  var totalAssetHtml=renderTreasuryAccountTotalAssetCard(assetSnapshot,totalAssetAccount);
   var totalAssetInserted=false;
   var accCards=[];
   filtered.forEach(function(a){
@@ -7365,10 +7366,11 @@ function isSisCathayAccount(account){
   return name.indexOf('Sis')>=0&&name.indexOf('國泰')>=0;
 }
 
-function renderTreasuryAccountTotalAssetCard(assetSnapshot){
+function renderTreasuryAccountTotalAssetCard(assetSnapshot,totalAssetAccount){
   var latest=assetSnapshot&&assetSnapshot.latest;
   var total=Number(assetSnapshot&&assetSnapshot.latestTotalAssetValue);
   if(isNaN(total)||!isFinite(total)||total<=0)total=Number(latest&&latest.totalAssetValue);
+  if(isNaN(total)||!isFinite(total)||total<=0)total=Number(totalAssetAccount&&totalAssetAccount.value);
   if(isNaN(total)||!isFinite(total)||total<=0)return '';
   var delta=Number(assetSnapshot&&assetSnapshot.totalAssetChangeAmount);
   if(isNaN(delta)||!isFinite(delta))delta=advisorSnapshotDelta(assetSnapshot,'totalAssetValue');
