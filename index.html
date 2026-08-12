@@ -4121,7 +4121,7 @@ function normalizeImageUrl(url){
 async function apiGet(params,timeoutMs){
   if(!API_URL)throw new Error('未設定 API 網址');
   var baseParams=Object.assign({},params||{});
-  var attempts=String(baseParams.action||'')==='todayCalendar'||String(baseParams.action||'')==='todayTasks'?3:1;
+  var attempts=/^(todayCalendar|todayTasks|config)$/.test(String(baseParams.action||''))?3:1;
   var lastErr=null;
   for(var attempt=0;attempt<attempts;attempt++){
     var requestParams=Object.assign({},baseParams,{_ts:Date.now(),_try:attempt+1});
@@ -4640,9 +4640,19 @@ function advisorAIUpdateWebVerifyStatus(){
 async function verifyWebAccess(){
   if(!API_URL)throw new Error('尚未設定 Web App API URL');
   if(!cleanToken(WRITE_TOKEN))throw new Error('尚未設定 WRITE_TOKEN');
-  await apiGet({action:'config'},30000);
-  await apiPost({action:'verifyWriteToken'});
-  return true;
+  var lastErr=null;
+  for(var attempt=0;attempt<3;attempt++){
+    try{
+      cfg=await apiGet({action:'config'},30000);
+      await apiPost({action:'verifyWriteToken'});
+      return true;
+    }catch(err){
+      lastErr=err;
+      if(attempt>=2||!isTransientApiError(err))throw err;
+      await delay(700*(attempt+1));
+    }
+  }
+  throw lastErr||new Error('網頁驗證失敗');
 }
 function cfgWebVerifyStatusText(){
   var status=webVerifyStoredStatus();
@@ -4683,8 +4693,7 @@ async function verifyCfgWebAccess(){
   renderCfgWebVerifyStatus('pending','正在驗證 API 與 WRITE_TOKEN');
   if(btn)btn.disabled=true;
   try{
-    cfg=await apiGet({action:'config'},30000);
-    await apiPost({action:'verifyWriteToken'});
+    await verifyWebAccess();
     setWebVerifyStatus('ok','API 與 WRITE_TOKEN 已通過');
     renderCfgWebVerifyStatus('ok','網頁驗證成功');
   }catch(e){
@@ -4717,8 +4726,7 @@ async function saveCfg(){
   }
   setWebVerifyStatus('pending','正在驗證 API 與 WRITE_TOKEN');
   try{
-    cfg=await apiGet({action:'config'},30000);
-    await apiPost({action:'verifyWriteToken'});
+    await verifyWebAccess();
     setWebVerifyStatus('ok','API 與 WRITE_TOKEN 已通過');
   }catch(e){
     console.error(e);
