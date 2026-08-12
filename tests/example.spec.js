@@ -60,7 +60,9 @@ test('intelligence office supports manual inspiration preview', async ({ page })
   await page.evaluate(() => {
     window.apiPost = async body => body.action === 'intelligenceImage'
       ? { dataUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=' }
-      : { text: '先把重要的事做好。🌿' };
+      : body.action === 'intelligenceVisualPlan'
+        ? { plan: { theme: '重要的事', subject: '一隻貓咪', scene: '貓咪專注整理手邊重要物品', emotion: '平靜', palette: '柔和暖色', metaphor: '把注意力放回真正重要的事', avoid: '大量文字' } }
+        : { text: '先把重要的事做好。🌿' };
   });
 
   await page.locator('.intelligence-orb').click();
@@ -69,6 +71,8 @@ test('intelligence office supports manual inspiration preview', async ({ page })
   await page.locator('#intelligence-polish-btn').click();
   await expect(page.locator('#intelligence-source-text')).toHaveValue('先把重要的事做好。🌿');
   await page.locator('#intelligence-image-btn').click();
+  await expect(page.locator('#intelligence-visual-plan')).toBeVisible();
+  await page.locator('#intelligence-image-confirm-btn').click();
   await expect(page.locator('#intelligence-image-preview')).toBeVisible();
   await page.getByRole('button', { name: '預覽' }).click();
   await expect(page.locator('#intelligence-preview')).toBeVisible();
@@ -87,10 +91,11 @@ test('intelligence image generation uses one GET write request', async ({ page }
       captured = { params, timeoutMs };
       return { ok: true, data: { dataUrl: 'data:image/png;base64,test' } };
     };
-    await apiPost({ action: 'intelligenceImage', finalText: '測試貼文' });
+    await apiPost({ action: 'intelligenceImage', finalText: '測試貼文', visualPlan: { theme: '主題', scene: '場景' } });
     return captured;
   });
   expect(request.params.action).toBe('intelligenceImage');
   expect(request.params.token).toBe('test-token');
+  expect(JSON.parse(request.params.visualPlan).theme).toBe('主題');
   expect(request.timeoutMs).toBe(180000);
 });

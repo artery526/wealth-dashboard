@@ -2995,6 +2995,7 @@ body::after{
 .intelligence-image-tools{margin-top:18px;padding-top:14px;border-top:1px solid rgba(190,151,73,.24)}
 .intelligence-image-preview{display:block;width:min(100%,360px);aspect-ratio:1;object-fit:cover;margin-top:12px;border:1px solid rgba(190,151,73,.4);border-radius:8px}
 .intelligence-image-preview[hidden]{display:none}
+.intelligence-visual-plan{margin-top:12px;padding:12px;background:rgba(0,0,0,.2);border:1px solid rgba(190,151,73,.28);border-radius:8px}.intelligence-visual-plan[hidden]{display:none}.intelligence-plan-field{display:block;color:#b99c66;font-size:12px;margin-top:9px}.intelligence-plan-field input,.intelligence-plan-field textarea{display:block;width:100%;box-sizing:border-box;margin-top:5px;background:#0a0806;color:#f1e4c7;border:1px solid #5d4728;border-radius:6px;padding:8px;font:inherit;line-height:1.6}
 @media(max-width:540px){.advisor-duo .intelligence-orb{width:190px;height:190px;flex-basis:190px}}
 @media(max-width:480px){.advisor-duo .intelligence-orb{width:180px;height:180px;flex-basis:180px}}
 </style>
@@ -3619,11 +3620,22 @@ body::after{
       <button class="intelligence-action-btn" type="button" onclick="showIntelligencePreview()">預覽</button>
     </div>
     <div class="intelligence-image-tools">
-      <div class="intelligence-label">視覺製作｜可選，不會自動呼叫圖片 API</div>
+      <div class="intelligence-label">視覺製作｜先確認視覺提案，才會呼叫圖片 API</div>
       <div class="intelligence-actions">
-        <button class="intelligence-action-btn" id="intelligence-image-btn" type="button" onclick="generateIntelligenceCatImage()">生成可愛貓咪圖</button>
+        <button class="intelligence-action-btn" id="intelligence-image-btn" type="button" onclick="prepareIntelligenceVisualPlan()">生成可愛貓咪圖</button>
+        <button class="intelligence-action-btn primary" id="intelligence-image-confirm-btn" type="button" onclick="confirmIntelligenceVisualPlan()" hidden>確認提案並生成圖片</button>
         <button class="intelligence-action-btn" id="intelligence-image-regenerate-btn" type="button" onclick="generateIntelligenceCatImage()" hidden>重新生成</button>
         <button class="intelligence-action-btn" id="intelligence-image-remove-btn" type="button" onclick="removeIntelligenceImage()" hidden>不使用圖片</button>
+      </div>
+      <div class="intelligence-visual-plan" id="intelligence-visual-plan" hidden>
+        <div class="intelligence-label">軍師視覺提案｜主公可直接修改</div>
+        <label class="intelligence-plan-field">主題<input id="intelligence-plan-theme" type="text"></label>
+        <label class="intelligence-plan-field">畫面主體<input id="intelligence-plan-subject" type="text"></label>
+        <label class="intelligence-plan-field">場景與動作<textarea id="intelligence-plan-scene" rows="2"></textarea></label>
+        <label class="intelligence-plan-field">情緒<input id="intelligence-plan-emotion" type="text"></label>
+        <label class="intelligence-plan-field">色彩<input id="intelligence-plan-palette" type="text"></label>
+        <label class="intelligence-plan-field">視覺隱喻<textarea id="intelligence-plan-metaphor" rows="2"></textarea></label>
+        <label class="intelligence-plan-field">避免內容<input id="intelligence-plan-avoid" type="text"></label>
       </div>
       <img class="intelligence-image-preview" id="intelligence-image-preview" alt="情報司生成的可愛貓咪插畫" hidden>
     </div>
@@ -4247,12 +4259,12 @@ async function apiPost(body){
   WRITE_TOKEN=cleanToken(WRITE_TOKEN);
   if(!WRITE_TOKEN)throw new Error('未設定記帳密鑰');
   if(body&&body.action==='intelligenceImage'){
-    var imageParams=Object.assign({},body,{token:WRITE_TOKEN});
+    var imageParams=Object.assign({},body,{token:WRITE_TOKEN,visualPlan:JSON.stringify(body.visualPlan||{})});
     var imageResult=await apiPostGetFallback(imageParams,180000);
     if(!imageResult.ok)throw new Error(imageResult.error||'圖片生成失敗');
     return imageResult.data;
   }
-  if(body&&/^(advisorAiParse|advisorDividendMemo|intelligencePolish|expense|income|transfer|ziweiInterpretationSave)$/.test(body.action||'')){
+  if(body&&/^(advisorAiParse|advisorDividendMemo|intelligencePolish|intelligenceVisualPlan|expense|income|transfer|ziweiInterpretationSave)$/.test(body.action||'')){
     var jsonTimeout=body.action==='intelligenceImage'?180000:((isApiWriteAction(body.action||'')||body.action==='advisorDividendMemo')?45000:undefined);
     return apiPostJson(body,jsonTimeout);
   }
@@ -4824,6 +4836,7 @@ function openPanel(key){
 var intelligenceTone = '自然口語';
 var intelligenceDraft = '';
 var intelligenceImageDataUrl = '';
+var intelligenceVisualPlan = null;
 function openIntelligenceOffice(event){
   if(event){event.preventDefault();event.stopPropagation();}
   closeAdvisorAIStandalone();
@@ -4854,6 +4867,7 @@ async function polishIntelligenceIdea(){
   if(status)status.textContent='軍師正在保留原意、整理語氣…';
   if(preview)preview.hidden=true;
   if(intelligenceImageDataUrl)removeIntelligenceImage();
+  resetIntelligenceVisualPlan();
   if(status)status.textContent='軍師正在保留原意、整理語氣…';
   try{
     var data=await apiPost({action:'intelligencePolish',sourceText:source,tone:intelligenceTone});
@@ -4878,6 +4892,65 @@ function showIntelligencePreview(){
   if(preview)preview.hidden=false;
   if(status)status.textContent='這只是人工預覽；Phase 4 才會加入 Threads 發布。';
 }
+function intelligencePlanFields(){
+  return {
+    theme:document.getElementById('intelligence-plan-theme'),
+    subject:document.getElementById('intelligence-plan-subject'),
+    scene:document.getElementById('intelligence-plan-scene'),
+    emotion:document.getElementById('intelligence-plan-emotion'),
+    palette:document.getElementById('intelligence-plan-palette'),
+    metaphor:document.getElementById('intelligence-plan-metaphor'),
+    avoid:document.getElementById('intelligence-plan-avoid')
+  };
+}
+function resetIntelligenceVisualPlan(){
+  intelligenceVisualPlan=null;
+  var plan=document.getElementById('intelligence-visual-plan');
+  var confirm=document.getElementById('intelligence-image-confirm-btn');
+  if(plan)plan.hidden=true;
+  if(confirm)confirm.hidden=true;
+  var fields=intelligencePlanFields();
+  Object.keys(fields).forEach(function(key){if(fields[key])fields[key].value='';});
+}
+function renderIntelligenceVisualPlan(plan){
+  plan=plan||{};
+  intelligenceVisualPlan=plan;
+  var fields=intelligencePlanFields();
+  Object.keys(fields).forEach(function(key){if(fields[key])fields[key].value=String(plan[key]||'');});
+  var planEl=document.getElementById('intelligence-visual-plan');
+  var confirm=document.getElementById('intelligence-image-confirm-btn');
+  if(planEl)planEl.hidden=false;
+  if(confirm)confirm.hidden=false;
+}
+async function prepareIntelligenceVisualPlan(){
+  var input=document.getElementById('intelligence-source-text');
+  var button=document.getElementById('intelligence-image-btn');
+  var status=document.getElementById('intelligence-status');
+  var finalText=String(input&&input.value||'').trim();
+  if(!finalText){if(status)status.textContent='請先完成文字草稿，再產生視覺提案。';return;}
+  if(button)button.disabled=true;
+  if(status)status.textContent='軍師正在把文章主旨轉成可畫出的場景…';
+  try{
+    var data=await apiPost({action:'intelligenceVisualPlan',finalText:finalText});
+    if(!data||!data.plan)throw new Error('視覺提案沒有回傳可用內容');
+    renderIntelligenceVisualPlan(data.plan);
+    if(status)status.textContent='視覺提案已完成，請主公確認或修改後再生成圖片。';
+  }catch(error){if(status)status.textContent='視覺提案失敗：'+String(error&&error.message||error);}
+  finally{if(button)button.disabled=false;}
+}
+function collectIntelligenceVisualPlan(){
+  var fields=intelligencePlanFields();
+  var plan={};
+  Object.keys(fields).forEach(function(key){plan[key]=String(fields[key]&&fields[key].value||'').trim();});
+  return plan;
+}
+async function confirmIntelligenceVisualPlan(){
+  var plan=collectIntelligenceVisualPlan();
+  var status=document.getElementById('intelligence-status');
+  if(!plan.theme||!plan.scene){if(status)status.textContent='請至少填寫主題與場景，再生成圖片。';return;}
+  intelligenceVisualPlan=plan;
+  await generateIntelligenceCatImage();
+}
 async function generateIntelligenceCatImage(){
   var input=document.getElementById('intelligence-source-text');
   var button=document.getElementById('intelligence-image-btn');
@@ -4887,10 +4960,13 @@ async function generateIntelligenceCatImage(){
   var status=document.getElementById('intelligence-status');
   var finalText=String(input&&input.value||'').trim();
   if(!finalText){if(status)status.textContent='請先完成文字草稿，再生成可愛貓咪圖。';return;}
+  var plan=collectIntelligenceVisualPlan();
+  if(!plan.theme||!plan.scene){if(status)status.textContent='請先生成並確認視覺提案，再生成圖片。';return;}
+  intelligenceVisualPlan=plan;
   if(button)button.disabled=true;if(regenerate)regenerate.disabled=true;if(remove)remove.disabled=true;
   if(status)status.textContent='情報司正在依據最終貼文意境繪製插畫…';
   try{
-    var data=await apiPost({action:'intelligenceImage',finalText:finalText});
+    var data=await apiPost({action:'intelligenceImage',finalText:finalText,visualPlan:plan});
     intelligenceImageDataUrl=String(data&&data.dataUrl||'').trim();
     if(!intelligenceImageDataUrl)throw new Error('圖片生成沒有回傳可用圖片');
     if(image){image.src=intelligenceImageDataUrl;image.hidden=false;}
