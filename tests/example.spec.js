@@ -56,6 +56,7 @@ test('intelligence office supports manual inspiration preview', async ({ page })
   const pageErrors = [];
   page.on('pageerror', error => pageErrors.push(error.message));
   await page.goto(dashboardUrl);
+  await expect.poll(() => page.evaluate(() => apiWriteTimeoutMs('intelligenceImage'))).toBe(180000);
   await page.evaluate(() => {
     window.apiPost = async body => body.action === 'intelligenceImage'
       ? { dataUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=' }

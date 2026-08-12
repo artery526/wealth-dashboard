@@ -4089,10 +4089,11 @@ function parseApiJsonText(text){
   throw new Error('API returned non-JSON response');
 }
 function isApiWriteAction(action){
-  return /^(expense|income|transfer|transactionUndo|stockTradeVoid|dividendEntry|dividendDelete|holdingTradeEntry|holdingTradeDelete|calendarCreate|calendarDelete|taskCreate|taskDelete|macroLongReportGenerate|macroLongReportTriggerInstall)$/.test(action||'');
+  return /^(intelligenceImage|expense|income|transfer|transactionUndo|stockTradeVoid|dividendEntry|dividendDelete|holdingTradeEntry|holdingTradeDelete|calendarCreate|calendarDelete|taskCreate|taskDelete|macroLongReportGenerate|macroLongReportTriggerInstall)$/.test(action||'');
 }
 function apiWriteTimeoutMs(action){
   action=String(action||'');
+  if(action==='intelligenceImage')return 180000;
   if(action==='macroLongReportGenerate')return 150000;
   if(action==='macroLongReportTriggerInstall')return 45000;
   return isApiWriteAction(action)?45000:15000;
@@ -4246,7 +4247,7 @@ async function apiPost(body){
   WRITE_TOKEN=cleanToken(WRITE_TOKEN);
   if(!WRITE_TOKEN)throw new Error('未設定記帳密鑰');
   if(body&&/^(advisorAiParse|advisorDividendMemo|intelligencePolish|intelligenceImage|expense|income|transfer|ziweiInterpretationSave)$/.test(body.action||'')){
-    var jsonTimeout=(isApiWriteAction(body.action||'')||body.action==='advisorDividendMemo')?45000:undefined;
+    var jsonTimeout=body.action==='intelligenceImage'?180000:((isApiWriteAction(body.action||'')||body.action==='advisorDividendMemo')?45000:undefined);
     return apiPostJson(body,jsonTimeout);
   }
   var params=Object.assign({},body,{token:WRITE_TOKEN});
