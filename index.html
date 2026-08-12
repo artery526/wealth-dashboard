@@ -4114,6 +4114,7 @@ function apiWriteTimeoutMs(action){
   if(action==='threadsPublish')return 90000;
   if(action==='macroLongReportGenerate')return 150000;
   if(action==='macroLongReportTriggerInstall')return 45000;
+  if(action==='verifyWriteToken')return 45000;
   return isApiWriteAction(action)?45000:15000;
 }
 function apiNonJsonMessage(text,context){
@@ -4728,7 +4729,7 @@ function advisorAIUpdateWebVerifyStatus(){
 async function verifyWebAccess(){
   if(!API_URL)throw new Error('尚未設定 Web App API URL');
   if(!cleanToken(WRITE_TOKEN))throw new Error('尚未設定 WRITE_TOKEN');
-  await apiGet({action:'config'},20000);
+  await apiGet({action:'config'},30000);
   await apiPost({action:'verifyWriteToken'});
   return true;
 }
@@ -4771,7 +4772,7 @@ async function verifyCfgWebAccess(){
   renderCfgWebVerifyStatus('pending','正在驗證 API 與 WRITE_TOKEN');
   if(btn)btn.disabled=true;
   try{
-    cfg=await apiGet({action:'config'});
+    cfg=await apiGet({action:'config'},30000);
     await apiPost({action:'verifyWriteToken'});
     setWebVerifyStatus('ok','API 與 WRITE_TOKEN 已通過');
     renderCfgWebVerifyStatus('ok','網頁驗證成功');
@@ -4805,7 +4806,7 @@ async function saveCfg(){
   }
   setWebVerifyStatus('pending','正在驗證 API 與 WRITE_TOKEN');
   try{
-    cfg=await apiGet({action:'config'});
+    cfg=await apiGet({action:'config'},30000);
     await apiPost({action:'verifyWriteToken'});
     setWebVerifyStatus('ok','API 與 WRITE_TOKEN 已通過');
   }catch(e){
