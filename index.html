@@ -14185,6 +14185,7 @@ function advisorAIDividendMemoCommand(raw){
   var perShare=parseFloat(m[2]);
   if(!(perShare>0)||perShare>=100)return null;
   var symbol=advisorAIResolveInvestmentSymbol(m[1]);
+  if(!advisorAIIsInvestmentKeyword(m[1],symbol))return null;
   if(!symbol)return null;
   return {intent:'advisorDividendMemo',market:advisorAIDividendMemoMarket(symbol),symbol:symbol,dividendPerShare:perShare};
 }
