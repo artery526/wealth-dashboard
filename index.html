@@ -4121,7 +4121,8 @@ function normalizeImageUrl(url){
 async function apiGet(params,timeoutMs){
   if(!API_URL)throw new Error('未設定 API 網址');
   var baseParams=Object.assign({},params||{});
-  var attempts=/^(todayCalendar|todayTasks|config)$/.test(String(baseParams.action||''))?3:1;
+  // Apps Script 讀取偶爾會在冷啟動或轉址時短暫回傳 404；讀取可安全重試，寫入仍維持單次請求。
+  var attempts=3;
   var lastErr=null;
   for(var attempt=0;attempt<attempts;attempt++){
     var requestParams=Object.assign({},baseParams,{_ts:Date.now(),_try:attempt+1});
