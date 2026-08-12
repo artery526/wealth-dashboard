@@ -3739,6 +3739,7 @@ var councilDashboardCache = null;
 var councilDashboardFetchedAt = 0;
 var councilDashboardPromise = null;
 var COUNCIL_DASHBOARD_CACHE_TTL = 45 * 1000;
+var COUNCIL_ROSTER_STORAGE_KEY = 'wealth_council_roster_v1';
 var stockTradeMode = false;
 var bookingAutoDate = '';
 var bookingFormInitPromise = null;
@@ -5311,8 +5312,26 @@ function renderFoodhouseCouncilRosterSummary(rows,rosterSnapshot){
     </div>`;
 }
 
+function readCouncilRosterStorageCache(){
+  try{
+    var cached=JSON.parse(localStorage.getItem(COUNCIL_ROSTER_STORAGE_KEY)||'null');
+    if(cached&&Array.isArray(cached.heroes)&&Array.isArray(cached.holdings))return cached;
+  }catch(e){}
+  return null;
+}
+function writeCouncilRosterStorageCache(cache){
+  try{
+    localStorage.setItem(COUNCIL_ROSTER_STORAGE_KEY,JSON.stringify({
+      heroes:cache.heroes||[],
+      holdings:cache.holdings||[],
+      councilRosterSnapshot:cache.councilRosterSnapshot||null,
+      cachedAt:Date.now()
+    }));
+  }catch(e){console.warn('Council roster cache unavailable',e);}
+}
+
 function renderBattleCouncilRosterSummary(){
-  var cached=councilDashboardCache;
+  var cached=councilDashboardCache||readCouncilRosterStorageCache();
   if(!cached){
     return `<div class="battle-section wide battle-council-roster-section" id="battle-council-roster-summary">
       <div class="foodhouse-roster-wrap council-roster-summary battle-council-roster-content">
@@ -11286,6 +11305,7 @@ function cacheCouncilDashboardResults(results){
   };
   councilDashboardFetchedAt=Date.now();
   holdingsCache=results.holdings&&results.holdings.length?results.holdings:holdingsCache;
+  writeCouncilRosterStorageCache(councilDashboardCache);
   return councilDashboardCache;
 }
 

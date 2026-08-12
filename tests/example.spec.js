@@ -89,3 +89,27 @@ test('remembered Pangtong verification restores the empire after reload', async 
 
   expect(result).toEqual({ authorizedDuringRestore: true, authorized: true, unlocked: true, status: 'ok', skippedConfig: true });
 });
+
+test('battle brief shows the cached army allocation before refreshing', async ({ page }) => {
+  await page.goto(dashboardUrl);
+
+  const result = await page.evaluate(() => {
+    const cache = {
+      heroes: [{ symbol: 'QQQI', assetName: 'QQQI', heroName: 'QQQI', enabled: true, sortOrder: 1 }],
+      holdings: [{ symbol: 'QQQI', name: 'QQQI', cost: 100, marketValue: 110 }],
+      councilRosterSnapshot: { groups: [] },
+      cachedAt: Date.now()
+    };
+    localStorage.setItem('wealth_council_roster_v1', JSON.stringify(cache));
+    councilDashboardCache = null;
+    const battle = document.createElement('div');
+    document.body.appendChild(battle);
+    renderBattleBrief({ summary: {}, funds: [], market: [], holdings: [], etfHoldingChange: {} }, battle);
+    return {
+      title: battle.querySelector('.foodhouse-roster-title')?.textContent || '',
+      hasSkeleton: !!battle.querySelector('.battle-council-roster-section .skel')
+    };
+  });
+
+  expect(result).toEqual({ title: '部隊兵力配置比例', hasSkeleton: false });
+});
