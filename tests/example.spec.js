@@ -11,6 +11,12 @@ test('battle brief panel renders with stable formatting', async ({ page }) => {
   await page.evaluate(() => {
     window.API_URL = '';
     window.WRITE_TOKEN = '';
+    window.councilDashboardCache = {
+      heroes: [{ symbol: 'QQQI', assetName: 'QQQI', heroName: 'QQQI', enabled: true, sortOrder: 1 }],
+      holdings: [{ symbol: 'QQQI', name: 'QQQI', cost: 100, marketValue: 110 }],
+      councilRosterSnapshot: { groups: [] },
+      holdingsLoaded: true
+    };
     renderCouncilPanel();
     renderBattleBrief({
       date: '2026/08/01',
@@ -31,7 +37,9 @@ test('battle brief panel renders with stable formatting', async ({ page }) => {
   });
 
   await expect(page.locator('.ptab.active')).toHaveAttribute('onclick', /battle-brief/);
-  await expect(page.locator('.battle-section').first().locator('.battle-section-title')).toHaveText('00997A 持股每日變化');
+  const reportSections = page.locator('.battle-report-grid > .battle-section');
+  await expect(reportSections.nth(0).locator('.foodhouse-roster-title')).toHaveText('部隊兵力配置比例');
+  await expect(reportSections.nth(1).locator('.battle-section-title')).toHaveText('00997A 持股變化與軍師短評');
   const fundSection = page.locator('.battle-section', { hasText: '基金淨值' });
   const marginSection = page.locator('.battle-section', { hasText: '台股融資與維持率' });
   await expect(fundSection.locator('.battle-line-current')).toHaveText(['50.1', '140.81']);

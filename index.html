@@ -1100,6 +1100,7 @@ body::after{
 .foodhouse-roster-reservoir .res-fill{border-radius:0 0 5px 5px}
 .foodhouse-roster-reservoir .res-pct{font-size:11px}
 .council-roster-summary{margin:0 0 14px}
+.battle-council-roster-content{margin-top:0}
 .foodhouse-bills-wrap{margin-top:12px}
 @media(max-width:540px){.foodhouse-warroom-grid,.foodhouse-roster-grid{grid-template-columns:1fr}.foodhouse-advisor-reminder .advisor-summary-grid{grid-template-columns:1fr}.foodhouse-advisor-reminder .advisor-summary-line{font-size:18px}.foodhouse-monthly-viz{grid-template-columns:104px minmax(0,1fr);gap:9px}.foodhouse-savings-gauge,.foodhouse-savings-gauge svg{width:104px}}
 .finance-reminder-wrap{margin:0 0 12px}
@@ -4802,7 +4803,7 @@ async function saveCfg(){
 // ══════════════════════════════════════════
 //  Panel open/close
 // ══════════════════════════════════════════
-function openPanel(key){
+function openPanel(key,initialTab){
   if(!webVerifyIsAuthorized()){empireUnlockNotice();return;}
   if(currentPanel===key){closePanel();return}
   document.querySelectorAll('.card').forEach(c=>c.classList.remove('active'));
@@ -4817,7 +4818,7 @@ function openPanel(key){
   if(key==='finance')renderFinancePanel();
   else if(key==='domestic'){setEmpireCardApiPendingStatus('domestic');renderDomesticPanel();}
   else if(key==='market')renderMarketPanel();
-  else if(key==='council'){setEmpireCardApiPendingStatus('council');renderCouncilPanel();}
+  else if(key==='council'){setEmpireCardApiPendingStatus('council');renderCouncilPanel(initialTab);}
   else if(key==='medical'){setEmpireCardApiPendingStatus('medical');renderMedicalPanel();}
   else if(key==='stars'){setEmpireCardApiPendingStatus('stars');renderStarsPanel();}
   document.getElementById('overlay').classList.add('open');
@@ -4906,12 +4907,13 @@ function openEmpireCardShortcut(event,panel,tab){
     openArkWall(tab);
     return;
   }
-  if(currentPanel!==panel){
-    openPanel(panel);
+  var openedNewPanel=currentPanel!==panel;
+  if(openedNewPanel){
+    openPanel(panel,tab);
   }else{
     document.getElementById('overlay').classList.add('open');
   }
-  if(tab){
+  if(tab&&!openedNewPanel){
     setTimeout(function(){
       var btn=document.querySelector('.ptab[onclick*="'+tab+'"]');
       if(btn)switchTab(btn,tab);
@@ -5290,6 +5292,32 @@ function renderFoodhouseCouncilRosterSummary(rows,rosterSnapshot){
         </div>`;
       }).join('')}
     </div>`;
+}
+
+function renderBattleCouncilRosterSummary(){
+  var cached=councilDashboardCache;
+  if(!cached){
+    return `<div class="battle-section wide battle-council-roster-section" id="battle-council-roster-summary">
+      <div class="foodhouse-roster-wrap council-roster-summary battle-council-roster-content">
+        <div class="foodhouse-roster-title">部隊兵力配置比例</div>
+        <div class="skel-line skel"></div>
+      </div>
+    </div>`;
+  }
+  var rows=mergeCouncilRows(cached.holdings,cached.heroes,{});
+  var summary=renderFoodhouseCouncilRosterSummary(rows,cached.councilRosterSnapshot);
+  if(!summary)return '';
+  return `<div class="battle-section wide battle-council-roster-section" id="battle-council-roster-summary">
+    <div class="foodhouse-roster-wrap council-roster-summary battle-council-roster-content">${summary}</div>
+  </div>`;
+}
+
+function applyBattleCouncilRosterSummary(){
+  var slot=document.getElementById('battle-council-roster-summary');
+  if(!slot)return;
+  var html=renderBattleCouncilRosterSummary();
+  if(html)slot.outerHTML=html;
+  else slot.remove();
 }
 
 async function loadZiweiCharts(){
@@ -10994,6 +11022,7 @@ function renderBattleBrief(data,el){
     </div>
   </div>
   <div class="battle-report-grid">
+    ${renderBattleCouncilRosterSummary()}
     ${battleEtfChangeHtml(etfHoldingChange)}
     <div class="battle-section">
       <div class="battle-section-title">基金淨值</div>
@@ -11021,6 +11050,20 @@ async function loadBattleBrief(force){
   }
   var cached=readTimedMarketCache(BATTLE_BRIEF_CACHE_KEY);
   if(cached&&!force)renderBattleBrief(cached,el);
+  var rosterCacheFresh=councilDashboardCache&&(Date.now()-councilDashboardFetchedAt<COUNCIL_DASHBOARD_CACHE_TTL);
+  var rosterPromise=rosterCacheFresh?Promise.resolve(councilDashboardCache):(
+    hasMainApiCredentials()?loadCouncilDashboardData().then(function(results){
+      return cacheCouncilDashboardResults(results);
+    }).then(function(result){
+      applyBattleCouncilRosterSummary();
+      return result;
+    }).catch(function(e){
+      console.warn('Council roster summary unavailable',e);
+      var slot=document.getElementById('battle-council-roster-summary');
+      if(slot)slot.remove();
+      return null;
+    }):Promise.resolve(null)
+  );
   setCouncilPanelStatusIfActive('pending',cached&&!force?'戰情快取更新中':'戰情總匯報讀取中');
   if(battleBriefPromise&&!force)return battleBriefPromise.then(function(data){
     if(data&&document.getElementById('battle-brief-content'))renderBattleBrief(data,document.getElementById('battle-brief-content'));
@@ -11029,8 +11072,11 @@ async function loadBattleBrief(force){
   battleBriefPromise=apiGet({action:'battleBrief'},45000).then(function(data){
     writeTimedMarketCache(BATTLE_BRIEF_CACHE_KEY,data);
     renderBattleBrief(data,el);
-    setCouncilPanelStatusIfActive('ok','戰情總匯報已更新');
-    return data;
+    return rosterPromise.then(function(){
+      applyBattleCouncilRosterSummary();
+      setCouncilPanelStatusIfActive('ok','戰情總匯報已更新');
+      return data;
+    });
   }).catch(function(e){
     if(!cached||force)el.innerHTML=`<div style="color:var(--coral);font-family:var(--sans);font-size:12px;padding:12px 0">${esc(e.message||'戰情總匯報讀取失敗')}</div>`;
     setCouncilPanelStatusIfActive(cached&&!force?'pending':'err',cached&&!force?'顯示戰情快取':'戰情總匯報讀取失敗');
@@ -11167,7 +11213,7 @@ function renderMarketPanel(){
 // ══════════════════════════════════════════
 //  COUNCIL PANEL
 // ══════════════════════════════════════════
-function renderCouncilPanel(){
+function renderCouncilPanel(initialTab){
   setPanelHead('📜','War Room · Command','軍機處');
   var panelExtra=document.getElementById('p-extra');
   if(panelExtra)panelExtra.innerHTML='<span class="empire-panel-status-dot err" id="council-panel-status-dot" title="軍機處連線失敗" aria-label="軍機處連線失敗"></span>';
@@ -11178,27 +11224,52 @@ function renderCouncilPanel(){
     {key:'market-watch',label:'台美股大盤'},
     {key:'macro-overview',label:'美股總經'}
   ]);
-  currentTab='battle-brief';
+  var targetTab=['battle-brief','council-roster','market-watch','macro-overview'].indexOf(initialTab)>=0?initialTab:'battle-brief';
+  currentTab=targetTab;
   var apiReady=hasMainApiCredentials();
   var lockedNotice=setupNotice();
   document.getElementById('p-body').innerHTML=`
-    <div class="pane active" id="pane-battle-brief">
+    <div class="pane ${targetTab==='battle-brief'?'active':''}" id="pane-battle-brief">
       <div id="battle-brief-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:82%"></div><div class="skel-line skel" style="width:68%"></div></div>
     </div>
-    <div class="pane" id="pane-council-roster">
+    <div class="pane ${targetTab==='council-roster'?'active':''}" id="pane-council-roster">
       <div id="council-content">${apiReady?'':lockedNotice}</div>
     </div>
-    <div class="pane" id="pane-market-watch">
+    <div class="pane ${targetTab==='market-watch'?'active':''}" id="pane-market-watch">
       <div id="market-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:82%"></div><div class="skel-line skel" style="width:68%"></div></div>
     </div>
-    <div class="pane" id="pane-macro-overview">
+    <div class="pane ${targetTab==='macro-overview'?'active':''}" id="pane-macro-overview">
       <div id="macro-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:82%"></div><div class="skel-line skel" style="width:68%"></div></div>
     </div>
     <div class="pane" id="pane-council-task">
       ${renderRetiredTaskNotice()}
     </div>`;
-  if(apiReady)loadBattleBrief();
-  if(API_URL)setTimeout(prefetchMarketDashboard,300);
+  var initialButton=document.querySelector('.ptab[onclick*="'+targetTab+'"]');
+  if(initialButton)initialButton.classList.add('active');
+  var initialMenuItem=document.querySelector('.panel-menu-item[data-panel-tab="'+targetTab+'"]');
+  if(initialMenuItem)initialMenuItem.classList.add('active');
+  if(apiReady){
+    if(targetTab==='battle-brief')loadBattleBrief();
+    else if(targetTab==='council-roster')loadCouncilDashboard();
+    else if(targetTab==='market-watch')loadMarketDashboard();
+    else if(targetTab==='macro-overview')loadMacroOverview();
+  }
+  if(API_URL&&targetTab!=='council-roster')setTimeout(prefetchMarketDashboard,300);
+}
+
+function cacheCouncilDashboardResults(results){
+  results=results||{};
+  councilDashboardCache={
+    heroes:results.heroes||[],
+    holdings:results.holdings||[],
+    assetSnapshot:results.assetSnapshot||null,
+    dividendProjection:results.dividendProjection||null,
+    councilRosterSnapshot:results.councilRosterSnapshot||null,
+    holdingsLoaded:results.holdingsLoaded
+  };
+  councilDashboardFetchedAt=Date.now();
+  holdingsCache=results.holdings&&results.holdings.length?results.holdings:holdingsCache;
+  return councilDashboardCache;
 }
 
 async function loadCouncilDashboard(){
@@ -11232,16 +11303,7 @@ async function loadCouncilDashboard(){
     var assetSnapshot=results.assetSnapshot;
     var dividendProjection=results.dividendProjection;
     var councilRosterSnapshot=results.councilRosterSnapshot;
-    councilDashboardCache={
-      heroes:heroes,
-      holdings:holdings,
-      assetSnapshot:assetSnapshot,
-      dividendProjection:dividendProjection,
-      councilRosterSnapshot:councilRosterSnapshot,
-      holdingsLoaded:results.holdingsLoaded
-    };
-    councilDashboardFetchedAt=Date.now();
-    holdingsCache=holdings.length?holdings:holdingsCache;
+    cacheCouncilDashboardResults(results);
     renderCouncilRoster(mergeCouncilRows(holdings,heroes,armySettings),el,assetSnapshot,dividendProjection,councilRosterSnapshot);
     var dot=document.getElementById('council-dot');
     var lbl=document.getElementById('council-label');
@@ -11414,9 +11476,6 @@ function renderCouncilRoster(rows,el,assetSnapshot,dividendProjection,councilRos
   var totalMonthly=holdings.reduce(function(s,r){return s+toNum(r.monthlyDiv);},0);
   var totalReturn=holdings.reduce(function(s,r){return s+toNum(r.totalReturn);},0);
   el.innerHTML=`
-    <div class="foodhouse-roster-wrap council-roster-summary">
-      ${renderFoodhouseCouncilRosterSummary(active,councilRosterSnapshot)}
-    </div>
     <div class="council-summary">
       <div class="council-stat"><div class="council-stat-l">持有數</div><div class="council-stat-v">${holdings.length||active.length} 檔</div><div class="council-stat-sub">${renderCouncilMonthlyDividendHtml(totalMonthly,dividendProjection)}</div></div>
       <div class="council-stat"><div class="council-stat-l">總投資成本</div><div class="council-stat-v">${fmtFull(totalCost)}</div><div class="council-stat-sub ${totalReturn>=0?'up':'down'}">含息報酬 ${totalReturn>=0?'+':'-'}${fmtFull(Math.abs(totalReturn))}</div></div>
