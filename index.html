@@ -4649,6 +4649,7 @@ async function advisorAIDirectLogin(event){
   try{
     await verifyWebAccess();
     setWebVerifyStatus('ok','直接登入成功，帝國城門已開啟');
+    advisorAILoadDividendQuickOptions(true);
   }catch(e){
     var msg=e&&e.message?e.message:'直接登入失敗';
     setWebVerifyStatus('err',msg);
@@ -13896,8 +13897,9 @@ function advisorAISelectQuickDividend(select){
   if(!row){advisorAISetQuickDividendStatus('此標的目前沒有待入帳配息','err');return;}
   advisorDividendQuickSelection=row;
   var market=advisorAIDividendMemoMarket(row.symbol||symbol)==='us'?'美股':'台股';
-  var note=row.note||('軍師AI配息備忘｜'+market);
-  advisorAISetQuickDividendStatus((row.displaySymbol||row.symbol)+' · '+note+'｜'+market+' · 每股配息 USD '+(row.dividendUsd||'--')+' · 預估入帳 '+(row.estimatedPayDate||'--'));
+  var note=row.note||'軍師AI配息備忘';
+  var memoLabel=(/｜(台股|美股)/.test(note)?note:note+'｜'+market);
+  advisorAISetQuickDividendStatus((row.displaySymbol||row.symbol)+' · '+memoLabel+' · 每股配息 USD '+(row.dividendUsd||'--')+' · 預估入帳 '+(row.estimatedPayDate||'--'));
   var amount=document.getElementById('advisor-ai-dividend-quick-amount');
   if(amount){amount.focus();amount.select();}
 }
