@@ -4608,6 +4608,14 @@ function webVerifyStoredStatus(){
 function webVerifyStoredMessage(){
   try{return localStorage.getItem(WEB_VERIFY_MESSAGE_KEY)||'';}catch(e){return '';}
 }
+function webVerifyIsAuthorized(){
+  return webVerifyStoredStatus()==='ok'&&hasMainApiCredentials();
+}
+function webVerifyIsAuthFailure(err){
+  var status=Number(err&&err.status);
+  var msg=String(err&&err.message||'');
+  return status===401||status===403||/(WRITE_TOKEN|密鑰|金鑰|未授權|驗證失敗|未設定 API)/i.test(msg);
+}
 function setWebVerifyStatus(status,message){
   status=status==='ok'?'ok':(status==='pending'?'pending':'err');
   try{
@@ -13789,17 +13797,13 @@ function advisorAIDatabaseSheetUrl(range){
 }
 
 async function advisorAIOpenDatabaseSheet(){
-  if(!hasMainApiCredentials()){
-    setWebVerifyStatus('err','請先設定 API 與 WRITE_TOKEN');
-    advisorAISetMessage('請先用右上角齒輪完成 API 與 WRITE_TOKEN 設定。','err');
+  if(!webVerifyIsAuthorized()){
+    advisorAISetMessage('請先在龐統軍師完成驗證，再進入資料庫。','err');
     openCfg();
     return;
   }
-  advisorAISetMessage('正在驗證資料庫通行權…','pending');
-  setWebVerifyStatus('pending','正在驗證資料庫通行權');
+  advisorAISetMessage('正在開啟資料庫…','pending');
   try{
-    await verifyWebAccess();
-    setWebVerifyStatus('ok','API 與 WRITE_TOKEN 已通過');
     var pos=await apiGet({action:'databasePosition'},12000);
     var row=Math.max(1,Number(pos&&pos.lastRow)||1);
     var url=advisorAIDatabaseSheetUrl('A'+row);
@@ -13808,9 +13812,13 @@ async function advisorAIOpenDatabaseSheet(){
     else advisorAISetMessage('資料庫通行權已驗證，正在開啟試算表。','ok');
   }catch(e){
     var msg=e&&e.message?e.message:'資料庫通行權驗證失敗';
-    setWebVerifyStatus('err',msg);
-    advisorAISetMessage(msg+'。請用右上角齒輪更新 API / WRITE_TOKEN。','err');
-    openCfg();
+    if(webVerifyIsAuthFailure(e)){
+      setWebVerifyStatus('err',msg);
+      advisorAISetMessage(msg+'。請重新驗證 API / WRITE_TOKEN。','err');
+      openCfg();
+    }else{
+      advisorAISetMessage(msg+'。龐統驗證狀態仍保留。','err');
+    }
   }
 }
 
