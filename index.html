@@ -1171,6 +1171,7 @@ body::after{
 .advisor-ai-quick-select option:checked{background:#0f6b57;color:#fff}
 .advisor-ai-quick-select:focus{border-color:#fff2b8;box-shadow:0 0 0 2px rgba(29,158,117,.25),0 0 18px rgba(29,158,117,.22)}
 .advisor-ai-quick-tools{display:flex;align-items:center;gap:6px;min-width:0}
+.advisor-ai-quick-tools .advisor-ai-palace-nav{width:auto;min-width:58px;min-height:38px;margin:0;padding:8px 12px;letter-spacing:1px;white-space:nowrap;flex-shrink:0}
 .advisor-ai-dividend-select{width:178px;flex-shrink:1;border:1px solid rgba(232,192,80,.58);border-radius:999px;background:linear-gradient(145deg,#3d2a09,#1b1004);color:#fff0b0;font-family:var(--sans);font-size:12px;font-weight:900;text-align:center;text-align-last:center;padding:8px 9px;outline:none;cursor:pointer}
 .advisor-ai-dividend-select option{background:#1b1004;color:#fff0b0;font-size:12px}
 .advisor-ai-dividend-select:focus{border-color:#fff2b8;box-shadow:0 0 0 2px rgba(232,192,80,.2)}
@@ -13782,6 +13783,7 @@ function advisorAIHeaderHtml(title){
     <div class="advisor-ai-head-row">
       <div class="advisor-ai-quick-tools">
         ${advisorAIQuickCommandSelectHtml()}
+        <button class="advisor-ai-palace-nav" type="button" onclick="toggleGlobalScrollMenu(event)" aria-label="導航">導航</button>
         ${advisorAIDividendQuickSelectHtml()}
       </div>
       <div class="advisor-ai-title-wrap">
@@ -13794,7 +13796,7 @@ function advisorAIHeaderHtml(title){
       <button class="advisor-ai-dividend-quick-btn" id="advisor-ai-dividend-quick-btn" type="button" onclick="advisorAIRecordQuickDividend(this)">記錄配息</button>
       <div class="advisor-ai-dividend-quick-status" id="advisor-ai-dividend-quick-status">選擇持股後自動帶入待入帳配息</div>
     </div>
-    <button class="advisor-ai-palace-nav" type="button" onclick="toggleGlobalScrollMenu(event)">&#x7687;&#x5BAE;&#x5C0E;&#x822A;</button>`;
+    `;
 }
 
 function advisorAIExamplesHtml(){
