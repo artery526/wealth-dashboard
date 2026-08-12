@@ -57,7 +57,9 @@ test('intelligence office supports manual inspiration preview', async ({ page })
   page.on('pageerror', error => pageErrors.push(error.message));
   await page.goto(dashboardUrl);
   await page.evaluate(() => {
-    window.apiPost = async () => ({ text: '先把重要的事做好。🌿' });
+    window.apiPost = async body => body.action === 'intelligenceImage'
+      ? { dataUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=' }
+      : { text: '先把重要的事做好。🌿' };
   });
 
   await page.locator('.intelligence-orb').click();
@@ -65,8 +67,11 @@ test('intelligence office supports manual inspiration preview', async ({ page })
   await page.locator('#intelligence-source-text').fill('今天先把重要的事情做好，不急著一次完成所有事。');
   await page.locator('#intelligence-polish-btn').click();
   await expect(page.locator('#intelligence-source-text')).toHaveValue('先把重要的事做好。🌿');
+  await page.locator('#intelligence-image-btn').click();
+  await expect(page.locator('#intelligence-image-preview')).toBeVisible();
   await page.getByRole('button', { name: '預覽' }).click();
   await expect(page.locator('#intelligence-preview')).toBeVisible();
   await expect(page.locator('#intelligence-preview-text')).toHaveText('先把重要的事做好。🌿');
+  await expect(page.locator('#intelligence-preview-image')).toBeVisible();
   expect(pageErrors).toEqual([]);
 });

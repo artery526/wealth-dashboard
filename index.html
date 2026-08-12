@@ -2791,6 +2791,7 @@ body::after{
   .advisor-duo-role{width:158px;flex:0 0 158px}
   .advisor-duo-role.pangtong,
   .advisor-duo-role.zhuge{width:190px;flex:0 0 190px}
+  .advisor-duo .intelligence-orb{width:190px;height:190px;flex:0 0 190px}
   .advisor-duo-stage{height:224px}
   .advisor-duo-role.pangtong .advisor-duo-stage,
   .advisor-duo-role.zhuge .advisor-duo-stage{height:190px}
@@ -2889,6 +2890,7 @@ body::after{
   .advisor-duo-role{width:148px;flex:0 0 148px}
   .advisor-duo-role.pangtong,
   .advisor-duo-role.zhuge{width:180px;flex:0 0 180px}
+  .advisor-duo .intelligence-orb{width:180px;height:180px;flex:0 0 180px}
   .advisor-duo-stage{height:210px}
   .advisor-duo-role.pangtong .advisor-duo-stage,
   .advisor-duo-role.zhuge .advisor-duo-stage{height:180px}
@@ -2983,13 +2985,18 @@ body::after{
 .intelligence-card .art{background:radial-gradient(circle at 50% 25%,rgba(196,166,102,.35),transparent 58%),#15100b}
 .intelligence-card .intelligence-card-image{width:100%;height:100%;display:block;object-fit:cover;object-position:center}
 .intelligence-card .intelligence-card-caption{color:#f0dfa0;font-family:var(--sans);font-size:16px;font-weight:900;letter-spacing:2px;text-shadow:0 1px 8px #080503}
-.advisor-duo .intelligence-orb{width:126px;height:126px;flex:0 0 126px;padding:0;border:1px solid rgba(232,192,80,.55);border-radius:12px;background:#120d07;box-shadow:0 8px 20px rgba(0,0,0,.35),inset 0 0 0 3px rgba(232,192,80,.08);overflow:hidden;cursor:pointer;transition:transform .22s,filter .22s,border-color .22s}
+.advisor-duo .intelligence-orb{width:220px;height:220px;flex:0 0 220px;padding:0;border:1px solid rgba(232,192,80,.55);border-radius:12px;background:#120d07;box-shadow:0 8px 20px rgba(0,0,0,.35),inset 0 0 0 3px rgba(232,192,80,.08);overflow:hidden;cursor:pointer;transition:transform .22s,filter .22s,border-color .22s}
 .advisor-duo .intelligence-orb:hover{transform:translateY(-5px) scale(1.025);filter:brightness(1.08);border-color:rgba(232,192,80,.9)}
 .intelligence-orb-image{display:block;width:100%;height:100%;object-fit:cover;object-position:center}
 .intelligence-overlay{position:fixed;inset:0;z-index:1200;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(5,3,2,.78)}
 .intelligence-overlay.open{display:flex}
 .intelligence-panel{width:min(760px,100%);max-height:min(92vh,900px);overflow:auto;background:linear-gradient(145deg,#20170d,#0e0b08 70%);border:1px solid rgba(190,151,73,.55);box-shadow:0 24px 80px rgba(0,0,0,.55);padding:22px;border-radius:12px;color:#ead9ad}
 .intelligence-head{display:flex;align-items:center;gap:12px;margin-bottom:18px}.intelligence-head img{width:54px;height:54px;object-fit:cover;border-radius:50%;border:1px solid #a47a32}.intelligence-title{font-family:var(--sans);font-size:22px;font-weight:900;letter-spacing:3px}.intelligence-subtitle{font-size:12px;color:#a58a5c;margin-top:3px}.intelligence-close{margin-left:auto;background:none;border:0;color:#d7bd82;font-size:28px;cursor:pointer}.intelligence-mode-row,.intelligence-tone-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}.intelligence-mode-btn,.intelligence-tone-btn,.intelligence-action-btn{border:1px solid rgba(190,151,73,.48);background:#17110b;color:#d9bd80;border-radius:7px;padding:9px 13px;cursor:pointer;font-family:var(--sans)}.intelligence-mode-btn.active,.intelligence-tone-btn.active{background:#8d6327;color:#fff2c9;border-color:#d5a64e}.intelligence-label{font-size:12px;color:#b99c66;margin:8px 0 6px;display:block}.intelligence-textarea{width:100%;min-height:150px;resize:vertical;box-sizing:border-box;background:#0a0806;color:#f1e4c7;border:1px solid #5d4728;border-radius:8px;padding:12px;line-height:1.8;font:inherit}.intelligence-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.intelligence-action-btn.primary{background:#a4772d;color:#fff3d1;border-color:#d1a34f;font-weight:800}.intelligence-action-btn:disabled{opacity:.55;cursor:wait}.intelligence-status{min-height:24px;color:#d7bd82;font-size:12px;line-height:1.6;margin-top:10px}.intelligence-preview{margin-top:18px;padding:16px;background:rgba(0,0,0,.25);border:1px solid rgba(190,151,73,.3);border-radius:8px}.intelligence-preview h3{margin:0 0 10px;font-size:14px;color:#f0dfa0}.intelligence-preview-text{white-space:pre-wrap;line-height:1.9;color:#f4ead4}.intelligence-preview[hidden]{display:none}@media(max-width:540px){.intelligence-overlay{padding:8px}.intelligence-panel{padding:16px;max-height:96vh}.intelligence-title{font-size:19px}.intelligence-textarea{min-height:130px}}
+.intelligence-image-tools{margin-top:18px;padding-top:14px;border-top:1px solid rgba(190,151,73,.24)}
+.intelligence-image-preview{display:block;width:min(100%,360px);aspect-ratio:1;object-fit:cover;margin-top:12px;border:1px solid rgba(190,151,73,.4);border-radius:8px}
+.intelligence-image-preview[hidden]{display:none}
+@media(max-width:540px){.advisor-duo .intelligence-orb{width:190px;height:190px;flex-basis:190px}}
+@media(max-width:480px){.advisor-duo .intelligence-orb{width:180px;height:180px;flex-basis:180px}}
 </style>
 </head>
 <body>
@@ -3336,11 +3343,11 @@ body::after{
     <div class="hdr-left">
       <div class="hdr-char-wrap advisor-duo-wrap">
         <div class="advisor-duo" aria-label="選擇軍師">
-          <button class="advisor-duo-role pangtong" type="button" onclick="openAdvisorAIFromOrb(event)" title="龐統 · 軍師AI">
-            <span class="advisor-duo-stage"><video class="advisor-duo-video" src="pangtongmenuv2.mp4" poster="pangtong.png" muted playsinline preload="auto" aria-label="龐統軍師"></video></span>
-          </button>
           <button class="intelligence-orb" type="button" onclick="openIntelligenceOffice(event)" title="情報司">
             <img class="intelligence-orb-image" src="think.png" alt="情報司">
+          </button>
+          <button class="advisor-duo-role pangtong" type="button" onclick="openAdvisorAIFromOrb(event)" title="龐統 · 軍師AI">
+            <span class="advisor-duo-stage"><video class="advisor-duo-video" src="pangtongmenuv2.mp4" poster="pangtong.png" muted playsinline preload="auto" aria-label="龐統軍師"></video></span>
           </button>
         </div>
         <div class="hdr-char-vignette"></div>
@@ -3611,10 +3618,20 @@ body::after{
       <button class="intelligence-action-btn" id="intelligence-regenerate-btn" type="button" onclick="polishIntelligenceIdea()" hidden>重新生成</button>
       <button class="intelligence-action-btn" type="button" onclick="showIntelligencePreview()">預覽</button>
     </div>
+    <div class="intelligence-image-tools">
+      <div class="intelligence-label">視覺製作｜可選，不會自動呼叫圖片 API</div>
+      <div class="intelligence-actions">
+        <button class="intelligence-action-btn" id="intelligence-image-btn" type="button" onclick="generateIntelligenceCatImage()">生成可愛貓咪圖</button>
+        <button class="intelligence-action-btn" id="intelligence-image-regenerate-btn" type="button" onclick="generateIntelligenceCatImage()" hidden>重新生成</button>
+        <button class="intelligence-action-btn" id="intelligence-image-remove-btn" type="button" onclick="removeIntelligenceImage()" hidden>不使用圖片</button>
+      </div>
+      <img class="intelligence-image-preview" id="intelligence-image-preview" alt="情報司生成的可愛貓咪插畫" hidden>
+    </div>
     <div class="intelligence-status" id="intelligence-status" aria-live="polite"></div>
     <div class="intelligence-preview" id="intelligence-preview" hidden>
       <h3>主公御覽｜Threads 貼文草稿</h3>
       <div class="intelligence-preview-text" id="intelligence-preview-text"></div>
+      <img class="intelligence-image-preview" id="intelligence-preview-image" alt="主公御覽的可愛貓咪插畫" hidden>
       <div class="intelligence-actions"><button class="intelligence-action-btn" type="button" onclick="closeIntelligenceOffice()">返回修改</button></div>
     </div>
   </section>
@@ -4228,7 +4245,7 @@ async function apiPost(body){
   if(!API_URL)throw new Error('未設定 API 網址');
   WRITE_TOKEN=cleanToken(WRITE_TOKEN);
   if(!WRITE_TOKEN)throw new Error('未設定記帳密鑰');
-  if(body&&/^(advisorAiParse|advisorDividendMemo|intelligencePolish|expense|income|transfer|ziweiInterpretationSave)$/.test(body.action||'')){
+  if(body&&/^(advisorAiParse|advisorDividendMemo|intelligencePolish|intelligenceImage|expense|income|transfer|ziweiInterpretationSave)$/.test(body.action||'')){
     var jsonTimeout=(isApiWriteAction(body.action||'')||body.action==='advisorDividendMemo')?45000:undefined;
     return apiPostJson(body,jsonTimeout);
   }
@@ -4799,6 +4816,7 @@ function openPanel(key){
 
 var intelligenceTone = '自然口語';
 var intelligenceDraft = '';
+var intelligenceImageDataUrl = '';
 function openIntelligenceOffice(event){
   if(event){event.preventDefault();event.stopPropagation();}
   closeAdvisorAIStandalone();
@@ -4828,6 +4846,8 @@ async function polishIntelligenceIdea(){
   if(button)button.disabled=true;if(regenerate)regenerate.disabled=true;
   if(status)status.textContent='軍師正在保留原意、整理語氣…';
   if(preview)preview.hidden=true;
+  if(intelligenceImageDataUrl)removeIntelligenceImage();
+  if(status)status.textContent='軍師正在保留原意、整理語氣…';
   try{
     var data=await apiPost({action:'intelligencePolish',sourceText:source,tone:intelligenceTone});
     intelligenceDraft=String(data&&data.text||'').trim();
@@ -4846,8 +4866,45 @@ function showIntelligencePreview(){
   var status=document.getElementById('intelligence-status');
   if(!text){if(status)status.textContent='尚無草稿可預覽，請先輸入或潤稿。';return;}
   if(output)output.textContent=text;
+  var previewImage=document.getElementById('intelligence-preview-image');
+  if(previewImage){previewImage.hidden=!intelligenceImageDataUrl;previewImage.src=intelligenceImageDataUrl||'';}
   if(preview)preview.hidden=false;
   if(status)status.textContent='這只是人工預覽；Phase 4 才會加入 Threads 發布。';
+}
+async function generateIntelligenceCatImage(){
+  var input=document.getElementById('intelligence-source-text');
+  var button=document.getElementById('intelligence-image-btn');
+  var regenerate=document.getElementById('intelligence-image-regenerate-btn');
+  var remove=document.getElementById('intelligence-image-remove-btn');
+  var image=document.getElementById('intelligence-image-preview');
+  var status=document.getElementById('intelligence-status');
+  var finalText=String(input&&input.value||'').trim();
+  if(!finalText){if(status)status.textContent='請先完成文字草稿，再生成可愛貓咪圖。';return;}
+  if(button)button.disabled=true;if(regenerate)regenerate.disabled=true;if(remove)remove.disabled=true;
+  if(status)status.textContent='情報司正在依據最終貼文意境繪製插畫…';
+  try{
+    var data=await apiPost({action:'intelligenceImage',finalText:finalText});
+    intelligenceImageDataUrl=String(data&&data.dataUrl||'').trim();
+    if(!intelligenceImageDataUrl)throw new Error('圖片生成沒有回傳可用圖片');
+    if(image){image.src=intelligenceImageDataUrl;image.hidden=false;}
+    if(regenerate)regenerate.hidden=false;
+    if(remove)remove.hidden=false;
+    if(status)status.textContent='圖片已生成。主公可保留、重新生成，或選擇不使用圖片。';
+  }catch(error){if(status)status.textContent='圖片生成失敗：'+String(error&&error.message||error);}
+  finally{if(button)button.disabled=false;if(regenerate)regenerate.disabled=false;if(remove)remove.disabled=false;}
+}
+function removeIntelligenceImage(){
+  intelligenceImageDataUrl='';
+  var image=document.getElementById('intelligence-image-preview');
+  var previewImage=document.getElementById('intelligence-preview-image');
+  var regenerate=document.getElementById('intelligence-image-regenerate-btn');
+  var remove=document.getElementById('intelligence-image-remove-btn');
+  var status=document.getElementById('intelligence-status');
+  if(image){image.removeAttribute('src');image.hidden=true;}
+  if(previewImage){previewImage.removeAttribute('src');previewImage.hidden=true;}
+  if(regenerate)regenerate.hidden=true;
+  if(remove)remove.hidden=true;
+  if(status)status.textContent='已選擇不使用圖片，之後仍可重新生成。';
 }
 function closePanel(){
   closePanelTitleMenu();
