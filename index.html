@@ -1217,8 +1217,6 @@ body::after{
 .advisor-ai-agenda-btn:disabled{opacity:.55;cursor:wait}
 .advisor-ai-config-btn{position:absolute;top:8px;right:40px;width:24px;height:24px;border:1px solid rgba(232,192,80,.34);border-radius:999px;background:rgba(232,192,80,.08);color:#e8c050;font-size:14px;font-weight:900;line-height:20px;cursor:pointer;box-shadow:0 0 12px rgba(232,192,80,.12);transition:background .16s,border-color .16s,transform .16s}
 .advisor-ai-config-btn:hover{background:rgba(232,192,80,.18);border-color:rgba(232,192,80,.7);transform:scale(1.05)}
-.advisor-ai-login-btn{position:absolute;top:8px;right:70px;width:24px;height:24px;border:1px solid rgba(29,158,117,.42);border-radius:999px;background:rgba(29,158,117,.1);color:#8ce6c6;font-size:13px;font-weight:900;line-height:20px;cursor:pointer;box-shadow:0 0 12px rgba(29,158,117,.16);transition:background .16s,border-color .16s,transform .16s}
-.advisor-ai-login-btn:hover{background:rgba(29,158,117,.2);border-color:rgba(29,158,117,.8);transform:scale(1.05)}
 .advisor-ai-title-wrap{display:flex;align-items:center;justify-content:center;gap:10px;min-width:0;flex-wrap:wrap}
 .advisor-ai-standalone .advisor-shortcut-title{font-family:'Noto Serif TC',serif;font-size:26px;letter-spacing:2px;text-align:center;margin:0;color:#f4e5b7;text-shadow:0 0 16px rgba(232,192,80,.22)}
 .advisor-web-verify-dot{width:12px;height:12px;border-radius:999px;flex-shrink:0;border:1px solid rgba(255,238,190,.45);background:var(--coral);box-shadow:0 0 13px rgba(231,87,71,.55),inset 0 1px 0 rgba(255,255,255,.24)}
@@ -10264,6 +10262,16 @@ function selectBookingDividendPending(key){
   }
 }
 
+function advisorDividendVisibleNote(note){
+  var value=String(note||'').trim();
+  value=value.replace(/軍師AI配息備忘(?:｜(台股|美股))?/g,'').replace(/^[｜|\s]+|[｜|\s]+$/g,'').trim();
+  return value;
+}
+
+function dividendPendingNoteText(row){
+  return advisorDividendVisibleNote(row&&row.note)||'配息';
+}
+
 function renderDividendPendingRow(row,allowDismiss){
   var dismissKey=dividendPendingKey(row);
   var isCenter=allowDismiss==='center';
@@ -10271,7 +10279,7 @@ function renderDividendPendingRow(row,allowDismiss){
   var pickAttrs=allowDismiss===true?` is-selectable" data-dividend-pick-id="${esc(dismissKey)}" onclick="selectBookingDividendPending(this.dataset.dividendPickId)"`:'"';
   return `<div class="dividend-pending-row${pickAttrs}">
     <div>
-      <div class="dividend-pending-name">${esc(row.displaySymbol||row.symbol)} · ${esc(row.note||'配息')}</div>
+      <div class="dividend-pending-name">${esc(row.displaySymbol||row.symbol)} · ${esc(dividendPendingNoteText(row))}</div>
         <div class="dividend-pending-meta">每股配息 USD ${esc(row.dividendUsd||'--')} · 預估入帳 ${esc(row.estimatedPayDate||'--')}</div>
     </div>
     <div class="dividend-pending-amt">${fmtFull(row.estimatedTwd)}</div>
@@ -13779,7 +13787,6 @@ function advisorAIScheduleHeaderFunds(){
 function advisorAIHeaderHtml(title){
   advisorAIScheduleHeaderFunds();
   return `<button class="advisor-ai-close" type="button" onclick="closeAdvisorAIStandalone()" aria-label="關閉軍師AI">×</button>
-    <button class="advisor-ai-login-btn" type="button" onclick="advisorAIDirectLogin(event)" title="直接登入龐統軍師" aria-label="直接登入龐統軍師">↪</button>
     <button class="advisor-ai-config-btn" type="button" onclick="openAdvisorAISettings(event)" title="API 與 WRITE_TOKEN 設定" aria-label="API 與 WRITE_TOKEN 設定">&#9881;</button>
     <div class="advisor-ai-head-row">
       <div class="advisor-ai-quick-tools">
@@ -13898,10 +13905,8 @@ function advisorAISelectQuickDividend(select){
   var row=advisorAIQuickDividendRow(symbol,dividendCenterCache||{});
   if(!row){advisorAISetQuickDividendStatus('此標的目前沒有待入帳配息','err');return;}
   advisorDividendQuickSelection=row;
-  var market=advisorAIDividendMemoMarket(row.symbol||symbol)==='us'?'美股':'台股';
-  var note=row.note||'軍師AI配息備忘';
-  var memoLabel=(/｜(台股|美股)/.test(note)?note:note+'｜'+market);
-  advisorAISetQuickDividendStatus((row.displaySymbol||row.symbol)+' · '+memoLabel+' · 每股配息 USD '+(row.dividendUsd||'--')+' · 預估入帳 '+(row.estimatedPayDate||'--'));
+  var note=advisorDividendVisibleNote(row.note);
+  advisorAISetQuickDividendStatus((row.displaySymbol||row.symbol)+(note?' · '+note:'')+' · 每股配息 USD '+(row.dividendUsd||'--')+' · 預估入帳 '+(row.estimatedPayDate||'--'));
   var amount=document.getElementById('advisor-ai-dividend-quick-amount');
   if(amount){amount.focus();amount.select();}
 }
@@ -15176,7 +15181,7 @@ function advisorDividendRowHtml(row){
   var key=dividendPendingKey(row);
   return `<button class="advisor-dividend-row" type="button" data-dividend-key="${esc(key)}" onclick="selectAdvisorDividendPending(this.dataset.dividendKey)">
     <div>
-      <div class="advisor-dividend-name">${esc(row.displaySymbol||row.symbol)} · ${esc(row.note||'配息')}</div>
+      <div class="advisor-dividend-name">${esc(row.displaySymbol||row.symbol)} · ${esc(dividendPendingNoteText(row))}</div>
       <div class="advisor-dividend-meta">每股配息 USD ${esc(row.dividendUsd||'--')} · 預估入帳 ${esc(row.estimatedPayDate||'--')}</div>
     </div>
     <div class="advisor-dividend-amount">NT${fmtFull(row.estimatedTwd)}</div>
