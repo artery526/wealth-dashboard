@@ -4649,7 +4649,7 @@ function webVerifyStoredMessage(){
   try{return localStorage.getItem(WEB_VERIFY_MESSAGE_KEY)||'';}catch(e){return '';}
 }
 function webVerifyIsAuthorized(){
-  try{return sessionStorage.getItem(EMPIRE_UNLOCK_KEY)==='ok'&&webVerifyStoredStatus()==='ok'&&hasMainApiCredentials();}
+  try{return webVerifyStoredStatus()==='ok'&&hasMainApiCredentials();}
   catch(e){return false;}
 }
 function restoreRememberedWebAccess(){
@@ -4658,8 +4658,9 @@ function restoreRememberedWebAccess(){
     return Promise.resolve(false);
   }
   setEmpireUnlockState(true);
-  return verifyWebAccess().then(function(){
-    setWebVerifyStatus('ok','已自動登入龐統軍師');
+  advisorAIUpdateWebVerifyStatus();
+  return verifyWebAccess({skipConfig:true}).then(function(){
+    setWebVerifyStatus('ok','網頁驗證成功');
     return true;
   }).catch(function(err){
     var message=err&&err.message?err.message:'登入狀態已失效，請重新驗證';
@@ -4716,13 +4717,14 @@ function advisorAIUpdateWebVerifyStatus(){
     dot.setAttribute('aria-label',title);
   });
 }
-async function verifyWebAccess(){
+async function verifyWebAccess(options){
+  options=options||{};
   if(!API_URL)throw new Error('尚未設定 Web App API URL');
   if(!cleanToken(WRITE_TOKEN))throw new Error('尚未設定 WRITE_TOKEN');
   var lastErr=null;
   for(var attempt=0;attempt<3;attempt++){
     try{
-      cfg=await apiGet({action:'config'},30000);
+      if(!options.skipConfig)cfg=await apiGet({action:'config'},30000);
       await apiPost({action:'verifyWriteToken'});
       return true;
     }catch(err){

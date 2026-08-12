@@ -67,9 +67,14 @@ test('remembered Pangtong verification restores the empire after reload', async 
     localStorage.setItem('wealth_api_url', 'https://example.test/exec');
     localStorage.setItem('wealth_write_token', 'remembered-token');
     localStorage.setItem('wealth_web_verify_status', 'ok');
+    sessionStorage.removeItem('wealth_empire_unlocked_v1');
     window.API_URL = 'https://example.test/exec';
     window.WRITE_TOKEN = 'remembered-token';
-    window.verifyWebAccess = () => new Promise(resolve => setTimeout(resolve, 10));
+    let verifyOptions = null;
+    window.verifyWebAccess = options => {
+      verifyOptions = options;
+      return new Promise(resolve => setTimeout(resolve, 10));
+    };
     const restorePromise = restoreRememberedWebAccess();
     const authorizedDuringRestore = webVerifyIsAuthorized();
     await restorePromise;
@@ -77,9 +82,10 @@ test('remembered Pangtong verification restores the empire after reload', async 
       authorizedDuringRestore,
       authorized: webVerifyIsAuthorized(),
       unlocked: document.getElementById('empire-cards').classList.contains('empire-unlocked'),
-      status: webVerifyStoredStatus()
+      status: webVerifyStoredStatus(),
+      skippedConfig: verifyOptions && verifyOptions.skipConfig === true
     };
   });
 
-  expect(result).toEqual({ authorizedDuringRestore: true, authorized: true, unlocked: true, status: 'ok' });
+  expect(result).toEqual({ authorizedDuringRestore: true, authorized: true, unlocked: true, status: 'ok', skippedConfig: true });
 });
