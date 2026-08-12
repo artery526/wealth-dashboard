@@ -1231,6 +1231,8 @@ body::after{
 .cards.empire-unlocked>.empire-access-lock{display:none}
 .advisor-ai-funds{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:0;flex-wrap:wrap;font-family:var(--sans);font-size:11px;font-weight:950;line-height:1.2;color:#f1d883}
 .advisor-ai-fund-pill{display:inline-flex;align-items:center;justify-content:center;min-height:24px;border:1px solid rgba(232,192,80,.32);border-radius:999px;background:rgba(232,192,80,.08);padding:4px 8px;white-space:nowrap;box-shadow:0 0 12px rgba(232,192,80,.09)}
+.advisor-ai-battle-pill{font:inherit;color:inherit;cursor:pointer;transition:background .16s,border-color .16s,box-shadow .16s}
+.advisor-ai-battle-pill:hover,.advisor-ai-battle-pill:focus-visible{background:rgba(232,192,80,.16);border-color:rgba(232,192,80,.7);box-shadow:0 0 16px rgba(232,192,80,.18);outline:none}
 .advisor-ai-fund-pill strong{font-family:var(--mono);font-size:12px;color:#fff0b0;margin:0 1px}
 .advisor-ai-close{position:absolute;top:8px;right:10px;width:24px;height:24px;border:1px solid rgba(232,192,80,.34);border-radius:999px;background:rgba(232,192,80,.08);color:#e8c050;font-size:16px;font-weight:900;line-height:20px;cursor:pointer;box-shadow:0 0 12px rgba(232,192,80,.12);transition:background .16s,border-color .16s,transform .16s}
 .advisor-ai-close:hover{background:rgba(232,192,80,.18);border-color:rgba(232,192,80,.7);transform:scale(1.05)}
@@ -13698,6 +13700,9 @@ var advisorAIScheduleOpen=false;
 var advisorAIHeaderFundsCache=null;
 var advisorAIHeaderFundsFetchedAt=0;
 var advisorAIHeaderFundsPromise=null;
+var advisorAIHeaderBattleVisible=false;
+var advisorAIHeaderBattleLoaded=false;
+var advisorAIHeaderBattleValue='';
 var advisorDividendQuickSelection=null;
 var advisorDividendQuickPromise=null;
 
@@ -13728,9 +13733,17 @@ function advisorAIHeaderFundsHtml(cash,stock,cube){
   var cashText=(cash===null||cash===undefined||isNaN(Number(cash)))?'--':Math.round(Number(cash)).toLocaleString('zh-TW');
   var stockText=(stock===null||stock===undefined||isNaN(Number(stock)))?'--':Math.round(Number(stock)).toLocaleString('zh-TW');
   var cubeText=(cube===null||cube===undefined||isNaN(Number(cube)))?'--':Math.round(Number(cube)).toLocaleString('zh-TW');
+  var battleText=advisorAIHeaderBattleVisible?(advisorAIHeaderBattleLoaded?(advisorAIHeaderBattleValue||'--'):'…'):'***';
   return `<span class="advisor-ai-fund-pill">💰 <strong>${esc(cashText)}</strong></span>
     <span class="advisor-ai-fund-pill">💲 <strong>${esc(stockText)}</strong></span>
+    <button class="advisor-ai-fund-pill advisor-ai-battle-pill" type="button" onclick="advisorAIToggleHeaderBattle(this)" title="顯示或隱藏月度戰情室 H4" aria-label="顯示或隱藏月度戰情室 H4">🛖 <strong>${esc(battleText)}</strong></button>
     <span class="advisor-ai-fund-pill">💳 <strong>${esc(cubeText)}</strong></span>`;
+}
+
+function advisorAIToggleHeaderBattle(){
+  advisorAIHeaderBattleVisible=!advisorAIHeaderBattleVisible;
+  advisorAIUpdateHeaderFunds();
+  if(advisorAIHeaderBattleVisible&&!advisorAIHeaderBattleLoaded)advisorAILoadHeaderFunds(true);
 }
 
 function advisorAIUpdateHeaderFunds(data){
@@ -13756,10 +13769,19 @@ async function advisorAILoadHeaderFunds(force){
   }
   if(!API_URL)return null;
   if(advisorAIHeaderFundsPromise)return advisorAIHeaderFundsPromise;
-  advisorAIHeaderFundsPromise=apiGet({action:'accounts'}).then(function(rows){
+  advisorAIHeaderFundsPromise=Promise.allSettled([
+    apiGet({action:'accounts'}),
+    apiGet({action:'monthlyBattleValue'})
+  ]).then(function(results){
+    var rows=results[0].status==='fulfilled'?results[0].value:[];
     var cashRow=advisorAIFindAccountRow(rows,'💰Cash');
     var stockRow=advisorAIFindAccountRow(rows,'💵國泰Stock');
     var cubeRow=(rows||[]).find(function(row){return advisorAIAccountMatches(row&&row.name,'Cube');});
+    if(results[1].status==='fulfilled'){
+      var battle=results[1].value||{};
+      advisorAIHeaderBattleValue=String(battle.display!=null?battle.display:(battle.value||'')).trim();
+      advisorAIHeaderBattleLoaded=true;
+    }
     advisorAIHeaderFundsCache={
       cash: cashRow?Number(cashRow.value):NaN,
       stock: stockRow?Number(stockRow.value):NaN,
