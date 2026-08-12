@@ -1207,6 +1207,12 @@ body::after{
 .advisor-web-verify-dot.ok{background:var(--teal);box-shadow:0 0 14px rgba(29,158,117,.62),inset 0 1px 0 rgba(255,255,255,.24)}
 .advisor-web-verify-dot.pending{background:var(--gold);box-shadow:0 0 14px rgba(232,192,80,.55),inset 0 1px 0 rgba(255,255,255,.24)}
 .advisor-duo-role>.advisor-web-verify-dot{position:absolute;top:-4px;right:-4px;width:14px;height:14px;z-index:4;pointer-events:none}
+.empire-access-lock{position:absolute;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;padding:24px;border:1px solid rgba(232,192,80,.26);background:rgba(8,5,3,.58);backdrop-filter:blur(2px);color:#f4e5b7;text-align:center;pointer-events:auto}
+.empire-access-lock-inner{max-width:360px;border:1px solid rgba(232,192,80,.38);border-radius:9px;background:rgba(18,11,4,.92);padding:18px 22px;box-shadow:0 0 22px rgba(0,0,0,.42)}
+.empire-access-lock-title{font-family:'Noto Serif TC',serif;font-size:20px;font-weight:950;letter-spacing:1px;color:#ffe8a3}
+.empire-access-lock-text{margin-top:8px;font-family:var(--sans);font-size:12px;line-height:1.7;color:#c7a967}
+.cards.empire-locked{position:relative}
+.cards.empire-unlocked>.empire-access-lock{display:none}
 .advisor-ai-funds{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:0;flex-wrap:wrap;font-family:var(--sans);font-size:11px;font-weight:950;line-height:1.2;color:#f1d883}
 .advisor-ai-fund-pill{display:inline-flex;align-items:center;justify-content:center;min-height:24px;border:1px solid rgba(232,192,80,.32);border-radius:999px;background:rgba(232,192,80,.08);padding:4px 8px;white-space:nowrap;box-shadow:0 0 12px rgba(232,192,80,.09)}
 .advisor-ai-fund-pill strong{font-family:var(--mono);font-size:12px;color:#fff0b0;margin:0 1px}
@@ -3380,7 +3386,13 @@ body::after{
     </div>
   </section>
 
-  <div class="cards">
+  <div class="cards empire-locked" id="empire-cards">
+    <div class="empire-access-lock" id="empire-access-lock" aria-live="polite">
+      <div class="empire-access-lock-inner">
+        <div class="empire-access-lock-title">🔒 帝國城門已鎖</div>
+        <div class="empire-access-lock-text">請先開啟龐統軍師，使用齒輪完成 API 與 WRITE_TOKEN 驗證。</div>
+      </div>
+    </div>
 
     <!-- 財政 -->
     <div class="card finance-landscape" id="c-finance" onclick="openFinanceCard(event)">
@@ -3698,6 +3710,7 @@ var WRITE_TOKEN = localStorage.getItem('wealth_write_token') || '';
 var WEB_VERIFY_STATUS_KEY='wealth_web_verify_status';
 var WEB_VERIFY_MESSAGE_KEY='wealth_web_verify_message';
 var WEB_VERIFY_CHECKED_AT_KEY='wealth_web_verify_checked_at';
+var EMPIRE_UNLOCK_KEY='wealth_empire_unlocked_v1';
 var cfg = (function(){
   try{
     var cached=JSON.parse(localStorage.getItem('wealth_booking_config_v1')||'null');
@@ -4123,6 +4136,8 @@ function normalizeImageUrl(url){
 async function apiGet(params,timeoutMs){
   if(!API_URL)throw new Error('未設定 API 網址');
   var baseParams=Object.assign({},params||{});
+  if(String(baseParams.action||'')!=='config'&&!webVerifyIsAuthorized())throw new Error('城門尚未開啟，請先完成龐統軍師驗證');
+  if(String(baseParams.action||'')!=='config'&&cleanToken(WRITE_TOKEN))baseParams.token=cleanToken(WRITE_TOKEN);
   // Apps Script 讀取偶爾會在冷啟動或轉址時短暫回傳 404；讀取可安全重試，寫入仍維持單次請求。
   var attempts=3;
   var lastErr=null;
@@ -4185,6 +4200,7 @@ async function apiPost(body){
   if(!API_URL)throw new Error('未設定 API 網址');
   WRITE_TOKEN=cleanToken(WRITE_TOKEN);
   if(!WRITE_TOKEN)throw new Error('未設定記帳密鑰');
+  if(String(body&&body.action||'')!=='verifyWriteToken'&&!webVerifyIsAuthorized())throw new Error('城門尚未開啟，請先完成龐統軍師驗證');
   if(body&&/^(advisorAiParse|advisorDividendMemo|expense|income|transfer|ziweiInterpretationSave)$/.test(body.action||'')){
     var jsonTimeout=((isApiWriteAction(body.action||'')||body.action==='advisorDividendMemo')?45000:undefined);
     return apiPostJson(body,jsonTimeout);
@@ -4611,7 +4627,20 @@ function webVerifyStoredMessage(){
   try{return localStorage.getItem(WEB_VERIFY_MESSAGE_KEY)||'';}catch(e){return '';}
 }
 function webVerifyIsAuthorized(){
-  return webVerifyStoredStatus()==='ok'&&hasMainApiCredentials();
+  try{return sessionStorage.getItem(EMPIRE_UNLOCK_KEY)==='ok'&&webVerifyStoredStatus()==='ok'&&hasMainApiCredentials();}
+  catch(e){return false;}
+}
+function setEmpireUnlockState(unlocked){
+  try{
+    if(unlocked)sessionStorage.setItem(EMPIRE_UNLOCK_KEY,'ok');
+    else sessionStorage.removeItem(EMPIRE_UNLOCK_KEY);
+  }catch(e){}
+  var cards=document.getElementById('empire-cards');
+  if(cards){cards.classList.toggle('empire-unlocked',!!unlocked);cards.classList.toggle('empire-locked',!unlocked);}
+}
+function applyEmpireUnlockState(){setEmpireUnlockState(webVerifyIsAuthorized());}
+function empireUnlockNotice(){
+  openCfg();
 }
 function webVerifyIsAuthFailure(err){
   var status=Number(err&&err.status);
@@ -4627,6 +4656,8 @@ function setWebVerifyStatus(status,message){
   }catch(e){}
   advisorAIUpdateWebVerifyStatus();
   renderCfgWebVerifyStatus();
+  if(status==='ok')setEmpireUnlockState(true);
+  else if(status==='err')setEmpireUnlockState(false);
 }
 function advisorAIWebVerifyStatusHtml(){
   var status=webVerifyStoredStatus();
@@ -4751,6 +4782,7 @@ async function saveCfg(){
 //  Panel open/close
 // ══════════════════════════════════════════
 function openPanel(key){
+  if(!webVerifyIsAuthorized()){empireUnlockNotice();return;}
   if(currentPanel===key){closePanel();return}
   document.querySelectorAll('.card').forEach(c=>c.classList.remove('active'));
   var activeCard=document.getElementById('c-'+key);
@@ -4845,6 +4877,7 @@ function openArkWallAdminShortcut(event){
 }
 
 function openEmpireCardShortcut(event,panel,tab){
+  if(!webVerifyIsAuthorized()){if(event){event.preventDefault();event.stopPropagation();}empireUnlockNotice();return;}
   if(event&&event.stopPropagation)event.stopPropagation();
   closeAdvisorAIStandalone();
   closeAdvisorDialog();
@@ -12924,17 +12957,18 @@ function setupNotice(){
     if(navLunar)navLunar.textContent=lunarDateLabel(now);
   }
   updateDateDisplay();
+  applyEmpireUnlockState();
   initTodayAgenda();
   initHomeAgenda();
   setEmpireCardApiPendingStatus('finance');
   setTimeout(function(){
-    if(hasMainApiCredentials())prefetchFinanceDashboard();
+    if(webVerifyIsAuthorized())prefetchFinanceDashboard();
   },2200);
   setTimeout(function(){
-    if(API_URL)prefetchMarketDashboard();
+    if(webVerifyIsAuthorized())prefetchMarketDashboard();
   },3200);
   setTimeout(function(){
-    if(API_URL)prefetchStarsPanelData();
+    if(webVerifyIsAuthorized())prefetchStarsPanelData();
   },4200);
   // 彰化天氣（Open-Meteo，無需 API key）
   (function(){
