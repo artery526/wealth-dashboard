@@ -1201,6 +1201,8 @@ body::after{
 .advisor-ai-agenda-btn:disabled{opacity:.55;cursor:wait}
 .advisor-ai-config-btn{position:absolute;top:8px;right:40px;width:24px;height:24px;border:1px solid rgba(232,192,80,.34);border-radius:999px;background:rgba(232,192,80,.08);color:#e8c050;font-size:14px;font-weight:900;line-height:20px;cursor:pointer;box-shadow:0 0 12px rgba(232,192,80,.12);transition:background .16s,border-color .16s,transform .16s}
 .advisor-ai-config-btn:hover{background:rgba(232,192,80,.18);border-color:rgba(232,192,80,.7);transform:scale(1.05)}
+.advisor-ai-login-btn{position:absolute;top:8px;right:70px;width:24px;height:24px;border:1px solid rgba(29,158,117,.42);border-radius:999px;background:rgba(29,158,117,.1);color:#8ce6c6;font-size:13px;font-weight:900;line-height:20px;cursor:pointer;box-shadow:0 0 12px rgba(29,158,117,.16);transition:background .16s,border-color .16s,transform .16s}
+.advisor-ai-login-btn:hover{background:rgba(29,158,117,.2);border-color:rgba(29,158,117,.8);transform:scale(1.05)}
 .advisor-ai-title-wrap{display:flex;align-items:center;justify-content:center;gap:10px;min-width:0;flex-wrap:wrap}
 .advisor-ai-standalone .advisor-shortcut-title{font-family:'Noto Serif TC',serif;font-size:26px;letter-spacing:2px;text-align:center;margin:0;color:#f4e5b7;text-shadow:0 0 16px rgba(232,192,80,.22)}
 .advisor-web-verify-dot{width:12px;height:12px;border-radius:999px;flex-shrink:0;border:1px solid rgba(255,238,190,.45);background:var(--coral);box-shadow:0 0 13px rgba(231,87,71,.55),inset 0 1px 0 rgba(255,255,255,.24)}
@@ -4618,6 +4620,25 @@ function openAdvisorAISettings(event){
   if(event&&event.stopPropagation)event.stopPropagation();
   closeAdvisorAIStandalone();
   openCfg();
+}
+
+async function advisorAIDirectLogin(event){
+  if(event&&event.stopPropagation)event.stopPropagation();
+  var hasAll=!!(API_URL&&cleanToken(WRITE_TOKEN)&&arkWallReadToken());
+  if(!hasAll){
+    openCfg();
+    renderCfgWebVerifyStatus('pending','請先補齊 API、記帳密鑰與城牆通行令');
+    return;
+  }
+  setWebVerifyStatus('pending','正在直接登入龐統軍師');
+  try{
+    await verifyWebAccess();
+    setWebVerifyStatus('ok','直接登入成功，帝國城門已開啟');
+  }catch(e){
+    var msg=e&&e.message?e.message:'直接登入失敗';
+    setWebVerifyStatus('err',msg);
+    renderCfgWebVerifyStatus('err',msg);
+  }
 }
 
 function webVerifyStoredStatus(){
@@ -13643,6 +13664,7 @@ function advisorAIScheduleHeaderFunds(){
 function advisorAIHeaderHtml(title){
   advisorAIScheduleHeaderFunds();
   return `<button class="advisor-ai-close" type="button" onclick="closeAdvisorAIStandalone()" aria-label="關閉軍師AI">×</button>
+    <button class="advisor-ai-login-btn" type="button" onclick="advisorAIDirectLogin(event)" title="直接登入龐統軍師" aria-label="直接登入龐統軍師">↪</button>
     <button class="advisor-ai-config-btn" type="button" onclick="openAdvisorAISettings(event)" title="API 與 WRITE_TOKEN 設定" aria-label="API 與 WRITE_TOKEN 設定">&#9881;</button>
     <div class="advisor-ai-head-row">
       ${advisorAIQuickCommandSelectHtml()}
