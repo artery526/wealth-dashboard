@@ -59,3 +59,27 @@ test('pangtong battle brief is a standalone button below video download', async 
   await expect(page.locator('#advisor-ai-quick-select option[value="戰情總匯報"]')).toHaveCount(0);
   await expect(page.locator('.advisor-ai-video-stack button')).toHaveText(['影片下載', '戰情總匯報']);
 });
+
+test('remembered Pangtong verification restores the empire after reload', async ({ page }) => {
+  await page.goto(dashboardUrl);
+
+  const result = await page.evaluate(async () => {
+    localStorage.setItem('wealth_api_url', 'https://example.test/exec');
+    localStorage.setItem('wealth_write_token', 'remembered-token');
+    localStorage.setItem('wealth_web_verify_status', 'ok');
+    window.API_URL = 'https://example.test/exec';
+    window.WRITE_TOKEN = 'remembered-token';
+    window.verifyWebAccess = () => new Promise(resolve => setTimeout(resolve, 10));
+    const restorePromise = restoreRememberedWebAccess();
+    const authorizedDuringRestore = webVerifyIsAuthorized();
+    await restorePromise;
+    return {
+      authorizedDuringRestore,
+      authorized: webVerifyIsAuthorized(),
+      unlocked: document.getElementById('empire-cards').classList.contains('empire-unlocked'),
+      status: webVerifyStoredStatus()
+    };
+  });
+
+  expect(result).toEqual({ authorizedDuringRestore: true, authorized: true, unlocked: true, status: 'ok' });
+});

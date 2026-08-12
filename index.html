@@ -4652,6 +4652,21 @@ function webVerifyIsAuthorized(){
   try{return sessionStorage.getItem(EMPIRE_UNLOCK_KEY)==='ok'&&webVerifyStoredStatus()==='ok'&&hasMainApiCredentials();}
   catch(e){return false;}
 }
+function restoreRememberedWebAccess(){
+  if(webVerifyStoredStatus()!=='ok'||!hasMainApiCredentials()){
+    applyEmpireUnlockState();
+    return Promise.resolve(false);
+  }
+  setEmpireUnlockState(true);
+  return verifyWebAccess().then(function(){
+    setWebVerifyStatus('ok','已自動登入龐統軍師');
+    return true;
+  }).catch(function(err){
+    var message=err&&err.message?err.message:'登入狀態已失效，請重新驗證';
+    setWebVerifyStatus('err',message);
+    return false;
+  });
+}
 function setEmpireUnlockState(unlocked){
   try{
     if(unlocked)sessionStorage.setItem(EMPIRE_UNLOCK_KEY,'ok');
@@ -13037,7 +13052,7 @@ function setupNotice(){
     if(navLunar)navLunar.textContent=lunarDateLabel(now);
   }
   updateDateDisplay();
-  applyEmpireUnlockState();
+  restoreRememberedWebAccess();
   initTodayAgenda();
   initHomeAgenda();
   setEmpireCardApiPendingStatus('finance');
