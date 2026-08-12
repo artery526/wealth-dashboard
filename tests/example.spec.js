@@ -60,7 +60,7 @@ test('intelligence office supports manual inspiration preview', async ({ page })
     window.apiPost = async () => ({ text: '先把重要的事做好。🌿' });
   });
 
-  await page.locator('#c-intelligence').click();
+  await page.locator('.intelligence-orb').click();
   await expect(page.locator('#intelligence-overlay')).toHaveClass(/open/);
   await page.locator('#intelligence-source-text').fill('今天先把重要的事情做好，不急著一次完成所有事。');
   await page.locator('#intelligence-polish-btn').click();

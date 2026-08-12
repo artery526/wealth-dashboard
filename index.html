@@ -2983,6 +2983,9 @@ body::after{
 .intelligence-card .art{background:radial-gradient(circle at 50% 25%,rgba(196,166,102,.35),transparent 58%),#15100b}
 .intelligence-card .intelligence-card-image{width:100%;height:100%;display:block;object-fit:cover;object-position:center}
 .intelligence-card .intelligence-card-caption{color:#f0dfa0;font-family:var(--sans);font-size:16px;font-weight:900;letter-spacing:2px;text-shadow:0 1px 8px #080503}
+.advisor-duo .intelligence-orb{width:126px;height:126px;flex:0 0 126px;padding:0;border:1px solid rgba(232,192,80,.55);border-radius:12px;background:#120d07;box-shadow:0 8px 20px rgba(0,0,0,.35),inset 0 0 0 3px rgba(232,192,80,.08);overflow:hidden;cursor:pointer;transition:transform .22s,filter .22s,border-color .22s}
+.advisor-duo .intelligence-orb:hover{transform:translateY(-5px) scale(1.025);filter:brightness(1.08);border-color:rgba(232,192,80,.9)}
+.intelligence-orb-image{display:block;width:100%;height:100%;object-fit:cover;object-position:center}
 .intelligence-overlay{position:fixed;inset:0;z-index:1200;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(5,3,2,.78)}
 .intelligence-overlay.open{display:flex}
 .intelligence-panel{width:min(760px,100%);max-height:min(92vh,900px);overflow:auto;background:linear-gradient(145deg,#20170d,#0e0b08 70%);border:1px solid rgba(190,151,73,.55);box-shadow:0 24px 80px rgba(0,0,0,.55);padding:22px;border-radius:12px;color:#ead9ad}
@@ -3336,6 +3339,9 @@ body::after{
           <button class="advisor-duo-role pangtong" type="button" onclick="openAdvisorAIFromOrb(event)" title="龐統 · 軍師AI">
             <span class="advisor-duo-stage"><video class="advisor-duo-video" src="pangtongmenuv2.mp4" poster="pangtong.png" muted playsinline preload="auto" aria-label="龐統軍師"></video></span>
           </button>
+          <button class="intelligence-orb" type="button" onclick="openIntelligenceOffice(event)" title="情報司">
+            <img class="intelligence-orb-image" src="think.png" alt="情報司">
+          </button>
         </div>
         <div class="hdr-char-vignette"></div>
       </div>
@@ -3386,22 +3392,6 @@ body::after{
   </section>
 
   <div class="cards">
-
-    <!-- Intelligence Office: Phase 1 inspiration polishing and preview -->
-    <div class="card intelligence-card" id="c-intelligence" onclick="openIntelligenceOffice(event)">
-      <div class="frame">
-        <div class="corner tl"></div><div class="corner tr"></div>
-        <div class="corner bl"></div><div class="corner br"></div>
-        <div class="gem">情報</div>
-        <div class="art" style="position:relative;overflow:hidden;height:427px;border-bottom:none;">
-          <img class="intelligence-card-image" src="think.png" alt="情報司">
-          <div style="position:absolute;bottom:0;left:0;right:0;z-index:4;background:linear-gradient(to top,rgba(8,5,3,.95),transparent);padding:16px 12px 12px;text-align:center;pointer-events:none;">
-            <span class="intelligence-card-caption">情報司</span>
-          </div>
-        </div>
-      </div>
-      <button class="card-scroll-toggle" type="button" aria-expanded="false" onclick="openIntelligenceOffice(event)">進入情報司</button>
-    </div>
 
     <!-- 財政 -->
     <div class="card finance-landscape" id="c-finance" onclick="openFinanceCard(event)">
