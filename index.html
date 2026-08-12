@@ -11322,12 +11322,13 @@ async function loadCouncilDashboard(){
     return;
   }
   setEmpireCardStatus('council','pending');
-  var cached=councilDashboardCache;
+  var cached=councilDashboardCache||readCouncilRosterStorageCache();
+  if(!councilDashboardCache&&cached)councilDashboardCache=cached;
   var cacheFresh=cached&&(Date.now()-councilDashboardFetchedAt<COUNCIL_DASHBOARD_CACHE_TTL);
   if(cached){
     holdingsCache=cached.holdings.length?cached.holdings:holdingsCache;
     renderCouncilRoster(mergeCouncilRows(cached.holdings,cached.heroes,{}),el,cached.assetSnapshot,cached.dividendProjection,cached.councilRosterSnapshot);
-    setEmpireCardStatus('council',cached.holdingsLoaded&&API_URL?'ok':'err',cached.holdingsLoaded&&API_URL?'武將與持股同步':'已載入武將資料 · 尚未連接持股 API');
+    setEmpireCardStatus('council',cacheFresh&&cached.holdingsLoaded&&API_URL?'ok':'pending',cacheFresh&&cached.holdingsLoaded&&API_URL?'武將與持股同步':'已顯示上次資料 · 背景更新中');
     if(cacheFresh)return;
   }else{
     el.innerHTML='<div class="skel-line skel"></div><div class="skel-line skel" style="width:82%"></div><div class="skel-line skel" style="width:70%"></div>';

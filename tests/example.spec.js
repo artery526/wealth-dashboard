@@ -113,3 +113,47 @@ test('battle brief shows the cached army allocation before refreshing', async ({
 
   expect(result).toEqual({ title: '部隊兵力配置比例', hasSkeleton: false });
 });
+
+test('council roster shows the cached roster before refreshing', async ({ page }) => {
+  await page.goto(dashboardUrl);
+
+  const result = await page.evaluate(async () => {
+    const cache = {
+      heroes: [{ symbol: 'QQQI', assetName: 'QQQI', heroName: 'QQQI', enabled: true, sortOrder: 1 }],
+      holdings: [{ symbol: 'QQQI', name: 'QQQI', cost: 100, marketValue: 110, shares: 1 }],
+      councilRosterSnapshot: { groups: [] },
+      cachedAt: Date.now()
+    };
+    localStorage.setItem('wealth_council_roster_v1', JSON.stringify(cache));
+    councilDashboardCache = null;
+    API_URL = 'https://example.test/exec';
+    WRITE_TOKEN = 'remembered-token';
+    setWebVerifyStatus('ok', '網頁驗證成功');
+    const roster = document.createElement('div');
+    roster.id = 'council-content';
+    document.body.appendChild(roster);
+    loadCouncilDashboardData = () => new Promise(resolve => setTimeout(() => resolve({
+      heroes: [
+        { symbol: 'QQQI', assetName: 'QQQI', heroName: 'QQQI', enabled: true, sortOrder: 1 },
+        { symbol: 'AIPI', assetName: 'AIPI', heroName: 'AIPI', enabled: true, sortOrder: 2 }
+      ],
+      holdings: [
+        { symbol: 'QQQI', name: 'QQQI', cost: 200, marketValue: 220, shares: 1 },
+        { symbol: 'AIPI', name: 'AIPI', cost: 300, marketValue: 330, shares: 1 }
+      ],
+      assetSnapshot: null,
+      dividendProjection: null,
+      councilRosterSnapshot: { groups: [] },
+      holdingsLoaded: true
+    }), 120));
+    const refreshPromise = loadCouncilDashboard();
+    await new Promise(resolve => setTimeout(resolve, 20));
+    const oldValue = roster.querySelector('.council-stat-v')?.textContent || '';
+    const hasSkeleton = !!roster.querySelector('.skel');
+    await refreshPromise;
+    const newValue = roster.querySelector('.council-stat-v')?.textContent || '';
+    return { oldValue, newValue, hasSkeleton };
+  });
+
+  expect(result).toEqual({ oldValue: '1 檔', newValue: '2 檔', hasSkeleton: false });
+});
