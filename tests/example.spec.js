@@ -76,3 +76,21 @@ test('intelligence office supports manual inspiration preview', async ({ page })
   await expect(page.locator('#intelligence-preview-image')).toBeVisible();
   expect(pageErrors).toEqual([]);
 });
+
+test('intelligence image generation uses one GET write request', async ({ page }) => {
+  await page.goto(dashboardUrl);
+  const request = await page.evaluate(async () => {
+    window.API_URL = 'https://example.invalid/exec';
+    window.WRITE_TOKEN = 'test-token';
+    let captured;
+    window.apiPostGetFallback = async (params, timeoutMs) => {
+      captured = { params, timeoutMs };
+      return { ok: true, data: { dataUrl: 'data:image/png;base64,test' } };
+    };
+    await apiPost({ action: 'intelligenceImage', finalText: '測試貼文' });
+    return captured;
+  });
+  expect(request.params.action).toBe('intelligenceImage');
+  expect(request.params.token).toBe('test-token');
+  expect(request.timeoutMs).toBe(180000);
+});

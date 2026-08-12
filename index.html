@@ -4246,7 +4246,13 @@ async function apiPost(body){
   if(!API_URL)throw new Error('未設定 API 網址');
   WRITE_TOKEN=cleanToken(WRITE_TOKEN);
   if(!WRITE_TOKEN)throw new Error('未設定記帳密鑰');
-  if(body&&/^(advisorAiParse|advisorDividendMemo|intelligencePolish|intelligenceImage|expense|income|transfer|ziweiInterpretationSave)$/.test(body.action||'')){
+  if(body&&body.action==='intelligenceImage'){
+    var imageParams=Object.assign({},body,{token:WRITE_TOKEN});
+    var imageResult=await apiPostGetFallback(imageParams,180000);
+    if(!imageResult.ok)throw new Error(imageResult.error||'圖片生成失敗');
+    return imageResult.data;
+  }
+  if(body&&/^(advisorAiParse|advisorDividendMemo|intelligencePolish|expense|income|transfer|ziweiInterpretationSave)$/.test(body.action||'')){
     var jsonTimeout=body.action==='intelligenceImage'?180000:((isApiWriteAction(body.action||'')||body.action==='advisorDividendMemo')?45000:undefined);
     return apiPostJson(body,jsonTimeout);
   }
