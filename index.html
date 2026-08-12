@@ -3646,10 +3646,7 @@ body::after{
       <img class="intelligence-image-preview" id="intelligence-preview-image" alt="主公御覽的可愛貓咪插畫" hidden>
       <div class="intelligence-actions">
         <button class="intelligence-action-btn" type="button" onclick="closeIntelligenceOffice()">返回修改</button>
-        <button class="intelligence-action-btn" id="threads-connect-btn" type="button" onclick="connectThreadsAccount()">連結 Threads</button>
-        <button class="intelligence-action-btn primary" id="threads-publish-btn" type="button" onclick="publishIntelligenceToThreads()">發布 Threads</button>
       </div>
-      <div class="intelligence-status" id="threads-status" aria-live="polite"></div>
     </div>
   </section>
 </div>
@@ -4106,12 +4103,11 @@ function parseApiJsonText(text){
   throw new Error('API returned non-JSON response');
 }
 function isApiWriteAction(action){
-  return /^(intelligenceImage|threadsPublish|expense|income|transfer|transactionUndo|stockTradeVoid|dividendEntry|dividendDelete|holdingTradeEntry|holdingTradeDelete|calendarCreate|calendarDelete|taskCreate|taskDelete|macroLongReportGenerate|macroLongReportTriggerInstall)$/.test(action||'');
+  return /^(intelligenceImage|expense|income|transfer|transactionUndo|stockTradeVoid|dividendEntry|dividendDelete|holdingTradeEntry|holdingTradeDelete|calendarCreate|calendarDelete|taskCreate|taskDelete|macroLongReportGenerate|macroLongReportTriggerInstall)$/.test(action||'');
 }
 function apiWriteTimeoutMs(action){
   action=String(action||'');
   if(action==='intelligenceImage')return 180000;
-  if(action==='threadsPublish')return 90000;
   if(action==='macroLongReportGenerate')return 150000;
   if(action==='macroLongReportTriggerInstall')return 45000;
   if(action==='verifyWriteToken')return 45000;
@@ -4844,15 +4840,12 @@ var intelligenceTone = '自然口語';
 var intelligenceDraft = '';
 var intelligenceImageDataUrl = '';
 var intelligenceVisualPlan = null;
-var intelligenceImageUrl = '';
-var intelligenceDraftId = '';
 function openIntelligenceOffice(event){
   if(event){event.preventDefault();event.stopPropagation();}
   closeAdvisorAIStandalone();
   closeAdvisorDialog();
   var overlay=document.getElementById('intelligence-overlay');
   if(overlay){overlay.classList.add('open');overlay.setAttribute('aria-hidden','false');}
-  if(!intelligenceDraftId)intelligenceDraftId='draft-'+Date.now()+'-'+Math.random().toString(36).slice(2,10);
   var input=document.getElementById('intelligence-source-text');
   if(input)setTimeout(function(){input.focus();},0);
 }
@@ -4900,8 +4893,7 @@ function showIntelligencePreview(){
   var previewImage=document.getElementById('intelligence-preview-image');
   if(previewImage){previewImage.hidden=!intelligenceImageDataUrl;previewImage.src=intelligenceImageDataUrl||'';}
   if(preview)preview.hidden=false;
-  if(status)status.textContent='這只是人工預覽；Phase 4 才會加入 Threads 發布。';
-  refreshThreadsStatus();
+  if(status)status.textContent='這只是人工預覽；目前不連結社群平台。';
 }
 function intelligencePlanFields(){
   return {
@@ -4979,7 +4971,6 @@ async function generateIntelligenceCatImage(){
   try{
     var data=await apiPost({action:'intelligenceImage',finalText:finalText,visualPlan:plan});
     intelligenceImageDataUrl=String(data&&data.dataUrl||'').trim();
-    intelligenceImageUrl=String(data&&data.imageUrl||'').trim();
     if(!intelligenceImageDataUrl)throw new Error('圖片生成沒有回傳可用圖片');
     if(image){image.src=intelligenceImageDataUrl;image.hidden=false;}
     if(regenerate)regenerate.hidden=false;
@@ -4990,7 +4981,6 @@ async function generateIntelligenceCatImage(){
 }
 function removeIntelligenceImage(){
   intelligenceImageDataUrl='';
-  intelligenceImageUrl='';
   var image=document.getElementById('intelligence-image-preview');
   var previewImage=document.getElementById('intelligence-preview-image');
   var regenerate=document.getElementById('intelligence-image-regenerate-btn');
@@ -5001,39 +4991,6 @@ function removeIntelligenceImage(){
   if(regenerate)regenerate.hidden=true;
   if(remove)remove.hidden=true;
   if(status)status.textContent='已選擇不使用圖片，之後仍可重新生成。';
-}
-async function refreshThreadsStatus(){
-  var status=document.getElementById('threads-status');
-  var connect=document.getElementById('threads-connect-btn');
-  if(status)status.textContent='正在檢查 Threads 連線…';
-  try{
-    var data=await apiGet({action:'threadsStatus'},15000);
-    if(data&&data.connected){if(status)status.textContent='已連結 Threads：@'+(data.username||data.userId||'目前帳號');if(connect)connect.textContent='重新連結 Threads';}
-    else{if(status)status.textContent=data&&data.expired?'Threads token 已失效，請重新連結。':'尚未連結 Threads 帳號。';if(connect)connect.textContent='連結 Threads';}
-  }catch(error){if(status)status.textContent='Threads 狀態暫時無法取得：'+String(error&&error.message||error);}
-}
-async function connectThreadsAccount(){
-  var status=document.getElementById('threads-status');
-  if(status)status.textContent='正在準備 Threads 授權…';
-  try{
-    var data=await apiGet({action:'threadsOAuthStart'},15000);
-    if(!data||!data.authUrl)throw new Error('後端沒有回傳 Threads 授權網址');
-    window.location.href=data.authUrl;
-  }catch(error){if(status)status.textContent='Threads 授權準備失敗：'+String(error&&error.message||error);}
-}
-async function publishIntelligenceToThreads(){
-  var input=document.getElementById('intelligence-source-text');
-  var button=document.getElementById('threads-publish-btn');
-  var status=document.getElementById('threads-status');
-  var text=String(input&&input.value||'').trim();
-  if(!text){if(status)status.textContent='沒有可發布的文字草稿。';return;}
-  if(button)button.disabled=true;
-  if(status)status.textContent='正在送出 Threads 容器，請勿重複點擊…';
-  try{
-    var data=await apiPost({action:'threadsPublish',draftId:intelligenceDraftId,finalText:text,imageUrl:intelligenceImageUrl});
-    if(status)status.textContent='發布成功！Threads post ID：'+String(data&&data.postId||'')+'。';
-  }catch(error){if(status)status.textContent='發布失敗，草稿已保留：'+String(error&&error.message||error);}
-  finally{if(button)button.disabled=false;}
 }
 function closePanel(){
   closePanelTitleMenu();

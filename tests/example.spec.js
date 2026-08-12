@@ -99,27 +99,3 @@ test('intelligence image generation uses one GET write request', async ({ page }
   expect(JSON.parse(request.params.visualPlan).theme).toBe('主題');
   expect(request.timeoutMs).toBe(180000);
 });
-
-test('threads publish is manual and preserves draft payload', async ({ page }) => {
-  await page.goto(dashboardUrl);
-  let publishRequest;
-  await page.evaluate(() => {
-    window.apiGet = async body => body.action === 'threadsStatus'
-      ? { connected: true, username: 'test_account', userId: 'user-1' }
-      : { authUrl: 'https://threads.net/oauth/authorize?test=1' };
-    window.apiPost = async body => {
-      window.__publishRequest = body;
-      return { postId: 'post-123', status: 'published' };
-    };
-  });
-  await page.locator('.intelligence-orb').click();
-  await page.locator('#intelligence-source-text').fill('最終人工確認的 Threads 草稿');
-  await page.getByRole('button', { name: '預覽' }).click();
-  await expect(page.locator('#threads-publish-btn')).toBeVisible();
-  await page.locator('#threads-publish-btn').click();
-  publishRequest = await page.evaluate(() => window.__publishRequest);
-  expect(publishRequest.action).toBe('threadsPublish');
-  expect(publishRequest.finalText).toBe('最終人工確認的 Threads 草稿');
-  expect(publishRequest.draftId).toMatch(/^draft-/);
-  await expect(page.locator('#threads-status')).toContainText('發布成功');
-});
