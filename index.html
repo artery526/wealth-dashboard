@@ -13703,6 +13703,7 @@ var advisorAIHeaderFundsPromise=null;
 var advisorAIHeaderBattleVisible=false;
 var advisorAIHeaderBattleLoaded=false;
 var advisorAIHeaderBattleValue='';
+var ADVISOR_AI_HEADER_FUNDS_CACHE_KEY='wealth_advisor_ai_header_funds_v1';
 var advisorDividendQuickSelection=null;
 var advisorDividendQuickPromise=null;
 
@@ -13729,6 +13730,32 @@ function toggleAdvisorAI(){
   openAdvisorAI();
 }
 
+function advisorAIReadHeaderFundsCache(){
+  try{
+    var packed=JSON.parse(localStorage.getItem(ADVISOR_AI_HEADER_FUNDS_CACHE_KEY)||'null');
+    var data=packed&&packed.data;
+    if(data&&typeof data==='object')return data;
+  }catch(e){}
+  return null;
+}
+
+function advisorAIGetHeaderFundsCache(){
+  if(!advisorAIHeaderFundsCache){
+    advisorAIHeaderFundsCache=advisorAIReadHeaderFundsCache();
+    if(advisorAIHeaderFundsCache&&advisorAIHeaderFundsCache.battleLoaded){
+      advisorAIHeaderBattleLoaded=true;
+      advisorAIHeaderBattleValue=String(advisorAIHeaderFundsCache.battleValue||'').trim();
+    }
+  }
+  return advisorAIHeaderFundsCache;
+}
+
+function advisorAIWriteHeaderFundsCache(data){
+  try{
+    localStorage.setItem(ADVISOR_AI_HEADER_FUNDS_CACHE_KEY,JSON.stringify({savedAt:Date.now(),data:data}));
+  }catch(e){}
+}
+
 function advisorAIHeaderFundsHtml(cash,stock,cube){
   var cashText=(cash===null||cash===undefined||isNaN(Number(cash)))?'--':Math.round(Number(cash)).toLocaleString('zh-TW');
   var stockText=(stock===null||stock===undefined||isNaN(Number(stock)))?'--':Math.round(Number(stock)).toLocaleString('zh-TW');
@@ -13749,7 +13776,7 @@ function advisorAIToggleHeaderBattle(){
 function advisorAIUpdateHeaderFunds(data){
   var el=document.getElementById('advisor-ai-funds');
   if(!el)return;
-  data=data||advisorAIHeaderFundsCache||{};
+  data=data||advisorAIGetHeaderFundsCache()||{};
   el.innerHTML=advisorAIHeaderFundsHtml(data.cash,data.stock,data.cube);
 }
 
@@ -13762,6 +13789,7 @@ function advisorAIFindAccountRow(rows,target){
 }
 
 async function advisorAILoadHeaderFunds(force){
+  advisorAIGetHeaderFundsCache();
   var now=Date.now();
   if(!force&&advisorAIHeaderFundsCache&&now-advisorAIHeaderFundsFetchedAt<30000){
     advisorAIUpdateHeaderFunds(advisorAIHeaderFundsCache);
@@ -13785,8 +13813,11 @@ async function advisorAILoadHeaderFunds(force){
     advisorAIHeaderFundsCache={
       cash: cashRow?Number(cashRow.value):NaN,
       stock: stockRow?Number(stockRow.value):NaN,
-      cube: cubeRow?Number(cubeRow.value):NaN
+      cube: cubeRow?Number(cubeRow.value):NaN,
+      battleValue: advisorAIHeaderBattleValue,
+      battleLoaded: advisorAIHeaderBattleLoaded
     };
+    advisorAIWriteHeaderFundsCache(advisorAIHeaderFundsCache);
     advisorAIHeaderFundsFetchedAt=Date.now();
     advisorAIUpdateHeaderFunds(advisorAIHeaderFundsCache);
     return advisorAIHeaderFundsCache;
@@ -13801,12 +13832,13 @@ async function advisorAILoadHeaderFunds(force){
 
 function advisorAIScheduleHeaderFunds(){
   setTimeout(function(){
-    advisorAIUpdateHeaderFunds(advisorAIHeaderFundsCache);
+    advisorAIUpdateHeaderFunds(advisorAIGetHeaderFundsCache());
     advisorAILoadHeaderFunds(true);
   },0);
 }
 
 function advisorAIHeaderHtml(title){
+  var fundsCache=advisorAIGetHeaderFundsCache();
   advisorAIScheduleHeaderFunds();
   return `<button class="advisor-ai-close" type="button" onclick="closeAdvisorAIStandalone()" aria-label="關閉軍師AI">×</button>
     <button class="advisor-ai-config-btn" type="button" onclick="openAdvisorAISettings(event)" title="API 與 WRITE_TOKEN 設定" aria-label="API 與 WRITE_TOKEN 設定">&#9881;</button>
@@ -13816,7 +13848,7 @@ function advisorAIHeaderHtml(title){
         <button class="advisor-ai-palace-nav" type="button" onclick="toggleGlobalScrollMenu(event)" title="導航" aria-label="導航">🏯</button>
       </div>
       <div class="advisor-ai-title-wrap">
-        <div class="advisor-ai-funds" id="advisor-ai-funds">${advisorAIHeaderFundsHtml(advisorAIHeaderFundsCache&&advisorAIHeaderFundsCache.cash,advisorAIHeaderFundsCache&&advisorAIHeaderFundsCache.stock,advisorAIHeaderFundsCache&&advisorAIHeaderFundsCache.cube)}</div>
+        <div class="advisor-ai-funds" id="advisor-ai-funds">${advisorAIHeaderFundsHtml(fundsCache&&fundsCache.cash,fundsCache&&fundsCache.stock,fundsCache&&fundsCache.cube)}</div>
       </div>
     </div>
     <div class="advisor-ai-dividend-quick-row">
