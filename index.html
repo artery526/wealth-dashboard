@@ -1172,13 +1172,13 @@ body::after{
 .advisor-ai-quick-select:focus{border-color:#fff2b8;box-shadow:0 0 0 2px rgba(29,158,117,.25),0 0 18px rgba(29,158,117,.22)}
 .advisor-ai-quick-tools{display:flex;align-items:center;gap:6px;min-width:0}
 .advisor-ai-quick-tools .advisor-ai-palace-nav{width:auto;min-width:58px;min-height:38px;margin:0;padding:8px 12px;letter-spacing:1px;white-space:nowrap;flex-shrink:0}
-.advisor-ai-dividend-select{width:178px;flex-shrink:1;border:1px solid rgba(232,192,80,.58);border-radius:999px;background:linear-gradient(145deg,#3d2a09,#1b1004);color:#fff0b0;font-family:var(--sans);font-size:12px;font-weight:900;text-align:center;text-align-last:center;padding:8px 9px;outline:none;cursor:pointer}
+.advisor-ai-dividend-select{width:132px;flex:0 1 132px;min-width:0;border:1px solid rgba(232,192,80,.58);border-radius:999px;background:linear-gradient(145deg,#3d2a09,#1b1004);color:#fff0b0;font-family:var(--sans);font-size:12px;font-weight:900;text-align:center;text-align-last:center;padding:8px 7px;outline:none;cursor:pointer}
 .advisor-ai-dividend-select option{background:#1b1004;color:#fff0b0;font-size:12px}
 .advisor-ai-dividend-select:focus{border-color:#fff2b8;box-shadow:0 0 0 2px rgba(232,192,80,.2)}
 .advisor-ai-dividend-quick-row{display:flex;align-items:center;gap:7px;margin:0 0 10px}
-.advisor-ai-dividend-quick-input{width:130px;min-width:0;border:1px solid rgba(232,192,80,.34);border-radius:7px;background:#0a0804;color:var(--ink);font-family:var(--mono);font-size:13px;padding:9px 10px;outline:none}
+.advisor-ai-dividend-quick-input{width:106px;flex:0 1 106px;min-width:0;border:1px solid rgba(232,192,80,.34);border-radius:7px;background:#0a0804;color:var(--ink);font-family:var(--mono);font-size:13px;padding:9px 8px;outline:none}
 .advisor-ai-dividend-quick-input:focus{border-color:var(--gold2)}
-.advisor-ai-dividend-quick-btn{width:auto;min-width:92px;border:1px solid rgba(29,158,117,.48);border-radius:7px;background:rgba(29,158,117,.12);color:#a8f1d6;font-family:var(--sans);font-size:12px;font-weight:950;padding:9px 12px;cursor:pointer}
+.advisor-ai-dividend-quick-btn{width:42px;min-width:42px;height:38px;border:1px solid rgba(29,158,117,.48);border-radius:7px;background:rgba(29,158,117,.12);color:#a8f1d6;font-family:var(--sans);font-size:20px;font-weight:950;line-height:1;padding:0;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 .advisor-ai-dividend-quick-btn:hover{background:rgba(29,158,117,.2)}
 .advisor-ai-dividend-quick-btn:disabled{opacity:.55;cursor:wait}
 .advisor-ai-dividend-quick-status{flex:1;min-width:0;font-family:var(--sans);font-size:11px;line-height:1.5;color:#b99651;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -1238,7 +1238,7 @@ body::after{
 .advisor-close{position:absolute;top:10px;right:12px;background:none;border:none;color:#5a4018;font-size:14px;cursor:pointer;transition:color .2s;line-height:1;padding:2px}
 .advisor-close:hover{color:var(--gold)}
 @media(max-width:480px){.advisor-overlay{padding:0;background:rgba(0,0,0,0);transition:background .18s}.advisor-overlay.open{background:rgba(0,0,0,.52)}.advisor-wrap{position:fixed;left:6px;top:108px;display:flex;align-items:flex-start;transform:translateY(-8px);opacity:0;pointer-events:none;transition:opacity .18s,transform .18s}.advisor-overlay.open .advisor-wrap{transform:translateY(0);opacity:1;pointer-events:auto}.advisor-img{width:124px;margin-top:-31px}.advisor-dialog{margin-top:0;margin-left:-14px;width:calc(100vw - 122px);max-height:calc(100vh - 128px);padding:12px 12px 10px;border-radius:0 14px 14px 14px}.advisor-dialog::before{top:42px}.advisor-dialog::after{top:43px}.advisor-command-head{gap:6px;margin-right:18px}.advisor-command-title{font-size:15px;letter-spacing:.5px}.advisor-reminder-card{padding:10px 11px 11px}.advisor-reminder-title{font-size:12px}.advisor-reminder-text{font-size:12px;line-height:1.68}.advisor-btn-grid{gap:8px}.advisor-menu-toggle{min-height:42px;font-size:16px;letter-spacing:2px}.advisor-menu-mark{width:20px;height:20px;font-size:11px}.advisor-btn-group{gap:6px;border-radius:7px}.advisor-menu-section.is-open .advisor-btn-group{padding:7px;max-height:220px}.advisor-btn{font-size:12px;padding:8px 4px;letter-spacing:0;gap:3px}.advisor-btn-tag{width:14px;height:14px;font-size:9px}.advisor-btn-spacer{min-height:32px}}
-@media(max-width:480px){.advisor-ai-standalone{left:calc(50% + 40px);top:108px;width:calc(100vw - 122px);padding:15px 14px 13px;border-radius:0 14px 14px 14px}.advisor-ai-portrait{left:-112px;top:-31px;width:124px}.advisor-ai-portrait-img{max-height:168px}.advisor-ai-head-row{grid-template-columns:auto minmax(0,1fr);gap:7px;margin-right:28px;margin-bottom:14px}.advisor-ai-quick-tools{width:100%;flex-wrap:wrap}.advisor-ai-agenda-btn{font-size:11px;padding:7px 9px;letter-spacing:0}.advisor-ai-head-row>.advisor-ai-quick-select{width:112px;font-size:13px;padding:8px 9px;letter-spacing:0;text-align:center;text-align-last:center}.advisor-ai-dividend-select{width:calc(100% - 4px);font-size:11px;padding:7px 8px}.advisor-ai-title-wrap{justify-content:flex-start;gap:6px}.advisor-ai-standalone .advisor-shortcut-title{font-size:20px;line-height:1.35;text-align:left}.advisor-ai-funds{justify-content:flex-start;font-size:10px}.advisor-ai-fund-pill{min-height:22px;padding:3px 6px}.advisor-ai-input{flex-basis:calc(100% - 66px)}.advisor-ai-dividend-quick-row{flex-wrap:wrap}.advisor-ai-dividend-quick-input{flex:1;width:auto}.advisor-ai-dividend-quick-btn{min-width:88px}.advisor-ai-dividend-quick-status{flex-basis:100%;white-space:normal}.advisor-ai-tool-row{grid-template-columns:1fr}.advisor-ai-examples-grid{grid-template-columns:1fr}}
+@media(max-width:480px){.advisor-ai-dividend-select{width:132px;flex:0 1 132px}.advisor-ai-dividend-quick-input{width:96px;flex:1 1 96px}.advisor-ai-dividend-quick-btn{width:42px;min-width:42px}}
 @media(max-width:480px){
   .advisor-ai-standalone{left:50%;top:142px;width:calc(100vw - 28px);padding:58px 14px 13px;border-radius:14px}
   .advisor-ai-portrait{left:50%;top:-62px;width:96px;transform:translateX(-50%)}
@@ -13784,7 +13784,6 @@ function advisorAIHeaderHtml(title){
       <div class="advisor-ai-quick-tools">
         ${advisorAIQuickCommandSelectHtml()}
         <button class="advisor-ai-palace-nav" type="button" onclick="toggleGlobalScrollMenu(event)" aria-label="導航">導航</button>
-        ${advisorAIDividendQuickSelectHtml()}
       </div>
       <div class="advisor-ai-title-wrap">
         <div class="advisor-shortcut-title">🗡️主公，今日有何吩咐?</div>
@@ -13792,8 +13791,9 @@ function advisorAIHeaderHtml(title){
       </div>
     </div>
     <div class="advisor-ai-dividend-quick-row">
+      ${advisorAIDividendQuickSelectHtml()}
       <input class="advisor-ai-dividend-quick-input" id="advisor-ai-dividend-quick-amount" type="number" min="1" step="1" placeholder="配息入帳金額" inputmode="decimal" onkeydown="advisorAIDividendQuickKey(event)">
-      <button class="advisor-ai-dividend-quick-btn" id="advisor-ai-dividend-quick-btn" type="button" onclick="advisorAIRecordQuickDividend(this)">記錄配息</button>
+      <button class="advisor-ai-dividend-quick-btn" id="advisor-ai-dividend-quick-btn" type="button" onclick="advisorAIRecordQuickDividend(this)" title="記錄配息" aria-label="記錄配息">📝</button>
       <div class="advisor-ai-dividend-quick-status" id="advisor-ai-dividend-quick-status">選擇持股後自動帶入待入帳配息</div>
     </div>
     `;
@@ -13919,7 +13919,7 @@ async function advisorAIRecordQuickDividend(btn){
   if(!row){advisorAISetQuickDividendStatus('請先選擇有待入帳配息的持股','err');return;}
   if(!amount||amount<=0){advisorAISetQuickDividendStatus('請輸入大於 0 的入帳金額','err');return;}
   if(btn&&btn.disabled)return;
-  if(btn){btn.disabled=true;btn.textContent='記錄中…';}
+  if(btn){btn.disabled=true;btn.textContent='⏳';}
   try{
     await apiPost({
       action:'income',
@@ -13941,7 +13941,7 @@ async function advisorAIRecordQuickDividend(btn){
   }catch(err){
     advisorAISetQuickDividendStatus('✗ '+(err&&err.message?err.message:'寫入失敗'),'err');
   }finally{
-    if(btn){btn.disabled=false;btn.textContent='記錄配息';}
+    if(btn){btn.disabled=false;btn.textContent='📝';}
   }
 }
 
