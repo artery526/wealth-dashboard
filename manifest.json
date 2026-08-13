@@ -1,0 +1,12 @@
+{
+  "name": "Empire Wealth Dashboard",
+  "short_name": "Empire",
+  "description": "Empire 個人財務與軍師儀表板",
+  "lang": "zh-TW",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0a0704",
+  "theme_color": "#0a0704"
+}

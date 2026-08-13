@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#0a0704">
 <title>⚔️ 帝國指揮所</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&family=Noto+Sans+TC:wght@400;500;700&family=DM+Mono:wght@400;500&family=Cinzel+Decorative:wght@700&display=swap" rel="stylesheet">
@@ -16255,6 +16257,15 @@ function mpmRender(records){
       +(notes?'<div class="mpm-rec-note">'+mpmEsc(notes)+'</div>':'')
       +'</div></div>';
   }).join('')+'</div>';
+}
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('./sw.js').catch(function (error) {
+      console.warn('Empire Service Worker registration failed', error);
+    });
+  });
 }
 </script>
 </body>
