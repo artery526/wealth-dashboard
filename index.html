@@ -13949,8 +13949,7 @@ function advisorAIOpenQuickTransfer(){
   advisorDividendQuickSelection=null;
   advisorDividendQuickHolding=null;
   panel.innerHTML=`${advisorAIHeaderHtml()}
-    <div class="advisor-shortcut-title">快速轉帳</div>
-    <div class="advisor-shortcut-hint">選擇轉出與轉入帳戶，輸入金額後直接記錄，不經口令辨識。</div>
+    <div class="advisor-shortcut-title" aria-label="快速轉帳">💲🔁💲</div>
     <div class="advisor-ai-quick-transfer-form">
       <div class="advisor-ai-quick-transfer-field"><label class="advisor-ai-quick-transfer-label">轉出帳戶</label><select class="advisor-ai-quick-transfer-select" id="advisor-ai-quick-transfer-from">${advisorAIQuickTransferAccountsHtml()}</select></div>
       <div class="advisor-ai-quick-transfer-field"><label class="advisor-ai-quick-transfer-label">轉入帳戶</label><select class="advisor-ai-quick-transfer-select" id="advisor-ai-quick-transfer-to">${advisorAIQuickTransferAccountsHtml()}</select></div>
