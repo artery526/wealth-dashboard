@@ -1113,16 +1113,14 @@ body::after{
 .foodhouse-bills-wrap{margin-top:12px}
 @media(max-width:540px){.foodhouse-warroom-grid,.foodhouse-roster-grid{grid-template-columns:1fr}.foodhouse-advisor-reminder .advisor-summary-grid{grid-template-columns:1fr}.foodhouse-advisor-reminder .advisor-summary-line{font-size:18px}.foodhouse-monthly-viz{grid-template-columns:104px minmax(0,1fr);gap:9px}.foodhouse-savings-gauge,.foodhouse-savings-gauge svg{width:104px}}
 .finance-reminder-wrap{margin:0 0 12px}
-.advisor-command-head{display:flex;align-items:center;justify-content:center;gap:9px;margin:0 20px 13px 0}
-.advisor-command-title{margin:0;text-align:center;font-family:'Noto Serif TC',serif;font-size:18px;font-weight:900;line-height:1.35;color:#f0dfa0;letter-spacing:1.5px;text-shadow:0 0 14px rgba(232,192,80,.22)}
-.advisor-dialog-nav{position:absolute;top:8px;right:42px;z-index:2;width:32px;height:32px;border:1px solid rgba(232,192,80,.58);border-radius:10px;background:linear-gradient(145deg,rgba(79,54,17,.94),rgba(22,13,5,.96));color:#f7e6b2;font-family:var(--sans);font-size:18px;line-height:1;cursor:pointer;box-shadow:0 0 14px rgba(232,192,80,.16),inset 0 1px 0 rgba(255,246,216,.2);transition:transform .16s,filter .16s,border-color .16s}
+.advisor-dialog-top-actions{position:absolute;top:8px;right:42px;z-index:2;display:flex;align-items:center;gap:6px}
+.advisor-dialog-nav{width:32px;height:32px;border:1px solid rgba(232,192,80,.58);border-radius:10px;background:linear-gradient(145deg,rgba(79,54,17,.94),rgba(22,13,5,.96));color:#f7e6b2;font-family:var(--sans);font-size:18px;line-height:1;cursor:pointer;box-shadow:0 0 14px rgba(232,192,80,.16),inset 0 1px 0 rgba(255,246,216,.2);transition:transform .16s,filter .16s,border-color .16s}
 .advisor-dialog-nav:hover,.advisor-dialog-nav:focus-visible{border-color:rgba(255,218,105,.95);filter:brightness(1.1);transform:translateY(-1px);outline:none}
 .advisor-dialog-nav:active{transform:translateY(0)}
-.advisor-dialog-tool-row{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin:0 0 10px}
-.advisor-dialog-tool{width:42px;height:36px;border:1px solid rgba(232,192,80,.48);border-radius:8px;background:linear-gradient(145deg,rgba(79,54,17,.9),rgba(22,13,5,.96));color:#f7e6b2;font-family:var(--sans);font-size:20px;line-height:1;cursor:pointer;box-shadow:0 0 14px rgba(232,192,80,.12),inset 0 1px 0 rgba(255,246,216,.18);transition:transform .16s,filter .16s,border-color .16s}
+.advisor-dialog-tool{width:32px;height:32px;border:1px solid rgba(232,192,80,.48);border-radius:8px;background:linear-gradient(145deg,rgba(79,54,17,.9),rgba(22,13,5,.96));color:#f7e6b2;font-family:var(--sans);font-size:17px;line-height:1;cursor:pointer;box-shadow:0 0 14px rgba(232,192,80,.12),inset 0 1px 0 rgba(255,246,216,.18);transition:transform .16s,filter .16s,border-color .16s}
 .advisor-dialog-tool:hover,.advisor-dialog-tool:focus-visible{border-color:rgba(255,218,105,.95);filter:brightness(1.1);transform:translateY(-1px);outline:none}
 .advisor-dialog-tool:active{transform:translateY(0)}
-.advisor-dialog-tool-status{flex:1;min-width:0;font-family:var(--sans);font-size:11px;line-height:1.45;color:#9f8248;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.advisor-dialog-tool-status{position:absolute;top:39px;right:0;width:220px;font-family:var(--sans);font-size:11px;line-height:1.45;color:#9f8248;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .advisor-sheet-link{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border:1px solid rgba(255,226,138,.72);border-radius:50%;background:radial-gradient(circle at 34% 28%,#fff7c7 0 12%,#f2c94c 28%,#b98724 64%,#56360d 100%);box-shadow:0 0 16px rgba(232,192,80,.38),inset 0 1px 0 rgba(255,255,255,.36);font-size:16px;line-height:1;text-decoration:none;flex-shrink:0;transition:transform .16s,filter .16s,box-shadow .16s}
 .advisor-sheet-link:hover{filter:brightness(1.08);box-shadow:0 0 22px rgba(232,192,80,.54),inset 0 1px 0 rgba(255,255,255,.42);transform:translateY(-1px)}
 .advisor-sheet-link:focus-visible{outline:2px solid rgba(255,238,190,.85);outline-offset:3px}
@@ -1268,8 +1266,8 @@ body::after{
 .advisor-ai-close:hover{background:rgba(232,192,80,.18);border-color:rgba(232,192,80,.7);transform:scale(1.05)}
 .advisor-close{position:absolute;top:10px;right:12px;background:none;border:none;color:#5a4018;font-size:14px;cursor:pointer;transition:color .2s;line-height:1;padding:2px}
 .advisor-close:hover{color:var(--gold)}
-@media(max-width:480px){.advisor-overlay{padding:0;background:rgba(0,0,0,0);transition:background .18s}.advisor-overlay.open{background:rgba(0,0,0,.52)}.advisor-wrap{position:fixed;left:6px;top:108px;display:flex;align-items:flex-start;transform:translateY(-8px);opacity:0;pointer-events:none;transition:opacity .18s,transform .18s}.advisor-overlay.open .advisor-wrap{transform:translateY(0);opacity:1;pointer-events:auto}.advisor-img{width:124px;margin-top:-31px}.advisor-dialog{margin-top:0;margin-left:-14px;width:calc(100vw - 122px);max-height:calc(100vh - 128px);padding:12px 12px 10px;border-radius:0 14px 14px 14px}.advisor-dialog::before{top:42px}.advisor-dialog::after{top:43px}.advisor-command-head{gap:6px;margin-right:18px}.advisor-command-title{font-size:15px;letter-spacing:.5px}.advisor-reminder-card{padding:10px 11px 11px}.advisor-reminder-title{font-size:12px}.advisor-reminder-text{font-size:12px;line-height:1.68}.advisor-btn-grid{gap:8px}.advisor-menu-toggle{min-height:42px;font-size:16px;letter-spacing:2px}.advisor-menu-mark{width:20px;height:20px;font-size:11px}.advisor-btn-group{gap:6px;border-radius:7px}.advisor-menu-section.is-open .advisor-btn-group{padding:7px;max-height:220px}.advisor-btn{font-size:12px;padding:8px 4px;letter-spacing:0;gap:3px}.advisor-btn-tag{width:14px;height:14px;font-size:9px}.advisor-btn-spacer{min-height:32px}}
-@media(max-width:480px){.advisor-overlay{padding:10px 8px;justify-content:center}.advisor-wrap{left:8px;right:8px;top:54px;width:auto;align-items:center}.advisor-img{width:90px;max-height:102px;margin:0 auto -14px}.advisor-dialog{margin:0;width:100%;max-height:calc(100vh - 146px);border-radius:14px}.advisor-dialog::before{top:-9px}.advisor-dialog::after{top:-7px}.advisor-dialog-tool-row{margin-bottom:8px}.advisor-dialog-tool{width:40px;height:34px;font-size:18px}.advisor-dialog-tool-status{font-size:10px}}
+ @media(max-width:480px){.advisor-overlay{padding:0;background:rgba(0,0,0,0);transition:background .18s}.advisor-overlay.open{background:rgba(0,0,0,.52)}.advisor-wrap{position:fixed;left:6px;top:108px;display:flex;align-items:flex-start;transform:translateY(-8px);opacity:0;pointer-events:none;transition:opacity .18s,transform .18s}.advisor-overlay.open .advisor-wrap{transform:translateY(0);opacity:1;pointer-events:auto}.advisor-img{width:124px;margin-top:-31px}.advisor-dialog{margin-top:0;margin-left:-14px;width:calc(100vw - 122px);max-height:calc(100vh - 128px);padding:12px 12px 10px;border-radius:0 14px 14px 14px}.advisor-dialog::before{top:42px}.advisor-dialog::after{top:43px}.advisor-reminder-card{padding:10px 11px 11px}.advisor-reminder-title{font-size:12px}.advisor-reminder-text{font-size:12px;line-height:1.68}.advisor-btn-grid{gap:8px}.advisor-menu-toggle{min-height:42px;font-size:16px;letter-spacing:2px}.advisor-menu-mark{width:20px;height:20px;font-size:11px}.advisor-btn-group{gap:6px;border-radius:7px}.advisor-menu-section.is-open .advisor-btn-group{padding:7px;max-height:220px}.advisor-btn{font-size:12px;padding:8px 4px;letter-spacing:0;gap:3px}.advisor-btn-tag{width:14px;height:14px;font-size:9px}.advisor-btn-spacer{min-height:32px}}
+ @media(max-width:480px){.advisor-overlay{padding:10px 8px;justify-content:center}.advisor-wrap{left:8px;right:8px;top:54px;width:auto;align-items:center}.advisor-img{width:90px;max-height:102px;margin:0 auto -14px}.advisor-dialog{margin:0;width:100%;max-height:calc(100vh - 146px);border-radius:14px}.advisor-dialog::before{top:-9px}.advisor-dialog::after{top:-7px}.advisor-dialog-tool{width:30px;height:30px;font-size:16px}.advisor-dialog-tool-status{top:37px;font-size:10px}}
 @media(max-width:480px){.advisor-ai-dividend-select{width:112px;flex:0 1 112px}.advisor-ai-dividend-quick-input{width:88px;flex:1 1 88px}.advisor-ai-dividend-quick-estimate{width:94px;flex:1 1 94px}.advisor-ai-dividend-quick-btn{width:42px;min-width:42px}}
 @media(max-width:480px){.advisor-ai-quick-transfer-form{grid-template-columns:1fr 1fr;gap:7px}.advisor-ai-quick-transfer-field.amount{grid-column:1}.advisor-ai-quick-transfer-submit{grid-column:2;align-self:end;width:100%}}
 @media(max-width:480px){
@@ -13414,17 +13412,14 @@ initAdvisorDuoVideoPlayback();
     <img class="advisor-img" src="advisor-zhuge.png" alt="諸葛亮軍師" onclick="closeAdvisorDialog()">
     <div class="advisor-dialog">
       <button class="advisor-close" onclick="closeAdvisorDialog()">✕</button>
-      <button class="advisor-dialog-nav" id="global-scroll-launcher" type="button" onclick="toggleGlobalScrollMenu(event)" title="導航" aria-label="導航" aria-expanded="false">🏯</button>
-      <div class="advisor-command-head">
-        <div class="advisor-command-title">主公，請下令🏹</div>
-      </div>
-      <div class="advisor-date-slot" id="advisor-date-slot"></div>
-      <div class="advisor-world-slot" id="advisor-world-slot"></div>
-      <div class="advisor-dialog-tool-row" aria-label="諸葛軍師工具">
-        <span class="advisor-dialog-tool-status" id="advisor-dialog-tool-status" aria-live="polite"></span>
-        <button class="advisor-dialog-tool" type="button" onclick="advisorAIOpenVideoDownload()" title="影片下載" aria-label="影片下載">📽️</button>
-        <button class="advisor-dialog-tool" type="button" onclick="advisorAIOpenDatabaseSheet()" title="進入試算表" aria-label="進入試算表">📂</button>
-      </div>
+       <div class="advisor-dialog-top-actions" aria-label="諸葛軍師快捷工具">
+         <button class="advisor-dialog-nav" id="global-scroll-launcher" type="button" onclick="toggleGlobalScrollMenu(event)" title="皇宮導航" aria-label="皇宮導航" aria-expanded="false">🏯</button>
+         <button class="advisor-dialog-tool" type="button" onclick="advisorAIOpenVideoDownload()" title="影片下載" aria-label="影片下載">📽️</button>
+         <button class="advisor-dialog-tool" type="button" onclick="advisorAIOpenDatabaseSheet()" title="進入資料庫" aria-label="進入資料庫">📂</button>
+         <span class="advisor-dialog-tool-status" id="advisor-dialog-tool-status" aria-live="polite"></span>
+       </div>
+       <div class="advisor-date-slot" id="advisor-date-slot"></div>
+       <div class="advisor-world-slot" id="advisor-world-slot"></div>
       <div class="advisor-btn-grid advisor-card-shortcuts-moved">
         <section class="advisor-menu-section">
           <button class="advisor-menu-toggle" type="button" onclick="toggleAdvisorMenuGroup(this)" aria-expanded="false"><span class="advisor-menu-mark">糧</span>糧倉<span class="advisor-menu-caret">▼</span></button>
