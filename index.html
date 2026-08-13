@@ -123,7 +123,7 @@ body::after{
   display:flex;
   align-items:flex-end;
   justify-content:center;
-  gap:18px;
+  gap:12px;
   width:100%;
   min-height:256px;
   padding:8px 10px 0;
@@ -249,9 +249,6 @@ body::after{
 .global-scroll-menu-subtitle{margin-top:3px;color:#bca66f;font-family:var(--sans);font-size:12px;font-weight:700}
 .global-scroll-menu-close{position:relative;z-index:6;flex:0 0 auto;width:36px;height:36px;border:1px solid rgba(232,192,80,.58);border-radius:50%;background:rgba(0,0,0,.42);color:#f6df9c;font-size:23px;line-height:1;cursor:pointer;pointer-events:auto;touch-action:manipulation}
 .global-scroll-menu-close:hover{border-color:rgba(255,220,112,.9);background:rgba(232,192,80,.12)}
-.global-scroll-launcher{position:fixed;left:clamp(12px,3vw,42px);top:clamp(132px,25vh,286px);z-index:40;width:48px;height:48px;border:1px solid rgba(232,192,80,.68);border-radius:12px;background:linear-gradient(145deg,rgba(79,54,17,.94),rgba(22,13,5,.96));color:#f7e6b2;font-family:var(--sans);font-size:24px;line-height:1;cursor:pointer;box-shadow:0 8px 22px rgba(0,0,0,.42),0 0 18px rgba(232,192,80,.16),inset 0 1px 0 rgba(255,246,216,.2);transition:transform .16s,filter .16s,border-color .16s}
-.global-scroll-launcher:hover,.global-scroll-launcher:focus-visible{border-color:rgba(255,218,105,.95);filter:brightness(1.1);transform:translateY(-2px);outline:none}
-.global-scroll-launcher:active{transform:translateY(0)}
 .global-scroll-groups{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;min-height:0;overflow-y:auto;padding-right:2px}
 .global-scroll-group{border:1px solid rgba(190,144,50,.3);border-radius:11px;background:rgba(9,6,3,.42);padding:10px}
 .global-scroll-group-title{display:none}
@@ -1107,6 +1104,9 @@ body::after{
 .finance-reminder-wrap{margin:0 0 12px}
 .advisor-command-head{display:flex;align-items:center;justify-content:center;gap:9px;margin:0 20px 13px 0}
 .advisor-command-title{margin:0;text-align:center;font-family:'Noto Serif TC',serif;font-size:18px;font-weight:900;line-height:1.35;color:#f0dfa0;letter-spacing:1.5px;text-shadow:0 0 14px rgba(232,192,80,.22)}
+.advisor-dialog-nav{position:absolute;top:8px;right:42px;z-index:2;width:32px;height:32px;border:1px solid rgba(232,192,80,.58);border-radius:10px;background:linear-gradient(145deg,rgba(79,54,17,.94),rgba(22,13,5,.96));color:#f7e6b2;font-family:var(--sans);font-size:18px;line-height:1;cursor:pointer;box-shadow:0 0 14px rgba(232,192,80,.16),inset 0 1px 0 rgba(255,246,216,.2);transition:transform .16s,filter .16s,border-color .16s}
+.advisor-dialog-nav:hover,.advisor-dialog-nav:focus-visible{border-color:rgba(255,218,105,.95);filter:brightness(1.1);transform:translateY(-1px);outline:none}
+.advisor-dialog-nav:active{transform:translateY(0)}
 .advisor-sheet-link{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border:1px solid rgba(255,226,138,.72);border-radius:50%;background:radial-gradient(circle at 34% 28%,#fff7c7 0 12%,#f2c94c 28%,#b98724 64%,#56360d 100%);box-shadow:0 0 16px rgba(232,192,80,.38),inset 0 1px 0 rgba(255,255,255,.36);font-size:16px;line-height:1;text-decoration:none;flex-shrink:0;transition:transform .16s,filter .16s,box-shadow .16s}
 .advisor-sheet-link:hover{filter:brightness(1.08);box-shadow:0 0 22px rgba(232,192,80,.54),inset 0 1px 0 rgba(255,255,255,.42);transform:translateY(-1px)}
 .advisor-sheet-link:focus-visible{outline:2px solid rgba(255,238,190,.85);outline-offset:3px}
@@ -2812,10 +2812,10 @@ body::after{
     max-width:96vw;
     overflow:visible;
   }
-  .advisor-duo{min-height:204px;gap:14px;padding:4px 0 0}
+  .advisor-duo{min-height:204px;gap:10px;padding:4px 0 0}
   .advisor-duo-role{width:158px;flex:0 0 158px}
   .advisor-duo-role.pangtong,
-  .advisor-duo-role.zhuge{width:190px;flex:0 0 190px}
+  .advisor-duo-role.zhuge{width:calc((100% - 10px)/2);flex:0 1 calc((100% - 10px)/2)}
   .advisor-duo-stage{height:224px}
   .advisor-duo-role.pangtong .advisor-duo-stage,
   .advisor-duo-role.zhuge .advisor-duo-stage{height:190px}
@@ -2913,7 +2913,7 @@ body::after{
   .advisor-duo{min-height:194px;gap:10px;justify-content:center}
   .advisor-duo-role{width:148px;flex:0 0 148px}
   .advisor-duo-role.pangtong,
-  .advisor-duo-role.zhuge{width:180px;flex:0 0 180px}
+  .advisor-duo-role.zhuge{width:calc((100% - 10px)/2);flex:0 1 calc((100% - 10px)/2)}
   .advisor-duo-stage{height:210px}
   .advisor-duo-role.pangtong .advisor-duo-stage,
   .advisor-duo-role.zhuge .advisor-duo-stage{height:180px}
@@ -3011,8 +3011,6 @@ body::after{
 
 <!-- Particles -->
 <div class="particles" id="particles"></div>
-
-<button class="global-scroll-launcher" id="global-scroll-launcher" type="button" onclick="toggleGlobalScrollMenu(event)" title="導航" aria-label="導航" aria-expanded="false">🏯</button>
 
 <!-- 宮廷背景 -->
 <video id="bg-video" autoplay muted loop playsinline
@@ -3356,6 +3354,9 @@ body::after{
           <button class="advisor-duo-role pangtong" type="button" onclick="openAdvisorAIFromOrb(event)" title="龐統 · 軍師AI">
             <span class="advisor-duo-stage"><video class="advisor-duo-video" src="pangtongmenuv2.mp4" poster="pangtong.png" muted playsinline preload="auto" aria-label="龐統軍師"></video></span>
             <span class="advisor-web-verify-dot err" id="advisor-web-verify-dot" title="網頁驗證未通過" aria-label="網頁驗證未通過"></span>
+          </button>
+          <button class="advisor-duo-role zhuge" type="button" onclick="openAdvisorDialog(event)" title="諸葛 · 軍師">
+            <span class="advisor-duo-stage"><video class="advisor-duo-video" src="Kongmingmenuv2.mp4" poster="advisor-zhuge.png" muted playsinline preload="auto" aria-label="諸葛軍師"></video></span>
           </button>
         </div>
         <div class="hdr-char-vignette"></div>
@@ -13365,6 +13366,7 @@ initAdvisorDuoVideoPlayback();
     <img class="advisor-img" src="advisor-zhuge.png" alt="軍師" onclick="closeAdvisorDialog()">
     <div class="advisor-dialog">
       <button class="advisor-close" onclick="closeAdvisorDialog()">✕</button>
+      <button class="advisor-dialog-nav" id="global-scroll-launcher" type="button" onclick="toggleGlobalScrollMenu(event)" title="導航" aria-label="導航" aria-expanded="false">🏯</button>
       <div class="advisor-command-head">
         <div class="advisor-command-title">主公，請下令🏹</div>
       </div>
