@@ -7419,8 +7419,8 @@ async function initBookingForm(){
       <div class="form-grid booking-entry-grid">
         <div class="form-group hidden"><label class="form-label">記帳日期</label><input class="form-control" type="date" id="e-date" value="${today()}"></div>
         <div class="form-group booking-focus-amount"><label class="form-label">金額 (TWD)</label><input class="form-control" type="number" id="e-amount" placeholder="0" min="1"></div>
-        <div class="form-group"><label class="form-label">消費項目</label>${expenseCatChips}<div class="booking-chip-select-wrap hidden" data-booking-select-wrap="e-cat"><select class="form-control" id="e-cat" onchange="syncBookingQuickChip('e-cat')">${catOpts}</select></div></div>
-        <div class="form-group"><label class="form-label">支出帳戶</label>${expenseAccountChips}<div class="booking-chip-select-wrap hidden" data-booking-select-wrap="e-account"><select class="form-control" id="e-account" onchange="syncBookingQuickChip('e-account')">${accOpts}</select></div></div>
+        <div class="form-group"><label class="form-label">消費項目</label><div class="booking-chip-select-wrap" data-booking-select-wrap="e-cat"><select class="form-control" id="e-cat">${catOpts}</select></div></div>
+        <div class="form-group"><label class="form-label">支出帳戶</label><div class="booking-chip-select-wrap" data-booking-select-wrap="e-account"><select class="form-control" id="e-account">${accOpts}</select></div></div>
         <div class="form-group full"><label class="form-label">備註（選填）</label><input class="form-control" type="text" id="e-note" placeholder="備註..."></div>
       </div>
       <button class="submit-btn expense" id="btn-expense" type="button" onclick="submitExpense(event)">記錄支出</button>
