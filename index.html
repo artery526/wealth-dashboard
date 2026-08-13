@@ -940,14 +940,14 @@ body::after{
   z-index:8;
 }
 /* ── 軍師問候對話框 ──────────────────────────────────────────── */
-.advisor-overlay{position:fixed;inset:0;z-index:3000;display:flex;align-items:flex-start;justify-content:flex-start;padding:54px 0 0 20px;background:rgba(0,0,0,0);pointer-events:none;transition:background .3s}
+.advisor-overlay{position:fixed;inset:0;z-index:3000;display:flex;align-items:flex-start;justify-content:center;padding:26px 20px 20px;background:rgba(0,0,0,0);pointer-events:none;transition:background .3s}
 .advisor-overlay.open{background:rgba(0,0,0,.55);pointer-events:auto}
-.advisor-wrap{display:flex;align-items:flex-start;gap:0;transform:translateY(-140%);transition:transform .45s cubic-bezier(.22,1,.36,1)}
+.advisor-wrap{display:flex;flex-direction:column;align-items:center;gap:0;transform:translateY(-140%);transition:transform .45s cubic-bezier(.22,1,.36,1)}
 .advisor-overlay.open .advisor-wrap{transform:translateY(0)}
-.advisor-img{width:clamp(140px,28vw,220px);flex-shrink:0;display:block;object-fit:contain;object-position:bottom;background:transparent;filter:drop-shadow(0 0 24px rgba(232,192,80,.25));cursor:pointer}
-.advisor-dialog{margin-top:34px;margin-left:-8px;background:linear-gradient(145deg,#1a1005,#0f0a03);border:1.5px solid rgba(232,192,80,.55);border-radius:0 16px 16px 16px;box-shadow:0 8px 40px rgba(0,0,0,.7),inset 0 1px 0 rgba(232,192,80,.15);padding:18px 20px 14px;width:min(420px,calc(100vw - 178px));max-height:calc(100vh - 86px);overflow-y:auto;position:relative}
-.advisor-dialog::before{content:'';position:absolute;left:-10px;top:40px;border:5px solid transparent;border-right-color:rgba(232,192,80,.55)}
-.advisor-dialog::after{content:'';position:absolute;left:-8px;top:41px;border:4px solid transparent;border-right-color:#1a1005}
+.advisor-img{width:clamp(96px,14vw,142px);max-height:150px;flex-shrink:0;display:block;object-fit:contain;object-position:center bottom;background:transparent;filter:drop-shadow(0 0 24px rgba(232,192,80,.25));cursor:pointer;margin:0 auto -10px;position:relative;z-index:2}
+.advisor-dialog{margin:0;background:linear-gradient(145deg,#1a1005,#0f0a03);border:1.5px solid rgba(232,192,80,.55);border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,.7),inset 0 1px 0 rgba(232,192,80,.15);padding:18px 20px 14px;width:min(640px,calc(100vw - 40px));max-height:calc(100vh - 190px);overflow-y:auto;position:relative}
+.advisor-dialog::before{content:'';position:absolute;left:50%;top:-10px;transform:translateX(-50%);border:5px solid transparent;border-bottom-color:rgba(232,192,80,.55)}
+.advisor-dialog::after{content:'';position:absolute;left:50%;top:-8px;transform:translateX(-50%);border:4px solid transparent;border-bottom-color:#1a1005}
 .advisor-reminder-slot{margin-bottom:11px}
 .advisor-reminder-card{position:relative;overflow:hidden;border:1px solid rgba(232,192,80,.44);border-radius:8px;background:linear-gradient(135deg,rgba(45,30,10,.92),rgba(15,10,4,.92) 62%,rgba(37,21,8,.9));box-shadow:0 9px 24px rgba(0,0,0,.38),inset 0 1px 0 rgba(255,238,190,.12);padding:12px 13px 13px}
 .advisor-reminder-card::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 12% 0,rgba(232,192,80,.2),transparent 34%),linear-gradient(90deg,transparent,rgba(255,238,190,.05),transparent);pointer-events:none}
@@ -1107,6 +1107,11 @@ body::after{
 .advisor-dialog-nav{position:absolute;top:8px;right:42px;z-index:2;width:32px;height:32px;border:1px solid rgba(232,192,80,.58);border-radius:10px;background:linear-gradient(145deg,rgba(79,54,17,.94),rgba(22,13,5,.96));color:#f7e6b2;font-family:var(--sans);font-size:18px;line-height:1;cursor:pointer;box-shadow:0 0 14px rgba(232,192,80,.16),inset 0 1px 0 rgba(255,246,216,.2);transition:transform .16s,filter .16s,border-color .16s}
 .advisor-dialog-nav:hover,.advisor-dialog-nav:focus-visible{border-color:rgba(255,218,105,.95);filter:brightness(1.1);transform:translateY(-1px);outline:none}
 .advisor-dialog-nav:active{transform:translateY(0)}
+.advisor-dialog-tool-row{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin:0 0 10px}
+.advisor-dialog-tool{width:42px;height:36px;border:1px solid rgba(232,192,80,.48);border-radius:8px;background:linear-gradient(145deg,rgba(79,54,17,.9),rgba(22,13,5,.96));color:#f7e6b2;font-family:var(--sans);font-size:20px;line-height:1;cursor:pointer;box-shadow:0 0 14px rgba(232,192,80,.12),inset 0 1px 0 rgba(255,246,216,.18);transition:transform .16s,filter .16s,border-color .16s}
+.advisor-dialog-tool:hover,.advisor-dialog-tool:focus-visible{border-color:rgba(255,218,105,.95);filter:brightness(1.1);transform:translateY(-1px);outline:none}
+.advisor-dialog-tool:active{transform:translateY(0)}
+.advisor-dialog-tool-status{flex:1;min-width:0;font-family:var(--sans);font-size:11px;line-height:1.45;color:#9f8248;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .advisor-sheet-link{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border:1px solid rgba(255,226,138,.72);border-radius:50%;background:radial-gradient(circle at 34% 28%,#fff7c7 0 12%,#f2c94c 28%,#b98724 64%,#56360d 100%);box-shadow:0 0 16px rgba(232,192,80,.38),inset 0 1px 0 rgba(255,255,255,.36);font-size:16px;line-height:1;text-decoration:none;flex-shrink:0;transition:transform .16s,filter .16s,box-shadow .16s}
 .advisor-sheet-link:hover{filter:brightness(1.08);box-shadow:0 0 22px rgba(232,192,80,.54),inset 0 1px 0 rgba(255,255,255,.42);transform:translateY(-1px)}
 .advisor-sheet-link:focus-visible{outline:2px solid rgba(255,238,190,.85);outline-offset:3px}
@@ -1239,6 +1244,7 @@ body::after{
 .advisor-close{position:absolute;top:10px;right:12px;background:none;border:none;color:#5a4018;font-size:14px;cursor:pointer;transition:color .2s;line-height:1;padding:2px}
 .advisor-close:hover{color:var(--gold)}
 @media(max-width:480px){.advisor-overlay{padding:0;background:rgba(0,0,0,0);transition:background .18s}.advisor-overlay.open{background:rgba(0,0,0,.52)}.advisor-wrap{position:fixed;left:6px;top:108px;display:flex;align-items:flex-start;transform:translateY(-8px);opacity:0;pointer-events:none;transition:opacity .18s,transform .18s}.advisor-overlay.open .advisor-wrap{transform:translateY(0);opacity:1;pointer-events:auto}.advisor-img{width:124px;margin-top:-31px}.advisor-dialog{margin-top:0;margin-left:-14px;width:calc(100vw - 122px);max-height:calc(100vh - 128px);padding:12px 12px 10px;border-radius:0 14px 14px 14px}.advisor-dialog::before{top:42px}.advisor-dialog::after{top:43px}.advisor-command-head{gap:6px;margin-right:18px}.advisor-command-title{font-size:15px;letter-spacing:.5px}.advisor-reminder-card{padding:10px 11px 11px}.advisor-reminder-title{font-size:12px}.advisor-reminder-text{font-size:12px;line-height:1.68}.advisor-btn-grid{gap:8px}.advisor-menu-toggle{min-height:42px;font-size:16px;letter-spacing:2px}.advisor-menu-mark{width:20px;height:20px;font-size:11px}.advisor-btn-group{gap:6px;border-radius:7px}.advisor-menu-section.is-open .advisor-btn-group{padding:7px;max-height:220px}.advisor-btn{font-size:12px;padding:8px 4px;letter-spacing:0;gap:3px}.advisor-btn-tag{width:14px;height:14px;font-size:9px}.advisor-btn-spacer{min-height:32px}}
+@media(max-width:480px){.advisor-overlay{padding:10px 8px;justify-content:center}.advisor-wrap{left:8px;right:8px;top:54px;width:auto;align-items:center}.advisor-img{width:90px;max-height:102px;margin:0 auto -14px}.advisor-dialog{margin:0;width:100%;max-height:calc(100vh - 146px);border-radius:14px}.advisor-dialog::before{top:-9px}.advisor-dialog::after{top:-7px}.advisor-dialog-tool-row{margin-bottom:8px}.advisor-dialog-tool{width:40px;height:34px;font-size:18px}.advisor-dialog-tool-status{font-size:10px}}
 @media(max-width:480px){.advisor-ai-dividend-select{width:132px;flex:0 1 132px}.advisor-ai-dividend-quick-input{width:96px;flex:1 1 96px}.advisor-ai-dividend-quick-btn{width:42px;min-width:42px}}
 @media(max-width:480px){
   .advisor-ai-standalone{left:50%;top:142px;width:calc(100vw - 28px);padding:58px 14px 13px;border-radius:14px}
@@ -13363,7 +13369,7 @@ initAdvisorDuoVideoPlayback();
 <!-- ── 軍師問候對話框 ────────────────────────────────────────── -->
 <div class="advisor-overlay" id="advisor-overlay" onclick="advisorOverlayClick(event)">
   <div class="advisor-wrap" id="advisor-wrap">
-    <img class="advisor-img" src="advisor-zhuge.png" alt="軍師" onclick="closeAdvisorDialog()">
+    <img class="advisor-img" src="advisor-zhuge.png" alt="諸葛亮軍師" onclick="closeAdvisorDialog()">
     <div class="advisor-dialog">
       <button class="advisor-close" onclick="closeAdvisorDialog()">✕</button>
       <button class="advisor-dialog-nav" id="global-scroll-launcher" type="button" onclick="toggleGlobalScrollMenu(event)" title="導航" aria-label="導航" aria-expanded="false">🏯</button>
@@ -13372,6 +13378,11 @@ initAdvisorDuoVideoPlayback();
       </div>
       <div class="advisor-date-slot" id="advisor-date-slot"></div>
       <div class="advisor-world-slot" id="advisor-world-slot"></div>
+      <div class="advisor-dialog-tool-row" aria-label="諸葛軍師工具">
+        <span class="advisor-dialog-tool-status" id="advisor-dialog-tool-status" aria-live="polite"></span>
+        <button class="advisor-dialog-tool" type="button" onclick="advisorAIOpenVideoDownload()" title="影片下載" aria-label="影片下載">📽️</button>
+        <button class="advisor-dialog-tool" type="button" onclick="advisorAIOpenDatabaseSheet()" title="進入試算表" aria-label="進入試算表">📂</button>
+      </div>
       <div class="advisor-btn-grid advisor-card-shortcuts-moved">
         <section class="advisor-menu-section">
           <button class="advisor-menu-toggle" type="button" onclick="toggleAdvisorMenuGroup(this)" aria-expanded="false"><span class="advisor-menu-mark">糧</span>糧倉<span class="advisor-menu-caret">▼</span></button>
@@ -13441,6 +13452,11 @@ function closeAdvisorAIStandalone(){
   }
   if(advisorShortcutOpenKind==='ai')advisorShortcutOpenKind='';
   advisorAIScheduleOpen=false;
+}
+function closeAdvisorAIActivePanel(){
+  var standalone=advisorAIStandalonePanel();
+  if(standalone&&standalone.classList.contains('open'))closeAdvisorAIStandalone();
+  else closeAdvisorShortcutPanel();
 }
 function mountAdvisorDateStatus(){
   var slot=document.getElementById('advisor-date-slot');
@@ -13844,7 +13860,7 @@ function advisorAIScheduleHeaderFunds(){
 function advisorAIHeaderHtml(title){
   var fundsCache=advisorAIGetHeaderFundsCache();
   advisorAIScheduleHeaderFunds();
-  return `<button class="advisor-ai-close" type="button" onclick="closeAdvisorAIStandalone()" aria-label="關閉軍師AI">×</button>
+  return `<button class="advisor-ai-close" type="button" onclick="closeAdvisorAIActivePanel()" aria-label="關閉軍師AI">×</button>
     <button class="advisor-ai-config-btn" type="button" onclick="openAdvisorAISettings(event)" title="API 與 WRITE_TOKEN 設定" aria-label="API 與 WRITE_TOKEN 設定">&#9881;</button>
     <div class="advisor-ai-head-row">
       <div class="advisor-ai-quick-tools">
@@ -14118,12 +14134,6 @@ function openAdvisorAI(targetPanel){
     <div class="advisor-ai-row">
       <input class="advisor-ai-input" id="advisor-ai-input" type="text" placeholder="輸入指令…" onkeydown="advisorAIKey(event)">
       <button class="advisor-shortcut-submit" id="advisor-ai-submit" type="button" onclick="runAdvisorAICommand(this)">執行</button>
-    </div>
-    <div class="advisor-ai-tool-row advisor-ai-tool-squares">
-      <button class="advisor-shortcut-secondary advisor-ai-tool-square advisor-ai-sheet-button" type="button" onclick="advisorAIOpenDatabaseSheet()">資料</button>
-      <button class="advisor-shortcut-secondary advisor-ai-tool-square advisor-ai-video-download" type="button" onclick="advisorAIOpenVideoDownload()">下載</button>
-      <button class="advisor-shortcut-secondary advisor-ai-tool-square advisor-ai-dividend-calc" type="button" onclick="openEmpireCardShortcut(event,'finance','div-calc')">試算</button>
-      <button class="advisor-shortcut-secondary advisor-ai-tool-square advisor-ai-battle-brief" type="button" onclick="openEmpireCardShortcut(event,'council','battle-brief')">戰情</button>
     </div>
     ${advisorAIExamplesHtml()}
     <div class="advisor-shortcut-msg" id="advisor-ai-msg"></div>`;
@@ -14645,8 +14655,8 @@ function advisorAICommand(raw){
 }
 
 function advisorAISetMessage(text,type){
-  var msg=document.getElementById('advisor-ai-msg')||document.getElementById('advisor-shortcut-msg');
-  if(msg){msg.textContent=text;msg.className='advisor-shortcut-msg '+(type||'');}
+  var msg=document.getElementById('advisor-ai-msg')||document.getElementById('advisor-shortcut-msg')||document.getElementById('advisor-dialog-tool-status');
+  if(msg){msg.textContent=text;msg.className=(msg.id==='advisor-dialog-tool-status'?'advisor-dialog-tool-status ':'advisor-shortcut-msg ')+(type||'');}
 }
 
 function advisorAIResultHtml(title,lines){
@@ -14664,12 +14674,13 @@ function advisorAIVideoDownloaderUrl(sourceUrl){
 function advisorAIOpenVideoDownload(){
   var panel=advisorAIActivePanel();
   if(!panel)return;
+  var isStandalone=panel===advisorAIStandalonePanel();
   advisorShortcutOpenKind='ai-video-download';
   advisorDividendSelection=null;
   advisorDividendMemoPending=null;
   advisorAIScheduleOpen=false;
   panel.innerHTML=`${advisorAIHeaderHtml()}
-    <div class="advisor-ai-portrait"><img class="advisor-ai-portrait-img" src="pangtong.png" alt="龐統軍師"></div>
+    ${isStandalone?'<div class="advisor-ai-portrait"><img class="advisor-ai-portrait-img" src="pangtong.png" alt="龐統軍師"></div>':''}
     <div class="advisor-shortcut-hint">貼上 TikTok、Threads 或 Facebook 影片連結；軍師會複製原連結，並開啟對應下載頁。</div>
     <div class="advisor-shortcut-field">
       <label>影片連結</label>
