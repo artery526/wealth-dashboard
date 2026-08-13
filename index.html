@@ -1926,6 +1926,12 @@ body::after{
 .booking-transfer-grid.stock-mode .transfer-shares-field{display:block;grid-column:1/-1;grid-row:4}
 .booking-transfer-grid.stock-mode .booking-chip-row{display:none}
 .booking-transfer-grid.stock-mode .booking-chip-select-wrap.hidden{display:block!important}
+.booking-transfer-grid:not(.stock-mode){grid-template-columns:1fr 1fr}
+.booking-transfer-grid:not(.stock-mode) .transfer-from-field{grid-column:1;grid-row:1}
+.booking-transfer-grid:not(.stock-mode) .transfer-to-field{grid-column:2;grid-row:1}
+.booking-transfer-grid:not(.stock-mode) .transfer-amount-field{grid-column:1/-1;grid-row:2}
+.booking-transfer-grid:not(.stock-mode) .booking-chip-row{display:none}
+.booking-transfer-grid:not(.stock-mode) .booking-chip-select-wrap.hidden{display:block!important}
 .booking-income-grid{grid-template-columns:1fr 1fr}
 .booking-income-grid .income-wide{grid-column:1/-1}
 .booking-transfer-mode .booking-mode-btn.buy.active{border-color:rgba(216,90,48,.65);background:var(--coral-l);color:var(--coral);box-shadow:0 0 12px rgba(216,90,48,.16)}
@@ -7484,8 +7490,8 @@ async function initBookingForm(){
         <div class="form-grid booking-transfer-grid">
           <div class="form-group hidden"><label class="form-label">記帳日期</label><input class="form-control" type="date" id="a-date" value="${today()}"></div>
           <div class="form-group booking-focus-amount transfer-amount-field"><label class="form-label">金額 (TWD)</label><input class="form-control" type="number" id="a-amount" placeholder="0" min="1"></div>
-          <div class="form-group transfer-from-field"><div class="form-label booking-source-label"><span id="a-from-label">轉出帳戶</span><span class="booking-dividend-anchor"><button class="booking-dividend-mini" type="button" onclick="event.stopPropagation();openBookingHoldingTradePicker()">待入帳<span class="booking-mini-badge" id="booking-holding-trade-badge"></span></button><span class="booking-dividend-pending" id="booking-holding-trade-picker"></span></span></div>${transferFromChips}<div class="booking-chip-select-wrap hidden" data-booking-select-wrap="a-from"><select class="form-control" id="a-from" onchange="syncBookingQuickChip('a-from')">${accOpts}</select></div></div>
-          <div class="form-group transfer-to-field"><label class="form-label" id="a-to-label">轉入帳戶</label>${transferToChips}<div class="booking-chip-select-wrap hidden" data-booking-select-wrap="a-to"><select class="form-control" id="a-to" onchange="syncBookingQuickChip('a-to')">${accOpts}</select></div></div>
+          <div class="form-group transfer-from-field"><div class="form-label booking-source-label"><span id="a-from-label">轉出帳戶</span><span class="booking-dividend-anchor"><button class="booking-dividend-mini" type="button" onclick="event.stopPropagation();openBookingHoldingTradePicker()">待入帳<span class="booking-mini-badge" id="booking-holding-trade-badge"></span></button><span class="booking-dividend-pending" id="booking-holding-trade-picker"></span></span></div><select class="form-control" id="a-from" onchange="syncBookingQuickChip('a-from')">${accOpts}</select></div>
+          <div class="form-group transfer-to-field"><label class="form-label" id="a-to-label">轉入帳戶</label><select class="form-control" id="a-to" onchange="syncBookingQuickChip('a-to')">${accOpts}</select></div>
           <div class="form-group full hidden transfer-stock-type-field" id="merged-stock-fields">
             <div class="booking-stock-fields">
               <div class="form-label">交易類型</div>
