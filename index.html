@@ -7788,8 +7788,29 @@ function toggleDivFields(){
   var src=document.getElementById('i-source');
   var isInv=src&&isInvestSrc(src.value);
   document.getElementById('i-div-rate-grp').classList.toggle('hidden',!isInv);
-  document.getElementById('i-div-sym-grp').classList.toggle('hidden',!isInv);
+  document.getElementById('i-div-sym-grp').classList.add('hidden');
+  syncIncomeDividendSymbolFromAccount();
   syncDivNote();
+}
+function incomeHoldingSymbolFromAccount(value){
+  var raw=String(value||'').trim();
+  if(!raw)return '';
+  var symbols=normalizeBookingSymbolList((cfg&&cfg.holdings&&cfg.holdings.length)?cfg.holdings:[]);
+  var found=symbols.find(function(item){return bookingOptionMatches(raw,item.value)||bookingOptionMatches(raw,item.label);});
+  if(found)return normalizeKey(found.value);
+  var normalized=normalizeKey(raw);
+  return isBookingKnownCashAccount(raw)||normalized==='國泰Stock'?'':normalized;
+}
+function syncIncomeDividendSymbolFromAccount(){
+  var account=document.getElementById('i-account');
+  var divSym=document.getElementById('i-div-sym');
+  var source=document.getElementById('i-source');
+  if(!account||!divSym||!source)return '';
+  if(!isInvestSrc(source.value)){divSym.value='';return '';}
+  var symbol=incomeHoldingSymbolFromAccount(account.value);
+  var display=getDividendDisplayValue(symbol,divSym);
+  divSym.value=display||'';
+  return divSym.value;
 }
 function syncDivNote(){
   var s=document.getElementById('i-div-sym');
@@ -9208,6 +9229,7 @@ function formatDividendUsdForInput(value){
 async function onIncomeAccountChange(){
   var acc=document.getElementById('i-account');
   if(!acc)return;
+  syncIncomeDividendSymbolFromAccount();
   var symbol=normalizeKey(acc.value);
   if(!isDividendAutofillSymbol(symbol))return clearIncomeDividendAutofill();
   try{
@@ -9429,10 +9451,13 @@ async function submitIncome(e){
   var note=document.getElementById('i-note').value;
   var divRate=document.getElementById('i-div-rate')?document.getElementById('i-div-rate').value:'';
   var divSym=document.getElementById('i-div-sym')?document.getElementById('i-div-sym').value:'';
-  if(isInvestSrc(src))note=syncDivNote();
+  if(isInvestSrc(src)){
+    divSym=syncIncomeDividendSymbolFromAccount()||divSym;
+    note=syncDivNote();
+  }
   var dividendRowId=(document.getElementById('i-amount')&&document.getElementById('i-amount').dataset.dividendRowId)||'';
   if(!date||!src||!acc||amt<=0){showMsg('msg-income','請填寫所有必填欄位','err');return}
-  if(isInvestSrc(src)&&!divSym){showMsg('msg-income','請選擇配息標的','err');return}
+  if(isInvestSrc(src)&&!divSym){showMsg('msg-income','請選擇持股標的作為入帳帳戶','err');return}
   btn.disabled=true;btn.textContent='記錄中…';
   try{
     await apiPost({action:'income',date:date.replace(/-/g,'/'),source:src,account:acc,amount:amt,note,divRate,divSymbol:divSym,
