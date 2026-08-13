@@ -3775,8 +3775,17 @@ var BOOKING_FALLBACK_CATEGORIES = ['🛒全聯食材','🍴超商外食','🍔�
 var BOOKING_FALLBACK_SOURCES = ['👷工作所得','💰投資理財','🪙副業兼職','💲交易所得','🤶爸媽收入','🪙機構退稅'];
 var BOOKING_FALLBACK_ACCOUNTS = ['💰Cash','💵國泰Stock','🔖中國信託','🟡將來銀行','🏔️玉山銀行','🟥永豐銀行','🌳國泰Money','💳Cube','🧚Sis 國泰世華'];
 var holdingsCache = [];
-var dividendCenterCache = null;
-var dividendCenterFetchedAt = 0;
+var DIVIDEND_CENTER_STORAGE_KEY='wealth_dividend_center_v1';
+function readDividendCenterStorageCache(){
+  try{
+    var packed=JSON.parse(localStorage.getItem(DIVIDEND_CENTER_STORAGE_KEY)||'null');
+    if(!packed||!packed.data)return null;
+    return {data:packed.data,savedAt:Number(packed.savedAt)||0};
+  }catch(e){return null;}
+}
+var dividendCenterStorageCache=readDividendCenterStorageCache();
+var dividendCenterCache=dividendCenterStorageCache&&dividendCenterStorageCache.data||null;
+var dividendCenterFetchedAt=dividendCenterStorageCache&&dividendCenterStorageCache.savedAt||0;
 var DIVIDEND_CENTER_TIMEOUT_MS = 45000;
 var bookingDividendHiddenRows = {};
 var bookingDividendExpanded = false;
@@ -9139,6 +9148,7 @@ async function loadDividendCenter(force){
   var data=await apiGet({action:'dividendCenter'},DIVIDEND_CENTER_TIMEOUT_MS);
   dividendCenterCache=data||{rows:[],pending:[],holdingTradePending:[],monthlyTotal:0,settingFx:32.5,dividendHoldings:[]};
   dividendCenterFetchedAt=now;
+  try{localStorage.setItem(DIVIDEND_CENTER_STORAGE_KEY,JSON.stringify({savedAt:now,data:dividendCenterCache}));}catch(e){}
   updateBookingPendingBadges(dividendCenterCache);
   return dividendCenterCache;
 }
@@ -14022,13 +14032,23 @@ async function advisorAIRecordQuickTransfer(btn){
 }
 
 function advisorAIDividendQuickSelectHtml(){
-  var holdings=(dividendCenterCache&&dividendCenterCache.dividendHoldings)||[];
+  var holdings=advisorAIDividendQuickAvailableHoldings();
   var options=holdings.map(function(row){
     return `<option value="${esc(row.symbol||'')}">${esc(row.displaySymbol||row.symbol||'')}</option>`;
   }).join('');
   return `<select class="advisor-ai-dividend-select" id="advisor-ai-dividend-select" onchange="advisorAISelectQuickDividend(this)" aria-label="龐統配息標的">
     <option value="">配息標的${holdings.length?'':'（載入中）'}</option>${options}
   </select>`;
+}
+
+function advisorAIDividendQuickAvailableHoldings(){
+  var holdings=(dividendCenterCache&&dividendCenterCache.dividendHoldings)||[];
+  if(holdings.length)return holdings;
+  var source=(cfg&&cfg.dividendSymbols&&cfg.dividendSymbols.length)?cfg.dividendSymbols:
+    ((cfg&&cfg.holdings&&cfg.holdings.length)?cfg.holdings:(typeof DIVIDEND_SYMBOLS!=='undefined'?DIVIDEND_SYMBOLS:[]));
+  return normalizeBookingSymbolList(source).map(function(row){
+    return {symbol:row.value,displaySymbol:row.label,shares:0};
+  });
 }
 
 function advisorAISetQuickDividendStatus(message,type){
@@ -14045,11 +14065,19 @@ function advisorAIRefreshDividendQuickSelect(data){
     return `<option value="${esc(row.symbol||'')}">${esc(row.displaySymbol||row.symbol||'')}</option>`;
   }).join('');
   if(current&&holdings.some(function(row){return String(row.symbol||'')===current;}))select.value=current;
+  if(select.value){
+    advisorDividendQuickHolding=advisorAIQuickDividendHolding(select.value,data||{});
+    advisorAIUpdateQuickDividendEstimate();
+  }
 }
 
 function advisorAILoadDividendQuickOptions(force){
   if(!webVerifyIsAuthorized())return Promise.resolve(null);
-  if(!force&&dividendCenterCache){advisorAIRefreshDividendQuickSelect(dividendCenterCache);return Promise.resolve(dividendCenterCache);}
+  var select=document.getElementById('advisor-ai-dividend-select');
+  if(select&&!force)advisorAIRefreshDividendQuickSelect(dividendCenterCache||{});
+  if(!force&&dividendCenterCache&&(Date.now()-dividendCenterFetchedAt)<DIVIDEND_CACHE_TTL){
+    return Promise.resolve(dividendCenterCache);
+  }
   if(advisorDividendQuickPromise)return advisorDividendQuickPromise;
   advisorDividendQuickPromise=loadDividendCenter(false).then(function(data){
     advisorAIRefreshDividendQuickSelect(data);
