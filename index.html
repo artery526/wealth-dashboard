@@ -1209,6 +1209,10 @@ body::after{
 .advisor-ai-quick-transfer-submit{width:42px;height:38px;border:1px solid rgba(29,158,117,.48);border-radius:7px;background:rgba(29,158,117,.12);color:#a8f1d6;font-size:20px;line-height:1;cursor:pointer}
 .advisor-ai-quick-transfer-submit:hover{background:rgba(29,158,117,.2)}
 .advisor-ai-quick-transfer-submit:disabled{opacity:.55;cursor:wait}
+.advisor-ai-quick-transfer-title-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.advisor-ai-quick-transfer-title-row .advisor-shortcut-title{margin:0}
+.advisor-ai-quick-transfer-close{width:30px;height:30px;border:1px solid rgba(232,192,80,.4);border-radius:7px;background:rgba(232,192,80,.08);color:var(--gold);font-size:18px;font-weight:900;line-height:1;cursor:pointer}
+.advisor-ai-quick-transfer-close:hover{background:rgba(232,192,80,.18);border-color:rgba(232,192,80,.7)}
 .advisor-ai-input{flex:1;min-width:0;border:1px solid #2a1c08;border-radius:7px;background:#0a0804;color:var(--ink);font-family:var(--sans);font-size:14px;padding:10px 11px;outline:none}
 .advisor-ai-input:focus{border-color:var(--gold2)}
 .advisor-ai-portrait{position:absolute;left:-204px;top:-62px;width:220px;pointer-events:none;z-index:1}
@@ -13949,7 +13953,7 @@ function advisorAIOpenQuickTransfer(){
   advisorDividendQuickSelection=null;
   advisorDividendQuickHolding=null;
   panel.innerHTML=`${advisorAIHeaderHtml()}
-    <div class="advisor-shortcut-title" aria-label="快速轉帳">💲🔁💲</div>
+    <div class="advisor-ai-quick-transfer-title-row"><div class="advisor-shortcut-title" aria-label="快速轉帳">💲🔁💲</div><button class="advisor-ai-quick-transfer-close" type="button" onclick="openAdvisorAI()" title="返回龐統軍師" aria-label="返回龐統軍師">×</button></div>
     <div class="advisor-ai-quick-transfer-form">
       <div class="advisor-ai-quick-transfer-field"><label class="advisor-ai-quick-transfer-label">轉出帳戶</label><select class="advisor-ai-quick-transfer-select" id="advisor-ai-quick-transfer-from">${advisorAIQuickTransferAccountsHtml()}</select></div>
       <div class="advisor-ai-quick-transfer-field"><label class="advisor-ai-quick-transfer-label">轉入帳戶</label><select class="advisor-ai-quick-transfer-select" id="advisor-ai-quick-transfer-to">${advisorAIQuickTransferAccountsHtml()}</select></div>
