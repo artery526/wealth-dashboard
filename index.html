@@ -1859,7 +1859,7 @@ body::after{
 
 /* ── Quick Booking ── */
 .btabs{display:none}
-.booking-interface-tabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0;margin-bottom:14px;background:#0a0804;border:1px solid #2a1c08;border-radius:6px;overflow:hidden}
+.booking-interface-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;margin-bottom:14px;background:#0a0804;border:1px solid #2a1c08;border-radius:6px;overflow:hidden}
 .booking-interface-tab{min-width:0;padding:9px 5px;border:0;border-right:1px solid #2a1c08;background:transparent;color:#5a4018;font-family:var(--sans);font-size:12px;font-weight:900;letter-spacing:1px;cursor:pointer;transition:all .2s}
 .booking-interface-tab:last-child{border-right:0}
 .booking-interface-tab.expense.active{background:var(--coral-l);color:var(--coral)}
@@ -1867,6 +1867,7 @@ body::after{
 .booking-interface-tab.transfer.active{background:rgba(124,111,192,.12);color:var(--purple)}
 .booking-interface-tab.buy.active{background:var(--coral-l);color:var(--coral)}
 .booking-interface-tab.sell.active{background:var(--teal-l);color:var(--teal)}
+.booking-interface-tab.stock.active{background:rgba(124,111,192,.12);color:var(--purple)}
 .btab{
   flex:1;padding:9px;border:none;background:transparent;
   font-family:var(--sans);font-size:11px;font-weight:700;color:#5a4018;
@@ -1917,6 +1918,13 @@ body::after{
 .booking-preset-card:hover{border-color:rgba(232,192,80,.58);background:rgba(232,192,80,.09);box-shadow:0 0 14px rgba(232,192,80,.12);transform:translateY(-1px)}
 .booking-focus-amount .form-control[type="number"]{border-color:rgba(232,192,80,.48);box-shadow:inset 0 0 0 1px rgba(232,192,80,.08)}
 .booking-transfer-mode{grid-template-columns:repeat(3,minmax(0,1fr))}
+.booking-transfer-grid.stock-mode{grid-template-columns:1fr 1fr}
+.booking-transfer-grid.stock-mode .transfer-stock-type-field{grid-column:1/-1;grid-row:1}
+.booking-transfer-grid.stock-mode .transfer-from-field{grid-column:1;grid-row:2}
+.booking-transfer-grid.stock-mode .transfer-to-field{grid-column:2;grid-row:2}
+.booking-transfer-grid.stock-mode .transfer-amount-field{grid-column:1/-1;grid-row:3}
+.booking-transfer-grid.stock-mode .booking-chip-row{display:none}
+.booking-transfer-grid.stock-mode .booking-chip-select-wrap.hidden{display:block!important}
 .booking-transfer-mode .booking-mode-btn.buy.active{border-color:rgba(216,90,48,.65);background:var(--coral-l);color:var(--coral);box-shadow:0 0 12px rgba(216,90,48,.16)}
 .booking-transfer-mode .booking-mode-btn.sell.active{border-color:rgba(29,158,117,.62);background:var(--teal-l);color:var(--teal);box-shadow:0 0 12px rgba(29,158,117,.16)}
 .booking-stock-toggle{width:100%;border:1px solid rgba(124,111,192,.45);border-radius:8px;background:rgba(124,111,192,.08);color:#bcb5ff;font-family:var(--sans);font-size:13px;font-weight:900;letter-spacing:1px;padding:10px 12px;margin-top:8px;cursor:pointer}
@@ -7434,8 +7442,7 @@ async function initBookingForm(){
       <button class="booking-interface-tab expense active" type="button" data-booking-interface="expense" onclick="setBookingInterfaceMode('expense')">支出</button>
       <button class="booking-interface-tab income" type="button" data-booking-interface="income" onclick="setBookingInterfaceMode('income')">收入</button>
       <button class="booking-interface-tab transfer" type="button" data-booking-interface="transfer" onclick="setBookingInterfaceMode('transfer')">轉帳</button>
-      <button class="booking-interface-tab buy" type="button" data-booking-interface="buy" onclick="setBookingInterfaceMode('buy')">買入</button>
-      <button class="booking-interface-tab sell" type="button" data-booking-interface="sell" onclick="setBookingInterfaceMode('sell')">賣出</button>
+      <button class="booking-interface-tab stock" type="button" data-booking-interface="stock" onclick="setBookingInterfaceMode('stock')">股票</button>
     </div>
     <!-- 收入支出：支出模式 -->
     <div class="bform active" id="bf-expense">
@@ -7472,10 +7479,10 @@ async function initBookingForm(){
       <div class="booking-transfer-section bank booking-transfer-pane active" id="transfer-account-pane">
         <div class="form-grid booking-transfer-grid">
           <div class="form-group hidden"><label class="form-label">記帳日期</label><input class="form-control" type="date" id="a-date" value="${today()}"></div>
-          <div class="form-group booking-focus-amount"><label class="form-label">金額 (TWD)</label><input class="form-control" type="number" id="a-amount" placeholder="0" min="1" oninput="calculateStockTradeFromPrice('amount')"></div>
-          <div class="form-group"><div class="form-label booking-source-label"><span id="a-from-label">轉出帳戶</span><span class="booking-dividend-anchor"><button class="booking-dividend-mini" type="button" onclick="event.stopPropagation();openBookingHoldingTradePicker()">待入帳<span class="booking-mini-badge" id="booking-holding-trade-badge"></span></button><span class="booking-dividend-pending" id="booking-holding-trade-picker"></span></span></div>${transferFromChips}<div class="booking-chip-select-wrap hidden" data-booking-select-wrap="a-from"><select class="form-control" id="a-from" onchange="syncBookingQuickChip('a-from')">${accOpts}</select></div></div>
-          <div class="form-group"><label class="form-label" id="a-to-label">轉入帳戶</label>${transferToChips}<div class="booking-chip-select-wrap hidden" data-booking-select-wrap="a-to"><select class="form-control" id="a-to" onchange="syncBookingQuickChip('a-to')">${accOpts}</select></div></div>
-          <div class="form-group full hidden" id="merged-stock-fields">
+          <div class="form-group booking-focus-amount transfer-amount-field"><label class="form-label">金額 (TWD)</label><input class="form-control" type="number" id="a-amount" placeholder="0" min="1" oninput="calculateStockTradeFromPrice('amount')"></div>
+          <div class="form-group transfer-from-field"><div class="form-label booking-source-label"><span id="a-from-label">轉出帳戶</span><span class="booking-dividend-anchor"><button class="booking-dividend-mini" type="button" onclick="event.stopPropagation();openBookingHoldingTradePicker()">待入帳<span class="booking-mini-badge" id="booking-holding-trade-badge"></span></button><span class="booking-dividend-pending" id="booking-holding-trade-picker"></span></span></div>${transferFromChips}<div class="booking-chip-select-wrap hidden" data-booking-select-wrap="a-from"><select class="form-control" id="a-from" onchange="syncBookingQuickChip('a-from')">${accOpts}</select></div></div>
+          <div class="form-group transfer-to-field"><label class="form-label" id="a-to-label">轉入帳戶</label>${transferToChips}<div class="booking-chip-select-wrap hidden" data-booking-select-wrap="a-to"><select class="form-control" id="a-to" onchange="syncBookingQuickChip('a-to')">${accOpts}</select></div></div>
+          <div class="form-group full hidden transfer-stock-type-field" id="merged-stock-fields">
             <div class="booking-stock-fields">
               <div class="form-label">交易類型</div>
               <div class="booking-trade-type-row">
@@ -7634,13 +7641,13 @@ function setBookingInterfaceTab(key){
 }
 
 function setBookingInterfaceMode(key){
-  var mode=key==='buy'||key==='sell'||key==='transfer'?key:(key==='income'?'income':'expense');
-  setBookingInterfaceTab(mode);
-  if(mode==='buy'||mode==='sell'){
+  var mode=key==='stock'||key==='buy'||key==='sell'||key==='transfer'?key:(key==='income'?'income':'expense');
+  setBookingInterfaceTab(mode==='buy'||mode==='sell'?'stock':mode);
+  if(mode==='stock'||mode==='buy'||mode==='sell'){
     document.querySelectorAll('.bform').forEach(function(form){form.classList.remove('active');});
     var transferPane=document.getElementById('bf-transfer');
     if(transferPane)transferPane.classList.add('active');
-    setTransferEntryMode(mode);
+    setTransferEntryMode(mode==='stock'?'buy':mode);
     return;
   }
   if(mode==='transfer'){
@@ -7738,9 +7745,11 @@ function isMergedStockTrade(){
 
 function setMergedStockTrade(open){
   var fields=document.getElementById('merged-stock-fields');
+  var grid=document.querySelector('.booking-transfer-grid');
   var btn=document.getElementById('btn-stock-toggle');
   var submit=document.getElementById('btn-transfer');
   if(fields)fields.classList.toggle('hidden',!open);
+  if(grid)grid.classList.toggle('stock-mode',!!open);
   if(btn){
     btn.classList.toggle('active',!!open);
     btn.textContent=open?'股票交易：開':'股票交易';
