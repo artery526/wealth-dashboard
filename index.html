@@ -249,8 +249,9 @@ body::after{
 .global-scroll-menu-subtitle{margin-top:3px;color:#bca66f;font-family:var(--sans);font-size:12px;font-weight:700}
 .global-scroll-menu-close{position:relative;z-index:6;flex:0 0 auto;width:36px;height:36px;border:1px solid rgba(232,192,80,.58);border-radius:50%;background:rgba(0,0,0,.42);color:#f6df9c;font-size:23px;line-height:1;cursor:pointer;pointer-events:auto;touch-action:manipulation}
 .global-scroll-menu-close:hover{border-color:rgba(255,220,112,.9);background:rgba(232,192,80,.12)}
-.advisor-ai-palace-nav{width:100%;min-height:40px;margin:8px 0 12px;border:1px solid rgba(232,192,80,.48);border-radius:8px;background:linear-gradient(180deg,rgba(82,57,20,.74),rgba(22,14,6,.9));color:#f4e5b7;font-family:var(--sans);font-size:14px;font-weight:900;letter-spacing:2px;cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,246,216,.14),0 5px 14px rgba(0,0,0,.25);transition:border-color .18s,filter .18s,transform .18s}
-.advisor-ai-palace-nav:hover,.advisor-ai-palace-nav:focus-visible{border-color:rgba(255,218,105,.9);filter:brightness(1.08);transform:translateY(-1px);outline:none}
+.global-scroll-launcher{position:fixed;left:clamp(12px,3vw,42px);top:clamp(132px,25vh,286px);z-index:40;width:48px;height:48px;border:1px solid rgba(232,192,80,.68);border-radius:12px;background:linear-gradient(145deg,rgba(79,54,17,.94),rgba(22,13,5,.96));color:#f7e6b2;font-family:var(--sans);font-size:24px;line-height:1;cursor:pointer;box-shadow:0 8px 22px rgba(0,0,0,.42),0 0 18px rgba(232,192,80,.16),inset 0 1px 0 rgba(255,246,216,.2);transition:transform .16s,filter .16s,border-color .16s}
+.global-scroll-launcher:hover,.global-scroll-launcher:focus-visible{border-color:rgba(255,218,105,.95);filter:brightness(1.1);transform:translateY(-2px);outline:none}
+.global-scroll-launcher:active{transform:translateY(0)}
 .global-scroll-groups{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;min-height:0;overflow-y:auto;padding-right:2px}
 .global-scroll-group{border:1px solid rgba(190,144,50,.3);border-radius:11px;background:rgba(9,6,3,.42);padding:10px}
 .global-scroll-group-title{display:none}
@@ -3011,6 +3012,8 @@ body::after{
 
 <!-- Particles -->
 <div class="particles" id="particles"></div>
+
+<button class="global-scroll-launcher" id="global-scroll-launcher" type="button" onclick="toggleGlobalScrollMenu(event)" title="導航" aria-label="導航" aria-expanded="false">🏯</button>
 
 <!-- 宮廷背景 -->
 <video id="bg-video" autoplay muted loop playsinline
@@ -13845,7 +13848,6 @@ function advisorAIHeaderHtml(title){
     <div class="advisor-ai-head-row">
       <div class="advisor-ai-quick-tools">
         ${advisorAIQuickCommandSelectHtml()}
-        <button class="advisor-ai-palace-nav" type="button" onclick="toggleGlobalScrollMenu(event)" title="導航" aria-label="導航">🏯</button>
       </div>
       <div class="advisor-ai-title-wrap">
         <div class="advisor-ai-funds" id="advisor-ai-funds">${advisorAIHeaderFundsHtml(fundsCache&&fundsCache.cash,fundsCache&&fundsCache.stock,fundsCache&&fundsCache.cube)}</div>
