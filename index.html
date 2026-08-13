@@ -1201,6 +1201,16 @@ body::after{
 .advisor-ai-dividend-quick-status-panel{display:block;flex:none;min-height:17px;margin:0 0 8px;padding:0 4px;white-space:normal;overflow:visible;text-overflow:clip}
 .advisor-ai-dividend-quick-status.ok{color:#8ce6c6}
 .advisor-ai-dividend-quick-status.err{color:var(--coral)}
+.advisor-ai-expense-quick-row{display:flex;align-items:center;gap:7px;margin:0 0 10px}
+.advisor-ai-expense-quick-select,.advisor-ai-expense-quick-amount{height:38px;min-width:0;border:1px solid rgba(232,192,80,.38);border-radius:7px;background:#0a0804;color:#fff0b0;font-family:var(--sans);font-size:12px;font-weight:800;padding:7px;outline:none}
+.advisor-ai-expense-quick-select{flex:1 1 0}
+.advisor-ai-expense-quick-amount{width:94px;flex:0 1 94px;font-family:var(--mono)}
+.advisor-ai-expense-quick-select:focus,.advisor-ai-expense-quick-amount:focus{border-color:var(--gold2)}
+.advisor-ai-expense-quick-btn{width:42px;min-width:42px;height:38px;border:1px solid rgba(29,158,117,.48);border-radius:7px;background:rgba(29,158,117,.12);color:#a8f1d6;font-size:20px;line-height:1;cursor:pointer}
+.advisor-ai-expense-quick-btn:hover{background:rgba(29,158,117,.2)}
+.advisor-ai-expense-quick-btn:disabled{opacity:.55;cursor:wait}
+.advisor-ai-expense-quick-status{min-height:0;margin:-5px 4px 8px;font-family:var(--sans);font-size:11px;line-height:1.5;text-align:center;color:#b99651}
+.advisor-ai-expense-quick-status.ok{color:#8ce6c6}.advisor-ai-expense-quick-status.err{color:var(--coral)}
 .advisor-ai-quick-transfer-form{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) 112px 42px;gap:7px;align-items:end;margin:0 0 10px;padding:10px;border:1px solid rgba(232,192,80,.22);border-radius:8px;background:rgba(0,0,0,.22)}
 .advisor-ai-quick-transfer-field{min-width:0}
 .advisor-ai-quick-transfer-label{display:block;margin:0 0 4px;color:#b99651;font-family:var(--sans);font-size:10px;font-weight:900}
@@ -1270,6 +1280,7 @@ body::after{
  @media(max-width:480px){.advisor-overlay{padding:10px 8px;justify-content:center}.advisor-wrap{left:8px;right:8px;top:54px;width:auto;align-items:center}.advisor-img{width:90px;max-height:102px;margin:0 auto -14px}.advisor-dialog{margin:0;width:100%;max-height:calc(100vh - 146px);border-radius:14px}.advisor-dialog::before{top:-9px}.advisor-dialog::after{top:-7px}.advisor-dialog-top-actions{top:8px;right:48px;gap:4px;max-width:calc(100% - 88px)}.advisor-dialog-nav,.advisor-dialog-tool{width:28px;height:28px}.advisor-dialog-nav{font-size:16px}.advisor-dialog-tool{font-size:15px}.advisor-dialog-tool-status{top:35px;font-size:10px}.advisor-close{top:6px;right:7px;width:30px;height:30px;font-size:14px}}
 @media(max-width:480px){.advisor-ai-dividend-select{width:112px;flex:0 1 112px}.advisor-ai-dividend-quick-input{width:88px;flex:1 1 88px}.advisor-ai-dividend-quick-estimate{width:94px;flex:1 1 94px}.advisor-ai-dividend-quick-btn{width:42px;min-width:42px}}
 @media(max-width:480px){.advisor-ai-quick-transfer-form{grid-template-columns:1fr 1fr;gap:7px}.advisor-ai-quick-transfer-field.amount{grid-column:1}.advisor-ai-quick-transfer-submit{grid-column:2;align-self:end;width:100%}}
+@media(max-width:480px){.advisor-ai-expense-quick-row{gap:5px}.advisor-ai-expense-quick-select{font-size:11px;padding:6px}.advisor-ai-expense-quick-amount{width:78px;flex-basis:78px;font-size:12px}.advisor-ai-expense-quick-btn{width:40px;min-width:40px}}
 @media(max-width:480px){
   .advisor-ai-standalone{left:50%;top:142px;width:calc(100vw - 28px);padding:58px 14px 13px;border-radius:14px}
   .advisor-ai-portrait{left:50%;top:-62px;width:96px;transform:translateX(-50%)}
@@ -13933,14 +13944,73 @@ function advisorAIHeaderHtml(title){
         <div class="advisor-ai-funds" id="advisor-ai-funds">${advisorAIHeaderFundsHtml(fundsCache&&fundsCache.cash,fundsCache&&fundsCache.stock,fundsCache&&fundsCache.cube)}</div>
       </div>
     </div>
-    <div class="advisor-ai-dividend-quick-row">
-      ${advisorAIDividendQuickSelectHtml()}
-      <input class="advisor-ai-dividend-quick-input" id="advisor-ai-dividend-quick-rate" type="number" min="0.0001" step="0.001" placeholder="每股配息比例" inputmode="decimal" oninput="advisorAIUpdateQuickDividendEstimate()" onkeydown="advisorAIDividendQuickKey(event)">
-      <input class="advisor-ai-dividend-quick-estimate" id="advisor-ai-dividend-quick-estimate" type="text" placeholder="預估金額" readonly aria-label="預估配息金額">
-      <button class="advisor-ai-dividend-quick-btn" id="advisor-ai-dividend-quick-btn" type="button" onclick="advisorAIRecordQuickDividend(this)" title="新增待入帳配息" aria-label="新增待入帳配息">📝</button>
+    <div class="advisor-ai-expense-quick-row">
+      <select class="advisor-ai-expense-quick-select" id="advisor-ai-expense-quick-category" aria-label="消費項目"><option value="">消費項目</option>${advisorAIQuickExpenseCategoriesHtml()}</select>
+      <select class="advisor-ai-expense-quick-select" id="advisor-ai-expense-quick-account" aria-label="支出帳戶"><option value="">支出帳戶</option>${advisorAIQuickExpenseAccountsHtml()}</select>
+      <input class="advisor-ai-expense-quick-amount" id="advisor-ai-expense-quick-amount" type="number" min="1" step="1" placeholder="金額" inputmode="decimal" aria-label="支出金額" onkeydown="advisorAIQuickExpenseKey(event)">
+      <button class="advisor-ai-expense-quick-btn" id="advisor-ai-expense-quick-btn" type="button" onclick="advisorAIRecordQuickExpense(this)" title="記錄支出" aria-label="記錄支出">📝</button>
     </div>
-    <div class="advisor-ai-dividend-quick-status advisor-ai-dividend-quick-status-panel" id="advisor-ai-dividend-quick-status">選擇標的後輸入每股配息比例，自動估算待入帳金額</div>
+    <div class="advisor-ai-expense-quick-status" id="advisor-ai-expense-quick-status"></div>
     `;
+}
+
+function advisorAIQuickExpenseCategoriesHtml(){
+  var categories=uniqueBookingOptions((cfg&&cfg.categories&&cfg.categories.length)?cfg.categories:BOOKING_FALLBACK_CATEGORIES);
+  return categories.map(function(category){return `<option value="${esc(category)}">${esc(category)}</option>`;}).join('');
+}
+
+function advisorAIQuickExpenseAccountsHtml(){
+  var accounts=uniqueBookingOptions(((cfg&&cfg.accounts&&cfg.accounts.length)?cfg.accounts:BOOKING_FALLBACK_ACCOUNTS).concat(BOOKING_FALLBACK_ACCOUNTS));
+  return accounts.map(function(account){return `<option value="${esc(account)}">${esc(account)}</option>`;}).join('');
+}
+
+function advisorAIQuickExpenseKey(e){
+  if(e&&e.key==='Enter'){
+    e.preventDefault();
+    advisorAIRecordQuickExpense(document.getElementById('advisor-ai-expense-quick-btn'));
+  }
+}
+
+async function advisorAIRecordQuickExpense(btn){
+  var categoryEl=document.getElementById('advisor-ai-expense-quick-category');
+  var accountEl=document.getElementById('advisor-ai-expense-quick-account');
+  var amountEl=document.getElementById('advisor-ai-expense-quick-amount');
+  var category=String(categoryEl&&categoryEl.value||'').trim();
+  var account=String(accountEl&&accountEl.value||'').trim();
+  var amount=parseFloat(amountEl&&amountEl.value)||0;
+  var status=document.getElementById('advisor-ai-expense-quick-status');
+  function show(text,type){if(status){status.textContent=text;status.className='advisor-ai-expense-quick-status '+(type||'');}}
+  if(!category||!account){show('請選擇消費項目與支出帳戶','err');return;}
+  if(amount<=0){show('請輸入大於 0 的金額','err');return;}
+  if(!advisorAIRequireWrite())return;
+  if(btn&&btn.disabled)return;
+  if(btn){btn.disabled=true;btn.textContent='⏳';}
+  try{
+    await apiPost({action:'expense',date:today().replace(/-/g,'/'),cat:category,account:account,amount:amount,note:'龐統快速支出'});
+    show('✓ 已記錄支出 '+fmtFull(amount),'ok');
+    if(amountEl)amountEl.value='';
+  }catch(err){show('✗ '+(err&&err.message?err.message:'寫入失敗'),'err');}
+  finally{if(btn){btn.disabled=false;btn.textContent='📝';}}
+}
+
+function advisorAIDividendQuickRowHtml(){
+  return `<div class="advisor-ai-dividend-quick-row">
+    ${advisorAIDividendQuickSelectHtml()}
+    <input class="advisor-ai-dividend-quick-input" id="advisor-ai-dividend-quick-rate" type="number" min="0.0001" step="0.001" placeholder="每股配息比例" inputmode="decimal" oninput="advisorAIUpdateQuickDividendEstimate()" onkeydown="advisorAIDividendQuickKey(event)">
+    <input class="advisor-ai-dividend-quick-estimate" id="advisor-ai-dividend-quick-estimate" type="text" placeholder="預估金額" readonly aria-label="預估配息金額">
+    <button class="advisor-ai-dividend-quick-btn" id="advisor-ai-dividend-quick-btn" type="button" onclick="advisorAIRecordQuickDividend(this)" title="新增待入帳配息" aria-label="新增待入帳配息">📝</button>
+  </div>
+  <div class="advisor-ai-dividend-quick-status advisor-ai-dividend-quick-status-panel" id="advisor-ai-dividend-quick-status">選擇標的後輸入每股配息比例，自動估算待入帳金額</div>`;
+}
+
+function advisorAIOpenDividendRecord(){
+  var panel=advisorAIActivePanel();
+  if(!panel)return;
+  advisorShortcutOpenKind='dividend-record';
+  advisorDividendQuickSelection=null;
+  advisorDividendQuickHolding=null;
+  panel.innerHTML=`${advisorAIHeaderHtml()}<div class="advisor-shortcut-title">配息記錄</div>${advisorAIDividendQuickRowHtml()}`;
+  advisorAILoadDividendQuickOptions(false);
 }
 
 function advisorAIExamplesHtml(){
@@ -13962,6 +14032,7 @@ function advisorAIExamplesHtml(){
 function advisorAIQuickCommands(){
   return [
     {label:'快速轉帳',command:'__quick_transfer__'},
+    {label:'配息記錄',command:'__dividend_record__'},
     {label:'顯示載具',command:'顯示載具'},
     {label:'超商會員',command:'__member_cards__'},
     {label:'退稅查詢',command:'__etf_tax_lookup__'},
@@ -14204,6 +14275,11 @@ function advisorAIRunQuickCommand(select){
   if(command==='__quick_transfer__'){
     if(select)select.value='';
     advisorAIOpenQuickTransfer();
+    return;
+  }
+  if(command==='__dividend_record__'){
+    if(select)select.value='';
+    advisorAIOpenDividendRecord();
     return;
   }
   if(command==='__member_cards__'){
