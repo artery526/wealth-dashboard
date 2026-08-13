@@ -1934,6 +1934,7 @@ body::after{
 .booking-transfer-grid:not(.stock-mode) .booking-chip-select-wrap.hidden{display:block!important}
 .booking-income-grid{grid-template-columns:1fr 1fr}
 .booking-income-grid .income-wide{grid-column:1/-1}
+.income-account-lock-status{margin-top:4px;font-family:var(--sans);font-size:10px;line-height:1.3;color:var(--teal)}
 .booking-transfer-mode .booking-mode-btn.buy.active{border-color:rgba(216,90,48,.65);background:var(--coral-l);color:var(--coral);box-shadow:0 0 12px rgba(216,90,48,.16)}
 .booking-transfer-mode .booking-mode-btn.sell.active{border-color:rgba(29,158,117,.62);background:var(--teal-l);color:var(--teal);box-shadow:0 0 12px rgba(29,158,117,.16)}
 .booking-stock-toggle{width:100%;border:1px solid rgba(124,111,192,.45);border-radius:8px;background:rgba(124,111,192,.08);color:#bcb5ff;font-family:var(--sans);font-size:13px;font-weight:900;letter-spacing:1px;padding:10px 12px;margin-top:8px;cursor:pointer}
@@ -7473,7 +7474,7 @@ async function initBookingForm(){
       <div class="form-grid booking-entry-grid booking-income-grid">
         <div class="form-group hidden"><label class="form-label">記帳日期</label><input class="form-control" type="date" id="i-date" value="${today()}"></div>
         <div class="form-group"><div class="form-label booking-source-label"><span>收入來源</span><span class="booking-dividend-anchor"><button class="booking-dividend-mini" type="button" onclick="event.stopPropagation();openBookingDividendPicker()">配息<span class="booking-mini-badge" id="booking-dividend-badge"></span></button><span class="booking-dividend-pending" id="booking-dividend-pending"></span></span></div><select class="form-control" id="i-source" onchange="toggleDivFields()">${srcOpts}</select></div>
-        <div class="form-group"><label class="form-label">入帳帳戶</label><select class="form-control" id="i-account" onchange="onIncomeAccountChange()">${incomeAccOpts}</select></div>
+        <div class="form-group"><label class="form-label">入帳帳戶</label><select class="form-control" id="i-account" onchange="onIncomeAccountChange()">${incomeAccOpts}</select><div class="income-account-lock-status hidden" id="i-account-lock-status"></div></div>
         <div class="form-group hidden income-wide" id="i-div-rate-grp"><label class="form-label">配息比例</label><input class="form-control" type="number" id="i-div-rate" placeholder="例：0.35" step="0.001" min="0"></div>
         <div class="form-group booking-focus-amount income-wide"><label class="form-label">金額 (TWD)</label><input class="form-control" type="number" id="i-amount" placeholder="0" min="1"></div>
         <div class="form-group hidden income-wide" id="i-div-sym-grp"><label class="form-label">配息標的</label><select class="form-control" id="i-div-sym" onclick="openBookingDividendPicker()" onfocus="openBookingDividendPicker()" onchange="syncDivNote()">${divOpts}</select></div>
@@ -7811,12 +7812,26 @@ function syncIncomeDividendSymbolFromAccount(){
   var account=document.getElementById('i-account');
   var divSym=document.getElementById('i-div-sym');
   var source=document.getElementById('i-source');
+  updateIncomeAccountLockStatus();
   if(!account||!divSym||!source)return '';
   if(!isInvestSrc(source.value)){divSym.value='';return '';}
   var symbol=incomeHoldingSymbolFromAccount(account.value);
   var display=getDividendDisplayValue(symbol,divSym);
   divSym.value=display||'';
   return divSym.value;
+}
+function updateIncomeAccountLockStatus(){
+  var account=document.getElementById('i-account');
+  var status=document.getElementById('i-account-lock-status');
+  if(!account||!status)return;
+  var symbol=incomeHoldingSymbolFromAccount(account.value);
+  if(symbol){
+    status.textContent='已鎖定 '+symbol;
+    status.classList.remove('hidden');
+  }else{
+    status.textContent='';
+    status.classList.add('hidden');
+  }
 }
 function syncDivNote(){
   var s=document.getElementById('i-div-sym');
