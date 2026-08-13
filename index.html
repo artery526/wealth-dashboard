@@ -1926,6 +1926,8 @@ body::after{
 .booking-transfer-grid.stock-mode .transfer-shares-field{display:block;grid-column:1/-1;grid-row:4}
 .booking-transfer-grid.stock-mode .booking-chip-row{display:none}
 .booking-transfer-grid.stock-mode .booking-chip-select-wrap.hidden{display:block!important}
+.booking-income-grid{grid-template-columns:1fr 1fr}
+.booking-income-grid .income-wide{grid-column:1/-1}
 .booking-transfer-mode .booking-mode-btn.buy.active{border-color:rgba(216,90,48,.65);background:var(--coral-l);color:var(--coral);box-shadow:0 0 12px rgba(216,90,48,.16)}
 .booking-transfer-mode .booking-mode-btn.sell.active{border-color:rgba(29,158,117,.62);background:var(--teal-l);color:var(--teal);box-shadow:0 0 12px rgba(29,158,117,.16)}
 .booking-stock-toggle{width:100%;border:1px solid rgba(124,111,192,.45);border-radius:8px;background:rgba(124,111,192,.08);color:#bcb5ff;font-family:var(--sans);font-size:13px;font-weight:900;letter-spacing:1px;padding:10px 12px;margin-top:8px;cursor:pointer}
@@ -1941,6 +1943,7 @@ body::after{
 @media(max-width:560px){
   .booking-interface-tab{font-size:11px;padding:8px 2px;letter-spacing:0}
   .booking-entry-grid,.booking-transfer-grid{grid-template-columns:1fr}
+  .booking-income-grid{grid-template-columns:1fr 1fr;gap:6px}
   .booking-expense-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
   .booking-expense-grid .form-label{font-size:10px;letter-spacing:0}
   .booking-expense-grid .form-control{font-size:12px;padding:8px 7px}
@@ -7461,14 +7464,14 @@ async function initBookingForm(){
 
     <!-- 收入支出：收入模式 -->
     <div class="bform" id="bf-income">
-      <div class="form-grid booking-entry-grid">
+      <div class="form-grid booking-entry-grid booking-income-grid">
         <div class="form-group hidden"><label class="form-label">記帳日期</label><input class="form-control" type="date" id="i-date" value="${today()}"></div>
-        <div class="form-group booking-focus-amount"><label class="form-label">金額 (TWD)</label><input class="form-control" type="number" id="i-amount" placeholder="0" min="1"></div>
-        <div class="form-group"><div class="form-label booking-source-label"><span>收入來源</span><span class="booking-dividend-anchor"><button class="booking-dividend-mini" type="button" onclick="event.stopPropagation();openBookingDividendPicker()">配息<span class="booking-mini-badge" id="booking-dividend-badge"></span></button><span class="booking-dividend-pending" id="booking-dividend-pending"></span></span></div>${incomeSourceChips}<div class="booking-chip-select-wrap hidden" data-booking-select-wrap="i-source"><select class="form-control" id="i-source" onchange="toggleDivFields();syncBookingQuickChip('i-source')">${srcOpts}</select></div></div>
-        <div class="form-group"><label class="form-label">入帳帳戶</label>${incomeAccountChips}<div class="booking-chip-select-wrap hidden" data-booking-select-wrap="i-account"><select class="form-control" id="i-account" onchange="onIncomeAccountChange();syncBookingQuickChip('i-account')">${incomeAccOpts}</select></div></div>
-        <div class="form-group hidden" id="i-div-rate-grp"><label class="form-label">配息比例</label><input class="form-control" type="number" id="i-div-rate" placeholder="例：0.35" step="0.001" min="0"></div>
-        <div class="form-group hidden" id="i-div-sym-grp"><label class="form-label">配息標的</label><select class="form-control" id="i-div-sym" onclick="openBookingDividendPicker()" onfocus="openBookingDividendPicker()" onchange="syncDivNote()">${divOpts}</select></div>
-        <div class="dividend-autofill-note hidden" id="i-dividend-autofill"></div>
+        <div class="form-group"><div class="form-label booking-source-label"><span>收入來源</span><span class="booking-dividend-anchor"><button class="booking-dividend-mini" type="button" onclick="event.stopPropagation();openBookingDividendPicker()">配息<span class="booking-mini-badge" id="booking-dividend-badge"></span></button><span class="booking-dividend-pending" id="booking-dividend-pending"></span></span></div><select class="form-control" id="i-source" onchange="toggleDivFields()">${srcOpts}</select></div>
+        <div class="form-group"><label class="form-label">入帳帳戶</label><select class="form-control" id="i-account" onchange="onIncomeAccountChange()">${incomeAccOpts}</select></div>
+        <div class="form-group hidden income-wide" id="i-div-rate-grp"><label class="form-label">配息比例</label><input class="form-control" type="number" id="i-div-rate" placeholder="例：0.35" step="0.001" min="0"></div>
+        <div class="form-group booking-focus-amount income-wide"><label class="form-label">金額 (TWD)</label><input class="form-control" type="number" id="i-amount" placeholder="0" min="1"></div>
+        <div class="form-group hidden income-wide" id="i-div-sym-grp"><label class="form-label">配息標的</label><select class="form-control" id="i-div-sym" onclick="openBookingDividendPicker()" onfocus="openBookingDividendPicker()" onchange="syncDivNote()">${divOpts}</select></div>
+        <div class="dividend-autofill-note hidden income-wide" id="i-dividend-autofill"></div>
         <div class="form-group full"><label class="form-label">備註</label><input class="form-control" type="text" id="i-note" placeholder="配息標的" readonly></div>
       </div>
       <button class="submit-btn income" id="btn-income" type="button" onclick="submitIncome(event)">記錄收入</button>
