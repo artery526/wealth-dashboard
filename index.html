@@ -515,7 +515,7 @@ body::after{
   box-shadow:0 12px 32px rgba(0,0,0,.32),inset 0 1px 0 rgba(255,238,190,.1);
 }
 .home-agenda-calendar{padding:13px 14px 14px}
-.home-agenda-court{padding:13px 14px 12px;min-width:0}
+.home-agenda-court{padding:32px 14px 12px;min-width:0}
 .home-agenda-head{
   position:relative;z-index:1;
   display:flex;align-items:center;justify-content:space-between;gap:12px;
@@ -571,7 +571,7 @@ body::after{
   grid-template-columns:1fr 1fr;
   gap:14px;
   min-width:0;
-  max-height:286px;
+  max-height:340px;
   overflow-y:auto;
   padding-right:4px;
 }
@@ -593,6 +593,14 @@ body::after{
   padding:6px 10px;cursor:pointer;white-space:nowrap;
 }
 .home-agenda-refresh:disabled{opacity:.55;cursor:wait}
+.home-agenda-global-refresh{
+  position:absolute;top:7px;right:8px;z-index:2;
+  border:1px solid rgba(196,151,61,.58);border-radius:3px;
+  background:linear-gradient(180deg,#2c1f0c,#171007);
+  color:#e9c96f;font-family:var(--sans);font-size:10px;font-weight:900;
+  line-height:1;padding:4px 7px;cursor:pointer;white-space:nowrap;
+}
+.home-agenda-global-refresh:hover{filter:brightness(1.1)}
 .home-agenda-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
 .home-agenda-mode-toggle{
   border:1px solid rgba(29,158,117,.5);border-radius:4px;
@@ -3389,18 +3397,7 @@ body::after{
       <div class="home-calendar-grid" id="home-calendar-grid" aria-live="polite"></div>
     </div>
     <div class="home-agenda-court" id="home-agenda-court">
-      <div class="home-agenda-head">
-        <div>
-          <div class="home-agenda-title" id="home-agenda-title"></div>
-          <div class="home-agenda-date" id="home-agenda-date">
-            <span class="home-agenda-date-text" id="home-agenda-date-text">--</span>
-          </div>
-        </div>
-        <div class="home-agenda-actions">
-          <button class="home-agenda-mode-toggle" id="home-agenda-mode-toggle" type="button" onclick="toggleHomeAgendaMode()">帝國晨報</button>
-          <button class="home-agenda-refresh" id="home-agenda-refresh" type="button" onclick="refreshHomeAgenda()">更新</button>
-        </div>
-      </div>
+      <button class="home-agenda-global-refresh" id="home-agenda-refresh" type="button" onclick="refreshHomeAgenda()">更新</button>
       <div class="home-agenda-body" id="home-agenda-body">
         <section class="agenda-section">
           <div class="agenda-section-title">今日行程</div>
