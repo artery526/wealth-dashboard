@@ -534,6 +534,7 @@ body::after{
 .home-agenda-date{
   font-family:var(--mono);font-size:12px;font-weight:900;color:#bda36d;white-space:nowrap;
 }
+#home-calendar-today{font-size:18px;color:#f0dfa0;}
 .home-agenda-date-text{display:inline}
 .home-agenda-date .nav-weather-row{display:inline-flex;margin-left:8px;vertical-align:middle}
 .home-calendar-grid{
@@ -3320,6 +3321,11 @@ body::after{
         <span class="nav-date-week" id="nav-week">星期—</span>
       </div>
       <div class="nav-date-lunar" id="nav-lunar" aria-label="農曆日期"></div>
+      <span class="nav-weather-row" id="nav-weather">
+        <span class="nav-weather-icon" id="nav-weather-icon">⏳</span>
+        <span class="nav-weather-temp" id="nav-weather-temp">—°C</span>
+        <span class="nav-weather-desc" id="nav-weather-desc">彰化天氣讀取中…</span>
+      </span>
     </div>
   </div>
   <section class="today-agenda court-agenda" id="today-agenda" aria-label="朝中政務">
@@ -3375,7 +3381,7 @@ body::after{
     <div class="home-agenda-calendar">
       <div class="home-agenda-head">
         <div>
-          <div class="home-agenda-title">本月月曆<span class="home-lunar-date" id="home-calendar-lunar">--</span></div>
+          <div class="home-agenda-title"><span class="home-lunar-date" id="home-calendar-lunar">--</span></div>
           <div class="home-agenda-date" id="home-calendar-month">--</div>
         </div>
         <div class="home-agenda-date" id="home-calendar-today">--</div>
@@ -3385,14 +3391,9 @@ body::after{
     <div class="home-agenda-court" id="home-agenda-court">
       <div class="home-agenda-head">
         <div>
-          <div class="home-agenda-title" id="home-agenda-title">今日政務</div>
+          <div class="home-agenda-title" id="home-agenda-title"></div>
           <div class="home-agenda-date" id="home-agenda-date">
             <span class="home-agenda-date-text" id="home-agenda-date-text">--</span>
-            <span class="nav-weather-row" id="nav-weather">
-              <span class="nav-weather-icon" id="nav-weather-icon">⏳</span>
-              <span class="nav-weather-temp" id="nav-weather-temp">—°C</span>
-              <span class="nav-weather-desc" id="nav-weather-desc">彰化天氣讀取中…</span>
-            </span>
           </div>
         </div>
         <div class="home-agenda-actions">
@@ -6221,8 +6222,8 @@ function updateHomeAgendaModeView(){
   var court=document.getElementById('home-agenda-court');
   var body=document.getElementById('home-agenda-body');
   var isBriefing=homeAgendaMode==='briefing';
-  if(title)title.textContent=isBriefing?'帝國晨報':'今日政務';
-  if(dateEl)dateEl.textContent=isBriefing?'諸葛亮軍情摘要':(homeAgendaSelectedDate?agendaDateLabelFromText_(homeAgendaSelectedDate):agendaDateLabel('today'));
+  if(title)title.textContent=isBriefing?'帝國晨報':'';
+  if(dateEl)dateEl.textContent=isBriefing?'諸葛亮軍情摘要':'';
   if(toggle)toggle.textContent=isBriefing?'今日政務':'帝國晨報';
   if(court)court.classList.toggle('is-briefing',isBriefing);
   if(body)body.classList.toggle('is-briefing',isBriefing);
