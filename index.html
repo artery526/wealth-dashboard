@@ -2627,6 +2627,7 @@ body::after{
 .carrier-close:hover{border-color:rgba(232,192,80,.68);box-shadow:0 0 13px rgba(232,192,80,.18)}
 .carrier-img{display:block;width:100%;max-width:520px;height:auto;margin:0 auto;background:#fff;border-radius:8px;padding:18px;box-shadow:0 0 0 1px rgba(232,192,80,.22)}
 .member-card-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.member-card-title{margin:0 0 12px;color:#f0dfa0;font-family:'Noto Serif TC',serif;font-size:20px;font-weight:900;letter-spacing:2px;text-align:center}
 .member-card-item{min-width:0;color:#f0dfa0;font-family:var(--sans);font-size:12px;font-weight:900;text-align:center}
 .member-card-item .carrier-img{max-width:none;margin-top:7px;padding:10px}
 .member-card-single{display:block}
@@ -3697,6 +3698,7 @@ body::after{
 <div class="carrier-overlay" id="member-card-overlay" onclick="memberCardOverlayClick(event)">
   <div class="carrier-box member-card-box" role="dialog" aria-modal="true" aria-label="超商會員條碼">
     <button class="carrier-close" type="button" onclick="hideMemberCard()" aria-label="關閉會員條碼">x</button>
+    <div class="member-card-title">超商會員</div>
     <div class="member-card-single"><img class="carrier-img" id="member-card-img" src="" alt=""></div>
     <div class="member-card-grid" id="member-card-grid">
       <div class="member-card-item">7-11會員<img class="carrier-img" src="小7會員.jpg" alt="7-11會員條碼"></div>
