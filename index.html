@@ -13451,6 +13451,8 @@ function closeAdvisorAIStandalone(){
     panel.innerHTML='';
   }
   if(advisorShortcutOpenKind==='ai')advisorShortcutOpenKind='';
+  advisorDividendQuickSelection=null;
+  advisorDividendQuickHolding=null;
   advisorAIScheduleOpen=false;
 }
 function closeAdvisorAIActivePanel(){
@@ -13735,6 +13737,8 @@ function closeAdvisorShortcutPanel(){
   advisorDividendSelection=null;
   advisorDividendMemoPending=null;
   advisorDividendIncomeDraftPending=null;
+  advisorDividendQuickSelection=null;
+  advisorDividendQuickHolding=null;
   advisorAIScheduleOpen=false;
 }
 
@@ -14029,6 +14033,8 @@ function advisorAIDividendQuickKey(e){
 
 async function advisorAIRecordQuickDividend(btn){
   var holding=advisorDividendQuickHolding;
+  var select=document.getElementById('advisor-ai-dividend-select');
+  if(!select||!select.value||!holding||normalizeKey(select.value)!==normalizeKey(holding.symbol||holding.displaySymbol))holding=null;
   var rateEl=document.getElementById('advisor-ai-dividend-quick-rate');
   var rate=parseFloat(rateEl&&rateEl.value)||0;
   var estimate=advisorAIQuickDividendEstimate(holding,rate,dividendCenterCache||{});
@@ -14166,6 +14172,8 @@ function openAdvisorAI(targetPanel){
   if(!panel)return;
   advisorShortcutOpenKind='ai';
   advisorDividendSelection=null;
+  advisorDividendQuickSelection=null;
+  advisorDividendQuickHolding=null;
   advisorAIScheduleOpen=false;
   panel.innerHTML=`${advisorAIHeaderHtml('🗡️主公，請下令')}
     <div class="advisor-ai-portrait"><img class="advisor-ai-portrait-img" src="pangtong.png" alt="龐統軍師"></div>
