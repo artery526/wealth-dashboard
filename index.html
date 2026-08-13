@@ -1858,7 +1858,15 @@ body::after{
 }
 
 /* ── Quick Booking ── */
-.btabs{display:flex;gap:0;margin-bottom:14px;background:#0a0804;border:1px solid #2a1c08;border-radius:6px;overflow:hidden}
+.btabs{display:none}
+.booking-interface-tabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0;margin-bottom:14px;background:#0a0804;border:1px solid #2a1c08;border-radius:6px;overflow:hidden}
+.booking-interface-tab{min-width:0;padding:9px 5px;border:0;border-right:1px solid #2a1c08;background:transparent;color:#5a4018;font-family:var(--sans);font-size:12px;font-weight:900;letter-spacing:1px;cursor:pointer;transition:all .2s}
+.booking-interface-tab:last-child{border-right:0}
+.booking-interface-tab.expense.active{background:var(--coral-l);color:var(--coral)}
+.booking-interface-tab.income.active{background:var(--teal-l);color:var(--teal)}
+.booking-interface-tab.transfer.active{background:rgba(124,111,192,.12);color:var(--purple)}
+.booking-interface-tab.buy.active{background:var(--coral-l);color:var(--coral)}
+.booking-interface-tab.sell.active{background:var(--teal-l);color:var(--teal)}
 .btab{
   flex:1;padding:9px;border:none;background:transparent;
   font-family:var(--sans);font-size:11px;font-weight:700;color:#5a4018;
@@ -1868,7 +1876,7 @@ body::after{
 .btab.income.active{background:var(--teal-l);color:var(--teal)}
 .btab.transfer.active{background:rgba(124,111,192,.12);color:var(--purple)}
 .bform{display:none}.bform.active{display:block}
-.booking-mode-switch{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0 0 10px}
+.booking-mode-switch{display:none}
 .booking-mode-btn{border:1px solid rgba(184,137,46,.38);border-radius:6px;background:rgba(10,8,4,.62);color:#9a7430;padding:9px 10px;font-family:var(--sans);font-size:12px;font-weight:900;cursor:pointer;transition:background .15s,color .15s,border-color .15s,box-shadow .15s}
 .booking-mode-btn.expense.active{border-color:rgba(216,90,48,.65);background:var(--coral-l);color:var(--coral);box-shadow:0 0 12px rgba(216,90,48,.16)}
 .booking-mode-btn.income.active{border-color:rgba(29,158,117,.62);background:var(--teal-l);color:var(--teal);box-shadow:0 0 12px rgba(29,158,117,.16)}
@@ -1922,6 +1930,7 @@ body::after{
 .booking-trade-type.sell.active{border-color:rgba(29,158,117,.7);background:rgba(29,158,117,.13);box-shadow:0 0 12px rgba(29,158,117,.16)}
 .stock-symbol-label{display:flex;align-items:center;justify-content:space-between;gap:8px}
 @media(max-width:560px){
+  .booking-interface-tab{font-size:11px;padding:8px 2px;letter-spacing:0}
   .booking-entry-grid,.booking-transfer-grid{grid-template-columns:1fr}
   .booking-expense-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
   .booking-expense-grid .form-label{font-size:10px;letter-spacing:0}
@@ -7421,17 +7430,15 @@ async function initBookingForm(){
     {label:'🧚Sis 國泰',value:'🧚Sis 國泰世華'}
   ]);
   el.innerHTML=`
-    <div class="btabs">
-      <button class="btab expense active" type="button" onclick="switchBTab(this,'expense')">收入支出</button>
-      <button class="btab transfer" type="button" onclick="switchBTab(this,'transfer')">網銀股票</button>
+    <div class="booking-interface-tabs" role="tablist" aria-label="記帳類型">
+      <button class="booking-interface-tab expense active" type="button" data-booking-interface="expense" onclick="setBookingInterfaceMode('expense')">支出</button>
+      <button class="booking-interface-tab income" type="button" data-booking-interface="income" onclick="setBookingInterfaceMode('income')">收入</button>
+      <button class="booking-interface-tab transfer" type="button" data-booking-interface="transfer" onclick="setBookingInterfaceMode('transfer')">轉帳</button>
+      <button class="booking-interface-tab buy" type="button" data-booking-interface="buy" onclick="setBookingInterfaceMode('buy')">買入</button>
+      <button class="booking-interface-tab sell" type="button" data-booking-interface="sell" onclick="setBookingInterfaceMode('sell')">賣出</button>
     </div>
-
     <!-- 收入支出：支出模式 -->
     <div class="bform active" id="bf-expense">
-      <div class="booking-mode-switch">
-        <button class="booking-mode-btn expense active" type="button" onclick="setBookingEntryMode('expense')">💸 支出</button>
-        <button class="booking-mode-btn income" type="button" onclick="setBookingEntryMode('income')">💰 收入</button>
-      </div>
       ${expensePresetsHtml}
       <div class="form-grid booking-entry-grid booking-expense-grid">
         <div class="form-group hidden"><label class="form-label">記帳日期</label><input class="form-control" type="date" id="e-date" value="${today()}"></div>
@@ -7446,10 +7453,6 @@ async function initBookingForm(){
 
     <!-- 收入支出：收入模式 -->
     <div class="bform" id="bf-income">
-      <div class="booking-mode-switch">
-        <button class="booking-mode-btn expense" type="button" onclick="setBookingEntryMode('expense')">💸 支出</button>
-        <button class="booking-mode-btn income active" type="button" onclick="setBookingEntryMode('income')">💰 收入</button>
-      </div>
       <div class="form-grid booking-entry-grid">
         <div class="form-group hidden"><label class="form-label">記帳日期</label><input class="form-control" type="date" id="i-date" value="${today()}"></div>
         <div class="form-group booking-focus-amount"><label class="form-label">金額 (TWD)</label><input class="form-control" type="number" id="i-amount" placeholder="0" min="1"></div>
@@ -7467,11 +7470,6 @@ async function initBookingForm(){
     <!-- 轉帳 -->
     <div class="bform" id="bf-transfer">
       <div class="booking-transfer-section bank booking-transfer-pane active" id="transfer-account-pane">
-        <div class="booking-mode-switch booking-transfer-mode">
-          <button class="booking-mode-btn transfer active" type="button" data-transfer-mode="account" onclick="setTransferEntryMode('account')">轉帳</button>
-          <button class="booking-mode-btn buy" type="button" data-transfer-mode="buy" onclick="setTransferEntryMode('buy')">買入</button>
-          <button class="booking-mode-btn sell" type="button" data-transfer-mode="sell" onclick="setTransferEntryMode('sell')">賣出</button>
-        </div>
         <div class="form-grid booking-transfer-grid">
           <div class="form-group hidden"><label class="form-label">記帳日期</label><input class="form-control" type="date" id="a-date" value="${today()}"></div>
           <div class="form-group booking-focus-amount"><label class="form-label">金額 (TWD)</label><input class="form-control" type="number" id="a-amount" placeholder="0" min="1" oninput="calculateStockTradeFromPrice('amount')"></div>
@@ -7629,12 +7627,34 @@ function applyBookingEntryDefaults(){
   toggleDivFields();
 }
 
-function setBookingEntryMode(key){
-  var tab=Array.from(document.querySelectorAll('.btab')).find(function(btn){
-    return btn.getAttribute('onclick')&&btn.getAttribute('onclick').indexOf("'expense'")>=0;
+function setBookingInterfaceTab(key){
+  document.querySelectorAll('[data-booking-interface]').forEach(function(btn){
+    btn.classList.toggle('active',btn.dataset.bookingInterface===key);
   });
-  if(tab)tab.classList.add('active');
-  document.querySelectorAll('.btab.transfer').forEach(function(btn){btn.classList.remove('active');});
+}
+
+function setBookingInterfaceMode(key){
+  var mode=key==='buy'||key==='sell'||key==='transfer'?key:(key==='income'?'income':'expense');
+  setBookingInterfaceTab(mode);
+  if(mode==='buy'||mode==='sell'){
+    document.querySelectorAll('.bform').forEach(function(form){form.classList.remove('active');});
+    var transferPane=document.getElementById('bf-transfer');
+    if(transferPane)transferPane.classList.add('active');
+    setTransferEntryMode(mode);
+    return;
+  }
+  if(mode==='transfer'){
+    document.querySelectorAll('.bform').forEach(function(form){form.classList.remove('active');});
+    var transferPane=document.getElementById('bf-transfer');
+    if(transferPane)transferPane.classList.add('active');
+    setTransferEntryMode('account');
+    return;
+  }
+  setBookingEntryMode(mode);
+}
+
+function setBookingEntryMode(key){
+  setBookingInterfaceTab(key);
   document.querySelectorAll('.bform').forEach(function(form){form.classList.remove('active');});
   var pane=document.getElementById(key==='income'?'bf-income':'bf-expense');
   if(pane)pane.classList.add('active');
@@ -7764,13 +7784,7 @@ function calculateStockTradeFromPrice(source){
 }
 
 function switchBTab(btn,key){
-  document.querySelectorAll('.btab').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  document.querySelectorAll('.bform').forEach(f=>f.classList.remove('active'));
-  document.getElementById('bf-'+key).classList.add('active');
-  initBookingDateInputs(false);
-  if(key==='expense')setBookingEntryMode('expense');
-  if(key==='transfer')setTransferEntryMode('account');
+  setBookingInterfaceMode(key);
 }
 
 function toggleDivFields(){
@@ -9607,8 +9621,7 @@ function repeatRecentBooking(index,btn){
     syncBookingQuickChip('i-account');
     focusBookingField('i-amount');
   }else if(type==='轉帳'){
-    var transferTab=document.querySelector('.btab.transfer');
-    if(transferTab)switchBTab(transferTab,'transfer');
+    setBookingInterfaceMode('transfer');
     setTransferEntryMode('account');
     setBookingDateForAll(date);
     selectBookingOptionByText('a-from',recentTxnAccount(t));
@@ -9619,9 +9632,8 @@ function repeatRecentBooking(index,btn){
     syncBookingQuickChip('a-to');
     focusBookingField('a-amount');
   }else if(type==='買入股票'||type==='賣出股票'){
-    var stockTab=document.querySelector('.btab.transfer');
-    if(stockTab)switchBTab(stockTab,'transfer');
     var stockType=type==='賣出股票'?'sell':'buy';
+    setBookingInterfaceMode(stockType);
     var parts=recentTxnStockParts(t);
     setTransferEntryMode(stockType);
     setBookingDateForAll(date);
