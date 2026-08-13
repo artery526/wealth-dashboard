@@ -1191,6 +1191,8 @@ body::after{
 .advisor-ai-dividend-select:focus{border-color:#fff2b8;box-shadow:0 0 0 2px rgba(232,192,80,.2)}
 .advisor-ai-dividend-quick-row{display:flex;align-items:center;gap:7px;margin:0 0 10px}
 .advisor-ai-dividend-quick-input{width:106px;flex:0 1 106px;min-width:0;border:1px solid rgba(232,192,80,.34);border-radius:7px;background:#0a0804;color:var(--ink);font-family:var(--mono);font-size:13px;padding:9px 8px;outline:none}
+.advisor-ai-dividend-quick-estimate{width:112px;flex:0 1 112px;min-width:0;border:1px solid rgba(29,158,117,.34);border-radius:7px;background:rgba(29,158,117,.08);color:#a8f1d6;font-family:var(--mono);font-size:13px;padding:9px 8px;outline:none}
+.advisor-ai-dividend-quick-estimate::placeholder{color:#6b9f8b}
 .advisor-ai-dividend-quick-input:focus{border-color:var(--gold2)}
 .advisor-ai-dividend-quick-btn{width:42px;min-width:42px;height:38px;border:1px solid rgba(29,158,117,.48);border-radius:7px;background:rgba(29,158,117,.12);color:#a8f1d6;font-family:var(--sans);font-size:20px;font-weight:950;line-height:1;padding:0;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 .advisor-ai-dividend-quick-btn:hover{background:rgba(29,158,117,.2)}
@@ -1254,7 +1256,7 @@ body::after{
 .advisor-close:hover{color:var(--gold)}
 @media(max-width:480px){.advisor-overlay{padding:0;background:rgba(0,0,0,0);transition:background .18s}.advisor-overlay.open{background:rgba(0,0,0,.52)}.advisor-wrap{position:fixed;left:6px;top:108px;display:flex;align-items:flex-start;transform:translateY(-8px);opacity:0;pointer-events:none;transition:opacity .18s,transform .18s}.advisor-overlay.open .advisor-wrap{transform:translateY(0);opacity:1;pointer-events:auto}.advisor-img{width:124px;margin-top:-31px}.advisor-dialog{margin-top:0;margin-left:-14px;width:calc(100vw - 122px);max-height:calc(100vh - 128px);padding:12px 12px 10px;border-radius:0 14px 14px 14px}.advisor-dialog::before{top:42px}.advisor-dialog::after{top:43px}.advisor-command-head{gap:6px;margin-right:18px}.advisor-command-title{font-size:15px;letter-spacing:.5px}.advisor-reminder-card{padding:10px 11px 11px}.advisor-reminder-title{font-size:12px}.advisor-reminder-text{font-size:12px;line-height:1.68}.advisor-btn-grid{gap:8px}.advisor-menu-toggle{min-height:42px;font-size:16px;letter-spacing:2px}.advisor-menu-mark{width:20px;height:20px;font-size:11px}.advisor-btn-group{gap:6px;border-radius:7px}.advisor-menu-section.is-open .advisor-btn-group{padding:7px;max-height:220px}.advisor-btn{font-size:12px;padding:8px 4px;letter-spacing:0;gap:3px}.advisor-btn-tag{width:14px;height:14px;font-size:9px}.advisor-btn-spacer{min-height:32px}}
 @media(max-width:480px){.advisor-overlay{padding:10px 8px;justify-content:center}.advisor-wrap{left:8px;right:8px;top:54px;width:auto;align-items:center}.advisor-img{width:90px;max-height:102px;margin:0 auto -14px}.advisor-dialog{margin:0;width:100%;max-height:calc(100vh - 146px);border-radius:14px}.advisor-dialog::before{top:-9px}.advisor-dialog::after{top:-7px}.advisor-dialog-tool-row{margin-bottom:8px}.advisor-dialog-tool{width:40px;height:34px;font-size:18px}.advisor-dialog-tool-status{font-size:10px}}
-@media(max-width:480px){.advisor-ai-dividend-select{width:132px;flex:0 1 132px}.advisor-ai-dividend-quick-input{width:96px;flex:1 1 96px}.advisor-ai-dividend-quick-btn{width:42px;min-width:42px}}
+@media(max-width:480px){.advisor-ai-dividend-select{width:112px;flex:0 1 112px}.advisor-ai-dividend-quick-input{width:88px;flex:1 1 88px}.advisor-ai-dividend-quick-estimate{width:94px;flex:1 1 94px}.advisor-ai-dividend-quick-btn{width:42px;min-width:42px}}
 @media(max-width:480px){
   .advisor-ai-standalone{left:50%;top:142px;width:calc(100vw - 28px);padding:58px 14px 13px;border-radius:14px}
   .advisor-ai-portrait{left:50%;top:-62px;width:96px;transform:translateX(-50%)}
@@ -13723,6 +13725,7 @@ var advisorAIHeaderBattleLoaded=false;
 var advisorAIHeaderBattleValue='';
 var ADVISOR_AI_HEADER_FUNDS_CACHE_KEY='wealth_advisor_ai_header_funds_v1';
 var advisorDividendQuickSelection=null;
+var advisorDividendQuickHolding=null;
 var advisorDividendQuickPromise=null;
 
 function closeAdvisorShortcutPanel(){
@@ -13870,10 +13873,11 @@ function advisorAIHeaderHtml(title){
     </div>
     <div class="advisor-ai-dividend-quick-row">
       ${advisorAIDividendQuickSelectHtml()}
-      <input class="advisor-ai-dividend-quick-input" id="advisor-ai-dividend-quick-amount" type="number" min="1" step="1" placeholder="配息入帳金額" inputmode="decimal" onkeydown="advisorAIDividendQuickKey(event)">
-      <button class="advisor-ai-dividend-quick-btn" id="advisor-ai-dividend-quick-btn" type="button" onclick="advisorAIRecordQuickDividend(this)" title="記錄配息" aria-label="記錄配息">📝</button>
+      <input class="advisor-ai-dividend-quick-input" id="advisor-ai-dividend-quick-rate" type="number" min="0.0001" step="0.001" placeholder="每股配息比例" inputmode="decimal" oninput="advisorAIUpdateQuickDividendEstimate()" onkeydown="advisorAIDividendQuickKey(event)">
+      <input class="advisor-ai-dividend-quick-estimate" id="advisor-ai-dividend-quick-estimate" type="text" placeholder="預估金額" readonly aria-label="預估配息金額">
+      <button class="advisor-ai-dividend-quick-btn" id="advisor-ai-dividend-quick-btn" type="button" onclick="advisorAIRecordQuickDividend(this)" title="新增待入帳配息" aria-label="新增待入帳配息">📝</button>
     </div>
-    <div class="advisor-ai-dividend-quick-status advisor-ai-dividend-quick-status-panel" id="advisor-ai-dividend-quick-status">選擇持股後自動帶入待入帳配息</div>
+    <div class="advisor-ai-dividend-quick-status advisor-ai-dividend-quick-status-panel" id="advisor-ai-dividend-quick-status">選擇標的後輸入每股配息比例，自動估算待入帳金額</div>
     `;
 }
 
@@ -13968,17 +13972,52 @@ function advisorAIQuickDividendRow(symbol,data){
   return rows[0]||null;
 }
 
+function advisorAIQuickDividendHolding(symbol,data){
+  var key=normalizeKey(symbol);
+  return ((data&&data.dividendHoldings)||[]).find(function(row){
+    return normalizeKey(row.symbol||row.displaySymbol)===key;
+  })||null;
+}
+
+function advisorAIQuickDividendEstimate(holding,rate,data){
+  var shares=Number(holding&&holding.shares)||0;
+  var perShare=Number(rate)||0;
+  if(!(shares>0&&perShare>0))return 0;
+  var symbol=holding.symbol||holding.displaySymbol||'';
+  var market=advisorAIDividendMemoMarket(symbol);
+  var fx=Number(data&&data.settingFx)||32.5;
+  var taxFactor=market==='us'&&normalizeKey(symbol)!=='施羅德收益成長A2'?0.7:1;
+  return Math.round(perShare*shares*(market==='us'?fx:1)*taxFactor);
+}
+
+function advisorAIUpdateQuickDividendEstimate(){
+  var rateEl=document.getElementById('advisor-ai-dividend-quick-rate');
+  var estimateEl=document.getElementById('advisor-ai-dividend-quick-estimate');
+  var rate=parseFloat(rateEl&&rateEl.value)||0;
+  var estimate=advisorAIQuickDividendEstimate(advisorDividendQuickHolding,rate,dividendCenterCache||{});
+  if(estimateEl)estimateEl.value=estimate>0?'NT$'+Math.round(estimate).toLocaleString('zh-TW'):'';
+  if(advisorDividendQuickHolding&&rate>0){
+    var market=advisorAIDividendMemoMarket(advisorDividendQuickHolding.symbol||'');
+    var fx=Number(dividendCenterCache&&dividendCenterCache.settingFx)||32.5;
+    advisorAISetQuickDividendStatus((advisorDividendQuickHolding.displaySymbol||advisorDividendQuickHolding.symbol)+' · '+(Number(advisorDividendQuickHolding.shares)||0)+' 股 · '+(market==='us'?'美股匯率 '+fx:'台股')+' · 將新增待入帳配息');
+  }
+}
+
 function advisorAISelectQuickDividend(select){
   var symbol=String(select&&select.value||'').trim();
   advisorDividendQuickSelection=null;
-  if(!symbol){advisorAISetQuickDividendStatus('選擇持股後自動帶入待入帳配息');return;}
-  var row=advisorAIQuickDividendRow(symbol,dividendCenterCache||{});
-  if(!row){advisorAISetQuickDividendStatus('此標的目前沒有待入帳配息','err');return;}
-  advisorDividendQuickSelection=row;
-  var note=advisorDividendVisibleNote(row.note);
-  advisorAISetQuickDividendStatus((row.displaySymbol||row.symbol)+(note?' · '+note:'')+' · 每股配息 USD '+(row.dividendUsd||'--')+' · 預估入帳 '+(row.estimatedPayDate||'--'));
-  var amount=document.getElementById('advisor-ai-dividend-quick-amount');
-  if(amount){amount.focus();amount.select();}
+  advisorDividendQuickHolding=advisorAIQuickDividendHolding(symbol,dividendCenterCache||{});
+  var rate=document.getElementById('advisor-ai-dividend-quick-rate');
+  var estimate=document.getElementById('advisor-ai-dividend-quick-estimate');
+  if(!symbol||!advisorDividendQuickHolding){
+    if(rate)rate.value='';
+    if(estimate)estimate.value='';
+    advisorAISetQuickDividendStatus('選擇標的後輸入每股配息比例');
+    return;
+  }
+  if(rate){rate.value='';rate.focus();}
+  if(estimate)estimate.value='';
+  advisorAIUpdateQuickDividendEstimate();
 }
 
 function advisorAIDividendQuickKey(e){
@@ -13989,30 +14028,32 @@ function advisorAIDividendQuickKey(e){
 }
 
 async function advisorAIRecordQuickDividend(btn){
-  var row=advisorDividendQuickSelection;
-  var amountEl=document.getElementById('advisor-ai-dividend-quick-amount');
-  var amount=parseFloat(amountEl&&amountEl.value)||0;
-  if(!row){advisorAISetQuickDividendStatus('請先選擇有待入帳配息的持股','err');return;}
-  if(!amount||amount<=0){advisorAISetQuickDividendStatus('請輸入大於 0 的入帳金額','err');return;}
+  var holding=advisorDividendQuickHolding;
+  var rateEl=document.getElementById('advisor-ai-dividend-quick-rate');
+  var rate=parseFloat(rateEl&&rateEl.value)||0;
+  var estimate=advisorAIQuickDividendEstimate(holding,rate,dividendCenterCache||{});
+  if(!holding){advisorAISetQuickDividendStatus('請先選擇配息標的','err');return;}
+  if(!rate||rate<=0){advisorAISetQuickDividendStatus('請輸入大於 0 的每股配息比例','err');return;}
+  if(!estimate){advisorAISetQuickDividendStatus('找不到持股數，無法估算配息金額','err');return;}
   if(btn&&btn.disabled)return;
   if(btn){btn.disabled=true;btn.textContent='⏳';}
   try{
     await apiPost({
-      action:'income',
+      action:'advisorDividendMemo',
       date:today().replace(/-/g,'/'),
-      source:'💰投資理財',
-      account:'💵國泰Stock',
-      amount:amount,
-      note:row.displaySymbol||row.symbol,
-      divRate:formatDividendUsdForInput(row.dividendUsd),
-      divSymbol:row.symbol,
-      dividendIncome:'1',
-      dividendRowId:row.rowId||''
+      market:advisorAIDividendMemoMarket(holding.symbol||''),
+      symbol:holding.symbol||holding.displaySymbol,
+      dividendPerShare:rate,
+      shares:holding.shares||0,
+      note:holding.displaySymbol||holding.symbol
     });
     invalidateDividendCenter();
     advisorDividendQuickSelection=null;
-    if(amountEl)amountEl.value='';
-    advisorAISetQuickDividendStatus('✓ 已記錄 '+(row.displaySymbol||row.symbol)+' 配息 '+fmtFull(amount),'ok');
+    advisorDividendQuickHolding=null;
+    if(rateEl)rateEl.value='';
+    var estimateEl=document.getElementById('advisor-ai-dividend-quick-estimate');
+    if(estimateEl)estimateEl.value='';
+    advisorAISetQuickDividendStatus('✓ 已新增待入帳配息，預估 '+fmtFull(estimate),'ok');
     if(document.getElementById('advisor-ai-dividend-select'))document.getElementById('advisor-ai-dividend-select').value='';
   }catch(err){
     advisorAISetQuickDividendStatus('✗ '+(err&&err.message?err.message:'寫入失敗'),'err');
