@@ -14009,7 +14009,7 @@ function advisorAIOpenDividendRecord(){
   advisorShortcutOpenKind='dividend-record';
   advisorDividendQuickSelection=null;
   advisorDividendQuickHolding=null;
-  panel.innerHTML=`${advisorAIHeaderHtml()}<div class="advisor-shortcut-title">配息記錄</div>${advisorAIDividendQuickRowHtml()}`;
+  panel.innerHTML=`${advisorAIHeaderHtml()}<div class="advisor-ai-quick-transfer-title-row"><div class="advisor-shortcut-title" aria-label="配息記錄">✍️➡️🪙</div><button class="advisor-ai-quick-transfer-close" type="button" onclick="openAdvisorAI()" title="返回龐統軍師" aria-label="返回龐統軍師">×</button></div>${advisorAIDividendQuickRowHtml()}`;
   advisorAILoadDividendQuickOptions(false);
 }
 
