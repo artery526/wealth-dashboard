@@ -70,9 +70,9 @@ test('remembered Pangtong verification restores the empire after reload', async 
     sessionStorage.removeItem('wealth_empire_unlocked_v1');
     window.API_URL = 'https://example.test/exec';
     window.WRITE_TOKEN = 'remembered-token';
-    let verifyOptions = null;
-    window.verifyWebAccess = options => {
-      verifyOptions = options;
+    let verifyCalls = 0;
+    window.verifyWebAccess = () => {
+      verifyCalls += 1;
       return new Promise(resolve => setTimeout(resolve, 10));
     };
     const restorePromise = restoreRememberedWebAccess();
@@ -83,11 +83,11 @@ test('remembered Pangtong verification restores the empire after reload', async 
       authorized: webVerifyIsAuthorized(),
       unlocked: document.getElementById('empire-cards').classList.contains('empire-unlocked'),
       status: webVerifyStoredStatus(),
-      skippedConfig: verifyOptions && verifyOptions.skipConfig === true
+      verifyCalls
     };
   });
 
-  expect(result).toEqual({ authorizedDuringRestore: true, authorized: true, unlocked: true, status: 'ok', skippedConfig: true });
+  expect(result).toEqual({ authorizedDuringRestore: true, authorized: true, unlocked: true, status: 'ok', verifyCalls: 1 });
 });
 
 test('battle brief shows the cached army allocation before refreshing', async ({ page }) => {

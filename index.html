@@ -4730,7 +4730,7 @@ function restoreRememberedWebAccess(){
   }
   setEmpireUnlockState(true);
   advisorAIUpdateWebVerifyStatus();
-  return verifyWebAccess({skipConfig:true}).then(function(){
+  return verifyWebAccess().then(function(){
     setWebVerifyStatus('ok','網頁驗證成功');
     return true;
   }).catch(function(err){
@@ -4788,14 +4788,12 @@ function advisorAIUpdateWebVerifyStatus(){
     dot.setAttribute('aria-label',title);
   });
 }
-async function verifyWebAccess(options){
-  options=options||{};
+async function verifyWebAccess(){
   if(!API_URL)throw new Error('尚未設定 Web App API URL');
   if(!cleanToken(WRITE_TOKEN))throw new Error('尚未設定 WRITE_TOKEN');
   var lastErr=null;
   for(var attempt=0;attempt<3;attempt++){
     try{
-      if(!options.skipConfig)cfg=await apiGet({action:'config'},30000);
       await apiPost({action:'verifyWriteToken'});
       return true;
     }catch(err){
