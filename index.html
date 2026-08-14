@@ -3851,21 +3851,6 @@ var bookingFormInitSeq = 0;
 var bookingRecentRows = [];
 var currentPanel = null;
 var currentTab = null;
-var COMMAND_SHEET_ID = '1MTPLhPA9j4kb2pllDDL1z7xaCD1UmIZutT0eVOHZd30';
-var COMMAND_MONTHLY_GID = '1525278727';
-var MACRO_SHEET_ID = '1BPnjwZKlBmxMkHmLDk6MSV28kfcAtQhGuZdufv5T7FY';
-var MONTHLY_HOLDINGS_SHEET_NAME = '\u6708\u5EA6\u6230\u60C5\u5BA4';
-var MONTHLY_HOLDINGS_RANGE = 'A12:N24';
-var MONTHLY_DIVIDEND_PROJECTION_RANGE = 'J2';
-var COMMAND_MARKET_VALUE_RANGE = 'I2:I2';
-var COMMAND_TOTAL_ASSET_RANGE = 'H2:H2';
-var COMMAND_EXPOSURE_VALUE_RANGE = 'G2:H2';
-var ASSET_SNAPSHOT_SHEET_NAME = '\u6BCF\u65E5\u8CC7\u7522\u5FEB\u7167';
-var ASSET_SNAPSHOT_GID = '2000002006';
-var ASSET_SNAPSHOT_RANGE = 'A2:I1000';
-var gvizJsonpQueue = Promise.resolve();
-var HERO_SHEET_ID = COMMAND_SHEET_ID;
-var HERO_SHEET_NAME = '武將資料';
 var HEALTH_JOURNAL_URL = 'https://artery526.github.io/health-app/medical-journal.html';
 var medicalOptionsCache = null;
 var ziweiChartsCache = [];
@@ -4164,7 +4149,9 @@ function apiNonJsonMessage(text,context){
   }
   return '回傳非JSON：'+String(text||'').slice(0,100);
 }
-function readGvizJsonp(url){
+function legacySheetReaderRemoved(url){
+  return Promise.reject(new Error('Legacy Gviz reader removed'));
+/*
   var run=function(){
     return new Promise(function(resolve,reject){
       var script=document.createElement('script');
@@ -4201,32 +4188,9 @@ function readGvizJsonp(url){
       document.head.appendChild(script);
     });
   };
-  gvizJsonpQueue=gvizJsonpQueue.then(run,run);
-  return gvizJsonpQueue;
-}
-function readGvizJson(url){
-  return fetch(url+(url.indexOf('?')>=0?'&':'?')+'t='+Date.now()).then(function(r){
-    if(!r.ok)throw new Error('Google Sheet read failed');
-    return r.text();
-  }).then(parseGvizText).catch(function(){
-    return readGvizJsonp(url);
-  });
-}
-function gvizRowsToObjects(json){
-  var headers=(json.table.cols||[]).map(function(c){return c.label||'';});
-  return (json.table.rows||[]).map(function(row){
-    var obj={};
-    (row.c||[]).forEach(function(cell,i){obj[headers[i]]=cell?(cell.f!=null?cell.f:cell.v):'';});
-    return obj;
-  });
-}
-function readSheetRows(sheetName){
-  var url='https://docs.google.com/spreadsheets/d/'+HERO_SHEET_ID+'/gviz/tq?tqx=out:json&sheet='+encodeURIComponent(sheetName);
-  return readGvizJson(url).then(gvizRowsToObjects);
-}
-function readCommandSheetRows(sheetName){
-  var url='https://docs.google.com/spreadsheets/d/'+COMMAND_SHEET_ID+'/gviz/tq?tqx=out:json&sheet='+encodeURIComponent(sheetName);
-  return readGvizJson(url).then(gvizRowsToObjects);
+  legacyQueueRemoved=legacyQueueRemoved.then(run,run);
+  return legacyQueueRemoved;
+*/
 }
 function normalizeImageUrl(url){
   var s=String(url||'').trim();
@@ -11544,7 +11508,7 @@ function resetRetiredTaskStatus(){
 async function loadHeroSheet(force){
   if(!hasMainApiCredentials())return [];
   if(!force&&heroCache.length)return heroCache;
-  var rows=await readSheetRows(HERO_SHEET_NAME);
+  var rows=await apiGet({action:'heroes'});
   heroCache=rows.map(normalizeHeroRow).filter(function(h){return h.symbol&&h.enabled;}).sort(function(a,b){return a.sortOrder-b.sortOrder;});
   return heroCache;
 }
@@ -11888,142 +11852,26 @@ function normalizeHoldingOverviewRow(row){
 }
 
 async function loadMonthlyHoldingsSheet(){
-  var url='https://docs.google.com/spreadsheets/d/'+COMMAND_SHEET_ID+'/gviz/tq?tqx=out:json&sheet='+encodeURIComponent(MONTHLY_HOLDINGS_SHEET_NAME)+'&range='+encodeURIComponent(MONTHLY_HOLDINGS_RANGE);
-  var json=await readGvizJson(url);
-  return (json.table.rows||[]).map(function(row){
-    var c=row.c||[];
-    return normalizeHoldingOverviewRow({
-      symbol:gvizCellValue(c[0]),
-      cost:gvizCellValue(c[1]),
-      marketValue:gvizCellValue(c[2]),
-      monthlyDiv:gvizCellValue(c[3]),
-      monthlyDivDisplay:gvizCellDisplayValue(c[3]),
-      shares:gvizCellValue(c[4]),
-      price:gvizCellValue(c[5]),
-      totalDiv:gvizCellValue(c[6]),
-      unrealized:gvizCellValue(c[7]),
-      totalReturn:gvizCellValue(c[8]),
-      avgCost:gvizCellValue(c[9]),
-      roi:gvizCellValue(c[10]),
-      formationDate:gvizCellValue(c[11]),
-      elapsedDays:gvizCellValue(c[12]),
-      yuanPerDay:gvizCellValue(c[13])
-    });
-  }).filter(function(row){
+  var rows=await apiGet({action:'holdingsOverview'});
+  return (rows||[]).map(normalizeHoldingOverviewRow).filter(function(row){
     return row.symbol&&(row.shares>0||row.cost>0||row.marketValue>0||normalizeKey(row.symbol)==='00997A');
   });
 }
 
 async function loadMonthlyDividendProjection(){
-  var url='https://docs.google.com/spreadsheets/d/'+COMMAND_SHEET_ID+'/gviz/tq?tqx=out:json&sheet='+encodeURIComponent(MONTHLY_HOLDINGS_SHEET_NAME)+'&range='+encodeURIComponent(MONTHLY_DIVIDEND_PROJECTION_RANGE);
-  var json=await readGvizJson(url);
-  var row=((json.table.rows||[])[0]||{});
-  var cell=(row.c||[])[0];
-  var value=gvizCellValue(cell);
-  return {
-    value:toNum(value),
-    displayValue:gvizCellDisplayValue(cell)
-  };
+  return apiGet({action:'monthlyDividendProjection'});
 }
 
 async function loadDailyAssetSnapshotSheet(){
-  var url='https://docs.google.com/spreadsheets/d/'+MACRO_SHEET_ID+'/gviz/tq?tqx=out:json&gid='+encodeURIComponent(ASSET_SNAPSHOT_GID)+'&range='+encodeURIComponent(ASSET_SNAPSHOT_RANGE);
-  var json=await readGvizJson(url);
-  var rows=(json.table.rows||[]).map(function(row,index){
-    var c=row.c||[];
-    var marketValue=toNum(gvizCellValue(c[1]));
-    if(!marketValue)return null;
-    var marketExposureRaw=gvizCellValue(c[6]);
-    var debtToNetAssetRaw=gvizCellValue(c[7]);
-    var totalAssetValue=toNum(gvizCellValue(c[8]));
-    var marketExposure=String(marketExposureRaw||'').trim()===''?null:foodhouseRatioPct(toNum(marketExposureRaw));
-    var debtToNetAsset=String(debtToNetAssetRaw||'').trim()===''?null:foodhouseRatioPct(toNum(debtToNetAssetRaw));
-    return {
-      rowNumber:index+2,
-      date:gvizCellValue(c[0]),
-      dateValue:gvizCellSortValue(c[0],index+2),
-      investmentMarketValue:marketValue,
-      marketValue:marketValue,
-      totalCost:toNum(gvizCellValue(c[2])),
-      totalReturn:toNum(gvizCellValue(c[3])),
-      monthlyDiv:toNum(gvizCellValue(c[4])),
-      marketExposurePct:marketExposure,
-      marketExposure:marketExposure===null?null:marketExposure/100,
-      debtToNetAssetPct:debtToNetAsset,
-      debtToNetAsset:debtToNetAsset===null?null:debtToNetAsset/100,
-      totalAssetValue:totalAssetValue||null,
-      note:String(gvizCellValue(c[5])||'')
-    };
-  }).filter(Boolean);
-  rows.sort(function(a,b){
-    if(a.dateValue!==b.dateValue)return a.dateValue-b.dateValue;
-    return a.rowNumber-b.rowNumber;
-  });
-  var latest=rows.length?rows[rows.length-1]:null;
-  var previous=rows.length>1?rows[rows.length-2]:null;
-  var dailyChangeAmount=null;
-  var dailyChangePct=null;
-  var totalAssetChangeAmount=null;
-  var totalAssetChangePct=null;
-  if(latest&&previous){
-    dailyChangeAmount=latest.investmentMarketValue-previous.investmentMarketValue;
-    if(previous.investmentMarketValue)dailyChangePct=dailyChangeAmount/previous.investmentMarketValue*100;
-    if(latest.totalAssetValue&&previous.totalAssetValue){
-      totalAssetChangeAmount=latest.totalAssetValue-previous.totalAssetValue;
-      totalAssetChangePct=totalAssetChangeAmount/previous.totalAssetValue*100;
-    }
-  }
-  return {
-    sheetName:ASSET_SNAPSHOT_SHEET_NAME,
-    rows:rows,
-    latest:latest,
-    previous:previous,
-    latestMarketValue:latest?latest.investmentMarketValue:null,
-    previousMarketValue:previous?previous.investmentMarketValue:null,
-    dailyChangeAmount:dailyChangeAmount,
-    dailyChangePct:dailyChangePct,
-    latestTotalAssetValue:latest?latest.totalAssetValue:null,
-    previousTotalAssetValue:previous?previous.totalAssetValue:null,
-    totalAssetChangeAmount:totalAssetChangeAmount,
-    totalAssetChangePct:totalAssetChangePct
-  };
+  return apiGet({action:'assetSnapshot'});
 }
 
 async function loadCommandMarketSnapshot(){
-  var marketUrl='https://docs.google.com/spreadsheets/d/'+COMMAND_SHEET_ID+'/gviz/tq?tqx=out:json&gid='+encodeURIComponent(COMMAND_MONTHLY_GID)+'&range='+encodeURIComponent(COMMAND_MARKET_VALUE_RANGE);
-  var totalUrl='https://docs.google.com/spreadsheets/d/'+COMMAND_SHEET_ID+'/gviz/tq?tqx=out:json&gid='+encodeURIComponent(COMMAND_MONTHLY_GID)+'&range='+encodeURIComponent(COMMAND_TOTAL_ASSET_RANGE);
-  var results=await Promise.all([readGvizJson(marketUrl),readGvizJson(totalUrl).catch(function(){return null;})]);
-  var json=results[0];
-  var row=(json.table.rows||[])[0]||{};
-  var cell=(row.c||[])[0];
-  var marketValue=toNum(gvizCellValue(cell));
-  if(!marketValue)return null;
-  var totalRow=results[1]&&((results[1].table.rows||[])[0]||{});
-  var totalAssetValue=toNum(gvizCellValue((totalRow.c||[])[0]));
-  return {
-    rowNumber:0,
-    date:today().replace(/-/g,'/'),
-    dateValue:Date.now(),
-    investmentMarketValue:marketValue,
-    marketValue:marketValue,
-    totalAssetValue:totalAssetValue||null,
-    source:'commandI2'
-  };
+  return apiGet({action:'assetSnapshot'});
 }
 
 async function loadCommandExposureAsset(){
-  var url='https://docs.google.com/spreadsheets/d/'+COMMAND_SHEET_ID+'/gviz/tq?tqx=out:json&gid='+encodeURIComponent(COMMAND_MONTHLY_GID)+'&range='+encodeURIComponent(COMMAND_EXPOSURE_VALUE_RANGE);
-  var json=await readGvizJson(url);
-  var row=(json.table.rows||[])[0]||{};
-  var cells=row.c||[];
-  var label=String(gvizCellValue(cells[0])||'總資產/總計').trim()||'總資產/總計';
-  var value=toNum(gvizCellValue(cells[1]));
-  if(!value)return null;
-  return {
-    label:label,
-    value:value,
-    source:'commandH2'
-  };
+  return apiGet({action:'assetSnapshot'});
 }
 
 function buildAssetSnapshotFromCommand(commandLatest,sheetSnapshot){
@@ -12059,16 +11907,6 @@ function buildAssetSnapshotFromCommand(commandLatest,sheetSnapshot){
 }
 
 async function loadAssetSnapshot(){
-  var snapshots=await Promise.allSettled([
-    loadDailyAssetSnapshotSheet(),
-    loadCommandMarketSnapshot()
-  ]);
-  var sheetSnapshot=snapshots[0].status==='fulfilled'?snapshots[0].value:null;
-  var commandLatest=snapshots[1].status==='fulfilled'?snapshots[1].value:null;
-  if(snapshots[0].status!=='fulfilled')console.warn('asset snapshot sheet fallback:',snapshots[0].reason);
-  if(commandLatest)return buildAssetSnapshotFromCommand(commandLatest,sheetSnapshot);
-  if(snapshots[1].status!=='fulfilled')console.warn('command market value fallback:',snapshots[1].reason);
-  if(sheetSnapshot&&sheetSnapshot.latest)return sheetSnapshot;
   if(!API_URL)return null;
   try{
     return await apiGet({action:'assetSnapshot'});
@@ -12086,12 +11924,6 @@ async function loadCouncilRosterSnapshot(){
 
 async function loadCouncilHoldingsOverview(){
   if(!hasMainApiCredentials())return [];
-  try{
-    var sheetRows=await loadMonthlyHoldingsSheet();
-    if(sheetRows.length)return sheetRows;
-  }catch(e){
-    console.warn(e);
-  }
   if(!API_URL)return [];
   var rows=await apiGet({action:'holdingsOverview'});
   return (rows||[]).map(normalizeHoldingOverviewRow);
