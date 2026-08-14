@@ -1877,6 +1877,12 @@ body::after{
 .btab.income.active{background:var(--teal-l);color:var(--teal)}
 .btab.transfer.active{background:rgba(124,111,192,.12);color:var(--purple)}
 .bform{display:none}.bform.active{display:block}
+.bform#bf-expense,.bform#bf-income,.bform#bf-transfer{padding:10px;border:1px solid transparent;border-radius:10px}
+.bform#bf-expense{background:rgba(216,90,48,.09);border-color:rgba(216,90,48,.22)}
+.bform#bf-income{background:rgba(232,192,80,.09);border-color:rgba(232,192,80,.24)}
+.bform#bf-transfer{background:rgba(29,158,117,.09);border-color:rgba(29,158,117,.22)}
+.bform#bf-transfer.stock-active{background:rgba(124,111,192,.11);border-color:rgba(124,111,192,.28)}
+.bform#bf-transfer .booking-transfer-section.bank{margin:0;padding:0;border-color:transparent;background:transparent}
 .booking-mode-switch{display:none}
 .booking-mode-btn{border:1px solid rgba(184,137,46,.38);border-radius:6px;background:rgba(10,8,4,.62);color:#9a7430;padding:9px 10px;font-family:var(--sans);font-size:12px;font-weight:900;cursor:pointer;transition:background .15s,color .15s,border-color .15s,box-shadow .15s}
 .booking-mode-btn.expense.active{border-color:rgba(216,90,48,.65);background:var(--coral-l);color:var(--coral);box-shadow:0 0 12px rgba(216,90,48,.16)}
@@ -7720,11 +7726,13 @@ function setMergedStockTrade(open){
   var fields=document.getElementById('merged-stock-fields');
   var sharesField=document.querySelector('.transfer-shares-field');
   var grid=document.querySelector('.booking-transfer-grid');
+  var transferForm=document.getElementById('bf-transfer');
   var btn=document.getElementById('btn-stock-toggle');
   var submit=document.getElementById('btn-transfer');
   if(fields)fields.classList.toggle('hidden',!open);
   if(sharesField)sharesField.classList.toggle('hidden',!open);
   if(grid)grid.classList.toggle('stock-mode',!!open);
+  if(transferForm)transferForm.classList.toggle('stock-active',!!open);
   if(btn){
     btn.classList.toggle('active',!!open);
     btn.textContent=open?'股票交易：開':'股票交易';
