@@ -3955,7 +3955,8 @@ function toNum(v){
   return isNaN(n)?0:n;
 }
 function normalizeKey(s){
-  s=String(s||'');
+  s=stripIconText(String(s||''));
+  if(s.indexOf('高股息')>=0)return '國泰高股息B';
   if(s.indexOf('統一')>=0||s.indexOf('全球新科技')>=0||s.indexOf('新科技基金')>=0)return '統一投信';
   if(s.indexOf('GLDW')>=0)return 'GLDW';
   if(s.indexOf('GDXW')>=0)return 'GDXW';
