@@ -2389,6 +2389,14 @@ body::after{
 .ziwei-interpretation-editor:focus{border-color:rgba(78,217,255,.8)}
 .ziwei-interpretation-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:8px}
 .chronicle-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 12px}
+.chronicle-entry{margin:0 0 16px;padding:12px;border:1px solid rgba(78,217,255,.28);border-radius:8px;background:rgba(10,8,4,.76)}
+.chronicle-entry-title{font-size:13px;font-weight:900;color:var(--gold);margin-bottom:10px}
+.chronicle-entry-grid{display:grid;grid-template-columns:2fr 1.2fr 1.2fr 1.4fr 1.2fr;gap:8px}
+.chronicle-entry-grid label{display:flex;flex-direction:column;gap:4px;font-size:10px;font-weight:900;color:#8a6a30}
+.chronicle-entry-grid input,.chronicle-entry-grid select{box-sizing:border-box;width:100%;min-height:34px;padding:7px 8px;border:1px solid #2a1c08;border-radius:6px;background:#0a0804;color:var(--ink);font:12px var(--sans);outline:none}
+.chronicle-entry-grid input:focus,.chronicle-entry-grid select:focus{border-color:rgba(78,217,255,.7)}
+.chronicle-entry-preview{margin-top:10px;padding:8px 10px;border-radius:6px;background:rgba(78,217,255,.06);font:12px var(--mono);color:#cdeff8}
+.chronicle-entry-actions{display:flex;align-items:center;gap:10px;margin-top:10px}
 .chronicle-search{width:min(320px,100%);background:#0a0804;border:1px solid #2a1c08;border-radius:6px;color:var(--ink);font-family:var(--sans);font-size:12px;padding:8px 10px;outline:none}
 .chronicle-search:focus{border-color:rgba(232,192,80,.55)}
 .chronicle-count{font-family:var(--mono);font-size:11px;color:#8a6a30;white-space:nowrap}
@@ -2403,6 +2411,7 @@ body::after{
 .chronicle-note-detail{display:none;grid-column:1/-1;border-top:1px solid rgba(184,137,46,.22);padding-top:8px;white-space:pre-wrap}
 .chronicle-row.is-open .chronicle-note-detail{display:block}
 @media(max-width:760px){.ziwei-overview{grid-template-columns:1fr}.ziwei-sidebar{border-right:0;border-bottom:1px solid rgba(232,192,80,.62)}.ziwei-main:before{border-left:0;border-top:1px solid rgba(78,217,255,.75)}.ziwei-list{max-height:220px}.ziwei-viewer-head{flex-direction:column}.ziwei-tools{justify-content:flex-start}.ziwei-stage{min-height:260px;padding:10px}.chronicle-toolbar{align-items:stretch;flex-direction:column}.chronicle-search{width:100%}.chronicle-count{white-space:normal}}
+@media(max-width:760px){.chronicle-entry-grid{grid-template-columns:1fr 1fr}.chronicle-entry-grid label:first-child{grid-column:1/-1}}
 @media(max-width:980px){.chronicle-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:540px){.chronicle-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.chronicle-row{grid-template-columns:1fr;padding:9px}.chronicle-cell{font-size:12px}.chronicle-cell:before{font-size:9px}.chronicle-row .chronicle-name{font-size:14px}.chronicle-date{font-size:10px}.chronicle-cost-value{font-size:14px}}
 @media(max-width:360px){.chronicle-list{gap:6px}.chronicle-row{gap:7px;padding:7px}.chronicle-cell{font-size:11px}.chronicle-cell:before{font-size:8px}.chronicle-cost-value{font-size:13px}}
@@ -3787,7 +3796,7 @@ body::after{
 // ══════════════════════════════════════════
 //  State & Config
 // ══════════════════════════════════════════
-var CANONICAL_API_URL = 'https://script.google.com/macros/s/AKfycbwBEm2-jTRwktEow_0FcwZw0Glos7a97Ajr2A9e62dRGj6g66zQ8QOoAqJ2up5iK58t/exec';
+var CANONICAL_API_URL = 'https://script.google.com/macros/s/AKfycbxOT0dQMBdOJskuALi6cldkJo7iTL235FigUs75id1KyEICuFAt2PYuGQio6tXK9jG0/exec';
 var LEGACY_API_DEPLOYMENT_IDS = [
   'AKfycbwBhxif_vONIC4m8mxWZB2q2bk3Hyy1lBkCkFSg66OLwQxPQL-Ktsc7BdTgZQZAc4bO',
   'AKfycbw3ddm4mcOvSSijvguaBwVvJH-KOp5MdrUgJQw4oy58o9bg456EtRIaCsYnrsPSS7xN',
@@ -5533,17 +5542,75 @@ async function loadEventChronicle(){
 function renderEventChronicle(){
   var content=document.getElementById('chronicle-content');
   if(!content)return;
-  if(!eventChronicleCache.length){
-    content.innerHTML='<div class="battle-empty">事件編年史目前沒有資料。請先在試算表填入事件名稱、事件模式與對應日期欄位。</div>';
-    return;
-  }
   content.innerHTML=`
+    <form class="chronicle-entry" onsubmit="submitEventChronicle(event)">
+      <div class="chronicle-entry-title">加入記錄</div>
+      <div class="chronicle-entry-grid">
+        <label>主要記錄名稱<input id="chronicle-entry-name" type="text" maxlength="100" required placeholder="例如：更換冷氣"></label>
+        <label>日期<input id="chronicle-entry-date" type="date" value="${today()}" required onchange="updateChroniclePreview()"></label>
+        <label>價格<input id="chronicle-entry-price" type="number" min="0.01" step="0.01" required placeholder="0" oninput="updateChroniclePreview()"></label>
+        <label>成本模式<select id="chronicle-entry-mode" onchange="toggleChronicleDuration();updateChroniclePreview()"><option value="長期成本">長期成本</option><option value="單一事件耗時">單一事件耗時</option></select></label>
+        <label id="chronicle-entry-duration-wrap" class="hidden">耗時日數<input id="chronicle-entry-duration" type="number" min="1" step="1" value="1" oninput="updateChroniclePreview()"></label>
+      </div>
+      <div class="chronicle-entry-preview" id="chronicle-entry-preview">請填入價格以預覽日、月與每日成本</div>
+      <div class="chronicle-entry-actions"><button class="cfg-verify-btn" id="chronicle-entry-submit" type="submit">加入記錄</button><div class="result-msg" id="chronicle-entry-msg"></div></div>
+    </form>
     <div class="chronicle-toolbar">
       <input class="chronicle-search" id="chronicle-search" type="search" placeholder="搜尋項目" oninput="queueEventChronicleRender()">
       <div class="chronicle-count" id="chronicle-count"></div>
     </div>
     <div class="chronicle-list" id="chronicle-list"></div>`;
+  toggleChronicleDuration();
+  updateChroniclePreview();
   renderEventChronicleList();
+}
+
+function toggleChronicleDuration(){
+  var mode=document.getElementById('chronicle-entry-mode');
+  var wrap=document.getElementById('chronicle-entry-duration-wrap');
+  var input=document.getElementById('chronicle-entry-duration');
+  var isDuration=mode&&mode.value==='單一事件耗時';
+  if(wrap)wrap.classList.toggle('hidden',!isDuration);
+  if(input)input.required=!!isDuration;
+}
+
+function getChronicleEntryPreview(){
+  var mode=(document.getElementById('chronicle-entry-mode')||{}).value||'長期成本';
+  var price=parseFloat((document.getElementById('chronicle-entry-price')||{}).value)||0;
+  var date=(document.getElementById('chronicle-entry-date')||{}).value||'';
+  var days=mode==='單一事件耗時'
+    ? (parseInt((document.getElementById('chronicle-entry-duration')||{}).value,10)||0)
+    : (date?Math.max(1,Math.floor((new Date().getTime()-new Date(date+'T00:00:00').getTime())/86400000)+1):0);
+  return {mode:mode,price:price,days:days,months:days?Math.round(days/30.6*100)/100:0,dailyCost:days&&price?Math.round(price/days*100)/100:0};
+}
+
+function updateChroniclePreview(){
+  var preview=document.getElementById('chronicle-entry-preview');
+  if(!preview)return;
+  var v=getChronicleEntryPreview();
+  preview.textContent=v.price>0&&v.days>0?'自動換算：'+v.days+' 日／'+v.months+' 月／每日成本 '+v.dailyCost.toLocaleString('zh-TW',{maximumFractionDigits:2}):'請填入價格以預覽日、月與每日成本';
+}
+
+async function submitEventChronicle(e){
+  stopBookingSubmitEvent(e);
+  var btn=document.getElementById('chronicle-entry-submit');
+  var msg=document.getElementById('chronicle-entry-msg');
+  var name=(document.getElementById('chronicle-entry-name')||{}).value.trim();
+  var date=(document.getElementById('chronicle-entry-date')||{}).value;
+  var price=parseFloat((document.getElementById('chronicle-entry-price')||{}).value)||0;
+  var mode=(document.getElementById('chronicle-entry-mode')||{}).value;
+  var durationDays=parseInt((document.getElementById('chronicle-entry-duration')||{}).value,10)||0;
+  if(!name||!date||price<=0||(mode==='單一事件耗時'&&durationDays<=0)){showMsg('chronicle-entry-msg','請填寫完整記錄資料','err');return;}
+  if(btn) {btn.disabled=true;btn.textContent='寫入中…';}
+  try{
+    await apiPost({action:'eventChronicleSave',name:name,date:date.replace(/-/g,'/'),price:price,mode:mode,durationDays:durationDays});
+    try{localStorage.removeItem(STARS_CHRONICLE_CACHE_KEY);}catch(ignore){}
+    showMsg('chronicle-entry-msg','✓ 已加入事件編年史','ok');
+    document.getElementById('chronicle-entry-name').value='';
+    document.getElementById('chronicle-entry-price').value='';
+    await loadEventChronicle();
+  }catch(err){showMsg('chronicle-entry-msg','✗ '+(err.message||'寫入失敗'),'err');}
+  finally{if(btn){btn.disabled=false;btn.textContent='加入記錄';}}
 }
 
 function sortEventChronicleRows(rows){
@@ -5587,12 +5654,12 @@ function renderChronicleCard(row){
   var date=String(row.date||'').trim()||'--';
   var note=String(row.note||'').trim();
   if(mode==='duration'){
-    var durationDays=formatChronicleDurationDays(row.durationDays);
     var tail=note||'尚無備註';
     return `<div class="chronicle-row is-toggle" role="button" tabindex="0" onclick="toggleChronicleNote(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleChronicleNote(this)}">
       <div class="chronicle-cell chronicle-name" data-label="事件名稱">${esc(row.name||'未命名')}<span class="chronicle-date">${esc(date)}</span></div>
-      <div class="chronicle-cell chronicle-cost-value" data-label="持續多少日">${esc(durationDays)}</div>
-      <div class="chronicle-cell" data-label="備註">點擊顯示</div>
+      <div class="chronicle-cell" data-label="經歷月">${esc(String(row.months||'').trim()||'--')}</div>
+      <div class="chronicle-cell" data-label="經歷日">${esc(String(row.days||'').trim()||'--')}</div>
+      <div class="chronicle-cell chronicle-cost-value" data-label="每日成本">${esc(String(row.dailyCost||'').trim()||'--')}</div>
       <div class="chronicle-cell chronicle-note-detail" data-label="備註">${esc(tail)}</div>
     </div>`;
   }
