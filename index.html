@@ -5980,7 +5980,7 @@ function ziweiImageUrl(row,size){
   if(!row)return '';
   var direct=String(row.imageUrl||'').trim();
   var fileId=String(row.fileId||extractDriveFileId(row.imageUrl)||extractDriveFileId(row.thumbUrl)||'').trim();
-  if(fileId)return 'https://drive.google.com/uc?export=view&id='+encodeURIComponent(fileId)+'&v='+encodeURIComponent(ziweiImageCacheBuster);
+  if(fileId)return 'https://drive.usercontent.google.com/download?id='+encodeURIComponent(fileId)+'&export=view&authuser=0&v='+encodeURIComponent(ziweiImageCacheBuster);
   return direct;
 }
 
