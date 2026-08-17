@@ -5160,6 +5160,8 @@ function switchTab(btn,key){
 }
 
 function renderStarsPanel(){
+  ziweiDetailCache={};
+  ziweiImageCacheBuster=String(Date.now());
   setPanelHead('★','Zi Wei · Star Chart','司天監');
   var panelExtra=document.getElementById('p-extra');
   if(panelExtra)panelExtra.innerHTML='<span class="empire-panel-status-dot err" id="stars-panel-status-dot" title="司天監連線失敗" aria-label="司天監連線失敗"></span>';
@@ -16383,7 +16385,7 @@ function mpmRender(records){
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('./sw.js').catch(function (error) {
+    navigator.serviceWorker.register('./sw.js?v=20260817-ziwei-refresh').catch(function (error) {
       console.warn('Empire Service Worker registration failed', error);
     });
   });
