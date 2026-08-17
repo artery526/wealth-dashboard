@@ -5926,7 +5926,7 @@ function renderZiweiPreview(){
       ${original?`<a class="ziwei-open-btn" href="${esc(original)}" target="_blank" rel="noopener">\u958b\u539f\u5716</a>`:(img?`<a class="ziwei-open-btn" href="${esc(img)}" target="_blank" rel="noopener">\u958b\u5716\u7247</a>`:'')}
     </div>
     <div class="ziwei-preview-stage">
-      ${img?`<img class="ziwei-preview-img" src="${esc(img)}" alt="${esc(row.name)} \u7d2b\u5fae\u547d\u76e4">`:'<div class="ziwei-preview-empty">\u9019\u7b46\u8cc7\u6599\u5c1a\u672a\u586b\u5165\u5716\u7247\u9023\u7d50\u3002</div>'}
+      ${img?`<img class="ziwei-preview-img" src="${esc(img)}" referrerpolicy="no-referrer" alt="${esc(row.name)} \u7d2b\u5fae\u547d\u76e4">`:'<div class="ziwei-preview-empty">\u9019\u7b46\u8cc7\u6599\u5c1a\u672a\u586b\u5165\u5716\u7247\u9023\u7d50\u3002</div>'}
     </div>
     <div class="ziwei-chart-tabs"><button class="ziwei-chart-tab active" type="button">${esc(chartTitle)}</button></div>
     <section class="ziwei-interpretation">
