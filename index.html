@@ -3880,6 +3880,7 @@ var ziweiBirthVisible = false;
 var ziweiDetailCache = {};
 var ziweiDetailPromise = null;
 var ziweiEditing = false;
+var ziweiImageCacheBuster = String(Date.now());
 var eventChronicleCache = [];
 var eventChronicleSortedCache = [];
 var eventChroniclePromise = null;
@@ -5473,6 +5474,7 @@ async function loadZiweiCharts(){
     }
     var data=await ziweiChartsPromise;
     ziweiChartsCache=data.rows||[];
+    ziweiDetailCache={};
     writeStarsCache(STARS_ZIWEI_CACHE_KEY,ziweiChartsCache);
     if(dot)dot.className='api-dot ok';
     if(label)label.textContent='已連線 · '+ziweiChartsCache.length+' 筆命盤索引';
@@ -5905,7 +5907,8 @@ function renderZiweiPreview(){
   }
   var detailState=ziweiDetailCache[ziweiDetailKey(row)]||{};
   var detail=detailState.detail||{};
-  var img=detail.imageDataUrl||detail.imageUrl||ziweiImageUrl(row,'large');
+  var driveImage=String(row.fileId||extractDriveFileId(row.imageUrl)||'').trim()?ziweiImageUrl(row,'large'):'';
+  var img=driveImage||detail.imageDataUrl||detail.imageUrl||ziweiImageUrl(row,'large');
   var original=detail.imageDataUrl||ziweiOriginalUrl(row);
   var meta=ziweiBirthMeta(row);
   var interpretation=detailState.loaded?String(detail.interpretation||''):String(row.note||'');
@@ -5975,7 +5978,7 @@ function ziweiImageUrl(row,size){
   if(!row)return '';
   var direct=String(row.imageUrl||'').trim();
   var fileId=String(row.fileId||extractDriveFileId(row.imageUrl)||extractDriveFileId(row.thumbUrl)||'').trim();
-  if(fileId)return 'https://drive.google.com/thumbnail?id='+encodeURIComponent(fileId)+'&sz='+(size==='thumb'?'w480':'w2200');
+  if(fileId)return 'https://drive.google.com/thumbnail?id='+encodeURIComponent(fileId)+'&sz='+(size==='thumb'?'w480':'w2200')+'&v='+encodeURIComponent(ziweiImageCacheBuster);
   return direct;
 }
 
