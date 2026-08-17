@@ -2293,6 +2293,22 @@ body::after{
 .macro-indicator-status.watch{color:var(--gold);background:rgba(232,192,80,.12)}
 .macro-indicator-status.defense{color:var(--coral);background:rgba(216,90,48,.12)}
 .macro-threshold{font-family:var(--sans);font-size:10px;color:#7a6030;line-height:1.7;margin-top:7px}
+.taiwan-macro-hero{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;border:1px solid rgba(184,137,46,.34);border-radius:10px;background:linear-gradient(145deg,rgba(16,10,4,.92),rgba(8,7,4,.88));padding:14px;margin-bottom:12px}
+.taiwan-macro-kicker{font-family:var(--sans);font-size:12px;color:#7a6030;letter-spacing:2px;font-weight:800}
+.taiwan-macro-state{font-family:var(--sans);font-size:25px;font-weight:900;color:var(--gold);margin-top:5px}
+.taiwan-macro-meta,.taiwan-macro-card-meta{font-family:var(--sans);font-size:10px;color:#8d7138;line-height:1.55;margin-top:4px}
+.taiwan-macro-section-title{font-family:var(--sans);font-size:10px;letter-spacing:2px;color:#8d7138;font-weight:900;border-bottom:1px solid #2a1c08;padding-bottom:6px;margin:14px 0 8px}
+.taiwan-macro-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.taiwan-macro-card{border:1px solid #2a1c08;border-radius:10px;background:rgba(10,8,4,.72);padding:10px}
+.taiwan-macro-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.taiwan-macro-card-name{font-family:var(--sans);font-size:12px;font-weight:900;color:var(--ink)}
+.taiwan-macro-card-code{font-family:var(--mono);font-size:9px;color:#5a4018;margin-top:2px}
+.taiwan-macro-card-value{font-family:var(--mono);font-size:20px;font-weight:900;color:var(--gold);margin-top:8px}
+.taiwan-macro-history{margin-top:4px}
+.taiwan-macro-history-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.taiwan-macro-range{display:flex;gap:4px}.taiwan-macro-range button{border:1px solid #2a1c08;background:#0c0804;color:#8d7138;border-radius:5px;padding:4px 7px;font:700 10px var(--mono);cursor:pointer}.taiwan-macro-range button.active{color:var(--gold);border-color:rgba(232,192,80,.55)}
+.taiwan-macro-chart{border:1px solid #2a1c08;border-radius:9px;background:rgba(10,8,4,.72);padding:9px;margin-top:8px}.taiwan-macro-chart-head{display:flex;justify-content:space-between;gap:8px;font:700 10px var(--sans);color:#b89452}.taiwan-macro-chart svg{display:block;width:100%;height:110px;margin-top:5px}.taiwan-macro-axis{stroke:rgba(184,137,46,.22);stroke-width:1}.taiwan-macro-line{fill:none;stroke:var(--teal);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.taiwan-macro-empty{border:1px dashed rgba(184,137,46,.4);border-radius:9px;padding:18px;text-align:center;color:#8d7138;font:12px/1.7 var(--sans)}
 .battle-report-head{
   display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
   border:1px solid rgba(184,137,46,.34);border-radius:8px;background:rgba(10,8,4,.72);
@@ -2424,6 +2440,7 @@ body::after{
 @media(max-width:540px){.chronicle-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.chronicle-row{grid-template-columns:1fr;padding:9px}.chronicle-cell{font-size:12px}.chronicle-cell:before{font-size:9px}.chronicle-row .chronicle-name{font-size:14px}.chronicle-date{font-size:10px}.chronicle-cost-value{font-size:14px}}
 @media(max-width:360px){.chronicle-list{gap:6px}.chronicle-row{gap:7px;padding:7px}.chronicle-cell{font-size:11px}.chronicle-cell:before{font-size:8px}.chronicle-cost-value{font-size:13px}}
 @media(max-width:540px){.market-command{grid-template-columns:1fr}.market-counts{justify-content:flex-start}.market-metrics{grid-template-columns:1fr 1fr}.market-card-grid{grid-template-columns:1fr}.macro-actions,.macro-grid{grid-template-columns:1fr}.macro-scenario{font-size:24px}}
+@media(max-width:540px){.taiwan-macro-hero{flex-direction:column}.taiwan-macro-hero .battle-report-refresh{width:100%}.taiwan-macro-grid{grid-template-columns:1fr}.taiwan-macro-history-head{align-items:flex-start;flex-direction:column}}
 @media(max-width:640px){.battle-report-grid{grid-template-columns:1fr}.battle-report-head{flex-direction:column}.battle-report-refresh{width:100%}}
 @media(max-width:640px){.battle-etf-head{flex-direction:column}.battle-etf-link{width:100%}.battle-etf-grid{grid-template-columns:1fr}}
 @media(max-width:560px){.battle-kpis{justify-content:flex-start}.battle-table-row{grid-template-columns:1fr 1fr}.battle-table-row.head{display:none}.battle-cell.num{text-align:left}.battle-cell[data-label]:before{content:attr(data-label);display:block;font-family:var(--sans);font-size:9px;color:#5a4018;letter-spacing:1px;margin-bottom:2px}}
@@ -4393,6 +4410,7 @@ var BATTLE_BRIEF_CACHE_KEY='wealth_battle_brief_v1';
 var MARKET_CACHE_TTL=2*60*60*1000;
 var marketDashboardPromise=null;
 var macroOverviewPromise=null;
+var taiwanMacroPromise=null;
 var macroLongReportPromise=null;
 var battleBriefPromise=null;
 function clearLegacyAdvisorReminderCache(){
@@ -5154,6 +5172,7 @@ function switchTab(btn,key){
   else if(key==='battle-brief')loadBattleBrief();
   else if(key==='market-watch')loadMarketDashboard();
   else if(key==='macro-overview')loadMacroOverview();
+  else if(key==='taiwan-macro')loadTaiwanMacro();
   else if(key==='council-roster')loadCouncilDashboard();
   else if(key==='council-task')resetRetiredTaskStatus();
   else if(key==='div-calc')initDivCalc();
@@ -11572,9 +11591,10 @@ function renderCouncilPanel(initialTab){
     {key:'battle-brief',label:'戰情總匯報'},
     {key:'council-roster',label:'部隊陣容'},
     {key:'market-watch',label:'台美股大盤'},
-    {key:'macro-overview',label:'美股總經'}
+    {key:'macro-overview',label:'美股總經'},
+    {key:'taiwan-macro',label:'台灣總體經濟'}
   ]);
-  var targetTab=['battle-brief','council-roster','market-watch','macro-overview'].indexOf(initialTab)>=0?initialTab:'battle-brief';
+  var targetTab=['battle-brief','council-roster','market-watch','macro-overview','taiwan-macro'].indexOf(initialTab)>=0?initialTab:'battle-brief';
   currentTab=targetTab;
   var apiReady=hasMainApiCredentials();
   var lockedNotice=setupNotice();
@@ -11591,6 +11611,9 @@ function renderCouncilPanel(initialTab){
     <div class="pane ${targetTab==='macro-overview'?'active':''}" id="pane-macro-overview">
       <div id="macro-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:82%"></div><div class="skel-line skel" style="width:68%"></div></div>
     </div>
+    <div class="pane ${targetTab==='taiwan-macro'?'active':''}" id="pane-taiwan-macro">
+      <div id="taiwan-macro-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:82%"></div><div class="skel-line skel" style="width:68%"></div></div>
+    </div>
     <div class="pane" id="pane-council-task">
       ${renderRetiredTaskNotice()}
     </div>`;
@@ -11603,6 +11626,7 @@ function renderCouncilPanel(initialTab){
     else if(targetTab==='council-roster')loadCouncilDashboard();
     else if(targetTab==='market-watch')loadMarketDashboard();
     else if(targetTab==='macro-overview')loadMacroOverview();
+    else if(targetTab==='taiwan-macro')loadTaiwanMacro();
   }
   if(API_URL&&targetTab!=='council-roster')setTimeout(prefetchMarketDashboard,300);
 }
@@ -13224,6 +13248,64 @@ function renderMacroOverview(data,el){
     <div class="macro-grid">${indicatorHtml}</div>`;
 }
 
+function taiwanMacroTone(direction){
+  var key=direction&&direction.key||'';
+  return key==='improve'?'attack':key==='cool'?'defense':'watch';
+}
+function taiwanMacroDirectionText(direction){
+  return direction&&direction.label?direction.label:'尚未更新';
+}
+function taiwanMacroValueText(value,suffix){
+  if(value===null||value===undefined||value==='')return '--';
+  var n=Number(value);
+  if(isNaN(n))return esc(value);
+  return (n>=0&&suffix==='%'?'+':'')+n.toFixed(2)+(suffix||'');
+}
+function taiwanMacroCard(name,code,value,direction,suffix,meta){
+  var tone=taiwanMacroTone(direction);
+  return `<div class="taiwan-macro-card">
+    <div class="taiwan-macro-card-head"><div><div class="taiwan-macro-card-name">${name}</div><div class="taiwan-macro-card-code">${code}</div></div><div class="macro-indicator-status ${tone}">${esc(taiwanMacroDirectionText(direction))}</div></div>
+    <div class="taiwan-macro-card-value">${taiwanMacroValueText(value,suffix)}</div>
+    <div class="taiwan-macro-card-meta">${esc(meta||'')}</div>
+  </div>`;
+}
+function taiwanMacroChart(rows,code,label){
+  var points=rows.map(function(row){var value=Number(row[code]);return isFinite(value)?value:null;}).filter(function(value){return value!==null;});
+  if(points.length<2)return '<div class="taiwan-macro-empty">尚未累積足夠歷史資料</div>';
+  var width=360,height=110,pad=10,min=Math.min.apply(null,points),max=Math.max.apply(null,points),span=max-min||1;
+  var coords=[],cursor=0;
+  rows.forEach(function(row){var value=Number(row[code]);if(!isFinite(value))return;var x=pad+(cursor/(points.length-1))*(width-pad*2);var y=height-pad-((value-min)/span)*(height-pad*2);coords.push(x.toFixed(1)+','+y.toFixed(1));cursor++;});
+  return `<div class="taiwan-macro-chart"><div class="taiwan-macro-chart-head"><span>${esc(label)}</span><span>${min.toFixed(2)} ～ ${max.toFixed(2)}</span></div><svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(label)}歷史趨勢"><line x1="${pad}" y1="${height-pad}" x2="${width-pad}" y2="${height-pad}" class="taiwan-macro-axis"></line><polyline points="${coords.join(' ')}" class="taiwan-macro-line"></polyline></svg></div>`;
+}
+function renderTaiwanMacro(data,history,el,range){
+  data=data||{}; history=history||{}; var latest=data.latest||{}; var d=latest.directions||{};
+  if(!data.hasData){el.innerHTML='<div class="taiwan-macro-empty">台灣總體經濟資料尚未建立。請先執行後端 taiwanMacroUpdate。</div>';return;}
+  var meta='最新公布月份：'+(latest.month||'--')+' · 更新：'+(latest.updated_at||'--');
+  var cards=[
+    taiwanMacroCard('🚦 景氣燈號','business_cycle_light',latest.business_cycle_light,d.score,'', '綜合判斷 '+(latest.business_cycle_score||'--')+' 分'),
+    taiwanMacroCard('📈 領先指標','leading_index_without_trend',latest.leading_index_without_trend,d.leading,'', '不含趨勢指數'),
+    taiwanMacroCard('📦 出口','exports_yoy',latest.exports_yoy,d.exports,'%','年增率'),
+    taiwanMacroCard('📝 外銷訂單','export_orders_yoy',latest.export_orders_yoy,d.orders,'%','年增率'),
+    taiwanMacroCard('🏭 工業生產','industrial_production_yoy',latest.industrial_production_yoy,d.industrial,'%','年增率'),
+    taiwanMacroCard('💱 新台幣','usdtwd',latest.usdtwd,{key:latest.usdtwd_trend==='台幣升值'?'improve':latest.usdtwd_trend==='台幣貶值'?'cool':'flat',label:latest.usdtwd_trend||'尚未更新'},'', '近 3 個月'),
+    taiwanMacroCard('💰 M2','m2_yoy',latest.m2_yoy,d.m2,'%','年增率')
+  ];
+  el.innerHTML=`<div class="taiwan-macro-hero"><div><div class="taiwan-macro-kicker">🇹🇼 台灣總體經濟</div><div class="taiwan-macro-state">${esc(latest.overall_state||'資料不足')}</div><div class="taiwan-macro-meta">${esc(meta)}</div></div><button class="battle-report-refresh" type="button" onclick="loadTaiwanMacro(true)">重新整理</button></div>
+    <div class="taiwan-macro-section-title">目前景氣</div><div class="taiwan-macro-grid">${cards[0]}${cards[4]}</div>
+    <div class="taiwan-macro-section-title">未來景氣</div><div class="taiwan-macro-grid">${cards[1]}${cards[2]}${cards[3]}</div>
+    <div class="taiwan-macro-section-title">金融／資金環境</div><div class="taiwan-macro-grid">${cards[5]}${cards[6]}</div>
+    <div class="taiwan-macro-history"><div class="taiwan-macro-history-head"><div class="taiwan-macro-section-title">歷史趨勢</div><div class="taiwan-macro-range">${['1Y','3Y','5Y'].map(function(item){return '<button class="'+(range===item?'active':'')+'" type="button" onclick="loadTaiwanMacro(false,\''+item+'\')">'+item+'</button>';}).join('')}</div></div>${taiwanMacroChart(history.rows||[],'business_cycle_score','景氣綜合判斷分數')} ${taiwanMacroChart(history.rows||[],'exports_yoy','出口 YoY')}</div>`;
+}
+async function loadTaiwanMacro(force,range){
+  var el=document.getElementById('taiwan-macro-content'); if(!el)return;
+  range=range||'1Y';
+  if(!API_URL){el.innerHTML=setupNotice();return;}
+  if(!force&&taiwanMacroPromise){return taiwanMacroPromise;}
+  setCouncilPanelStatusIfActive('pending','台灣總體經濟讀取中');
+  taiwanMacroPromise=Promise.all([apiGet({action:'taiwanMacroOverview'},30000),apiGet({action:'taiwanMacroHistory',range:range},30000)]).then(function(result){renderTaiwanMacro(result[0],result[1],el,range);setCouncilPanelStatusIfActive('ok','台灣總體經濟已連線');return result;}).catch(function(error){el.innerHTML='<div class="taiwan-macro-empty">台灣總體經濟讀取失敗：'+esc(error&&error.message||'請稍後再試')+'</div>';setCouncilPanelStatusIfActive('err','台灣總體經濟讀取失敗');throw error;}).finally(function(){taiwanMacroPromise=null;});
+  return taiwanMacroPromise;
+}
+
 function setupNotice(){
   return `<div class="setup-notice">
     <p>尚未設定 API，無法讀取資料。<br>請填入 Google Apps Script Web App URL 與記帳密鑰。</p>
@@ -14757,6 +14839,7 @@ function advisorAIOpenTarget(text){
   if(key.indexOf('年度財報')>=0||key.indexOf('財報')>=0)return {intent:'open',panel:'finance',tab:'domestic-yearly',label:'年度財報'};
   if(key.indexOf('部隊陣容')>=0||key.indexOf('陣容')>=0)return {intent:'open',panel:'council',tab:'council-roster',label:'部隊陣容'};
   if(key.indexOf('戰情總匯報')>=0||key.indexOf('總匯報')>=0)return {intent:'open',panel:'council',tab:'battle-brief',label:'戰情總匯報'};
+  if(key.indexOf('台灣總體經濟')>=0||key.indexOf('台灣總經')>=0)return {intent:'open',panel:'council',tab:'taiwan-macro',label:'台灣總體經濟'};
   if(key.indexOf('總經')>=0)return {intent:'open',panel:'council',tab:'macro-overview',label:'美股總經'};
   if(key.indexOf('市集')>=0||key.indexOf('市場')>=0)return {intent:'open',panel:'council',tab:'market-watch',label:'台美股大盤'};
   if(key.indexOf('內政')>=0||key.indexOf('記帳')>=0)return {intent:'open',panel:'domestic',tab:'booking-form',label:'快速記帳'};
@@ -14955,6 +15038,7 @@ function advisorAICommand(raw){
   if(compact==='糧'||compact.indexOf('糧倉')>=0)return {intent:'open',panel:'finance',tab:'finance-accs',label:'國庫現況'};
   if(compact.indexOf('部隊陣容')>=0||compact.indexOf('陣容')>=0)return {intent:'open',panel:'council',tab:'council-roster',label:'部隊陣容'};
   if(compact.indexOf('戰情總匯報')>=0||compact.indexOf('總匯報')>=0)return {intent:'open',panel:'council',tab:'battle-brief',label:'戰情總匯報'};
+  if(compact.indexOf('台灣總體經濟')>=0||compact.indexOf('台灣總經')>=0)return {intent:'open',panel:'council',tab:'taiwan-macro',label:'台灣總體經濟'};
   if(compact.indexOf('總經')>=0)return {intent:'open',panel:'council',tab:'macro-overview',label:'美股總經'};
   if(compact.indexOf('維持率')>=0)return {intent:'maintenance'};
   if(compact.indexOf('複製載具')>=0)return {intent:'copyCarrier'};
