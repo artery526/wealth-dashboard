@@ -1005,6 +1005,23 @@ body::after{
 .advisor-world-pill.defense strong{color:var(--coral)}
 .advisor-world-pill.attack strong{color:var(--teal)}
 .advisor-world-quote{position:relative;z-index:1;margin-top:11px;padding-top:9px;border-top:1px solid rgba(232,192,80,.16);font-family:var(--font);font-size:15px;font-weight:900;line-height:1.8;color:#f4e5b7;text-align:center;text-shadow:0 0 12px rgba(232,192,80,.14)}
+.advisor-world-title-row{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:3px}
+.advisor-world-title-row .advisor-world-title{margin:0}
+.advisor-world-tab-btn{border:1px solid rgba(232,192,80,.5);border-radius:5px;background:linear-gradient(180deg,#3a290d,#1a1006);color:#f4d783;font-family:var(--sans);font-size:11px;font-weight:900;padding:5px 9px;cursor:pointer;white-space:nowrap}
+.advisor-world-tab-btn:hover,.advisor-world-tab-btn:focus-visible{filter:brightness(1.12);border-color:rgba(255,218,105,.95);outline:none}
+.advisor-tw-review-kicker{position:relative;z-index:1;margin-top:7px;font-family:var(--sans);font-size:12px;font-weight:900;letter-spacing:1px;color:#c8b07a}
+.advisor-tw-review-meta{position:relative;z-index:1;margin:5px 0 10px;font-family:var(--mono);font-size:11px;color:#9f8248}
+.advisor-tw-review-statuses{position:relative;z-index:1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:8px 0 11px}
+.advisor-tw-review-status{border:1px solid rgba(232,192,80,.2);border-radius:6px;background:rgba(0,0,0,.18);padding:7px 6px;font-family:var(--sans);font-size:10px;line-height:1.4;color:#a98a48}
+.advisor-tw-review-status strong{display:block;margin-top:2px;font-size:12px;color:#f3df9a}
+.advisor-tw-review-section{position:relative;z-index:1;border-top:1px solid rgba(232,192,80,.16);padding:9px 0 0;margin-top:9px}
+.advisor-tw-review-label{font-family:var(--sans);font-size:11px;font-weight:900;color:#c8b07a;margin-bottom:4px}
+.advisor-tw-review-text{font-family:var(--font);font-size:13px;line-height:1.75;color:#ead9a8}
+.advisor-tw-review-monthly{font-size:15px;font-weight:900;color:#f4e5b7}
+.advisor-tw-review-list{margin:0;padding-left:18px;font-family:var(--sans);font-size:12px;line-height:1.7;color:#ead7a2}
+.advisor-tw-review-missing{position:relative;z-index:1;margin-top:10px;border:1px solid rgba(216,90,48,.35);border-radius:6px;padding:7px 8px;font-family:var(--sans);font-size:11px;line-height:1.5;color:#ffad8f}
+.advisor-tw-review-actions{position:relative;z-index:1;display:flex;justify-content:flex-end;margin-top:11px}
+@media(max-width:540px){.advisor-tw-review-statuses{grid-template-columns:1fr}.advisor-world-tab-btn{font-size:10px;padding:5px 7px}}
 .advisor-brief-date{position:relative;z-index:1;margin-top:-4px;margin-bottom:12px;text-align:center;font-family:var(--mono);font-size:12px;font-weight:900;color:#bda36d}
 .advisor-brief-divider{position:relative;z-index:1;height:1px;margin:12px 0;background:linear-gradient(90deg,transparent,rgba(232,192,80,.35),transparent)}
 .advisor-brief-section{position:relative;z-index:1;padding:2px 0}
@@ -4176,11 +4193,11 @@ function parseApiJsonText(text){
   throw new Error('API returned non-JSON response');
 }
 function isApiWriteAction(action){
-  return /^(expense|income|transfer|transactionUndo|stockTradeVoid|dividendEntry|dividendDelete|holdingTradeEntry|holdingTradeDelete|calendarCreate|calendarDelete|taskCreate|taskDelete|macroLongReportGenerate|macroLongReportTriggerInstall)$/.test(action||'');
+  return /^(expense|income|transfer|transactionUndo|stockTradeVoid|dividendEntry|dividendDelete|holdingTradeEntry|holdingTradeDelete|calendarCreate|calendarDelete|taskCreate|taskDelete|macroLongReportGenerate|macroLongReportTriggerInstall|taiwanStockReviewGenerate)$/.test(action||'');
 }
 function apiWriteTimeoutMs(action){
   action=String(action||'');
-  if(action==='macroLongReportGenerate')return 150000;
+  if(action==='macroLongReportGenerate'||action==='taiwanStockReviewGenerate')return 150000;
   if(action==='macroLongReportTriggerInstall')return 45000;
   if(action==='verifyWriteToken')return 45000;
   return isApiWriteAction(action)?45000:15000;
@@ -4412,6 +4429,8 @@ var marketDashboardPromise=null;
 var macroOverviewPromise=null;
 var taiwanMacroPromise=null;
 var taiwanMacroSyncPromise=null;
+var taiwanStockReviewPromise=null;
+var taiwanStockReviewGeneratePromise=null;
 var macroLongReportPromise=null;
 var battleBriefPromise=null;
 function clearLegacyAdvisorReminderCache(){
@@ -13060,7 +13079,7 @@ function advisorWorldBuild(market,macro){
 }
 function advisorWorldHtml(view){
   return `<div class="advisor-world-card">
-    <div class="advisor-world-title">🏛 帝國晨報</div>
+    <div class="advisor-world-title-row"><div class="advisor-world-title">🏛 帝國晨報</div><button class="advisor-world-tab-btn" type="button" onclick="openAdvisorTaiwanStockReview(event)">📈 台股</button></div>
     <div class="advisor-brief-date">${esc(view.date)}</div>
     <div class="advisor-brief-divider"></div>
     <div class="advisor-world-stance ${esc(view.empireTone)}"><span>⚔ 帝國狀態</span><strong>${esc(advisorWorldBriefStatus(view.empireTone,view.empireStatus))}</strong></div>
@@ -13078,6 +13097,63 @@ function advisorWorldHtml(view){
     </div>
     <div class="advisor-summary-sub" style="position:relative;z-index:1;text-align:center;margin-top:7px">更新 ${esc(view.updatedAt)} · 指標 ${esc(view.sourceDate)}</div>
   </div>`;
+}
+
+function advisorWorldTaiwanStockReviewRequest(){
+  if(taiwanStockReviewPromise)return taiwanStockReviewPromise;
+  taiwanStockReviewPromise=apiGet({action:'taiwanStockReview'},45000).finally(function(){taiwanStockReviewPromise=null;});
+  return taiwanStockReviewPromise;
+}
+function advisorWorldTaiwanStockReviewList(items){
+  items=Array.isArray(items)?items:[];
+  return items.length?items.map(function(item){return '<li>'+esc(item)+'</li>';}).join(''):'<li>尚未建立觀察清單</li>';
+}
+function advisorWorldTaiwanStockReviewHtml(data){
+  data=data||{};
+  var report=data.latest||null;
+  var head='<div class="advisor-world-title-row"><div class="advisor-world-title">📈 台股</div><button class="advisor-world-tab-btn" type="button" onclick="openAdvisorWorldSituation(event,false)">🏛 帝國晨報</button></div>';
+  if(!report){
+    return '<div class="advisor-world-card advisor-tw-review">'+head+''+
+      '<div class="advisor-tw-review-kicker">GPT 軍師月評</div>'+
+      '<div class="advisor-tw-review-text" style="margin-top:10px">目前尚未建立月評。待最新台灣總體經濟資料完成後，可產生本月 GPT 軍師分析。</div>'+
+      '<div class="advisor-tw-review-actions"><button class="home-agenda-refresh" type="button" onclick="advisorWorldGenerateTaiwanStockReview(event)">產生本月月評</button></div>'+
+      '</div>';
+  }
+  var missing=report.missingFields?'<div class="advisor-tw-review-missing">資料尚未公布：'+esc(report.missingFields)+'<br>本月判斷信心已下調，待官方資料補齊後可重新產生。</div>':'';
+  return '<div class="advisor-world-card advisor-tw-review">'+head+
+    '<div class="advisor-tw-review-kicker">GPT 軍師月評</div>'+
+    '<div class="advisor-tw-review-meta">資料月份 '+esc(report.dataMonth||report.month||'--')+' · '+esc(report.model||'gpt-5.6-luna')+' · 信心 '+esc(report.confidence||'中')+'</div>'+
+    '<div class="advisor-tw-review-statuses">'+
+      '<div class="advisor-tw-review-status">景氣階段<strong>'+esc(report.stage||'景氣中性')+'</strong></div>'+
+      '<div class="advisor-tw-review-status">景氣方向<strong>'+esc(report.leadingDirection||'持平')+'</strong></div>'+
+      '<div class="advisor-tw-review-status">台股總經環境<strong>'+esc(report.stockEnvironment||'中性')+'</strong></div>'+
+    '</div>'+
+    '<div class="advisor-tw-review-section"><div class="advisor-tw-review-label">目前實體經濟 · 金融環境</div><div class="advisor-tw-review-text">'+esc(report.currentEconomy||'中性')+' · '+esc(report.financialEnvironment||'中性')+'</div></div>'+
+    '<div class="advisor-tw-review-section"><div class="advisor-tw-review-label">階段理由</div><div class="advisor-tw-review-text">'+esc(report.stageReason||'尚未提供階段理由')+'</div></div>'+
+    '<div class="advisor-tw-review-section"><div class="advisor-tw-review-label">交叉驗證</div><div class="advisor-tw-review-text">'+esc(report.crossValidation||'尚未提供交叉驗證')+'</div></div>'+
+    '<div class="advisor-tw-review-section"><div class="advisor-tw-review-label">100～180 字軍師月評</div><div class="advisor-tw-review-text advisor-tw-review-monthly">'+esc(report.monthlyReview||'尚未產出月評')+'</div></div>'+
+    '<div class="advisor-tw-review-section"><div class="advisor-tw-review-label">下月最值得觀察</div><ul class="advisor-tw-review-list">'+advisorWorldTaiwanStockReviewList(report.watchlist)+'</ul></div>'+
+    missing+
+    '<div class="advisor-tw-review-actions"><button class="home-agenda-refresh" type="button" onclick="advisorWorldGenerateTaiwanStockReview(event)">重新產生本月月評</button></div>'+
+    '<div class="advisor-summary-sub" style="position:relative;z-index:1;text-align:center;margin-top:8px">產生時間 '+esc(report.generatedAt||'--')+' · 僅供總體經濟環境評估</div>'+
+    '</div>';
+}
+async function openAdvisorTaiwanStockReview(event){
+  if(event&&event.stopPropagation)event.stopPropagation();
+  var panel=document.getElementById('advisor-world-slot')||document.getElementById('advisor-shortcut-panel');
+  if(!panel)return;
+  panel.innerHTML='<div class="advisor-world-card advisor-tw-review"><div class="advisor-world-title-row"><div class="advisor-world-title">📈 台股</div><button class="advisor-world-tab-btn" type="button" onclick="openAdvisorWorldSituation(event,false)">🏛 帝國晨報</button></div><div class="advisor-tw-review-text" style="margin-top:12px;text-align:center">正在調閱 GPT 軍師月評…</div></div>';
+  if(!API_URL){panel.innerHTML=advisorWorldTaiwanStockReviewHtml({latest:null,message:'尚未設定 API URL'});return;}
+  try{var data=await advisorWorldTaiwanStockReviewRequest();panel.innerHTML=advisorWorldTaiwanStockReviewHtml(data);if(panel.scrollIntoView)panel.scrollIntoView({block:'nearest',behavior:'smooth'});}
+  catch(err){panel.innerHTML='<div class="advisor-world-card advisor-tw-review"><div class="advisor-world-title-row"><div class="advisor-world-title">📈 台股</div><button class="advisor-world-tab-btn" type="button" onclick="openAdvisorWorldSituation(event,false)">🏛 帝國晨報</button></div><div class="advisor-tw-review-missing">月評讀取失敗：'+esc(err&&err.message?err.message:'請稍後再試')+'</div></div>';}
+}
+async function advisorWorldGenerateTaiwanStockReview(event){
+  if(event&&event.stopPropagation)event.stopPropagation();
+  var panel=document.getElementById('advisor-world-slot')||document.getElementById('advisor-shortcut-panel');
+  if(!panel||taiwanStockReviewGeneratePromise)return;
+  panel.innerHTML='<div class="advisor-world-card advisor-tw-review"><div class="advisor-world-title-row"><div class="advisor-world-title">📈 台股</div><button class="advisor-world-tab-btn" type="button" onclick="openAdvisorWorldSituation(event,false)">🏛 帝國晨報</button></div><div class="advisor-tw-review-text" style="margin-top:12px;text-align:center">GPT 軍師正在根據最新月資料撰寫，請稍候…</div></div>';
+  taiwanStockReviewGeneratePromise=apiPost({action:'taiwanStockReviewGenerate'},90000).then(function(){return advisorWorldTaiwanStockReviewRequest();}).then(function(data){panel.innerHTML=advisorWorldTaiwanStockReviewHtml(data);return data;}).catch(function(err){panel.innerHTML='<div class="advisor-world-card advisor-tw-review"><div class="advisor-world-title-row"><div class="advisor-world-title">📈 台股</div><button class="advisor-world-tab-btn" type="button" onclick="openAdvisorWorldSituation(event,false)">🏛 帝國晨報</button></div><div class="advisor-tw-review-missing">月評產生失敗：'+esc(err&&err.message?err.message:'請稍後再試')+'<br>若訊息涉及密鑰，請確認 API 設定中的 WRITE_TOKEN 與後端設定一致。</div></div>';}).finally(function(){taiwanStockReviewGeneratePromise=null;});
+  return taiwanStockReviewGeneratePromise;
 }
 // ══════════════════════════════════════════
 //  台股指數卡片渲染（資料來自 GAS，無 CORS 問題）
