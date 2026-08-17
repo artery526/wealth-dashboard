@@ -2369,6 +2369,10 @@ body::after{
 .ziwei-preview-empty{margin:auto;padding:18px;font-size:12px;color:#8a6a30;line-height:1.7}
 .ziwei-open-btn{display:inline-flex;align-items:center;justify-content:center;border:1px solid rgba(184,137,46,.4);border-radius:6px;background:rgba(184,137,46,.12);color:var(--gold);font-family:var(--sans);font-size:12px;font-weight:800;padding:8px 10px;cursor:pointer;text-decoration:none;white-space:nowrap}
 .ziwei-open-btn:hover{border-color:rgba(232,192,80,.68);background:rgba(184,137,46,.2)}
+.ziwei-upload-label{position:relative;overflow:hidden}
+.ziwei-upload-label input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.ziwei-danger-btn{border-color:rgba(214,90,90,.58);color:#ffb0a8;background:rgba(150,38,30,.14)}
+.ziwei-danger-btn:hover{border-color:rgba(255,130,120,.85);background:rgba(150,38,30,.28)}
 .ziwei-viewer{border:1px solid rgba(184,137,46,.32);border-radius:8px;background:rgba(6,5,3,.76);min-width:0;overflow:hidden;display:flex;flex-direction:column}
 .ziwei-viewer-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;border-bottom:1px solid #1e1408;padding:12px 14px}
 .ziwei-title{font-family:var(--sans);font-size:18px;font-weight:900;color:var(--gold);letter-spacing:1px}
@@ -4295,7 +4299,7 @@ async function apiPost(body){
   WRITE_TOKEN=cleanToken(WRITE_TOKEN);
   if(!WRITE_TOKEN)throw new Error('未設定記帳密鑰');
   if(String(body&&body.action||'')!=='verifyWriteToken'&&!webVerifyIsAuthorized())throw new Error('城門尚未開啟，請先完成龐統軍師驗證');
-  if(body&&/^(advisorAiParse|advisorDividendMemo|expense|income|transfer|ziweiInterpretationSave)$/.test(body.action||'')){
+  if(body&&/^(advisorAiParse|advisorDividendMemo|expense|income|transfer|ziweiInterpretationSave|ziweiChartUpload|ziweiChartDelete)$/.test(body.action||'')){
     var jsonTimeout=((isApiWriteAction(body.action||'')||body.action==='advisorDividendMemo')?45000:undefined);
     return apiPostJson(body,jsonTimeout);
   }
@@ -5899,6 +5903,43 @@ async function loadZiweiDetail(row){
   return state.loading;
 }
 
+function ziweiFileToDataUrl_(file){
+  return new Promise(function(resolve,reject){
+    var reader=new FileReader();
+    reader.onload=function(){resolve(String(reader.result||''));};
+    reader.onerror=function(){reject(new Error('\u547d\u76e4\u5716\u7247\u8b80\u53d6\u5931\u6557'));};
+    reader.readAsDataURL(file);
+  });
+}
+
+async function uploadZiweiChart(input){
+  var row=ziweiChartsCache.find(function(item){return item.id===ziweiSelectedId;})||ziweiChartsCache[0];
+  var file=input&&input.files&&input.files[0];
+  if(input)input.value='';
+  if(!row||!file)return;
+  if(!/^image\/(png|jpe?g|webp)$/i.test(String(file.type||''))){alert('\u8acb\u9078\u64c7 PNG\u3001JPG \u6216 WebP \u5716\u7247');return;}
+  if(file.size>12*1024*1024){alert('\u547d\u76e4\u5716\u7247\u4e0d\u53ef\u8d85\u904e 12 MB');return;}
+  try{
+    var dataUrl=await ziweiFileToDataUrl_(file);
+    var result=await apiPostJson({action:'ziweiChartUpload',personKey:row.personKey,chartKey:row.chartKey||'ziwei',fileName:file.name,mimeType:file.type,base64:dataUrl},60000);
+    ziweiDetailCache[ziweiDetailKey(row)]={loaded:true,loading:null,detail:result||{},error:null,notFound:false};
+    renderZiweiPreview();
+    alert('\u547d\u76e4\u5df2\u4e0a\u50b3\u4e26\u8986\u84cb NAS \u4e2d\u7684\u820a\u5716');
+  }catch(e){alert('\u4e0a\u50b3\u547d\u76e4\u5931\u6557\uff1a'+(e.message||e));}
+}
+
+async function deleteZiweiChart(){
+  var row=ziweiChartsCache.find(function(item){return item.id===ziweiSelectedId;})||ziweiChartsCache[0];
+  if(!row)return;
+  if(!confirm('\u78ba\u5b9a\u8981\u522a\u9664\u300c'+row.name+'\u300d\u7684\u547d\u76e4\u5716\u7247\u55ce\uff1f\n\n\u53ea\u6703\u522a\u9664 NAS \u4e2d\u7684\u547d\u76e4\u8cc7\u6599\uff0c\u4e0d\u6703\u522a\u9664\u8a66\u7b97\u8868\u4eba\u7269\u3002'))return;
+  try{
+    await apiPostJson({action:'ziweiChartDelete',personKey:row.personKey,chartKey:row.chartKey||'ziwei'},30000);
+    ziweiDetailCache[ziweiDetailKey(row)]={loaded:true,loading:null,detail:{personKey:row.personKey,chartKey:row.chartKey||'ziwei'},error:null,notFound:true,deleted:true};
+    renderZiweiPreview();
+    alert('\u547d\u76e4\u5df2\u5f9e NAS \u522a\u9664');
+  }catch(e){alert('\u522a\u9664\u547d\u76e4\u5931\u6557\uff1a'+(e.message||e));}
+}
+
 function renderZiweiPreview(){
   var preview=document.getElementById('ziwei-preview');
   if(!preview)return;
@@ -5910,7 +5951,7 @@ function renderZiweiPreview(){
   var detailState=ziweiDetailCache[ziweiDetailKey(row)]||{};
   var detail=detailState.detail||{};
   var img=detail.imageDataUrl||detail.imageUrl||'';
-  var original=detail.imageDataUrl||detail.imageUrl||ziweiOriginalUrl(row);
+  var original=detail.imageDataUrl||detail.imageUrl||'';
   var meta=ziweiBirthMeta(row);
   var interpretation=detailState.loaded?String(detail.interpretation||''):String(row.note||'');
   var chartTitle=detail.title||'\u7d2b\u5fae\u6597\u6578\u672c\u547d\u76e4';
@@ -5922,7 +5963,11 @@ function renderZiweiPreview(){
         <div class="ziwei-preview-title">${esc(row.name)}</div>
         <div class="ziwei-preview-meta">${esc(meta||'\u672a\u586b\u51fa\u751f\u8cc7\u6599')}${row.updatedAt?' \u00b7 '+esc(row.updatedAt):''}</div>
       </div>
-      ${original?`<a class="ziwei-open-btn" href="${esc(original)}" target="_blank" rel="noopener">\u958b\u539f\u5716</a>`:(img?`<a class="ziwei-open-btn" href="${esc(img)}" target="_blank" rel="noopener">\u958b\u5716\u7247</a>`:'')}
+      <div class="ziwei-tools">
+        ${original?`<a class="ziwei-open-btn" href="${esc(original)}" target="_blank" rel="noopener">\u958b\u539f\u5716</a>`:''}
+        <label class="ziwei-open-btn ziwei-upload-label">\u4e0a\u50b3\u65b0\u547d\u76e4<input type="file" accept="image/png,image/jpeg,image/webp" onchange="uploadZiweiChart(this)"></label>
+        <button class="ziwei-tool ziwei-danger-btn" type="button" onclick="deleteZiweiChart()">\u522a\u9664\u547d\u76e4</button>
+      </div>
     </div>
     <div class="ziwei-preview-stage">
       ${img?`<img class="ziwei-preview-img" src="${esc(img)}" referrerpolicy="no-referrer" alt="${esc(row.name)} \u7d2b\u5fae\u547d\u76e4">`:'<div class="ziwei-preview-empty">\u9019\u7b46\u8cc7\u6599\u5c1a\u672a\u586b\u5165\u5716\u7247\u9023\u7d50\u3002</div>'}
