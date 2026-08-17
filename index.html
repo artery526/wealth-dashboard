@@ -4411,6 +4411,7 @@ var MARKET_CACHE_TTL=2*60*60*1000;
 var marketDashboardPromise=null;
 var macroOverviewPromise=null;
 var taiwanMacroPromise=null;
+var taiwanMacroSyncPromise=null;
 var macroLongReportPromise=null;
 var battleBriefPromise=null;
 function clearLegacyAdvisorReminderCache(){
@@ -13279,7 +13280,7 @@ function taiwanMacroChart(rows,code,label){
 }
 function renderTaiwanMacro(data,history,el,range){
   data=data||{}; history=history||{}; var latest=data.latest||{}; var d=latest.directions||{};
-  if(!data.hasData){el.innerHTML='<div class="taiwan-macro-empty">台灣總體經濟資料尚未建立。請先執行後端 taiwanMacroUpdate。</div>';return;}
+  if(!data.hasData){el.innerHTML='<div class="taiwan-macro-empty">台灣總體經濟資料尚未建立。<br><button class="battle-report-refresh" type="button" onclick="taiwanMacroUpdate()">同步官方資料</button></div>';return;}
   var meta='最新公布月份：'+(latest.month||'--')+' · 更新：'+(latest.updated_at||'--');
   var cards=[
     taiwanMacroCard('🚦 景氣燈號','business_cycle_light',latest.business_cycle_light,d.score,'', '綜合判斷 '+(latest.business_cycle_score||'--')+' 分'),
@@ -13290,11 +13291,26 @@ function renderTaiwanMacro(data,history,el,range){
     taiwanMacroCard('💱 新台幣','usdtwd',latest.usdtwd,{key:latest.usdtwd_trend==='台幣升值'?'improve':latest.usdtwd_trend==='台幣貶值'?'cool':'flat',label:latest.usdtwd_trend||'尚未更新'},'', '近 3 個月'),
     taiwanMacroCard('💰 M2','m2_yoy',latest.m2_yoy,d.m2,'%','年增率')
   ];
-  el.innerHTML=`<div class="taiwan-macro-hero"><div><div class="taiwan-macro-kicker">🇹🇼 台灣總體經濟</div><div class="taiwan-macro-state">${esc(latest.overall_state||'資料不足')}</div><div class="taiwan-macro-meta">${esc(meta)}</div></div><button class="battle-report-refresh" type="button" onclick="loadTaiwanMacro(true)">重新整理</button></div>
+  el.innerHTML=`<div class="taiwan-macro-hero"><div><div class="taiwan-macro-kicker">🇹🇼 台灣總體經濟</div><div class="taiwan-macro-state">${esc(latest.overall_state||'資料不足')}</div><div class="taiwan-macro-meta">${esc(meta)}</div></div><div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><button class="battle-report-refresh" type="button" onclick="taiwanMacroUpdate()">同步官方資料</button><button class="battle-report-refresh" type="button" onclick="loadTaiwanMacro(true)">重新整理</button></div></div>
     <div class="taiwan-macro-section-title">目前景氣</div><div class="taiwan-macro-grid">${cards[0]}${cards[4]}</div>
     <div class="taiwan-macro-section-title">未來景氣</div><div class="taiwan-macro-grid">${cards[1]}${cards[2]}${cards[3]}</div>
     <div class="taiwan-macro-section-title">金融／資金環境</div><div class="taiwan-macro-grid">${cards[5]}${cards[6]}</div>
     <div class="taiwan-macro-history"><div class="taiwan-macro-history-head"><div class="taiwan-macro-section-title">歷史趨勢</div><div class="taiwan-macro-range">${['1Y','3Y','5Y'].map(function(item){return '<button class="'+(range===item?'active':'')+'" type="button" onclick="loadTaiwanMacro(false,\''+item+'\')">'+item+'</button>';}).join('')}</div></div>${taiwanMacroChart(history.rows||[],'business_cycle_score','景氣綜合判斷分數')} ${taiwanMacroChart(history.rows||[],'exports_yoy','出口 YoY')}</div>`;
+}
+async function taiwanMacroUpdate(){
+  if(taiwanMacroSyncPromise)return taiwanMacroSyncPromise;
+  if(!API_URL){return Promise.reject(new Error('尚未設定 Web App API'));}
+  setCouncilPanelStatusIfActive('pending','台灣總體經濟同步中');
+  taiwanMacroSyncPromise=apiGet({action:'taiwanMacroUpdate'},120000).then(function(result){
+    if(!result||result.ok===false)throw new Error(result&&result.error||'官方資料同步失敗');
+    return loadTaiwanMacro(true);
+  }).then(function(result){setCouncilPanelStatusIfActive('ok','台灣總體經濟同步完成');return result;}).catch(function(error){
+    setCouncilPanelStatusIfActive('err','台灣總體經濟同步失敗');
+    var el=document.getElementById('taiwan-macro-content');
+    if(el&&!el.textContent.trim())el.innerHTML='<div class="taiwan-macro-empty">同步失敗：'+esc(error&&error.message||'請稍後再試')+'</div>';
+    throw error;
+  }).finally(function(){taiwanMacroSyncPromise=null;});
+  return taiwanMacroSyncPromise;
 }
 async function loadTaiwanMacro(force,range){
   var el=document.getElementById('taiwan-macro-content'); if(!el)return;
