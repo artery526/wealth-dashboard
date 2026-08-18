@@ -8167,7 +8167,7 @@ function clearArkWallReadToken(){
 
 function arkWallAuthOptions(options){
   var next=options||{};
-  var token=next.wallWrite?arkWallWriteToken():arkWallReadToken();
+  var token=next.wallWrite?(arkWallWriteToken()||arkWallReadToken()):arkWallReadToken();
   delete next.wallWrite;
   var headers=new Headers(next.headers||{});
   if(token)headers.set('authorization','Bearer '+token);
