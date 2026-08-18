@@ -5885,7 +5885,7 @@ function renderZiweiLayout(){
         <div class="ziwei-main">
           <div id="ziwei-preview" class="ziwei-preview">
             <div class="ziwei-preview-kicker">\u547d\u76e4\u9810\u89bd\u5340</div>
-            <div class="ziwei-preview-meta">\u6ed1\u9f20\u79fb\u904e\u53bb\u5c31\u8b8a\u5316</div>
+            <div class="ziwei-preview-meta">\u9ede\u9078\u4eba\u7269\u67e5\u770b\u547d\u76e4</div>
           </div>
         </div>
       </div>
@@ -5932,7 +5932,7 @@ function renderZiweiList(){
   if(!rows.some(function(row){return row.id===ziweiSelectedId;}))ziweiSelectedId=rows[0].id;
   list.innerHTML=rows.map(function(row){
     var meta=ziweiBirthMeta(row);
-    return `<button class="ziwei-person ${row.id===ziweiSelectedId?'active':''}" type="button" onmouseenter="previewZiweiChart('${encodeURIComponent(row.id)}')" onclick="selectZiweiChartEncoded('${encodeURIComponent(row.id)}')">
+    return `<button class="ziwei-person ${row.id===ziweiSelectedId?'active':''}" type="button" onclick="selectZiweiChartEncoded('${encodeURIComponent(row.id)}')">
         <div class="ziwei-person-name">${esc(row.name)}</div>
         <div class="ziwei-person-meta">${esc(meta||'\u672a\u586b\u51fa\u751f\u8cc7\u6599')}</div>
     </button>`;
@@ -5967,6 +5967,26 @@ function ziweiDetailKey(row){
   return String(row&&row.personKey||'')+'::'+String(row&&row.chartKey||'ziwei');
 }
 
+function ziweiDetailStorageKey_(row){
+  return 'wealth_ziwei_detail_v1_'+encodeURIComponent(ziweiDetailKey(row));
+}
+
+function readZiweiDetailStorage_(row){
+  try{
+    var cached=JSON.parse(localStorage.getItem(ziweiDetailStorageKey_(row))||'null');
+    if(!cached||!cached.savedAt||Date.now()-Number(cached.savedAt)>7*24*60*60*1000)return null;
+    return cached.detail||null;
+  }catch(e){return null;}
+}
+
+function writeZiweiDetailStorage_(row,detail){
+  try{localStorage.setItem(ziweiDetailStorageKey_(row),JSON.stringify({savedAt:Date.now(),detail:detail||{}}));}catch(e){}
+}
+
+function removeZiweiDetailStorage_(row){
+  try{localStorage.removeItem(ziweiDetailStorageKey_(row));}catch(e){}
+}
+
 async function loadZiweiDetail(row){
   if(!row||!row.personKey||!API_URL)return null;
   var key=ziweiDetailKey(row);
@@ -5976,10 +5996,21 @@ async function loadZiweiDetail(row){
   }
   if(ziweiDetailCache[key]&&ziweiDetailCache[key].loading)return ziweiDetailCache[key].loading;
   var state=ziweiDetailCache[key]||{};
+  var cachedDetail=readZiweiDetailStorage_(row);
+  if(cachedDetail){
+    state.loaded=true;
+    state.loading=null;
+    state.detail=cachedDetail;
+    state.fromStorage=true;
+    ziweiDetailCache[key]=state;
+    if(ziweiSelectedId===row.id)renderZiweiPreview();
+    return state;
+  }
   state.loading=apiGet({action:'ziweiChartDetail',personKey:row.personKey,chartKey:row.chartKey||'ziwei'},20000).then(function(detail){
     state.loaded=true;
     state.loading=null;
     state.detail=detail||{};
+    writeZiweiDetailStorage_(row,state.detail);
     if(ziweiSelectedId===row.id)renderZiweiPreview();
     return state;
   }).catch(function(err){
@@ -6013,6 +6044,7 @@ async function uploadZiweiChart(input){
     var dataUrl=await ziweiFileToDataUrl_(file);
     var result=await apiPostJson({action:'ziweiChartUpload',personKey:row.personKey,chartKey:row.chartKey||'ziwei',fileName:file.name,mimeType:file.type,base64:dataUrl},60000);
     ziweiDetailCache[ziweiDetailKey(row)]={loaded:true,loading:null,detail:result||{},error:null,notFound:false};
+    writeZiweiDetailStorage_(row,result||{});
     renderZiweiPreview();
     alert('\u547d\u76e4\u5df2\u4e0a\u50b3\u4e26\u8986\u84cb NAS \u4e2d\u7684\u820a\u5716');
   }catch(e){alert('\u4e0a\u50b3\u547d\u76e4\u5931\u6557\uff1a'+(e.message||e));}
@@ -6024,6 +6056,7 @@ async function deleteZiweiChart(){
   if(!confirm('\u78ba\u5b9a\u8981\u522a\u9664\u300c'+row.name+'\u300d\u7684\u547d\u76e4\u5716\u7247\u55ce\uff1f\n\n\u53ea\u6703\u522a\u9664 NAS \u4e2d\u7684\u547d\u76e4\u8cc7\u6599\uff0c\u4e0d\u6703\u522a\u9664\u8a66\u7b97\u8868\u4eba\u7269\u3002'))return;
   try{
     await apiPostJson({action:'ziweiChartDelete',personKey:row.personKey,chartKey:row.chartKey||'ziwei'},30000);
+    removeZiweiDetailStorage_(row);
     ziweiDetailCache[ziweiDetailKey(row)]={loaded:true,loading:null,detail:{personKey:row.personKey,chartKey:row.chartKey||'ziwei'},error:null,notFound:true,deleted:true};
     renderZiweiPreview();
     alert('\u547d\u76e4\u5df2\u5f9e NAS \u522a\u9664');
