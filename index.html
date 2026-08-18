@@ -2963,6 +2963,8 @@ body::after{
 .ark-wall-moment-form input,.ark-wall-moment-form textarea,.ark-wall-moment-form select{box-sizing:border-box;width:100%;border:1px solid rgba(184,137,46,.34);border-radius:6px;background:#0a0804;color:#f0dfa0;padding:7px 8px;font:13px var(--sans)}
 .ark-wall-moment-form textarea{min-height:70px;resize:vertical}
 .ark-wall-moment-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ark-wall-moment-form-pair{display:grid;grid-template-columns:minmax(105px,.75fr) minmax(0,1.25fr);gap:8px}
+.ark-wall-moment-form-date-mood{grid-template-columns:1fr 1fr}
 .ark-wall-moment-form-actions{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
 .ark-wall-moment-cancel{border:1px solid rgba(184,137,46,.38);border-radius:8px;background:rgba(10,8,4,.72);color:#bda36d;font:900 12px var(--sans);padding:8px 10px;cursor:pointer}
 .ark-wall-moment-status{min-height:18px;color:#a8f1d6;font:800 12px var(--sans)}
@@ -8793,10 +8795,8 @@ function arkWallMomentOptions(values,current){return values.map(function(value){
 function arkWallMomentFormHtml(){
   var item=arkWallMoments.find(function(moment){return moment.id===arkWallMomentEditingId;})||{date:arkWallMomentSelectedDate,text:'',type:'療癒',icon:'🌱',mood:'',note:''};
   return '<form class="ark-wall-moment-form" onsubmit="submitArkWallMoment(event)">'
-    +'<label>日期<input id="ark-wall-moment-date" type="date" value="'+esc(item.date)+'" required></label>'
-    +'<label>一句話<input id="ark-wall-moment-text" maxlength="180" value="'+esc(item.text)+'" placeholder="今天值得記住的一件事" required></label>'
-    +'<div class="ark-wall-moment-form-grid"><label>類型<select id="ark-wall-moment-type">'+arkWallMomentOptions(['感恩','開心','療癒','成就','值得記住','低潮'],item.type)+'</select></label><label>圖示<select id="ark-wall-moment-icon">'+arkWallMomentIconOptions(item.icon)+'</select></label></div>'
-    +'<div class="ark-wall-moment-form-grid"><label>心情<select id="ark-wall-moment-mood">'+arkWallMomentOptions(['❌','😃','😭','🤔'],item.mood)+'</select></label><div></div></div>'
+    +'<div class="ark-wall-moment-form-pair"><label>感受<select id="ark-wall-moment-icon">'+arkWallMomentIconOptions(item.icon)+'</select></label><label>一句話<input id="ark-wall-moment-text" maxlength="180" value="'+esc(item.text)+'" placeholder="今天值得記住的一件事" required></label></div>'
+    +'<div class="ark-wall-moment-form-pair ark-wall-moment-form-date-mood"><label>日期<input id="ark-wall-moment-date" type="date" value="'+esc(item.date)+'" required></label><label>心情<select id="ark-wall-moment-mood">'+arkWallMomentOptions(['❌','😃','😭','🤔'],item.mood)+'</select></label></div>'
     +'<div class="ark-wall-moment-form-actions"><button class="ark-wall-moment-action" type="submit">'+(arkWallMomentEditingId?'儲存修改':'留下印記')+'</button><button class="ark-wall-moment-cancel" type="button" onclick="cancelArkWallMomentForm()">取消</button><span class="ark-wall-moment-status" id="ark-wall-moment-form-status"></span></div>'
   +'</form>';
 }
@@ -8865,7 +8865,7 @@ function cancelArkWallMomentForm(){arkWallMomentFormOpen=false;arkWallMomentEdit
 function submitArkWallMoment(event){
   event.preventDefault();
   var status=document.getElementById('ark-wall-moment-form-status');if(status)status.textContent='儲存中...';
-  var payload={date:document.getElementById('ark-wall-moment-date').value,text:document.getElementById('ark-wall-moment-text').value,type:document.getElementById('ark-wall-moment-type').value,icon:document.getElementById('ark-wall-moment-icon').value,mood:document.getElementById('ark-wall-moment-mood').value,note:''};
+  var payload={date:document.getElementById('ark-wall-moment-date').value,text:document.getElementById('ark-wall-moment-text').value,icon:document.getElementById('ark-wall-moment-icon').value,mood:document.getElementById('ark-wall-moment-mood').value,note:''};
   var id=arkWallMomentEditingId;var options={method:id?'PUT':'POST',wallWrite:true,headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)};
   arkWallFetch(id?'/api/admin/wall-moments/'+encodeURIComponent(id):'/api/admin/wall-moments',options).then(function(data){var saved=data.moment;arkWallMomentYear=saved.date.slice(0,4);arkWallMomentMonth=saved.date.slice(5,7);arkWallMomentSelectedDate=saved.date;arkWallMomentFormOpen=false;arkWallMomentEditingId='';closeArkWallMomentModal();arkWallMomentsKey='';return loadArkWallMoments();}).then(function(){renderArkWallList();}).catch(function(err){if(status)status.textContent=err.status===401?'需要管理員授權，請確認城牆寫入權限。':(err.message||'儲存失敗');});
 }
