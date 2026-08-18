@@ -8795,8 +8795,8 @@ function arkWallMomentOptions(values,current){return values.map(function(value){
 function arkWallMomentFormHtml(){
   var item=arkWallMoments.find(function(moment){return moment.id===arkWallMomentEditingId;})||{date:arkWallMomentSelectedDate,text:'',type:'療癒',icon:'🌱',mood:'',note:''};
   return '<form class="ark-wall-moment-form" onsubmit="submitArkWallMoment(event)">'
-    +'<div class="ark-wall-moment-form-pair"><label>感受<select id="ark-wall-moment-icon">'+arkWallMomentIconOptions(item.icon)+'</select></label><label>一句話<input id="ark-wall-moment-text" maxlength="180" value="'+esc(item.text)+'" placeholder="今天值得記住的一件事" required></label></div>'
     +'<div class="ark-wall-moment-form-pair ark-wall-moment-form-date-mood"><label>日期<input id="ark-wall-moment-date" type="date" value="'+esc(item.date)+'" required></label><label>心情<select id="ark-wall-moment-mood">'+arkWallMomentOptions(['❌','😃','😭','🤔'],item.mood)+'</select></label></div>'
+    +'<div class="ark-wall-moment-form-pair"><label>感受<select id="ark-wall-moment-icon">'+arkWallMomentIconOptions(item.icon)+'</select></label><label>一句話<input id="ark-wall-moment-text" maxlength="180" value="'+esc(item.text)+'" placeholder="今天值得記住的一件事" required></label></div>'
     +'<div class="ark-wall-moment-form-actions"><button class="ark-wall-moment-action" type="submit">'+(arkWallMomentEditingId?'儲存修改':'留下印記')+'</button><button class="ark-wall-moment-cancel" type="button" onclick="cancelArkWallMomentForm()">取消</button><span class="ark-wall-moment-status" id="ark-wall-moment-form-status"></span></div>'
   +'</form>';
 }
