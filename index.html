@@ -2711,6 +2711,7 @@ body::after{
   box-shadow:0 22px 70px rgba(0,0,0,.72),inset 0 1px 0 rgba(255,255,255,.06);
   display:flex;flex-direction:column;
 }
+#ark-wall-overlay .travel-panel{width:min(1180px,100%);max-height:min(88vh,900px)}
 .travel-head{display:flex;align-items:center;gap:12px;padding:16px 18px 12px;border-bottom:1px solid rgba(184,137,46,.26)}
 .travel-mark{width:38px;height:38px;border-radius:8px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(232,192,80,.38);background:rgba(232,192,80,.1);font-size:21px}
 .travel-title-wrap{min-width:0;flex:1}
@@ -2930,6 +2931,42 @@ body::after{
 .ark-wall-lightbox-count{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);border:1px solid rgba(78,217,255,.26);border-radius:8px;background:rgba(3,8,10,.86);color:#d9fbff;font-family:var(--sans);font-size:12px;font-weight:900;padding:6px 9px}
 .ark-wall-back{border:1px solid rgba(78,217,255,.34);border-radius:8px;background:rgba(78,217,255,.08);color:#aeefff;font-family:var(--sans);font-size:12px;font-weight:900;padding:7px 10px;cursor:pointer}
 .ark-wall-back:hover{border-color:rgba(78,217,255,.62);background:rgba(78,217,255,.14)}
+.ark-wall-moments{display:grid;gap:12px;margin-bottom:15px;padding:14px;border:1px solid rgba(232,192,80,.34);border-radius:10px;background:linear-gradient(145deg,rgba(35,25,8,.78),rgba(5,8,8,.76))}
+.ark-wall-moments-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.ark-wall-moments-title{font-family:var(--font);font-size:24px;font-weight:900;color:#fff0b8;letter-spacing:1px}
+.ark-wall-moments-sub{margin-top:3px;color:#bda36d;font:12px/1.6 var(--sans)}
+.ark-wall-moment-add,.ark-wall-moment-action{border:1px solid rgba(29,158,117,.52);border-radius:8px;background:rgba(29,158,117,.14);color:#a8f1d6;font:900 12px var(--sans);padding:8px 10px;cursor:pointer}
+.ark-wall-moment-add:hover,.ark-wall-moment-action:hover{border-color:rgba(29,158,117,.84);background:rgba(29,158,117,.22)}
+.ark-wall-moments-layout{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(280px,.9fr);gap:14px}
+.ark-wall-calendar{border:1px solid rgba(184,137,46,.25);border-radius:8px;background:rgba(3,5,5,.5);padding:10px}
+.ark-wall-calendar-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.ark-wall-calendar-nav button{width:32px;height:30px;border:1px solid rgba(184,137,46,.34);border-radius:6px;background:rgba(10,8,4,.72);color:#f0dfa0;cursor:pointer}
+.ark-wall-calendar-label{font:900 16px var(--font);color:#f0dfa0}
+.ark-wall-calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.ark-wall-calendar-weekday{text-align:center;color:#8aa7a9;font:900 11px var(--sans);padding:4px 0}
+.ark-wall-calendar-day{min-height:58px;border:1px solid rgba(184,137,46,.18);border-radius:6px;background:rgba(10,8,4,.5);color:#d8c18a;text-align:left;padding:5px;cursor:pointer}
+.ark-wall-calendar-day:hover,.ark-wall-calendar-day.selected{border-color:rgba(232,192,80,.75);background:rgba(232,192,80,.13)}
+.ark-wall-calendar-day.today{box-shadow:inset 0 0 0 1px rgba(78,217,255,.7)}
+.ark-wall-calendar-day.empty{border-color:transparent;background:transparent;cursor:default}
+.ark-wall-calendar-day-number{display:block;font:900 13px var(--mono);color:#f0dfa0}
+.ark-wall-calendar-icons{display:block;margin-top:5px;min-height:16px;font-size:13px;line-height:1.2;overflow:hidden;white-space:nowrap}
+.ark-wall-moment-detail{border:1px solid rgba(78,217,255,.24);border-radius:8px;background:rgba(3,8,10,.52);padding:12px;min-height:230px}
+.ark-wall-moment-detail-head{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:9px}
+.ark-wall-moment-detail-title{font:900 18px var(--font);color:#aeefff}
+.ark-wall-moment-card{border-left:3px solid rgba(232,192,80,.65);margin:8px 0;padding:8px 9px;background:rgba(232,192,80,.07);border-radius:0 7px 7px 0}
+.ark-wall-moment-card-text{font:800 13px/1.65 var(--sans);color:#f0dfa0;overflow-wrap:anywhere}
+.ark-wall-moment-card-meta{display:flex;align-items:center;justify-content:space-between;gap:7px;margin-top:6px;color:#8aa7a9;font:11px var(--sans)}
+.ark-wall-moment-card-actions{display:flex;gap:5px}
+.ark-wall-moment-card-actions button{border:0;background:transparent;color:#aeefff;cursor:pointer;font:900 11px var(--sans);padding:2px 3px}
+.ark-wall-moment-form{display:grid;gap:8px;margin-top:10px;padding:10px;border:1px solid rgba(29,158,117,.32);border-radius:8px;background:rgba(29,158,117,.07)}
+.ark-wall-moment-form label{display:grid;gap:4px;color:#9a7430;font:900 11px var(--sans)}
+.ark-wall-moment-form input,.ark-wall-moment-form textarea,.ark-wall-moment-form select{box-sizing:border-box;width:100%;border:1px solid rgba(184,137,46,.34);border-radius:6px;background:#0a0804;color:#f0dfa0;padding:7px 8px;font:13px var(--sans)}
+.ark-wall-moment-form textarea{min-height:70px;resize:vertical}
+.ark-wall-moment-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ark-wall-moment-form-actions{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+.ark-wall-moment-cancel{border:1px solid rgba(184,137,46,.38);border-radius:8px;background:rgba(10,8,4,.72);color:#bda36d;font:900 12px var(--sans);padding:8px 10px;cursor:pointer}
+.ark-wall-moment-status{min-height:18px;color:#a8f1d6;font:800 12px var(--sans)}
+@media(max-width:760px){.ark-wall-moments-layout{grid-template-columns:1fr}.ark-wall-calendar-day{min-height:48px;padding:4px}.ark-wall-calendar-icons{font-size:12px}.ark-wall-moments-title{font-size:21px}}
 @media(max-width:760px){#ark-wall-body{display:flex;flex-direction:column}.ark-wall-grid,.ark-wall-photo-grid{grid-template-columns:1fr}.ark-wall-index-row{grid-template-columns:84px minmax(0,1fr);gap:7px}.ark-wall-library-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.ark-wall-memo-tools{grid-template-columns:1fr}.ark-wall-main-content{order:1}.ark-wall-timeline-block{order:2}.ark-wall-detail-top{align-items:flex-start}.ark-wall-detail-title{font-size:22px}.ark-wall-detail-text{font-size:14px;line-height:1.9;padding:14px 13px 13px}.ark-wall-copy-hint{position:static;display:inline-flex;margin-bottom:8px}}
 @media(max-width:560px){#ark-wall-overlay .ark-wall-actions{grid-column:2/4;grid-row:2;width:100%;justify-content:flex-start;margin-top:3px}.ark-wall-admin,.ark-wall-back{font-size:11px;padding:7px 9px}.ark-wall-filter{grid-template-columns:1fr}.ark-wall-library-head{display:grid}.ark-wall-library-actions{display:grid;grid-template-columns:1fr 1fr}.ark-wall-library-load{grid-column:1/-1}.ark-wall-library-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ark-wall-month-title{font-size:18px}.ark-wall-index-title{font-size:16px}}
 @media(max-width:760px){.travel-card-list{grid-template-columns:1fr}}
@@ -3828,6 +3865,8 @@ body::after{
     </div>
     <label class="cfg-label">城牆通行令</label>
     <input class="cfg-input" type="password" id="cfg-wall-token" placeholder="輸入城牆通行令">
+    <label class="cfg-label">城牆寫入令（新增／編輯／刪除拾光）</label>
+    <input class="cfg-input" type="password" id="cfg-wall-write-token" placeholder="輸入 NAS 管理寫入令">
     <div class="cfg-actions">
       <button class="cfg-cancel" onclick="closeCfg()">取消</button>
       <button class="cfg-save" onclick="saveCfg()">儲存並連線</button>
@@ -4742,6 +4781,8 @@ function openCfg(){
   document.getElementById('cfg-token').value=WRITE_TOKEN;
   var wallTokenInput=document.getElementById('cfg-wall-token');
   if(wallTokenInput)wallTokenInput.value=arkWallReadToken();
+  var wallWriteTokenInput=document.getElementById('cfg-wall-write-token');
+  if(wallWriteTokenInput)wallWriteTokenInput.value=arkWallWriteToken();
   renderCfgWebVerifyStatus();
   document.getElementById('cfg-overlay').classList.add('open');
 }
@@ -4882,10 +4923,12 @@ function renderCfgWebVerifyStatus(status,message){
 }
 function readCfgInputs(){
   var wallTokenInput=document.getElementById('cfg-wall-token');
+  var wallWriteTokenInput=document.getElementById('cfg-wall-write-token');
   return {
     url:normalizeWealthApiUrl(document.getElementById('cfg-url').value.trim()),
     token:cleanToken(document.getElementById('cfg-token').value),
-    wallToken:wallTokenInput?String(wallTokenInput.value||'').trim():''
+    wallToken:wallTokenInput?String(wallTokenInput.value||'').trim():'',
+    wallWriteToken:wallWriteTokenInput?String(wallWriteTokenInput.value||'').trim():''
   };
 }
 function persistCfgInputs(values){
@@ -4895,6 +4938,7 @@ function persistCfgInputs(values){
   localStorage.setItem('wealth_api_url',values.url);
   localStorage.setItem('wealth_write_token',values.token);
   setArkWallReadToken(values.wallToken);
+  setArkWallWriteToken(values.wallWriteToken);
   return values;
 }
 async function verifyCfgWebAccess(){
@@ -8079,6 +8123,13 @@ var arkWallLibraryShowAll=false;
 var arkWallHistoryItems=[];
 var arkWallLibraryOpen=false;
 var arkWallHistoryTodayOpen=false;
+var arkWallMoments=[];
+var arkWallMomentsKey='';
+var arkWallMomentSelectedDate=today();
+var arkWallMomentFormOpen=false;
+var arkWallMomentEditingId='';
+var arkWallMomentYear=String(today()).slice(0,4);
+var arkWallMomentMonth=String(today()).slice(5,7);
 var arkWallLightboxItems=[];
 var arkWallLightboxIndex=-1;
 var arkWallLightboxTouchStart=null;
@@ -8086,6 +8137,18 @@ var arkWallLightboxEventsBound=false;
 
 function arkWallReadToken(){
   try{return localStorage.getItem(ARK_WALL_READ_TOKEN_KEY)||'';}catch(e){return '';}
+}
+
+function arkWallWriteToken(){
+  try{return localStorage.getItem('ark_wall_write_token')||'';}catch(e){return '';}
+}
+
+function setArkWallWriteToken(token){
+  var value=String(token||'').trim();
+  try{
+    if(value)localStorage.setItem('ark_wall_write_token',value);
+    else localStorage.removeItem('ark_wall_write_token');
+  }catch(e){}
 }
 
 function setArkWallReadToken(token){
@@ -8103,8 +8166,9 @@ function clearArkWallReadToken(){
 }
 
 function arkWallAuthOptions(options){
-  var token=arkWallReadToken();
   var next=options||{};
+  var token=next.wallWrite?arkWallWriteToken():arkWallReadToken();
+  delete next.wallWrite;
   var headers=new Headers(next.headers||{});
   if(token)headers.set('authorization','Bearer '+token);
   next.headers=headers;
@@ -8705,6 +8769,80 @@ function changeArkWallMonth(value){
   renderArkWallList();
 }
 
+function arkWallMomentMonthLabel(){return arkWallMomentYear+' 年 '+Number(arkWallMomentMonth)+' 月';}
+function arkWallMomentDateKey(year,month,day){return year+'-'+String(month).padStart(2,'0')+'-'+String(day).padStart(2,'0');}
+function arkWallMomentMap(){
+  var map={};
+  arkWallMoments.forEach(function(moment){(map[moment.date]||(map[moment.date]=[])).push(moment);});
+  return map;
+}
+function arkWallMomentIcons(items){
+  var counts={};
+  (items||[]).forEach(function(item){counts[item.icon]=(counts[item.icon]||0)+1;});
+  return Object.keys(counts).slice(0,3).map(function(icon){return icon+(counts[icon]>1?' ×'+counts[icon]:'');}).join(' ')+(Object.keys(counts).length>3?' ＋'+(Object.keys(counts).length-3):'');
+}
+function arkWallMomentOptions(values,current){return values.map(function(value){return '<option value="'+esc(value)+'"'+(value===current?' selected':'')+'>'+esc(value)+'</option>';}).join('');}
+function arkWallMomentFormHtml(){
+  var item=arkWallMoments.find(function(moment){return moment.id===arkWallMomentEditingId;})||{date:arkWallMomentSelectedDate,text:'',type:'療癒',icon:'🌱',mood:'',note:''};
+  return '<form class="ark-wall-moment-form" onsubmit="submitArkWallMoment(event)">'
+    +'<label>日期<input id="ark-wall-moment-date" type="date" value="'+esc(item.date)+'" required></label>'
+    +'<label>一句話<input id="ark-wall-moment-text" maxlength="180" value="'+esc(item.text)+'" placeholder="今天值得記住的一件事" required></label>'
+    +'<div class="ark-wall-moment-form-grid"><label>類型<select id="ark-wall-moment-type">'+arkWallMomentOptions(['感恩','開心','療癒','成就','值得記住','低潮'],item.type)+'</select></label><label>圖示<select id="ark-wall-moment-icon">'+arkWallMomentOptions(['🌱','❤️','⭐','☕','🐱','🏆','🌧️'],item.icon)+'</select></label></div>'
+    +'<div class="ark-wall-moment-form-grid"><label>心情（選填）<select id="ark-wall-moment-mood"><option value="">不記錄</option>'+arkWallMomentOptions(['🙂','😐','🙁'],item.mood)+'</select></label><div></div></div>'
+    +'<div class="ark-wall-moment-form-actions"><button class="ark-wall-moment-action" type="submit">'+(arkWallMomentEditingId?'儲存修改':'留下印記')+'</button><button class="ark-wall-moment-cancel" type="button" onclick="cancelArkWallMomentForm()">取消</button><span class="ark-wall-moment-status" id="ark-wall-moment-form-status"></span></div>'
+  +'</form>';
+}
+function renderArkWallMomentDetail(date,map){
+  var items=map[date]||[];
+  var title=String(date).split('-');
+  var html='<div class="ark-wall-moment-detail"><div class="ark-wall-moment-detail-head"><div><div class="ark-wall-moment-detail-title">'+Number(title[1])+' 月 '+Number(title[2])+' 日</div><div class="ark-wall-moments-sub">'+(items.length?'今天有 '+items.length+' 則拾光':'今天還沒有印記')+'</div></div></div>';
+  if(items.length)html+=items.map(function(item){return '<article class="ark-wall-moment-card"><div class="ark-wall-moment-card-text">'+esc(item.icon)+' '+esc(item.text)+'</div><div class="ark-wall-moment-card-meta"><span>'+esc(item.type)+(item.mood?' · '+esc(item.mood):'')+'</span><span class="ark-wall-moment-card-actions"><button type="button" onclick="editArkWallMoment(\''+esc(item.id)+'\')">編輯</button><button type="button" onclick="deleteArkWallMoment(\''+esc(item.id)+'\')">刪除</button></span></div></article>';}).join('');
+  if(arkWallMomentFormOpen)html+=arkWallMomentFormHtml();
+  return html+'</div>';
+}
+function renderArkWallMomentsBlock(){
+  var map=arkWallMomentMap();
+  var first=new Date(Number(arkWallMomentYear),Number(arkWallMomentMonth)-1,1);
+  var days=new Date(Number(arkWallMomentYear),Number(arkWallMomentMonth),0).getDate();
+  var start=first.getDay();
+  var cells=['日','一','二','三','四','五','六'].map(function(day){return '<div class="ark-wall-calendar-weekday">'+day+'</div>';}).join('');
+  for(var i=0;i<start;i++)cells+='<div class="ark-wall-calendar-day empty"></div>';
+  for(var day=1;day<=days;day++){
+    var date=arkWallMomentDateKey(arkWallMomentYear,arkWallMomentMonth,day);
+    var classes='ark-wall-calendar-day'+(date===arkWallMomentSelectedDate?' selected':'')+(date===today()?' today':'');
+    var hoverText=(map[date]||[]).map(function(item){return item.icon+' '+item.text;}).join('\n');
+    cells+='<button class="'+classes+'" type="button" title="'+esc(hoverText)+'" aria-label="'+esc(date+(hoverText?' '+hoverText:''))+'" onclick="selectArkWallMomentDate(\''+date+'\')"><span class="ark-wall-calendar-day-number">'+day+'</span><span class="ark-wall-calendar-icons">'+esc(arkWallMomentIcons(map[date]||[]))+'</span></button>';
+  }
+  var monthStatus=arkWallMomentsKey===arkWallMomentYear+'-'+arkWallMomentMonth?'本月 '+arkWallMoments.length+' 則短印記':'正在載入本月印記...';
+  return '<section class="ark-wall-moments" id="ark-wall-moments"><div class="ark-wall-moments-head"><div><div class="ark-wall-moments-title">今日拾光</div><div class="ark-wall-moments-sub">把一天留下的一句話，變成生活足跡。</div></div><button class="ark-wall-moment-add" type="button" onclick="openArkWallMomentForm()">＋新增印記</button></div><div class="ark-wall-moments-layout"><div class="ark-wall-calendar"><div class="ark-wall-calendar-nav"><button type="button" onclick="changeArkWallMomentMonth(-1)" aria-label="上個月">‹</button><div class="ark-wall-calendar-label">'+arkWallMomentMonthLabel()+'</div><button type="button" onclick="changeArkWallMomentMonth(1)" aria-label="下個月">›</button></div><div class="ark-wall-calendar-grid">'+cells+'</div><div class="ark-wall-moments-sub">'+monthStatus+'</div></div>'+renderArkWallMomentDetail(arkWallMomentSelectedDate,map)+'</div></section>';
+}
+function loadArkWallMoments(){
+  var key=arkWallMomentYear+'-'+arkWallMomentMonth;
+  if(arkWallMomentsKey===key)return Promise.resolve(arkWallMoments);
+  return arkWallFetch('/api/wall-moments?year='+encodeURIComponent(arkWallMomentYear)+'&month='+encodeURIComponent(arkWallMomentMonth)).then(function(data){arkWallMoments=Array.isArray(data.moments)?data.moments:[];arkWallMomentsKey=key;renderArkWallList();return arkWallMoments;});
+}
+function selectArkWallMomentDate(date){arkWallMomentSelectedDate=date;arkWallMomentFormOpen=false;arkWallMomentEditingId='';renderArkWallList();}
+function changeArkWallMomentMonth(delta){
+  var date=new Date(Number(arkWallMomentYear),Number(arkWallMomentMonth)-1+delta,1);
+  arkWallMomentYear=String(date.getFullYear());arkWallMomentMonth=String(date.getMonth()+1).padStart(2,'0');
+  arkWallMomentSelectedDate=arkWallMomentDateKey(arkWallMomentYear,arkWallMomentMonth,1);arkWallMomentsKey='';
+  renderArkWallList();loadArkWallMoments().catch(function(){});
+}
+function openArkWallMomentForm(){arkWallMomentEditingId='';arkWallMomentFormOpen=true;renderArkWallList();}
+function editArkWallMoment(id){var item=arkWallMoments.find(function(moment){return moment.id===id;});if(!item)return;arkWallMomentEditingId=id;arkWallMomentSelectedDate=item.date;arkWallMomentFormOpen=true;renderArkWallList();}
+function cancelArkWallMomentForm(){arkWallMomentFormOpen=false;arkWallMomentEditingId='';renderArkWallList();}
+function submitArkWallMoment(event){
+  event.preventDefault();
+  var status=document.getElementById('ark-wall-moment-form-status');if(status)status.textContent='儲存中...';
+  var payload={date:document.getElementById('ark-wall-moment-date').value,text:document.getElementById('ark-wall-moment-text').value,type:document.getElementById('ark-wall-moment-type').value,icon:document.getElementById('ark-wall-moment-icon').value,mood:document.getElementById('ark-wall-moment-mood').value,note:''};
+  var id=arkWallMomentEditingId;var options={method:id?'PUT':'POST',wallWrite:true,headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)};
+  arkWallFetch(id?'/api/admin/wall-moments/'+encodeURIComponent(id):'/api/admin/wall-moments',options).then(function(data){var saved=data.moment;arkWallMomentYear=saved.date.slice(0,4);arkWallMomentMonth=saved.date.slice(5,7);arkWallMomentSelectedDate=saved.date;arkWallMomentFormOpen=false;arkWallMomentEditingId='';arkWallMomentsKey='';return loadArkWallMoments();}).then(function(){renderArkWallList();}).catch(function(err){if(status)status.textContent=err.status===401?'需要管理員授權，請確認城牆寫入權限。':(err.message||'儲存失敗');});
+}
+function deleteArkWallMoment(id){
+  var item=arkWallMoments.find(function(moment){return moment.id===id;});if(!item||!confirm('確定刪除這則拾光？'))return;
+  arkWallFetch('/api/admin/wall-moments/'+encodeURIComponent(id),{method:'DELETE',wallWrite:true}).then(function(){arkWallMomentFormOpen=false;arkWallMomentEditingId='';arkWallMomentsKey='';return loadArkWallMoments();}).then(function(){renderArkWallList();}).catch(function(err){alert(err.message||'刪除失敗');});
+}
+
 function arkWallEntryCard(entry){
   var id=entry.id||entry.slug||'';
   var cover=arkWallUrl(entry.coverImageUrl||((entry.images&&entry.images[0]&&entry.images[0].thumbnailUrl)||''));
@@ -8731,10 +8869,11 @@ function renderArkWallList(){
     ? renderArkWallLibraryBlock()
     : '<section class="ark-wall-library" id="ark-wall-library"><div class="ark-wall-library-status" id="ark-wall-library-status">時光長廊索引讀取中...</div></section>';
   if(!arkWallEntries.length){
-    body.innerHTML=renderArkWallViewTabs()
+    body.innerHTML=(arkWallView==='wall'?renderArkWallMomentsBlock():'')+renderArkWallViewTabs()
       +arkWallSectionHtml(arkWallView==='memo'?renderArkWallMemoList():(arkWallView==='market'?renderArkWallMarketList():'<div class="travel-status">城牆尚無紀錄。可由右上角「新增紀錄」寫入 NAS。</div>'),'main')
       +(arkWallView==='wall'?arkWallSectionHtml(libraryHtml,'timeline'):'');
     if(arkWallView==='wall'){
+      loadArkWallMoments().catch(function(err){var status=document.querySelector('.ark-wall-moments .ark-wall-moments-sub');if(status)status.textContent='今日拾光讀取失敗：'+(err.message||err);});
       if(!arkWallLibrarySummary)loadArkWallLibrarySummary().then(renderArkWallList).catch(function(err){arkWallLibraryStatus('時光長廊讀取失敗：'+(err&&err.message?err.message:err));});
       else{
         if(arkWallLibraryOpen)loadArkWallLibraryMonth();
@@ -8765,9 +8904,10 @@ function renderArkWallList(){
   +(query?'<div class="ark-wall-count">關鍵字「'+esc(query)+'」 · '+entries.length+' 篇</div>':'')
   +(entries.length?'<div class="ark-wall-index">'+entries.map(arkWallIndexRow).join('')+'</div>':'<div class="travel-status">'+esc(query?'沒有符合關鍵字的文章。':'這個月份尚無紀錄。')+'</div>');
   }
-  body.innerHTML=renderArkWallViewTabs()+arkWallSectionHtml(content,'main')+(arkWallView==='wall'?arkWallSectionHtml(filterHtml+libraryHtml,'timeline'):'');
+  body.innerHTML=(arkWallView==='wall'?renderArkWallMomentsBlock():'')+renderArkWallViewTabs()+arkWallSectionHtml(content,'main')+(arkWallView==='wall'?arkWallSectionHtml(filterHtml+libraryHtml,'timeline'):'');
   syncArkWallSearchButton();
   if(arkWallView==='wall'){
+    loadArkWallMoments().catch(function(err){var status=document.querySelector('.ark-wall-moments .ark-wall-moments-sub');if(status)status.textContent='今日拾光讀取失敗：'+(err.message||err);});
     if(!arkWallLibrarySummary)loadArkWallLibrarySummary().then(renderArkWallList).catch(function(err){arkWallLibraryStatus('時光長廊讀取失敗：'+(err&&err.message?err.message:err));});
     else{
       if(arkWallLibraryOpen)loadArkWallLibraryMonth();
