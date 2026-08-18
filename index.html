@@ -8771,6 +8771,7 @@ function changeArkWallMonth(value){
 
 function arkWallMomentMonthLabel(){return arkWallMomentYear+' 年 '+Number(arkWallMomentMonth)+' 月';}
 function arkWallMomentDateKey(year,month,day){return year+'-'+String(month).padStart(2,'0')+'-'+String(day).padStart(2,'0');}
+function arkWallMomentIconOptions(current){var icons=[['🌱','療癒'],['❤️','感恩'],['☀️','開心'],['⭐','成就'],['🐾','生活'],['🌧️','低潮'],['💡','領悟'],['🎁','珍藏']];return icons.map(function(item){return '<option value="'+esc(item[0])+'"'+(item[0]===current?' selected':'')+'>'+esc(item[0]+' '+item[1])+'</option>';}).join('');}
 function arkWallMomentMap(){
   var map={};
   arkWallMoments.forEach(function(moment){(map[moment.date]||(map[moment.date]=[])).push(moment);});
@@ -8787,7 +8788,7 @@ function arkWallMomentFormHtml(){
   return '<form class="ark-wall-moment-form" onsubmit="submitArkWallMoment(event)">'
     +'<label>日期<input id="ark-wall-moment-date" type="date" value="'+esc(item.date)+'" required></label>'
     +'<label>一句話<input id="ark-wall-moment-text" maxlength="180" value="'+esc(item.text)+'" placeholder="今天值得記住的一件事" required></label>'
-    +'<div class="ark-wall-moment-form-grid"><label>類型<select id="ark-wall-moment-type">'+arkWallMomentOptions(['感恩','開心','療癒','成就','值得記住','低潮'],item.type)+'</select></label><label>圖示<select id="ark-wall-moment-icon">'+arkWallMomentOptions(['🌱','❤️','⭐','☕','🐱','🏆','🌧️'],item.icon)+'</select></label></div>'
+    +'<div class="ark-wall-moment-form-grid"><label>類型<select id="ark-wall-moment-type">'+arkWallMomentOptions(['感恩','開心','療癒','成就','值得記住','低潮'],item.type)+'</select></label><label>圖示<select id="ark-wall-moment-icon">'+arkWallMomentIconOptions(item.icon)+'</select></label></div>'
     +'<div class="ark-wall-moment-form-grid"><label>心情<select id="ark-wall-moment-mood">'+arkWallMomentOptions(['❌','😃','😭','🤔'],item.mood)+'</select></label><div></div></div>'
     +'<div class="ark-wall-moment-form-actions"><button class="ark-wall-moment-action" type="submit">'+(arkWallMomentEditingId?'儲存修改':'留下印記')+'</button><button class="ark-wall-moment-cancel" type="button" onclick="cancelArkWallMomentForm()">取消</button><span class="ark-wall-moment-status" id="ark-wall-moment-form-status"></span></div>'
   +'</form>';
