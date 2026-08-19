@@ -5470,10 +5470,12 @@ function buildCouncilRosterGroupSummaries(active,totalCost){
   });
 }
 
-function councilRosterSnapshotDeltaHtml(snapshot,label){
+function councilRosterSnapshotDeltaHtml(snapshot,label,currentValue){
   var groups=snapshot&&Array.isArray(snapshot.groups)?snapshot.groups:[];
   var group=groups.filter(function(item){return item&&item.label===label;})[0];
-  var amount=Number(group&&group.changeAmount);
+  var hasCurrent=currentValue!==null&&currentValue!==undefined&&currentValue!==''&&isFinite(Number(currentValue));
+  var hasPrevious=group&&group.previousValue!==null&&group.previousValue!==undefined&&group.previousValue!==''&&isFinite(Number(group.previousValue));
+  var amount=hasCurrent&&hasPrevious?Number(currentValue)-Number(group.previousValue):Number(group&&group.changeAmount);
   if(!isFinite(amount))return '<span class="foodhouse-roster-delta flat">(較昨 --)</span>';
   return `<span class="foodhouse-roster-delta ${amount>=0?'up':'down'}">(${amount>=0?'+':'-'}${fmtFull(Math.abs(amount))})</span>`;
 }
@@ -5493,7 +5495,7 @@ function renderFoodhouseCouncilRosterSummary(rows,rosterSnapshot){
         return `<div class="foodhouse-roster-item">
           <div class="foodhouse-roster-label">${esc(group.label)}</div>
           <div class="foodhouse-roster-meta">
-            <div>加總現值 <strong>${fmtFull(group.market)}</strong>${councilRosterSnapshotDeltaHtml(rosterSnapshot,group.label)}</div>
+            <div>加總現值 <strong>${fmtFull(group.market)}</strong>${councilRosterSnapshotDeltaHtml(rosterSnapshot,group.label,group.market)}</div>
             <span class="foodhouse-roster-reservoir" aria-label="成本加總佔比 ${costPct.toFixed(1)}%">
               <span class="res-fill ${cls}" style="height:${fillPct.toFixed(1)}%"><span class="res-waves"></span></span>
               <span class="res-pct">${costPct.toFixed(1)}%</span>
