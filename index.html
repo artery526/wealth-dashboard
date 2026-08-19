@@ -15061,7 +15061,7 @@ function advisorAIResolveInvestmentSymbol(value){
 }
 
 function advisorAIDividendMemoUsSymbols(){
-  return ['QQQI','AIPI','PLTY','CHPY','GDXW','GLDW'];
+  return ['QQQI','AIPI','MLPI','PLTY','CHPY','GDXW','GLDW'];
 }
 
 function advisorAIDividendMemoMarket(symbol){
@@ -15178,7 +15178,7 @@ function advisorAIDeepSeekSystemPrompt(){
     '允許 intent: transfer, dividend, advisorDividendMemo, stockBuy, stockSell, open, maintenance, copyCarrier, showCarrier, member, unknown。',
     'transfer 欄位: from, to, amount, note。',
     'dividend 欄位: symbol, amount。',
-    'advisorDividendMemo 欄位: market, symbol, dividendPerShare。可省略 market；只輸入「ETF關鍵字 配息比率」也可回 advisorDividendMemo，例如「台灣5G 0.12」或「AIPI 0.234」。美股只有 QQQI, AIPI, PLTY, CHPY, GDXW, GLDW；其餘為台股；施羅德收益成長A2 是美股但免先扣 30%。',
+    'advisorDividendMemo 欄位: market, symbol, dividendPerShare。可省略 market；只輸入「ETF關鍵字 配息比率」也可回 advisorDividendMemo，例如「台灣5G 0.12」或「AIPI 0.234」。美股只有 QQQI, AIPI, MLPI, PLTY, CHPY, GDXW, GLDW；其餘為台股；施羅德收益成長A2 是美股但免先扣 30%。',
     'stockBuy/stockSell 欄位: symbol, shares, amount。',
     'open 欄位: panel, tab, label。panel 只能 finance, foodhouse, market, domestic, council, stars, medical。',
     'member 欄位: type，只能 seven, family 或 hilife。',
