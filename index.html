@@ -6360,7 +6360,7 @@ function renderMedicalPanel(){
       <div class="council-army-title">🧍 疼痛地圖</div>
       <div class="mpm-summary">
         <div class="mpm-summary-box"><div class="mpm-summary-num" id="mpm-total-records">—</div><div class="mpm-summary-lbl">總疼痛記錄</div></div>
-        <div class="mpm-summary-box"><div class="mpm-summary-num" id="mpm-avg-pain">—</div><div class="mpm-summary-lbl">平均疼痛值</div></div>
+        <div class="mpm-summary-box"><div class="mpm-summary-num" id="mpm-avg-pain">—</div><div class="mpm-summary-lbl">疼痛程度分布</div></div>
         <div class="mpm-summary-box"><div class="mpm-summary-num" id="mpm-med-count">—</div><div class="mpm-summary-lbl">用藥次數</div></div>
       </div>
       <div class="council-army-title" style="font-size:13px;margin-bottom:8px">痛｜疼痛部位統計（前 6 影響占比）</div>
@@ -6391,8 +6391,33 @@ function fillMedicalSelect(id,values,placeholder){
   if(!el)return;
   var list=(values||[]).filter(Boolean);
   el.innerHTML='<option value="">'+esc(placeholder)+'</option>'+list.map(function(v){
-    return '<option value="'+esc(v)+'">'+esc(v)+'</option>';
+    var value=typeof v==='object'?v.value:v;
+    var label=typeof v==='object'?(v.label||v.value):v;
+    return '<option value="'+esc(value)+'">'+esc(label)+'</option>';
   }).join('');
+}
+
+var MEDICAL_PAIN_LEVEL_OPTIONS=[
+  {value:'⚪輕度',label:'⚪輕度'},
+  {value:'🔵中度',label:'🔵中度'},
+  {value:'🟡重度',label:'🟡重度'},
+  {value:'🔴嚴重',label:'🔴嚴重'}
+];
+
+function medicalPainLevelInfo(value){
+  var text=String(value==null?'':value).trim();
+  var numeric=Number(text);
+  if(text!==''&&!isNaN(numeric)){
+    if(numeric<=3)return {key:'mild',label:'⚪輕度',className:'pain-lo'};
+    if(numeric<=6)return {key:'moderate',label:'🔵中度',className:'pain-md'};
+    if(numeric<=9)return {key:'severe',label:'🟡重度',className:'pain-hi'};
+    if(numeric===10)return {key:'critical',label:'🔴嚴重',className:'pain-critical'};
+  }
+  if(text.indexOf('⚪')===0||text.includes('輕度'))return {key:'mild',label:'⚪輕度',className:'pain-lo'};
+  if(text.indexOf('🔵')===0||text.includes('中度'))return {key:'moderate',label:'🔵中度',className:'pain-md'};
+  if(text.indexOf('🟡')===0||text.includes('重度'))return {key:'severe',label:'🟡重度',className:'pain-hi'};
+  if(text.indexOf('🔴')===0||text.includes('嚴重'))return {key:'critical',label:'🔴嚴重',className:'pain-critical'};
+  return null;
 }
 
 function cleanMedicalLabel(value){
@@ -6990,7 +7015,7 @@ async function initMedicalQuickForm(){
   if(!form)return;
   var timeEl=document.getElementById('medical-time');
   if(timeEl&&!timeEl.value)timeEl.value=localDateTimeValue();
-  fillMedicalSelect('medical-pain-level',Array.from({length:11},function(_,i){return i===0?'0 無痛':String(i);}),'選擇疼痛程度');
+  fillMedicalSelect('medical-pain-level',MEDICAL_PAIN_LEVEL_OPTIONS,'選擇疼痛程度');
   fillMedicalSelect('medical-dose',Array.from({length:7},function(_,i){return i+'顆';}),'選擇藥量');
   form.addEventListener('submit',submitMedicalQuickRecord);
 
@@ -7013,7 +7038,7 @@ async function submitMedicalQuickRecord(e){
   var med=document.getElementById('medical-med').value;
   var dose=document.getElementById('medical-dose').value;
   var notes=(document.getElementById('medical-notes')||{}).value||'';
-  var painLevel=painLevelValue?parseInt(painLevelValue,10):'';
+  var painLevel=painLevelValue||'';
 
   if(!date||!time){
     setMedicalStatus('請確認紀錄時間','err');
@@ -16741,8 +16766,8 @@ function mpmRender(records){
   var allPainRecs = records.filter(function(r){
     var areas = String(r.painAreas||'').trim();
     var meds  = String(r.meds||'').trim();
-    var lvl   = Number(r.painLevel);
-    return areas || (meds && !meds.includes('未用藥')) || (!isNaN(lvl) && lvl > 0);
+    var level = medicalPainLevelInfo(r.painLevel);
+    return areas || (meds && !meds.includes('未用藥')) || level;
   }).slice().sort(function(a,b){
     return String(b.recordTime||b.date||'').localeCompare(String(a.recordTime||a.date||''));
   });
@@ -16770,8 +16795,19 @@ function mpmRender(records){
 
   // ── 摘要數字 ──
   var totalMed = painRecs.filter(function(r){ var m=String(r.meds||'').trim(); return m&&!m.includes('未用藥'); }).length;
-  var painVals = painRecs.map(function(r){ return Number(r.painLevel); }).filter(function(v){ return !isNaN(v)&&v>0; });
-  var avgPain  = painVals.length ? (painVals.reduce(function(s,v){return s+v;},0)/painVals.length).toFixed(1) : '—';
+  var painLevelCounts = {mild:0,moderate:0,severe:0,critical:0};
+  painRecs.forEach(function(r){
+    var level=medicalPainLevelInfo(r.painLevel);
+    if(level)painLevelCounts[level.key]++;
+  });
+  var avgPain = [
+    {key:'mild',label:'⚪輕度'},
+    {key:'moderate',label:'🔵中度'},
+    {key:'severe',label:'🟡重度'},
+    {key:'critical',label:'🔴嚴重'}
+  ].filter(function(item){return painLevelCounts[item.key]>0;}).map(function(item){
+    return item.label+'*'+painLevelCounts[item.key];
+  }).join(' ')||'—';
   function setText(id,v){var el=document.getElementById(id);if(el)el.textContent=v;}
   setText('mpm-total-records', painRecs.length);
   setText('mpm-avg-pain',      avgPain);
@@ -16814,9 +16850,8 @@ function mpmRender(records){
   }
   recEl.innerHTML = '<div class="mpm-rec-list">'+painRecs.map(function(r){
     var timeStr = (r.date||'') + (r.time?' '+r.time:'');
-    var lvl     = Number(r.painLevel);
-    var lvlCls  = !isNaN(lvl) && lvl>=7 ? 'pain-hi' : (!isNaN(lvl) && lvl>=4 ? 'pain-md' : 'pain-lo');
-    var lvlTxt  = (!isNaN(lvl) && lvl>0) ? '痛感 '+lvl+'/10' : '';
+    var level   = medicalPainLevelInfo(r.painLevel);
+    var lvlTxt  = level ? level.label : '';
     var emotion = String(r.emotion||'').trim();
     var meds    = String(r.meds||'').trim();
     var medDose = String(r.medDose||'').trim();
@@ -16827,7 +16862,7 @@ function mpmRender(records){
 
     var badges  = '';
     if(emotion)  badges += '<span class="mpm-badge">'+mpmEsc(emotion)+'</span>';
-    if(lvlTxt)   badges += '<span class="mpm-badge '+lvlCls+'">'+mpmEsc(lvlTxt)+'</span>';
+    if(lvlTxt)   badges += '<span class="mpm-badge '+level.className+'">'+mpmEsc(lvlTxt)+'</span>';
     if(areas)    badges += '<span class="mpm-badge">📍 '+mpmEsc(areas)+'</span>';
     if(cause)    badges += '<span class="mpm-badge">⚡ '+mpmEsc(cause)+'</span>';
     if(medTxt)   badges += '<span class="mpm-badge">'+mpmEsc(medTxt)+'</span>';
