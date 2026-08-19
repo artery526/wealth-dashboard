@@ -11475,7 +11475,7 @@ function battleTableRowHtml(row){
   row=row||{};
   var cls=battleChangeClass(row.change);
   return `<div class="battle-table-row">
-    <div class="battle-cell" data-label="標的">${esc(row.name||row.code||'--')}<div class="battle-line-code">${esc(row.code||'')}</div></div>
+    <div class="battle-cell" data-label="標的">${esc(row.name||row.code||'--')}</div>
     <div class="battle-cell num" data-label="現價">${esc(battleNumberText(row.current,2,''))}</div>
     <div class="battle-cell num" data-label="昨日">${esc(battleNumberText(row.previous,2,''))}</div>
     <div class="battle-cell num delta ${cls}" data-label="增減">${esc(battleDeltaText(row,false))}</div>
