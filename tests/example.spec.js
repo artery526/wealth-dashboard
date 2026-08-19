@@ -14,7 +14,6 @@ test('battle brief panel renders with stable formatting', async ({ page }) => {
     window.councilDashboardCache = {
       heroes: [{ symbol: 'QQQI', assetName: 'QQQI', heroName: 'QQQI', enabled: true, sortOrder: 1 }],
       holdings: [{ symbol: 'QQQI', name: 'QQQI', cost: 100, marketValue: 110 }],
-      councilRosterSnapshot: { groups: [] },
       holdingsLoaded: true
     };
     renderCouncilPanel();
@@ -38,8 +37,7 @@ test('battle brief panel renders with stable formatting', async ({ page }) => {
 
   await expect(page.locator('.ptab.active')).toHaveAttribute('onclick', /battle-brief/);
   const reportSections = page.locator('.battle-report-grid > .battle-section');
-  await expect(reportSections.nth(0).locator('.foodhouse-roster-title')).toHaveText('部隊兵力配置比例');
-  await expect(reportSections.nth(1).locator('.battle-section-title')).toHaveText('00997A 持股變化與軍師短評');
+  await expect(reportSections.nth(0).locator('.battle-section-title')).toHaveText('00997A 持股變化與軍師短評');
   const fundSection = page.locator('.battle-section', { hasText: '基金淨值' });
   const marginSection = page.locator('.battle-section', { hasText: '台股融資與維持率' });
   await expect(fundSection.locator('.battle-line-current')).toHaveText(['50.1', '140.81']);
@@ -90,14 +88,13 @@ test('remembered Pangtong verification restores the empire after reload', async 
   expect(result).toEqual({ authorizedDuringRestore: true, authorized: true, unlocked: true, status: 'ok', verifyCalls: 1 });
 });
 
-test('battle brief shows the cached army allocation before refreshing', async ({ page }) => {
+test('battle brief no longer renders the retired army allocation snapshot', async ({ page }) => {
   await page.goto(dashboardUrl);
 
   const result = await page.evaluate(() => {
     const cache = {
       heroes: [{ symbol: 'QQQI', assetName: 'QQQI', heroName: 'QQQI', enabled: true, sortOrder: 1 }],
       holdings: [{ symbol: 'QQQI', name: 'QQQI', cost: 100, marketValue: 110 }],
-      councilRosterSnapshot: { groups: [] },
       cachedAt: Date.now()
     };
     localStorage.setItem('wealth_council_roster_v1', JSON.stringify(cache));
@@ -107,11 +104,11 @@ test('battle brief shows the cached army allocation before refreshing', async ({
     renderBattleBrief({ summary: {}, funds: [], market: [], holdings: [], etfHoldingChange: {} }, battle);
     return {
       title: battle.querySelector('.foodhouse-roster-title')?.textContent || '',
-      hasSkeleton: !!battle.querySelector('.battle-council-roster-section .skel')
+      hasArmyAllocation: !!battle.querySelector('.battle-council-roster-section')
     };
   });
 
-  expect(result).toEqual({ title: '部隊兵力配置比例', hasSkeleton: false });
+  expect(result).toEqual({ title: '', hasArmyAllocation: false });
 });
 
 test('council roster shows the cached roster before refreshing', async ({ page }) => {
@@ -121,7 +118,6 @@ test('council roster shows the cached roster before refreshing', async ({ page }
     const cache = {
       heroes: [{ symbol: 'QQQI', assetName: 'QQQI', heroName: 'QQQI', enabled: true, sortOrder: 1 }],
       holdings: [{ symbol: 'QQQI', name: 'QQQI', cost: 100, marketValue: 110, shares: 1 }],
-      councilRosterSnapshot: { groups: [] },
       cachedAt: Date.now()
     };
     localStorage.setItem('wealth_council_roster_v1', JSON.stringify(cache));
@@ -143,7 +139,6 @@ test('council roster shows the cached roster before refreshing', async ({ page }
       ],
       assetSnapshot: null,
       dividendProjection: null,
-      councilRosterSnapshot: { groups: [] },
       holdingsLoaded: true
     }), 120));
     const refreshPromise = loadCouncilDashboard();
