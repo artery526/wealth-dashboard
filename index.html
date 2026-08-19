@@ -6070,6 +6070,30 @@ async function deleteZiweiChart(){
   }catch(e){alert('\u522a\u9664\u547d\u76e4\u5931\u6557\uff1a'+(e.message||e));}
 }
 
+function openZiweiOriginal(){
+  var row=ziweiChartsCache.find(function(item){return item.id===ziweiSelectedId;})||ziweiChartsCache[0];
+  var state=row&&ziweiDetailCache[ziweiDetailKey(row)];
+  var source=state&&state.detail&&(state.detail.imageDataUrl||state.detail.imageUrl);
+  if(!source){alert('\u547d\u76e4\u5716\u7247\u5c1a\u672a\u8f09\u5165');return;}
+  if(/^data:image\//i.test(source)){
+    var comma=source.indexOf(',');
+    var header=comma>0?source.slice(0,comma):'data:image/png;base64';
+    var mime=((header.match(/^data:([^;]+)/i)||[])[1])||'image/png';
+    var raw=atob(comma>0?source.slice(comma+1):source);
+    var bytes=new Uint8Array(raw.length);
+    for(var i=0;i<raw.length;i++)bytes[i]=raw.charCodeAt(i);
+    source=URL.createObjectURL(new Blob([bytes],{type:mime}));
+    setTimeout(function(){URL.revokeObjectURL(source);},60000);
+  }
+  var anchor=document.createElement('a');
+  anchor.href=source;
+  anchor.target='_blank';
+  anchor.rel='noopener noreferrer';
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+}
+
 function renderZiweiPreview(){
   var preview=document.getElementById('ziwei-preview');
   if(!preview)return;
@@ -6094,7 +6118,7 @@ function renderZiweiPreview(){
         <div class="ziwei-preview-meta">${esc(meta||'\u672a\u586b\u51fa\u751f\u8cc7\u6599')}${row.updatedAt?' \u00b7 '+esc(row.updatedAt):''}</div>
       </div>
       <div class="ziwei-tools">
-        ${original?`<a class="ziwei-open-btn" href="${esc(original)}" target="_blank" rel="noopener">\u958b\u539f\u5716</a>`:''}
+        ${original?`<button class="ziwei-open-btn" type="button" onclick="openZiweiOriginal()">\u958b\u539f\u5716</button>`:''}
         <label class="ziwei-open-btn ziwei-upload-label">\u4e0a\u50b3\u65b0\u547d\u76e4<input type="file" accept="image/png,image/jpeg,image/webp" onchange="uploadZiweiChart(this)"></label>
         <button class="ziwei-tool ziwei-danger-btn" type="button" onclick="deleteZiweiChart()">\u522a\u9664\u547d\u76e4</button>
       </div>
