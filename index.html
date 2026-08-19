@@ -11544,11 +11544,12 @@ function battleLineHtml(row,options){
   var current=options.scale&&row.current!==''&&row.current!=null?Number(row.current)/options.scale:row.current;
   var value=battleNumberText(current,options.digits,options.suffix,options.minDigits);
   var updatedAt=options.showUpdatedAt?battleUpdatedAtText(row.updatedAt||row.dataTime||row.fetchedAt):'';
+  var codeText=options.hideCode?'':(row.code||row.source||'');
   return `<div class="battle-line">
     <div>
       <div class="battle-line-name">${esc(row.name||row.code||'--')}</div>
       ${updatedAt?`<div class="battle-line-updated">資料取得 ${esc(updatedAt)}</div>`:''}
-      <div class="battle-line-code">${esc(row.code||row.source||'')}</div>
+      ${codeText?`<div class="battle-line-code">${esc(codeText)}</div>`:''}
     </div>
     <div class="battle-line-value">
       <div class="battle-line-current">${esc(value)}</div>
@@ -11635,7 +11636,7 @@ function renderBattleBrief(data,el){
   var marginRows=market.filter(function(row){return row&&!isMaintenanceRow(row)&&!isForeignTxNetShortRow(row);});
   var maintenanceRows=market.filter(isMaintenanceRow);
   var foreignTxNetShortRows=market.filter(isForeignTxNetShortRow);
-  var fundHtml=funds.length?funds.map(function(row){return battleLineHtml(row,{digits:2,minDigits:0,showUpdatedAt:true});}).join(''):'<div class="battle-empty">尚未讀到基金淨值。</div>';
+  var fundHtml=funds.length?funds.map(function(row){return battleLineHtml(row,{digits:2,minDigits:0,showUpdatedAt:true,hideCode:true});}).join(''):'<div class="battle-empty">尚未讀到基金淨值。</div>';
   var marginHtml=(marginRows.concat(maintenanceRows)).length?(marginRows.concat(maintenanceRows)).map(function(row){
     var isRatio=isMaintenanceRow(row);
     return battleLineHtml(row,isRatio?{digits:2,suffix:'%',percentOnly:false}:{scale:100000000,digits:2,minDigits:2,suffix:' 億',changeScale:100000000,changeDigits:2,changeSuffix:' 億'});
