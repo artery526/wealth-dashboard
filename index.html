@@ -11548,7 +11548,7 @@ function battleLineHtml(row,options){
   return `<div class="battle-line">
     <div>
       <div class="battle-line-name">${esc(row.name||row.code||'--')}</div>
-      ${updatedAt?`<div class="battle-line-updated">資料取得 ${esc(updatedAt)}</div>`:''}
+      ${updatedAt?`<div class="battle-line-updated">${esc(updatedAt)}</div>`:''}
       ${codeText?`<div class="battle-line-code">${esc(codeText)}</div>`:''}
     </div>
     <div class="battle-line-value">
