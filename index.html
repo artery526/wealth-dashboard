@@ -5431,14 +5431,15 @@ function starsCacheLabel(cached,prefix){
 }
 
 function renderFoodhouseCouncilRosterSummary(rows,rosterSnapshot){
-  var groups=rosterSnapshot&&Array.isArray(rosterSnapshot.previousMonthEndGroups)?rosterSnapshot.previousMonthEndGroups:[];
-  var monthEnd=rosterSnapshot&&rosterSnapshot.previousMonthEnd;
-  if(!groups.length||!monthEnd){
+  var groups=rosterSnapshot&&Array.isArray(rosterSnapshot.displaySnapshotGroups)?rosterSnapshot.displaySnapshotGroups:[];
+  var displaySnapshot=rosterSnapshot&&rosterSnapshot.displaySnapshot;
+  var periodLabel=rosterSnapshot&&rosterSnapshot.displaySnapshotLabel||'上月底結算值';
+  if(!groups.length||!displaySnapshot){
     return `<div class="foodhouse-roster-title">部隊兵力配置比例</div>
-      <div class="foodhouse-roster-empty">尚無上月底完整快照資料。</div>`;
+      <div class="foodhouse-roster-empty">尚無完整快照資料。</div>`;
   }
   return `<div class="foodhouse-roster-title">部隊兵力配置比例</div>
-    <div class="foodhouse-roster-period">上月底結算值 · 資料截至 ${esc(monthEnd.date||'--')}</div>
+    <div class="foodhouse-roster-period">${esc(periodLabel)} · 資料截至 ${esc(displaySnapshot.date||'--')}</div>
     <div class="foodhouse-roster-list">
       ${groups.map(function(group){
         var value=Number(group.value);
