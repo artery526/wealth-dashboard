@@ -1110,17 +1110,6 @@ body::after{
 .foodhouse-expense-head strong{flex-shrink:0;font-family:var(--mono);font-size:10px;color:#f3df9a}
 .foodhouse-expense-fill{background:#b8892e}
 .foodhouse-supply-extra{margin-top:10px;padding-top:9px;border-top:1px solid rgba(232,192,80,.16)}
-.foodhouse-roster-wrap{margin-top:12px}
-.foodhouse-roster-title{font-family:var(--sans);font-size:12px;font-weight:900;line-height:1.35;color:var(--gold2);letter-spacing:1px;margin:0 0 9px;display:flex;align-items:center;gap:8px}
-.foodhouse-roster-title::after{content:"";height:1px;flex:1;background:linear-gradient(90deg,rgba(184,137,46,.45),transparent)}
-.foodhouse-roster-period{margin:-3px 0 8px;font-family:var(--sans);font-size:10px;font-weight:800;line-height:1.4;color:#a9915b}
-.foodhouse-roster-list{display:grid;gap:6px}
-.foodhouse-roster-line{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid rgba(184,137,46,.26);border-radius:6px;background:rgba(10,8,4,.38);padding:9px 11px}
-.foodhouse-roster-value{font-family:var(--mono);font-size:14px;color:#f3df9a;white-space:nowrap}
-.foodhouse-roster-empty{border:1px solid rgba(184,137,46,.2);border-radius:6px;padding:10px 11px;font-family:var(--sans);font-size:11px;font-weight:800;color:#a9915b}
-.foodhouse-roster-label{font-family:var(--sans);font-size:12px;font-weight:900;line-height:1.35;color:#f0dfa0;letter-spacing:.7px}
-.council-roster-summary{margin:0 0 14px}
-.battle-council-roster-content{margin-top:0}
 .foodhouse-bills-wrap{margin-top:12px}
 @media(max-width:540px){.foodhouse-warroom-grid{grid-template-columns:1fr}.foodhouse-advisor-reminder .advisor-summary-grid{grid-template-columns:1fr}.foodhouse-advisor-reminder .advisor-summary-line{font-size:18px}.foodhouse-monthly-viz{grid-template-columns:104px minmax(0,1fr);gap:9px}.foodhouse-savings-gauge,.foodhouse-savings-gauge svg{width:104px}}
 .finance-reminder-wrap{margin:0 0 12px}
@@ -5430,28 +5419,6 @@ function starsCacheLabel(cached,prefix){
   return (prefix||'快取先顯示')+' · '+(age<1?'剛剛':age+' 分前');
 }
 
-function renderFoodhouseCouncilRosterSummary(rows,rosterSnapshot){
-  var groups=rosterSnapshot&&Array.isArray(rosterSnapshot.displaySnapshotGroups)?rosterSnapshot.displaySnapshotGroups:[];
-  var displaySnapshot=rosterSnapshot&&rosterSnapshot.displaySnapshot;
-  var periodLabel=rosterSnapshot&&rosterSnapshot.displaySnapshotLabel||'上月底結算值';
-  if(!groups.length||!displaySnapshot){
-    return `<div class="foodhouse-roster-title">部隊兵力配置比例</div>
-      <div class="foodhouse-roster-empty">尚無完整快照資料。</div>`;
-  }
-  return `<div class="foodhouse-roster-title">部隊兵力配置比例</div>
-    <div class="foodhouse-roster-period">${esc(periodLabel)} · 資料截至 ${esc(displaySnapshot.date||'--')}</div>
-    <div class="foodhouse-roster-list">
-      ${groups.map(function(group){
-        var value=Number(group.value);
-        var valueText=isFinite(value)?fmtFull(value):'--';
-        return `<div class="foodhouse-roster-line">
-          <span class="foodhouse-roster-label">${esc(group.label)}</span>
-          <strong class="foodhouse-roster-value">${valueText}</strong>
-        </div>`;
-      }).join('')}
-    </div>`;
-}
-
 function readCouncilRosterStorageCache(){
   try{
     var cached=JSON.parse(localStorage.getItem(COUNCIL_ROSTER_STORAGE_KEY)||'null');
@@ -5468,32 +5435,6 @@ function writeCouncilRosterStorageCache(cache){
       cachedAt:Date.now()
     }));
   }catch(e){console.warn('Council roster cache unavailable',e);}
-}
-
-function renderBattleCouncilRosterSummary(){
-  var cached=councilDashboardCache||readCouncilRosterStorageCache();
-  if(!cached){
-    return `<div class="battle-section wide battle-council-roster-section" id="battle-council-roster-summary">
-      <div class="foodhouse-roster-wrap council-roster-summary battle-council-roster-content">
-        <div class="foodhouse-roster-title">部隊兵力配置比例</div>
-        <div class="skel-line skel"></div>
-      </div>
-    </div>`;
-  }
-  var rows=mergeCouncilRows(cached.holdings,cached.heroes,{});
-  var summary=renderFoodhouseCouncilRosterSummary(rows,cached.councilRosterSnapshot);
-  if(!summary)return '';
-  return `<div class="battle-section wide battle-council-roster-section" id="battle-council-roster-summary">
-    <div class="foodhouse-roster-wrap council-roster-summary battle-council-roster-content">${summary}</div>
-  </div>`;
-}
-
-function applyBattleCouncilRosterSummary(){
-  var slot=document.getElementById('battle-council-roster-summary');
-  if(!slot)return;
-  var html=renderBattleCouncilRosterSummary();
-  if(html)slot.outerHTML=html;
-  else slot.remove();
 }
 
 async function loadZiweiCharts(){
@@ -11633,7 +11574,6 @@ function renderBattleBrief(data,el){
     </div>
   </div>
   <div class="battle-report-grid">
-    ${renderBattleCouncilRosterSummary()}
     ${battleEtfChangeHtml(etfHoldingChange)}
     <div class="battle-section">
       <div class="battle-section-title">基金淨值</div>
@@ -11661,20 +11601,6 @@ async function loadBattleBrief(force){
   }
   var cached=readTimedMarketCache(BATTLE_BRIEF_CACHE_KEY);
   if(cached&&!force)renderBattleBrief(cached,el);
-  var rosterCacheFresh=councilDashboardCache&&(Date.now()-councilDashboardFetchedAt<COUNCIL_DASHBOARD_CACHE_TTL);
-  var rosterPromise=rosterCacheFresh?Promise.resolve(councilDashboardCache):(
-    hasMainApiCredentials()?loadCouncilDashboardData().then(function(results){
-      return cacheCouncilDashboardResults(results);
-    }).then(function(result){
-      applyBattleCouncilRosterSummary();
-      return result;
-    }).catch(function(e){
-      console.warn('Council roster summary unavailable',e);
-      var slot=document.getElementById('battle-council-roster-summary');
-      if(slot)slot.remove();
-      return null;
-    }):Promise.resolve(null)
-  );
   setCouncilPanelStatusIfActive('pending',cached&&!force?'戰情快取更新中':'戰情總匯報讀取中');
   if(battleBriefPromise&&!force)return battleBriefPromise.then(function(data){
     if(data&&document.getElementById('battle-brief-content'))renderBattleBrief(data,document.getElementById('battle-brief-content'));
@@ -11683,11 +11609,8 @@ async function loadBattleBrief(force){
   battleBriefPromise=apiGet({action:'battleBrief'},45000).then(function(data){
     writeTimedMarketCache(BATTLE_BRIEF_CACHE_KEY,data);
     renderBattleBrief(data,el);
-    return rosterPromise.then(function(){
-      applyBattleCouncilRosterSummary();
-      setCouncilPanelStatusIfActive('ok','戰情總匯報已更新');
-      return data;
-    });
+    setCouncilPanelStatusIfActive('ok','戰情總匯報已更新');
+    return data;
   }).catch(function(e){
     if(!cached||force)el.innerHTML=`<div style="color:var(--coral);font-family:var(--sans);font-size:12px;padding:12px 0">${esc(e.message||'戰情總匯報讀取失敗')}</div>`;
     setCouncilPanelStatusIfActive(cached&&!force?'pending':'err',cached&&!force?'顯示戰情快取':'戰情總匯報讀取失敗');
