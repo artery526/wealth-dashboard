@@ -4530,10 +4530,16 @@ function treasuryDebtNetAssetKpi(assetSnapshot){
   var latest=assetSnapshot&&assetSnapshot.latest;
   var previous=assetSnapshot&&assetSnapshot.previous;
   function ratioPct(row){
-    var pct=Number(row&&row.debtToNetAssetPct);
-    if(!isNaN(pct)&&isFinite(pct))return pct;
-    var ratio=Number(row&&row.debtToNetAsset);
-    return !isNaN(ratio)&&isFinite(ratio)?ratio*100:null;
+    if(!row)return null;
+    function finiteNumber(value){
+      if(value===null||value===undefined||value==='')return null;
+      var n=Number(value);
+      return !isNaN(n)&&isFinite(n)?n:null;
+    }
+    var pct=finiteNumber(row.debtToNetAssetPct);
+    if(pct!==null)return pct;
+    var ratio=finiteNumber(row.debtToNetAsset);
+    return ratio===null?null:ratio*100;
   }
   var latestPct=ratioPct(latest);
   if(latestPct===null||latestPct===undefined||isNaN(latestPct)||!isFinite(latestPct))return {html:'',delta:null};
