@@ -8845,6 +8845,7 @@ function changeArkWallMonth(value){
 function arkWallMomentMonthLabel(){return arkWallMomentYear+' 年 '+Number(arkWallMomentMonth)+' 月';}
 function arkWallMomentDateKey(year,month,day){return year+'-'+String(month).padStart(2,'0')+'-'+String(day).padStart(2,'0');}
 function arkWallMomentIconOptions(current){var icons=[['🌱','療癒'],['❤️','感恩'],['☀️','開心'],['⭐','成就'],['🐾','生活'],['🌧️','低潮'],['💡','領悟'],['🎁','珍藏']];return icons.map(function(item){return '<option value="'+esc(item[0])+'"'+(item[0]===current?' selected':'')+'>'+esc(item[0]+' '+item[1])+'</option>';}).join('');}
+function arkWallMomentTypeForIcon(icon){var labels={'🌱':'療癒','❤️':'感恩','☀️':'開心','⭐':'成就','🐾':'生活','🌧️':'低潮','💡':'領悟','🎁':'珍藏'};return labels[icon]||'生活';}
 function arkWallMomentMap(){
   var map={};
   arkWallMoments.forEach(function(moment){(map[moment.date]||(map[moment.date]=[])).push(moment);});
@@ -8929,7 +8930,8 @@ function cancelArkWallMomentForm(){arkWallMomentFormOpen=false;arkWallMomentEdit
 function submitArkWallMoment(event){
   event.preventDefault();
   var status=document.getElementById('ark-wall-moment-form-status');if(status)status.textContent='儲存中...';
-  var payload={date:document.getElementById('ark-wall-moment-date').value,text:document.getElementById('ark-wall-moment-text').value,icon:document.getElementById('ark-wall-moment-icon').value,mood:document.getElementById('ark-wall-moment-mood').value,note:''};
+  var icon=document.getElementById('ark-wall-moment-icon').value;
+  var payload={date:document.getElementById('ark-wall-moment-date').value,text:document.getElementById('ark-wall-moment-text').value,icon:icon,type:arkWallMomentTypeForIcon(icon),mood:document.getElementById('ark-wall-moment-mood').value,note:''};
   var id=arkWallMomentEditingId;var options={method:id?'PUT':'POST',wallWrite:true,headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)};
   arkWallFetch(id?'/api/admin/wall-moments/'+encodeURIComponent(id):'/api/admin/wall-moments',options).then(function(data){var saved=data.moment;arkWallMomentYear=saved.date.slice(0,4);arkWallMomentMonth=saved.date.slice(5,7);arkWallMomentSelectedDate=saved.date;arkWallMomentFormOpen=false;arkWallMomentEditingId='';closeArkWallMomentModal();arkWallMomentsKey='';return loadArkWallMoments();}).then(function(){renderArkWallList();}).catch(function(err){if(status)status.textContent=err.status===401?'需要管理員授權，請確認城牆寫入權限。':(err.message||'儲存失敗');});
 }
