@@ -1113,22 +1113,16 @@ body::after{
 .foodhouse-roster-wrap{margin-top:12px}
 .foodhouse-roster-title{font-family:var(--sans);font-size:12px;font-weight:900;line-height:1.35;color:var(--gold2);letter-spacing:1px;margin:0 0 9px;display:flex;align-items:center;gap:8px}
 .foodhouse-roster-title::after{content:"";height:1px;flex:1;background:linear-gradient(90deg,rgba(184,137,46,.45),transparent)}
-.foodhouse-roster-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-.foodhouse-roster-item{border:1px solid rgba(184,137,46,.26);border-radius:6px;background:rgba(10,8,4,.38);padding:10px 11px}
+.foodhouse-roster-period{margin:-3px 0 8px;font-family:var(--sans);font-size:10px;font-weight:800;line-height:1.4;color:#a9915b}
+.foodhouse-roster-list{display:grid;gap:6px}
+.foodhouse-roster-line{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid rgba(184,137,46,.26);border-radius:6px;background:rgba(10,8,4,.38);padding:9px 11px}
+.foodhouse-roster-value{font-family:var(--mono);font-size:14px;color:#f3df9a;white-space:nowrap}
+.foodhouse-roster-empty{border:1px solid rgba(184,137,46,.2);border-radius:6px;padding:10px 11px;font-family:var(--sans);font-size:11px;font-weight:800;color:#a9915b}
 .foodhouse-roster-label{font-family:var(--sans);font-size:12px;font-weight:900;line-height:1.35;color:#f0dfa0;letter-spacing:.7px}
-.foodhouse-roster-meta{margin-top:6px;display:grid;grid-template-columns:minmax(0,1fr) 46px;align-items:center;gap:9px;font-family:var(--sans);font-size:11px;font-weight:800;line-height:1.45;color:#bda36d}
-.foodhouse-roster-meta strong{font-family:var(--mono);font-size:13px;color:#f3df9a}
-.foodhouse-roster-delta{display:inline-block;margin-left:4px;font-family:var(--mono);font-size:10px;font-weight:900;white-space:nowrap}
-.foodhouse-roster-delta.up{color:var(--teal)}
-.foodhouse-roster-delta.down{color:var(--coral)}
-.foodhouse-roster-delta.flat{color:#a9915b}
-.foodhouse-roster-reservoir{position:relative;width:42px;height:54px;border-radius:7px;background:rgba(0,0,0,.35);overflow:hidden;box-shadow:inset 0 0 0 1px rgba(232,192,80,.12)}
-.foodhouse-roster-reservoir .res-fill{border-radius:0 0 5px 5px}
-.foodhouse-roster-reservoir .res-pct{font-size:11px}
 .council-roster-summary{margin:0 0 14px}
 .battle-council-roster-content{margin-top:0}
 .foodhouse-bills-wrap{margin-top:12px}
-@media(max-width:540px){.foodhouse-warroom-grid,.foodhouse-roster-grid{grid-template-columns:1fr}.foodhouse-advisor-reminder .advisor-summary-grid{grid-template-columns:1fr}.foodhouse-advisor-reminder .advisor-summary-line{font-size:18px}.foodhouse-monthly-viz{grid-template-columns:104px minmax(0,1fr);gap:9px}.foodhouse-savings-gauge,.foodhouse-savings-gauge svg{width:104px}}
+@media(max-width:540px){.foodhouse-warroom-grid{grid-template-columns:1fr}.foodhouse-advisor-reminder .advisor-summary-grid{grid-template-columns:1fr}.foodhouse-advisor-reminder .advisor-summary-line{font-size:18px}.foodhouse-monthly-viz{grid-template-columns:104px minmax(0,1fr);gap:9px}.foodhouse-savings-gauge,.foodhouse-savings-gauge svg{width:104px}}
 .finance-reminder-wrap{margin:0 0 12px}
 .advisor-dialog-top-actions{position:absolute;top:8px;right:50px;z-index:2;display:flex;align-items:center;gap:6px;max-width:calc(100% - 96px)}
 .advisor-dialog-nav{width:32px;height:32px;border:1px solid rgba(232,192,80,.58);border-radius:10px;background:linear-gradient(145deg,rgba(79,54,17,.94),rgba(22,13,5,.96));color:#f7e6b2;font-family:var(--sans);font-size:18px;line-height:1;cursor:pointer;box-shadow:0 0 14px rgba(232,192,80,.16),inset 0 1px 0 rgba(255,246,216,.2);transition:transform .16s,filter .16s,border-color .16s}
@@ -5436,71 +5430,22 @@ function starsCacheLabel(cached,prefix){
   return (prefix||'快取先顯示')+' · '+(age<1?'剛剛':age+' 分前');
 }
 
-function buildCouncilRosterGroupSummaries(active,totalCost){
-  var used=[];
-  var groups=councilRosterGroups().map(function(group){
-    var rows=(active||[]).filter(function(row){
-      if(used.indexOf(row)>=0)return false;
-      return councilRowInGroup(row,group);
-    });
-    rows.forEach(function(row){used.push(row);});
-    return Object.assign({},group,{rows:rows});
-  });
-  groups.forEach(function(group){
-    if(!group.useRemaining)return;
-    var existing=group.rows||[];
-    (active||[]).forEach(function(row){
-      if(used.indexOf(row)>=0)return;
-      existing.push(row);
-      used.push(row);
-    });
-    group.rows=existing;
-  });
-  return groups.map(function(group){
-    var holdings=(group.rows||[]).filter(function(row){return row.holding;}).map(function(row){return row.holding;});
-    var market=holdings.reduce(function(s,row){return s+toNum(row.marketValue);},0);
-    var cost=holdings.reduce(function(s,row){return s+toNum(row.cost);},0);
-    return {
-      label:group.label,
-      rows:group.rows||[],
-      market:market,
-      cost:cost,
-      costPct:totalCost>0?cost/totalCost*100:0
-    };
-  });
-}
-
-function councilRosterSnapshotDeltaHtml(snapshot,label,currentValue){
-  var groups=snapshot&&Array.isArray(snapshot.groups)?snapshot.groups:[];
-  var group=groups.filter(function(item){return item&&item.label===label;})[0];
-  var hasCurrent=currentValue!==null&&currentValue!==undefined&&currentValue!==''&&isFinite(Number(currentValue));
-  var hasPrevious=group&&group.previousValue!==null&&group.previousValue!==undefined&&group.previousValue!==''&&isFinite(Number(group.previousValue));
-  var amount=hasCurrent&&hasPrevious?Number(currentValue)-Number(group.previousValue):Number(group&&group.changeAmount);
-  if(!isFinite(amount))return '<span class="foodhouse-roster-delta flat">(較昨 --)</span>';
-  return `<span class="foodhouse-roster-delta ${amount>=0?'up':'down'}">(${amount>=0?'+':'-'}${fmtFull(Math.abs(amount))})</span>`;
-}
-
 function renderFoodhouseCouncilRosterSummary(rows,rosterSnapshot){
-  var active=(rows||[]).filter(function(r){return r.holding||r.enabled;});
-  var holdings=active.filter(function(r){return r.holding;}).map(function(r){return r.holding;});
-  var totalCost=holdings.reduce(function(s,r){return s+toNum(r.cost);},0);
-  var groups=buildCouncilRosterGroupSummaries(active,totalCost);
-  if(!groups.length)return '';
+  var groups=rosterSnapshot&&Array.isArray(rosterSnapshot.previousMonthEndGroups)?rosterSnapshot.previousMonthEndGroups:[];
+  var monthEnd=rosterSnapshot&&rosterSnapshot.previousMonthEnd;
+  if(!groups.length||!monthEnd){
+    return `<div class="foodhouse-roster-title">部隊兵力配置比例</div>
+      <div class="foodhouse-roster-empty">尚無上月底完整快照資料。</div>`;
+  }
   return `<div class="foodhouse-roster-title">部隊兵力配置比例</div>
-    <div class="foodhouse-roster-grid">
+    <div class="foodhouse-roster-period">上月底結算值 · 資料截至 ${esc(monthEnd.date||'--')}</div>
+    <div class="foodhouse-roster-list">
       ${groups.map(function(group){
-        var costPct=group.costPct||0;
-        var fillPct=Math.max(0,Math.min(100,costPct/50*100));
-        var cls=costPct>40?'red':(costPct>20?'blue':'green');
-        return `<div class="foodhouse-roster-item">
-          <div class="foodhouse-roster-label">${esc(group.label)}</div>
-          <div class="foodhouse-roster-meta">
-            <div>加總現值 <strong>${fmtFull(group.market)}</strong>${councilRosterSnapshotDeltaHtml(rosterSnapshot,group.label,group.market)}</div>
-            <span class="foodhouse-roster-reservoir" aria-label="成本加總佔比 ${costPct.toFixed(1)}%">
-              <span class="res-fill ${cls}" style="height:${fillPct.toFixed(1)}%"><span class="res-waves"></span></span>
-              <span class="res-pct">${costPct.toFixed(1)}%</span>
-            </span>
-          </div>
+        var value=Number(group.value);
+        var valueText=isFinite(value)?fmtFull(value):'--';
+        return `<div class="foodhouse-roster-line">
+          <span class="foodhouse-roster-label">${esc(group.label)}</span>
+          <strong class="foodhouse-roster-value">${valueText}</strong>
         </div>`;
       }).join('')}
     </div>`;
