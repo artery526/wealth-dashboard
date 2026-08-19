@@ -6861,6 +6861,7 @@ function renderCalendarEvent(ev){
     if(ev.location)meta.push('📍 '+esc(ev.location));
     if(ev.calendarName)meta.push('📒 '+esc(ev.calendarName));
     if(ev.description)meta.push(esc(ev.description));
+    meta=meta.filter(function(item){return item.indexOf(String.fromCodePoint(0x1F4D2))!==0;});
     return `<div class="agenda-item">
       <div class="agenda-time">${esc(ev.timeText||'整日')}</div>
       <div>
@@ -6923,7 +6924,6 @@ function renderGoogleTasks(tasks){
   return tasks.map(function(task){
     var meta=[];
     if(task.dueText)meta.push('期限 '+esc(task.dueText));
-    if(task.taskListName)meta.push('清單 '+esc(task.taskListName));
     if(task.notes)meta.push(esc(task.notes));
     return `<div class="task-item">
       <div class="task-mark">□</div>
