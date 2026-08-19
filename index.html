@@ -2362,8 +2362,9 @@ body::after{
 .battle-kpi.down{color:var(--coral);border-color:rgba(216,90,48,.45);background:rgba(216,90,48,.08)}
 .battle-list{display:grid;gap:8px}
 .battle-line{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;border:1px solid #251808;border-radius:8px;background:#0c0804;padding:9px 10px}
-.battle-line-name{font-family:var(--sans);font-size:15px;font-weight:900;color:var(--ink);line-height:1.35;overflow-wrap:anywhere}
-.battle-line-code{font-family:var(--mono);font-size:11px;color:#5a4018;margin-top:2px}
+ .battle-line-name{font-family:var(--sans);font-size:15px;font-weight:900;color:var(--ink);line-height:1.35;overflow-wrap:anywhere}
+ .battle-line-updated{font-family:var(--mono);font-size:10px;color:#b89452;line-height:1.4;margin-top:2px}
+ .battle-line-code{font-family:var(--mono);font-size:11px;color:#5a4018;margin-top:2px}
 .battle-line-value{text-align:right;min-width:124px}
 .battle-line-current{font-family:var(--mono);font-size:19px;font-weight:900;color:var(--gold)}
 .battle-line-delta{font-family:var(--sans);font-size:13px;font-weight:900;margin-top:3px;color:#8d7138}
@@ -11528,15 +11529,25 @@ function battleDeltaText(row,percentOnly,options){
   return changeText+sign+pct.toFixed(2)+'%';
 }
 
+function battleUpdatedAtText(value){
+  var text=String(value||'').trim();
+  if(!text)return '';
+  var match=text.match(/^(?:\d{4}[\/-])?(\d{1,2})[\/-](\d{1,2})\s+(\d{1,2}):(\d{2})/);
+  if(match)return Number(match[1])+'/'+Number(match[2])+' '+String(match[3]).padStart(2,'0')+':'+match[4];
+  return text;
+}
+
 function battleLineHtml(row,options){
   row=row||{};
   options=options||{};
   var cls=battleChangeClass(row.change);
   var current=options.scale&&row.current!==''&&row.current!=null?Number(row.current)/options.scale:row.current;
   var value=battleNumberText(current,options.digits,options.suffix,options.minDigits);
+  var updatedAt=options.showUpdatedAt?battleUpdatedAtText(row.updatedAt||row.dataTime||row.fetchedAt):'';
   return `<div class="battle-line">
     <div>
       <div class="battle-line-name">${esc(row.name||row.code||'--')}</div>
+      ${updatedAt?`<div class="battle-line-updated">資料取得 ${esc(updatedAt)}</div>`:''}
       <div class="battle-line-code">${esc(row.code||row.source||'')}</div>
     </div>
     <div class="battle-line-value">
@@ -11624,7 +11635,7 @@ function renderBattleBrief(data,el){
   var marginRows=market.filter(function(row){return row&&!isMaintenanceRow(row)&&!isForeignTxNetShortRow(row);});
   var maintenanceRows=market.filter(isMaintenanceRow);
   var foreignTxNetShortRows=market.filter(isForeignTxNetShortRow);
-  var fundHtml=funds.length?funds.map(function(row){return battleLineHtml(row,{digits:2,minDigits:0});}).join(''):'<div class="battle-empty">尚未讀到基金淨值。</div>';
+  var fundHtml=funds.length?funds.map(function(row){return battleLineHtml(row,{digits:2,minDigits:0,showUpdatedAt:true});}).join(''):'<div class="battle-empty">尚未讀到基金淨值。</div>';
   var marginHtml=(marginRows.concat(maintenanceRows)).length?(marginRows.concat(maintenanceRows)).map(function(row){
     var isRatio=isMaintenanceRow(row);
     return battleLineHtml(row,isRatio?{digits:2,suffix:'%',percentOnly:false}:{scale:100000000,digits:2,minDigits:2,suffix:' 億',changeScale:100000000,changeDigits:2,changeSuffix:' 億'});
