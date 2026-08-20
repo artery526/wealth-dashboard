@@ -1800,6 +1800,10 @@ body::after{
 .treasury-monthly-income{color:var(--coral)}
 .treasury-monthly-expense{color:var(--teal)}
 .treasury-monthly-saving{font-size:12px;font-weight:900;color:#8d6a2a;margin-left:auto;overflow:hidden;text-overflow:ellipsis}
+.treasury-cash-stock-card{min-height:116px}
+.treasury-account-merge-row{display:flex;align-items:center;gap:8px;font-family:var(--sans);font-size:11px;font-weight:800;color:#8d6a2a;line-height:1.8;white-space:nowrap}
+.treasury-account-merge-row strong{font-family:var(--mono);font-size:15px;color:var(--gold)}
+.treasury-account-merge-row small{margin-left:auto;font-family:var(--mono);font-size:10px;color:#7e5e25;overflow:hidden;text-overflow:ellipsis}
 
 /* ── Quick Booking ── */
 .btabs{display:none}
@@ -7360,11 +7364,22 @@ function renderAccounts(accs,monthly,el,assetSnapshot,bills,stale){
   var all=accs||[];
   var filtered=all.filter(a=>a.name!=='總資產'&&a.name!=='總資產/總計');
   var totalAssetAccount=all.find(function(a){return a.name==='總資產'||a.name==='總資產/總計';});
+  var cashAccount=null;
+  var cathayStockAccount=null;
+  var ordinaryAccounts=[];
+  filtered.forEach(function(a){
+    var key=stripIconText(a&&a.name).replace(/\s+/g,'').toLowerCase();
+    if(key==='cash')cashAccount=a;
+    else if(key==='國泰stock')cathayStockAccount=a;
+    else ordinaryAccounts.push(a);
+  });
 
   var totalAssetHtml=renderTreasuryAccountTotalAssetCard(assetSnapshot,totalAssetAccount,monthly);
   var accCards=[];
   if(totalAssetHtml)accCards.push(totalAssetHtml);
-  filtered.forEach(function(a){
+  var cashStockHtml=renderTreasuryCashStockCard(cashAccount,cathayStockAccount);
+  if(cashStockHtml)accCards.push(cashStockHtml);
+  ordinaryAccounts.forEach(function(a){
     accCards.push(`
     <div class="acc-item">
       <div class="acc-name">${esc(a.name)}</div>
@@ -7406,6 +7421,22 @@ function renderTreasuryAccountTotalAssetCard(assetSnapshot,totalAssetAccount,mon
     <div class="treasury-monthly-title">本月收入／支出</div>
     <div class="treasury-monthly-row"><span>收入</span><strong class="treasury-monthly-income">${fmtFull(monthly.income)}</strong><span class="treasury-monthly-saving">🪙儲蓄${esc(monthly.savingRate||'—')}</span></div>
     <div class="treasury-monthly-row"><span>支出</span><strong class="treasury-monthly-expense">${fmtFull(monthly.expense)}</strong></div>
+  </div>`;
+}
+
+function renderTreasuryCashStockCard(cashAccount,cathayStockAccount){
+  if(!cashAccount&&!cathayStockAccount)return '';
+  function row(account,label){
+    if(!account)return '';
+    var stockNote=account.stockValue!=null&&!isNaN(account.stockValue)
+      ? `<small>市值 $${Math.round(account.stockValue).toLocaleString('zh-TW')}</small>`
+      : '';
+    return `<div class="treasury-account-merge-row"><span>${label}</span><strong>${fmtFull(account.value)}</strong>${stockNote}</div>`;
+  }
+  return `<div class="acc-item treasury-cash-stock-card">
+    <div class="acc-name">💰Cash ＋ 💵國泰Stock</div>
+    ${row(cashAccount,'💰Cash')}
+    ${row(cathayStockAccount,'💵國泰Stock')}
   </div>`;
 }
 
