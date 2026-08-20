@@ -1794,23 +1794,12 @@ body::after{
 .treasury-card-note{margin-top:4px;font-family:var(--sans);font-size:10px;font-weight:700;color:#5a4018;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media(max-width:680px){.treasury-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.treasury-main{font-size:25px}}
 
-.kpi-row{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;margin-bottom:14px}
-.kpi{background:#0a0804;border:1px solid #2a1c08;border-radius:7px;padding:10px 10px}
-.kpi-label{font-family:var(--sans);font-size:9px;color:#5a4018;letter-spacing:.5px;margin-bottom:5px;text-transform:uppercase}
-  .kpi-val{font-family:var(--mono);font-size:15px;font-weight:400;color:var(--ink)}
-  .kpi-dual-line{display:flex;align-items:center;justify-content:flex-start;gap:8px;font-family:var(--sans);font-size:11px;font-weight:800;color:#8d6a2a;line-height:1.7;white-space:nowrap}
-  .kpi-dual-line strong{font-family:var(--mono);font-size:15px}
-  .finance-monthly-income{color:var(--coral)}
-  .finance-monthly-expense{color:var(--teal)}
-  .kpi-inline-note{font-family:var(--sans);font-size:13px;font-weight:900;color:#8d6a2a;margin-left:auto;line-height:1.35;min-width:0;overflow:hidden;text-overflow:ellipsis}
-  .kpi-inline-note.up{color:var(--teal)}.kpi-inline-note.down{color:var(--coral)}
-.kpi-val.up{color:var(--teal)}.kpi-val.down{color:var(--coral)}.kpi-val.gold{color:var(--gold)}
-.kpi-sub{margin-top:4px;font-family:var(--mono);font-size:11px;line-height:1.25;color:#8d6a2a;white-space:nowrap}
-.kpi-sub.up{color:var(--teal)}.kpi-sub.down{color:var(--coral)}
-@media(max-width:680px){
-  .kpi-row{grid-template-columns:minmax(0,1fr);}
-  .finance-monthly-kpi{grid-column:1/-1;grid-row:1}
-}
+.treasury-monthly-title{font-family:var(--sans);font-size:10px;font-weight:900;color:#c6a85d;letter-spacing:.6px;margin-top:10px;padding-top:8px;border-top:1px solid rgba(232,192,80,.14)}
+.treasury-monthly-row{display:flex;align-items:center;gap:8px;font-family:var(--sans);font-size:11px;font-weight:800;color:#8d6a2a;line-height:1.8;white-space:nowrap}
+.treasury-monthly-row strong{font-family:var(--mono);font-size:15px}
+.treasury-monthly-income{color:var(--coral)}
+.treasury-monthly-expense{color:var(--teal)}
+.treasury-monthly-saving{font-size:12px;font-weight:900;color:#8d6a2a;margin-left:auto;overflow:hidden;text-overflow:ellipsis}
 
 /* ── Quick Booking ── */
 .btabs{display:none}
@@ -7372,9 +7361,9 @@ function renderAccounts(accs,monthly,el,assetSnapshot,bills,stale){
   var filtered=all.filter(a=>a.name!=='總資產'&&a.name!=='總資產/總計');
   var totalAssetAccount=all.find(function(a){return a.name==='總資產'||a.name==='總資產/總計';});
 
-  var totalAssetHtml=renderTreasuryAccountTotalAssetCard(assetSnapshot,totalAssetAccount);
-  var totalAssetInserted=false;
+  var totalAssetHtml=renderTreasuryAccountTotalAssetCard(assetSnapshot,totalAssetAccount,monthly);
   var accCards=[];
+  if(totalAssetHtml)accCards.push(totalAssetHtml);
   filtered.forEach(function(a){
     accCards.push(`
     <div class="acc-item">
@@ -7382,12 +7371,7 @@ function renderAccounts(accs,monthly,el,assetSnapshot,bills,stale){
       <div class="acc-val${a.value<0?' neg':''}">${fmtFull(a.value)}</div>
       ${a.stockValue!=null&&!isNaN(a.stockValue)?`<div style="font-family:var(--mono);font-size:11px;color:#9a7430;margin-top:2px">市值 $${Math.round(a.stockValue).toLocaleString('zh-TW')}</div>`:''}
     </div>`);
-    if(totalAssetHtml&&!totalAssetInserted&&isSisCathayAccount(a)){
-      accCards.push(totalAssetHtml);
-      totalAssetInserted=true;
-    }
   });
-  if(totalAssetHtml&&!totalAssetInserted)accCards.push(totalAssetHtml);
   var accHtml=accCards.join('');
   var accountListHtml=`
     <details class="finance-collapse finance-accounts-collapse" open>
@@ -7397,27 +7381,14 @@ function renderAccounts(accs,monthly,el,assetSnapshot,bills,stale){
       </div>
     </details>`;
 
-  var kpisHtml=`
-    <div class="kpi-row">
-      <div class="kpi finance-monthly-kpi">
-        <div class="kpi-label">本月收入／支出</div>
-        <div class="kpi-dual-line"><span>收入</span><strong class="finance-monthly-income">${fmtFull(monthly.income)}</strong><span class="kpi-inline-note">🪙儲蓄${esc(monthly.savingRate||'—')}</span></div>
-        <div class="kpi-dual-line"><span>支出</span><strong class="finance-monthly-expense">${fmtFull(monthly.expense)}</strong></div>
-      </div>
-    </div>`;
   var billsHtml=renderBillReservoirHtml(bills);
 
-  el.innerHTML=kpisHtml+`
-    ${accountListHtml}
+  el.innerHTML=accountListHtml+`
     ${billsHtml?`<div class="finance-bills-wrap">${billsHtml}</div>`:''}`;
 }
 
-function isSisCathayAccount(account){
-  var name=String(account&&account.name||'');
-  return name.indexOf('Sis')>=0&&name.indexOf('國泰')>=0;
-}
-
-function renderTreasuryAccountTotalAssetCard(assetSnapshot,totalAssetAccount){
+function renderTreasuryAccountTotalAssetCard(assetSnapshot,totalAssetAccount,monthly){
+  monthly=monthly||{};
   var latest=assetSnapshot&&assetSnapshot.latest;
   var total=Number(assetSnapshot&&assetSnapshot.latestTotalAssetValue);
   if(isNaN(total)||!isFinite(total)||total<=0)total=Number(latest&&latest.totalAssetValue);
@@ -7432,6 +7403,9 @@ function renderTreasuryAccountTotalAssetCard(assetSnapshot,totalAssetAccount){
     <div class="acc-name">帝國寶庫</div>
     <div class="acc-val">${fmtFull(total)}</div>
     <div class="treasury-total-delta ${deltaClass}">較昨日 ${deltaText}</div>
+    <div class="treasury-monthly-title">本月收入／支出</div>
+    <div class="treasury-monthly-row"><span>收入</span><strong class="treasury-monthly-income">${fmtFull(monthly.income)}</strong><span class="treasury-monthly-saving">🪙儲蓄${esc(monthly.savingRate||'—')}</span></div>
+    <div class="treasury-monthly-row"><span>支出</span><strong class="treasury-monthly-expense">${fmtFull(monthly.expense)}</strong></div>
   </div>`;
 }
 
