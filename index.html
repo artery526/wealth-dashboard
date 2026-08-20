@@ -1803,7 +1803,7 @@ body::after{
 .treasury-cash-stock-card{min-height:116px}
 .treasury-account-merge-row{display:flex;align-items:center;flex-wrap:wrap;gap:2px 8px;font-family:var(--sans);font-size:11px;font-weight:800;color:#8d6a2a;line-height:1.8;white-space:nowrap}
 .treasury-account-merge-row strong{font-family:var(--mono);font-size:15px;color:var(--gold)}
-.treasury-account-merge-row small{flex:0 0 100%;margin-left:24px;font-family:var(--mono);font-size:10px;color:#7e5e25;overflow:visible;text-overflow:clip;white-space:nowrap}
+@media(max-width:680px){.acc-grid{grid-template-columns:1fr}}
 
 /* ── Quick Booking ── */
 .btabs{display:none}
@@ -7428,10 +7428,7 @@ function renderTreasuryCashStockCard(cashAccount,cathayStockAccount){
   if(!cashAccount&&!cathayStockAccount)return '';
   function row(account,label){
     if(!account)return '';
-    var stockNote=account.stockValue!=null&&!isNaN(account.stockValue)
-      ? `<small>市值 $${Math.round(account.stockValue).toLocaleString('zh-TW')}</small>`
-      : '';
-    return `<div class="treasury-account-merge-row"><span>${label}</span><strong>${fmtFull(account.value)}</strong>${stockNote}</div>`;
+    return `<div class="treasury-account-merge-row"><span>${label}</span><strong>${fmtFull(account.value)}</strong></div>`;
   }
   return `<div class="acc-item treasury-cash-stock-card">
     <div class="acc-name">🪎Cash/Stock</div>
