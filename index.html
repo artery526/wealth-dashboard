@@ -11380,6 +11380,14 @@ function prefetchFinanceDashboard(){
   }
 }
 
+function prefetchBattleBrief(){
+  if(!API_URL||readTimedMarketCache(BATTLE_BRIEF_CACHE_KEY)||battleBriefPromise)return;
+  battleBriefPromise=apiGet({action:'battleBrief'},45000).then(function(data){
+    writeTimedMarketCache(BATTLE_BRIEF_CACHE_KEY,data);
+    return data;
+  }).catch(function(e){console.warn(e)}).finally(function(){battleBriefPromise=null;});
+}
+
 function prefetchMarketDashboard(){
   if(!API_URL)return;
   if(!readTimedMarketCache(MARKET_DASHBOARD_CACHE_KEY)&&!marketDashboardPromise){
@@ -11393,12 +11401,6 @@ function prefetchMarketDashboard(){
       writeTimedMarketCache(MARKET_MACRO_CACHE_KEY,data);
       return data;
     }).catch(function(e){console.warn(e)}).finally(function(){macroOverviewPromise=null;});
-  }
-  if(!readTimedMarketCache(BATTLE_BRIEF_CACHE_KEY)&&!battleBriefPromise){
-    battleBriefPromise=apiGet({action:'battleBrief'},45000).then(function(data){
-      writeTimedMarketCache(BATTLE_BRIEF_CACHE_KEY,data);
-      return data;
-    }).catch(function(e){console.warn(e)}).finally(function(){battleBriefPromise=null;});
   }
 }
 
@@ -13715,6 +13717,9 @@ function setupNotice(){
   setTimeout(function(){
     if(webVerifyIsAuthorized())prefetchFinanceDashboard();
   },2200);
+  setTimeout(function(){
+    if(webVerifyIsAuthorized())prefetchBattleBrief();
+  },1200);
   setTimeout(function(){
     if(webVerifyIsAuthorized())prefetchMarketDashboard();
   },3200);
