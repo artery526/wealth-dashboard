@@ -3533,11 +3533,11 @@ body::after{
       <div class="hdr-char-wrap advisor-duo-wrap">
         <div class="advisor-duo" aria-label="選擇軍師">
           <button class="advisor-duo-role pangtong" type="button" onclick="openAdvisorAIFromOrb(event)" title="龐統 · 軍師AI">
-            <span class="advisor-duo-stage"><video class="advisor-duo-video" src="pangtongmenuv2.mp4" poster="pangtong.png" muted playsinline preload="auto" aria-label="龐統軍師"></video></span>
+            <span class="advisor-duo-stage"><video class="advisor-duo-video" data-src="pangtongmenuv2.mp4" poster="pangtong.png" muted playsinline preload="none" aria-label="龐統軍師"></video></span>
             <span class="advisor-web-verify-dot err" id="advisor-web-verify-dot" title="網頁驗證未通過" aria-label="網頁驗證未通過"></span>
           </button>
           <button class="advisor-duo-role zhuge" type="button" onclick="openAdvisorDialog(event)" title="諸葛 · 軍師">
-            <span class="advisor-duo-stage"><video class="advisor-duo-video" src="Kongmingmenuv2.mp4" poster="advisor-zhuge.png" muted playsinline preload="auto" aria-label="諸葛軍師"></video></span>
+            <span class="advisor-duo-stage"><video class="advisor-duo-video" data-src="Kongmingmenuv2.mp4" poster="advisor-zhuge.png" muted playsinline preload="none" aria-label="諸葛軍師"></video></span>
           </button>
         </div>
         <div class="hdr-char-vignette"></div>
@@ -3589,11 +3589,12 @@ body::after{
         <div class="art" style="position:relative;overflow:hidden;height:427px;border-bottom:none;">
           <video
             class="card-video"
-            src="finance-cardv2.mp4"
+            data-src="finance-cardv2.mp4"
+            poster="finance-card-poster.jpg"
             autoplay
             muted
             playsinline
-            preload="auto"
+            preload="none"
             style="width:100%;height:100%;display:block;object-fit:cover;object-position:center center;"
           ></video>
           <!-- 底部漸層 + 小字標籤 -->
@@ -3621,11 +3622,12 @@ body::after{
         <div class="art" style="position:relative;overflow:hidden;height:427px;border-bottom:none;">
           <video
             class="card-video"
-            src="domestic-cardv2.mp4"
+            data-src="domestic-cardv2.mp4"
+            poster="domestic-card-poster.jpg"
             autoplay
             muted
             playsinline
-            preload="auto"
+            preload="none"
             style="width:100%;height:100%;display:block;object-fit:cover;object-position:center center;"
           ></video>
           <div style="position:absolute;bottom:0;left:0;right:0;z-index:4;
@@ -3652,11 +3654,12 @@ body::after{
         <div class="art" style="position:relative;overflow:hidden;height:427px;border-bottom:none;">
           <video
             class="card-video"
-            src="military-controlv2.mp4"
+            data-src="military-controlv2.mp4"
+            poster="military-control-poster.jpg"
             autoplay
             muted
             playsinline
-            preload="auto"
+            preload="none"
             style="width:100%;height:100%;display:block;object-fit:cover;object-position:center center;"
           ></video>
           <div style="position:absolute;bottom:0;left:0;right:0;z-index:4;
@@ -3684,11 +3687,12 @@ body::after{
         <div class="art" style="position:relative;overflow:hidden;height:427px;border-bottom:none;">
           <video
             class="card-video"
-            src="medical-cardv2.mp4"
+            data-src="medical-cardv2.mp4"
+            poster="medical-card-poster.jpg"
             autoplay
             muted
             playsinline
-            preload="auto"
+            preload="none"
             style="width:100%;height:100%;display:block;object-fit:cover;object-position:center center;"
           ></video>
           <div style="position:absolute;bottom:0;left:0;right:0;z-index:4;
@@ -3716,11 +3720,12 @@ body::after{
         <div class="art" style="position:relative;overflow:hidden;height:427px;border-bottom:none;">
           <video
             class="card-video"
-            src="starsv2.mp4"
+            data-src="starsv2.mp4"
+            poster="stars-card-poster.jpg"
             autoplay
             muted
             playsinline
-            preload="auto"
+            preload="none"
             style="width:100%;height:100%;display:block;object-fit:cover;object-position:center center;"
           ></video>
           <div style="position:absolute;bottom:0;left:0;right:0;z-index:4;
@@ -3746,11 +3751,12 @@ body::after{
         <div class="art" style="position:relative;overflow:hidden;height:427px;border-bottom:none;">
           <video
             class="card-video"
-            src="wallv2.mp4"
+            data-src="wallv2.mp4"
+            poster="wall-card-poster.jpg"
             autoplay
             muted
             playsinline
-            preload="auto"
+            preload="none"
             style="width:100%;height:100%;display:block;object-fit:cover;object-position:center center;"
           ></video>
           <div style="position:absolute;bottom:0;left:0;right:0;z-index:4;
@@ -13805,7 +13811,29 @@ function setupNotice(){
   })();
 })();
 
+function loadDeferredVideo(video){
+  if(!video||video.dataset.videoLoaded==='1')return;
+  var source=String(video.dataset.src||'').trim();
+  if(!source)return;
+  video.src=source;
+  video.dataset.videoLoaded='1';
+  video.load();
+}
+
 function initCardVideoPlayback(){
+  var observer=('IntersectionObserver' in window)?new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(!entry.isIntersecting)return;
+      var card=entry.target;
+      var video=card.querySelector('video.card-video');
+      if(video){
+        loadDeferredVideo(video);
+        var result=video.play();
+        if(result&&result.catch)result.catch(function(){});
+      }
+      observer.unobserve(card);
+    });
+  },{rootMargin:'120px 0px',threshold:0.05}):null;
   document.querySelectorAll('.card').forEach(function(card){
     var video=card.querySelector('video.card-video');
     if(!video)return;
@@ -13815,6 +13843,7 @@ function initCardVideoPlayback(){
     }catch(e){}
     video.dataset.cardVideoReady='1';
     function playCardVideo(){
+      loadDeferredVideo(video);
       try{
         video.currentTime=0;
         var result=video.play();
@@ -13827,33 +13856,19 @@ function initCardVideoPlayback(){
         video.currentTime=0;
       }catch(e){}
     }
-    if(card.id==='c-finance'||card.id==='c-domestic'||card.id==='c-council'||card.id==='c-medical'||card.id==='c-stars'||card.id==='c-wall'){
-      video.dataset.playOnEntry='1';
-      video.loop=false;
-      video.addEventListener('ended',function(){
-        try{
-          video.pause();
-          video.currentTime=0;
-        }catch(e){}
-      });
-      var playOnce=function(){
-        try{
-          video.currentTime=0;
-          var result=video.play();
-          if(result&&result.catch)result.catch(function(){});
-        }catch(e){}
-      };
-      if(video.readyState>=2){
-        setTimeout(playOnce,180);
-      }else{
-        video.addEventListener('loadeddata',function(){setTimeout(playOnce,180);},{once:true});
-      }
-    }
+    video.loop=false;
+    video.addEventListener('ended',function(){
+      try{
+        video.pause();
+        video.currentTime=0;
+      }catch(e){}
+    });
     card.addEventListener('mouseenter',playCardVideo);
     card.addEventListener('mouseleave',stopCardVideo);
     card.addEventListener('focusin',playCardVideo);
     card.addEventListener('focusout',stopCardVideo);
     card.addEventListener('pointerdown',playCardVideo);
+    if(observer)observer.observe(card);
   });
 }
 initCardVideoPlayback();
@@ -13895,15 +13910,11 @@ function initAdvisorDuoVideoPlayback(){
     video.muted=true;
     video.playsInline=true;
     video.loop=false;
-    try{
-      video.currentTime=0;
-      var firstRun=video.play();
-      if(firstRun&&firstRun.catch)firstRun.catch(function(){});
-    }catch(e){}
     video.addEventListener('ended',function(){
       try{video.pause();}catch(e){}
     });
     function playAdvisorVideo(){
+      loadDeferredVideo(video);
       try{
         video.currentTime=0;
         var result=video.play();
