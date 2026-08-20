@@ -1801,9 +1801,9 @@ body::after{
 .treasury-monthly-expense{color:var(--teal)}
 .treasury-monthly-saving{font-size:12px;font-weight:900;color:#8d6a2a;margin-left:auto;overflow:hidden;text-overflow:ellipsis}
 .treasury-cash-stock-card{min-height:116px}
-.treasury-account-merge-row{display:flex;align-items:center;gap:8px;font-family:var(--sans);font-size:11px;font-weight:800;color:#8d6a2a;line-height:1.8;white-space:nowrap}
+.treasury-account-merge-row{display:flex;align-items:center;flex-wrap:wrap;gap:2px 8px;font-family:var(--sans);font-size:11px;font-weight:800;color:#8d6a2a;line-height:1.8;white-space:nowrap}
 .treasury-account-merge-row strong{font-family:var(--mono);font-size:15px;color:var(--gold)}
-.treasury-account-merge-row small{margin-left:auto;font-family:var(--mono);font-size:10px;color:#7e5e25;overflow:hidden;text-overflow:ellipsis}
+.treasury-account-merge-row small{flex:0 0 100%;margin-left:24px;font-family:var(--mono);font-size:10px;color:#7e5e25;overflow:visible;text-overflow:clip;white-space:nowrap}
 
 /* ── Quick Booking ── */
 .btabs{display:none}
@@ -7434,7 +7434,7 @@ function renderTreasuryCashStockCard(cashAccount,cathayStockAccount){
     return `<div class="treasury-account-merge-row"><span>${label}</span><strong>${fmtFull(account.value)}</strong>${stockNote}</div>`;
   }
   return `<div class="acc-item treasury-cash-stock-card">
-    <div class="acc-name">💰Cash ＋ 💵國泰Stock</div>
+    <div class="acc-name">🪎Cash/Stock</div>
     ${row(cashAccount,'💰Cash')}
     ${row(cathayStockAccount,'💵國泰Stock')}
   </div>`;
