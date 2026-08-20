@@ -7199,18 +7199,18 @@ async function loadAccounts(){
     el.innerHTML=setupNotice();return;
   }
   var cached=readTimedFinanceCache(FINANCE_TREASURY_CACHE_KEY)||readStaleFinanceCache(FINANCE_TREASURY_CACHE_KEY);
-  if(cached)renderAccounts(cached.accs,cached.monthly,el,cached.financeStatus,cached.assetSnapshot,cached.bills,true);
+  if(cached)renderAccounts(cached.accs,cached.monthly,el,cached.assetSnapshot,cached.bills,true);
   setFinanceCardStatus('pending');
   if(financeTreasuryPromise){
     return financeTreasuryPromise.then(function(data){
-      if(data&&data.accs&&document.getElementById('acc-content'))renderAccounts(data.accs,data.monthly,document.getElementById('acc-content'),data.financeStatus,data.assetSnapshot,data.bills,false);
+      if(data&&data.accs&&document.getElementById('acc-content'))renderAccounts(data.accs,data.monthly,document.getElementById('acc-content'),data.assetSnapshot,data.bills,false);
       if(data&&data.accs)setFinanceCardStatus('ok');
       return data;
     });
   }
   financeTreasuryPromise=fetchFinanceTreasuryData(cached).then(function(data){
     writeTimedFinanceCache(FINANCE_TREASURY_CACHE_KEY,data);
-    if(document.getElementById('acc-content'))renderAccounts(data.accs,data.monthly,document.getElementById('acc-content'),data.financeStatus,data.assetSnapshot,data.bills,false);
+    if(document.getElementById('acc-content'))renderAccounts(data.accs,data.monthly,document.getElementById('acc-content'),data.assetSnapshot,data.bills,false);
     setFinanceCardStatus('ok');
     return data;
   }).catch(function(e){
@@ -7227,7 +7227,6 @@ function fetchFinanceTreasuryData(cached){
   return Promise.allSettled([
     apiGet({action:'accounts'}),
     apiGet({action:'monthly',ym:currentYM()}),
-    apiGet({action:'financeStatus'}),
     apiGet({action:'transactions',ym:currentYM()}),
     apiGet({action:'assetSnapshot'}),
     apiGet({action:'bills'})
@@ -7236,17 +7235,13 @@ function fetchFinanceTreasuryData(cached){
       throw (results[0].reason||new Error('finance load failed'));
     }
     var monthly=results[1].status==='fulfilled'?(results[1].value||{}):{};
-    if(results[3].status==='fulfilled')monthly=financeMonthlyFromTransactions(results[3].value||[],monthly);
+    if(results[2].status==='fulfilled')monthly=financeMonthlyFromTransactions(results[2].value||[],monthly);
     var data={
       accs:results[0].value||[],
       monthly:monthly,
-      financeStatus:results[2].status==='fulfilled'?results[2].value:null,
-      assetSnapshot:results[4].status==='fulfilled'?results[4].value:null,
-      bills:results[5].status==='fulfilled'?results[5].value:null
+      assetSnapshot:results[3].status==='fulfilled'?results[3].value:null,
+      bills:results[4].status==='fulfilled'?results[4].value:null
     };
-    if(!financeStatusHasData(data.financeStatus)&&cached&&financeStatusHasData(cached.financeStatus)){
-      data.financeStatus=cached.financeStatus;
-    }
     return data;
   });
 }
@@ -7283,10 +7278,6 @@ function financeMonthlyFromTransactions(txns,baseMonthly){
     .sort(function(a,b){return b.amount-a.amount;});
   if(cats.length)monthly.categories=cats;
   return monthly;
-}
-
-function financeStatusHasData(status){
-  return !!(status&&((status.metrics&&status.metrics.length)||(status.wealthStatus&&(status.wealthStatus.text||status.wealthStatus.rule))));
 }
 
 function renderBillReservoirHtml(bills){
@@ -7376,7 +7367,7 @@ function renderTreasuryOverview(all,filtered,monthly,assetSnapshot,totalRow){
   </div>`;
 }
 
-function renderAccounts(accs,monthly,el,financeStatus,assetSnapshot,bills,stale){
+function renderAccounts(accs,monthly,el,assetSnapshot,bills,stale){
   var all=accs||[];
   var filtered=all.filter(a=>a.name!=='總資產'&&a.name!=='總資產/總計');
   var totalAssetAccount=all.find(function(a){return a.name==='總資產'||a.name==='總資產/總計';});
