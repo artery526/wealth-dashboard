@@ -1801,8 +1801,10 @@ body::after{
 .treasury-monthly-expense{color:var(--teal)}
 .treasury-monthly-saving{font-size:12px;font-weight:900;color:#8d6a2a;margin-left:auto;overflow:hidden;text-overflow:ellipsis}
 .treasury-cash-stock-card{min-height:116px}
-.treasury-account-merge-row{display:flex;align-items:center;flex-wrap:wrap;gap:2px 8px;font-family:var(--sans);font-size:11px;font-weight:800;color:#8d6a2a;line-height:1.8;white-space:nowrap}
-.treasury-account-merge-row strong{font-family:var(--mono);font-size:15px;color:var(--gold)}
+.treasury-account-merge-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:8px}
+.treasury-account-merge-cell{min-width:0;padding:6px 7px;border:1px solid rgba(232,192,80,.14);border-radius:5px;background:rgba(10,8,4,.58)}
+.treasury-account-merge-label{font-family:var(--sans);font-size:10px;font-weight:800;color:#8d6a2a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.treasury-account-merge-value{margin-top:2px;font-family:var(--mono);font-size:14px;font-weight:900;color:var(--gold);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media(max-width:680px){.acc-grid{grid-template-columns:1fr}}
 
 /* ── Quick Booking ── */
@@ -7426,14 +7428,16 @@ function renderTreasuryAccountTotalAssetCard(assetSnapshot,totalAssetAccount,mon
 
 function renderTreasuryCashStockCard(cashAccount,cathayStockAccount){
   if(!cashAccount&&!cathayStockAccount)return '';
-  function row(account,label){
+  function cell(account,label){
     if(!account)return '';
-    return `<div class="treasury-account-merge-row"><span>${label}</span><strong>${fmtFull(account.value)}</strong></div>`;
+    return `<div class="treasury-account-merge-cell"><div class="treasury-account-merge-label">${label}</div><div class="treasury-account-merge-value">${fmtFull(account.value)}</div></div>`;
   }
   return `<div class="acc-item treasury-cash-stock-card">
     <div class="acc-name">🪎Cash/Stock</div>
-    ${row(cashAccount,'💰Cash')}
-    ${row(cathayStockAccount,'💵國泰Stock')}
+    <div class="treasury-account-merge-grid">
+      ${cell(cashAccount,'💰Cash')}
+      ${cell(cathayStockAccount,'💵國泰Stock')}
+    </div>
   </div>`;
 }
 
