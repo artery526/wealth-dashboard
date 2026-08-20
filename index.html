@@ -1800,10 +1800,11 @@ body::after{
 .treasury-monthly-income{color:var(--coral)}
 .treasury-monthly-expense{color:var(--teal)}
 .treasury-cash-stock-card{min-height:116px}
+.treasury-cash-stock-card .acc-name{font-size:17px}
 .treasury-account-merge-grid{display:flex;flex-direction:column;gap:3px;margin-top:8px}
 .treasury-account-merge-cell{display:flex;align-items:baseline;gap:8px;min-width:0;padding:2px 0;border:0;background:transparent}
-.treasury-account-merge-label{flex:1;min-width:0;font-family:var(--sans);font-size:11px;font-weight:800;color:#8d6a2a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.treasury-account-merge-value{margin-top:0;font-family:var(--mono);font-size:14px;font-weight:900;color:var(--gold);white-space:nowrap}
+.treasury-account-merge-label{flex:1;min-width:0;font-family:var(--sans);font-size:13px;font-weight:800;color:#8d6a2a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.treasury-account-merge-value{margin-top:0;font-family:var(--mono);font-size:17px;font-weight:900;color:var(--gold);white-space:nowrap}
 .treasury-cash-stock-saving{margin-top:5px;padding-top:4px;border-top:1px solid rgba(232,192,80,.14);font-family:var(--sans);font-size:12px;font-weight:900;color:#8d6a2a}
 @media(max-width:680px){.acc-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 6px}.acc-item{min-width:0}.acc-name{font-size:12px}.acc-val{font-size:15px}.treasury-cash-stock-card .acc-name{font-size:14px}.treasury-cash-stock-card .treasury-account-merge-cell{display:block}.treasury-cash-stock-card .treasury-account-merge-label{font-size:12px}.treasury-cash-stock-card .treasury-account-merge-value{margin-top:1px;font-size:16px}.treasury-cash-stock-saving{font-size:13px}}
 
@@ -7444,7 +7445,7 @@ function renderTreasuryCashStockCard(cashAccount,cathayStockAccount,monthly){
     return `<div class="treasury-account-merge-cell"><div class="treasury-account-merge-label">${label}</div><div class="treasury-account-merge-value">${fmtFull(account.value)}</div></div>`;
   }
   return `<div class="acc-item treasury-cash-stock-card">
-    <div class="acc-name">🪎Cash/Stock</div>
+    <div class="acc-name">✨Cash/Stock</div>
     <div class="treasury-account-merge-grid">
       ${cell(cashAccount,'💰現金Cash')}
       ${cell(cathayStockAccount,'💵國泰Stock')}
