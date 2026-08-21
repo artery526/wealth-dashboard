@@ -12392,7 +12392,8 @@ function renderHeroCard(row,totalCost){
       </div>
       <div class="hero-metrics-panel" aria-live="polite">
         <div>📦${shares?shares.toLocaleString('zh-TW'):'--'}</div>
-        <div>現 ${fmtFull(marketValue)} / 成 ${fmtFull(cost)}</div>
+        <div>市 ${fmtFull(marketValue)}</div>
+        <div>成 ${fmtFull(cost)}</div>
         <div>現 ${price?price.toFixed(2):'--'} / 均 ${avg?avg.toFixed(2):'--'}</div>
         <div>🟡${esc(monthlyDivText)}🪣${costWeight.toFixed(1)}%</div>
         <div>ROI ${fmtPctSigned(roi)} / 殖 ${annualYield.toFixed(1)}%</div>
