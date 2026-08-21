@@ -1607,7 +1607,7 @@ body::after{
 .council-roster-total-item.cost strong{color:var(--gold)}
 .hero-card{min-height:178px;position:relative;overflow:visible;border:1px solid rgba(184,137,46,.45);border-radius:8px;background:linear-gradient(135deg,#17140d,#080806 58%,#121009);box-shadow:inset 0 0 28px rgba(0,0,0,.55);display:grid;grid-template-columns:128px minmax(0,1fr);grid-template-rows:auto 1fr;gap:10px 14px;padding:14px}
 .hero-card::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 18% 18%,var(--hero-glow,rgba(232,192,80,.22)),transparent 36%),linear-gradient(90deg,rgba(0,0,0,.05),rgba(0,0,0,.65) 64%);z-index:1}
-.hero-card::after{content:"";position:absolute;inset:-30%;background:conic-gradient(from 20deg,transparent 0 18%,var(--effect-glow,rgba(232,192,80,.18)) 23%,transparent 30% 100%);opacity:.38;mix-blend-mode:screen;animation:heroEffectSweep 7s linear infinite;z-index:1;pointer-events:none}
+.hero-card::after{content:"";position:absolute;inset:-30%;background:conic-gradient(from 20deg,transparent 0 18%,var(--effect-glow,rgba(232,192,80,.18)) 23%,transparent 30% 100%);opacity:.28;mix-blend-mode:screen;animation:none;z-index:1;pointer-events:none}
 .hero-card.metrics-open-card{z-index:40}
 .hero-card.up{border-color:rgba(29,158,117,.45)}.hero-card.down{border-color:rgba(216,90,48,.48)}
 .hero-visual-stack{position:relative;z-index:2;grid-row:1/3;display:flex;flex-direction:column;align-items:stretch;gap:7px;min-width:0}
@@ -12392,8 +12392,8 @@ function renderHeroCard(row,totalCost){
       </div>
       <div class="hero-metrics-panel" aria-live="polite">
         <div>📦${shares?shares.toLocaleString('zh-TW'):'--'}</div>
-        <div>現 ${fmtWan(marketValue)} / 成 ${fmtWan(cost)}</div>
-        <div>💵${price?price.toFixed(2):'--'}⚖️${avg?avg.toFixed(2):'--'}</div>
+        <div>現 ${fmtFull(marketValue)} / 成 ${fmtFull(cost)}</div>
+        <div>現 ${price?price.toFixed(2):'--'} / 均 ${avg?avg.toFixed(2):'--'}</div>
         <div>🟡${esc(monthlyDivText)}🪣${costWeight.toFixed(1)}%</div>
         <div>ROI ${fmtPctSigned(roi)} / 殖 ${annualYield.toFixed(1)}%</div>
         <div>${paybackShort} / ${cost>0?paybackPct.toFixed(1)+'%':'--'}</div>
