@@ -1595,9 +1595,10 @@ body::after{
 .council-army-title{display:flex;align-items:center;gap:10px;margin:4px 0 14px;font-family:var(--sans);font-size:15px;font-weight:900;color:var(--gold2);letter-spacing:1px}
 .council-army-title::after{content:"";height:1px;flex:1;background:linear-gradient(90deg,#5a4018,transparent)}
 .council-roster-groups{display:grid;gap:14px}
-.council-roster-group{display:grid;grid-template-columns:minmax(0,1fr) 178px;gap:12px;align-items:stretch;border:1px solid rgba(184,137,46,.28);border-radius:8px;background:rgba(10,8,4,.38);padding:12px}
+.council-roster-group{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;align-items:stretch;border:1px solid rgba(184,137,46,.28);border-radius:8px;background:rgba(10,8,4,.38);padding:12px}
 .council-roster-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
-.council-roster-label{font-family:var(--sans);font-size:13px;font-weight:900;color:var(--gold2);letter-spacing:1px}
+.council-roster-label{display:flex;align-items:baseline;flex-wrap:wrap;gap:7px;font-family:var(--sans);font-size:13px;font-weight:900;color:var(--gold2);letter-spacing:1px}
+.council-roster-metrics{font-family:var(--mono);font-size:12px;font-weight:800;letter-spacing:0;color:#d7bd78;white-space:nowrap}
 .council-roster-count{font-family:var(--mono);font-size:11px;color:#8f7441;white-space:nowrap}
 .council-roster{display:grid;grid-template-columns:1fr;gap:12px}
 .council-roster-total{border-left:1px solid rgba(184,137,46,.26);padding-left:12px;display:flex;flex-direction:column;justify-content:center;gap:12px}
@@ -12110,16 +12111,12 @@ function renderCouncilRosterGroup(group,totalCost){
   return `<div class="council-roster-group">
     <div>
       <div class="council-roster-head">
-        <div class="council-roster-label">${esc(group.label)}</div>
+        <div class="council-roster-label">${esc(group.label)} <span class="council-roster-metrics">🪙${fmtFull(market)} 🧾${costPct.toFixed(1)}%</span></div>
         <div class="council-roster-count">${rows.length} \u6a94</div>
       </div>
       <div class="council-roster">
         ${rows.length?rows.map(function(row){return renderHeroCard(row,totalCost);}).join(''):'<div class="hero-add"><div><div class="hero-add-plus">+</div><div style="font-weight:800;color:#a89060;margin-bottom:4px">\u5c1a\u7121\u7de8\u5236</div><div style="font-size:11px">\u7b49\u5f85\u8cc7\u6599\u4f86\u6e90\u88dc\u9f4a</div></div></div>'}
       </div>
-    </div>
-    <div class="council-roster-total">
-      <div class="council-roster-total-item">\u52a0\u7e3d\u73fe\u503c<strong>${fmtFull(market)}</strong></div>
-      <div class="council-roster-total-item cost">\u6210\u672c\u52a0\u7e3d\u4f54\u6bd4<strong>${costPct.toFixed(1)}%</strong></div>
     </div>
   </div>`;
 }
