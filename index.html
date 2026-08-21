@@ -12387,7 +12387,7 @@ function renderHeroCard(row,totalCost){
     </div>
     <div class="hero-info">
       <div class="hero-symbol">${esc(row.symbol||'未編制')}${shares?'📦'+shares.toLocaleString('zh-TW'):''} <span class="hero-quote">💵${price?price.toFixed(2):'--'}⚖️${avg?avg.toFixed(2):'--'}</span></div>
-      <div class="hero-name">${esc(name)} <span class="hero-type-inline"><span>${esc(heroType)}</span><button class="hero-type-toggle" type="button" aria-label="展開月配息與殖利率" aria-expanded="false" onclick="var type=this.parentElement;type.classList.toggle('open');this.setAttribute('aria-expanded',type.classList.contains('open'))">➡️</button><span class="hero-type-details">顯示🟡${esc(monthlyDivText)}🪣${costWeight.toFixed(1)}%</span></span></div>
+      <div class="hero-name">${esc(name)} <span class="hero-type-inline"><span>${esc(heroType)}</span><button class="hero-type-toggle" type="button" aria-label="展開月配息與殖利率" aria-expanded="false" onclick="var type=this.parentElement;type.classList.toggle('open');this.setAttribute('aria-expanded',type.classList.contains('open'))">➡️</button><span class="hero-type-details">🟡${esc(monthlyDivText)}🪣${costWeight.toFixed(1)}%</span></span></div>
       <div class="hero-value-under-badge">現 ${fmtWan(marketValue)} / 成 ${fmtWan(cost)}</div>
     </div>
     ${effectBlock}
