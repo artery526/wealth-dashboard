@@ -1739,14 +1739,15 @@ body::after{
 .treasury-fixed-expense-heading .finance-collapse-meta{font-size:10px}
 .treasury-fixed-expense-card .finance-collapse-body{padding:0 8px 6px}
 .res-grid{display:grid;gap:2px;margin-bottom:8px}
-.res-card{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto auto;align-items:center;gap:7px;padding:7px 4px;border-bottom:1px solid rgba(232,192,80,.12);min-width:0}
+.res-card{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:7px;padding:7px 4px;border-bottom:1px solid rgba(232,192,80,.12);min-width:0}
 .res-card:last-child{border-bottom:0}
 .res-icon{font-size:16px;line-height:1}
 .res-name{font-family:var(--sans);font-size:12px;color:var(--ink2);font-weight:900;letter-spacing:.2px;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.res-details{display:flex;align-items:center;gap:7px;white-space:nowrap}
 .res-months{font-family:var(--mono);font-size:15px;font-weight:900;color:var(--gold);line-height:1.35;white-space:nowrap}
 .res-slash{font-family:var(--mono);font-size:13px;font-weight:800;color:#8d6a2a}
 .res-amt{font-family:var(--mono);font-size:13px;font-weight:800;color:var(--ink2);white-space:nowrap}
-@media(max-width:420px){.res-card{gap:5px;padding-left:2px;padding-right:2px}.res-name{font-size:11px}.res-months{font-size:14px}.res-amt{font-size:12px}}
+@media(max-width:680px){.treasury-fixed-expense-card .res-card{grid-template-columns:auto minmax(0,1fr);grid-template-areas:'icon name' 'details details';row-gap:3px;column-gap:6px;padding-left:2px;padding-right:2px}.treasury-fixed-expense-card .res-icon{grid-area:icon}.treasury-fixed-expense-card .res-name{grid-area:name;overflow:visible;text-overflow:clip}.treasury-fixed-expense-card .res-details{grid-area:details;justify-content:flex-start;padding-left:2px}.treasury-fixed-expense-card .res-months{font-size:14px}.treasury-fixed-expense-card .res-amt{font-size:12px}}
 /* ── 帳戶 ────────────────────────────────────────────────────── */
 .acc-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
 .acc-item{
@@ -7286,9 +7287,7 @@ function renderBillReservoirHtml(bills){
     return `<div class="res-card">
       <div class="res-icon">${b.icon||'💰'}</div>
       <strong class="res-name">${esc(b.name)}</strong>
-      <strong class="res-months">${months.toFixed(1)}</strong>
-      <span class="res-slash">/</span>
-      <span class="res-amt">${formatFixedExpenseAmount(b.monthly)}</span>
+      <div class="res-details"><strong class="res-months">${months.toFixed(1)}</strong><span class="res-slash">/</span><span class="res-amt">${formatFixedExpenseAmount(b.monthly)}</span></div>
     </div>`;
   }).join('');
   return `
