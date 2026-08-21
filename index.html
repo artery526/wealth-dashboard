@@ -7267,9 +7267,8 @@ function financeMonthlyFromTransactions(txns,baseMonthly){
 function renderBillReservoirHtml(bills){
   if(!bills||!bills.bills||!bills.bills.length)return '';
   var cards=bills.bills.map(function(b){
-    var pct=Number(b.pct);
-    if(isNaN(pct)||!isFinite(pct))pct=0;
-    var months=Math.max(0,pct/100*12);
+    var months=Number(b.months);
+    if(isNaN(months)||!isFinite(months))months=0;
     return `<div class="res-card">
       <div class="res-icon">${b.icon||'💰'}</div>
       <div class="res-name">${esc(b.name)}</div>
