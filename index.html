@@ -1223,6 +1223,13 @@ body::after{
 .advisor-ai-quick-transfer-title-row .advisor-shortcut-title{margin:0}
 .advisor-ai-quick-transfer-close{width:30px;height:30px;border:1px solid rgba(232,192,80,.4);border-radius:7px;background:rgba(232,192,80,.08);color:var(--gold);font-size:18px;font-weight:900;line-height:1;cursor:pointer}
 .advisor-ai-quick-transfer-close:hover{background:rgba(232,192,80,.18);border-color:rgba(232,192,80,.7)}
+.advisor-ai-gold-quote{border:1px solid rgba(232,192,80,.28);border-radius:9px;background:linear-gradient(145deg,rgba(64,42,8,.55),rgba(10,8,4,.72));padding:12px;margin:2px 0 10px;color:var(--ink);font-family:var(--sans);line-height:1.65}
+.advisor-ai-gold-quote-title{font-size:16px;font-weight:950;color:#ffe08a;margin-bottom:6px}
+.advisor-ai-gold-quote-main{font-family:var(--mono);font-size:20px;font-weight:950;color:#fff0b0;margin:5px 0 8px}
+.advisor-ai-gold-quote-row{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:#d6b36a}
+.advisor-ai-gold-quote-row strong{color:#fff0b0;font-family:var(--mono);font-weight:900;text-align:right}
+.advisor-ai-gold-quote-note{margin-top:8px;font-size:10px;color:#a98b52;line-height:1.55}
+.advisor-ai-gold-quote-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
 .advisor-ai-input{flex:1;min-width:0;border:1px solid #2a1c08;border-radius:7px;background:#0a0804;color:var(--ink);font-family:var(--sans);font-size:14px;padding:10px 11px;outline:none}
 .advisor-ai-input:focus{border-color:var(--gold2)}
 .advisor-ai-portrait{position:absolute;left:-204px;top:-62px;width:220px;pointer-events:none;z-index:1}
@@ -3835,7 +3842,7 @@ body::after{
 // ══════════════════════════════════════════
 //  State & Config
 // ══════════════════════════════════════════
-var CANONICAL_API_URL = 'https://script.google.com/macros/s/AKfycbzBNmJJV9XUvCaCPKjCoqt-yrJDJLGLWU1H47po-h5q_DlYWAN7-Qjjhim0ky7Ru4e0/exec';
+var CANONICAL_API_URL = 'https://script.google.com/macros/s/AKfycbxLAh1dq3DLcdQ9b9epsIhNmMQ_6qIppmn8jJwcXbIQwyNZqZMOErgrV4zKF1vi0eKm/exec';
 var LEGACY_API_DEPLOYMENT_IDS = [
   'AKfycbwBhxif_vONIC4m8mxWZB2q2bk3Hyy1lBkCkFSg66OLwQxPQL-Ktsc7BdTgZQZAc4bO',
   'AKfycbw3ddm4mcOvSSijvguaBwVvJH-KOp5MdrUgJQw4oy58o9bg456EtRIaCsYnrsPSS7xN',
@@ -14446,10 +14453,58 @@ function advisorAIExamplesHtml(){
   </div>`;
 }
 
+function advisorAIOpenGoldQuote(){
+  var panel=advisorAIActivePanel();
+  if(!panel)return;
+  advisorShortcutOpenKind='gold-quote';
+  panel.innerHTML=`${advisorAIHeaderHtml()}
+    <div class="advisor-ai-portrait"><img class="advisor-ai-portrait-img" src="pangtong.png" alt="龐統軍師"></div>
+    <div class="advisor-shortcut-title">🪙 黃金 5 台兩</div>
+    <div class="advisor-shortcut-hint">查詢國際黃金美元報價與美元／台幣匯率，換算 5 台兩的市場估算。</div>
+    <div class="advisor-ai-gold-quote" id="advisor-ai-gold-quote"><div class="advisor-shortcut-msg">正在更新黃金與匯率…</div></div>
+    <div class="advisor-ai-gold-quote-actions">
+      <button class="advisor-shortcut-secondary" type="button" onclick="advisorAIRefreshGoldQuote(this)">更新</button>
+      <button class="advisor-shortcut-submit" type="button" onclick="openAdvisorAI()">返回</button>
+    </div>`;
+  advisorAIRefreshGoldQuote();
+}
+
+function advisorAIGoldQuoteHtml(data){
+  var gold=data&&data.gold||{};
+  var fx=data&&data.fx||{};
+  var conversion=data&&data.conversion||{};
+  var goldPrice=Number(gold.usdPerTroyOunce)||0;
+  var usdTwd=Number(fx.usdTwd)||0;
+  var fiveTael=Number(conversion.fiveTaelTwd)||0;
+  return `<div class="advisor-ai-gold-quote-title">🪙 5 台兩市場估算</div>
+    <div class="advisor-ai-gold-quote-main">NT$ ${fiveTael.toLocaleString('zh-TW')}</div>
+    <div class="advisor-ai-gold-quote-row"><span>國際黃金</span><strong>US$ ${goldPrice.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})} / 金衡盎司</strong></div>
+    <div class="advisor-ai-gold-quote-row"><span>美元／台幣</span><strong>NT$ ${usdTwd.toLocaleString('zh-TW',{minimumFractionDigits:3,maximumFractionDigits:3})}</strong></div>
+    <div class="advisor-ai-gold-quote-row"><span>換算重量</span><strong>${Number(conversion.grams||187.5).toLocaleString('zh-TW')} 克（${Number(conversion.troyOunces||0).toFixed(3)} 金衡盎司）</strong></div>
+    <div class="advisor-ai-gold-quote-note">報價：${esc(gold.quoteTime||'時間未知')} · 匯率：${esc(fx.quoteTime||'時間未知')}<br>${esc(data&&data.source||'Yahoo Finance')} · ${esc(data&&data.note||'市場估算，未含銀樓工費與買賣價差')}</div>`;
+}
+
+async function advisorAIRefreshGoldQuote(btn){
+  var box=document.getElementById('advisor-ai-gold-quote');
+  if(!box)return;
+  if(btn&&btn.disabled)return;
+  if(btn){btn.disabled=true;btn.textContent='更新中…';}
+  box.innerHTML='<div class="advisor-shortcut-msg">正在更新黃金與匯率…</div>';
+  try{
+    var data=await apiGet({action:'goldPrice'},30000);
+    box.innerHTML=advisorAIGoldQuoteHtml(data);
+  }catch(error){
+    box.innerHTML='<div class="advisor-shortcut-msg err">✗ '+esc(error&&error.message?error.message:'黃金報價讀取失敗')+'</div>';
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='更新';}
+  }
+}
+
 function advisorAIQuickCommands(){
   return [
     {label:'快速轉帳',command:'__quick_transfer__'},
     {label:'配息記錄',command:'__dividend_record__'},
+    {label:'黃金5台兩',command:'__gold_5_tael__'},
     {label:'顯示載具',command:'顯示載具'},
     {label:'超商會員',command:'__member_cards__'},
     {label:'退稅查詢',command:'__etf_tax_lookup__'},
@@ -14699,6 +14754,11 @@ function advisorAIRunQuickCommand(select){
   if(command==='__dividend_record__'){
     if(select)select.value='';
     advisorAIOpenDividendRecord();
+    return;
+  }
+  if(command==='__gold_5_tael__'){
+    if(select)select.value='';
+    advisorAIOpenGoldQuote();
     return;
   }
   if(command==='__member_cards__'){
