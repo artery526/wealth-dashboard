@@ -1734,6 +1734,9 @@ body::after{
 .finance-collapse-meta{font-family:var(--sans);font-size:10px;font-weight:800;color:#7a6030;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .finance-collapse-body{padding:0 10px 10px}
 .finance-collapse .res-section-title,.finance-collapse .pledge-section-title{display:none}
+.treasury-fixed-expense-card{margin:0;min-width:0;height:100%;align-self:stretch}
+.treasury-fixed-expense-card>summary{padding:10px 10px}
+.treasury-fixed-expense-card .finance-collapse-body{padding:0 8px 6px}
 .res-grid{display:grid;gap:2px;margin-bottom:8px}
 .res-card{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto auto;align-items:center;gap:7px;padding:7px 4px;border-bottom:1px solid rgba(232,192,80,.12);min-width:0}
 .res-card:last-child{border-bottom:0}
@@ -7288,7 +7291,7 @@ function renderBillReservoirHtml(bills){
     </div>`;
   }).join('');
   return `
-    <details class="finance-collapse finance-bills-collapse">
+    <details class="finance-collapse treasury-fixed-expense-card" open>
       <summary><span class="finance-collapse-title">💧 固定支出</span><span class="finance-collapse-meta">${bills.bills.length} 筆</span></summary>
       <div class="finance-collapse-body">
         <div class="res-section-title">💧 固定支出</div>
@@ -7390,19 +7393,18 @@ function renderAccounts(accs,monthly,el,assetSnapshot,bills,stale){
       ${a.stockValue!=null&&!isNaN(a.stockValue)?`<div style="font-family:var(--mono);font-size:11px;color:#9a7430;margin-top:2px">市值 $${Math.round(a.stockValue).toLocaleString('zh-TW')}</div>`:''}
     </div>`);
   });
+  var accountCardCount=accCards.length;
+  var billsHtml=renderBillReservoirHtml(bills);
+  if(billsHtml)accCards.push(billsHtml);
   var accHtml=accCards.join('');
   var accountListHtml=`
     <details class="finance-collapse finance-accounts-collapse" open>
-      <summary><span class="finance-collapse-title">帳戶一覽</span><span class="finance-collapse-meta">${accCards.length} 張卡</span></summary>
+      <summary><span class="finance-collapse-title">帳戶一覽</span><span class="finance-collapse-meta">${accountCardCount} 張卡</span></summary>
       <div class="finance-collapse-body">
         <div class="acc-grid">${accHtml}</div>
       </div>
     </details>`;
-
-  var billsHtml=renderBillReservoirHtml(bills);
-
-  el.innerHTML=accountListHtml+`
-    ${billsHtml?`<div class="finance-bills-wrap">${billsHtml}</div>`:''}`;
+  el.innerHTML=accountListHtml;
 }
 
 function renderTreasuryAccountTotalAssetCard(assetSnapshot,totalAssetAccount,monthly){
