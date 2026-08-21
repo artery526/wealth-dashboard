@@ -1616,8 +1616,11 @@ body::after{
 .hero-payback-under-avatar.complete{color:var(--teal)}
 .hero-info{position:relative;z-index:3;min-height:0}
 .hero-symbol{font-family:var(--mono);font-size:15px;font-weight:700;color:#c8c4bd;letter-spacing:1px;margin-bottom:2px;overflow-wrap:anywhere}
-.hero-name{font-size:25px;font-weight:900;color:var(--gold);letter-spacing:1px;line-height:1.12;text-shadow:0 0 16px rgba(232,192,80,.35);margin-bottom:8px;overflow-wrap:anywhere}
+.hero-name{display:flex;align-items:baseline;flex-wrap:wrap;gap:7px;font-size:25px;font-weight:900;color:var(--gold);letter-spacing:1px;line-height:1.12;text-shadow:0 0 16px rgba(232,192,80,.35);margin-bottom:8px;overflow-wrap:anywhere}
+.hero-name-roi{font-family:var(--mono);font-size:12px;font-weight:800;letter-spacing:0;color:var(--teal);white-space:nowrap;text-shadow:none}
+.hero-name-roi.down{color:var(--coral)}
 .hero-badge{display:inline-block;font-family:var(--sans);font-size:11px;font-weight:800;color:var(--hero-color,var(--gold));border:1px solid currentColor;background:rgba(0,0,0,.22);border-radius:4px;padding:3px 7px;margin-bottom:7px}
+.hero-badge-div{font-family:var(--mono);margin-left:6px;color:var(--gold);white-space:nowrap}
 .hero-desc{font-family:var(--sans);font-size:12px;line-height:1.55;color:#c09a50;margin-bottom:12px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .hero-effect{position:relative;z-index:3;border:1px solid var(--effect-border,rgba(232,192,80,.28));border-radius:6px;background:linear-gradient(90deg,var(--effect-bg,rgba(232,192,80,.10)),rgba(0,0,0,.14));padding:8px 10px;font-family:var(--sans);box-shadow:inset 0 0 18px var(--effect-shadow,rgba(232,192,80,.08));align-self:end;grid-column:2;grid-row:2}
 .hero-effect-name{display:flex;align-items:center;gap:7px;margin-bottom:3px;font-size:12px;font-weight:900;color:var(--effect-color,var(--gold));letter-spacing:.5px}
@@ -12363,18 +12366,17 @@ function renderHeroCard(row,totalCost){
       <div class="hero-payback-under-avatar ${paybackDone?'complete':''}">${paybackShort} / ${cost>0?paybackPct.toFixed(1)+'%':'--'}</div>
     </div>
     <div class="hero-info">
-      <div class="hero-symbol">${esc(row.symbol||'未編制')}${shares?' / '+shares.toLocaleString('zh-TW')+'股':''}</div>
-      <div class="hero-name">${esc(name)}</div>
-      <div class="hero-badge">${esc(row.heroType||row.riskLevel||'策略型')}</div>
+      <div class="hero-symbol">${esc(row.symbol||'未編制')}${shares?' / '+shares.toLocaleString('zh-TW')+'股':''} / 殖 ${annualYield.toFixed(1)}%</div>
+      <div class="hero-name">${esc(name)} <span class="hero-name-roi ${roi<0?'down':''}">ROI ${fmtPctSigned(roi)}</span></div>
+      <div class="hero-badge">${esc(row.heroType||row.riskLevel||'策略型')} <span class="hero-badge-div">🟡${esc(monthlyDivText)}</span></div>
       <div class="hero-desc">${esc(note)}</div>
-      <div class="hero-return ${tone}">含息 <strong>${ret>=0?'+':'-'}${fmtFull(Math.abs(ret))}</strong><div class="hero-roi">ROI ${fmtPctSigned(roi)}</div></div>
+      <div class="hero-return ${tone}">含息 <strong>${ret>=0?'+':'-'}${fmtFull(Math.abs(ret))}</strong></div>
     </div>
     ${effectBlock}
     <div class="hero-bottom">
       <span class="hero-value">現值 ${fmtFull(marketValue)}</span>
-      <span class="hero-cost">成本 ${fmtFull(cost)}${totalCost>0?' ('+costWeight.toFixed(1)+'%)':''} <span class="hero-yield">殖利率 ${annualYield.toFixed(1)}%</span></span>
+      <span class="hero-cost">成本 ${fmtFull(cost)}${totalCost>0?' ('+costWeight.toFixed(1)+'%)':''}</span>
       <span class="hero-price">現 ${price?price.toFixed(2):'--'} / 均 ${avg?avg.toFixed(2):'--'}</span>
-      <span class="hero-service">月配息 ${esc(monthlyDivText)}</span>
     </div>
   </div>`;
 }
