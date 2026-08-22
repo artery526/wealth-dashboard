@@ -980,9 +980,9 @@ body::after{
 #c-wall.wall-landscape{
   width:502px;
 }
-/* 桌機縮窄時保留雙欄，讓主卡隨容器等比例收窄；平板以下再改單欄。 */
+/* 桌機四宮格：財政、內政、軍機處、醫館同列，後續卡片接續排到下一列。 */
 @media(min-width:769px){
-  .cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}
+  .cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));align-items:start}
   #c-finance.finance-landscape,
   #c-domestic.domestic-landscape,
   #c-council.military-landscape,
@@ -3082,7 +3082,7 @@ body::after{
   .hdr-char-wrap:hover{transform:none}
   .cards{
     display:grid;
-    grid-template-columns:minmax(0,min(100%,432px));
+    grid-template-columns:repeat(2,minmax(0,1fr));
     justify-content:center;
     align-items:start;
     gap:14px;
@@ -3161,7 +3161,7 @@ body::after{
   .advisor-duo-role.zhuge .advisor-duo-stage{height:180px}
   .advisor-duo-label{min-width:94px;font-size:11px;letter-spacing:.3px;padding:5px 8px}
   .cards{
-    grid-template-columns:minmax(0,1fr);
+    grid-template-columns:repeat(2,minmax(0,1fr));
     gap:14px;
     max-width:390px;
   }
@@ -3258,6 +3258,19 @@ body::after{
 #c-domestic.domestic-landscape .card-video{
   object-fit:contain!important;
   background:#090713;
+}
+
+/* 四張主入口卡統一為 1:1 方塊；桌機四欄、手機兩欄時保持等比例縮放。 */
+#c-finance.finance-landscape .art,
+#c-domestic.domestic-landscape .art,
+#c-council.military-landscape .art,
+#c-medical.medical-landscape .art{
+  height:auto!important;
+  aspect-ratio:1/1!important;
+}
+#c-council.military-landscape .card-video,
+#c-medical.medical-landscape .card-video{
+  object-fit:cover!important;
 }
 </style>
 </head>
