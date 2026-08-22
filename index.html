@@ -12337,11 +12337,12 @@ async function loadCouncilHoldingsOverview(){
 function councilHeroAccentColor(row){
   var key=normalizeKey(row&&row.symbol);
   var text=councilRowText(row);
-  if(key==='QQQI'||key==='SPYI'||key==='CHPY'||key==='MLPI'||key==='國泰高股息B'||text.indexOf('國泰高股息')>=0)return '#2F80ED';
+  if(key==='QQQI'||key==='SPYI'||key==='國泰高股息B'||text.indexOf('國泰高股息')>=0)return '#E8C050';
   if(key==='路博邁台灣5G'||key==='00997A'||text.indexOf('路博邁')>=0||text.indexOf('5G')>=0)return '#E8C050';
-  if(key==='AIPI'||key==='PLTY')return '#A83232';
-  if(key==='00985B'||key==='GDXW'||key==='GLDW')return '#1D9E75';
-  if(key==='施羅德收益成長A2'||text.indexOf('施羅德')>=0)return '#8B5CF6';
+  if(key==='CHPY'||key==='AIPI'||key==='PLTY')return '#A83232';
+  if(key==='MLPI')return '#2F80ED';
+  if(key==='00985B'||key==='施羅德收益成長A2'||text.indexOf('施羅德')>=0)return '#8B5CF6';
+  if(key==='GDXW'||key==='GLDW')return '#1D9E75';
   return row&&row.accentColor||'#B8892E';
 }
 
