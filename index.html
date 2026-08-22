@@ -982,7 +982,7 @@ body::after{
 }
 /* 桌機四宮格：財政、內政、軍機處、醫館同列，後續卡片接續排到下一列。 */
 @media(min-width:769px){
-  .cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));align-items:start}
+  .cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:start}
   #c-finance.finance-landscape,
   #c-domestic.domestic-landscape,
   #c-council.military-landscape,
@@ -3260,16 +3260,20 @@ body::after{
   background:#090713;
 }
 
-/* 四張主入口卡統一為 1:1 方塊；桌機四欄、手機兩欄時保持等比例縮放。 */
+/* 六張主入口卡統一為 1:1 方塊；桌機三欄、手機兩欄時保持等比例縮放。 */
 #c-finance.finance-landscape .art,
 #c-domestic.domestic-landscape .art,
 #c-council.military-landscape .art,
-#c-medical.medical-landscape .art{
+#c-medical.medical-landscape .art,
+#c-stars.stars-landscape .art,
+#c-wall.wall-landscape .art{
   height:auto!important;
   aspect-ratio:1/1!important;
 }
 #c-council.military-landscape .card-video,
-#c-medical.medical-landscape .card-video{
+#c-medical.medical-landscape .card-video,
+#c-stars.stars-landscape .card-video,
+#c-wall.wall-landscape .card-video{
   object-fit:cover!important;
 }
 
