@@ -3560,7 +3560,7 @@ html[data-theme="deep-blue"] .overlay .form-label{color:#78aec0}
       <div class="hdr-char-wrap advisor-duo-wrap">
         <div class="advisor-duo" aria-label="選擇軍師">
           <button class="advisor-duo-role pangtong" type="button" onclick="openAdvisorAIFromOrb(event)" title="龐統 · 軍師AI">
-            <span class="advisor-duo-stage"><video class="advisor-duo-video" data-src="pangtongmenuv2.mp4" poster="pangtong.png" muted playsinline preload="none" aria-label="龐統軍師"></video></span>
+            <span class="advisor-duo-stage"><video class="advisor-duo-video" data-src="1menuv3.mp4" poster="1menu.png" muted playsinline preload="none" aria-label="龐統軍師"></video></span>
             <span class="advisor-web-verify-dot err" id="advisor-web-verify-dot" title="網頁驗證未通過" aria-label="網頁驗證未通過"></span>
           </button>
           <button class="advisor-duo-role zhuge" type="button" onclick="openAdvisorDialog(event)" title="諸葛 · 軍師">
@@ -14577,7 +14577,7 @@ function advisorAIOpenGoldQuote(){
   if(!panel)return;
   advisorShortcutOpenKind='gold-quote';
   panel.innerHTML=`${advisorAIHeaderHtml()}
-    <div class="advisor-ai-portrait"><img class="advisor-ai-portrait-img" src="pangtong.png" alt="龐統軍師"></div>
+     <div class="advisor-ai-portrait"><img class="advisor-ai-portrait-img" src="1menu.png" alt="龐統軍師"></div>
     <div class="advisor-shortcut-title">🪙 黃金 5 台兩</div>
     <div class="advisor-shortcut-hint">查詢國際黃金美元報價與美元／台幣匯率，換算 5 台兩的市場估算。</div>
     <div class="advisor-ai-gold-quote" id="advisor-ai-gold-quote"><div class="advisor-shortcut-msg">正在更新黃金與匯率…</div></div>
@@ -14904,7 +14904,7 @@ function advisorAIOpenTaxLookup(){
   if(!panel)return;
   advisorAIScheduleOpen=false;
   panel.innerHTML=`${advisorAIHeaderHtml()}
-    <div class="advisor-ai-portrait"><img class="advisor-ai-portrait-img" src="pangtong.png" alt="龐統軍師"></div>
+     <div class="advisor-ai-portrait"><img class="advisor-ai-portrait-img" src="1menu.png" alt="龐統軍師"></div>
     <div class="advisor-shortcut-hint">輸入 ETF 代號，軍師會查詢國泰、富邦與 2024 退稅分頁中的退稅比例。</div>
     <div class="advisor-shortcut-field">
       <label>ETF 代號</label>
@@ -14967,7 +14967,7 @@ async function advisorAISubmitTaxLookup(btn){
     var data=await apiGet({action:'etfTaxLookup',symbol:symbol},30000);
     var lines=data&&data.found?advisorAITaxLookupLines(data):['查無退稅'];
     if(panel)panel.innerHTML=`${advisorAIHeaderHtml()}
-      <div class="advisor-ai-portrait"><img class="advisor-ai-portrait-img" src="pangtong.png" alt="龐統軍師"></div>
+       <div class="advisor-ai-portrait"><img class="advisor-ai-portrait-img" src="1menu.png" alt="龐統軍師"></div>
       ${advisorAIResultHtml(symbol+' 退稅查詢',lines)}
       <div class="advisor-dividend-actions">
         <button class="advisor-shortcut-secondary" type="button" onclick="advisorAIOpenTaxLookup()">再查一次</button>
@@ -14990,7 +14990,7 @@ function openAdvisorAI(targetPanel){
   advisorDividendQuickHolding=null;
   advisorAIScheduleOpen=false;
   panel.innerHTML=`${advisorAIHeaderHtml('🗡️主公，請下令')}
-    <div class="advisor-ai-portrait"><img class="advisor-ai-portrait-img" src="pangtong.png" alt="龐統軍師"></div>
+     <div class="advisor-ai-portrait"><img class="advisor-ai-portrait-img" src="1menu.png" alt="龐統軍師"></div>
     <div class="advisor-ai-granary-brief loading" id="advisor-ai-granary-brief"><span>龐統正在檢視帝國糧倉…</span></div>
     <div class="advisor-ai-row">
       <input class="advisor-ai-input" id="advisor-ai-input" type="text" placeholder="輸入指令…" onkeydown="advisorAIKey(event)">
@@ -15525,7 +15525,7 @@ function advisorAIOpenVideoDownload(){
   advisorDividendMemoPending=null;
   advisorAIScheduleOpen=false;
   panel.innerHTML=`${advisorAIHeaderHtml()}
-    ${isStandalone?'<div class="advisor-ai-portrait"><img class="advisor-ai-portrait-img" src="pangtong.png" alt="龐統軍師"></div>':''}
+     ${isStandalone?'<div class="advisor-ai-portrait"><img class="advisor-ai-portrait-img" src="1menu.png" alt="龐統軍師"></div>':''}
     <div class="advisor-shortcut-hint">貼上 TikTok、Threads 或 Facebook 影片連結；軍師會複製原連結，並開啟對應下載頁。</div>
     <div class="advisor-shortcut-field">
       <label>影片連結</label>
@@ -15700,7 +15700,7 @@ async function advisorAIShowMonthlyAssetBrief(){
   advisorDividendSelection=null;
   advisorAIScheduleOpen=false;
   panel.innerHTML=`${advisorAIHeaderHtml()}
-    <div class="advisor-ai-portrait"><img class="advisor-ai-portrait-img" src="pangtong.png" alt="龐統軍師"></div>
+     <div class="advisor-ai-portrait"><img class="advisor-ai-portrait-img" src="1menu.png" alt="龐統軍師"></div>
     <div class="advisor-ai-result"><strong>本月資產簡報</strong><br>軍師正在調閱本月財報與糧倉資訊…</div>
     <div class="advisor-shortcut-msg" id="advisor-ai-msg"></div>`;
   if(!API_URL){
@@ -15741,7 +15741,7 @@ async function advisorAIShowMonthlyAssetBrief(){
     if(results[0].status!=='fulfilled')lines.push('本月財報讀取失敗：'+(results[0].reason&&results[0].reason.message||'未知錯誤'));
     if(results[1].status!=='fulfilled')lines.push('糧倉資訊讀取失敗：'+(results[1].reason&&results[1].reason.message||'未知錯誤'));
     panel.innerHTML=`${advisorAIHeaderHtml()}
-      <div class="advisor-ai-portrait"><img class="advisor-ai-portrait-img" src="pangtong.png" alt="龐統軍師"></div>
+       <div class="advisor-ai-portrait"><img class="advisor-ai-portrait-img" src="1menu.png" alt="龐統軍師"></div>
       ${advisorAIResultHtml('本月資產簡報',lines)}
       <div class="advisor-shortcut-msg" id="advisor-ai-msg"></div>`;
   }catch(err){
@@ -15761,7 +15761,7 @@ async function advisorAIShowSchedule(btn){
   advisorDividendSelection=null;
   advisorAIScheduleOpen=true;
   panel.innerHTML=`${advisorAIHeaderHtml()}
-    <div class="advisor-ai-portrait"><img class="advisor-ai-portrait-img" src="pangtong.png" alt="龐統軍師"></div>
+     <div class="advisor-ai-portrait"><img class="advisor-ai-portrait-img" src="1menu.png" alt="龐統軍師"></div>
     <div class="advisor-ai-result">
       <strong>朝中政務</strong><br>
       軍師正在調閱待辦與今日行程…
@@ -15784,7 +15784,7 @@ async function advisorAIShowSchedule(btn){
       ? renderCalendarAgenda(results[1].value.events||[],'today')
       : `<div class="today-agenda-error">${esc(results[1].reason&&results[1].reason.message||'行程讀取失敗')}</div>`;
     panel.innerHTML=`${advisorAIHeaderHtml()}
-      <div class="advisor-ai-portrait"><img class="advisor-ai-portrait-img" src="pangtong.png" alt="龐統軍師"></div>
+       <div class="advisor-ai-portrait"><img class="advisor-ai-portrait-img" src="1menu.png" alt="龐統軍師"></div>
       <div class="advisor-ai-result">
         <strong>朝中政務</strong>
         <section class="agenda-section">
