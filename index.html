@@ -14067,12 +14067,16 @@ function initAdvisorDuoVideoPlayback(){
     video.playsInline=true;
     video.loop=false;
     video.addEventListener('ended',function(){
-      try{video.pause();}catch(e){}
+      try{
+        video.loop=false;
+        video.pause();
+      }catch(e){}
     });
-    function playAdvisorVideo(){
+    function playAdvisorVideo(continueLoop){
       loadDeferredVideo(video);
       try{
-        video.currentTime=0;
+        if(video.ended||(!isFinite(video.duration)||video.currentTime>=video.duration-.05))video.currentTime=0;
+        video.loop=continueLoop===true;
         var result=video.play();
         if(result&&result.catch)result.catch(function(){});
       }catch(e){}
@@ -14080,14 +14084,16 @@ function initAdvisorDuoVideoPlayback(){
     function stopAdvisorVideo(){
       try{
         video.pause();
-        video.currentTime=0;
+        video.loop=false;
       }catch(e){}
     }
-    role.addEventListener('mouseenter',playAdvisorVideo);
+    /* 首次進頁先播放一次，結束後停在最後一幀，不再只顯示 poster。 */
+    playAdvisorVideo(false);
+    role.addEventListener('mouseenter',function(){playAdvisorVideo(true)});
     role.addEventListener('mouseleave',stopAdvisorVideo);
-    role.addEventListener('focusin',playAdvisorVideo);
+    role.addEventListener('focusin',function(){playAdvisorVideo(true)});
     role.addEventListener('focusout',stopAdvisorVideo);
-    role.addEventListener('pointerdown',playAdvisorVideo);
+    role.addEventListener('pointerdown',function(){playAdvisorVideo(true)});
   });
 }
 initAdvisorDuoVideoPlayback();
