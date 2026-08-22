@@ -3975,7 +3975,7 @@ function normalizeWealthApiUrl(url){
   if(LEGACY_API_DEPLOYMENT_IDS.some(function(id){return url.indexOf(id)>=0;}))return CANONICAL_API_URL;
   return url;
 }
-var EMPIRE_THEME_KEY='empire_theme_v1';
+var EMPIRE_THEME_KEY='empire_theme_v2';
 var EMPIRE_THEMES=['deep-blue','night-purple','palace'];
 var EMPIRE_THEME_LABELS={'deep-blue':'🌊 深藍內政','night-purple':'🌙 夜幕紫金','palace':'🏯 御殿金棕'};
 function applyEmpireTheme(theme,persist){
