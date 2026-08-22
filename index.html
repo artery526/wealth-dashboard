@@ -3248,11 +3248,13 @@ body::after{
 .div-market-btn.active.tw{background:rgba(29,158,117,.1);color:var(--teal);border-color:rgba(29,158,117,.4)}
 .div-market-btn.active.us{background:rgba(124,111,192,.1);color:var(--purple);border-color:rgba(124,111,192,.4)}
 
-/* 內政 v3 為 1:1 素材，卡片保留正方形顯示，避免裁切影片內容。 */
+/* 財政與內政 v3 為 1:1 素材，卡片保留正方形顯示，避免裁切影片內容。 */
+#c-finance.finance-landscape .art,
 #c-domestic.domestic-landscape .art{
   height:auto!important;
   aspect-ratio:1/1!important;
 }
+#c-finance.finance-landscape .card-video,
 #c-domestic.domestic-landscape .card-video{
   object-fit:contain!important;
   background:#090713;
@@ -3666,8 +3668,8 @@ body::after{
         <div class="art" style="position:relative;overflow:hidden;height:427px;border-bottom:none;">
           <video
             class="card-video"
-            data-src="finance-cardv2.mp4"
-            poster="finance-card-poster.jpg"
+            data-src="finance-cardv3.mp4"
+            poster="finance-card-poster-v3.jpg"
             autoplay
             muted
             playsinline
