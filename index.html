@@ -8389,8 +8389,9 @@ function clearArkWallReadToken(){
 
 function arkWallAuthOptions(options){
   var next=options||{};
-  var token=next.wallWrite?(arkWallWriteToken()||arkWallReadToken()):arkWallReadToken();
+  var token=Object.prototype.hasOwnProperty.call(next,'wallAuthToken')?next.wallAuthToken:(next.wallWrite?(arkWallWriteToken()||arkWallReadToken()):arkWallReadToken());
   delete next.wallWrite;
+  delete next.wallAuthToken;
   var headers=new Headers(next.headers||{});
   if(token)headers.set('authorization','Bearer '+token);
   next.headers=headers;
@@ -8398,7 +8399,12 @@ function arkWallAuthOptions(options){
 }
 
 function arkWallFetch(path,options){
-  return fetch(ARK_WALL_API_BASE+path,arkWallAuthOptions(Object.assign({cache:'no-store'},options||{}))).then(function(res){
+  var base=Object.assign({cache:'no-store'},options||{});
+  var authTokens=base.wallWrite?[arkWallWriteToken(),arkWallReadToken()].filter(function(token,index,tokens){return token&&tokens.indexOf(token)===index;}):[arkWallReadToken()];
+  if(!authTokens.length)authTokens=[''];
+  function request(index){
+    return fetch(ARK_WALL_API_BASE+path,arkWallAuthOptions(Object.assign({},base,{wallAuthToken:authTokens[index]}))).then(function(res){
+      if(res.status===401&&base.wallWrite&&index+1<authTokens.length)return request(index+1);
     if(res.status===401){
       var error=new Error('城牆需要通行令。');
       error.status=401;
@@ -8406,7 +8412,9 @@ function arkWallFetch(path,options){
     }
     if(!res.ok)throw new Error('城牆讀取失敗 '+res.status);
     return res.json();
-  });
+    });
+  }
+  return request(0);
 }
 
 function arkWallUrl(path){
