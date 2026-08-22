@@ -3272,6 +3272,90 @@ body::after{
 #c-medical.medical-landscape .card-video{
   object-fit:cover!important;
 }
+
+/* 行事曆與待辦事項：配合深藍內政主題。 */
+.home-agenda-calendar,
+.home-agenda-court{
+  border-color:rgba(77,169,214,.42);
+  background:
+    radial-gradient(circle at 10% 0,rgba(42,135,184,.22),transparent 34%),
+    linear-gradient(145deg,rgba(10,37,61,.96),rgba(4,15,27,.98));
+  box-shadow:0 12px 32px rgba(0,8,18,.44),inset 0 1px 0 rgba(180,232,255,.12);
+}
+.home-agenda-head{
+  border-bottom-color:rgba(77,169,214,.25);
+}
+.home-agenda-title,
+#home-calendar-today{
+  color:#c8edff;
+  text-shadow:0 0 12px rgba(72,183,231,.24);
+}
+.home-lunar-date{color:#72c5e8}
+.home-agenda-date{color:#9fc9dd}
+.home-calendar-weekday{color:#68aeca}
+.home-calendar-day{
+  border-color:rgba(77,169,214,.2);
+  background:rgba(5,24,42,.72);
+  color:#b8d9e8;
+}
+.home-calendar-day.today{
+  color:#e6f8ff;
+  border-color:rgba(113,216,255,.82);
+  background:linear-gradient(180deg,#165579,#092238);
+  box-shadow:0 0 18px rgba(49,174,226,.28),inset 0 0 0 1px rgba(204,244,255,.14);
+}
+.home-calendar-day.selectable:hover{
+  border-color:rgba(113,216,255,.78);
+  background:rgba(31,113,153,.34);
+}
+.home-calendar-day.selected{
+  border-color:#c8edff;
+  box-shadow:0 0 0 2px rgba(72,183,231,.38),0 0 16px rgba(49,174,226,.25);
+  color:#effbff;
+}
+.home-agenda-body::-webkit-scrollbar-thumb{background:#1b5878}
+.home-agenda-body .agenda-section+.agenda-section{
+  border-left-color:rgba(77,169,214,.28);
+}
+.home-agenda-body .agenda-section-title{color:#bdeaff;text-shadow:0 0 10px rgba(72,183,231,.2)}
+.home-agenda-body .today-agenda-empty,
+.home-agenda-body .today-agenda-loading{color:#b9d9e8;text-shadow:0 0 8px rgba(72,183,231,.14)}
+.home-agenda-body .today-agenda-error{color:#ff9d91}
+.home-agenda-body .agenda-item{
+  border-bottom-color:rgba(77,169,214,.22);
+  background:linear-gradient(90deg,rgba(62,157,202,.12),transparent 44%,rgba(18,75,106,.12));
+}
+.home-agenda-body .agenda-time{
+  border-color:rgba(65,177,217,.5);
+  color:#a9e6fa;
+  background:rgba(9,68,94,.3);
+  box-shadow:inset 0 0 12px rgba(24,133,175,.12);
+}
+.home-agenda-body .agenda-title,
+.home-agenda-body .task-title{color:#e5f7ff}
+.home-agenda-body .agenda-meta,
+.home-agenda-body .task-meta{color:#91c1d5}
+.home-agenda-body .task-item{
+  border-bottom-color:rgba(77,169,214,.2);
+  background:linear-gradient(90deg,rgba(47,142,188,.1),transparent 42%,rgba(168,219,238,.04));
+}
+.home-agenda-body .task-mark{
+  border-color:rgba(91,198,231,.52);
+  color:#a9e6fa;
+  box-shadow:inset 0 0 10px rgba(49,174,226,.12);
+}
+.home-agenda-global-refresh,
+.home-agenda-refresh{
+  border-color:rgba(91,198,231,.58);
+  background:linear-gradient(180deg,#124665,#071c2d);
+  color:#c8edff;
+}
+.home-agenda-mode-toggle{
+  border-color:rgba(91,198,231,.56);
+  background:linear-gradient(180deg,rgba(18,76,104,.9),rgba(5,27,43,.94));
+  color:#a9e6fa;
+  box-shadow:0 0 12px rgba(49,174,226,.14),inset 0 1px 0 rgba(213,246,255,.1);
+}
 </style>
 </head>
 <body>
