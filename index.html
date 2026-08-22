@@ -1546,6 +1546,15 @@ body::after{
 .mpm-pain-distribution span{color:#f0dfa0}
 .mpm-pain-distribution b{margin-left:2px;color:var(--coral);font-family:var(--mono);font-size:16px}
 .mpm-summary-lbl{font-family:var(--sans);font-size:11px;color:#7a4028;margin-top:5px;letter-spacing:.5px}
+.mpm-trend-wrap{margin:0 0 16px;border:1px solid rgba(184,137,46,.24);border-radius:8px;background:rgba(10,5,4,.58);overflow-x:auto}
+.mpm-trend-grid{display:grid;min-width:max-content;align-items:stretch}
+.mpm-trend-cell{min-width:58px;min-height:36px;padding:7px 6px;border-right:1px solid rgba(184,137,46,.14);border-bottom:1px solid rgba(184,137,46,.14);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:16px;font-weight:800;color:#f0dfa0}
+.mpm-trend-head{min-height:30px;background:rgba(184,137,46,.1);color:var(--gold);font-size:12px}
+.mpm-trend-label{min-width:88px;justify-content:flex-start;padding-left:10px;font-family:var(--sans);font-size:13px;white-space:nowrap}
+.mpm-trend-level-critical{color:#ff8463;background:rgba(216,90,48,.18)}
+.mpm-trend-level-severe{color:#f0c65a;background:rgba(210,157,37,.14)}
+.mpm-trend-level-moderate{color:#d5b66b;background:rgba(184,137,46,.1)}
+.mpm-trend-level-mild{color:#92d8bd;background:rgba(29,158,117,.1)}
 .mpm-area-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:9px;margin-top:6px}
 .mpm-area-item{background:rgba(14,8,5,.82);border:1px solid rgba(216,90,48,.26);border-radius:8px;padding:11px 12px;display:flex;flex-direction:column;gap:5px}
 .mpm-area-name{font-family:var(--sans);font-size:15px;font-weight:800;color:#e0b0a0;line-height:1.45}
@@ -6667,6 +6676,8 @@ function renderMedicalPanel(){
         <div class="mpm-summary-box"><div class="mpm-summary-num" id="mpm-avg-pain">—</div><div class="mpm-summary-lbl">疼痛程度分布</div></div>
         <div class="mpm-summary-box"><div class="mpm-summary-num" id="mpm-med-count">—</div><div class="mpm-summary-lbl">用藥次數</div></div>
       </div>
+      <div class="council-army-title" style="font-size:13px;margin-bottom:8px">趨｜疼痛程度趨勢</div>
+      <div id="mpm-severity-trend"><div class="mpm-empty">⏳ 載入中…</div></div>
       <div class="council-army-title" style="font-size:13px;margin-bottom:8px">痛｜疼痛部位統計（前 6 影響占比）</div>
       <div id="mpm-area-chart"><div class="mpm-empty">⏳ 載入中…</div></div>
       <div class="mpm-detail-head">
@@ -17159,6 +17170,42 @@ function mpmMonthLabel(key){
   return parts.length === 2 ? parts[0]+' 年 '+Number(parts[1])+' 月' : '未分月份';
 }
 
+function mpmRenderSeverityTrend(records){
+  var el=document.getElementById('mpm-severity-trend');
+  if(!el)return;
+  var months=Array.from(new Set(records.map(mpmMonthKey).filter(Boolean))).sort();
+  var levels=[
+    {key:'critical',label:'🔴嚴重',className:'mpm-trend-level-critical'},
+    {key:'severe',label:'🟡重度',className:'mpm-trend-level-severe'},
+    {key:'moderate',label:'🔵中度',className:'mpm-trend-level-moderate'},
+    {key:'mild',label:'⚪輕度',className:'mpm-trend-level-mild'}
+  ];
+  if(!months.length){
+    el.innerHTML='<div class="mpm-empty">尚無疼痛程度趨勢資料</div>';
+    return;
+  }
+  var counts={};
+  months.forEach(function(month){
+    counts[month]={mild:0,moderate:0,severe:0,critical:0};
+  });
+  records.forEach(function(record){
+    var month=mpmMonthKey(record);
+    var level=medicalPainLevelInfo(record.painLevel);
+    if(month&&counts[month]&&level)counts[month][level.key]++;
+  });
+  var columns='88px repeat('+months.length+',minmax(58px,1fr))';
+  var html='<div class="mpm-trend-wrap"><div class="mpm-trend-grid" style="grid-template-columns:'+columns+'">'
+    +'<div class="mpm-trend-cell mpm-trend-head mpm-trend-label">程度＼月份</div>'
+    +months.map(function(month){return '<div class="mpm-trend-cell mpm-trend-head">'+mpmEsc(Number(month.slice(5))+'月')+'</div>';}).join('');
+  levels.forEach(function(level){
+    html+='<div class="mpm-trend-cell mpm-trend-label '+level.className+'">'+level.label+'</div>';
+    months.forEach(function(month){
+      html+='<div class="mpm-trend-cell '+level.className+'" title="'+mpmEsc(mpmMonthLabel(month)+' '+level.label)+'：'+counts[month][level.key]+' 筆">'+counts[month][level.key]+'</div>';
+    });
+  });
+  el.innerHTML=html+'</div></div>';
+}
+
 // 正規化一筆 record（對齊 medical-journal 的 normalizeRecord）
 function mpmNormalizeRecord(r){
   var rt = String(r.recordTime||'').trim();
@@ -17226,6 +17273,7 @@ function mpmRender(records){
   }
 
   var painRecs = selectedMonth ? allPainRecs.filter(function(r){ return mpmMonthKey(r) === selectedMonth; }) : allPainRecs;
+  mpmRenderSeverityTrend(allPainRecs);
 
   // ── 摘要數字 ──
   var totalMed = painRecs.filter(function(r){ var m=String(r.meds||'').trim(); return m&&!m.includes('未用藥'); }).length;
