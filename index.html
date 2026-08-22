@@ -1639,6 +1639,7 @@ body::after{
 .hero-price-under-value{margin:-8px 0 10px;font-family:var(--mono);font-size:12px;font-weight:800;color:#f0dfa0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hero-name{display:flex;align-items:baseline;flex-wrap:wrap;gap:7px;font-size:25px;font-weight:900;color:var(--gold);letter-spacing:1px;line-height:1.12;text-shadow:0 0 16px rgba(232,192,80,.35);margin-bottom:8px;overflow-wrap:anywhere}
 .hero-type-inline{display:inline-flex;align-items:center;gap:4px;font-family:var(--sans);font-size:12px;font-weight:900;letter-spacing:0;color:var(--hero-color,var(--gold));white-space:nowrap}
+.hero-type-yield{font-family:var(--mono);font-size:12px;color:var(--teal);letter-spacing:0}
 .hero-price-under-name{margin:-3px 0 10px;font-family:var(--mono);font-size:12px;font-weight:800;color:#f0dfa0;white-space:nowrap}
 .hero-badge{display:inline-block;font-family:var(--sans);font-size:11px;font-weight:800;color:var(--hero-color,var(--gold));border:1px solid currentColor;background:rgba(0,0,0,.22);border-radius:4px;padding:3px 7px;margin-bottom:7px}
 .hero-badge-div,.hero-badge-weight{font-family:var(--mono);margin-left:6px;color:var(--gold);white-space:nowrap}
@@ -12417,15 +12418,14 @@ function renderHeroCard(row,totalCost){
     </div>
     <div class="hero-info">
       <div class="hero-symbol">${esc(row.symbol||'未編制')} <span class="hero-symbol-return ${ret<0?'down':''}">${ret>=0?'+':'-'}${fmtFull(Math.abs(ret))}</span></div>
-      <div class="hero-name">${esc(name)} <span class="hero-type-inline">${esc(heroType)}</span></div>
+      <div class="hero-name">${esc(name)} <span class="hero-type-inline">${esc(heroType)} <span class="hero-type-yield">🟡${annualYield.toFixed(1)}%</span></span></div>
       <div class="hero-price-under-name">現 ${price?price.toFixed(2):'--'} / 均 ${avg?avg.toFixed(2):'--'}</div>
     </div>
     ${effectBlock}
     <div class="hero-metrics-panel" role="button" tabindex="0" aria-label="點擊複製資訊框內容" aria-live="polite" onclick="copyHeroMetrics(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();copyHeroMetrics(this)}">
       <div>📦${shares?shares.toLocaleString('zh-TW'):'--'} 💧${esc(monthlyDivCompact)} 🚰佔總${costWeight.toFixed(1)}%</div>
       <div>📈${fmtFull(marketValue)} / 🌱${fmtFull(cost)}</div>
-      <div>ROI ${fmtPctSigned(roi)} / 殖 ${annualYield.toFixed(1)}%</div>
-      <div>${paybackShort} / ${cost>0?paybackPct.toFixed(1)+'%':'--'}</div>
+      <div>ROI ${fmtPctSigned(roi)} / 🧩${paybackShort}➡️${cost>0?paybackPct.toFixed(1)+'%':'--'}</div>
     </div>
   </div>`;
 }
