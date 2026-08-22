@@ -61,12 +61,12 @@ html[data-theme="night-purple"] .card-shortcut:hover{border-color:#d8b5ff;color:
 
 /* 深藍內政主題：對齊內政 v3 的墨藍、冷青光與暗金 */
 html[data-theme="deep-blue"]{
-  --bg:#06131d;--gold:#d9b36a;--gold2:#a98042;--gold3:#426b7d;
+  --bg:#06131d;--gold:#8fe4ff;--gold2:#4bb5d9;--gold3:#286b86;
   --teal:#62c9e8;--teal-l:rgba(98,201,232,.13);
   --coral:#b85c55;--coral-l:rgba(184,92,85,.13);
   --purple:#82b9d2;--ink:#e6f1f4;--ink2:#9bb9c4;--ink3:#587783;
   --card-bg:rgba(8,28,40,.94);--card-border:#2f6d86;
-  --card-border-active:#d9b36a;
+  --card-border-active:#72d5f4;
   --panel-bg:linear-gradient(160deg,#0d2938,#06131d);
   --shadow:0 4px 32px rgba(1,8,14,.72);
 }
@@ -3413,6 +3413,84 @@ html[data-theme="deep-blue"] .card .card-shortcut:focus-visible{
   background:linear-gradient(180deg,rgba(28,103,132,.98),rgba(7,34,53,.98));
   box-shadow:0 0 16px rgba(47,183,232,.24),inset 0 1px 0 rgba(218,249,255,.18),inset 0 -10px 18px rgba(0,8,18,.1);
 }
+
+/* 深藍內政主題：卡片開啟後的內容面板也使用墨藍／冷青配色 */
+html[data-theme="deep-blue"] .overlay{background:rgba(1,9,18,.8)}
+html[data-theme="deep-blue"] .overlay .panel{
+  background:linear-gradient(160deg,#0d2c40,#06131d 72%,#030b13);
+  border-color:rgba(79,181,220,.72);
+  box-shadow:0 20px 70px rgba(0,7,15,.78),0 0 28px rgba(35,158,205,.18);
+}
+html[data-theme="deep-blue"] .overlay .panel-head{
+  border-bottom-color:rgba(70,167,206,.28);
+  background:linear-gradient(180deg,rgba(16,59,82,.72),rgba(5,20,32,.4));
+}
+html[data-theme="deep-blue"] .overlay .panel-en{color:#4b8faa}
+html[data-theme="deep-blue"] .overlay .panel-zh{color:#bcefff;text-shadow:0 0 8px rgba(63,190,232,.28)}
+html[data-theme="deep-blue"] .overlay .close-x{color:#79c9e3}
+html[data-theme="deep-blue"] .overlay .close-x:hover{color:#e4faff}
+html[data-theme="deep-blue"] .overlay .panel-tabs{border-bottom-color:#123d53;background:#061823}
+html[data-theme="deep-blue"] .overlay .ptab{color:#6c9fb3}
+html[data-theme="deep-blue"] .overlay .ptab.active{color:#bdeeff;border-bottom-color:#64d1f0;background:rgba(54,174,218,.1)}
+html[data-theme="deep-blue"] .overlay .ptab:hover:not(.active){color:#a8eaff;background:rgba(49,160,203,.08)}
+html[data-theme="deep-blue"] .overlay .panel-body{color:#d8eef5}
+html[data-theme="deep-blue"] .overlay .panel-body::-webkit-scrollbar-thumb{background:#1a5975}
+html[data-theme="deep-blue"] .overlay .panel-body .form-control,
+html[data-theme="deep-blue"] .overlay .panel-body input,
+html[data-theme="deep-blue"] .overlay .panel-body select,
+html[data-theme="deep-blue"] .overlay .panel-body textarea{
+  background:#061b2b;color:#dff7ff;border-color:rgba(65,157,194,.52);
+}
+html[data-theme="deep-blue"] .overlay .panel-body input::placeholder,
+html[data-theme="deep-blue"] .overlay .panel-body textarea::placeholder{color:#6ea4b7}
+html[data-theme="deep-blue"] .overlay .panel-body input:focus,
+html[data-theme="deep-blue"] .overlay .panel-body select:focus,
+html[data-theme="deep-blue"] .overlay .panel-body textarea:focus{border-color:#71d8f7;box-shadow:0 0 0 2px rgba(53,184,228,.14)}
+html[data-theme="deep-blue"] .overlay .panel-body option{background:#061b2b;color:#dff7ff}
+
+/* 財政面板內的摘要、帳戶與資金卡片 */
+html[data-theme="deep-blue"] .overlay .finance-collapse,
+html[data-theme="deep-blue"] .overlay .acc-item,
+html[data-theme="deep-blue"] .overlay .treasury-card,
+html[data-theme="deep-blue"] .overlay .setup-notice{
+  background:rgba(6,28,44,.84);border-color:rgba(65,157,194,.34);
+}
+html[data-theme="deep-blue"] .overlay .finance-collapse>summary,
+html[data-theme="deep-blue"] .overlay .treasury-fixed-expense-heading,
+html[data-theme="deep-blue"] .overlay .treasury-monthly-title{color:#bcefff}
+html[data-theme="deep-blue"] .overlay .finance-collapse[open]>summary,
+html[data-theme="deep-blue"] .overlay .acc-total-row,
+html[data-theme="deep-blue"] .overlay .treasury-monthly-title{border-color:rgba(65,157,194,.24)}
+html[data-theme="deep-blue"] .overlay .finance-collapse-meta,
+html[data-theme="deep-blue"] .overlay .treasury-label,
+html[data-theme="deep-blue"] .overlay .treasury-card-label,
+html[data-theme="deep-blue"] .overlay .treasury-card-note,
+html[data-theme="deep-blue"] .overlay .treasury-date,
+html[data-theme="deep-blue"] .overlay .setup-notice p{color:#78aec0}
+html[data-theme="deep-blue"] .overlay .res-card,
+html[data-theme="deep-blue"] .overlay .treasury-cash-stock-saving{border-color:rgba(65,157,194,.22)}
+html[data-theme="deep-blue"] .overlay .res-months,
+html[data-theme="deep-blue"] .overlay .acc-val,
+html[data-theme="deep-blue"] .overlay .acc-total-val,
+html[data-theme="deep-blue"] .overlay .treasury-main,
+html[data-theme="deep-blue"] .overlay .treasury-card-value.gold,
+html[data-theme="deep-blue"] .overlay .treasury-account-merge-value{color:#8fe4ff}
+html[data-theme="deep-blue"] .overlay .res-slash,
+html[data-theme="deep-blue"] .overlay .treasury-monthly-row,
+html[data-theme="deep-blue"] .overlay .treasury-account-merge-label,
+html[data-theme="deep-blue"] .overlay .treasury-cash-stock-saving{color:#72b5c9}
+html[data-theme="deep-blue"] .overlay .treasury-hero{
+  border-color:rgba(79,181,220,.58);
+  background:radial-gradient(circle at 18% 0,rgba(63,190,232,.18),transparent 34%),linear-gradient(145deg,#0d3449,#06131d 72%);
+  box-shadow:inset 0 1px 0 rgba(220,250,255,.08),0 0 18px rgba(35,158,205,.14)
+}
+html[data-theme="deep-blue"] .overlay .treasury-hero:before{background:linear-gradient(90deg,transparent,rgba(63,190,232,.08),transparent)}
+html[data-theme="deep-blue"] .overlay .setup-btn{background:linear-gradient(180deg,#123d53,#082333);border-color:#4bb5d9;color:#bcefff}
+html[data-theme="deep-blue"] .overlay .booking-interface-tabs,
+html[data-theme="deep-blue"] .overlay .booking-mode-btn{background:#061b2b;border-color:rgba(65,157,194,.4)}
+html[data-theme="deep-blue"] .overlay .booking-interface-tab,
+html[data-theme="deep-blue"] .overlay .btab,
+html[data-theme="deep-blue"] .overlay .form-label{color:#78aec0}
 </style>
 </head>
 <body>
