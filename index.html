@@ -1615,6 +1615,8 @@ body::after{
 .hero-visual img{width:100%;height:100%;object-fit:contain;object-position:center center;opacity:.96;filter:saturate(.96) contrast(1.04)}
 .hero-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:54px;font-family:var(--serif);font-weight:900;color:rgba(232,192,80,.42);background:linear-gradient(160deg,rgba(232,192,80,.10),rgba(0,0,0,.24))}
 .hero-metrics-panel{display:none;grid-column:1/-1;width:100%;box-sizing:border-box;padding:10px 11px;border:1px solid rgba(184,137,46,.5);border-radius:7px;background:rgba(8,7,5,.92);box-shadow:0 10px 26px rgba(0,0,0,.58),inset 0 0 16px rgba(232,192,80,.05);font-family:var(--mono);font-size:13px;font-weight:800;line-height:1.55;color:#f0dfa0}
+.hero-metrics-panel{cursor:pointer}
+.hero-metrics-panel.copied{border-color:var(--teal);box-shadow:0 0 14px rgba(29,158,117,.2),inset 0 0 16px rgba(29,158,117,.08)}
 .hero-metrics-panel div{white-space:normal;overflow-wrap:anywhere}
 .hero-metrics-panel div+div{margin-top:3px}
 .hero-card.metrics-open-card .hero-metrics-panel{display:block}
@@ -12352,6 +12354,24 @@ function toggleHeroMetrics(visual){
   visual.setAttribute('aria-expanded',open?'true':'false');
 }
 
+function copyHeroMetrics(panel){
+  if(!panel)return;
+  var text=String(panel.innerText||'').trim();
+  var done=function(){
+    panel.classList.add('copied');
+    window.setTimeout(function(){panel.classList.remove('copied');},900);
+  };
+  if(navigator.clipboard&&window.isSecureContext){
+    navigator.clipboard.writeText(text).then(done).catch(function(){});
+    return;
+  }
+  var input=document.createElement('textarea');
+  input.value=text;input.style.position='fixed';input.style.opacity='0';
+  document.body.appendChild(input);input.focus();input.select();
+  try{if(document.execCommand('copy'))done();}catch(e){}
+  input.remove();
+}
+
 function renderHeroCard(row,totalCost){
   var h=row.holding||{};
   var ret=toNum(h.totalReturn);
@@ -12401,8 +12421,8 @@ function renderHeroCard(row,totalCost){
       <div class="hero-price-under-name">現 ${price?price.toFixed(2):'--'} / 均 ${avg?avg.toFixed(2):'--'}</div>
     </div>
     ${effectBlock}
-    <div class="hero-metrics-panel" aria-live="polite">
-      <div>📦${shares?shares.toLocaleString('zh-TW'):'--'} 🪣${esc(monthlyDivCompact)} 🚰${costWeight.toFixed(1)}%</div>
+    <div class="hero-metrics-panel" role="button" tabindex="0" aria-label="點擊複製資訊框內容" aria-live="polite" onclick="copyHeroMetrics(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();copyHeroMetrics(this)}">
+      <div>📦${shares?shares.toLocaleString('zh-TW'):'--'} 💧${esc(monthlyDivCompact)} 🚰佔總${costWeight.toFixed(1)}%</div>
       <div>📈${fmtFull(marketValue)} / 🌱${fmtFull(cost)}</div>
       <div>ROI ${fmtPctSigned(roi)} / 殖 ${annualYield.toFixed(1)}%</div>
       <div>${paybackShort} / ${cost>0?paybackPct.toFixed(1)+'%':'--'}</div>
