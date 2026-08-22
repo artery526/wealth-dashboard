@@ -1550,6 +1550,7 @@ body::after{
 .mpm-trend-grid{display:grid;min-width:max-content;align-items:stretch}
 .mpm-trend-cell{min-width:58px;min-height:36px;padding:7px 6px;border-right:1px solid rgba(184,137,46,.14);border-bottom:1px solid rgba(184,137,46,.14);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:16px;font-weight:800;color:#f0dfa0}
 .mpm-trend-head{min-height:30px;background:rgba(184,137,46,.1);color:var(--gold);font-size:12px}
+.mpm-trend-month-head{min-width:104px;font-family:var(--sans);font-size:11px;white-space:nowrap}
 .mpm-trend-label{min-width:88px;justify-content:flex-start;padding-left:10px;font-family:var(--sans);font-size:13px;white-space:nowrap}
 .mpm-trend-level-critical{color:#ff8463;background:rgba(216,90,48,.18)}
 .mpm-trend-level-severe{color:#f0c65a;background:rgba(210,157,37,.14)}
@@ -6671,11 +6672,6 @@ function renderMedicalPanel(){
     </div>
     <div class="pane" id="pane-medical-painmap">
       <div class="council-army-title">🧍 疼痛地圖</div>
-      <div class="mpm-summary">
-        <div class="mpm-summary-box"><div class="mpm-summary-num" id="mpm-total-records">—</div><div class="mpm-summary-lbl">總疼痛記錄</div></div>
-        <div class="mpm-summary-box"><div class="mpm-summary-num" id="mpm-avg-pain">—</div><div class="mpm-summary-lbl">疼痛程度分布</div></div>
-        <div class="mpm-summary-box"><div class="mpm-summary-num" id="mpm-med-count">—</div><div class="mpm-summary-lbl">用藥次數</div></div>
-      </div>
       <div class="council-army-title" style="font-size:13px;margin-bottom:8px">趨｜疼痛程度趨勢</div>
       <div id="mpm-severity-trend"><div class="mpm-empty">⏳ 載入中…</div></div>
       <div class="council-army-title" style="font-size:13px;margin-bottom:8px">痛｜疼痛部位統計（前 6 影響占比）</div>
@@ -17186,17 +17182,24 @@ function mpmRenderSeverityTrend(records){
   }
   var counts={};
   months.forEach(function(month){
-    counts[month]={mild:0,moderate:0,severe:0,critical:0};
+    counts[month]={records:0,meds:0,mild:0,moderate:0,severe:0,critical:0};
   });
   records.forEach(function(record){
     var month=mpmMonthKey(record);
     var level=medicalPainLevelInfo(record.painLevel);
-    if(month&&counts[month]&&level)counts[month][level.key]++;
+    if(!month||!counts[month])return;
+    counts[month].records++;
+    var meds=String(record.meds||'').trim();
+    if(meds&&!meds.includes('未用藥'))counts[month].meds++;
+    if(level)counts[month][level.key]++;
   });
-  var columns='88px repeat('+months.length+',minmax(58px,1fr))';
+  var columns='88px repeat('+months.length+',minmax(104px,1fr))';
   var html='<div class="mpm-trend-wrap"><div class="mpm-trend-grid" style="grid-template-columns:'+columns+'">'
     +'<div class="mpm-trend-cell mpm-trend-head mpm-trend-label">程度＼月份</div>'
-    +months.map(function(month){return '<div class="mpm-trend-cell mpm-trend-head">'+mpmEsc(Number(month.slice(5))+'月')+'</div>';}).join('');
+    +months.map(function(month){
+      var monthCounts=counts[month];
+      return '<div class="mpm-trend-cell mpm-trend-head mpm-trend-month-head">'+mpmEsc(Number(month.slice(5))+'月(✍️'+monthCounts.records+'💊'+monthCounts.meds+')')+'</div>';
+    }).join('');
   levels.forEach(function(level){
     html+='<div class="mpm-trend-cell mpm-trend-label '+level.className+'">'+level.label+'</div>';
     months.forEach(function(month){
@@ -17274,27 +17277,6 @@ function mpmRender(records){
 
   var painRecs = selectedMonth ? allPainRecs.filter(function(r){ return mpmMonthKey(r) === selectedMonth; }) : allPainRecs;
   mpmRenderSeverityTrend(allPainRecs);
-
-  // ── 摘要數字 ──
-  var totalMed = painRecs.filter(function(r){ var m=String(r.meds||'').trim(); return m&&!m.includes('未用藥'); }).length;
-  var painLevelCounts = {mild:0,moderate:0,severe:0,critical:0};
-  painRecs.forEach(function(r){
-    var level=medicalPainLevelInfo(r.painLevel);
-    if(level)painLevelCounts[level.key]++;
-  });
-  var painDistribution = [
-    {key:'mild',label:'⚪輕度'},
-    {key:'moderate',label:'🔵中度'},
-    {key:'severe',label:'🟡重度'},
-    {key:'critical',label:'🔴嚴重'}
-  ].map(function(item){
-    return '<span>'+item.label+'<b>'+painLevelCounts[item.key]+'</b></span>';
-  }).join('');
-  function setText(id,v){var el=document.getElementById(id);if(el)el.textContent=v;}
-  setText('mpm-total-records', painRecs.length);
-  var distributionEl=document.getElementById('mpm-avg-pain');
-  if(distributionEl)distributionEl.innerHTML='<div class="mpm-pain-distribution">'+painDistribution+'</div>';
-  setText('mpm-med-count',     totalMed);
 
   // ── 疼痛部位統計 ──
   var areaCounts = {};
