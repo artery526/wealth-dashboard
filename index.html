@@ -3830,8 +3830,8 @@ body::after{
         <div class="art" style="position:relative;overflow:hidden;height:427px;border-bottom:none;">
           <video
             class="card-video"
-            data-src="military-controlv2.mp4"
-            poster="military-control-poster.jpg"
+            data-src="military-controlv3.mp4"
+            poster="military-control-poster-v3.jpg"
             autoplay
             muted
             playsinline
@@ -4078,7 +4078,7 @@ var EMPIRE_THEME_KEY='empire_theme_v2';
 var EMPIRE_THEMES=['deep-blue','night-purple','palace'];
 var EMPIRE_THEME_LABELS={'deep-blue':'🌊 深藍內政','night-purple':'🌙 夜幕紫金','palace':'🏯 御殿金棕'};
 function applyEmpireTheme(theme,persist){
-  theme=EMPIRE_THEMES.indexOf(theme)>=0?theme:'night-purple';
+  theme=EMPIRE_THEMES.indexOf(theme)>=0?theme:'deep-blue';
   document.documentElement.dataset.theme=theme;
   var button=document.getElementById('theme-switcher');
   if(button)button.textContent=EMPIRE_THEME_LABELS[theme];
