@@ -1542,6 +1542,9 @@ body::after{
 .mpm-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
 .mpm-summary-box{border:1px solid rgba(216,90,48,.32);border-radius:8px;background:rgba(10,5,4,.75);padding:13px 10px;text-align:center}
 .mpm-summary-num{font-family:var(--mono);font-size:26px;font-weight:700;color:var(--coral);line-height:1}
+.mpm-pain-distribution{display:grid;grid-template-columns:repeat(2,max-content);justify-content:center;gap:5px 14px;font-family:var(--sans);font-size:14px;font-weight:800;line-height:1.35;white-space:nowrap}
+.mpm-pain-distribution span{color:#f0dfa0}
+.mpm-pain-distribution b{margin-left:2px;color:var(--coral);font-family:var(--mono);font-size:16px}
 .mpm-summary-lbl{font-family:var(--sans);font-size:11px;color:#7a4028;margin-top:5px;letter-spacing:.5px}
 .mpm-area-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:9px;margin-top:6px}
 .mpm-area-item{background:rgba(14,8,5,.82);border:1px solid rgba(216,90,48,.26);border-radius:8px;padding:11px 12px;display:flex;flex-direction:column;gap:5px}
@@ -17169,17 +17172,18 @@ function mpmRender(records){
     var level=medicalPainLevelInfo(r.painLevel);
     if(level)painLevelCounts[level.key]++;
   });
-  var avgPain = [
+  var painDistribution = [
     {key:'mild',label:'⚪輕度'},
     {key:'moderate',label:'🔵中度'},
     {key:'severe',label:'🟡重度'},
     {key:'critical',label:'🔴嚴重'}
-  ].filter(function(item){return painLevelCounts[item.key]>0;}).map(function(item){
-    return item.label+'*'+painLevelCounts[item.key];
-  }).join(' ')||'—';
+  ].map(function(item){
+    return '<span>'+item.label+'<b>'+painLevelCounts[item.key]+'</b></span>';
+  }).join('');
   function setText(id,v){var el=document.getElementById(id);if(el)el.textContent=v;}
   setText('mpm-total-records', painRecs.length);
-  setText('mpm-avg-pain',      avgPain);
+  var distributionEl=document.getElementById('mpm-avg-pain');
+  if(distributionEl)distributionEl.innerHTML='<div class="mpm-pain-distribution">'+painDistribution+'</div>';
   setText('mpm-med-count',     totalMed);
 
   // ── 疼痛部位統計 ──
