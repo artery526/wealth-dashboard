@@ -3607,6 +3607,63 @@ html[data-theme="deep-blue"] #ark-wall-overlay .ark-wall-moment-form{background:
 html[data-theme="deep-blue"] #ark-wall-overlay .ark-wall-moment-form input,
 html[data-theme="deep-blue"] #ark-wall-overlay .ark-wall-moment-form textarea,
 html[data-theme="deep-blue"] #ark-wall-overlay .ark-wall-moment-form select{background:#061b2b;color:#dff7ff;border-color:rgba(65,157,194,.52)}
+
+/* 深藍主體中的分頁選單：局部採用夜幕紫金，不改變整站主題 */
+html[data-theme="deep-blue"] .overlay .panel-tabs,
+html[data-theme="deep-blue"] .overlay .booking-interface-tabs{
+  border-color:rgba(141,100,194,.48);
+  background:linear-gradient(180deg,#1a1030,#0e091a);
+}
+html[data-theme="deep-blue"] .overlay .ptab,
+html[data-theme="deep-blue"] .overlay .btab,
+html[data-theme="deep-blue"] .overlay .booking-interface-tab{
+  color:#aa92c9;
+  border-color:rgba(141,100,194,.28);
+  background:transparent;
+}
+html[data-theme="deep-blue"] .overlay .ptab.active,
+html[data-theme="deep-blue"] .overlay .btab.active,
+html[data-theme="deep-blue"] .overlay .booking-interface-tab.active{
+  color:#e2d0ff;
+  border-bottom-color:#c29aff;
+  background:linear-gradient(180deg,rgba(126,82,184,.28),rgba(74,43,112,.2));
+  text-shadow:0 0 9px rgba(185,149,255,.28);
+}
+html[data-theme="deep-blue"] .overlay .ptab:hover:not(.active),
+html[data-theme="deep-blue"] .overlay .btab:hover:not(.active),
+html[data-theme="deep-blue"] .overlay .booking-interface-tab:hover:not(.active){
+  color:#d5c0f2;background:rgba(126,82,184,.16);
+}
+html[data-theme="deep-blue"] .overlay .panel-title-menu{
+  border-color:rgba(141,100,194,.62);
+  background:linear-gradient(145deg,rgba(31,18,52,.98),rgba(9,6,18,.99));
+  box-shadow:0 14px 32px rgba(0,0,0,.48),0 0 18px rgba(141,82,214,.16);
+}
+html[data-theme="deep-blue"] .overlay .panel-menu-item{color:#cbb5ed}
+html[data-theme="deep-blue"] .overlay .panel-menu-item:hover,
+html[data-theme="deep-blue"] .overlay .panel-menu-item:focus-visible,
+html[data-theme="deep-blue"] .overlay .panel-menu-item.active{border-color:rgba(185,149,255,.56);background:rgba(126,82,184,.2);color:#eadbff}
+html[data-theme="deep-blue"] .overlay .booking-interface-tab.expense.active,
+html[data-theme="deep-blue"] .overlay .booking-interface-tab.income.active,
+html[data-theme="deep-blue"] .overlay .booking-interface-tab.transfer.active,
+html[data-theme="deep-blue"] .overlay .booking-interface-tab.buy.active,
+html[data-theme="deep-blue"] .overlay .booking-interface-tab.sell.active,
+html[data-theme="deep-blue"] .overlay .booking-interface-tab.stock.active,
+html[data-theme="deep-blue"] .overlay .btab.expense.active,
+html[data-theme="deep-blue"] .overlay .btab.income.active,
+html[data-theme="deep-blue"] .overlay .btab.transfer.active{
+  color:#e2d0ff;background:rgba(126,82,184,.24);border-bottom-color:#c29aff;
+}
+html[data-theme="deep-blue"] .overlay .ziwei-chart-tab.active{
+  border-color:rgba(185,149,255,.72);background:rgba(126,82,184,.24);color:#eadbff;
+}
+html[data-theme="deep-blue"] #ark-wall-overlay .ark-wall-view-tabs{border-color:rgba(141,100,194,.26)}
+html[data-theme="deep-blue"] #ark-wall-overlay .ark-wall-view-tab,
+html[data-theme="deep-blue"] #ark-wall-overlay .ark-wall-view-tab.active{
+  border-color:rgba(141,100,194,.5);background:rgba(126,82,184,.16);color:#cbb5ed;
+}
+html[data-theme="deep-blue"] #ark-wall-overlay .ark-wall-view-tab:hover,
+html[data-theme="deep-blue"] #ark-wall-overlay .ark-wall-view-tab.active{border-color:#c29aff;background:rgba(126,82,184,.28);color:#eadbff}
 </style>
 </head>
 <body>
