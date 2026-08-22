@@ -12365,6 +12365,7 @@ function renderHeroCard(row,totalCost){
   var costWeight=totalCost>0?cost/totalCost*100:0;
   var annualYield=cost>0?monthlyDiv*12/cost*100:0;
   var monthlyDivText=String(h.monthlyDivDisplay||'').trim()||fmtFull(monthlyDiv);
+  var monthlyDivCompact=monthlyDivText.replace(/^\$/,'');
   var received=toNum(h.totalDiv);
   var remaining=Math.max(0,cost-received);
   var paybackPct=cost>0?Math.min(100,received/cost*100):0;
@@ -12401,9 +12402,8 @@ function renderHeroCard(row,totalCost){
     </div>
     ${effectBlock}
     <div class="hero-metrics-panel" aria-live="polite">
-      <div>📦${shares?shares.toLocaleString('zh-TW'):'--'}</div>
+      <div>📦${shares?shares.toLocaleString('zh-TW'):'--'} 🪣${esc(monthlyDivCompact)} 🚰${costWeight.toFixed(1)}%</div>
       <div>📈${fmtFull(marketValue)} / 🌱${fmtFull(cost)}</div>
-      <div>🟡${esc(monthlyDivText)}🪣${costWeight.toFixed(1)}%</div>
       <div>ROI ${fmtPctSigned(roi)} / 殖 ${annualYield.toFixed(1)}%</div>
       <div>${paybackShort} / ${cost>0?paybackPct.toFixed(1)+'%':'--'}</div>
     </div>
