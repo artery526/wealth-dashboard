@@ -2518,6 +2518,16 @@ body::after{
 .pledge-stat-value.red{color:var(--coral)}
 .pledge-stat-value.green{color:var(--teal)}
 .pledge-stat-value.yellow{color:#d4a820}
+.pledge-compact-list{display:grid;gap:0;margin-bottom:12px}
+.pledge-compact-row{display:flex;align-items:center;gap:6px;min-width:0;padding:9px 2px;border-bottom:1px solid rgba(232,192,80,.14);font-family:var(--mono);font-size:14px;font-weight:800;line-height:1.35;white-space:nowrap;overflow-x:auto}
+.pledge-compact-row:last-child{border-bottom:0}
+.pledge-compact-loan{color:var(--gold);font-weight:900}
+.pledge-compact-days{color:#c6a85d}
+.pledge-compact-interest{color:var(--coral)}
+.pledge-compact-lots{color:#c6a85d}
+.pledge-compact-maint{color:var(--teal)}
+.pledge-compact-rate{color:#e8d79a}
+.pledge-compact-empty{padding:10px 2px;color:#7a6030;font-family:var(--mono);font-size:13px}
 .pledge-row{border:1px solid #2a1c08;border-radius:10px;background:rgba(10,8,4,.72);padding:11px;margin-bottom:9px}
 .pledge-row-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:7px}
 .pledge-row-name{font-family:var(--sans);font-size:13px;font-weight:800;color:var(--ink)}
@@ -2545,6 +2555,7 @@ body::after{
 .loan-stage-labels{display:flex;gap:4px;font-family:var(--sans);font-size:8px;color:#5a4018}
 .loan-stage-labels span{flex:1;text-align:center}
 @media(max-width:480px){.pledge-stats-grid{grid-template-columns:repeat(2,1fr)}.pledge-amounts{grid-template-columns:1fr}}
+@media(max-width:680px){.pledge-compact-row{gap:4px;padding:8px 1px;font-size:12px}}
 
 /* ── Config Modal ── */
 .cfg-overlay{
@@ -13565,18 +13576,21 @@ function renderPledgePanel(data,el){
   var loans=data.loans||[];
   updatePledgeCollapseMeta(data);
 
-  // ── 質押總覽數字 ──
-  var totalLoan=pledges.reduce(function(s,p){return s+(parseFloat(p.loanAmount)||0);},0);
-  var splitInterest=pledgeSplitValues(pledges,'accruedInterest',function(value){return fmtPlainAmount(value);});
-  var splitRates=pledgeSplitValues(pledges,'rate',function(value){return (parseFloat(value)||0).toFixed(2)+'%';});
-  var splitElapsedDays=pledgeSplitValues(pledges,'elapsedDays',function(value){return fmtWholeNumberText(value);});
-  var splitMaint=pledgeSplitValues(pledges,'latestMaintenance',function(value){return (parseFloat(value)||0).toFixed(2)+'%';});
-  var minMaint=pledges.length?pledges.reduce(function(min,p){
-    var value=parseFloat(p.latestMaintenance)||0;
-    return min===null?value:Math.min(min,value);
-  },null):0;
-  var maintStatus=pledgeMaintStatus(minMaint);
-  var totalLots=pledges.reduce(function(s,p){return s+(parseFloat(p.lots)||0);},0);
+  // ── 質押總覽合併列 ──
+  var pledgeCompactRows=pledges.map(function(p){
+    var maintenance=pledgeMaintStatus(p.latestMaintenance).pct;
+    var rate=parseFloat(p.rate);
+    var rateText=isNaN(rate)?'--':rate.toFixed(2)+'%';
+    return `<div class="pledge-compact-row">
+      <span class="pledge-compact-loan">${fmtPlainAmount(p.loanAmount)}</span>
+      <span class="pledge-compact-days">🈷️${fmtWholeNumberText(p.elapsedDays)}</span>
+      <span class="pledge-compact-interest">${fmtDeltaAmount(p.accruedInterest)}</span>
+      <span class="pledge-compact-lots">🎫${fmtWholeNumberText(p.lots)}</span>
+      <span class="pledge-compact-maint">(${maintenance.toFixed(2)}%)</span>
+      <span class="pledge-compact-rate">⚪${rateText}</span>
+    </div>`;
+  }).join('');
+  if(!pledgeCompactRows)pledgeCompactRows='<div class="pledge-compact-empty">--</div>';
 
   // ── 信貸總覽數字 ──
   var loanTotal=loans.reduce(function(s,l){return s+(parseFloat(l.loanAmount)||0);},0);
@@ -13587,32 +13601,7 @@ function renderPledgePanel(data,el){
 
   el.innerHTML=`
     <div class="pledge-section-title">🔐 質押總覽</div>
-    <div class="pledge-stats-grid">
-      <div class="pledge-stat">
-        <div class="pledge-stat-label">質押總借款</div>
-        <div class="pledge-stat-value">${fmtFull(totalLoan)}</div>
-      </div>
-      <div class="pledge-stat">
-        <div class="pledge-stat-label">累積利息</div>
-        <div class="pledge-stat-value red split">${esc(splitInterest)}</div>
-      </div>
-      <div class="pledge-stat">
-        <div class="pledge-stat-label">平均維持率</div>
-        <div class="pledge-stat-value ${pledges.length?maintStatus.color:''} split">${esc(splitMaint)}</div>
-      </div>
-      <div class="pledge-stat">
-        <div class="pledge-stat-label">經過天數</div>
-        <div class="pledge-stat-value split">${esc(splitElapsedDays)}</div>
-      </div>
-      <div class="pledge-stat">
-        <div class="pledge-stat-label">總質押張數</div>
-        <div class="pledge-stat-value">${totalLots.toLocaleString('zh-TW')}</div>
-      </div>
-      <div class="pledge-stat">
-        <div class="pledge-stat-label">質押利率</div>
-        <div class="pledge-stat-value split">${esc(splitRates)}</div>
-      </div>
-    </div>
+    <div class="pledge-compact-list">${pledgeCompactRows}</div>
     <div class="pledge-section-title" style="margin-top:18px">🏦 信貸總覽</div>
     <div class="pledge-stats-grid">
       <div class="pledge-stat">
