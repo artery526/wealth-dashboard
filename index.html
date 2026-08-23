@@ -2420,8 +2420,9 @@ body::after{
 .battle-price-chart-test{margin-top:14px;border:1px solid #4a3210;border-radius:10px;background:rgba(12,8,4,.72);overflow:hidden}
 .battle-price-chart-test>summary{cursor:pointer;padding:10px 12px;color:#e8c050;font-family:var(--sans);font-size:13px;font-weight:900;letter-spacing:.4px}
 .battle-price-chart-test>summary::marker{color:#e8c050}
-.battle-price-chart-frame{height:430px;background:#101010;border-top:1px solid #251808}
-.battle-price-chart-frame iframe{display:block;width:100%;height:100%;border:0}
+.battle-price-chart-frame{min-height:430px;background:#101010;border-top:1px solid #251808;overflow:auto}
+.battle-price-chart-svg{display:block;width:100%;min-width:680px;height:430px}
+.battle-price-chart-loading{display:flex;align-items:center;justify-content:center;min-height:430px;color:#9b7a3d;font-family:var(--sans);font-size:12px}
 .battle-price-chart-note{padding:7px 12px;color:#7a6030;font-family:var(--sans);font-size:10px;line-height:1.5}
 .battle-cell.subtle{font-size:11px;color:#8d7138;font-weight:700}
 .ziwei-layout{display:block;min-height:520px}
@@ -5083,7 +5084,6 @@ var battleBriefPromise=null;
 var battlePriceHistoryPromise=null;
 var battleBriefHoldings=[];
 var battlePriceHistoryState={period:'3M',codesKey:'',data:null,error:''};
-var BATTLE_PRICE_CHART_WIDGET_URL='https://www.tradingview.com/widgetembed/?frameElementId=tradingview_00997a&symbol=TWSE%3A00997A&interval=D&hidesidetoolbar=1&symboledit=0&saveimage=0&toolbarbg=101010&studies=%5B%5D&theme=dark&style=1&timezone=Asia%2FTaipei&withdateranges=1&hideideas=1&locale=zh_TW';
 function clearLegacyAdvisorReminderCache(){
   try{localStorage.removeItem(ADVISOR_REMINDER_CACHE_KEY);}catch(e){}
 }
@@ -12072,13 +12072,50 @@ function battlePricePeriodText(value){
   return (n>0?'+':'')+n.toFixed(2)+'%';
 }
 
+function battlePriceCandleChartSvg(series, periodData){
+  var points=(series||[]).filter(function(point){
+    return point&&point.date&&isFinite(Number(point.open))&&isFinite(Number(point.high))&&isFinite(Number(point.low))&&isFinite(Number(point.close));
+  });
+  if(periodData&&periodData.startDate){
+    points=points.filter(function(point){return point.date>=periodData.startDate&&(!periodData.endDate||point.date<=periodData.endDate);});
+  }
+  if(!points.length)return '<div class="battle-price-chart-loading">尚未取得 00997A K 線資料</div>';
+  points=points.slice(-120);
+  var width=900,height=430,left=58,right=18,top=20,bottom=42;
+  var plotWidth=width-left-right,plotHeight=height-top-bottom;
+  var min=points.reduce(function(value,point){return Math.min(value,Number(point.low));},Infinity);
+  var max=points.reduce(function(value,point){return Math.max(value,Number(point.high));},-Infinity);
+  var range=max-min||1,pad=range*.08;
+  min-=pad;max+=pad;range=max-min;
+  var y=function(value){return top+(max-Number(value))/range*plotHeight;};
+  var step=plotWidth/Math.max(points.length,1),bodyWidth=Math.max(2,Math.min(10,step*.58));
+  var grid='';
+  for(var g=0;g<=4;g++){
+    var value=max-(range*g/4),gy=y(value);
+    grid+=`<line x1="${left}" y1="${gy.toFixed(2)}" x2="${(width-right).toFixed(2)}" y2="${gy.toFixed(2)}" stroke="#2c2417" stroke-width="1"/><text x="${left-8}" y="${(gy+4).toFixed(2)}" text-anchor="end" fill="#8d7138" font-size="11">${value.toFixed(2)}</text>`;
+  }
+  var candles=points.map(function(point,index){
+    var x=left+step*(index+.5),open=Number(point.open),close=Number(point.close),high=Number(point.high),low=Number(point.low);
+    var up=close>=open,color=up?'#35c99a':'#ef6d5b',bodyTop=Math.min(y(open),y(close)),bodyHeight=Math.max(1,Math.abs(y(close)-y(open)));
+    return `<line x1="${x.toFixed(2)}" y1="${y(high).toFixed(2)}" x2="${x.toFixed(2)}" y2="${y(low).toFixed(2)}" stroke="${color}" stroke-width="1"/><rect x="${(x-bodyWidth/2).toFixed(2)}" y="${bodyTop.toFixed(2)}" width="${bodyWidth.toFixed(2)}" height="${bodyHeight.toFixed(2)}" fill="${up?'#123d32':'#4a1d19'}" stroke="${color}" stroke-width="1"/>`;
+  }).join('');
+  var labels=[0,Math.floor((points.length-1)/2),points.length-1].filter(function(value,index,list){return list.indexOf(value)===index;}).map(function(index){
+    var x=left+step*(index+.5);return `<text x="${x.toFixed(2)}" y="${height-14}" text-anchor="middle" fill="#8d7138" font-size="11">${points[index].date.slice(5)}</text>`;
+  }).join('');
+  return `<svg class="battle-price-chart-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="00997A K線走勢圖"><rect width="${width}" height="${height}" fill="#101010"/>${grid}${candles}${labels}<text x="${left}" y="14" fill="#e8c050" font-size="12" font-weight="700">00997A · Yahoo Finance OHLC</text></svg>`;
+}
+
 function battlePriceEmbeddedChartHtml(holdings){
   var has00997A=(holdings||[]).some(function(row){return normalizeKey(row&&row.code)==='00997A';});
   if(!has00997A)return '';
+  var chartItem=((battlePriceHistoryState.data&&battlePriceHistoryState.data.items)||[]).find(function(item){return normalizeKey(item&&item.code)==='00997A';});
+  var period=battlePriceHistoryState.period||'3M';
+  var periodData=chartItem&&chartItem.periods&&chartItem.periods[period];
+  var chart=chartItem&&chartItem.series&&chartItem.series.length?battlePriceCandleChartSvg(chartItem.series,periodData):'<div class="battle-price-chart-loading">背景取得 00997A K 線資料中…</div>';
   return `<details class="battle-price-chart-test" open>
-    <summary>📈 00997A K線走勢圖（測試鑲嵌）</summary>
-    <div class="battle-price-chart-frame"><iframe src="${BATTLE_PRICE_CHART_WIDGET_URL}" title="00997A K線走勢圖" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>
-    <div class="battle-price-chart-note">圖表由 TradingView Widget 提供；標的為 TWSE:00997A，僅供走勢檢視，資料時間與本頁 Yahoo Finance 收盤價可能不同。</div>
+    <summary>📈 00997A K線走勢圖（Yahoo 資料測試）</summary>
+    <div class="battle-price-chart-frame">${chart}</div>
+    <div class="battle-price-chart-note">資料來源：Yahoo Finance 00997A.TW 歷史 OHLC；目前顯示 ${period} 區間，與上方收盤價變化共用同一份資料。</div>
   </details>`;
 }
 
