@@ -12205,7 +12205,7 @@ function battlePriceEmbeddedChartHtml(holdings){
   return chartCodes.map(function(code){
     var chartItem=((battlePriceHistoryState.data&&battlePriceHistoryState.data.items)||[]).find(function(item){return normalizeKey(item&&item.code)===code;});
     var chart=chartItem&&chartItem.series&&chartItem.series.length?`<div class="battle-price-chart-loading" data-battle-price-live-chart="${code}">互動式 K 線載入中…</div>`:`<div class="battle-price-chart-loading">背景取得 ${code} K 線資料中…</div>`;
-    return `<details class="battle-price-chart-test" open>
+    return `<details class="battle-price-chart-test">
       <summary>📈 ${code} K線走勢圖（Yahoo 資料）</summary>
       <div class="battle-price-chart-frame">${chart}</div>
       <div class="battle-price-chart-note">資料來源：Yahoo Finance ${code}.TW 歷史 OHLC；目前顯示 ${period} 區間，與上方收盤價變化共用同一份資料。</div>
