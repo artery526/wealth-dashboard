@@ -5073,7 +5073,7 @@ var MARKET_MACRO_CACHE_KEY='wealth_market_macro_v4';
 var MARKET_LONG_REPORT_CACHE_KEY='wealth_market_long_report_v1';
 var BATTLE_BRIEF_CACHE_KEY='wealth_battle_brief_v1';
 var MARKET_CACHE_TTL=2*60*60*1000;
-var BATTLE_PRICE_HISTORY_CACHE_KEY='wealth_battle_price_history_v3';
+var BATTLE_PRICE_HISTORY_CACHE_KEY='wealth_battle_price_history_v4';
 var BATTLE_PRICE_HISTORY_CACHE_TTL=6*60*60*1000;
 var marketDashboardPromise=null;
 var macroOverviewPromise=null;
@@ -5089,6 +5089,7 @@ var battlePriceHistoryState={period:'3M',codesKey:'',data:null,error:''};
 var battlePriceChartLibraryPromise=null;
 var battlePriceChartInstances=[];
 var BATTLE_PRICE_CHART_LIBRARY_URL='https://unpkg.com/lightweight-charts@5.0.8/dist/lightweight-charts.standalone.production.js';
+var BATTLE_PRICE_CHART_CODES=['00997A','00985B','QQQI','MLPI'];
 function clearLegacyAdvisorReminderCache(){
   try{localStorage.removeItem(ADVISOR_REMINDER_CACHE_KEY);}catch(e){}
 }
@@ -12058,7 +12059,7 @@ function battlePriceHistoryCacheRead(codes){
     var cachedCodes=(cached.codes||[]).slice().sort();
     if(cachedCodes.join(',')!==codes.join(','))return null;
     // 舊版快取只有 3M／6M／12M 摘要，沒有 OHLC；必須重新取得才能繪製 K 線。
-    var chartCodes=['00997A','00985B'].filter(function(code){return codes.indexOf(code)>=0;});
+    var chartCodes=BATTLE_PRICE_CHART_CODES.filter(function(code){return codes.indexOf(code)>=0;});
     if(chartCodes.some(function(code){
       var chartItem=(cached.data.items||[]).find(function(item){return normalizeKey(item&&item.code)===code;});
       var firstPoint=chartItem&&chartItem.series&&chartItem.series[0];
@@ -12198,7 +12199,7 @@ function mountBattlePriceInteractiveChart(){
 }
 
 function battlePriceEmbeddedChartHtml(holdings){
-  var chartCodes=['00997A','00985B'].filter(function(code){return (holdings||[]).some(function(row){return normalizeKey(row&&row.code)===code;});});
+  var chartCodes=BATTLE_PRICE_CHART_CODES.filter(function(code){return (holdings||[]).some(function(row){return normalizeKey(row&&row.code)===code;});});
   if(!chartCodes.length)return '';
   var period=battlePriceHistoryState.period||'3M';
   return chartCodes.map(function(code){
