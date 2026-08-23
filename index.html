@@ -5071,7 +5071,7 @@ var MARKET_MACRO_CACHE_KEY='wealth_market_macro_v4';
 var MARKET_LONG_REPORT_CACHE_KEY='wealth_market_long_report_v1';
 var BATTLE_BRIEF_CACHE_KEY='wealth_battle_brief_v1';
 var MARKET_CACHE_TTL=2*60*60*1000;
-var BATTLE_PRICE_HISTORY_CACHE_KEY='wealth_battle_price_history_v2';
+var BATTLE_PRICE_HISTORY_CACHE_KEY='wealth_battle_price_history_v3';
 var BATTLE_PRICE_HISTORY_CACHE_TTL=6*60*60*1000;
 var marketDashboardPromise=null;
 var macroOverviewPromise=null;
@@ -12052,6 +12052,12 @@ function battlePriceHistoryCacheRead(codes){
     if(!cached||!cached.data||Date.now()-Number(cached.savedAt||0)>=BATTLE_PRICE_HISTORY_CACHE_TTL)return null;
     var cachedCodes=(cached.codes||[]).slice().sort();
     if(cachedCodes.join(',')!==codes.join(','))return null;
+    // 舊版快取只有 3M／6M／12M 摘要，沒有 OHLC；必須重新取得才能繪製 K 線。
+    if(codes.indexOf('00997A')>=0){
+      var chartItem=(cached.data.items||[]).find(function(item){return normalizeKey(item&&item.code)==='00997A';});
+      var firstPoint=chartItem&&chartItem.series&&chartItem.series[0];
+      if(!firstPoint||firstPoint.open==null||firstPoint.high==null||firstPoint.low==null)return null;
+    }
     return cached.data;
   }catch(e){return null;}
 }
