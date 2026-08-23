@@ -12058,11 +12058,12 @@ function battlePriceHistoryCacheRead(codes){
     var cachedCodes=(cached.codes||[]).slice().sort();
     if(cachedCodes.join(',')!==codes.join(','))return null;
     // 舊版快取只有 3M／6M／12M 摘要，沒有 OHLC；必須重新取得才能繪製 K 線。
-    if(codes.indexOf('00997A')>=0){
-      var chartItem=(cached.data.items||[]).find(function(item){return normalizeKey(item&&item.code)==='00997A';});
+    var chartCodes=['00997A','00985B'].filter(function(code){return codes.indexOf(code)>=0;});
+    if(chartCodes.some(function(code){
+      var chartItem=(cached.data.items||[]).find(function(item){return normalizeKey(item&&item.code)===code;});
       var firstPoint=chartItem&&chartItem.series&&chartItem.series[0];
-      if(!firstPoint||firstPoint.open==null||firstPoint.high==null||firstPoint.low==null)return null;
-    }
+      return !firstPoint||firstPoint.open==null||firstPoint.high==null||firstPoint.low==null;
+    }))return null;
     return cached.data;
   }catch(e){return null;}
 }
@@ -12141,9 +12142,11 @@ function battlePriceInteractivePoints(series,periodData){
 }
 
 function mountBattlePriceInteractiveChart(){
-  var mount=document.querySelector('[data-battle-price-live-chart]');
-  if(!mount)return;
-  var chartItem=((battlePriceHistoryState.data&&battlePriceHistoryState.data.items)||[]).find(function(item){return normalizeKey(item&&item.code)==='00997A';});
+  var mounts=document.querySelectorAll('[data-battle-price-live-chart]');
+  if(!mounts.length)return;
+  Array.prototype.forEach.call(mounts,function(mount){
+  var chartCode=normalizeKey(mount.getAttribute('data-battle-price-live-chart'));
+  var chartItem=((battlePriceHistoryState.data&&battlePriceHistoryState.data.items)||[]).find(function(item){return normalizeKey(item&&item.code)===chartCode;});
   var period=battlePriceHistoryState.period||'3M';
   var periodData=chartItem&&chartItem.periods&&chartItem.periods[period];
   var points=battlePriceInteractivePoints(chartItem&&chartItem.series,periodData);
@@ -12191,20 +12194,22 @@ function mountBattlePriceInteractiveChart(){
   }).catch(function(){
     if(mount.isConnected)mount.innerHTML=battlePriceCandleChartSvg(chartItem.series,periodData);
   });
+  });
 }
 
 function battlePriceEmbeddedChartHtml(holdings){
-  var has00997A=(holdings||[]).some(function(row){return normalizeKey(row&&row.code)==='00997A';});
-  if(!has00997A)return '';
-  var chartItem=((battlePriceHistoryState.data&&battlePriceHistoryState.data.items)||[]).find(function(item){return normalizeKey(item&&item.code)==='00997A';});
+  var chartCodes=['00997A','00985B'].filter(function(code){return (holdings||[]).some(function(row){return normalizeKey(row&&row.code)===code;});});
+  if(!chartCodes.length)return '';
   var period=battlePriceHistoryState.period||'3M';
-  var periodData=chartItem&&chartItem.periods&&chartItem.periods[period];
-  var chart=chartItem&&chartItem.series&&chartItem.series.length?'<div class="battle-price-chart-loading" data-battle-price-live-chart>互動式 K 線載入中…</div>':'<div class="battle-price-chart-loading">背景取得 00997A K 線資料中…</div>';
-  return `<details class="battle-price-chart-test" open>
-    <summary>📈 00997A K線走勢圖（Yahoo 資料測試）</summary>
-    <div class="battle-price-chart-frame">${chart}</div>
-    <div class="battle-price-chart-note">資料來源：Yahoo Finance 00997A.TW 歷史 OHLC；目前顯示 ${period} 區間，與上方收盤價變化共用同一份資料。</div>
-  </details>`;
+  return chartCodes.map(function(code){
+    var chartItem=((battlePriceHistoryState.data&&battlePriceHistoryState.data.items)||[]).find(function(item){return normalizeKey(item&&item.code)===code;});
+    var chart=chartItem&&chartItem.series&&chartItem.series.length?`<div class="battle-price-chart-loading" data-battle-price-live-chart="${code}">互動式 K 線載入中…</div>`:`<div class="battle-price-chart-loading">背景取得 ${code} K 線資料中…</div>`;
+    return `<details class="battle-price-chart-test" open>
+      <summary>📈 ${code} K線走勢圖（Yahoo 資料）</summary>
+      <div class="battle-price-chart-frame">${chart}</div>
+      <div class="battle-price-chart-note">資料來源：Yahoo Finance ${code}.TW 歷史 OHLC；目前顯示 ${period} 區間，與上方收盤價變化共用同一份資料。</div>
+    </details>`;
+  }).join('');
 }
 
 function battlePriceComparisonHtml(holdings){
