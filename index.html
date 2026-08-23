@@ -15084,6 +15084,7 @@ function advisorAIExamplesHtml(){
   var examples=[
     ['轉帳','國泰s 轉 現金 1000'],
     ['配息入帳','AIPI 3249'],
+    ['黃金查詢','黃金（5台兩）'],
     ['股票賣出','賣出 100股 IAU 156000'],
     ['股票買入','買入 12.02股 施羅德 54000']
   ];
@@ -15146,7 +15147,6 @@ function advisorAIQuickCommands(){
   return [
     {label:'快速轉帳',command:'__quick_transfer__'},
     {label:'配息記錄',command:'__dividend_record__'},
-    {label:'黃金5台兩',command:'__gold_5_tael__'},
     {label:'顯示載具',command:'顯示載具'},
     {label:'超商會員',command:'__member_cards__'},
     {label:'退稅查詢',command:'__etf_tax_lookup__'},
@@ -15396,11 +15396,6 @@ function advisorAIRunQuickCommand(select){
   if(command==='__dividend_record__'){
     if(select)select.value='';
     advisorAIOpenDividendRecord();
-    return;
-  }
-  if(command==='__gold_5_tael__'){
-    if(select)select.value='';
-    advisorAIOpenGoldQuote();
     return;
   }
   if(command==='__member_cards__'){
@@ -15868,6 +15863,7 @@ function advisorAINormalizeDeepSeekCommand(cmd,raw){
   var amount=Number(cmd.amount||0);
   if(intent==='open')return advisorAIOpenTarget(cmd.label||cmd.panel||cmd.tab||raw)||{intent:'unknown'};
   if(intent==='maintenance')return {intent:'maintenance'};
+  if(intent==='goldQuote')return {intent:'goldQuote'};
   if(intent==='copyCarrier')return {intent:'copyCarrier'};
   if(intent==='showCarrier')return {intent:'showCarrier'};
   if(intent==='member'){
@@ -15981,6 +15977,7 @@ function advisorAICommand(raw){
   var amount=advisorAIAmount(raw);
   if(compact==='行程'||compact.indexOf('今日行程')>=0||compact.indexOf('待辦')>=0||compact.indexOf('朝中政務')>=0)return {intent:'schedule'};
   if(compact==='檢視本月資產'||compact==='本月資產'||compact.indexOf('本月資產')>=0)return {intent:'monthlyAssetBrief'};
+  if(compact==='黃金'||compact==='黃金查詢'||compact==='黃金5台兩')return {intent:'goldQuote'};
   var openTarget=advisorAIOpenTarget(raw);
   if(openTarget)return openTarget;
   var accountLookup=advisorAIAccountLookupCommand(raw);
@@ -16380,6 +16377,10 @@ async function runAdvisorAICommand(btn){
     }
     if(cmd.intent==='monthlyAssetBrief'){
       await advisorAIShowMonthlyAssetBrief();
+      return;
+    }
+    if(cmd.intent==='goldQuote'){
+      advisorAIOpenGoldQuote();
       return;
     }
     if(cmd.intent==='advisorDividendMemo'){
