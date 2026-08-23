@@ -2774,6 +2774,9 @@ body::after{
 .carrier-img{display:block;width:100%;max-width:520px;height:auto;margin:0 auto;background:#fff;border-radius:8px;padding:18px;box-shadow:0 0 0 1px rgba(232,192,80,.22)}
 .member-card-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 .member-card-title{margin:0 0 12px;color:#f0dfa0;font-family:'Noto Serif TC',serif;font-size:20px;font-weight:900;letter-spacing:2px;text-align:center}
+.member-card-carrier-section{margin:0 0 24px;padding:0 0 20px;border-bottom:1px solid rgba(232,192,80,.28)}
+.member-card-section-title{margin:0 0 9px;color:#d8b866;font-family:var(--sans);font-size:13px;font-weight:950;letter-spacing:1px;text-align:center}
+.member-card-members-section{padding-top:1px}
 .member-card-item{min-width:0;color:#f0dfa0;font-family:var(--sans);font-size:12px;font-weight:900;text-align:center}
 .member-card-item .carrier-img{max-width:none;margin-top:7px;padding:10px}
 .member-card-single{display:block}
@@ -4405,12 +4408,18 @@ html[data-theme="deep-blue"] .advisor-ai-standalone .advisor-ai-quick-select:foc
 <div class="carrier-overlay" id="member-card-overlay" onclick="memberCardOverlayClick(event)">
   <div class="carrier-box member-card-box" role="dialog" aria-modal="true" aria-label="超商會員條碼">
     <button class="carrier-close" type="button" onclick="hideMemberCard()" aria-label="關閉會員條碼">x</button>
-    <div class="member-card-title">超商會員</div>
-    <div class="member-card-single"><img class="carrier-img" id="member-card-img" src="" alt=""></div>
-    <div class="member-card-grid" id="member-card-grid">
-      <div class="member-card-item">7-11會員<img class="carrier-img" src="小7會員.jpg" alt="7-11會員條碼"></div>
-      <div class="member-card-item">全家會員<img class="carrier-img" src="全家會員.jpg" alt="全家會員條碼"></div>
-      <div class="member-card-item">萊爾富會員<img class="carrier-img" src="HILIFE.jpg" alt="萊爾富會員條碼"></div>
+    <div class="member-card-title">載具超商</div>
+    <div class="member-card-carrier-section" id="member-card-carrier-section">
+      <div class="member-card-section-title" id="member-card-single-title">電子發票載具</div>
+      <div class="member-card-single"><img class="carrier-img" id="member-card-img" src="" alt=""></div>
+    </div>
+    <div class="member-card-members-section" id="member-card-members-section">
+      <div class="member-card-section-title">超商會員</div>
+      <div class="member-card-grid" id="member-card-grid">
+        <div class="member-card-item">7-11會員<img class="carrier-img" src="小7會員.jpg" alt="7-11會員條碼"></div>
+        <div class="member-card-item">全家會員<img class="carrier-img" src="全家會員.jpg" alt="全家會員條碼"></div>
+        <div class="member-card-item">萊爾富會員<img class="carrier-img" src="HILIFE.jpg" alt="萊爾富會員條碼"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -9902,8 +9911,7 @@ function copyInvoiceCarrier(btn){
   fallbackCopyText(text)?done():fail();
 }
 function showInvoiceCarrier(){
-  var overlay=document.getElementById('carrier-overlay');
-  if(overlay)overlay.classList.add('open');
+  showMemberCards();
 }
 function hideInvoiceCarrier(){
   var overlay=document.getElementById('carrier-overlay');
@@ -9924,8 +9932,14 @@ function showMemberCard(type){
   if(!data||!overlay||!img)return;
   var single=img.parentElement;
   var grid=document.getElementById('member-card-grid');
+  var carrierSection=document.getElementById('member-card-carrier-section');
+  var membersSection=document.getElementById('member-card-members-section');
+  var singleTitle=document.getElementById('member-card-single-title');
   if(single)single.style.display='block';
   if(grid)grid.style.display='none';
+  if(carrierSection)carrierSection.style.marginBottom='0';
+  if(membersSection)membersSection.style.display='none';
+  if(singleTitle)singleTitle.textContent='超商會員';
   img.src=data.src;
   img.alt=data.alt;
   overlay.classList.add('open');
@@ -9936,7 +9950,14 @@ function showMemberCards(){
   var single=img&&img.parentElement;
   var grid=document.getElementById('member-card-grid');
   if(!overlay||!grid)return;
-  if(single)single.style.display='none';
+  var carrierSection=document.getElementById('member-card-carrier-section');
+  var membersSection=document.getElementById('member-card-members-section');
+  var singleTitle=document.getElementById('member-card-single-title');
+  if(single)single.style.display='block';
+  if(img){img.src='+EGWGSR.png';img.alt='電子發票載具條碼 /+EGWGSR';}
+  if(carrierSection)carrierSection.style.marginBottom='24px';
+  if(membersSection)membersSection.style.display='block';
+  if(singleTitle)singleTitle.textContent='電子發票載具';
   grid.style.display='grid';
   overlay.classList.add('open');
 }
@@ -15147,8 +15168,7 @@ function advisorAIQuickCommands(){
   return [
     {label:'快速轉帳',command:'__quick_transfer__'},
     {label:'配息記錄',command:'__dividend_record__'},
-    {label:'顯示載具',command:'顯示載具'},
-    {label:'超商會員',command:'__member_cards__'},
+    {label:'載具超商',command:'__member_cards__'},
     {label:'退稅查詢',command:'__etf_tax_lookup__'},
     {label:'複製載具',command:'複製載具'}
   ];
