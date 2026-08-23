@@ -1813,6 +1813,24 @@ body::after{
 .finance-collapse-title{display:flex;align-items:center;gap:6px;min-width:0}
 .finance-collapse-meta{font-family:var(--sans);font-size:10px;font-weight:800;color:#7a6030;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .finance-collapse-body{padding:0 10px 10px}
+.finance-accounts-heading{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid rgba(232,192,80,.12);font-family:var(--sans);font-size:11px;font-weight:900;letter-spacing:1px;color:var(--gold)}
+.finance-accounts-heading .finance-collapse-meta{margin-left:auto}
+.finance-accounts-toggle{flex:0 0 auto;border:1px solid rgba(232,192,80,.34);border-radius:999px;background:transparent;color:var(--gold);padding:4px 9px;font-family:var(--sans);font-size:10px;font-weight:900;cursor:pointer;white-space:nowrap}
+.finance-accounts-toggle:hover{background:rgba(232,192,80,.1)}
+.finance-accounts-collapse.is-masked .acc-val{font-size:0!important;color:transparent!important}
+.finance-accounts-collapse.is-masked .acc-val::after{content:'***';font-family:var(--mono);font-size:17px;color:var(--gold)}
+.finance-accounts-collapse.is-masked .treasury-total-delta{font-size:0;color:transparent}
+.finance-accounts-collapse.is-masked .treasury-total-delta::after{content:'較昨日 ***';font-family:var(--mono);font-size:11px;color:#8d6a2a}
+.finance-accounts-collapse.is-masked .treasury-monthly-row strong{font-size:0;color:transparent}
+.finance-accounts-collapse.is-masked .treasury-monthly-row strong::after{content:'***';font-family:var(--mono);font-size:15px}
+.finance-accounts-collapse.is-masked .treasury-monthly-income::after{color:var(--coral)}
+.finance-accounts-collapse.is-masked .treasury-monthly-expense::after{color:var(--teal)}
+.finance-accounts-collapse.is-masked .treasury-account-merge-value{font-size:0;color:transparent}
+.finance-accounts-collapse.is-masked .treasury-account-merge-value::after{content:'***';font-family:var(--mono);font-size:19px;color:var(--gold)}
+.finance-accounts-collapse.is-masked .treasury-cash-stock-saving{font-size:0;color:transparent}
+.finance-accounts-collapse.is-masked .treasury-cash-stock-saving::after{content:'🪙儲蓄***';font-family:var(--sans);font-size:14px;color:#8d6a2a}
+.finance-accounts-collapse.is-masked .res-details{font-size:0;color:transparent}
+.finance-accounts-collapse.is-masked .res-details::after{content:'***';font-family:var(--mono);font-size:15px;color:var(--gold)}
 .finance-collapse .res-section-title,.finance-collapse .pledge-section-title{display:none}
 .treasury-fixed-expense-card{margin:0;min-width:0;height:100%;align-self:stretch}
 .treasury-fixed-expense-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 10px;border-bottom:1px solid rgba(232,192,80,.12);font-family:var(--sans);font-size:11px;font-weight:900;letter-spacing:1px;color:var(--gold)}
@@ -1888,6 +1906,7 @@ body::after{
 .treasury-account-merge-value{margin-top:0;font-family:var(--mono);font-size:19px;font-weight:900;color:var(--gold);white-space:nowrap}
 .treasury-cash-stock-saving{margin-top:5px;padding-top:4px;border-top:1px solid rgba(232,192,80,.14);font-family:var(--sans);font-size:14px;font-weight:900;color:#8d6a2a}
 @media(max-width:680px){.acc-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 6px}.acc-item{min-width:0}.acc-name{font-size:12px}.acc-val{font-size:15px}.treasury-cash-stock-card .acc-name{font-size:14px}.treasury-cash-stock-card .treasury-account-merge-cell{display:block}.treasury-cash-stock-card .treasury-account-merge-label{font-size:12px}.treasury-cash-stock-card .treasury-account-merge-value{margin-top:1px;font-size:16px}.treasury-cash-stock-saving{font-size:13px}}
+@media(max-width:680px){.finance-accounts-collapse.is-masked .acc-val::after{font-size:15px}.finance-accounts-collapse.is-masked .treasury-account-merge-value::after{font-size:16px}.finance-accounts-collapse.is-masked .treasury-cash-stock-saving::after{font-size:13px}.finance-accounts-collapse.is-masked .res-details::after{font-size:14px}}
 
 /* ── Quick Booking ── */
 .btabs{display:none}
@@ -7986,13 +8005,20 @@ function renderAccounts(accs,monthly,el,assetSnapshot,bills,stale){
   var accountCardCount=(totalAssetHtml?1:0)+(cashStockHtml?1:0)+leftAccounts.length+(cubeAccount?1:0);
   var accHtml=accCards.join('');
   var accountListHtml=`
-    <details class="finance-collapse finance-accounts-collapse" open>
-      <summary><span class="finance-collapse-title">帳戶一覽</span><span class="finance-collapse-meta">${accountCardCount} 張卡</span></summary>
+    <section class="finance-collapse finance-accounts-collapse">
+      <div class="finance-accounts-heading"><span class="finance-collapse-title">帳戶一覽</span><span class="finance-collapse-meta">${accountCardCount} 張卡</span><button class="finance-accounts-toggle" type="button" aria-pressed="false">🔒 隱藏數字</button></div>
       <div class="finance-collapse-body">
         <div class="acc-grid">${accHtml}</div>
       </div>
-    </details>`;
+    </section>`;
   el.innerHTML=accountListHtml;
+  var accountPanel=el.querySelector('.finance-accounts-collapse');
+  var privacyToggle=el.querySelector('.finance-accounts-toggle');
+  if(accountPanel&&privacyToggle)privacyToggle.addEventListener('click',function(){
+    var masked=accountPanel.classList.toggle('is-masked');
+    privacyToggle.setAttribute('aria-pressed',String(masked));
+    privacyToggle.textContent=masked?'🔓 顯示數字':'🔒 隱藏數字';
+  });
 }
 
 function renderTreasuryAccountTotalAssetCard(assetSnapshot,totalAssetAccount,monthly){
