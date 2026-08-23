@@ -2422,6 +2422,8 @@ body::after{
 .battle-price-chart-test>summary::marker{color:#e8c050}
 .battle-price-chart-frame{min-height:430px;background:#101010;border-top:1px solid #251808;overflow:auto}
 .battle-price-chart-svg{display:block;width:100%;min-width:680px;height:430px}
+.battle-price-chart-live{position:relative;width:100%;min-width:680px;height:430px}
+.battle-price-chart-tooltip{position:absolute;z-index:2;top:8px;left:8px;pointer-events:none;padding:6px 8px;border:1px solid #4a3210;border-radius:6px;background:rgba(10,8,5,.9);color:#f2d98c;font:700 11px/1.5 var(--mono);white-space:nowrap}
 .battle-price-chart-loading{display:flex;align-items:center;justify-content:center;min-height:430px;color:#9b7a3d;font-family:var(--sans);font-size:12px}
 .battle-price-chart-note{padding:7px 12px;color:#7a6030;font-family:var(--sans);font-size:10px;line-height:1.5}
 .battle-cell.subtle{font-size:11px;color:#8d7138;font-weight:700}
@@ -5084,6 +5086,9 @@ var battleBriefPromise=null;
 var battlePriceHistoryPromise=null;
 var battleBriefHoldings=[];
 var battlePriceHistoryState={period:'3M',codesKey:'',data:null,error:''};
+var battlePriceChartLibraryPromise=null;
+var battlePriceChartInstances=[];
+var BATTLE_PRICE_CHART_LIBRARY_URL='https://unpkg.com/lightweight-charts@5.0.8/dist/lightweight-charts.standalone.production.js';
 function clearLegacyAdvisorReminderCache(){
   try{localStorage.removeItem(ADVISOR_REMINDER_CACHE_KEY);}catch(e){}
 }
@@ -12111,13 +12116,90 @@ function battlePriceCandleChartSvg(series, periodData){
   return `<svg class="battle-price-chart-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="00997A K線走勢圖"><rect width="${width}" height="${height}" fill="#101010"/>${grid}${candles}${labels}<text x="${left}" y="14" fill="#e8c050" font-size="12" font-weight="700">00997A · Yahoo Finance OHLC</text></svg>`;
 }
 
+function loadBattlePriceChartLibrary(){
+  if(window.LightweightCharts)return Promise.resolve(window.LightweightCharts);
+  if(battlePriceChartLibraryPromise)return battlePriceChartLibraryPromise;
+  battlePriceChartLibraryPromise=new Promise(function(resolve,reject){
+    var script=document.createElement('script');
+    script.src=BATTLE_PRICE_CHART_LIBRARY_URL;
+    script.async=true;
+    script.onload=function(){window.LightweightCharts?resolve(window.LightweightCharts):reject(new Error('LightweightCharts global missing'));};
+    script.onerror=function(){reject(new Error('LightweightCharts 載入失敗'));};
+    document.head.appendChild(script);
+  });
+  return battlePriceChartLibraryPromise;
+}
+
+function battlePriceInteractivePoints(series,periodData){
+  var points=(series||[]).filter(function(point){
+    return point&&point.date&&isFinite(Number(point.open))&&isFinite(Number(point.high))&&isFinite(Number(point.low))&&isFinite(Number(point.close));
+  });
+  if(periodData&&periodData.startDate){
+    points=points.filter(function(point){return point.date>=periodData.startDate&&(!periodData.endDate||point.date<=periodData.endDate);});
+  }
+  return points.slice(-120);
+}
+
+function mountBattlePriceInteractiveChart(){
+  var mount=document.querySelector('[data-battle-price-live-chart]');
+  if(!mount)return;
+  var chartItem=((battlePriceHistoryState.data&&battlePriceHistoryState.data.items)||[]).find(function(item){return normalizeKey(item&&item.code)==='00997A';});
+  var period=battlePriceHistoryState.period||'3M';
+  var periodData=chartItem&&chartItem.periods&&chartItem.periods[period];
+  var points=battlePriceInteractivePoints(chartItem&&chartItem.series,periodData);
+  if(!points.length)return;
+  loadBattlePriceChartLibrary().then(function(lc){
+    if(!mount.isConnected)return;
+    var container=document.createElement('div');
+    container.className='battle-price-chart-live';
+    var tooltip=document.createElement('div');
+    tooltip.className='battle-price-chart-tooltip';
+    tooltip.hidden=true;
+    container.appendChild(tooltip);
+    mount.replaceChildren(container);
+    var chart=lc.createChart(container,{
+      width:container.clientWidth,
+      height:container.clientHeight,
+      layout:{background:{type:lc.ColorType.Solid,color:'#101010'},textColor:'#b8944d',fontSize:11},
+      grid:{vertLines:{color:'#2c2417'},horzLines:{color:'#2c2417'}},
+      crosshair:{mode:lc.CrosshairMode.Normal},
+      rightPriceScale:{borderColor:'#4a3210',scaleMargins:{top:.08,bottom:.25}},
+      timeScale:{borderColor:'#4a3210',rightOffset:3,timeVisible:false},
+      handleScroll:{mouseWheel:true,pressedMouseMove:true,horzTouchDrag:true,vertTouchDrag:true},
+      handleScale:{axisPressedMouseMove:true,mouseWheel:true,pinch:true}
+    });
+    var candles=chart.addSeries(lc.CandlestickSeries,{upColor:'#35c99a',downColor:'#ef6d5b',borderUpColor:'#35c99a',borderDownColor:'#ef6d5b',wickUpColor:'#35c99a',wickDownColor:'#ef6d5b',priceLineVisible:false});
+    candles.setData(points.map(function(point){return {time:point.date,open:Number(point.open),high:Number(point.high),low:Number(point.low),close:Number(point.close)};}));
+    var volume=chart.addSeries(lc.HistogramSeries,{priceFormat:{type:'volume'},priceScaleId:'volume',lastValueVisible:false,priceLineVisible:false});
+    volume.priceScale().applyOptions({scaleMargins:{top:.8,bottom:0}});
+    volume.setData(points.map(function(point){return {time:point.date,value:Number(point.volume||0),color:Number(point.close)>=Number(point.open)?'rgba(53,201,154,.48)':'rgba(239,109,91,.48)'};}));
+    chart.subscribeCrosshairMove(function(param){
+      if(!param||!param.time||!param.point){tooltip.hidden=true;return;}
+      var value=param.seriesData.get(candles);
+      if(!value){tooltip.hidden=true;return;}
+      tooltip.textContent=String(param.time)+'  開 '+Number(value.open).toFixed(2)+'  高 '+Number(value.high).toFixed(2)+'  低 '+Number(value.low).toFixed(2)+'  收 '+Number(value.close).toFixed(2);
+      tooltip.hidden=false;
+      tooltip.style.left=Math.max(8,Math.min(container.clientWidth-290,Number(param.point.x||0)+12))+'px';
+    });
+    chart.timeScale().fitContent();
+    battlePriceChartInstances.push(chart);
+    if(typeof ResizeObserver==='function'){
+      var resizeObserver=new ResizeObserver(function(){if(container.clientWidth)chart.applyOptions({width:container.clientWidth,height:container.clientHeight});});
+      resizeObserver.observe(container);
+      chart.__battleResizeObserver=resizeObserver;
+    }
+  }).catch(function(){
+    if(mount.isConnected)mount.innerHTML=battlePriceCandleChartSvg(chartItem.series,periodData);
+  });
+}
+
 function battlePriceEmbeddedChartHtml(holdings){
   var has00997A=(holdings||[]).some(function(row){return normalizeKey(row&&row.code)==='00997A';});
   if(!has00997A)return '';
   var chartItem=((battlePriceHistoryState.data&&battlePriceHistoryState.data.items)||[]).find(function(item){return normalizeKey(item&&item.code)==='00997A';});
   var period=battlePriceHistoryState.period||'3M';
   var periodData=chartItem&&chartItem.periods&&chartItem.periods[period];
-  var chart=chartItem&&chartItem.series&&chartItem.series.length?battlePriceCandleChartSvg(chartItem.series,periodData):'<div class="battle-price-chart-loading">背景取得 00997A K 線資料中…</div>';
+  var chart=chartItem&&chartItem.series&&chartItem.series.length?'<div class="battle-price-chart-loading" data-battle-price-live-chart>互動式 K 線載入中…</div>':'<div class="battle-price-chart-loading">背景取得 00997A K 線資料中…</div>';
   return `<details class="battle-price-chart-test" open>
     <summary>📈 00997A K線走勢圖（Yahoo 資料測試）</summary>
     <div class="battle-price-chart-frame">${chart}</div>
@@ -12163,7 +12245,12 @@ function battlePriceComparisonHtml(holdings){
 
 function updateBattleBriefPriceComparison(){
   var host=document.getElementById('battle-price-comparison-host');
-  if(host)host.innerHTML=battlePriceComparisonHtml(battleBriefHoldings);
+  if(host){
+    battlePriceChartInstances.forEach(function(chart){try{if(chart.__battleResizeObserver)chart.__battleResizeObserver.disconnect();chart.remove();}catch(e){}});
+    battlePriceChartInstances=[];
+    host.innerHTML=battlePriceComparisonHtml(battleBriefHoldings);
+    mountBattlePriceInteractiveChart();
+  }
 }
 
 function setBattleBriefPricePeriod(period){
