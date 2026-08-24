@@ -976,6 +976,9 @@ body::after{
 .store-panel-title{font:900 20px var(--font);color:#bcefff;letter-spacing:1px}
 .store-panel-sub{font:800 12px/1.65 var(--sans);color:#8aa7b6}
 .store-toolbar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-bottom:10px}
+.store-date-filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:10px}
+.store-date-filter{height:38px;border:1px solid rgba(65,157,194,.52);border-radius:8px;background:#061b2b;color:#dff7ff;padding:0 10px;font:850 13px var(--sans);outline:none}
+.store-date-filter:focus{border-color:#71d8f7;box-shadow:0 0 0 2px rgba(53,184,228,.14)}
 .store-search{width:100%;box-sizing:border-box;height:38px;border:1px solid rgba(65,157,194,.52);border-radius:8px;background:#061b2b;color:#dff7ff;padding:0 11px;font:850 14px var(--sans);outline:none}
 .store-search:focus{border-color:#71d8f7;box-shadow:0 0 0 2px rgba(53,184,228,.14)}
 .store-add-button,.store-secondary-button{height:38px;border:1px solid rgba(29,158,117,.52);border-radius:8px;background:rgba(29,158,117,.14);color:#a8f1d6;font:900 12px var(--sans);padding:0 12px;cursor:pointer;white-space:nowrap}
@@ -998,7 +1001,7 @@ body::after{
 .store-form-label{color:#8aa7b6;font:900 12px var(--sans)}
 .store-form-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:2px}
 .store-form-status{min-height:18px;color:#a8f1d6;font:800 12px var(--sans)}
-@media(max-width:650px){.store-grid,.store-form-grid{grid-template-columns:1fr}.store-form-group.full{grid-column:auto}.store-toolbar{grid-template-columns:1fr}.store-add-button{width:100%}}
+@media(max-width:650px){.store-grid,.store-form-grid{grid-template-columns:1fr}.store-form-group.full{grid-column:auto}.store-toolbar,.store-date-filters{grid-template-columns:1fr}.store-add-button{width:100%}}
 .market-lord{
   position:absolute;
   top:-65px;
@@ -5958,6 +5961,7 @@ function renderStorePanel(initialTab){
     <div class="pane active" id="pane-store-list">
       <div class="store-panel-intro"><div class="store-panel-title">Store｜倉庫物品</div><div class="store-panel-sub">搜尋物品名稱、所在地點或編號，快速找到收納位置。</div></div>
       <div class="store-toolbar"><input class="store-search" id="store-search" type="search" placeholder="搜尋物品、位置或編號" oninput="storeSearchTerm=this.value;renderStoreList()"><button class="store-add-button" type="button" onclick="switchStoreTab('store-add')">＋新增記錄</button></div>
+      <div class="store-date-filters" id="store-date-filters" aria-label="記錄年月篩選"></div>
       <div class="store-count" id="store-count"></div>
       <div id="store-list-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:78%"></div></div>
     </div>
@@ -5977,6 +5981,8 @@ function renderStorePanel(initialTab){
 
 var storeRecordsCache=[];
 var storeSearchTerm='';
+var storeFilterYear=String(new Date().getFullYear());
+var storeFilterMonth=String(new Date().getMonth()+1).padStart(2,'0');
 var storeRecordsPromise=null;
 
 function renderStoreForm(){
@@ -6000,18 +6006,40 @@ function switchStoreTab(key){
   if(btn)switchTab(btn,key);
 }
 
+function storeRecordYear(record){
+  var match=String(record.recordDate||'').match(/^(\d{4})[\/-]\d{1,2}[\/-]\d{1,2}$/);
+  return match?match[1]:'';
+}
+
+function storeRecordMonth(record){
+  var match=String(record.recordDate||'').match(/^\d{4}[\/-](\d{1,2})[\/-]\d{1,2}$/);
+  return match?String(Number(match[1])).padStart(2,'0'):'';
+}
+
+function renderStoreDateFilters(){
+  var el=document.getElementById('store-date-filters');
+  if(!el)return;
+  var years={};
+  years[storeFilterYear]=true;
+  storeRecordsCache.forEach(function(record){var year=storeRecordYear(record);if(year)years[year]=true;});
+  var yearOptions=Object.keys(years).sort(function(a,b){return Number(b)-Number(a);}).map(function(year){return '<option value="'+esc(year)+'"'+(year===storeFilterYear?' selected':'')+'>'+esc(year)+'年</option>';}).join('');
+  var monthOptions=Array.from({length:12},function(_,index){var month=String(index+1).padStart(2,'0');return '<option value="'+month+'"'+(month===storeFilterMonth?' selected':'')+'>'+Number(month)+'月</option>';}).join('');
+  el.innerHTML='<select class="store-date-filter" id="store-filter-year" aria-label="記錄年份" onchange="storeFilterYear=this.value;renderStoreList()">'+yearOptions+'</select><select class="store-date-filter" id="store-filter-month" aria-label="記錄月份" onchange="storeFilterMonth=this.value;renderStoreList()">'+monthOptions+'</select>';
+}
+
 function renderStoreList(){
   var el=document.getElementById('store-list-content');
   var countEl=document.getElementById('store-count');
   if(!el)return;
   var term=String(storeSearchTerm||'').trim().toLowerCase();
   var rows=storeRecordsCache.filter(function(record){
+    if(storeRecordYear(record)!==storeFilterYear||storeRecordMonth(record)!==storeFilterMonth)return false;
     if(!term)return true;
     return [record.itemName,record.location,record.code,record.description].join(' ').toLowerCase().indexOf(term)>=0;
   });
-  if(countEl)countEl.textContent=term?'顯示 '+rows.length+' / '+storeRecordsCache.length+' 筆':'共 '+storeRecordsCache.length+' 筆記錄';
+  if(countEl)countEl.textContent=storeFilterYear+'年'+Number(storeFilterMonth)+'月：'+(term?'顯示 '+rows.length+' 筆':'共 '+rows.length+' 筆記錄');
   if(!rows.length){
-    el.innerHTML='<div class="store-empty">'+(storeRecordsCache.length?'找不到符合的物品。':'目前尚無倉庫記錄，請從「新增記錄」開始。')+'</div>';
+    el.innerHTML='<div class="store-empty">'+(storeRecordsCache.length?(term?'找不到符合的物品。':'目前選擇的年月沒有倉庫記錄。'):'目前尚無倉庫記錄，請從「新增記錄」開始。')+'</div>';
     return;
   }
   el.innerHTML='<div class="store-grid">'+rows.map(function(record){
@@ -6021,6 +6049,7 @@ function renderStoreList(){
         '<span class="store-item-label">所在地點</span><span class="store-item-value">'+esc(record.location||'—')+'</span>'+
         '<span class="store-item-label">編號</span><span class="store-item-value">'+esc(record.code||'—')+'</span>'+
         '<span class="store-item-label">說明</span><span class="store-item-value">'+esc(record.description||'—')+'</span>'+
+        '<span class="store-item-label">記錄時間</span><span class="store-item-value">'+esc(record.recordDate||'—')+'</span>'+
       '</div><div class="store-item-actions"><button class="store-item-action" type="button" onclick="editStoreRecord('+Number(record.row)+')">編輯</button><button class="store-item-action danger" type="button" onclick="removeStoreRecord('+Number(record.row)+')">移除</button></div></article>';
   }).join('')+'</div>';
 }
@@ -6031,6 +6060,7 @@ function loadStoreRecords(force){
   setEmpireCardStatus('store','pending');
   storeRecordsPromise=apiGet({action:'storeRecords'}).then(function(data){
     storeRecordsCache=(data&&data.records)||[];
+    renderStoreDateFilters();
     renderStoreList();
     setEmpireCardStatus('store','ok','倉庫資料已載入');
     return storeRecordsCache;
