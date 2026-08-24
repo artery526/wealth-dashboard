@@ -3021,8 +3021,13 @@ body::after{
 .ark-wall-detail{display:grid;gap:13px}
 .ark-wall-detail-head{border:1px solid rgba(184,137,46,.28);border-radius:8px;background:rgba(10,8,4,.62);padding:14px}
 .ark-wall-detail-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.ark-wall-detail-actions{display:flex;align-items:center;justify-content:flex-end;gap:7px;flex-wrap:wrap}
 .ark-wall-edit-link{border:1px solid rgba(29,158,117,.5);border-radius:8px;background:rgba(29,158,117,.12);color:#a8f1d6;font-family:var(--sans);font-size:12px;font-weight:900;padding:7px 10px;text-decoration:none;white-space:nowrap}
 .ark-wall-edit-link:hover{border-color:rgba(29,158,117,.75);background:rgba(29,158,117,.2)}
+.ark-wall-pin-toggle{border-color:rgba(232,192,80,.55);background:rgba(232,192,80,.12);color:#fff0b8;cursor:pointer}
+.ark-wall-pin-toggle:hover{border-color:rgba(232,192,80,.82);background:rgba(232,192,80,.2)}
+.ark-wall-pin-toggle:disabled{cursor:wait;opacity:.65}
+.ark-wall-pin-status{min-height:18px;margin-top:8px;color:#a8f1d6;font:800 12px/1.5 var(--sans)}
 .ark-wall-detail-date{font-family:var(--mono);font-size:13px;font-weight:900;color:#aeefff;margin-bottom:5px}
 .ark-wall-detail-title{font-family:var(--font);font-size:28px;font-weight:900;color:#f0dfa0;line-height:1.35;letter-spacing:1px}
 .ark-wall-detail-text{position:relative;border:1px solid rgba(184,137,46,.24);border-radius:8px;background:rgba(3,4,3,.72);font-family:var(--sans);font-size:15px;font-weight:750;line-height:1.95;color:#d8c18a;white-space:normal;overflow-wrap:anywhere;padding:13px 14px;user-select:text;-webkit-user-select:text;touch-action:manipulation}
@@ -3095,7 +3100,7 @@ body::after{
 .ark-wall-moment-modal-close{width:32px;height:32px;border:1px solid rgba(184,137,46,.4);border-radius:7px;background:rgba(10,8,4,.72);color:#f0dfa0;font:900 18px var(--sans);cursor:pointer}
 .ark-wall-moment-modal .ark-wall-moment-form{margin-top:8px}
 @media(max-width:760px){.ark-wall-moments-layout{grid-template-columns:1fr}.ark-wall-calendar-day{min-height:48px;padding:4px}.ark-wall-calendar-icons{font-size:12px}.ark-wall-moments-title{font-size:21px}}
-@media(max-width:760px){#ark-wall-body{display:flex;flex-direction:column}.ark-wall-grid,.ark-wall-photo-grid{grid-template-columns:1fr}.ark-wall-index-row{grid-template-columns:84px minmax(0,1fr);gap:7px}.ark-wall-library-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.ark-wall-memo-tools{grid-template-columns:1fr}.ark-wall-main-content{order:1}.ark-wall-timeline-block{order:2}.ark-wall-detail-top{align-items:flex-start}.ark-wall-detail-title{font-size:22px}.ark-wall-detail-text{font-size:14px;line-height:1.9;padding:14px 13px 13px}.ark-wall-copy-hint{position:static;display:inline-flex;margin-bottom:8px}}
+@media(max-width:760px){#ark-wall-body{display:flex;flex-direction:column}.ark-wall-grid,.ark-wall-photo-grid{grid-template-columns:1fr}.ark-wall-index-row{grid-template-columns:84px minmax(0,1fr);gap:7px}.ark-wall-library-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.ark-wall-memo-tools{grid-template-columns:1fr}.ark-wall-main-content{order:1}.ark-wall-timeline-block{order:2}.ark-wall-detail-top{align-items:flex-start}.ark-wall-detail-actions{width:100%;justify-content:flex-start}.ark-wall-detail-title{font-size:22px}.ark-wall-detail-text{font-size:14px;line-height:1.9;padding:14px 13px 13px}.ark-wall-copy-hint{position:static;display:inline-flex;margin-bottom:8px}}
 @media(max-width:560px){#ark-wall-overlay .ark-wall-actions{grid-column:2/4;grid-row:2;width:100%;justify-content:flex-start;margin-top:3px}.ark-wall-admin,.ark-wall-back{font-size:11px;padding:7px 9px}.ark-wall-filter{grid-template-columns:1fr}.ark-wall-library-head{display:grid}.ark-wall-library-actions{display:grid;grid-template-columns:1fr 1fr}.ark-wall-library-load{grid-column:1/-1}.ark-wall-library-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ark-wall-month-title{font-size:18px}.ark-wall-index-title{font-size:16px}}
 @media(max-width:760px){.travel-card-list{grid-template-columns:1fr}}
 @media(max-width:560px){.travel-overlay{padding:10px;align-items:flex-end}.travel-panel{max-height:86vh;border-radius:12px 12px 0 0}.travel-head{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:9px;padding:13px 14px 10px;align-items:start}.travel-title-wrap{grid-column:2/3}.travel-title{font-size:19px}.travel-carrier-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;width:100%;margin-top:8px}.travel-copy-btn,.travel-carrier-show{width:100%;font-size:11px;padding:7px 6px;text-align:center}.carrier-box{width:94vw;padding:42px 14px 18px}.carrier-img{padding:12px}.member-card-grid{grid-template-columns:1fr;gap:16px}.member-card-item .carrier-img{padding:12px}.travel-head-actions{grid-column:2/3;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;width:100%;justify-content:stretch}.travel-map-btn{width:100%;font-size:11px;padding:7px 6px}.travel-close{grid-column:3/4;grid-row:1/2}.travel-body{padding:13px}.travel-detail-row{grid-template-columns:76px minmax(0,1fr);gap:7px}.travel-route{grid-template-columns:1fr}.travel-arrow{display:none}.travel-card-head{flex-direction:column}.travel-card-actions{width:100%;justify-content:space-between}.travel-time-badge{font-size:14px;padding:5px 8px}.travel-add-grid{grid-template-columns:1fr}.travel-time-pair{grid-template-columns:72px minmax(0,1fr)}}
@@ -9403,18 +9408,12 @@ function arkWallMonthLabel(year,month){
 
 function arkWallSortEntries(entries){
   return entries.slice().sort(function(a,b){
-    return String(b.date||'').localeCompare(String(a.date||'')) || String(b.createdAt||'').localeCompare(String(a.createdAt||''));
+    return Number(!!b.pinned)-Number(!!a.pinned) || String(b.date||'').localeCompare(String(a.date||'')) || String(b.createdAt||'').localeCompare(String(a.createdAt||''));
   });
 }
 
 function arkWallSortTaggedEntries(entries){
-  var sorted=arkWallSortEntries(entries);
-  if(arkWallView==='memo'&&arkWallMemoTag==='全部'){
-    sorted.sort(function(a,b){
-      return Number(!!b.pinned)-Number(!!a.pinned) || String(b.date||'').localeCompare(String(a.date||'')) || String(b.createdAt||'').localeCompare(String(a.createdAt||''));
-    });
-  }
-  return sorted;
+  return arkWallSortEntries(entries);
 }
 
 function arkWallYears(){
@@ -9929,6 +9928,25 @@ function openArkWall(view){
   });
 }
 
+function toggleArkWallEntryPinned(id,pinned,button){
+  if(!id||!button)return;
+  var status=document.getElementById('ark-wall-pin-status');
+  var original=button.textContent;
+  button.disabled=true;
+  button.textContent=pinned?'置頂中...':'取消中...';
+  if(status)status.textContent=pinned?'正在設定置頂...':'正在取消置頂...';
+  arkWallFetch('/api/admin/expeditions/'+encodeURIComponent(id)+'/pinned',{method:'PUT',wallWrite:true,headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'pinned='+(pinned?'true':'false')}).then(function(data){
+    var updated=data&&data.entry;
+    var current=arkWallEntries.find(function(entry){return String(entry.id||entry.slug||'')===String(id);});
+    if(current&&updated)Object.assign(current,updated);
+    openArkWallEntry(id);
+  }).catch(function(error){
+    button.disabled=false;
+    button.textContent=original;
+    if(status)status.textContent=error&&error.status===401?'需要管理員授權，請確認城牆寫入權限。':'置頂設定失敗：'+(error&&error.message||'請稍後再試');
+  });
+}
+
 function openArkWallEntry(id){
   var body=document.getElementById('ark-wall-body');
   var back=document.getElementById('ark-wall-back');
@@ -9959,8 +9977,12 @@ function openArkWallEntry(id){
             +'<div class="ark-wall-detail-date">'+esc(entry.date||'')+'</div>'
             +'<div class="ark-wall-detail-title">'+esc(entry.title||'未命名紀錄')+'</div>'
           +'</div>'
-          +'<a class="ark-wall-edit-link" href="'+esc(arkWallAdminEditUrl(entry.id||id))+'" target="_blank" rel="noopener">編輯</a>'
+          +'<div class="ark-wall-detail-actions">'
+            +'<button class="ark-wall-edit-link ark-wall-pin-toggle" type="button" onclick="toggleArkWallEntryPinned(\''+esc(entry.id||id)+'\','+(!entry.pinned)+',this)">'+(entry.pinned?'★ 取消置頂':'☆ 置頂')+'</button>'
+            +'<a class="ark-wall-edit-link" href="'+esc(arkWallAdminEditUrl(entry.id||id))+'" target="_blank" rel="noopener">編輯</a>'
+          +'</div>'
         +'</div>'
+        +'<div class="ark-wall-pin-status" id="ark-wall-pin-status" aria-live="polite"></div>'
         +(Array.isArray(entry.tags)&&entry.tags.length?'<div class="ark-wall-tags">'+entry.tags.map(function(tag){return '<span class="ark-wall-tag" data-wall-tag="'+esc(tag)+'">'+esc(tag)+'</span>';}).join('')+'</div>':'')
       +'</div>'
       +(text?'<div class="ark-wall-detail-text copy-ready" data-wall-copy-text="'+esc(text)+'"><span class="ark-wall-copy-hint">點兩下複製</span>\n'+arkWallMarkdownHtml(data.markdown||entry.excerpt||'')+'</div>':'')
