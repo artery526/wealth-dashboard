@@ -299,6 +299,7 @@ body::after{
 .global-scroll-group:nth-child(4) .global-scroll-button::before{content:'醫'}
 .global-scroll-group:nth-child(5) .global-scroll-button::before{content:'監'}
 .global-scroll-group:nth-child(6) .global-scroll-button::before{content:'牆'}
+.global-scroll-group:nth-child(7) .global-scroll-button::before{content:'倉'}
 .global-scroll-button:hover,.global-scroll-button:focus-visible{transform:translateY(-1px);border-color:rgba(255,218,105,.83);background:linear-gradient(180deg,rgba(112,77,26,.72),rgba(30,20,8,.88));outline:none}
 .card-scroll-toggle,.card-shortcuts{display:none!important}
 /* ── Today Agenda ── */
@@ -3867,6 +3868,44 @@ html[data-theme="deep-blue"] .global-scroll-button[data-global-panel="wall"]:hov
 html[data-theme="deep-blue"] .global-scroll-button[data-global-panel="wall"]:focus-visible{
   border-color:#c29aff;background:linear-gradient(180deg,rgba(100,63,146,.82),rgba(31,17,52,.94));color:#f3eaff;
 }
+html[data-theme="deep-blue"] .global-scroll-menu{
+  border-color:rgba(79,181,220,.72);
+  background:radial-gradient(ellipse at 50% 0,rgba(105,221,255,.12),transparent 48%),linear-gradient(145deg,#0d2c40,#06131d 78%,#030b13);
+  box-shadow:0 24px 70px rgba(0,7,15,.78),0 0 28px rgba(35,158,205,.18),inset 0 1px 0 rgba(220,250,255,.08);
+}
+html[data-theme="deep-blue"] .global-scroll-menu-head{
+  border-bottom-color:rgba(79,181,220,.34);
+  background:linear-gradient(180deg,rgba(13,52,73,.98),rgba(6,24,38,.98));
+}
+html[data-theme="deep-blue"] .global-scroll-menu-title{color:#bcefff;text-shadow:0 0 12px rgba(63,190,232,.22)}
+html[data-theme="deep-blue"] .global-scroll-menu-close{
+  border-color:rgba(79,181,220,.58);background:rgba(3,16,26,.58);color:#dff7ff;
+}
+html[data-theme="deep-blue"] .global-scroll-menu-close:hover{border-color:#8fe4ff;background:rgba(54,174,218,.2)}
+html[data-theme="deep-blue"] .global-scroll-group{
+  border-color:rgba(65,157,194,.34);background:rgba(6,28,44,.78);
+}
+html[data-theme="deep-blue"] .global-scroll-button{
+  border-color:rgba(79,181,220,.55);background:linear-gradient(145deg,#15506a,#08283b);color:#e8faff;
+  box-shadow:0 2px 8px rgba(0,0,0,.4),inset 0 1px 0 rgba(220,250,255,.1);
+}
+html[data-theme="deep-blue"] .global-scroll-button::before{
+  border-color:rgba(79,181,220,.72);background:rgba(3,16,26,.58);color:#8fe4ff;box-shadow:0 0 8px rgba(35,158,205,.16),inset 0 0 5px rgba(79,181,220,.12);
+}
+html[data-theme="deep-blue"] .global-scroll-button:hover,
+html[data-theme="deep-blue"] .global-scroll-button:focus-visible{
+  border-color:#8fe4ff;background:linear-gradient(145deg,#1d6b89,#0b354d);box-shadow:0 4px 16px rgba(35,158,205,.3);outline:none;
+}
+html[data-theme="deep-blue"] .global-scroll-button[data-global-panel="wall"]{
+  border-color:rgba(79,181,220,.55);background:linear-gradient(145deg,#15506a,#08283b);color:#e8faff;
+}
+html[data-theme="deep-blue"] .global-scroll-button[data-global-panel="wall"]::before{
+  border-color:rgba(79,181,220,.72);background:rgba(3,16,26,.58);color:#8fe4ff;
+}
+html[data-theme="deep-blue"] .global-scroll-button[data-global-panel="wall"]:hover,
+html[data-theme="deep-blue"] .global-scroll-button[data-global-panel="wall"]:focus-visible{
+  border-color:#8fe4ff;background:linear-gradient(145deg,#1d6b89,#0b354d);color:#e8faff;
+}
 
 /* 城牆 > 新增印記：使用深藍／冷青介面 */
 html[data-theme="deep-blue"] #ark-wall-moments .ark-wall-moment-add,
@@ -4459,7 +4498,7 @@ html[data-theme="deep-blue"] .advisor-ai-standalone .advisor-ai-quick-select:foc
       <section class="global-scroll-group"><div class="global-scroll-group-title">&#x91AB;&#x9928;</div><div class="global-scroll-buttons"><button class="global-scroll-button" type="button" data-global-panel="medical" data-global-tab="medical-quick" onclick="openGlobalScrollShortcut(event,'medical','medical-quick')">&#x5FEB;&#x901F;&#x8A18;&#x9304;</button><button class="global-scroll-button" type="button" data-global-panel="medical" data-global-tab="medical-tarot" onclick="openGlobalScrollShortcut(event,'medical','medical-tarot')">&#x62BD;&#x724C;&#x8A18;&#x9304;</button><button class="global-scroll-button" type="button" data-global-panel="medical" data-global-tab="medical-stats" onclick="openGlobalScrollShortcut(event,'medical','medical-stats')">&#x724C;&#x5361;&#x7D71;&#x8A08;</button><button class="global-scroll-button" type="button" data-global-panel="medical" data-global-tab="medical-painmap" onclick="openGlobalScrollShortcut(event,'medical','medical-painmap')">&#x75BC;&#x75DB;&#x5730;&#x5716;</button></div></section>
       <section class="global-scroll-group"><div class="global-scroll-group-title">&#x53F8;&#x5929;&#x76E3;</div><div class="global-scroll-buttons"><button class="global-scroll-button" type="button" data-global-panel="stars" data-global-tab="stars-home" onclick="openGlobalScrollShortcut(event,'stars','stars-home')">&#x547D;&#x76E4;&#x7E3D;&#x89BD;</button><button class="global-scroll-button" type="button" data-global-panel="stars" data-global-tab="stars-chronicle" onclick="openGlobalScrollShortcut(event,'stars','stars-chronicle')">&#x4E8B;&#x4EF6;&#x7DE8;&#x5E74;</button></div></section>
       <section class="global-scroll-group"><div class="global-scroll-group-title">&#x57CE;&#x7246;</div><div class="global-scroll-buttons"><button class="global-scroll-button" type="button" data-global-panel="wall" data-global-tab="wall" onclick="openGlobalScrollShortcut(event,'wall','wall')">&#x751F;&#x6D3B;&#x65E5;&#x8A18;</button><button class="global-scroll-button" type="button" data-global-panel="wall" data-global-tab="memo" onclick="openGlobalScrollShortcut(event,'wall','memo')">&#x5099;&#x5FD8;&#x96A8;&#x7B46;</button><button class="global-scroll-button" type="button" data-global-panel="wall" data-global-tab="market" onclick="openGlobalScrollShortcut(event,'wall','market')">&#x80A1;&#x5E02;&#x6559;&#x5BA4;</button><button class="global-scroll-button" type="button" onclick="openGlobalScrollAdmin(event)">&#x65B0;&#x589E;&#x8A18;&#x9304;</button></div></section>
-      <section class="global-scroll-group"><div class="global-scroll-group-title">倉庫</div><div class="global-scroll-buttons"><button class="global-scroll-button" type="button" data-global-panel="store" data-global-tab="store-list" onclick="openGlobalScrollShortcut(event,'store','store-list')">物品總覽</button><button class="global-scroll-button" type="button" data-global-panel="store" data-global-tab="store-add" onclick="openGlobalScrollShortcut(event,'store','store-add')">新增記錄</button></div></section>
+      <section class="global-scroll-group"><div class="global-scroll-group-title">倉庫</div><div class="global-scroll-buttons"><button class="global-scroll-button" type="button" data-global-panel="store" data-global-tab="store-list" onclick="openGlobalScrollShortcut(event,'store','store-list')">倉物品總覽</button><button class="global-scroll-button" type="button" data-global-panel="store" data-global-tab="store-add" onclick="openGlobalScrollShortcut(event,'store','store-add')">倉新增紀錄</button></div></section>
     </div>
   </section>
 </div>
