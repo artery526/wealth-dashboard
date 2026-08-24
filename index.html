@@ -986,6 +986,11 @@ body::after{
 .store-item-name{font:900 18px/1.35 var(--font);color:#dff7ff;overflow-wrap:anywhere}
 .store-item-meta{display:grid;grid-template-columns:auto minmax(0,1fr);gap:3px 8px;font:800 12px/1.55 var(--sans)}
 .store-item-label{color:#6ea4b7}.store-item-value{color:#bcefff;overflow-wrap:anywhere}
+.store-item-actions{display:flex;justify-content:flex-end;gap:7px;margin-top:3px}
+.store-item-action{height:30px;border:1px solid rgba(65,157,194,.42);border-radius:7px;background:rgba(6,27,43,.76);color:#aeefff;font:900 11px var(--sans);padding:0 10px;cursor:pointer}
+.store-item-action:hover{border-color:#71d8f7;background:rgba(20,74,98,.78)}
+.store-item-action.danger{border-color:rgba(216,90,48,.46);color:#ef9a77}
+.store-item-action.danger:hover{border-color:rgba(239,119,85,.82);background:rgba(91,34,24,.58)}
 .store-empty{border:1px dashed rgba(65,157,194,.38);border-radius:9px;background:rgba(6,27,43,.5);color:#8aa7b6;font:800 13px/1.7 var(--sans);padding:18px;text-align:center}
 .store-form{display:grid;gap:10px}
 .store-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
@@ -4922,7 +4927,7 @@ function parseApiJsonText(text){
   throw new Error('API returned non-JSON response');
 }
 function isApiWriteAction(action){
-  return /^(expense|income|transfer|transactionUndo|stockTradeVoid|dividendEntry|dividendDelete|holdingTradeEntry|holdingTradeDelete|calendarCreate|calendarDelete|taskCreate|taskDelete|storeRecordCreate|macroLongReportGenerate|macroLongReportTriggerInstall|taiwanStockReviewGenerate)$/.test(action||'');
+  return /^(expense|income|transfer|transactionUndo|stockTradeVoid|dividendEntry|dividendDelete|holdingTradeEntry|holdingTradeDelete|calendarCreate|calendarDelete|taskCreate|taskDelete|storeRecordCreate|storeRecordUpdate|storeRecordDelete|macroLongReportGenerate|macroLongReportTriggerInstall|taiwanStockReviewGenerate)$/.test(action||'');
 }
 function apiWriteTimeoutMs(action){
   action=String(action||'');
@@ -5957,7 +5962,7 @@ function renderStorePanel(initialTab){
       <div id="store-list-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:78%"></div></div>
     </div>
     <div class="pane" id="pane-store-add">
-      <div class="store-panel-intro"><div class="store-panel-title">新增倉庫記錄</div><div class="store-panel-sub">只登記物品名稱、所在地點、編號與說明。</div></div>
+      <div class="store-panel-intro"><div class="store-panel-title" id="store-form-title">新增倉庫記錄</div><div class="store-panel-sub">只登記物品名稱、所在地點、編號與說明。</div></div>
       <div id="store-form-content"></div>
     </div>`;
   renderStoreForm();
@@ -5979,13 +5984,14 @@ function renderStoreForm(){
   if(!el)return;
   el.innerHTML=`
     <form class="store-form" onsubmit="submitStoreRecord(event)">
+      <input type="hidden" id="store-edit-row" value="">
       <div class="store-form-grid">
         <div class="store-form-group"><label class="store-form-label" for="store-item-name">物品名稱</label><input class="form-control" id="store-item-name" type="text" maxlength="120" placeholder="例如：備用 HDMI 線" required></div>
         <div class="store-form-group"><label class="store-form-label" for="store-location">所在地點</label><input class="form-control" id="store-location" type="text" maxlength="120" placeholder="例如：三樓 A 區第 2 箱"></div>
         <div class="store-form-group"><label class="store-form-label" for="store-code">編號</label><input class="form-control" id="store-code" type="text" maxlength="80" placeholder="例如：W3-A-001"></div>
         <div class="store-form-group full"><label class="store-form-label" for="store-description">說明</label><textarea class="form-control" id="store-description" maxlength="500" placeholder="補充用途、數量或辨識方式"></textarea></div>
       </div>
-      <div class="store-form-actions"><button class="store-add-button" id="store-submit" type="submit">儲存記錄</button><button class="store-secondary-button" type="button" onclick="document.querySelector('#pane-store-add form').reset()">清除</button><span class="store-form-status" id="store-form-status" aria-live="polite"></span></div>
+      <div class="store-form-actions"><button class="store-add-button" id="store-submit" type="submit">儲存記錄</button><button class="store-secondary-button" id="store-cancel-edit" type="button" hidden onclick="resetStoreForm()">清除</button><span class="store-form-status" id="store-form-status" aria-live="polite"></span></div>
     </form>`;
 }
 
@@ -6015,7 +6021,7 @@ function renderStoreList(){
         '<span class="store-item-label">所在地點</span><span class="store-item-value">'+esc(record.location||'—')+'</span>'+
         '<span class="store-item-label">編號</span><span class="store-item-value">'+esc(record.code||'—')+'</span>'+
         '<span class="store-item-label">說明</span><span class="store-item-value">'+esc(record.description||'—')+'</span>'+
-      '</div></article>';
+      '</div><div class="store-item-actions"><button class="store-item-action" type="button" onclick="editStoreRecord('+Number(record.row)+')">編輯</button><button class="store-item-action danger" type="button" onclick="removeStoreRecord('+Number(record.row)+')">移除</button></div></article>';
   }).join('')+'</div>';
 }
 
@@ -6038,6 +6044,59 @@ function loadStoreRecords(force){
   return storeRecordsPromise;
 }
 
+function editStoreRecord(row){
+  var record=storeRecordsCache.find(function(item){return Number(item.row)===Number(row);});
+  if(!record)return;
+  switchStoreTab('store-add');
+  var rowEl=document.getElementById('store-edit-row');
+  var titleEl=document.getElementById('store-form-title');
+  var submitEl=document.getElementById('store-submit');
+  var cancelEl=document.getElementById('store-cancel-edit');
+  if(rowEl)rowEl.value=String(record.row);
+  if(titleEl)titleEl.textContent='編輯倉庫記錄';
+  if(submitEl)submitEl.textContent='更新記錄';
+  if(cancelEl)cancelEl.hidden=false;
+  var fields={
+    'store-item-name':record.itemName||'',
+    'store-location':record.location||'',
+    'store-code':record.code||'',
+    'store-description':record.description||''
+  };
+  Object.keys(fields).forEach(function(id){var el=document.getElementById(id);if(el)el.value=fields[id];});
+  var status=document.getElementById('store-form-status');
+  if(status)status.textContent='正在編輯第 '+record.row+' 筆記錄';
+}
+
+function resetStoreForm(){
+  var form=document.querySelector('#pane-store-add form');
+  if(form)form.reset();
+  var rowEl=document.getElementById('store-edit-row');
+  var titleEl=document.getElementById('store-form-title');
+  var submitEl=document.getElementById('store-submit');
+  var cancelEl=document.getElementById('store-cancel-edit');
+  if(rowEl)rowEl.value='';
+  if(titleEl)titleEl.textContent='新增倉庫記錄';
+  if(submitEl)submitEl.textContent='儲存記錄';
+  if(cancelEl)cancelEl.hidden=true;
+  var status=document.getElementById('store-form-status');
+  if(status)status.textContent='';
+}
+
+async function removeStoreRecord(row){
+  var record=storeRecordsCache.find(function(item){return Number(item.row)===Number(row);});
+  if(!record)return;
+  if(!window.confirm('確定要移除「'+record.itemName+'」嗎？'))return;
+  try{
+    setEmpireCardStatus('store','pending','正在移除記錄');
+    await apiPost({action:'storeRecordDelete',row:record.row});
+    await loadStoreRecords(true);
+    setEmpireCardStatus('store','ok','倉庫資料已更新');
+  }catch(e){
+    console.error(e);
+    setEmpireCardStatus('store','err',e.message||'移除失敗');
+  }
+}
+
 async function submitStoreRecord(event){
   if(event)event.preventDefault();
   var status=document.getElementById('store-form-status');
@@ -6046,15 +6105,15 @@ async function submitStoreRecord(event){
   var location=(document.getElementById('store-location')||{}).value||'';
   var code=(document.getElementById('store-code')||{}).value||'';
   var description=(document.getElementById('store-description')||{}).value||'';
+  var editRow=Number((document.getElementById('store-edit-row')||{}).value||0);
   if(!String(itemName).trim()){if(status)status.textContent='請輸入物品名稱';return;}
   if(!API_URL){if(status)status.textContent='尚未設定 API';return;}
   if(button)button.disabled=true;
   if(status)status.textContent='正在儲存…';
   try{
-    await apiPost({action:'storeRecordCreate',itemName:itemName,location:location,code:code,description:description});
-    if(status)status.textContent='已新增倉庫記錄';
-    var form=document.querySelector('#pane-store-add form');
-    if(form)form.reset();
+    await apiPost({action:editRow?'storeRecordUpdate':'storeRecordCreate',row:editRow||undefined,itemName:itemName,location:location,code:code,description:description});
+    if(status)status.textContent=editRow?'已更新倉庫記錄':'已新增倉庫記錄';
+    resetStoreForm();
     await loadStoreRecords(true);
     switchStoreTab('store-list');
   }catch(e){
