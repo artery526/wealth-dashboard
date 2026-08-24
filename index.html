@@ -12420,9 +12420,7 @@ function battleLineHtml(row,options){
 }
 
 function battlePriceHistoryCodes(holdings){
-  return (holdings||[]).map(function(row){return String(row&&row.code||'').trim();}).filter(function(code,index,list){
-    return code&&list.indexOf(code)===index;
-  }).sort();
+  return BATTLE_PRICE_CHART_CODES.slice();
 }
 
 function battlePriceHistoryCacheRead(codes){
@@ -12458,7 +12456,8 @@ function battlePricePeriodText(value){
   return (n>0?'+':'')+n.toFixed(2)+'%';
 }
 
-function battlePriceCandleChartSvg(series, periodData){
+function battlePriceCandleChartSvg(series, periodData, code){
+  code=String(code||'').trim()||'標的';
   var points=(series||[]).filter(function(point){
     return point&&point.date&&isFinite(Number(point.open))&&isFinite(Number(point.high))&&isFinite(Number(point.low))&&isFinite(Number(point.close));
   });
@@ -12488,7 +12487,7 @@ function battlePriceCandleChartSvg(series, periodData){
   var labels=[0,Math.floor((points.length-1)/2),points.length-1].filter(function(value,index,list){return list.indexOf(value)===index;}).map(function(index){
     var x=left+step*(index+.5);return `<text x="${x.toFixed(2)}" y="${height-14}" text-anchor="middle" fill="#8d7138" font-size="11">${points[index].date.slice(5)}</text>`;
   }).join('');
-  return `<svg class="battle-price-chart-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="00997A K線走勢圖"><rect width="${width}" height="${height}" fill="#101010"/>${grid}${candles}${labels}<text x="${left}" y="14" fill="#e8c050" font-size="12" font-weight="700">00997A · Yahoo Finance OHLC</text></svg>`;
+  return `<svg class="battle-price-chart-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(code)} K線走勢圖"><rect width="${width}" height="${height}" fill="#101010"/>${grid}${candles}${labels}<text x="${left}" y="14" fill="#e8c050" font-size="12" font-weight="700">${esc(code)} · Yahoo Finance OHLC</text></svg>`;
 }
 
 function loadBattlePriceChartLibrary(){
@@ -12566,53 +12565,29 @@ function mountBattlePriceInteractiveChart(){
       chart.__battleResizeObserver=resizeObserver;
     }
   }).catch(function(){
-    if(mount.isConnected)mount.innerHTML=battlePriceCandleChartSvg(chartItem.series,periodData);
+    if(mount.isConnected)mount.innerHTML=battlePriceCandleChartSvg(chartItem.series,periodData,chartCode);
   });
   });
 }
 
 function battlePriceEmbeddedChartHtml(holdings){
-  var chartCodes=BATTLE_PRICE_CHART_CODES.filter(function(code){return (holdings||[]).some(function(row){return normalizeKey(row&&row.code)===code;});});
-  if(!chartCodes.length)return '';
-  var period=battlePriceHistoryState.period||'3M';
+  var chartCodes=BATTLE_PRICE_CHART_CODES.slice();
   return chartCodes.map(function(code){
     var chartItem=((battlePriceHistoryState.data&&battlePriceHistoryState.data.items)||[]).find(function(item){return normalizeKey(item&&item.code)===code;});
     var chart=chartItem&&chartItem.series&&chartItem.series.length?`<div class="battle-price-chart-loading" data-battle-price-live-chart="${code}">互動式 K 線載入中…</div>`:`<div class="battle-price-chart-loading">背景取得 ${code} K 線資料中…</div>`;
     return `<details class="battle-price-chart-test">
       <summary>📈 ${code} K線走勢圖（Yahoo 資料）</summary>
       <div class="battle-price-chart-frame">${chart}</div>
-      <div class="battle-price-chart-note">資料來源：Yahoo Finance ${code}.TW 歷史 OHLC；目前顯示 ${period} 區間，與上方收盤價變化共用同一份資料。</div>
+      <div class="battle-price-chart-note">資料來源：Yahoo Finance ${code}.TW 歷史 OHLC</div>
     </details>`;
   }).join('');
 }
 
-function battlePriceComparisonHtml(holdings){
-  var period=battlePriceHistoryState.period||'3M';
+function battlePriceComparisonHtml(){
   var data=battlePriceHistoryState.data;
-  var itemMap=battlePriceHistoryItemMap(data);
-  var periodItems=(data&&data.items||[]).map(function(item){return item&&item.periods&&item.periods[period];}).filter(Boolean);
-  var firstAvailable=periodItems.filter(function(item){return item.available;})[0];
-  var meta=data&&data.updatedAt?'資料來源 '+(data.source||'歷史收盤價')+' · 最新資料日 '+(data.items||[]).map(function(item){return item.latestDate||'';}).filter(Boolean)[0]:'背景取得歷史收盤資料中';
-  if(firstAvailable&&firstAvailable.startDate)meta+=' · '+period+' 起算日 '+firstAvailable.startDate;
-  var rows=(holdings||[]).map(function(row){
-    return `<div class="battle-table-row">
-      <div class="battle-cell" data-label="標的">${esc(row.name||row.code||'--')}</div>
-      <div class="battle-cell num" data-label="現價">${esc(battleNumberText(row.current,2,''))}</div>
-    </div>`;
-  }).join('');
   return `<div id="battle-price-comparison">
-    <div class="battle-price-toolbar">
-      <div class="battle-price-periods" role="group" aria-label="收盤價變化期間">
-        ${['3M','6M','12M'].map(function(key){return `<button type="button" class="battle-price-period ${period===key?'is-active':''}" onclick="setBattleBriefPricePeriod('${key}')">${key}</button>`;}).join('')}
-      </div>
-      <div class="battle-price-meta">${esc(meta)}</div>
-    </div>
     ${battlePriceHistoryState.error?`<div class="battle-price-loading" style="color:var(--coral)">${esc(battlePriceHistoryState.error)}</div>`:''}
-    <div class="battle-table">
-      <div class="battle-table-row head"><div>標的</div><div>現價</div></div>
-      ${rows||'<div class="battle-empty">尚未讀到持股股價。</div>'}
-    </div>
-    ${battlePriceEmbeddedChartHtml(holdings)}
+    ${battlePriceEmbeddedChartHtml()}
   </div>`;
 }
 
@@ -12621,15 +12596,9 @@ function updateBattleBriefPriceComparison(){
   if(host){
     battlePriceChartInstances.forEach(function(chart){try{if(chart.__battleResizeObserver)chart.__battleResizeObserver.disconnect();chart.remove();}catch(e){}});
     battlePriceChartInstances=[];
-    host.innerHTML=battlePriceComparisonHtml(battleBriefHoldings);
+    host.innerHTML=battlePriceComparisonHtml();
     mountBattlePriceInteractiveChart();
   }
-}
-
-function setBattleBriefPricePeriod(period){
-  if(['3M','6M','12M'].indexOf(period)<0)return;
-  battlePriceHistoryState.period=period;
-  updateBattleBriefPriceComparison();
 }
 
 function loadBattleBriefPriceHistory(holdings){
@@ -12739,7 +12708,7 @@ function renderBattleBrief(data,el){
   var foreignTxNetShortHtml=foreignTxNetShortRows.length?foreignTxNetShortRows.map(function(row){
     return battleLineHtml(row,{digits:0,minDigits:0,suffix:' 口',changeDigits:0,changeSuffix:' 口'});
   }).join(''):'<div class="battle-empty">尚未讀到外資台指期淨空單。</div>';
-  var holdingsHtml=holdings.length?`<div id="battle-price-comparison-host">${battlePriceComparisonHtml(holdings)}</div>`:'<div class="battle-empty">尚未讀到持股股價。</div>';
+  var holdingsHtml=`<div id="battle-price-comparison-host">${battlePriceComparisonHtml()}</div>`;
   el.innerHTML=`<div class="battle-report-head">
     <div>
       <div class="battle-report-title">戰情總匯報</div>
@@ -12764,11 +12733,11 @@ function renderBattleBrief(data,el){
       <div class="battle-list">${foreignTxNetShortHtml}</div>
     </div>
     <div class="battle-section wide">
-      <div class="battle-section-title">持股現價與 K 線</div>
+      <div class="battle-section-title">K線走勢圖</div>
       ${holdingsHtml}
     </div>
   </div>`;
-  if(holdings.length)setTimeout(function(){loadBattleBriefPriceHistory(holdings);},0);
+  setTimeout(function(){loadBattleBriefPriceHistory();},0);
 }
 
 async function loadBattleBrief(force){
