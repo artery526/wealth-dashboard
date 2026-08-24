@@ -4604,7 +4604,7 @@ html[data-theme="deep-blue"] .advisor-ai-standalone .advisor-ai-quick-select:foc
 // ══════════════════════════════════════════
 //  State & Config
 // ══════════════════════════════════════════
-var CANONICAL_API_URL = 'https://script.google.com/macros/s/AKfycbzEOCfP10unXSbdlk0v2RZ4rgsBnS1TzX5wu8-OcyVd58vP00A4wwgME7lJthBw5NaZ/exec';
+var CANONICAL_API_URL = 'https://script.google.com/macros/s/AKfycbx5Xv2-qSF4ZXvO946irhuXtQQP9Bcmh_zN8BtEreW_iW5-B5kyvj849bnA0px-hwo1';
 var LEGACY_API_DEPLOYMENT_IDS = [
   'AKfycbwBhxif_vONIC4m8mxWZB2q2bk3Hyy1lBkCkFSg66OLwQxPQL-Ktsc7BdTgZQZAc4bO',
   'AKfycbw3ddm4mcOvSSijvguaBwVvJH-KOp5MdrUgJQw4oy58o9bg456EtRIaCsYnrsPSS7xN',
@@ -12591,15 +12591,9 @@ function battlePriceComparisonHtml(holdings){
   var meta=data&&data.updatedAt?'資料來源 '+(data.source||'歷史收盤價')+' · 最新資料日 '+(data.items||[]).map(function(item){return item.latestDate||'';}).filter(Boolean)[0]:'背景取得歷史收盤資料中';
   if(firstAvailable&&firstAvailable.startDate)meta+=' · '+period+' 起算日 '+firstAvailable.startDate;
   var rows=(holdings||[]).map(function(row){
-    var item=itemMap[row.code];
-    var periodData=item&&item.periods&&item.periods[period];
-    var available=periodData&&periodData.available;
-    var cls=available?(periodData.changePct>0?'up':periodData.changePct<0?'down':'flat'):'flat';
     return `<div class="battle-table-row">
       <div class="battle-cell" data-label="標的">${esc(row.name||row.code||'--')}</div>
       <div class="battle-cell num" data-label="現價">${esc(battleNumberText(row.current,2,''))}</div>
-      <div class="battle-cell num subtle" data-label="${period}起點">${esc(available?battleNumberText(periodData.startClose,2,''):'--')}</div>
-      <div class="battle-cell num delta ${cls}" data-label="${period}變化">${esc(available?battlePricePeriodText(periodData.changePct):'資料不足')}</div>
     </div>`;
   }).join('');
   return `<div id="battle-price-comparison">
@@ -12611,7 +12605,7 @@ function battlePriceComparisonHtml(holdings){
     </div>
     ${battlePriceHistoryState.error?`<div class="battle-price-loading" style="color:var(--coral)">${esc(battlePriceHistoryState.error)}</div>`:''}
     <div class="battle-table">
-      <div class="battle-table-row head"><div>標的</div><div>現價</div><div>${period}起點</div><div>${period}變化</div></div>
+      <div class="battle-table-row head"><div>標的</div><div>現價</div></div>
       ${rows||'<div class="battle-empty">尚未讀到持股股價。</div>'}
     </div>
     ${battlePriceEmbeddedChartHtml(holdings)}
@@ -12745,7 +12739,7 @@ function renderBattleBrief(data,el){
   el.innerHTML=`<div class="battle-report-head">
     <div>
       <div class="battle-report-title">戰情總匯報</div>
-      <div class="battle-report-date">日期 ${esc(data.date||'--')} · 更新 ${esc(data.updatedAt||'--')} · 快照 ${esc(summary.sheetName||'戰情總匯報')}</div>
+      <div class="battle-report-date">日期 ${esc(data.date||'--')} · 更新 ${esc(data.updatedAt||'--')} · ${esc(summary.storageMode||'今日／昨日比較')}</div>
     </div>
     <div class="battle-kpis">
       <span class="battle-kpi">${esc(summary.marketStance||'觀望')}</span>
@@ -12766,7 +12760,7 @@ function renderBattleBrief(data,el){
       <div class="battle-list">${foreignTxNetShortHtml}</div>
     </div>
     <div class="battle-section wide">
-      <div class="battle-section-title">持股股價對比</div>
+      <div class="battle-section-title">持股現價與 K 線</div>
       ${holdingsHtml}
     </div>
   </div>`;
