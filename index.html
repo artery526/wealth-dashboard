@@ -1964,6 +1964,17 @@ body::after{
 .booking-interface-tab.buy.active{background:var(--coral-l);color:var(--coral)}
 .booking-interface-tab.sell.active{background:var(--teal-l);color:var(--teal)}
 .booking-interface-tab.stock.active{background:rgba(124,111,192,.12);color:var(--purple)}
+.booking-account-balance-panel{margin:0 0 10px;padding:9px 10px;border:1px solid rgba(232,192,80,.22);border-radius:8px;background:rgba(10,8,4,.46)}
+.booking-account-balance-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px;font-family:var(--sans);font-size:10px;font-weight:900;letter-spacing:.7px;color:#c6a85d}
+.booking-account-balance-status{font-size:9px;font-weight:700;color:#7a6030;letter-spacing:0}
+.booking-account-balance-status.ok{color:var(--teal)}
+.booking-account-balance-status.err{color:var(--coral)}
+.booking-account-balance-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
+.booking-account-balance-card{min-width:0;padding:6px 7px;border:1px solid rgba(232,192,80,.14);border-radius:6px;background:rgba(0,0,0,.2)}
+.booking-account-balance-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:var(--sans);font-size:9px;color:#9a7840}
+.booking-account-balance-value{margin-top:2px;font-family:var(--mono);font-size:13px;font-weight:900;color:var(--gold);white-space:nowrap}
+.booking-account-balance-value.neg{color:var(--coral)}
+@media(max-width:560px){.booking-account-balance-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.booking-account-balance-value{font-size:12px}}
 .btab{
   flex:1;padding:9px;border:none;background:transparent;
   font-family:var(--sans);font-size:11px;font-weight:700;color:#5a4018;
@@ -4643,6 +4654,8 @@ var BOOKING_FALLBACK_CATEGORIES = ['🛒全聯食材','🍴超商外食','🍔�
 var BOOKING_FALLBACK_SOURCES = ['👷工作所得','💰投資理財','🪙副業兼職','💲交易所得','🤶爸媽收入','🪙機構退稅'];
 var BOOKING_FALLBACK_ACCOUNTS = ['💰Cash','💵國泰Stock','🔖中國信託','🟩連線商業銀行','🏔️玉山銀行','💳Cube','🧚Sis 國泰世華'];
 var holdingsCache = [];
+var bookingAccountBalances = [];
+var bookingAccountBalancesPromise = null;
 var DIVIDEND_CENTER_STORAGE_KEY='wealth_dividend_center_v1';
 function readDividendCenterStorageCache(){
   try{
@@ -8500,6 +8513,51 @@ function renderDomesticPanel(){
   initBookingForm();
 }
 
+function bookingAccountBalanceHtml(){
+  return `<section class="booking-account-balance-panel" id="booking-account-balance-panel" aria-live="polite">
+    <div class="booking-account-balance-head"><span>目前帳戶數字</span><span class="booking-account-balance-status" id="booking-account-balance-status">載入中…</span></div>
+    <div class="booking-account-balance-grid" id="booking-account-balance-grid"><div class="booking-account-balance-status">帳戶數字載入中…</div></div>
+  </section>`;
+}
+
+function renderBookingAccountBalances(rows,status,message){
+  var grid=document.getElementById('booking-account-balance-grid');
+  var statusEl=document.getElementById('booking-account-balance-status');
+  if(!grid||!statusEl)return;
+  var state=status||'pending';
+  statusEl.className='booking-account-balance-status '+state;
+  statusEl.textContent=message||({pending:'載入中…',ok:'已更新',err:'更新失敗'}[state]||'');
+  if(state==='err'){
+    grid.innerHTML='<div class="booking-account-balance-status">目前無法取得帳戶數字</div>';
+    return;
+  }
+  var visible=(rows||[]).filter(function(row){return row&&String(row.name||'').trim()&&String(row.name||'').trim()!=='總資產'&&String(row.name||'').trim()!=='總資產/總計';});
+  if(!visible.length){
+    grid.innerHTML='<div class="booking-account-balance-status">尚未取得帳戶資料</div>';
+    return;
+  }
+  grid.innerHTML=visible.map(function(row){
+    var value=Number(row.value)||0;
+    return `<div class="booking-account-balance-card"><div class="booking-account-balance-name">${esc(row.name)}</div><div class="booking-account-balance-value${value<0?' neg':''}">${fmtFull(value)}</div></div>`;
+  }).join('');
+}
+
+function refreshBookingAccountBalances(){
+  if(!API_URL)return Promise.resolve(null);
+  if(bookingAccountBalancesPromise)return bookingAccountBalancesPromise;
+  renderBookingAccountBalances(bookingAccountBalances,'pending','更新中…');
+  bookingAccountBalancesPromise=apiGet({action:'accounts'},20000).then(function(rows){
+    bookingAccountBalances=Array.isArray(rows)?rows:[];
+    renderBookingAccountBalances(bookingAccountBalances,'ok','已更新');
+    return bookingAccountBalances;
+  }).catch(function(error){
+    console.warn('booking account balances failed',error);
+    renderBookingAccountBalances(bookingAccountBalances,'err','更新失敗');
+    return null;
+  }).finally(function(){bookingAccountBalancesPromise=null;});
+  return bookingAccountBalancesPromise;
+}
+
 async function initBookingForm(){
   var el=document.getElementById('pane-booking-form');
   if(!el)return;
@@ -8584,6 +8642,7 @@ async function initBookingForm(){
     {label:'🧚Sis 國泰',value:'🧚Sis 國泰世華'}
   ]);
   el.innerHTML=`
+    ${bookingAccountBalanceHtml()}
     <div class="booking-interface-tabs" role="tablist" aria-label="記帳類型">
       <button class="booking-interface-tab expense active" type="button" data-booking-interface="expense" onclick="setBookingInterfaceMode('expense')">支出</button>
       <button class="booking-interface-tab income" type="button" data-booking-interface="income" onclick="setBookingInterfaceMode('income')">收入</button>
@@ -8653,6 +8712,7 @@ async function initBookingForm(){
     var typeEl=document.getElementById('t-stock-type');
     if(typeEl)typeEl.addEventListener('change',clearTransferDividendAutofill);
   })();
+  refreshBookingAccountBalances();
   el.dataset.bookingReady='1';
   delete el.dataset.bookingLoading;
   })();
@@ -10751,6 +10811,7 @@ async function submitExpense(e){
   try{
     await apiPost({action:'expense',date:date.replace(/-/g,'/'),cat,account:acc,amount:amt,note});
     showMsg('msg-expense','✓ 已記錄！','ok');
+    refreshBookingAccountBalances();
     document.getElementById('e-amount').value='';
     document.getElementById('e-note').value='';
     focusBookingField('e-amount');
@@ -10782,6 +10843,7 @@ async function submitIncome(e){
       dividendIncome:dividendRowId?'1':'',dividendRowId});
     if(dividendRowId)invalidateDividendCenter();
     showMsg('msg-income','✓ 已記錄！','ok');
+    refreshBookingAccountBalances();
     document.getElementById('i-amount').value='';
     syncDivNote();
     clearIncomeDividendAutofill();
@@ -10806,6 +10868,7 @@ async function submitAccountTransfer(e){
   try{
     await apiPost({action:'transfer',date:date.replace(/-/g,'/'),from,to,amount:amt,label:'',note});
     showMsg('msg-transfer','✓ 已記錄！','ok');
+    refreshBookingAccountBalances();
     document.getElementById('a-amount').value='';
     document.getElementById('a-note').value='';
     focusBookingField('a-amount');
@@ -10839,6 +10902,7 @@ async function submitStockTransfer(e){
       stockAmount:stockAmt,dividendRowId,holdingTradeRowId});
     if(dividendRowId||holdingTradeRowId)invalidateDividendCenter();
     showMsg('msg-transfer','✓ 已記錄股票交易！','ok');
+    refreshBookingAccountBalances();
     document.getElementById('a-note').value='';
     document.getElementById('a-amount').value='';
     document.getElementById('t-stock-shares').value='';
