@@ -4518,7 +4518,7 @@ var cfg = (function(){
 })();
 var BOOKING_FALLBACK_CATEGORIES = ['🛒全聯食材','🍴超商外食','🍔大餐簡餐','🛵外送餐飲','🏠家居用品','⛽機車加油','🧑‍🔧機車維護','💻3C產品','💧水電瓦斯','🏦稅務勞健保','🧥服飾外貌','⚒️房屋修繕','💊醫療保健','☎️電信網路','📱APP訂閱','📖書籍教材','👩Sis學貸/支出','💸租屋管理費','🛎️旅遊住宿','🤹娛樂費用','👤公益樂捐','🎅爸媽代繳'];
 var BOOKING_FALLBACK_SOURCES = ['👷工作所得','💰投資理財','🪙副業兼職','💲交易所得','🤶爸媽收入','🪙機構退稅'];
-var BOOKING_FALLBACK_ACCOUNTS = ['💰Cash','💵國泰Stock','🔖中國信託','🟩連線商業銀行','🏔️玉山銀行','🌳國泰Money','💳Cube','🧚Sis 國泰世華'];
+var BOOKING_FALLBACK_ACCOUNTS = ['💰Cash','💵國泰Stock','🔖中國信託','🟩連線商業銀行','🏔️玉山銀行','💳Cube','🧚Sis 國泰世華'];
 var holdingsCache = [];
 var DIVIDEND_CENTER_STORAGE_KEY='wealth_dividend_center_v1';
 function readDividendCenterStorageCache(){
@@ -4699,6 +4699,12 @@ function filterRemovedBookingAccounts(values){
   return (values||[]).filter(function(value){
     var key=stripIconText(value).replace(/\s+/g,'').toLowerCase();
     return key!=='永豐銀行'&&key!=='永豐';
+  });
+}
+function filterHiddenBookingAccounts(values){
+  return filterRemovedBookingAccounts(values).filter(function(value){
+    var key=stripIconText(value).replace(/\s+/g,'').toLowerCase();
+    return key!=='國泰money'&&key!=='國泰m';
   });
 }
 function bookingOptionMatches(value,target){
@@ -8033,7 +8039,7 @@ function renderAccounts(accs,monthly,el,assetSnapshot,bills,stale){
     else if(key==='國泰stock')cathayStockAccount=a;
     else ordinaryAccounts.push(a);
   });
-  var accountOrder=['中國信託','連線商業銀行','玉山銀行','國泰money','sis國泰世華','cube'];
+  var accountOrder=['中國信託','連線商業銀行','玉山銀行','sis國泰世華','cube'];
   ordinaryAccounts.sort(function(a,b){
     var aKey=stripIconText(a&&a.name).replace(/\s+/g,'').toLowerCase();
     var bKey=stripIconText(b&&b.name).replace(/\s+/g,'').toLowerCase();
@@ -8165,7 +8171,7 @@ async function initBookingForm(){
   if(initSeq!==bookingFormInitSeq||el!==document.getElementById('pane-booking-form'))return;
   var cats=prioritizeBookingOption((cfg.categories&&cfg.categories.length)?cfg.categories:BOOKING_FALLBACK_CATEGORIES,'超商外食');
   var sources=prioritizeBookingOption((cfg.sources&&cfg.sources.length)?cfg.sources:BOOKING_FALLBACK_SOURCES,'投資理財');
-  var accs=filterRemovedBookingAccounts(uniqueBookingOptions((cfg.accounts&&cfg.accounts.length)?cfg.accounts:BOOKING_FALLBACK_ACCOUNTS));
+  var accs=filterHiddenBookingAccounts(uniqueBookingOptions((cfg.accounts&&cfg.accounts.length)?cfg.accounts:BOOKING_FALLBACK_ACCOUNTS));
   var apiHoldings=(cfg.holdings&&cfg.holdings.length)?cfg.holdings:[];
   var apiDividendSymbols=(cfg.dividendSymbols&&cfg.dividendSymbols.length)?cfg.dividendSymbols:apiHoldings;
   var stockSymbols=normalizeBookingSymbolList(apiHoldings.length?apiHoldings:STOCK_SYMBOLS);
@@ -8215,7 +8221,6 @@ async function initBookingForm(){
     {label:'🔖中國',value:'🔖中國信託'},
     {label:'🟩連線',value:'🟩連線商業銀行'},
     {label:'🏔️玉山',value:'🏔️玉山銀行'},
-    {label:'🌳國泰',value:'🌳國泰Money'}
   ]);
   var transferToChips=bookingQuickChipsHtml('a-to',[
     {label:'💰Cash',value:'💰Cash'},
@@ -15211,7 +15216,7 @@ function advisorAIQuickExpenseCategoriesHtml(){
 }
 
 function advisorAIQuickExpenseAccountsHtml(){
-  var accounts=filterRemovedBookingAccounts(uniqueBookingOptions(((cfg&&cfg.accounts&&cfg.accounts.length)?cfg.accounts:BOOKING_FALLBACK_ACCOUNTS).concat(BOOKING_FALLBACK_ACCOUNTS)));
+  var accounts=filterHiddenBookingAccounts(uniqueBookingOptions(((cfg&&cfg.accounts&&cfg.accounts.length)?cfg.accounts:BOOKING_FALLBACK_ACCOUNTS).concat(BOOKING_FALLBACK_ACCOUNTS)));
   return accounts.map(function(account){return `<option value="${esc(account)}">${esc(account)}</option>`;}).join('');
 }
 
@@ -15347,7 +15352,7 @@ function advisorAIQuickCommandSelectHtml(){
 }
 
 function advisorAIQuickTransferAccountsHtml(){
-  var accounts=filterRemovedBookingAccounts(uniqueBookingOptions(((cfg&&cfg.accounts&&cfg.accounts.length)?cfg.accounts:BOOKING_FALLBACK_ACCOUNTS).concat(BOOKING_FALLBACK_ACCOUNTS)));
+  var accounts=filterHiddenBookingAccounts(uniqueBookingOptions(((cfg&&cfg.accounts&&cfg.accounts.length)?cfg.accounts:BOOKING_FALLBACK_ACCOUNTS).concat(BOOKING_FALLBACK_ACCOUNTS)));
   return accounts.map(function(account){return `<option value="${esc(account)}">${esc(account)}</option>`;}).join('');
 }
 
@@ -17001,7 +17006,6 @@ var LORD_DATA = {
     {name:'🔖 中國信託', val:308030},
     {name:'🟩 連線商業銀行', val:112000},
     {name:'🏔️ 玉山銀行', val:11615},
-    {name:'🌳 國泰Money', val:30000},
     {name:'💳 Cube', val:-1031},
   ],
   holdings: [
