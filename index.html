@@ -961,11 +961,39 @@ body::after{
   object-fit:cover;
   object-position:center center;
 }
+#c-store.store-landscape{width:502px}
+#c-store.store-landscape .art{height:auto!important;aspect-ratio:16/9}
+#c-store.store-landscape .card-video{object-fit:cover;object-position:center center}
+@media(min-width:769px){#c-store.store-landscape{width:100%;min-width:0;max-width:502px;justify-self:center}}
+@media(max-width:768px){#c-store.store-landscape{grid-column:auto;width:100%;max-width:432px}#c-store.store-landscape .art{height:auto!important;aspect-ratio:16/9}}
+@media(max-width:480px){#c-store.store-landscape{max-width:100%}}
 .finance-card-caption,.empire-card-caption{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-family:'Noto Sans TC',sans-serif;font-size:11px;color:#c09a50;letter-spacing:3px}
 .finance-panel-status-dot,.empire-panel-status-dot{width:9px;height:9px;border-radius:999px;display:inline-block;flex-shrink:0;border:1px solid rgba(255,238,190,.44);background:var(--coral);box-shadow:0 0 13px rgba(231,87,71,.55),inset 0 1px 0 rgba(255,255,255,.22)}
 .finance-panel-status-dot,.empire-panel-status-dot{width:10px;height:10px;margin-left:2px}
 .finance-panel-status-dot.ok,.empire-panel-status-dot.ok{background:var(--teal);box-shadow:0 0 14px rgba(29,158,117,.62),inset 0 1px 0 rgba(255,255,255,.22)}
 .finance-panel-status-dot.pending,.empire-panel-status-dot.pending{background:var(--gold);box-shadow:0 0 14px rgba(232,192,80,.58),inset 0 1px 0 rgba(255,255,255,.22)}
+.store-panel-intro{display:grid;gap:5px;margin-bottom:13px;padding:12px 13px;border:1px solid rgba(78,217,255,.22);border-radius:9px;background:linear-gradient(145deg,rgba(8,36,52,.72),rgba(5,14,23,.7))}
+.store-panel-title{font:900 20px var(--font);color:#bcefff;letter-spacing:1px}
+.store-panel-sub{font:800 12px/1.65 var(--sans);color:#8aa7b6}
+.store-toolbar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-bottom:10px}
+.store-search{width:100%;box-sizing:border-box;height:38px;border:1px solid rgba(65,157,194,.52);border-radius:8px;background:#061b2b;color:#dff7ff;padding:0 11px;font:850 14px var(--sans);outline:none}
+.store-search:focus{border-color:#71d8f7;box-shadow:0 0 0 2px rgba(53,184,228,.14)}
+.store-add-button,.store-secondary-button{height:38px;border:1px solid rgba(29,158,117,.52);border-radius:8px;background:rgba(29,158,117,.14);color:#a8f1d6;font:900 12px var(--sans);padding:0 12px;cursor:pointer;white-space:nowrap}
+.store-add-button:hover,.store-secondary-button:hover{border-color:rgba(29,158,117,.84);background:rgba(29,158,117,.22)}
+.store-count{min-height:18px;margin:0 0 9px;color:#8aa7b6;font:800 12px var(--sans)}
+.store-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.store-item-card{display:grid;gap:7px;border:1px solid rgba(65,157,194,.3);border-radius:9px;background:linear-gradient(160deg,rgba(8,35,51,.78),rgba(4,14,23,.78));padding:12px;min-width:0}
+.store-item-name{font:900 18px/1.35 var(--font);color:#dff7ff;overflow-wrap:anywhere}
+.store-item-meta{display:grid;grid-template-columns:auto minmax(0,1fr);gap:3px 8px;font:800 12px/1.55 var(--sans)}
+.store-item-label{color:#6ea4b7}.store-item-value{color:#bcefff;overflow-wrap:anywhere}
+.store-empty{border:1px dashed rgba(65,157,194,.38);border-radius:9px;background:rgba(6,27,43,.5);color:#8aa7b6;font:800 13px/1.7 var(--sans);padding:18px;text-align:center}
+.store-form{display:grid;gap:10px}
+.store-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.store-form-group{display:grid;gap:5px}.store-form-group.full{grid-column:1/-1}
+.store-form-label{color:#8aa7b6;font:900 12px var(--sans)}
+.store-form-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:2px}
+.store-form-status{min-height:18px;color:#a8f1d6;font:800 12px var(--sans)}
+@media(max-width:650px){.store-grid,.store-form-grid{grid-template-columns:1fr}.store-form-group.full{grid-column:auto}.store-toolbar{grid-template-columns:1fr}.store-add-button{width:100%}}
 .market-lord{
   position:absolute;
   top:-65px;
@@ -1738,6 +1766,8 @@ body::after{
 .panel.medical-wide{max-width:1080px}
 .panel.stars-wide{max-width:min(1280px,96vw)}
 .panel.foodhouse-wide{max-width:760px}
+.panel.store-wide{max-width:860px}
+@media(max-width:540px){.panel.store-wide{max-width:100%}}
 @media(min-width:600px){.panel{border-radius:16px;transform:translateY(30px) scale(.96)}}
 .overlay.open .panel{transform:translateY(0) scale(1)}
 
@@ -4373,6 +4403,37 @@ html[data-theme="deep-blue"] .advisor-ai-standalone .advisor-ai-quick-select:foc
       </div>
     </div>
 
+    <!-- Store 倉庫 -->
+    <div class="card store-landscape" id="c-store" onclick="openPanel('store')">
+      <div class="frame">
+        <div class="corner tl"></div><div class="corner tr"></div>
+        <div class="corner bl"></div><div class="corner br"></div>
+        <div class="gem">庫</div>
+        <div class="art" style="position:relative;overflow:hidden;height:427px;border-bottom:none;">
+          <video
+            class="card-video"
+            data-src="storelv1.mp4"
+            poster="store.png"
+            autoplay
+            muted
+            playsinline
+            preload="none"
+            style="width:100%;height:100%;display:block;object-fit:cover;object-position:center center;"
+          ></video>
+          <div style="position:absolute;bottom:0;left:0;right:0;z-index:4;
+            background:linear-gradient(to top,rgba(8,5,3,.95) 0%,rgba(8,5,3,.5) 50%,transparent 100%);
+            padding:16px 12px 12px;text-align:center;pointer-events:none;">
+            <span class="empire-card-caption">倉庫</span>
+          </div>
+        </div>
+      </div>
+      <button class="card-scroll-toggle" type="button" aria-expanded="false" onclick="toggleCardScroll(event,this)">打開卷軸</button>
+      <div class="card-shortcuts" aria-label="倉庫快捷入口">
+        <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'store','store-list')">物品總覽</button>
+        <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'store','store-add')">新增記錄</button>
+      </div>
+    </div>
+
   </div><!-- /cards -->
 </div><!-- /wrap -->
 
@@ -4387,6 +4448,7 @@ html[data-theme="deep-blue"] .advisor-ai-standalone .advisor-ai-quick-select:foc
       <section class="global-scroll-group"><div class="global-scroll-group-title">&#x91AB;&#x9928;</div><div class="global-scroll-buttons"><button class="global-scroll-button" type="button" data-global-panel="medical" data-global-tab="medical-quick" onclick="openGlobalScrollShortcut(event,'medical','medical-quick')">&#x5FEB;&#x901F;&#x8A18;&#x9304;</button><button class="global-scroll-button" type="button" data-global-panel="medical" data-global-tab="medical-tarot" onclick="openGlobalScrollShortcut(event,'medical','medical-tarot')">&#x62BD;&#x724C;&#x8A18;&#x9304;</button><button class="global-scroll-button" type="button" data-global-panel="medical" data-global-tab="medical-stats" onclick="openGlobalScrollShortcut(event,'medical','medical-stats')">&#x724C;&#x5361;&#x7D71;&#x8A08;</button><button class="global-scroll-button" type="button" data-global-panel="medical" data-global-tab="medical-painmap" onclick="openGlobalScrollShortcut(event,'medical','medical-painmap')">&#x75BC;&#x75DB;&#x5730;&#x5716;</button></div></section>
       <section class="global-scroll-group"><div class="global-scroll-group-title">&#x53F8;&#x5929;&#x76E3;</div><div class="global-scroll-buttons"><button class="global-scroll-button" type="button" data-global-panel="stars" data-global-tab="stars-home" onclick="openGlobalScrollShortcut(event,'stars','stars-home')">&#x547D;&#x76E4;&#x7E3D;&#x89BD;</button><button class="global-scroll-button" type="button" data-global-panel="stars" data-global-tab="stars-chronicle" onclick="openGlobalScrollShortcut(event,'stars','stars-chronicle')">&#x4E8B;&#x4EF6;&#x7DE8;&#x5E74;</button></div></section>
       <section class="global-scroll-group"><div class="global-scroll-group-title">&#x57CE;&#x7246;</div><div class="global-scroll-buttons"><button class="global-scroll-button" type="button" data-global-panel="wall" data-global-tab="wall" onclick="openGlobalScrollShortcut(event,'wall','wall')">&#x751F;&#x6D3B;&#x65E5;&#x8A18;</button><button class="global-scroll-button" type="button" data-global-panel="wall" data-global-tab="memo" onclick="openGlobalScrollShortcut(event,'wall','memo')">&#x5099;&#x5FD8;&#x96A8;&#x7B46;</button><button class="global-scroll-button" type="button" data-global-panel="wall" data-global-tab="market" onclick="openGlobalScrollShortcut(event,'wall','market')">&#x80A1;&#x5E02;&#x6559;&#x5BA4;</button><button class="global-scroll-button" type="button" onclick="openGlobalScrollAdmin(event)">&#x65B0;&#x589E;&#x8A18;&#x9304;</button></div></section>
+      <section class="global-scroll-group"><div class="global-scroll-group-title">倉庫</div><div class="global-scroll-buttons"><button class="global-scroll-button" type="button" data-global-panel="store" data-global-tab="store-list" onclick="openGlobalScrollShortcut(event,'store','store-list')">物品總覽</button><button class="global-scroll-button" type="button" data-global-panel="store" data-global-tab="store-add" onclick="openGlobalScrollShortcut(event,'store','store-add')">新增記錄</button></div></section>
     </div>
   </section>
 </div>
@@ -4857,7 +4919,7 @@ function parseApiJsonText(text){
   throw new Error('API returned non-JSON response');
 }
 function isApiWriteAction(action){
-  return /^(expense|income|transfer|transactionUndo|stockTradeVoid|dividendEntry|dividendDelete|holdingTradeEntry|holdingTradeDelete|calendarCreate|calendarDelete|taskCreate|taskDelete|macroLongReportGenerate|macroLongReportTriggerInstall|taiwanStockReviewGenerate)$/.test(action||'');
+  return /^(expense|income|transfer|transactionUndo|stockTradeVoid|dividendEntry|dividendDelete|holdingTradeEntry|holdingTradeDelete|calendarCreate|calendarDelete|taskCreate|taskDelete|storeRecordCreate|macroLongReportGenerate|macroLongReportTriggerInstall|taiwanStockReviewGenerate)$/.test(action||'');
 }
 function apiWriteTimeoutMs(action){
   action=String(action||'');
@@ -5617,6 +5679,7 @@ function openPanel(key,initialTab){
   document.getElementById('panel').classList.toggle('finance-wide',key==='finance');
   document.getElementById('panel').classList.toggle('medical-wide',key==='medical');
   document.getElementById('panel').classList.toggle('stars-wide',key==='stars');
+  document.getElementById('panel').classList.toggle('store-wide',key==='store');
   currentPanel=key;
   if(key==='finance')renderFinancePanel();
   else if(key==='domestic'){setEmpireCardApiPendingStatus('domestic');renderDomesticPanel();}
@@ -5624,6 +5687,7 @@ function openPanel(key,initialTab){
   else if(key==='council'){setEmpireCardApiPendingStatus('council');renderCouncilPanel(initialTab);}
   else if(key==='medical'){setEmpireCardApiPendingStatus('medical');renderMedicalPanel();}
   else if(key==='stars'){setEmpireCardApiPendingStatus('stars');renderStarsPanel();}
+  else if(key==='store'){setEmpireCardApiPendingStatus('store');renderStorePanel(initialTab);}
   document.getElementById('overlay').classList.add('open');
 }
 
@@ -5635,6 +5699,7 @@ function closePanel(){
   document.getElementById('panel').classList.remove('finance-wide');
   document.getElementById('panel').classList.remove('medical-wide');
   document.getElementById('panel').classList.remove('stars-wide');
+  document.getElementById('panel').classList.remove('store-wide');
   document.querySelectorAll('.card').forEach(c=>c.classList.remove('active'));
   currentPanel=null;
 }
@@ -5854,6 +5919,7 @@ function switchTab(btn,key){
   else if(key==='medical-stats')initMedicalCardStats();
   else if(key==='medical-painmap')initMedicalPainMap();
   else if(key==='stars-chronicle')loadEventChronicle();
+  else if(key==='store-list')loadStoreRecords();
 }
 
 function renderStarsPanel(){
@@ -5873,6 +5939,125 @@ function renderStarsPanel(){
     </div>`;
   if(API_URL)loadZiweiCharts();
   else document.getElementById('ziwei-content').innerHTML=setupNotice();
+}
+
+function renderStorePanel(initialTab){
+  setPanelHead('庫','Store · Warehouse','倉庫');
+  var panelExtra=document.getElementById('p-extra');
+  if(panelExtra)panelExtra.innerHTML='<span class="empire-panel-status-dot err" id="store-panel-status-dot" title="倉庫連線失敗" aria-label="倉庫連線失敗"></span>';
+  setPanelMenuTabs([{key:'store-list',label:'物品總覽'},{key:'store-add',label:'新增記錄'}]);
+  document.getElementById('p-body').innerHTML=`
+    <div class="pane active" id="pane-store-list">
+      <div class="store-panel-intro"><div class="store-panel-title">Store｜倉庫物品</div><div class="store-panel-sub">搜尋物品名稱、所在地點或編號，快速找到收納位置。</div></div>
+      <div class="store-toolbar"><input class="store-search" id="store-search" type="search" placeholder="搜尋物品、位置或編號" oninput="storeSearchTerm=this.value;renderStoreList()"><button class="store-add-button" type="button" onclick="switchStoreTab('store-add')">＋新增記錄</button></div>
+      <div class="store-count" id="store-count"></div>
+      <div id="store-list-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:78%"></div></div>
+    </div>
+    <div class="pane" id="pane-store-add">
+      <div class="store-panel-intro"><div class="store-panel-title">新增倉庫記錄</div><div class="store-panel-sub">只登記物品名稱、所在地點、編號與說明。</div></div>
+      <div id="store-form-content"></div>
+    </div>`;
+  renderStoreForm();
+  setEmpireCardApiPendingStatus('store');
+  if(API_URL)loadStoreRecords(true);
+  else document.getElementById('store-list-content').innerHTML=setupNotice();
+  if(initialTab)setTimeout(function(){
+    var btn=document.querySelector('.panel-menu-item[data-panel-tab="'+initialTab+'"]');
+    if(btn)switchTab(btn,initialTab);
+  },0);
+}
+
+var storeRecordsCache=[];
+var storeSearchTerm='';
+var storeRecordsPromise=null;
+
+function renderStoreForm(){
+  var el=document.getElementById('store-form-content');
+  if(!el)return;
+  el.innerHTML=`
+    <form class="store-form" onsubmit="submitStoreRecord(event)">
+      <div class="store-form-grid">
+        <div class="store-form-group"><label class="store-form-label" for="store-item-name">物品名稱</label><input class="form-control" id="store-item-name" type="text" maxlength="120" placeholder="例如：備用 HDMI 線" required></div>
+        <div class="store-form-group"><label class="store-form-label" for="store-location">所在地點</label><input class="form-control" id="store-location" type="text" maxlength="120" placeholder="例如：三樓 A 區第 2 箱"></div>
+        <div class="store-form-group"><label class="store-form-label" for="store-code">編號</label><input class="form-control" id="store-code" type="text" maxlength="80" placeholder="例如：W3-A-001"></div>
+        <div class="store-form-group full"><label class="store-form-label" for="store-description">說明</label><textarea class="form-control" id="store-description" maxlength="500" placeholder="補充用途、數量或辨識方式"></textarea></div>
+      </div>
+      <div class="store-form-actions"><button class="store-add-button" id="store-submit" type="submit">儲存記錄</button><button class="store-secondary-button" type="button" onclick="document.querySelector('#pane-store-add form').reset()">清除</button><span class="store-form-status" id="store-form-status" aria-live="polite"></span></div>
+    </form>`;
+}
+
+function switchStoreTab(key){
+  var btn=document.querySelector('.panel-menu-item[data-panel-tab="'+key+'"]');
+  if(btn)switchTab(btn,key);
+}
+
+function renderStoreList(){
+  var el=document.getElementById('store-list-content');
+  var countEl=document.getElementById('store-count');
+  if(!el)return;
+  var term=String(storeSearchTerm||'').trim().toLowerCase();
+  var rows=storeRecordsCache.filter(function(record){
+    if(!term)return true;
+    return [record.itemName,record.location,record.code,record.description].join(' ').toLowerCase().indexOf(term)>=0;
+  });
+  if(countEl)countEl.textContent=term?'顯示 '+rows.length+' / '+storeRecordsCache.length+' 筆':'共 '+storeRecordsCache.length+' 筆記錄';
+  if(!rows.length){
+    el.innerHTML='<div class="store-empty">'+(storeRecordsCache.length?'找不到符合的物品。':'目前尚無倉庫記錄，請從「新增記錄」開始。')+'</div>';
+    return;
+  }
+  el.innerHTML='<div class="store-grid">'+rows.map(function(record){
+    return '<article class="store-item-card">'+
+      '<div class="store-item-name">'+esc(record.itemName||'未命名物品')+'</div>'+
+      '<div class="store-item-meta">'+
+        '<span class="store-item-label">所在地點</span><span class="store-item-value">'+esc(record.location||'—')+'</span>'+
+        '<span class="store-item-label">編號</span><span class="store-item-value">'+esc(record.code||'—')+'</span>'+
+        '<span class="store-item-label">說明</span><span class="store-item-value">'+esc(record.description||'—')+'</span>'+
+      '</div></article>';
+  }).join('')+'</div>';
+}
+
+function loadStoreRecords(force){
+  if(storeRecordsPromise&&!force)return storeRecordsPromise;
+  if(!API_URL){setEmpireCardStatus('store','err','尚未設定 API');return Promise.reject(new Error('尚未設定 API'));}
+  setEmpireCardStatus('store','pending');
+  storeRecordsPromise=apiGet({action:'storeRecords'}).then(function(data){
+    storeRecordsCache=(data&&data.records)||[];
+    renderStoreList();
+    setEmpireCardStatus('store','ok','倉庫資料已載入');
+    return storeRecordsCache;
+  }).catch(function(e){
+    console.error(e);
+    setEmpireCardStatus('store','err',e.message||'倉庫資料載入失敗');
+    var el=document.getElementById('store-list-content');
+    if(el)el.innerHTML='<div class="store-empty">'+esc(e.message||'倉庫資料載入失敗')+'</div>';
+    throw e;
+  }).finally(function(){storeRecordsPromise=null;});
+  return storeRecordsPromise;
+}
+
+async function submitStoreRecord(event){
+  if(event)event.preventDefault();
+  var status=document.getElementById('store-form-status');
+  var button=document.getElementById('store-submit');
+  var itemName=(document.getElementById('store-item-name')||{}).value||'';
+  var location=(document.getElementById('store-location')||{}).value||'';
+  var code=(document.getElementById('store-code')||{}).value||'';
+  var description=(document.getElementById('store-description')||{}).value||'';
+  if(!String(itemName).trim()){if(status)status.textContent='請輸入物品名稱';return;}
+  if(!API_URL){if(status)status.textContent='尚未設定 API';return;}
+  if(button)button.disabled=true;
+  if(status)status.textContent='正在儲存…';
+  try{
+    await apiPost({action:'storeRecordCreate',itemName:itemName,location:location,code:code,description:description});
+    if(status)status.textContent='已新增倉庫記錄';
+    var form=document.querySelector('#pane-store-add form');
+    if(form)form.reset();
+    await loadStoreRecords(true);
+    switchStoreTab('store-list');
+  }catch(e){
+    console.error(e);
+    if(status)status.textContent=e.message||'儲存失敗';
+  }finally{if(button)button.disabled=false;}
 }
 
 function pruneFinanceTreasuryCacheVersions(){
@@ -5958,7 +6143,8 @@ function setEmpireCardStatus(key,status,message){
     council:'軍機處',
     medical:'醫館',
     stars:'司天監',
-    wall:'城牆'
+    wall:'城牆',
+    store:'倉庫'
   };
   var label=labels[key]||'卡片';
   var text=status==='ok'?label+'連線成功':(status==='pending'?label+'連線中':label+'連線失敗');
@@ -5971,6 +6157,7 @@ function setEmpireCardStatus(key,status,message){
   if(key==='medical')targets.push({id:'medical-panel-status-dot',cls:'empire-panel-status-dot'});
   if(key==='stars')targets.push({id:'stars-panel-status-dot',cls:'empire-panel-status-dot'});
   if(key==='wall')targets.push({id:'wall-panel-status-dot',cls:'empire-panel-status-dot'});
+  if(key==='store')targets.push({id:'store-panel-status-dot',cls:'empire-panel-status-dot'});
   targets.forEach(function(target){
     var dot=document.getElementById(target.id);
     if(dot){
@@ -5995,7 +6182,7 @@ function setCouncilPanelStatusIfActive(status,message){
 
 function initEmpireCardStatuses(){
   setEmpireCardApiPendingStatus('finance');
-  ['domestic','council','medical','stars'].forEach(function(key){
+  ['domestic','council','medical','stars','store'].forEach(function(key){
     setEmpireCardApiPendingStatus(key);
   });
   setEmpireCardStatus('wall','pending','尚未讀取城牆');
