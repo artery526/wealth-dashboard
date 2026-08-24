@@ -4604,7 +4604,7 @@ html[data-theme="deep-blue"] .advisor-ai-standalone .advisor-ai-quick-select:foc
 // ══════════════════════════════════════════
 //  State & Config
 // ══════════════════════════════════════════
-var CANONICAL_API_URL = 'https://script.google.com/macros/s/AKfycbww0jAI188IxJeECKEgaUjye9Pf1iJlnI7vGxutJ6ksNDHw6alJ0NcDg2oJtXqeYwtv';
+var CANONICAL_API_URL = 'https://script.google.com/macros/s/AKfycbzRIPcVq_Reg2YY-KKFQz29zOxJIpc-KMu9z4luAHRZGQ-j-9viy5Rbz31unxwNTTcY';
 var LEGACY_API_DEPLOYMENT_IDS = [
   'AKfycbwBhxif_vONIC4m8mxWZB2q2bk3Hyy1lBkCkFSg66OLwQxPQL-Ktsc7BdTgZQZAc4bO',
   'AKfycbw3ddm4mcOvSSijvguaBwVvJH-KOp5MdrUgJQw4oy58o9bg456EtRIaCsYnrsPSS7xN',
@@ -5111,6 +5111,10 @@ function isAbortLikeError(err){
 }
 async function apiPost(body){
   if(!API_URL)throw new Error('未設定 API 網址');
+  body=Object.assign({},body||{});
+  if(/^(expense|income|transfer)$/.test(String(body.action||''))&&!body.requestId){
+    body.requestId='web-'+(window.crypto&&crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random().toString(36).slice(2));
+  }
   WRITE_TOKEN=cleanToken(WRITE_TOKEN);
   if(!WRITE_TOKEN)throw new Error('未設定記帳密鑰');
   if(String(body&&body.action||'')!=='verifyWriteToken'&&!webVerifyIsAuthorized())throw new Error('城門尚未開啟，請先完成龐統軍師驗證');
