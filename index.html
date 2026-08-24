@@ -5966,7 +5966,7 @@ function renderStorePanel(initialTab){
       <div id="store-list-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:78%"></div></div>
     </div>
     <div class="pane" id="pane-store-add">
-      <div class="store-panel-intro"><div class="store-panel-title" id="store-form-title">新增倉庫記錄</div><div class="store-panel-sub">只登記物品名稱、所在地點、編號與說明。</div></div>
+      <div class="store-panel-intro"><div class="store-panel-title" id="store-form-title">新增倉庫記錄</div><div class="store-panel-sub">登記物品名稱、所在地點、編號、說明與記錄時間。</div></div>
       <div id="store-form-content"></div>
     </div>`;
   renderStoreForm();
@@ -5995,10 +5995,22 @@ function renderStoreForm(){
         <div class="store-form-group"><label class="store-form-label" for="store-item-name">物品名稱</label><input class="form-control" id="store-item-name" type="text" maxlength="120" placeholder="例如：備用 HDMI 線" required></div>
         <div class="store-form-group"><label class="store-form-label" for="store-location">所在地點</label><input class="form-control" id="store-location" type="text" maxlength="120" placeholder="例如：三樓 A 區第 2 箱"></div>
         <div class="store-form-group"><label class="store-form-label" for="store-code">編號</label><input class="form-control" id="store-code" type="text" maxlength="80" placeholder="例如：W3-A-001"></div>
+        <div class="store-form-group"><label class="store-form-label" for="store-record-date">記錄時間</label><input class="form-control" id="store-record-date" type="date" required></div>
         <div class="store-form-group full"><label class="store-form-label" for="store-description">說明</label><textarea class="form-control" id="store-description" maxlength="500" placeholder="補充用途、數量或辨識方式"></textarea></div>
       </div>
       <div class="store-form-actions"><button class="store-add-button" id="store-submit" type="submit">儲存記錄</button><button class="store-secondary-button" id="store-cancel-edit" type="button" hidden onclick="resetStoreForm()">清除</button><span class="store-form-status" id="store-form-status" aria-live="polite"></span></div>
     </form>`;
+  var dateEl=document.getElementById('store-record-date');
+  if(dateEl)dateEl.value=getStoreTodayInputValue();
+}
+
+function getStoreTodayInputValue(){
+  var now=new Date();
+  return now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+}
+
+function storeDateInputValue(recordDate){
+  return String(recordDate||'').replace(/\//g,'-');
 }
 
 function switchStoreTab(key){
@@ -6090,7 +6102,8 @@ function editStoreRecord(row){
     'store-item-name':record.itemName||'',
     'store-location':record.location||'',
     'store-code':record.code||'',
-    'store-description':record.description||''
+    'store-description':record.description||'',
+    'store-record-date':storeDateInputValue(record.recordDate)||getStoreTodayInputValue()
   };
   Object.keys(fields).forEach(function(id){var el=document.getElementById(id);if(el)el.value=fields[id];});
   var status=document.getElementById('store-form-status');
@@ -6108,6 +6121,8 @@ function resetStoreForm(){
   if(titleEl)titleEl.textContent='新增倉庫記錄';
   if(submitEl)submitEl.textContent='儲存記錄';
   if(cancelEl)cancelEl.hidden=true;
+  var dateEl=document.getElementById('store-record-date');
+  if(dateEl)dateEl.value=getStoreTodayInputValue();
   var status=document.getElementById('store-form-status');
   if(status)status.textContent='';
 }
@@ -6135,13 +6150,14 @@ async function submitStoreRecord(event){
   var location=(document.getElementById('store-location')||{}).value||'';
   var code=(document.getElementById('store-code')||{}).value||'';
   var description=(document.getElementById('store-description')||{}).value||'';
+  var recordDate=(document.getElementById('store-record-date')||{}).value||'';
   var editRow=Number((document.getElementById('store-edit-row')||{}).value||0);
   if(!String(itemName).trim()){if(status)status.textContent='請輸入物品名稱';return;}
   if(!API_URL){if(status)status.textContent='尚未設定 API';return;}
   if(button)button.disabled=true;
   if(status)status.textContent='正在儲存…';
   try{
-    await apiPost({action:editRow?'storeRecordUpdate':'storeRecordCreate',row:editRow||undefined,itemName:itemName,location:location,code:code,description:description});
+    await apiPost({action:editRow?'storeRecordUpdate':'storeRecordCreate',row:editRow||undefined,itemName:itemName,location:location,code:code,description:description,recordDate:recordDate});
     if(status)status.textContent=editRow?'已更新倉庫記錄':'已新增倉庫記錄';
     resetStoreForm();
     await loadStoreRecords(true);
