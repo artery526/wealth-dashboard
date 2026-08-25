@@ -4653,7 +4653,7 @@ var cfg = (function(){
 })();
 var BOOKING_FALLBACK_CATEGORIES = ['🛒全聯食材','🍴超商外食','🍔大餐簡餐','🛵外送餐飲','🏠家居用品','⛽機車加油','🧑‍🔧機車維護','💻3C產品','💧水電瓦斯','🏦稅務勞健保','🧥服飾外貌','⚒️房屋修繕','💊醫療保健','☎️電信網路','📱APP訂閱','📖書籍教材','👩Sis學貸/支出','💸租屋管理費','🛎️旅遊住宿','🤹娛樂費用','👤公益樂捐','🎅爸媽代繳'];
 var BOOKING_FALLBACK_SOURCES = ['👷工作所得','💰投資理財','🪙副業兼職','💲交易所得','🤶爸媽收入','🪙機構退稅'];
-var BOOKING_FALLBACK_ACCOUNTS = ['💰Cash','💵國泰Stock','🔖中國信託','🟩連線商業銀行','🏔️玉山銀行','💳Cube'];
+var BOOKING_FALLBACK_ACCOUNTS = ['💰Cash','💵國泰Stock','🔖中國信託','🟩連線商業銀行','🏔️玉山銀行'];
 var holdingsCache = [];
 var bookingAccountBalances = [];
 var bookingAccountBalancesPromise = null;
@@ -4841,7 +4841,7 @@ function filterRemovedBookingAccounts(values){
 function filterHiddenBookingAccounts(values){
   return filterRemovedBookingAccounts(values).filter(function(value){
     var key=stripIconText(value).replace(/\s+/g,'').toLowerCase();
-    return key!=='國泰money'&&key!=='國泰m'&&key!=='sis國泰世華';
+    return key!=='國泰money'&&key!=='國泰m'&&key!=='sis國泰世華'&&key!=='cube';
   });
 }
 function bookingOptionMatches(value,target){
@@ -4877,7 +4877,6 @@ function bookingExpensePresetsHtml(){
   var items=[
     {label:'外食',cat:'🍔大餐簡餐',account:'🏔️玉山銀行',note:'外食簡餐'},
     {label:'超商',cat:'🍴超商外食',account:'🔖中國信託',note:'超商消費'},
-    {label:'PX網購',cat:'💻3C產品',account:'💳Cube',note:'PX網購'},
     {label:'現金',cat:'🍴超商外食',account:'💰Cash',note:'現金支付'},
     {label:'APP',cat:'📱APP訂閱',account:'🏔️玉山銀行',note:'APP訂閱'}
   ];
@@ -8431,7 +8430,7 @@ function renderAccounts(accs,monthly,el,assetSnapshot,bills,stale){
     else if(key==='國泰stock')cathayStockAccount=a;
     else ordinaryAccounts.push(a);
   });
-  var accountOrder=['中國信託','連線商業銀行','玉山銀行','cube'];
+  var accountOrder=['中國信託','連線商業銀行','玉山銀行'];
   ordinaryAccounts.sort(function(a,b){
     var aKey=stripIconText(a&&a.name).replace(/\s+/g,'').toLowerCase();
     var bKey=stripIconText(b&&b.name).replace(/\s+/g,'').toLowerCase();
@@ -8442,11 +8441,8 @@ function renderAccounts(accs,monthly,el,assetSnapshot,bills,stale){
     return aIndex-bIndex;
   });
 
-  var cubeAccount=ordinaryAccounts.find(function(a){
-    return stripIconText(a&&a.name).replace(/\s+/g,'').toLowerCase()==='cube';
-  });
   var totalAssetHtml=renderTreasuryAccountTotalAssetCard(assetSnapshot,totalAssetAccount,monthly);
-  var cashStockHtml=renderTreasuryCashStockCard(cashAccount,cathayStockAccount,cubeAccount);
+  var cashStockHtml=renderTreasuryCashStockCard(cashAccount,cathayStockAccount);
   var leftAccounts=ordinaryAccounts.filter(function(a){
     return stripIconText(a&&a.name).replace(/\s+/g,'').toLowerCase()!=='cube';
   });
@@ -8503,14 +8499,13 @@ function renderTreasuryAccountTotalAssetCard(assetSnapshot,totalAssetAccount,mon
   </div>`;
 }
 
-function renderTreasuryCashStockCard(cashAccount,cathayStockAccount,cubeAccount){
+function renderTreasuryCashStockCard(cashAccount,cathayStockAccount){
   if(!cashAccount&&!cathayStockAccount)return '';
   function cell(account,label){
     if(!account)return '';
     return `<div class="treasury-account-merge-cell"><div class="treasury-account-merge-label">${label}</div><div class="treasury-account-merge-value">${fmtFull(account.value)}</div></div>`;
   }
   var stockLabel='💵國泰Stock';
-  if(cubeAccount)stockLabel+='(💳'+fmtPlainAmount(cubeAccount.value)+')';
   return `<div class="acc-item treasury-cash-stock-card">
     <div class="acc-name">✨Cash/Stock</div>
     <div class="treasury-account-merge-grid">
@@ -8637,7 +8632,6 @@ async function initBookingForm(){
     {label:'💰Cash',value:'💰Cash'},
     {label:'💵國泰S',value:'💵國泰Stock'},
     {label:'🔖中國',value:'🔖中國信託'},
-    {label:'💳Cube',value:'💳Cube'}
   ]);
   var incomeSourceChips=bookingQuickChipsHtml('i-source',[
     {label:'💰投資',value:'💰投資理財'},
@@ -8664,7 +8658,6 @@ async function initBookingForm(){
     {label:'🔖中國',value:'🔖中國信託'},
     {label:'🟩連線',value:'🟩連線商業銀行'},
     {label:'🏔️玉山',value:'🏔️玉山銀行'},
-    {label:'💳Cube',value:'💳Cube'}
   ]);
   el.innerHTML=`
     ${bookingAccountBalanceHtml()}
@@ -15449,7 +15442,6 @@ function advisorShortcutSpecs(){
   return {
     withdraw:{title:'日常提款',amountLabel:'提款金額',hint:'國泰Stock → Cash，直接記錄轉帳。',action:'transfer',from:'💵國泰Stock',to:'💰Cash',note:'日常提款'},
     cashpay:{title:'現金支付',amountLabel:'消費金額',hint:'Cash 支出，請選擇完整消費項目。',action:'expense',account:'💰Cash',cat:'',note:'現金支付',needCategory:true},
-    credit:{title:'PX網購',amountLabel:'消費金額',hint:'Cube 支出，請選擇完整消費項目。',action:'expense',account:'💳Cube',cat:'',note:'PX網購',needCategory:true},
     dining:{title:'外食簡餐',amountLabel:'消費金額',hint:'玉山銀行支出，請選擇完整消費項目。',action:'expense',account:'🏔️玉山銀行',cat:'',note:'外食簡餐',needCategory:true},
     store:{title:'超商消費',amountLabel:'消費金額',hint:'固定分類：🍴超商外食；帳戶：🔖中國信託。',action:'expense',account:'🔖中國信託',cat:'🍴超商外食',note:'超商消費'}
   };
@@ -15527,15 +15519,13 @@ function advisorAIWriteHeaderFundsCache(data){
   }catch(e){}
 }
 
-function advisorAIHeaderFundsHtml(cash,stock,cube){
+function advisorAIHeaderFundsHtml(cash,stock){
   var cashText=(cash===null||cash===undefined||isNaN(Number(cash)))?'--':Math.round(Number(cash)).toLocaleString('zh-TW');
   var stockText=(stock===null||stock===undefined||isNaN(Number(stock)))?'--':Math.round(Number(stock)).toLocaleString('zh-TW');
-  var cubeText=(cube===null||cube===undefined||isNaN(Number(cube)))?'--':Math.round(Number(cube)).toLocaleString('zh-TW');
   var battleText=advisorAIHeaderBattleVisible?(advisorAIHeaderBattleLoaded?(advisorAIHeaderBattleValue||'--'):'…'):'***';
   return `<span class="advisor-ai-fund-pill">💰 <strong>${esc(cashText)}</strong></span>
     <span class="advisor-ai-fund-pill">💲 <strong>${esc(stockText)}</strong></span>
-    <button class="advisor-ai-fund-pill advisor-ai-battle-pill" type="button" onclick="advisorAIToggleHeaderBattle(this)" title="顯示或隱藏月度戰情室 H4" aria-label="顯示或隱藏月度戰情室 H4">🛖 <strong>${esc(battleText)}</strong></button>
-    <span class="advisor-ai-fund-pill">💳 <strong>${esc(cubeText)}</strong></span>`;
+    <button class="advisor-ai-fund-pill advisor-ai-battle-pill" type="button" onclick="advisorAIToggleHeaderBattle(this)" title="顯示或隱藏月度戰情室 H4" aria-label="顯示或隱藏月度戰情室 H4">🛖 <strong>${esc(battleText)}</strong></button>`;
 }
 
 function advisorAIToggleHeaderBattle(){
@@ -15548,7 +15538,7 @@ function advisorAIUpdateHeaderFunds(data){
   var el=document.getElementById('advisor-ai-funds');
   if(!el)return;
   data=data||advisorAIGetHeaderFundsCache()||{};
-  el.innerHTML=advisorAIHeaderFundsHtml(data.cash,data.stock,data.cube);
+  el.innerHTML=advisorAIHeaderFundsHtml(data.cash,data.stock);
 }
 
 function advisorAIFindAccountRow(rows,target){
@@ -15575,7 +15565,6 @@ async function advisorAILoadHeaderFunds(force){
     var rows=results[0].status==='fulfilled'?results[0].value:[];
     var cashRow=advisorAIFindAccountRow(rows,'💰Cash');
     var stockRow=advisorAIFindAccountRow(rows,'💵國泰Stock');
-    var cubeRow=(rows||[]).find(function(row){return advisorAIAccountMatches(row&&row.name,'Cube');});
     if(results[1].status==='fulfilled'){
       var battle=results[1].value||{};
       advisorAIHeaderBattleValue=String(battle.display!=null?battle.display:(battle.value||'')).trim();
@@ -15584,7 +15573,6 @@ async function advisorAILoadHeaderFunds(force){
     advisorAIHeaderFundsCache={
       cash: cashRow?Number(cashRow.value):NaN,
       stock: stockRow?Number(stockRow.value):NaN,
-      cube: cubeRow?Number(cubeRow.value):NaN,
       battleValue: advisorAIHeaderBattleValue,
       battleLoaded: advisorAIHeaderBattleLoaded
     };
@@ -15618,7 +15606,7 @@ function advisorAIHeaderHtml(title){
         ${advisorAIQuickCommandSelectHtml()}
       </div>
       <div class="advisor-ai-title-wrap">
-        <div class="advisor-ai-funds" id="advisor-ai-funds">${advisorAIHeaderFundsHtml(fundsCache&&fundsCache.cash,fundsCache&&fundsCache.stock,fundsCache&&fundsCache.cube)}</div>
+        <div class="advisor-ai-funds" id="advisor-ai-funds">${advisorAIHeaderFundsHtml(fundsCache&&fundsCache.cash,fundsCache&&fundsCache.stock)}</div>
       </div>
     </div>
     <div class="advisor-ai-expense-quick-row">
@@ -17427,7 +17415,6 @@ var LORD_DATA = {
     {name:'🔖 中國信託', val:308030},
     {name:'🟩 連線商業銀行', val:112000},
     {name:'🏔️ 玉山銀行', val:11615},
-    {name:'💳 Cube', val:-1031},
   ],
   holdings: [
     {emoji:'👑',name:'IAU', cost:643339, mktVal:768394, units:275, price:88.75, div:0},
