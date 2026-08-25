@@ -8684,7 +8684,6 @@ async function initBookingForm(){
         <div class="form-group hidden"><label class="form-label">記帳日期</label><input class="form-control" type="date" id="i-date" value="${today()}"></div>
         <div class="form-group"><div class="form-label booking-source-label"><span>收入來源</span><span class="booking-dividend-anchor"><button class="booking-dividend-mini" type="button" onclick="event.stopPropagation();openBookingDividendPicker()">配息<span class="booking-mini-badge" id="booking-dividend-badge"></span></button><span class="booking-dividend-pending" id="booking-dividend-pending"></span></span></div><select class="form-control" id="i-source" onchange="toggleDivFields()">${srcOpts}</select></div>
         <div class="form-group"><label class="form-label">入帳帳戶</label><select class="form-control" id="i-account" onchange="onIncomeAccountChange()">${incomeAccOpts}</select><div class="income-account-lock-status hidden" id="i-account-lock-status"></div></div>
-        <div class="form-group hidden income-wide" id="i-div-rate-grp"><label class="form-label">配息比例</label><input class="form-control" type="number" id="i-div-rate" placeholder="例：0.35" step="0.001" min="0"></div>
         <div class="form-group booking-focus-amount income-wide"><label class="form-label">金額 (TWD)</label><input class="form-control" type="number" id="i-amount" placeholder="0" min="1"></div>
         <div class="form-group hidden income-wide" id="i-div-sym-grp"><label class="form-label">配息標的</label><select class="form-control" id="i-div-sym" onclick="openBookingDividendPicker()" onfocus="openBookingDividendPicker()" onchange="syncDivNote()">${divOpts}</select></div>
         <div class="dividend-autofill-note hidden income-wide" id="i-dividend-autofill"></div>
@@ -9004,9 +9003,6 @@ function switchBTab(btn,key){
 }
 
 function toggleDivFields(){
-  var src=document.getElementById('i-source');
-  var isInv=src&&isInvestSrc(src.value);
-  document.getElementById('i-div-rate-grp').classList.toggle('hidden',!isInv);
   document.getElementById('i-div-sym-grp').classList.add('hidden');
   syncIncomeDividendSymbolFromAccount();
   syncDivNote();
@@ -10635,17 +10631,14 @@ async function onIncomeAccountChange(){
 function clearIncomeDividendAutofill(){
   var note=document.getElementById('i-dividend-autofill');
   var amount=document.getElementById('i-amount');
-  var divRate=document.getElementById('i-div-rate');
   if(note){note.classList.add('hidden');note.textContent='';note.dataset.dividendRowId='';}
   if(amount)amount.dataset.dividendRowId='';
-  if(divRate)divRate.value='';
 }
 
 function applyIncomeDividendAutofill(row){
   var src=document.getElementById('i-source');
   var amount=document.getElementById('i-amount');
   var divSym=document.getElementById('i-div-sym');
-  var divRate=document.getElementById('i-div-rate');
   var note=document.getElementById('i-note');
   var auto=document.getElementById('i-dividend-autofill');
   if(src){
@@ -10654,7 +10647,6 @@ function applyIncomeDividendAutofill(row){
     toggleDivFields();
   }
   if(divSym)divSym.value=getDividendDisplayValue(row.symbol,divSym) || row.symbol;
-  if(divRate)divRate.value=formatDividendUsdForInput(row.dividendUsd);
   syncDivNote();
   if(amount){amount.value=Math.round(Number(row.estimatedTwd)||0);amount.dataset.dividendRowId=row.rowId||'';}
   if(auto){
@@ -10725,7 +10717,6 @@ async function advisorAIConfirmDividendIncome(btn){
       account:'💵國泰Stock',
       amount:pending.amount,
       note:pending.displaySymbol,
-      divRate:pending.divRate,
       divSymbol:pending.symbol,
       dividendIncome:'1',
       dividendRowId:pending.dividendRowId||''
@@ -10843,7 +10834,6 @@ async function submitIncome(e){
   var acc=document.getElementById('i-account').value;
   var amt=parseFloat(document.getElementById('i-amount').value)||0;
   var note=document.getElementById('i-note').value;
-  var divRate=document.getElementById('i-div-rate')?document.getElementById('i-div-rate').value:'';
   var divSym=document.getElementById('i-div-sym')?document.getElementById('i-div-sym').value:'';
   if(isInvestSrc(src)){
     divSym=syncIncomeDividendSymbolFromAccount()||divSym;
@@ -10854,7 +10844,7 @@ async function submitIncome(e){
   if(isInvestSrc(src)&&!divSym){showMsg('msg-income','請選擇持股標的作為入帳帳戶','err');return}
   btn.disabled=true;btn.textContent='記錄中…';
   try{
-    await apiPost({action:'income',date:date.replace(/-/g,'/'),source:src,account:acc,amount:amt,note,divRate,divSymbol:divSym,
+    await apiPost({action:'income',date:date.replace(/-/g,'/'),source:src,account:acc,amount:amt,note,divSymbol:divSym,
       dividendIncome:dividendRowId?'1':'',dividendRowId});
     if(dividendRowId)invalidateDividendCenter();
     showMsg('msg-income','✓ 已記錄！','ok');
@@ -17137,7 +17127,6 @@ async function advisorAIRecordDividend(symbol,amount){
     account:'💵國泰Stock',
     amount:amount,
     note:'',
-    divRate:(row&&row.dividendUsd)||'',
     divSymbol:(row&&row.symbol)||symbol,
     dividendIncome:'1',
     dividendRowId:(row&&row.rowId)||''
@@ -17397,7 +17386,6 @@ async function submitAdvisorDividendIncome(btn){
       account:'💵國泰Stock',
       amount:amount,
       note:'',
-      divRate:row.dividendUsd||'',
       divSymbol:row.symbol||row.displaySymbol||'',
       dividendIncome:'1',
       dividendRowId:row.rowId||''
