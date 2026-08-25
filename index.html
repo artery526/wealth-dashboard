@@ -4616,6 +4616,7 @@ html[data-theme="deep-blue"] .advisor-ai-standalone .advisor-ai-quick-select:foc
 //  State & Config
 // ══════════════════════════════════════════
 var CANONICAL_API_URL = 'https://script.google.com/macros/s/AKfycbyjjbR3MJ2GShZmEe6IU6FHzZrxSrBRMvXoqL6Wn1Q7Ldszm1p08Y8cxJFkkzAI-woa/exec';
+var EVENT_CHRONICLE_NAS_API_URL = 'https://api.ark-os26.cc';
 var LEGACY_API_DEPLOYMENT_IDS = [
   'AKfycbwBhxif_vONIC4m8mxWZB2q2bk3Hyy1lBkCkFSg66OLwQxPQL-Ktsc7BdTgZQZAc4bO',
   'AKfycbw3ddm4mcOvSSijvguaBwVvJH-KOp5MdrUgJQw4oy58o9bg456EtRIaCsYnrsPSS7xN',
@@ -5121,6 +5122,23 @@ function isAbortLikeError(err){
   var name=String(err&&err.name||'');
   var message=String(err&&err.message||'').toLowerCase();
   return name==='AbortError'||message.indexOf('abort')>=0||message.indexOf('signal is aborted')>=0;
+}
+
+async function eventChronicleApiRequest(method,path,body,timeoutMs){
+  var token=cleanToken(WRITE_TOKEN);
+  if(!token)throw new Error('尚未設定 NAS 管理寫入令');
+  var options={method:method,cache:'no-store',redirect:'follow',headers:{'Authorization':'Bearer '+token,'Accept':'application/json'}};
+  if(body!==undefined){options.headers['Content-Type']='application/json';options.body=JSON.stringify(body);}
+  var r=await fetchWithTimeout(EVENT_CHRONICLE_NAS_API_URL+path,options,timeoutMs||20000);
+  var text=await r.text();
+  var data;
+  try{data=JSON.parse(text);}catch(e){throw new Error('NAS 事件 API 回傳格式無效');}
+  if(!r.ok)throw new Error(data.error||'NAS 事件 API 失敗：HTTP '+r.status);
+  return data;
+}
+
+function eventChronicleRowKey(row){
+  return String((row&&row.id)||((row&&row.rowNumber)||''));
 }
 async function apiPost(body){
   if(!API_URL)throw new Error('未設定 API 網址');
@@ -6460,7 +6478,7 @@ async function loadEventChronicle(){
   var label=document.getElementById('chronicle-label');
   var dot=document.getElementById('chronicle-dot');
   if(!content)return;
-  if(!API_URL){
+  if(!cleanToken(WRITE_TOKEN)){
     content.innerHTML=setupNotice();
     if(dot)dot.className='api-dot err';
     if(label)label.textContent='尚未設定 API';
@@ -6481,7 +6499,7 @@ async function loadEventChronicle(){
   }
   try{
     if(!eventChroniclePromise){
-      eventChroniclePromise=apiGet({action:'eventChronicle'},30000).finally(function(){eventChroniclePromise=null;});
+      eventChroniclePromise=eventChronicleApiRequest('GET','/api/event-chronicle',undefined,30000).finally(function(){eventChroniclePromise=null;});
     }
     var data=await eventChroniclePromise;
     eventChronicleCache=data.rows||[];
@@ -6547,7 +6565,7 @@ function getChronicleEntryPreview(){
   var date=(document.getElementById('chronicle-entry-date')||{}).value||'';
   var days=mode==='單一事件耗時'
     ? (parseInt((document.getElementById('chronicle-entry-duration')||{}).value,10)||0)
-    : (date?Math.max(1,Math.floor((new Date().getTime()-new Date(date+'T00:00:00').getTime())/86400000)+1):0);
+    : (date?Math.floor((Date.parse(today()+'T00:00:00Z')-Date.parse(date+'T00:00:00Z'))/86400000)+1:0);
   return {mode:mode,price:price,days:days,months:days?Math.round(days/30.6*100)/100:0,dailyCost:days&&price?Math.round(price/days*100)/100:0};
 }
 
@@ -6555,7 +6573,7 @@ function updateChroniclePreview(){
   var preview=document.getElementById('chronicle-entry-preview');
   if(!preview)return;
   var v=getChronicleEntryPreview();
-  preview.textContent=v.price>0&&v.days>0?'自動換算：'+v.days+' 日／'+v.months+' 月／每日成本 '+v.dailyCost.toLocaleString('zh-TW',{maximumFractionDigits:2}):'請填入價格以預覽日、月與每日成本';
+  preview.textContent=v.price>0&&v.days>0?'自動換算：'+v.days+' 日／'+v.months+' 月／每日成本 '+v.dailyCost.toLocaleString('zh-TW',{maximumFractionDigits:2}):v.price>0&&v.days<=0?'尚未開始：日期在今天之後，日／月／每日成本暫不計算':'請填入價格以預覽日、月與每日成本';
 }
 
 async function submitEventChronicle(e){
@@ -6570,7 +6588,12 @@ async function submitEventChronicle(e){
   if(!name||!date||price<=0||(mode==='單一事件耗時'&&durationDays<=0)){showMsg('chronicle-entry-msg','請填寫完整記錄資料','err');return;}
   if(btn) {btn.disabled=true;btn.textContent='寫入中…';}
   try{
-    await apiPost({action:chronicleEditingRowNumber?'eventChronicleEdit':'eventChronicleSave',rowNumber:chronicleEditingRowNumber||'',name:name,date:date.replace(/-/g,'/'),price:price,mode:mode,durationDays:durationDays});
+    var payload={name:name,date:date,price:price,mode:mode,durationDays:durationDays};
+    if(chronicleEditingRowNumber){
+      await eventChronicleApiRequest('PUT','/api/event-chronicle/'+encodeURIComponent(String(chronicleEditingRowNumber)),payload,30000);
+    }else{
+      await eventChronicleApiRequest('POST','/api/event-chronicle',payload,30000);
+    }
     try{localStorage.removeItem(STARS_CHRONICLE_CACHE_KEY);}catch(ignore){}
     showMsg('chronicle-entry-msg',chronicleEditingRowNumber?'✓ 事件已更新':'✓ 已加入事件編年史','ok');
     resetChronicleEntryForm();
@@ -6604,9 +6627,10 @@ function cancelEditEventChronicle(){
 }
 
 function beginEditEventChronicle(rowNumber){
-  var row=eventChronicleCache.find(function(item){return Number(item.rowNumber)===Number(rowNumber);});
+  rowNumber=decodeURIComponent(String(rowNumber||''));
+  var row=eventChronicleCache.find(function(item){return eventChronicleRowKey(item)===String(rowNumber);});
   if(!row)return;
-  chronicleEditingRowNumber=Number(row.rowNumber);
+  chronicleEditingRowNumber=eventChronicleRowKey(row);
   var title=document.getElementById('chronicle-entry-title');
   var btn=document.getElementById('chronicle-entry-submit');
   var cancel=document.getElementById('chronicle-entry-cancel');
@@ -6631,11 +6655,12 @@ function beginEditEventChronicle(rowNumber){
 
 async function removeEventChronicle(rowNumber,event){
   if(event&&event.stopPropagation)event.stopPropagation();
-  var row=eventChronicleCache.find(function(item){return Number(item.rowNumber)===Number(rowNumber);});
+  rowNumber=decodeURIComponent(String(rowNumber||''));
+  var row=eventChronicleCache.find(function(item){return eventChronicleRowKey(item)===String(rowNumber);});
   if(!row)return;
-  if(!confirm('確定移除「'+String(row.name||'未命名')+'」？此操作會刪除試算表中的整列記錄。'))return;
+  if(!confirm('確定移除「'+String(row.name||'未命名')+'」？此操作會刪除 NAS 中的事件記錄。'))return;
   try{
-    await apiPost({action:'eventChronicleDelete',rowNumber:Number(rowNumber)});
+    await eventChronicleApiRequest('DELETE','/api/event-chronicle/'+encodeURIComponent(String(rowNumber)),undefined,30000);
     try{localStorage.removeItem(STARS_CHRONICLE_CACHE_KEY);}catch(ignore){}
     if(chronicleEditingRowNumber===Number(rowNumber))resetChronicleEntryForm();
     await loadEventChronicle();
@@ -6643,7 +6668,8 @@ async function removeEventChronicle(rowNumber,event){
 }
 
 function chronicleCardActions(row){
-  return '<div class="chronicle-card-actions" onclick="event.stopPropagation()"><button type="button" onclick="beginEditEventChronicle('+Number(row.rowNumber)+')">編輯</button><button type="button" class="danger" onclick="removeEventChronicle('+Number(row.rowNumber)+',event)">移除</button></div>';
+  var key=encodeURIComponent(eventChronicleRowKey(row));
+  return '<div class="chronicle-card-actions" onclick="event.stopPropagation()"><button type="button" onclick="beginEditEventChronicle(\''+key+'\')">編輯</button><button type="button" class="danger" onclick="removeEventChronicle(\''+key+'\',event)">移除</button></div>';
 }
 
 function sortEventChronicleRows(rows){
@@ -12382,7 +12408,7 @@ function prefetchBattleBrief(){
 }
 
 function prefetchMarketDashboard(){
-  if(!API_URL)return;
+  if(!cleanToken(WRITE_TOKEN))return;
   if(!readTimedMarketCache(MARKET_DASHBOARD_CACHE_KEY)&&!marketDashboardPromise){
     marketDashboardPromise=apiGet({action:'marketDashboard'}).then(function(data){
       writeTimedMarketCache(MARKET_DASHBOARD_CACHE_KEY,data);
@@ -12409,7 +12435,7 @@ function prefetchStarsPanelData(){
     ziweiChartsPromise.catch(function(e){console.warn(e);});
   }
   if(!readStarsCache(STARS_CHRONICLE_CACHE_KEY,false)&&!eventChroniclePromise){
-    eventChroniclePromise=apiGet({action:'eventChronicle'},30000).then(function(data){
+    eventChroniclePromise=eventChronicleApiRequest('GET','/api/event-chronicle',undefined,30000).then(function(data){
       var rows=(data&&data.rows)||[];
       writeStarsCache(STARS_CHRONICLE_CACHE_KEY,rows);
       if(!eventChronicleCache.length){
