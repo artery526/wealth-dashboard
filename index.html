@@ -5266,6 +5266,7 @@ var BATTLE_PRICE_CHART_LIBRARY_URL='https://unpkg.com/lightweight-charts@5.0.8/d
 var BATTLE_PRICE_CHART_CODES=['00997A','00985B','QQQI','MLPI'];
 var battleFinanceSnapshotPromise=null;
 var battleFinanceSnapshotState={range:'7d',data:null,error:''};
+var BATTLE_FINANCE_SNAPSHOT_CACHE_KEY='battle_finance_snapshot_cache_v1';
 function clearLegacyAdvisorReminderCache(){
   try{localStorage.removeItem(ADVISOR_REMINDER_CACHE_KEY);}catch(e){}
 }
@@ -12602,7 +12603,8 @@ function battleFinanceSnapshotHtml(snapshotType,holdingColumn){
     rows=holdingColumn==='left'?leftRows.join(''):holdingColumn==='right'?rightRows.join(''):`<div class="battle-holding-snapshot-grid"><div>${leftRows.join('')}</div><div>${rightRows.join('')}</div></div>`;
   }
   var title=snapshotType==='holdings'?'持股標的昨日數值對比':'昨日數值對比';
-  return `<div class="battle-snapshot-panel"><div class="battle-snapshot-toolbar"><span>${title}</span><div>${['7d','1m','3m'].map(function(range){return `<button type="button" class="battle-snapshot-range ${state.range===range?'is-active':''}" onclick="setBattleFinanceSnapshotRange('${range}')">${range==='7d'?'7天':range==='1m'?'1個月':'3個月'}</button>`;}).join('')}</div></div>${state.error?`<div class="battle-price-loading">${esc(state.error)}</div>`:rows||'<div class="battle-price-loading">尚未有 NAS 快照資料</div>'}</div>`;
+  var body=state.error?`<div class="battle-price-loading">${esc(state.error)}</div>${rows}`:(rows||'<div class="battle-price-loading">尚未有 NAS 快照資料</div>');
+  return `<div class="battle-snapshot-panel"><div class="battle-snapshot-toolbar"><span>${title}</span><div>${['7d','1m','3m'].map(function(range){return `<button type="button" class="battle-snapshot-range ${state.range===range?'is-active':''}" onclick="setBattleFinanceSnapshotRange('${range}')">${range==='7d'?'7天':range==='1m'?'1個月':'3個月'}</button>`;}).join('')}</div></div>${body}</div>`;
 }
 
 function updateBattleFinanceSnapshotViews(){
@@ -12619,11 +12621,17 @@ function updateBattleFinanceSnapshotViews(){
 function loadBattleFinanceSnapshots(force){
   if(!EVENT_CHRONICLE_NAS_API_URL)return Promise.resolve(null);
   if(battleFinanceSnapshotPromise&&!force)return battleFinanceSnapshotPromise;
+  if(!battleFinanceSnapshotState.data){
+    try{
+      var cached=JSON.parse(localStorage.getItem(BATTLE_FINANCE_SNAPSHOT_CACHE_KEY)||'null');
+      if(cached&&Array.isArray(cached.records)){battleFinanceSnapshotState.data=cached;updateBattleFinanceSnapshotViews();}
+    }catch(cacheError){}
+  }
   var token=arkWallReadToken()||cleanToken(WRITE_TOKEN);
   var headers={'Accept':'application/json'};
   if(token)headers['x-arkos-read-token']=token;
   var url=EVENT_CHRONICLE_NAS_API_URL+'/api/finance/battle-brief-snapshots?range='+encodeURIComponent(battleFinanceSnapshotState.range||'7d');
-  battleFinanceSnapshotPromise=fetchWithTimeout(url,{headers:headers,cache:'no-store'},15000).then(function(response){return response.json().then(function(data){if(!response.ok)throw new Error(data.error||'NAS 快照讀取失敗');return data;});}).then(function(data){battleFinanceSnapshotState.data=data;battleFinanceSnapshotState.error='';updateBattleFinanceSnapshotViews();return data;}).catch(function(error){battleFinanceSnapshotState.error=error.message||'NAS 快照讀取失敗';updateBattleFinanceSnapshotViews();return null;}).finally(function(){battleFinanceSnapshotPromise=null;});
+  battleFinanceSnapshotPromise=fetchWithTimeout(url,{headers:headers,cache:'no-store'},45000).then(function(response){return response.json().then(function(data){if(!response.ok)throw new Error(data.error||'NAS 快照讀取失敗');return data;});}).then(function(data){battleFinanceSnapshotState.data=data;battleFinanceSnapshotState.error='';try{localStorage.setItem(BATTLE_FINANCE_SNAPSHOT_CACHE_KEY,JSON.stringify(data));}catch(cacheError){}updateBattleFinanceSnapshotViews();return data;}).catch(function(error){battleFinanceSnapshotState.error=battleFinanceSnapshotState.data?'來源連線較慢，先顯示上次快照':'連線逾時，請稍後再試';updateBattleFinanceSnapshotViews();return null;}).finally(function(){battleFinanceSnapshotPromise=null;});
   return battleFinanceSnapshotPromise;
 }
 
