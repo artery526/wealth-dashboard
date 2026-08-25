@@ -2483,10 +2483,12 @@ body::after{
 .battle-price-chart-loading{display:flex;align-items:center;justify-content:center;min-height:430px;color:#9b7a3d;font-family:var(--sans);font-size:12px}
 .battle-price-chart-note{padding:7px 12px;color:#7a6030;font-family:var(--sans);font-size:10px;line-height:1.5}
 .battle-snapshot-panel{margin-top:10px;padding:9px 10px;border:1px solid rgba(184,148,77,.35);border-radius:8px;background:rgba(8,7,5,.52)}
+.battle-holding-snapshot-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 14px}
 .battle-snapshot-toolbar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;color:#b8944d;font:800 13px var(--sans)}
 .battle-snapshot-toolbar>div{display:flex;gap:5px}.battle-snapshot-range{border:1px solid #4a3210;border-radius:999px;background:#0c0804;color:#9b7a3d;padding:4px 9px;font:800 12px var(--sans);cursor:pointer}.battle-snapshot-range.is-active{background:#2b1b07;color:#ffe6a1;border-color:#d5a83d}
 .battle-snapshot-row{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(96px,1fr) minmax(76px,.8fr) auto;gap:9px;align-items:center;padding:7px 0;border-top:1px solid rgba(184,148,77,.16);font-family:var(--sans);font-size:13px}.battle-snapshot-row strong{color:var(--ink);font-family:var(--mono);font-size:14px}.battle-snapshot-row em{color:var(--teal);font-style:normal;font-family:var(--mono);font-size:13px}.battle-snapshot-row small{color:#7a6030;text-align:right;font-size:11px}.battle-snapshot-row .battle-snapshot-yesterday{display:block;text-align:left;color:#8f7547;font-size:12px;margin-top:3px}
 @media (max-width:960px){.battle-snapshot-toolbar{flex-wrap:wrap;align-items:center}.battle-snapshot-toolbar>div{margin-left:auto}.battle-snapshot-row{grid-template-columns:minmax(0,1fr) auto!important;grid-template-rows:auto auto auto;gap:4px 8px;padding:9px 0;font-size:14px}.battle-snapshot-row>span{grid-column:1!important;grid-row:1 / span 2!important;min-width:0;overflow-wrap:normal;word-break:normal}.battle-snapshot-row>strong{grid-column:2!important;grid-row:1!important;text-align:right;white-space:nowrap;font-size:15px}.battle-snapshot-row>em{grid-column:2!important;grid-row:2!important;text-align:right;white-space:nowrap;font-size:14px}.battle-snapshot-row>small:not(.battle-snapshot-yesterday){grid-column:1 / -1!important;grid-row:3!important;text-align:right;font-size:10px}.battle-snapshot-row .battle-snapshot-yesterday{font-size:12px}}
+@media (max-width:960px){.battle-holding-snapshot-grid{grid-template-columns:1fr;gap:0}}
 .battle-cell.subtle{font-size:11px;color:#8d7138;font-weight:700}
 .ziwei-layout{display:block;min-height:520px}
 .ziwei-overview{display:grid;grid-template-columns:128px minmax(0,1fr);gap:0;border:1px solid rgba(232,192,80,.64);border-radius:10px;background:rgba(14,14,13,.86);overflow:hidden;min-height:560px}
@@ -12576,14 +12578,27 @@ function battleFinanceSnapshotHtml(snapshotType){
   var records=(data.records||[]).filter(function(record){return record.snapshotType===snapshotType;});
   var grouped={};
   records.forEach(function(record){(record.items||[]).forEach(function(item){var key=item.code+'|'+item.name;(grouped[key]||(grouped[key]=[])).push(Object.assign({},item,{capturedAt:record.capturedAt,recordSourceDate:record.sourceDate}));});});
-  var rows=Object.keys(grouped).map(function(key){
+  var rowParts=Object.keys(grouped).map(function(key){
     var points=grouped[key].sort(function(a,b){return String(a.capturedAt).localeCompare(String(b.capturedAt));});
     var latest=points[points.length-1],latestDate=battleFinanceSnapshotDateKey(latest),previous=null;
     for(var i=points.length-2;i>=0;i--){
       if(battleFinanceSnapshotDateKey(points[i])!==latestDate){previous=points[i];break;}
     }
     return `<div class="battle-snapshot-row"><span>${esc(latest.name)}<small class="battle-snapshot-yesterday">${esc(battleFinanceSnapshotYesterdayText(latest,previous))}</small></span><strong>${esc(battleFinanceSnapshotValueText(latest))}</strong><em>${esc(battleFinanceSnapshotDeltaText(latest,previous))}</em><small>${esc(battleUpdatedAtText(latest.capturedAt||latest.recordSourceDate))}</small></div>`;
-  }).join('');
+  });
+  var rows=rowParts.join('');
+  if(snapshotType==='holdings'){
+    var preferred=['QQQI','MLPI','AIPI','PLTY','CHPY','00985B','00997A','GDXW','GLDW'];
+    var rowByName={};
+    rowParts.forEach(function(row,index){
+      var nameMatch=row.match(/<span>([^<]+)/);
+      if(nameMatch)rowByName[nameMatch[1]]=row;
+    });
+    var ordered=preferred.filter(function(name){return rowByName[name];}).map(function(name){return rowByName[name];});
+    Object.keys(rowByName).forEach(function(name){if(preferred.indexOf(name)<0)ordered.push(rowByName[name]);});
+    var split=Math.ceil(ordered.length/2);
+    rows=`<div class="battle-holding-snapshot-grid"><div>${ordered.slice(0,split).join('')}</div><div>${ordered.slice(split).join('')}</div></div>`;
+  }
   var title=snapshotType==='holdings'?'持股標的昨日數值對比':'昨日數值對比';
   return `<div class="battle-snapshot-panel"><div class="battle-snapshot-toolbar"><span>${title}</span><div>${['7d','1m','3m'].map(function(range){return `<button type="button" class="battle-snapshot-range ${state.range===range?'is-active':''}" onclick="setBattleFinanceSnapshotRange('${range}')">${range==='7d'?'7天':range==='1m'?'1個月':'3個月'}</button>`;}).join('')}</div></div>${state.error?`<div class="battle-price-loading">${esc(state.error)}</div>`:rows||'<div class="battle-price-loading">尚未有 NAS 快照資料</div>'}</div>`;
 }
