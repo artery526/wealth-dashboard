@@ -12573,7 +12573,7 @@ function battleFinanceSnapshotYesterdayText(latest,previous){
   return '昨 '+battleFinanceSnapshotValueText(previous);
 }
 
-function battleFinanceSnapshotHtml(snapshotType){
+function battleFinanceSnapshotHtml(snapshotType,holdingColumn){
   var state=battleFinanceSnapshotState,data=state.data||{};
   var records=(data.records||[]).filter(function(record){return record.snapshotType===snapshotType;});
   var grouped={};
@@ -12596,8 +12596,10 @@ function battleFinanceSnapshotHtml(snapshotType){
     });
     var ordered=preferred.filter(function(name){return rowByName[name];}).map(function(name){return rowByName[name];});
     Object.keys(rowByName).forEach(function(name){if(preferred.indexOf(name)<0)ordered.push(rowByName[name]);});
-    var split=Math.ceil(ordered.length/2);
-    rows=`<div class="battle-holding-snapshot-grid"><div>${ordered.slice(0,split).join('')}</div><div>${ordered.slice(split).join('')}</div></div>`;
+    var leftNames=['QQQI','MLPI','AIPI','PLTY','CHPY'];
+    var leftRows=leftNames.filter(function(name){return rowByName[name];}).map(function(name){return rowByName[name];});
+    var rightRows=ordered.filter(function(row){return leftRows.indexOf(row)<0;});
+    rows=holdingColumn==='left'?leftRows.join(''):holdingColumn==='right'?rightRows.join(''):`<div class="battle-holding-snapshot-grid"><div>${leftRows.join('')}</div><div>${rightRows.join('')}</div></div>`;
   }
   var title=snapshotType==='holdings'?'持股標的昨日數值對比':'昨日數值對比';
   return `<div class="battle-snapshot-panel"><div class="battle-snapshot-toolbar"><span>${title}</span><div>${['7d','1m','3m'].map(function(range){return `<button type="button" class="battle-snapshot-range ${state.range===range?'is-active':''}" onclick="setBattleFinanceSnapshotRange('${range}')">${range==='7d'?'7天':range==='1m'?'1個月':'3個月'}</button>`;}).join('')}</div></div>${state.error?`<div class="battle-price-loading">${esc(state.error)}</div>`:rows||'<div class="battle-price-loading">尚未有 NAS 快照資料</div>'}</div>`;
@@ -12606,10 +12608,12 @@ function battleFinanceSnapshotHtml(snapshotType){
 function updateBattleFinanceSnapshotViews(){
   var fundHost=document.getElementById('battle-fund-snapshot-host');
   var marginHost=document.getElementById('battle-margin-snapshot-host');
-  var holdingsHost=document.getElementById('battle-holdings-snapshot-host');
+  var holdingsLeftHost=document.getElementById('battle-holdings-left-snapshot-host');
+  var holdingsRightHost=document.getElementById('battle-holdings-right-snapshot-host');
   if(fundHost)fundHost.innerHTML=battleFinanceSnapshotHtml('fund-nav');
   if(marginHost)marginHost.innerHTML=battleFinanceSnapshotHtml('twse-margin');
-  if(holdingsHost)holdingsHost.innerHTML=battleFinanceSnapshotHtml('holdings');
+  if(holdingsLeftHost)holdingsLeftHost.innerHTML=battleFinanceSnapshotHtml('holdings','left');
+  if(holdingsRightHost)holdingsRightHost.innerHTML=battleFinanceSnapshotHtml('holdings','right');
 }
 
 function loadBattleFinanceSnapshots(force){
@@ -12885,11 +12889,12 @@ function renderBattleBrief(data,el){
     <div class="battle-section">
       <div class="battle-section-title">基金淨值</div>
       <div id="battle-fund-snapshot-host"></div>
+      <div id="battle-holdings-left-snapshot-host"></div>
     </div>
     <div class="battle-section">
       <div class="battle-section-title">台股融資與維持率</div>
       <div id="battle-margin-snapshot-host"></div>
-      <div id="battle-holdings-snapshot-host"></div>
+      <div id="battle-holdings-right-snapshot-host"></div>
     </div>
     <div class="battle-section wide">
       <div class="battle-section-title">K線走勢圖</div>
