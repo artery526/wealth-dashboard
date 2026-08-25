@@ -12534,6 +12534,7 @@ function battlePricePeriodText(value){
 function battleFinanceSnapshotValueText(item){
   var value=Number(item&&item.value);
   if(!isFinite(value))return '--';
+  if(String(item&&item.snapshotType||'')==='holdings')return value.toLocaleString('zh-TW',{minimumFractionDigits:2,maximumFractionDigits:2});
   if(String(item&&item.name||'').indexOf('融資')>=0)return (value/100000000).toFixed(2)+' 億';
   if(String(item&&item.name||'').indexOf('維持率')>=0)return value.toFixed(2)+'%';
   return value.toLocaleString('zh-TW',{minimumFractionDigits:0,maximumFractionDigits:2});
@@ -12573,14 +12574,17 @@ function battleFinanceSnapshotHtml(snapshotType){
     }
     return `<div class="battle-snapshot-row"><span>${esc(latest.name)}<small class="battle-snapshot-yesterday">${esc(battleFinanceSnapshotYesterdayText(latest,previous))}</small></span><strong>${esc(battleFinanceSnapshotValueText(latest))}</strong><em>${esc(battleFinanceSnapshotDeltaText(latest,previous))}</em><small>${esc(battleUpdatedAtText(latest.capturedAt||latest.recordSourceDate))}</small></div>`;
   }).join('');
-  return `<div class="battle-snapshot-panel"><div class="battle-snapshot-toolbar"><span>昨日數值對比</span><div>${['7d','1m','3m'].map(function(range){return `<button type="button" class="battle-snapshot-range ${state.range===range?'is-active':''}" onclick="setBattleFinanceSnapshotRange('${range}')">${range==='7d'?'7天':range==='1m'?'1個月':'3個月'}</button>`;}).join('')}</div></div>${state.error?`<div class="battle-price-loading">${esc(state.error)}</div>`:rows||'<div class="battle-price-loading">尚未有 NAS 快照資料</div>'}</div>`;
+  var title=snapshotType==='holdings'?'持股標的昨日數值對比':'昨日數值對比';
+  return `<div class="battle-snapshot-panel"><div class="battle-snapshot-toolbar"><span>${title}</span><div>${['7d','1m','3m'].map(function(range){return `<button type="button" class="battle-snapshot-range ${state.range===range?'is-active':''}" onclick="setBattleFinanceSnapshotRange('${range}')">${range==='7d'?'7天':range==='1m'?'1個月':'3個月'}</button>`;}).join('')}</div></div>${state.error?`<div class="battle-price-loading">${esc(state.error)}</div>`:rows||'<div class="battle-price-loading">尚未有 NAS 快照資料</div>'}</div>`;
 }
 
 function updateBattleFinanceSnapshotViews(){
   var fundHost=document.getElementById('battle-fund-snapshot-host');
   var marginHost=document.getElementById('battle-margin-snapshot-host');
+  var holdingsHost=document.getElementById('battle-holdings-snapshot-host');
   if(fundHost)fundHost.innerHTML=battleFinanceSnapshotHtml('fund-nav');
   if(marginHost)marginHost.innerHTML=battleFinanceSnapshotHtml('twse-margin');
+  if(holdingsHost)holdingsHost.innerHTML=battleFinanceSnapshotHtml('holdings');
 }
 
 function loadBattleFinanceSnapshots(force){
@@ -12863,7 +12867,8 @@ function renderBattleBrief(data,el){
     </div>
     <div class="battle-section wide">
       <div class="battle-section-title">K線走勢圖</div>
-      ${holdingsHtml}
+    ${holdingsHtml}
+    <div id="battle-holdings-snapshot-host"></div>
     </div>
   </div>`;
   setTimeout(function(){loadBattleBriefPriceHistory();},0);
