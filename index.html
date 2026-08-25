@@ -8294,20 +8294,15 @@ function fetchFinanceTreasuryData(cached){
 
 function financeMonthlyFromTransactions(txns,baseMonthly){
   baseMonthly=baseMonthly||{};
-  var income=0,expense=0,todayIncome=0,todayExpense=0;
+  var income=0,expense=0;
   var catMap={};
-  var d=new Date();
-  var todayShort=String(d.getMonth()+1).padStart(2,'0')+'/'+String(d.getDate()).padStart(2,'0');
   (txns||[]).forEach(function(t){
     var type=String(t&&t.type||'').trim();
     var amount=Math.abs(Number(t&&t.amount)||0);
-    var date=String(t&&t.date||'').trim();
     if(type==='收入'){
       income+=amount;
-      if(date===todayShort)todayIncome+=amount;
     }else if(type==='支出'){
       expense+=amount;
-      if(date===todayShort)todayExpense+=amount;
       var cat=String(t&&t.cat||'').trim();
       if(cat)catMap[cat]=(catMap[cat]||0)+amount;
     }
@@ -8316,8 +8311,6 @@ function financeMonthlyFromTransactions(txns,baseMonthly){
   var monthly=Object.assign({},baseMonthly);
   if(income>Number(monthly.income||0))monthly.income=Math.round(income);
   if(expense>Number(monthly.expense||0))monthly.expense=Math.round(expense);
-  monthly.todayIncome=Math.max(Number(monthly.todayIncome)||0,Math.round(todayIncome));
-  monthly.todayExpense=Math.max(Number(monthly.todayExpense)||0,Math.round(todayExpense));
   monthly.net=Math.round((Number(monthly.income)||0)-(Number(monthly.expense)||0));
   monthly.savingRate=Number(monthly.income)>0?(monthly.net/Number(monthly.income)*100).toFixed(1)+'%':'0%';
   var cats=Object.keys(catMap).map(function(name){return {name:name,amount:Math.round(catMap[name])};})
@@ -8373,7 +8366,6 @@ function renderTreasuryOverview(all,filtered,monthly,assetSnapshot,totalRow){
   var monthIncome=Number(monthly.income)||0;
   var monthExpense=Number(monthly.expense)||0;
   var monthNet=monthIncome-monthExpense;
-  var todayNet=(Number(monthly.todayIncome)||0)-(Number(monthly.todayExpense)||0);
   var cashRatio=totalAsset>0?cashTotal/totalAsset*100:null;
   var stockRatio=totalAsset>0?marketTotal/totalAsset*100:null;
   var snapshotDate=latest&&latest.date?latest.date:'即時帳戶';
@@ -8403,11 +8395,6 @@ function renderTreasuryOverview(all,filtered,monthly,assetSnapshot,totalRow){
         <div class="treasury-card-label">本月淨流</div>
         <div class="treasury-card-value ${monthNet>=0?'up':'down'}">${monthNet>=0?'+':'-'}${fmtFull(Math.abs(monthNet))}</div>
         <div class="treasury-card-note">收 ${fmtFull(monthIncome)} / 支 ${fmtFull(monthExpense)}</div>
-      </div>
-      <div class="treasury-card">
-        <div class="treasury-card-label">今日結餘</div>
-        <div class="treasury-card-value ${todayNet>=0?'up':'down'}">${todayNet>=0?'+':'-'}${fmtFull(Math.abs(todayNet))}</div>
-        <div class="treasury-card-note">儲蓄率 ${esc(monthly.savingRate||'--')}</div>
       </div>
     </div>
   </div>`;
