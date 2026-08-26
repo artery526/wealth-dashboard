@@ -2401,6 +2401,23 @@ body::after{
 .market-metric-d{margin-top:4px;font-family:var(--sans);font-size:10px;font-weight:900;color:#8d7138;line-height:1.35}
 .market-metric-d.up{color:var(--teal)}.market-metric-d.down{color:var(--coral)}
 .market-note{font-family:var(--sans);font-size:9px;color:#7a6030;line-height:1.45}
+.market-sector-rotation{margin-top:14px;padding-top:2px}
+.market-sector-meta{font-family:var(--sans);font-size:10px;color:#7a6030;line-height:1.5;margin:-4px 0 8px}
+.market-sector-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.market-sector-row{border:1px solid rgba(184,137,46,.3);border-radius:9px;background:rgba(10,8,4,.72);padding:9px 10px;min-width:0}
+.market-sector-head{display:flex;align-items:center;justify-content:space-between;gap:7px;margin-bottom:6px}
+.market-sector-name{font-family:var(--sans);font-size:13px;font-weight:900;color:var(--ink);overflow-wrap:anywhere}
+.market-sector-code{font-family:var(--mono);font-size:10px;color:#7a6030;margin-top:2px}
+.market-sector-status{font-family:var(--sans);font-size:10px;font-weight:900;color:#d7bd78;white-space:nowrap}
+.market-sector-status.up{color:var(--teal)}.market-sector-status.down{color:var(--coral)}.market-sector-status.improving{color:#e8c050}
+.market-sector-score{font-family:var(--mono);font-size:16px;font-weight:900;color:var(--gold);white-space:nowrap}
+.market-sector-score small{font-family:var(--sans);font-size:9px;color:#7a6030;font-weight:800}
+.market-sector-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
+.market-sector-metric{padding:4px 5px;border-radius:5px;background:#0c0804;border:1px solid #251808;min-width:0}
+.market-sector-metric span{display:block;font-family:var(--sans);font-size:8px;color:#7a6030;line-height:1.2}
+.market-sector-metric strong{display:block;margin-top:2px;font-family:var(--mono);font-size:11px;color:#d7bd78;white-space:nowrap}
+.market-sector-commentary{margin-top:8px;border:1px solid rgba(232,192,80,.28);border-radius:8px;background:rgba(30,20,5,.34);padding:9px 10px;font-family:var(--sans);font-size:12px;line-height:1.65;color:var(--ink)}
+.market-sector-commentary strong{display:block;margin-bottom:3px;color:var(--gold2);font-size:11px}
 .macro-hero{border:1px solid #2a1c08;border-radius:10px;background:linear-gradient(145deg,rgba(16,10,4,.92),rgba(8,7,4,.88));padding:14px;margin-bottom:12px}
 .macro-hero-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:10px}
 .macro-title{font-family:var(--sans);font-size:12px;color:#7a6030;letter-spacing:2px;font-weight:800}
@@ -2597,6 +2614,7 @@ body::after{
 @media(max-width:540px){.chronicle-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.chronicle-row{grid-template-columns:1fr;padding:9px}.chronicle-cell{font-size:12px}.chronicle-cell:before{font-size:9px}.chronicle-row .chronicle-name{font-size:14px}.chronicle-date{font-size:10px}.chronicle-cost-value{font-size:14px}}
 @media(max-width:360px){.chronicle-list{gap:6px}.chronicle-row{gap:7px;padding:7px}.chronicle-cell{font-size:11px}.chronicle-cell:before{font-size:8px}.chronicle-cost-value{font-size:13px}}
 @media(max-width:540px){.market-command{grid-template-columns:1fr}.market-counts{justify-content:flex-start}.market-metrics{grid-template-columns:1fr 1fr}.market-card-grid{grid-template-columns:1fr}.macro-actions,.macro-grid{grid-template-columns:1fr}.macro-scenario{font-size:24px}}
+@media(max-width:540px){.market-sector-grid{grid-template-columns:1fr}.market-sector-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:540px){.taiwan-macro-hero{flex-direction:column}.taiwan-macro-hero .battle-report-refresh{width:100%}.taiwan-macro-grid{grid-template-columns:1fr}.taiwan-macro-history-head{align-items:flex-start;flex-direction:column}}
 @media(max-width:640px){.battle-report-grid{grid-template-columns:1fr}.battle-report-head{flex-direction:column}.battle-report-refresh{width:100%}}
 @media(max-width:640px){.battle-etf-head{flex-direction:column}.battle-etf-link{width:100%}.battle-etf-grid{grid-template-columns:1fr}}
@@ -5270,6 +5288,7 @@ var financeYearlyActiveRequest=0;
 var financeYearlySelectedYear='';
 var financeMonthDetailPromises={};
 var MARKET_DASHBOARD_CACHE_KEY='wealth_market_dashboard_v1';
+var MARKET_SECTOR_ROTATION_CACHE_KEY='wealth_market_sector_rotation_v1';
 var MARKET_MACRO_CACHE_KEY='wealth_market_macro_v4';
 var MARKET_LONG_REPORT_CACHE_KEY='wealth_market_long_report_v1';
 var BATTLE_BRIEF_CACHE_KEY='wealth_battle_brief_v1';
@@ -5277,6 +5296,7 @@ var MARKET_CACHE_TTL=2*60*60*1000;
 var BATTLE_PRICE_HISTORY_CACHE_KEY='wealth_battle_price_history_v4';
 var BATTLE_PRICE_HISTORY_CACHE_TTL=6*60*60*1000;
 var marketDashboardPromise=null;
+var marketSectorRotationPromise=null;
 var macroOverviewPromise=null;
 var taiwanMacroPromise=null;
 var taiwanMacroSyncPromise=null;
@@ -14730,6 +14750,46 @@ function renderTWSECard(r){
   </div>`;
 }
 
+function marketSectorPctText(value){
+  var n=Number(value);
+  return n==null||isNaN(n)||!isFinite(n)?'--':(n>=0?'+':'')+n.toFixed(2)+'%';
+}
+
+function marketSectorStatusClass(status){
+  status=String(status||'');
+  return /強勢/.test(status)?'up':/弱勢|降溫/.test(status)?'down':/改善|初期/.test(status)?'improving':'';
+}
+
+function renderMarketSectorRotation(data,el){
+  if(!el)return;
+  data=data||{};
+  var rows=(data.rows||[]).slice().sort(function(a,b){return Number(b.rotationScore||0)-Number(a.rotationScore||0);});
+  if(!rows.length){el.innerHTML='<div class="market-sector-meta">'+esc(data.status||'尚未有產業輪動快照')+'</div>';return;}
+  var commentary=data.commentary&&data.commentary.summary?'<div class="market-sector-commentary"><strong>🧠 DeepSeek 產業輪動短評</strong>'+esc(data.commentary.summary)+'</div>':'';
+  el.innerHTML='<div class="market-sector-meta">快照 '+esc(data.sourceDate||data.updatedAt||'--')+' · '+esc(data.source||'資料來源未知')+(data.commentaryError?' · 短評尚未產生':'')+'</div><div class="market-sector-grid">'+rows.map(function(row){
+    var cls=marketSectorStatusClass(row.status);
+    return '<div class="market-sector-row"><div class="market-sector-head"><div><div class="market-sector-name">'+esc(row.name)+'</div><div class="market-sector-code">'+esc(row.code)+' · '+esc(row.quadrant||'資料不足')+'</div></div><div><div class="market-sector-status '+cls+'">'+esc(row.status||'資料不足')+'</div><div class="market-sector-score">'+(row.rotationScore==null?'--':Number(row.rotationScore).toFixed(1))+' <small>分</small></div></div></div><div class="market-sector-metrics"><div class="market-sector-metric"><span>5日</span><strong>'+marketSectorPctText(row.return5d)+'</strong></div><div class="market-sector-metric"><span>20日相對SPY</span><strong>'+marketSectorPctText(row.relative20d)+'</strong></div><div class="market-sector-metric"><span>60日相對SPY</span><strong>'+marketSectorPctText(row.relative60d)+'</strong></div></div></div>';
+  }).join('')+'</div>'+commentary;
+}
+
+function loadMarketSectorRotation(){
+  var host=document.getElementById('market-sector-rotation-body');
+  if(!host||!API_URL)return Promise.resolve(null);
+  var cached=readTimedMarketCache(MARKET_SECTOR_ROTATION_CACHE_KEY);
+  if(cached)renderMarketSectorRotation(cached,host);
+  if(marketSectorRotationPromise)return marketSectorRotationPromise;
+  marketSectorRotationPromise=apiGet({action:'marketSectorRotation'},45000).then(function(data){
+    writeTimedMarketCache(MARKET_SECTOR_ROTATION_CACHE_KEY,data);
+    var current=document.getElementById('market-sector-rotation-body');
+    if(current)renderMarketSectorRotation(data,current);
+    return data;
+  }).catch(function(error){
+    if(!cached)host.innerHTML='<div class="market-sector-meta">產業輪動快照讀取失敗：'+esc(error&&error.message?error.message:'請稍後再試')+'</div>';
+    return null;
+  }).finally(function(){marketSectorRotationPromise=null;});
+  return marketSectorRotationPromise;
+}
+
 function renderMarketDashboard(data,el){
   var rows=(data&&data.rows)||[];
   var summary=(data&&data.summary)||{};
@@ -14793,7 +14853,9 @@ function renderMarketDashboard(data,el){
       </div>
       <div class="market-counts">${chips||`<span class="market-chip ${stanceTone}">${esc(summary.stance||'觀望')}</span>`}</div>
     </div>
-    ${twseHtml}${otherHtml}`;
+    ${twseHtml}${otherHtml}
+    <div class="market-sector-rotation"><div class="sec-title">產業輪動快照</div><div id="market-sector-rotation-body"><div class="market-sector-meta">背景讀取產業快照中…</div></div></div>`;
+  loadMarketSectorRotation();
 }
 
 function renderMacroOverview(data,el){
