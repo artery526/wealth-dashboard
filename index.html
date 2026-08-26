@@ -5605,16 +5605,11 @@ function restoreRememberedWebAccess(){
     applyEmpireUnlockState();
     return Promise.resolve(false);
   }
+  // 已完成過驗證時直接恢復城門狀態；避免每次開頁又因 API 冷啟動／延遲
+  // 把綠燈切回「正在驗證」，導致點擊卡片時重複觸發驗證流程。
   setEmpireUnlockState(true);
   advisorAIUpdateWebVerifyStatus();
-  return verifyWebAccess().then(function(){
-    setWebVerifyStatus('ok','網頁驗證成功');
-    return true;
-  }).catch(function(err){
-    var message=err&&err.message?err.message:'登入狀態已失效，請重新驗證';
-    setWebVerifyStatus('err',message);
-    return false;
-  });
+  return Promise.resolve(true);
 }
 function setEmpireUnlockState(unlocked){
   try{
