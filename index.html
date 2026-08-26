@@ -13734,7 +13734,7 @@ function renderHeroCard(row,totalCost){
   return `<div class="hero-card ${tone}" style="--hero-color:${esc(color)};--hero-glow:${hexToRgba(color,.24)};--effect-glow:${hexToRgba(effectColor,.20)};border-color:${hexToRgba(color,.72)}">
     <div class="hero-visual-stack">
       <div class="hero-visual" role="button" tabindex="0" aria-label="展開持股數值" aria-expanded="false" onclick="toggleHeroMetrics(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleHeroMetrics(this)}">
-        ${animatedAvatar?`<video autoplay muted playsinline preload="metadata" aria-label="${esc(name)} 動態頭像" onmouseenter="this.loop=true;this.play()" onmouseleave="this.loop=false;this.pause();this.currentTime=0" onclick="event.stopPropagation();this.loop=true;this.play()"><source src="${animatedAvatarSource}" type="video/mp4"></video>`:(img?`<img src="${esc(img)}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`:'' )}
+        ${animatedAvatar?`<video autoplay muted playsinline preload="metadata" aria-label="${esc(name)} 動態頭像" onmouseenter="this.loop=true;this.play()" onmouseleave="this.loop=false;this.pause();this.currentTime=0" onclick="event.stopPropagation();toggleHeroMetrics(this.parentElement);this.loop=true;this.play()"><source src="${animatedAvatarSource}" type="video/mp4"></video>`:(img?`<img src="${esc(img)}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`:'' )}
         <div class="hero-fallback" style="${animatedAvatar||img?'display:none':''}">${esc((row.icon||name.slice(0,1)||'軍'))}</div>
       </div>
     </div>
