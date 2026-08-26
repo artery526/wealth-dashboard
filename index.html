@@ -13678,8 +13678,9 @@ function renderHeroCard(row,totalCost){
   var isTaiwan5G=holdingKey==='路博邁台灣5G'||councilRowText(row).indexOf('路博邁台灣5G')>=0||councilRowText(row).indexOf('5G')>=0;
   var isPlty=holdingKey==='PLTY'||councilRowText(row).indexOf('PLTY')>=0;
   var isAipi=holdingKey==='AIPI'||councilRowText(row).indexOf('AIPI')>=0;
-  var animatedAvatar=holdingKey==='QQQI'||holdingKey==='00997A'||isCathayHighDividend||isTaiwan5G||isPlty||isAipi;
-  var animatedAvatarSource=isAipi?'AIPI.mp4':isPlty?'PLTY.mp4':isTaiwan5G?'路博邁台灣5G.mp4':isCathayHighDividend?'國泰高股息B.mp4':holdingKey==='00997A'?'997A.mp4':'QQQI.mp4';
+  var isChpy=holdingKey==='CHPY'||councilRowText(row).indexOf('CHPY')>=0;
+  var animatedAvatar=holdingKey==='QQQI'||holdingKey==='00997A'||isCathayHighDividend||isTaiwan5G||isPlty||isAipi||isChpy;
+  var animatedAvatarSource=isChpy?'CHPY.mp4':isAipi?'AIPI.mp4':isPlty?'PLTY.mp4':isTaiwan5G?'路博邁台灣5G.mp4':isCathayHighDividend?'國泰高股息B.mp4':holdingKey==='00997A'?'997A.mp4':'QQQI.mp4';
   var name=row.heroName||row.symbol;
   var heroType=String(row.heroType||row.riskLevel||'策略型').replace(/型$/,'');
   var effectName=skill.skillName||row.skill1Name||'武將技能';
