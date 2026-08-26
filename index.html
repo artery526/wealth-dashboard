@@ -1956,15 +1956,22 @@ body::after{
 
 /* ── Quick Booking ── */
 .btabs{display:none}
-.booking-interface-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;margin-bottom:14px;background:#0a0804;border:1px solid #2a1c08;border-radius:6px;overflow:hidden}
+.booking-interface-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;margin-bottom:10px;background:#0a0804;border:1px solid #2a1c08;border-radius:6px;overflow:hidden}
 .booking-interface-tab{min-width:0;padding:9px 5px;border:0;border-right:1px solid #2a1c08;background:transparent;color:#5a4018;font-family:var(--sans);font-size:12px;font-weight:900;letter-spacing:1px;cursor:pointer;transition:all .2s}
 .booking-interface-tab:last-child{border-right:0}
 .booking-interface-tab.expense.active{background:var(--coral-l);color:var(--coral)}
 .booking-interface-tab.income.active{background:rgba(232,192,80,.14);color:var(--gold)}
+.booking-interface-tab.cashflow.active{background:rgba(232,192,80,.14);color:var(--gold)}
 .booking-interface-tab.transfer.active{background:var(--teal-l);color:var(--teal)}
 .booking-interface-tab.buy.active{background:var(--coral-l);color:var(--coral)}
 .booking-interface-tab.sell.active{background:var(--teal-l);color:var(--teal)}
 .booking-interface-tab.stock.active{background:rgba(124,111,192,.12);color:var(--purple)}
+.booking-cashflow-toggle{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin:0 0 10px;padding:4px;border:1px solid #2a1c08;border-radius:6px;background:#0a0804}
+.booking-cashflow-toggle button{min-width:0;padding:7px 5px;border:1px solid transparent;border-radius:4px;background:transparent;color:#7d6130;font-family:var(--sans);font-size:11px;font-weight:900;letter-spacing:1px;cursor:pointer}
+.booking-cashflow-toggle button.expense.active{background:var(--coral-l);border-color:rgba(240,106,72,.25);color:var(--coral)}
+.booking-cashflow-toggle button.income.active{background:var(--teal-l);border-color:rgba(32,190,139,.25);color:var(--teal)}
+.booking-account-balance-tools{display:flex;justify-content:flex-end;margin:0 0 8px}
+.booking-account-balance-toggle{padding:6px 10px;border:1px solid rgba(141,100,194,.42);border-radius:999px;background:rgba(31,18,52,.45);color:#cbb5ed;font-family:var(--sans);font-size:10px;font-weight:900;cursor:pointer}
 .booking-account-balance-panel{margin:0 0 10px;padding:9px 10px;border:1px solid rgba(141,100,194,.48);border-radius:8px;background:linear-gradient(145deg,rgba(31,18,52,.78),rgba(9,6,18,.72));box-shadow:inset 0 1px 0 rgba(235,219,255,.05),0 0 14px rgba(126,82,184,.08)}
 .booking-account-balance-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px;font-family:var(--sans);font-size:10px;font-weight:900;letter-spacing:.7px;color:#e2d0ff}
 .booking-account-balance-status{font-size:9px;font-weight:700;color:#aa92c9;letter-spacing:0}
@@ -4666,6 +4673,7 @@ var BOOKING_FALLBACK_ACCOUNTS = ['💰Cash','💵國泰Stock','🔖中國信託'
 var holdingsCache = [];
 var bookingAccountBalances = [];
 var bookingAccountBalancesPromise = null;
+var bookingAccountBalancesLoaded = false;
 var DIVIDEND_CENTER_STORAGE_KEY='wealth_dividend_center_v1';
 function readDividendCenterStorageCache(){
   try{
@@ -8530,10 +8538,26 @@ function renderDomesticPanel(){
 }
 
 function bookingAccountBalanceHtml(){
-  return `<section class="booking-account-balance-panel" id="booking-account-balance-panel" aria-live="polite">
+  return `<div class="booking-account-balance-tools"><button class="booking-account-balance-toggle" id="booking-account-balance-toggle" type="button" onclick="toggleBookingAccountBalances()">查看帳戶餘額</button></div><section class="booking-account-balance-panel hidden" id="booking-account-balance-panel" aria-live="polite">
     <div class="booking-account-balance-head"><span>目前帳戶數字</span><span class="booking-account-balance-status" id="booking-account-balance-status">載入中…</span></div>
     <div class="booking-account-balance-grid" id="booking-account-balance-grid"><div class="booking-account-balance-status">帳戶數字載入中…</div></div>
   </section>`;
+}
+
+function toggleBookingAccountBalances(){
+  var panel=document.getElementById('booking-account-balance-panel');
+  var button=document.getElementById('booking-account-balance-toggle');
+  if(!panel)return;
+  var open=!panel.classList.contains('hidden');
+  panel.classList.toggle('hidden',open);
+  if(button)button.textContent=open?'查看帳戶餘額':'隱藏帳戶餘額';
+  if(!open&&!bookingAccountBalancesLoaded)refreshBookingAccountBalances();
+}
+
+function invalidateBookingAccountBalances(){
+  bookingAccountBalancesLoaded=false;
+  var panel=document.getElementById('booking-account-balance-panel');
+  if(panel&&!panel.classList.contains('hidden'))refreshBookingAccountBalances();
 }
 
 function renderBookingAccountBalances(rows,status,message){
@@ -8564,6 +8588,7 @@ function refreshBookingAccountBalances(){
   renderBookingAccountBalances(bookingAccountBalances,'pending','更新中…');
   bookingAccountBalancesPromise=apiGet({action:'accounts'},20000).then(function(rows){
     bookingAccountBalances=Array.isArray(rows)?rows:[];
+    bookingAccountBalancesLoaded=true;
     renderBookingAccountBalances(bookingAccountBalances,'ok','已更新');
     return bookingAccountBalances;
   }).catch(function(error){
@@ -8656,10 +8681,13 @@ async function initBookingForm(){
   el.innerHTML=`
     ${bookingAccountBalanceHtml()}
     <div class="booking-interface-tabs" role="tablist" aria-label="記帳類型">
-      <button class="booking-interface-tab expense active" type="button" data-booking-interface="expense" onclick="setBookingInterfaceMode('expense')">支出</button>
-      <button class="booking-interface-tab income" type="button" data-booking-interface="income" onclick="setBookingInterfaceMode('income')">收入</button>
+      <button class="booking-interface-tab cashflow active" type="button" data-booking-interface="cashflow" onclick="setBookingInterfaceMode('cashflow')">收支</button>
       <button class="booking-interface-tab transfer" type="button" data-booking-interface="transfer" onclick="setBookingInterfaceMode('transfer')">轉帳</button>
       <button class="booking-interface-tab stock" type="button" data-booking-interface="stock" onclick="setBookingInterfaceMode('stock')">股票</button>
+    </div>
+    <div class="booking-cashflow-toggle" role="tablist" aria-label="收支類型">
+      <button class="expense active" type="button" data-booking-cashflow="expense" onclick="setBookingEntryMode('expense')">支出</button>
+      <button class="income" type="button" data-booking-cashflow="income" onclick="setBookingEntryMode('income')">收入</button>
     </div>
     <!-- 收入支出：支出模式 -->
     <div class="bform active" id="bf-expense">
@@ -8723,7 +8751,6 @@ async function initBookingForm(){
     var typeEl=document.getElementById('t-stock-type');
     if(typeEl)typeEl.addEventListener('change',clearTransferDividendAutofill);
   })();
-  refreshBookingAccountBalances();
   el.dataset.bookingReady='1';
   delete el.dataset.bookingLoading;
   })();
@@ -8857,8 +8884,10 @@ function setBookingInterfaceTab(key){
 }
 
 function setBookingInterfaceMode(key){
-  var mode=key==='stock'||key==='buy'||key==='sell'||key==='transfer'?key:(key==='income'?'income':'expense');
-  setBookingInterfaceTab(mode==='buy'||mode==='sell'?'stock':mode);
+  var mode=key==='stock'||key==='buy'||key==='sell'||key==='transfer'?key:(key==='income'?'income':(key==='cashflow'?'cashflow':'expense'));
+  setBookingInterfaceTab(mode==='buy'||mode==='sell'?'stock':mode==='income'?'cashflow':mode);
+  var cashflowToggle=document.querySelector('.booking-cashflow-toggle');
+  if(cashflowToggle)cashflowToggle.classList.toggle('hidden',mode!=='cashflow'&&mode!=='expense'&&mode!=='income');
   if(mode==='stock'||mode==='buy'||mode==='sell'){
     document.querySelectorAll('.bform').forEach(function(form){form.classList.remove('active');});
     var transferPane=document.getElementById('bf-transfer');
@@ -8873,24 +8902,29 @@ function setBookingInterfaceMode(key){
     setTransferEntryMode('account');
     return;
   }
+  if(mode==='cashflow'){setBookingEntryMode('expense');return;}
   setBookingEntryMode(mode);
 }
 
 function setBookingEntryMode(key){
-  setBookingInterfaceTab(key);
+  var entry=key==='income'?'income':'expense';
+  setBookingInterfaceTab('cashflow');
+  var cashflowToggle=document.querySelector('.booking-cashflow-toggle');
+  if(cashflowToggle)cashflowToggle.classList.remove('hidden');
+  document.querySelectorAll('[data-booking-cashflow]').forEach(function(btn){btn.classList.toggle('active',btn.dataset.bookingCashflow===entry);});
   document.querySelectorAll('.bform').forEach(function(form){form.classList.remove('active');});
-  var pane=document.getElementById(key==='income'?'bf-income':'bf-expense');
+  var pane=document.getElementById(entry==='income'?'bf-income':'bf-expense');
   if(pane)pane.classList.add('active');
   document.querySelectorAll('.booking-mode-btn').forEach(function(btn){btn.classList.remove('active');});
-  document.querySelectorAll('.booking-mode-btn.'+(key==='income'?'income':'expense')).forEach(function(btn){btn.classList.add('active');});
+  document.querySelectorAll('.booking-mode-btn.'+(entry==='income'?'income':'expense')).forEach(function(btn){btn.classList.add('active');});
   initBookingDateInputs(false);
-  if(key==='expense'){
+  if(entry==='expense'){
     selectBookingOptionByText('e-cat','超商外食');
     syncBookingQuickChip('e-cat');
     syncBookingQuickChip('e-account');
     focusBookingField('e-amount');
   }
-  if(key==='income'){
+  if(entry==='income'){
     selectBookingOptionByText('i-source','投資理財');
     syncBookingQuickChip('i-source');
     syncBookingQuickChip('i-account');
@@ -10814,7 +10848,7 @@ async function submitExpense(e){
   try{
     await apiPost({action:'expense',date:date.replace(/-/g,'/'),cat,account:acc,amount:amt,note});
     showMsg('msg-expense','✓ 已記錄！','ok');
-    refreshBookingAccountBalances();
+    invalidateBookingAccountBalances();
     document.getElementById('e-amount').value='';
     document.getElementById('e-note').value='';
     focusBookingField('e-amount');
@@ -10845,7 +10879,7 @@ async function submitIncome(e){
       dividendIncome:dividendRowId?'1':'',dividendRowId});
     if(dividendRowId)invalidateDividendCenter();
     showMsg('msg-income','✓ 已記錄！','ok');
-    refreshBookingAccountBalances();
+    invalidateBookingAccountBalances();
     document.getElementById('i-amount').value='';
     syncDivNote();
     clearIncomeDividendAutofill();
@@ -10870,7 +10904,7 @@ async function submitAccountTransfer(e){
   try{
     await apiPost({action:'transfer',date:date.replace(/-/g,'/'),from,to,amount:amt,label:'',note});
     showMsg('msg-transfer','✓ 已記錄！','ok');
-    refreshBookingAccountBalances();
+    invalidateBookingAccountBalances();
     document.getElementById('a-amount').value='';
     document.getElementById('a-note').value='';
     focusBookingField('a-amount');
@@ -10904,7 +10938,7 @@ async function submitStockTransfer(e){
       stockAmount:stockAmt,dividendRowId,holdingTradeRowId});
     if(dividendRowId||holdingTradeRowId)invalidateDividendCenter();
     showMsg('msg-transfer','✓ 已記錄股票交易！','ok');
-    refreshBookingAccountBalances();
+    invalidateBookingAccountBalances();
     document.getElementById('a-note').value='';
     document.getElementById('a-amount').value='';
     document.getElementById('t-stock-shares').value='';
