@@ -13649,6 +13649,7 @@ function copyHeroMetrics(panel){
 
 function renderHeroCard(row,totalCost){
   var h=row.holding||{};
+  var displaySymbol=String(row.symbol||h.symbol||h.assetName||h.name||'').trim();
   var ret=toNum(h.totalReturn);
   var roi=toNum(h.roi);
   var shares=toNum(h.shares);
@@ -13673,7 +13674,7 @@ function renderHeroCard(row,totalCost){
   var forceHoldingAccent=normalizeKey(row&&row.symbol)==='國泰高股息B'||councilRowText(row).indexOf('國泰高股息')>=0;
   var effectColor=forceHoldingAccent?color:(skill.effectColor||color);
   var img=normalizeImageUrl(row.avatarUrl);
-  var holdingKey=normalizeKey(row&&row.symbol);
+  var holdingKey=normalizeKey(displaySymbol);
   var isCathayHighDividend=holdingKey==='國泰高股息B'||councilRowText(row).indexOf('國泰高股息')>=0;
   var isTaiwan5G=holdingKey==='路博邁台灣5G'||councilRowText(row).indexOf('路博邁台灣5G')>=0||councilRowText(row).indexOf('5G')>=0;
   var isPlty=holdingKey==='PLTY'||councilRowText(row).indexOf('PLTY')>=0;
@@ -13683,7 +13684,7 @@ function renderHeroCard(row,totalCost){
   var is985b=holdingKey==='00985B'||councilRowText(row).indexOf('00985B')>=0;
   var animatedAvatar=holdingKey==='QQQI'||holdingKey==='00997A'||isCathayHighDividend||isTaiwan5G||isPlty||isAipi||isChpy||isSchroder||is985b;
   var animatedAvatarSource=is985b?'985B.mp4':isSchroder?'施羅德收益成長A2.mp4':isChpy?'CHPY.mp4':isAipi?'AIPI.mp4':isPlty?'PLTY.mp4':isTaiwan5G?'路博邁台灣5G.mp4':isCathayHighDividend?'國泰高股息B.mp4':holdingKey==='00997A'?'997A.mp4':'QQQI.mp4';
-  var name=row.heroName||row.symbol;
+  var name=row.heroName||h.heroName||displaySymbol||'未編制';
   var heroType=String(row.heroType||row.riskLevel||'策略型').replace(/型$/,'');
   var effectName=skill.skillName||row.skill1Name||'武將技能';
   var effectText=skill.uiEffect||skill.effectKeyword||row.skill2Desc||row.skill1Desc||'尚未設定 UI 特效';
@@ -13701,7 +13702,7 @@ function renderHeroCard(row,totalCost){
       </div>
     </div>
     <div class="hero-info">
-      <div class="hero-symbol">${esc(row.symbol||'未編制')} <span class="hero-symbol-return ${ret<0?'down':''}">${ret>=0?'+':'-'}${fmtFull(Math.abs(ret))}</span></div>
+      <div class="hero-symbol">${esc(displaySymbol||'未編制')} <span class="hero-symbol-return ${ret<0?'down':''}">${ret>=0?'+':'-'}${fmtFull(Math.abs(ret))}</span></div>
       <div class="hero-name">${esc(name)} <span class="hero-type-inline">${esc(heroType)} <span class="hero-type-yield">🟡${annualYield.toFixed(1)}%</span></span></div>
       <div class="hero-price-under-name">現 ${price?price.toFixed(2):'--'} / 均 ${avg?avg.toFixed(2):'--'}</div>
     </div>
