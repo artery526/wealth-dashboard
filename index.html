@@ -1090,7 +1090,15 @@ body::after{
 @media(max-width:540px){.advisor-tw-review-statuses{grid-template-columns:1fr}.advisor-world-tab-btn{font-size:10px;padding:5px 7px}}
 .advisor-brief-date{position:relative;z-index:1;margin-top:-4px;margin-bottom:12px;text-align:center;font-family:var(--mono);font-size:12px;font-weight:900;color:#bda36d}
 .advisor-brief-divider{position:relative;z-index:1;height:1px;margin:12px 0;background:linear-gradient(90deg,transparent,rgba(232,192,80,.35),transparent)}
+.advisor-brief-grid{position:relative;z-index:1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .advisor-brief-section{position:relative;z-index:1;padding:2px 0}
+.advisor-brief-grid .advisor-brief-section{display:flex;flex-direction:column;justify-content:space-between;min-width:0;aspect-ratio:1/1;padding:11px 10px;border:1px solid rgba(232,192,80,.2);border-radius:7px;background:rgba(0,0,0,.16);overflow:hidden}
+.advisor-brief-grid .advisor-brief-head{align-items:flex-start;flex-direction:column;gap:3px;margin-bottom:3px}
+.advisor-brief-grid .advisor-brief-heading{font-size:14px}
+.advisor-brief-grid .advisor-brief-status{font-size:13px}
+.advisor-brief-grid .advisor-brief-lines{gap:2px;margin:5px 0 7px}
+.advisor-brief-grid .advisor-brief-line{font-size:11px;gap:6px}
+.advisor-brief-grid .advisor-brief-one{font-size:12px;line-height:1.55}
 .advisor-long-report{position:relative;z-index:1;border:1px solid rgba(232,192,80,.26);border-radius:8px;background:rgba(10,8,4,.38);padding:10px 11px;margin-top:10px}
 .advisor-long-report-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:8px}
 .advisor-long-report-title{font-family:var(--font);font-size:16px;font-weight:900;color:#f0dfa0}
@@ -14594,7 +14602,7 @@ function advisorWorldHtml(view){
     <div class="advisor-brief-divider"></div>
     <div class="advisor-world-stance ${esc(view.empireTone)}"><span>⚔ 帝國狀態</span><strong>${esc(advisorWorldBriefStatus(view.empireTone,view.empireStatus))}</strong></div>
     <div class="advisor-brief-divider"></div>
-    ${view.sections.map(function(section){return advisorWorldSectionHtml(section);}).join('<div class="advisor-brief-divider"></div>')}
+    <div class="advisor-brief-grid">${view.sections.map(function(section){return advisorWorldSectionHtml(section);}).join('')}</div>
     <div class="advisor-brief-divider"></div>
     <div class="advisor-world-section">
       <div class="advisor-world-label">📌 今日一句</div>
