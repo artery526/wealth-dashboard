@@ -13681,8 +13681,9 @@ function renderHeroCard(row,totalCost){
   var holdingKey=normalizeKey(row&&row.symbol);
   var isCathayHighDividend=holdingKey==='國泰高股息B'||councilRowText(row).indexOf('國泰高股息')>=0;
   var isTaiwan5G=holdingKey==='路博邁台灣5G'||councilRowText(row).indexOf('路博邁台灣5G')>=0||councilRowText(row).indexOf('5G')>=0;
-  var animatedAvatar=holdingKey==='QQQI'||holdingKey==='00997A'||isCathayHighDividend||isTaiwan5G;
-  var animatedAvatarSource=isTaiwan5G?'路博邁台灣5G.mp4':isCathayHighDividend?'國泰高股息B.mp4':holdingKey==='00997A'?'997A.mp4':'QQQI.mp4';
+  var isPlty=holdingKey==='PLTY'||councilRowText(row).indexOf('PLTY')>=0;
+  var animatedAvatar=holdingKey==='QQQI'||holdingKey==='00997A'||isCathayHighDividend||isTaiwan5G||isPlty;
+  var animatedAvatarSource=isPlty?'PLTY.mp4':isTaiwan5G?'路博邁台灣5G.mp4':isCathayHighDividend?'國泰高股息B.mp4':holdingKey==='00997A'?'997A.mp4':'QQQI.mp4';
   var name=row.heroName||row.symbol;
   var heroType=String(row.heroType||row.riskLevel||'策略型').replace(/型$/,'');
   var effectName=skill.skillName||row.skill1Name||'武將技能';
