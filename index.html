@@ -13683,8 +13683,9 @@ function renderHeroCard(row,totalCost){
   var isSchroder=holdingKey==='施羅德收益成長A2'||councilRowText(row).indexOf('施羅德收益成長')>=0;
   var is985b=holdingKey==='00985B'||councilRowText(row).indexOf('00985B')>=0;
   var isMlpi=holdingKey==='MLPI'||councilRowText(row).indexOf('MLPI')>=0;
-  var animatedAvatar=holdingKey==='QQQI'||holdingKey==='00997A'||isCathayHighDividend||isTaiwan5G||isPlty||isAipi||isChpy||isSchroder||is985b||isMlpi;
-  var animatedAvatarSource=isMlpi?'MLPI.mp4':is985b?'985B.mp4':isSchroder?'施羅德收益成長A2.mp4':isChpy?'CHPY.mp4':isAipi?'AIPI.mp4':isPlty?'PLTY.mp4':isTaiwan5G?'路博邁台灣5G.mp4':isCathayHighDividend?'國泰高股息B.mp4':holdingKey==='00997A'?'997A.mp4':'QQQI.mp4';
+  var isGdxw=holdingKey==='GDXW'||councilRowText(row).indexOf('GDXW')>=0;
+  var animatedAvatar=holdingKey==='QQQI'||holdingKey==='00997A'||isCathayHighDividend||isTaiwan5G||isPlty||isAipi||isChpy||isSchroder||is985b||isMlpi||isGdxw;
+  var animatedAvatarSource=isGdxw?'GDXW.mp4':isMlpi?'MLPI.mp4':is985b?'985B.mp4':isSchroder?'施羅德收益成長A2.mp4':isChpy?'CHPY.mp4':isAipi?'AIPI.mp4':isPlty?'PLTY.mp4':isTaiwan5G?'路博邁台灣5G.mp4':isCathayHighDividend?'國泰高股息B.mp4':holdingKey==='00997A'?'997A.mp4':'QQQI.mp4';
   var name=row.heroName||h.heroName||displaySymbol||'未編制';
   var heroType=String(row.heroType||row.riskLevel||'策略型').replace(/型$/,'');
   var effectName=skill.skillName||row.skill1Name||'武將技能';
