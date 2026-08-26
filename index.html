@@ -1697,8 +1697,14 @@ body::after{
 .hero-metrics-panel{display:none;grid-column:1/-1;width:100%;box-sizing:border-box;padding:10px 11px;border:1px solid rgba(184,137,46,.5);border-radius:7px;background:rgba(8,7,5,.92);box-shadow:0 10px 26px rgba(0,0,0,.58),inset 0 0 16px rgba(232,192,80,.05);font-family:var(--mono);font-size:13px;font-weight:800;line-height:1.55;color:#f0dfa0}
 .hero-metrics-panel{cursor:pointer}
 .hero-metrics-panel.copied{border-color:var(--teal);box-shadow:0 0 14px rgba(29,158,117,.2),inset 0 0 16px rgba(29,158,117,.08)}
-.hero-metrics-panel div{white-space:normal;overflow-wrap:anywhere}
-.hero-metrics-panel div+div{margin-top:3px}
+.hero-metrics-panel>div{white-space:normal;overflow-wrap:anywhere}
+.hero-metrics-panel>div+div{margin-top:3px}
+.hero-money-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin:5px 0 6px}
+.hero-money-item{min-width:0;padding:5px 7px;border:1px solid rgba(184,137,46,.28);border-radius:6px;background:rgba(0,0,0,.22)}
+.hero-money-label{display:block;margin-bottom:2px;font-family:var(--sans);font-size:10px;font-weight:900;line-height:1.2;letter-spacing:.3px;color:#b89452}
+.hero-money-value{display:block;min-width:0;font-family:var(--mono);font-size:14px;font-weight:900;line-height:1.25;overflow-wrap:anywhere;color:#f0dfa0}
+.hero-money-item.market{border-color:rgba(77,183,226,.35)}.hero-money-item.market .hero-money-label,.hero-money-item.market .hero-money-value{color:#8fe4ff}
+.hero-money-item.cost{border-color:rgba(232,192,80,.32)}.hero-money-item.cost .hero-money-label{color:#d7bd78}
 .hero-card.metrics-open-card .hero-metrics-panel{display:block}
 .hero-visual-stack.metrics-open .hero-visual{border-color:rgba(232,192,80,.78);box-shadow:0 0 18px rgba(232,192,80,.2),inset 0 0 16px rgba(232,192,80,.08)}
 .hero-payback-under-avatar{font-family:var(--mono);font-size:12px;font-weight:800;line-height:1.25;text-align:center;color:var(--gold);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -13746,7 +13752,10 @@ function renderHeroCard(row,totalCost){
     ${effectBlock}
     <div class="hero-metrics-panel" role="button" tabindex="0" aria-label="點擊複製資訊框內容" aria-live="polite" onclick="copyHeroMetrics(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();copyHeroMetrics(this)}">
       <div>📦${shares?shares.toLocaleString('zh-TW'):'--'} 💧${esc(monthlyDivCompact)} 🚰佔總${costWeight.toFixed(1)}%</div>
-      <div>📈${fmtFull(marketValue)} / 🌱${fmtFull(cost)}</div>
+      <div class="hero-money-grid" aria-label="市值與成本">
+        <div class="hero-money-item market"><span class="hero-money-label">📈 市值</span><strong class="hero-money-value">${fmtFull(marketValue)}</strong></div>
+        <div class="hero-money-item cost"><span class="hero-money-label">🌱 成本</span><strong class="hero-money-value">${fmtFull(cost)}</strong></div>
+      </div>
       <div>ROI ${fmtPctSigned(roi)} / 🧩${paybackShort}➡️${cost>0?paybackPct.toFixed(1)+'%':'--'}</div>
     </div>
   </div>`;
