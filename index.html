@@ -1873,7 +1873,7 @@ body::after{
 .finance-collapse-body{padding:0 10px 10px}
 .finance-accounts-heading{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid rgba(232,192,80,.12);font-family:var(--sans);font-size:11px;font-weight:900;letter-spacing:1px;color:var(--gold)}
 .finance-accounts-heading .finance-collapse-meta{margin-left:auto}
-.finance-accounts-toggle{flex:0 0 auto;border:1px solid rgba(232,192,80,.34);border-radius:999px;background:transparent;color:var(--gold);padding:4px 9px;font-family:var(--sans);font-size:10px;font-weight:900;cursor:pointer;white-space:nowrap}
+.finance-accounts-toggle{flex:0 0 auto;width:32px;height:32px;display:inline-grid;place-items:center;border:1px solid rgba(232,192,80,.34);border-radius:999px;background:transparent;color:var(--gold);padding:0;font-family:var(--sans);font-size:18px;font-weight:900;line-height:1;cursor:pointer;white-space:nowrap}
 .finance-accounts-toggle:hover{background:rgba(232,192,80,.1)}
 .finance-accounts-collapse.is-masked .acc-val{font-size:0!important;color:transparent!important}
 .finance-accounts-collapse.is-masked .acc-val::after{content:'***';font-family:var(--mono);font-size:17px;color:var(--gold)}
@@ -8513,7 +8513,7 @@ function renderAccounts(accs,monthly,el,assetSnapshot,bills,stale){
   var accHtml=accCards.join('');
   var accountListHtml=`
     <section class="finance-collapse finance-accounts-collapse">
-      <div class="finance-accounts-heading"><span class="finance-collapse-title">帳戶一覽</span><span class="finance-collapse-meta">${accountCardCount} 張卡</span><button class="finance-accounts-toggle" type="button" aria-pressed="false">🔒 隱藏數字</button></div>
+      <div class="finance-accounts-heading"><span class="finance-collapse-title">帳戶一覽</span><span class="finance-collapse-meta">${accountCardCount} 張卡</span><button class="finance-accounts-toggle" type="button" aria-label="隱藏數字" title="隱藏數字" aria-pressed="false">🔒</button></div>
       <div class="finance-collapse-body">
         <div class="acc-grid">${accHtml}</div>
       </div>
@@ -8524,7 +8524,9 @@ function renderAccounts(accs,monthly,el,assetSnapshot,bills,stale){
   if(accountPanel&&privacyToggle)privacyToggle.addEventListener('click',function(){
     var masked=accountPanel.classList.toggle('is-masked');
     privacyToggle.setAttribute('aria-pressed',String(masked));
-    privacyToggle.textContent=masked?'🔓 顯示數字':'🔒 隱藏數字';
+    privacyToggle.textContent=masked?'🔓':'🔒';
+    privacyToggle.setAttribute('aria-label',masked?'顯示數字':'隱藏數字');
+    privacyToggle.setAttribute('title',masked?'顯示數字':'隱藏數字');
   });
 }
 
