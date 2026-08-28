@@ -132,7 +132,7 @@ function doGet(e) {
     if (action === 'ziweiCharts') return ok(getZiweiCharts());
     if (action === 'eventChronicle') return ok(getEventChronicle(ss));
     // ── 寫入路由（需要 token）──
-    if (action === 'expense' || action === 'income' || action === 'transfer' || action === 'transactionUndo' || action === 'stockTradeVoid' || action === 'divCalc' || action === 'dividendEntry' || action === 'dividendDelete' || action === 'holdingTradeEntry' || action === 'holdingTradeDelete' || action === 'macroWebhook' || action === 'travelMemoHide' || action === 'travelMemoAdd' || action === 'verifyWriteToken') {
+    if (action === 'expense' || action === 'income' || action === 'transfer' || action === 'transactionUndo' || action === 'stockTradeVoid' || action === 'dividendEntry' || action === 'dividendDelete' || action === 'holdingTradeEntry' || action === 'holdingTradeDelete' || action === 'macroWebhook' || action === 'travelMemoHide' || action === 'travelMemoAdd' || action === 'verifyWriteToken') {
       verifyWriteToken(p);
       if (action === 'verifyWriteToken') return ok({ message: 'WRITE_TOKEN 驗證成功' });
       if (action === 'expense')  return ok(writeExpense(ss, p));
@@ -140,7 +140,6 @@ function doGet(e) {
       if (action === 'transfer') return ok(writeTransfer(ss, p));
       if (action === 'transactionUndo') return ok(undoTransaction(ss, p));
       if (action === 'stockTradeVoid') return ok(voidStockTrade(ss, p));
-      if (action === 'divCalc')  return ok(writeDivCalc(ss, p));
       if (action === 'dividendEntry') return ok(writeDividendEntry(ss, p));
       if (action === 'dividendDelete') return ok(deleteDividendEntry(ss, p));
       if (action === 'holdingTradeEntry') return ok(writeHoldingTradeEntry(ss, p));
@@ -173,7 +172,6 @@ function doPost(e) {
     if (action === 'transactionUndo') return ok(undoTransaction(ss, body));
     if (action === 'stockTradeVoid') return ok(voidStockTrade(ss, body));
     if (action === 'verifyWriteToken') return ok({ message: 'WRITE_TOKEN 驗證成功' });
-    if (action === 'divCalc')  return ok(writeDivCalc(ss, body));
     if (action === 'dividendEntry') return ok(writeDividendEntry(ss, body));
     if (action === 'dividendDelete') return ok(deleteDividendEntry(ss, body));
     if (action === 'holdingTradeEntry') return ok(writeHoldingTradeEntry(ss, body));
@@ -3856,81 +3854,6 @@ function dateSortValue_(value) {
   }
   var t = new Date(s).getTime();
   return isNaN(t) ? 0 : t;
-}
-
-// ── 寫入配息試算 ──────────────────────────────────────────────
-function writeDivCalc(ss, body) {
-  // 取得或建立「配息試算」分頁
-  var db = getExternalDbSpreadsheet_();
-  var sheet = db.getSheetByName('配息試算');
-  if (!sheet) {
-    sheet = db.insertSheet('配息試算');
-    // 建立標題列
-    var headers = [
-      '記錄時間', '股票名稱', '市場', '配息頻率',
-      '股價', '購買股數', '每股配息', 'USD匯率',
-      '所需本金(TWD)', '單次配息(TWD)', '月配息(TWD)', '年配息(TWD)', '年殖利率%'
-    ];
-    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
-    sheet.getRange('A1:M1')
-      .setFontWeight('bold')
-      .setBackground('#2a1c08')
-      .setFontColor('#e8c050');
-    sheet.setFrozenRows(1);
-    // 欄寬
-    sheet.setColumnWidth(1, 140);
-    sheet.setColumnWidth(2, 120);
-    [3,4].forEach(function(c){ sheet.setColumnWidth(c, 70); });
-    [5,6,7,8].forEach(function(c){ sheet.setColumnWidth(c, 90); });
-    [9,10,11,12,13].forEach(function(c){ sheet.setColumnWidth(c, 110); });
-    // 數字格式（後續寫入時套用）
-  }
-
-  var tz = db.getSpreadsheetTimeZone ? db.getSpreadsheetTimeZone() : 'Asia/Taipei';
-  var now = Utilities.formatDate(new Date(), tz || 'Asia/Taipei', 'yyyy/MM/dd HH:mm');
-
-  var name      = String(body.name    || '').trim();
-  var market    = String(body.market  || '台股').trim();
-  var freq      = String(body.freq    || '月配').trim();
-  var price     = parseFloat(body.price)           || 0;
-  var shares    = parseFloat(body.shares)          || 0;
-  var divAmt    = parseFloat(body.divAmt)          || 0;
-  var fx        = parseFloat(body.fx)              || 1;
-  var capital   = parseFloat(body.requiredCapital) || 0;
-  var onceDiv   = parseFloat(body.onceDiv)         || 0;
-  var monthly   = parseFloat(body.monthlyDiv)      || 0;
-  var annual    = parseFloat(body.annualDiv)        || 0;
-  var yieldPct  = parseFloat(body.annualYield)     || 0;
-
-  if (!name)   throw new Error('股票名稱必填');
-  if (shares <= 0) throw new Error('股數必須大於 0');
-  if (price  <= 0) throw new Error('股價必須大於 0');
-  if (divAmt <= 0) throw new Error('每股配息必須大於 0');
-
-  var nr = sheet.getLastRow() + 1;
-  var row = [now, name, market, freq, price, shares, divAmt, fx,
-             capital, onceDiv, monthly, annual, yieldPct];
-  sheet.getRange(nr, 1, 1, row.length).setValues([row]);
-
-  // 格式：時間文字、數字千分位、百分比
-  sheet.getRange(nr, 1).setNumberFormat('@');
-  [5, 7, 8].forEach(function(c){
-    sheet.getRange(nr, c).setNumberFormat('#,##0.00');
-  });
-  sheet.getRange(nr, 6).setNumberFormat('#,##0');
-  [9, 10, 11, 12].forEach(function(c){
-    sheet.getRange(nr, c).setNumberFormat('#,##0');
-  });
-  sheet.getRange(nr, 13).setNumberFormat('0.00"%"');
-
-  SpreadsheetApp.flush();
-
-  return {
-    message: '配息試算已記錄',
-    name: name,
-    monthlyDiv: Math.round(monthly),
-    row: nr
-  };
 }
 
 // ── 帳戶餘額調整（供 API 使用）───────────────────────────────
