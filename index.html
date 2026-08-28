@@ -12757,7 +12757,8 @@ function battleLiveFundSnapshotHtml(funds){
   }).map(function(item){
     var current=Number(item.current), previous=item.previous===''||item.previous==null?null:Number(item.previous);
     var change=item.change===''||item.change==null?(previous==null?null:current-previous):Number(item.change);
-    var changeText=change==null||!isFinite(change)?'--':(change>0?'+':'')+change.toFixed(2);
+    var pct=item.changePct===''||item.changePct==null?null:Number(item.changePct);
+    var changeText=pct==null||!isFinite(pct)?'--':(pct>0?'+':'')+pct.toFixed(2)+'%';
     return `<div class="battle-snapshot-row"><span>${esc(item.name)}<small class="battle-snapshot-yesterday">昨 ${previous==null?'--':battleFinanceSnapshotValueText({value:previous})}</small></span><strong>${esc(battleFinanceSnapshotValueText({value:current}))}</strong><em>${esc(changeText)}</em><small>${esc(battleUpdatedAtText(item.updatedAt||item.dataTime||item.fetchedAt))}</small></div>`;
   }).join('');
   var title='昨日數值對比';
