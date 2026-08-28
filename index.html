@@ -1279,6 +1279,24 @@ body::after{
 .advisor-ai-dividend-quick-status-panel{display:block;flex:none;min-height:17px;margin:0 0 8px;padding:0 4px;white-space:normal;overflow:visible;text-overflow:clip}
 .advisor-ai-dividend-quick-status.ok{color:#8ce6c6}
 .advisor-ai-dividend-quick-status.err{color:var(--coral)}
+.advisor-div-calc-card{margin-top:2px;border:1px solid rgba(232,192,80,.3);border-radius:9px;background:linear-gradient(145deg,rgba(232,192,80,.08),rgba(10,8,4,.72));padding:12px}
+.advisor-div-calc-market,.advisor-div-calc-frequency{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-bottom:9px}
+.advisor-div-calc-frequency{grid-template-columns:repeat(4,minmax(0,1fr))}
+.advisor-div-calc-btn{border:1px solid rgba(232,192,80,.32);border-radius:7px;background:rgba(232,192,80,.06);color:var(--gold);font-family:var(--sans);font-size:12px;font-weight:900;padding:8px 6px;cursor:pointer}
+.advisor-div-calc-btn.active{background:rgba(232,192,80,.18);border-color:var(--gold2);box-shadow:0 0 12px rgba(232,192,80,.12)}
+.advisor-div-calc-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.advisor-div-calc-field{min-width:0}
+.advisor-div-calc-field label{display:block;margin-bottom:4px;font-family:var(--sans);font-size:10px;font-weight:900;color:#b99550}
+.advisor-div-calc-field input{width:100%;border:1px solid rgba(232,192,80,.3);border-radius:7px;background:#0a0804;color:var(--ink);font-family:var(--mono);font-size:13px;padding:9px 8px;outline:none;box-sizing:border-box}
+.advisor-div-calc-field input:focus{border-color:var(--gold2)}
+.advisor-div-calc-note{margin:8px 0 10px;font-family:var(--sans);font-size:10px;line-height:1.55;color:#9a7430}
+.advisor-div-calc-result{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}
+.advisor-div-calc-result-item{padding:8px;border:1px solid rgba(232,192,80,.16);border-radius:7px;background:rgba(0,0,0,.18)}
+.advisor-div-calc-result-item span{display:block;font-family:var(--sans);font-size:10px;color:#9a7430}
+.advisor-div-calc-result-item strong{display:block;margin-top:3px;font-family:var(--mono);font-size:14px;color:var(--gold);white-space:nowrap}
+.advisor-div-calc-result-item.primary{grid-column:1/-1}
+.advisor-div-calc-result-item.primary strong{font-size:20px;color:var(--teal)}
+@media(max-width:480px){.advisor-div-calc-frequency{grid-template-columns:repeat(2,minmax(0,1fr))}.advisor-div-calc-grid{grid-template-columns:1fr}.advisor-div-calc-result-item strong{font-size:13px}.advisor-div-calc-result-item.primary strong{font-size:18px}}
 .advisor-ai-expense-quick-row{display:flex;align-items:center;gap:7px;margin:0 0 10px}
 .advisor-ai-expense-quick-select,.advisor-ai-expense-quick-amount{height:38px;min-width:0;border:1px solid rgba(232,192,80,.38);border-radius:7px;background:#0a0804;color:#fff0b0;font-family:var(--sans);font-size:12px;font-weight:800;padding:7px;outline:none}
 .advisor-ai-expense-quick-select{flex:1 1 0}
@@ -4389,7 +4407,6 @@ html[data-theme="deep-blue"] .advisor-ai-standalone .advisor-ai-quick-select:foc
         <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'finance','booking-form')">&#x5FEB;&#x901F;&#x8A18;&#x5E33;</button>
         <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'finance','domestic-yearly')">&#x5E74;&#x5EA6;&#x8CA1;&#x5831;</button>
         <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'finance','dividend-center')">&#x6301;&#x80A1;&#x8207;&#x914D;&#x606F;</button>
-        <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'finance','div-calc')">&#x914D;&#x606F;&#x8A66;&#x7B97;</button>
       </div>
     </div>
 
@@ -4562,7 +4579,7 @@ html[data-theme="deep-blue"] .advisor-ai-standalone .advisor-ai-quick-select:foc
   <section class="global-scroll-menu" role="dialog" aria-modal="true" aria-labelledby="global-scroll-menu-title" onclick="event.stopPropagation()">
     <div class="global-scroll-menu-head"><div><div class="global-scroll-menu-title" id="global-scroll-menu-title">🐉&#x7687;&#x5BAE;&#x5C0E;&#x822A;</div></div><button class="global-scroll-menu-close" type="button" aria-label="&#x95DC;&#x9589;" onclick="closeGlobalScrollMenu()">&#x00D7;</button></div>
     <div class="global-scroll-groups">
-      <section class="global-scroll-group"><div class="global-scroll-group-title">&#x8CA1;&#x653F;</div><div class="global-scroll-buttons"><button class="global-scroll-button" type="button" data-global-panel="finance" data-global-tab="finance-accs" onclick="openGlobalScrollShortcut(event,'finance','finance-accs')">&#x570B;&#x5EAB;&#x73FE;&#x6CC1;</button><button class="global-scroll-button" type="button" data-global-panel="finance" data-global-tab="booking-form" onclick="openGlobalScrollShortcut(event,'finance','booking-form')">&#x5FEB;&#x901F;&#x8A18;&#x5E33;</button><button class="global-scroll-button" type="button" data-global-panel="finance" data-global-tab="domestic-yearly" onclick="openGlobalScrollShortcut(event,'finance','domestic-yearly')">&#x5E74;&#x5EA6;&#x8CA1;&#x5831;</button><button class="global-scroll-button" type="button" data-global-panel="finance" data-global-tab="dividend-center" onclick="openGlobalScrollShortcut(event,'finance','dividend-center')">&#x6301;&#x80A1;&#x8207;&#x914D;&#x606F;</button><button class="global-scroll-button" type="button" data-global-panel="finance" data-global-tab="div-calc" onclick="openGlobalScrollShortcut(event,'finance','div-calc')">&#x914D;&#x606F;&#x8A66;&#x7B97;</button></div></section>
+      <section class="global-scroll-group"><div class="global-scroll-group-title">&#x8CA1;&#x653F;</div><div class="global-scroll-buttons"><button class="global-scroll-button" type="button" data-global-panel="finance" data-global-tab="finance-accs" onclick="openGlobalScrollShortcut(event,'finance','finance-accs')">&#x570B;&#x5EAB;&#x73FE;&#x6CC1;</button><button class="global-scroll-button" type="button" data-global-panel="finance" data-global-tab="booking-form" onclick="openGlobalScrollShortcut(event,'finance','booking-form')">&#x5FEB;&#x901F;&#x8A18;&#x5E33;</button><button class="global-scroll-button" type="button" data-global-panel="finance" data-global-tab="domestic-yearly" onclick="openGlobalScrollShortcut(event,'finance','domestic-yearly')">&#x5E74;&#x5EA6;&#x8CA1;&#x5831;</button><button class="global-scroll-button" type="button" data-global-panel="finance" data-global-tab="dividend-center" onclick="openGlobalScrollShortcut(event,'finance','dividend-center')">&#x6301;&#x80A1;&#x8207;&#x914D;&#x606F;</button></div></section>
       <section class="global-scroll-group"><div class="global-scroll-group-title">&#x8ECD;&#x6A5F;&#x8655;</div><div class="global-scroll-buttons"><button class="global-scroll-button" type="button" data-global-panel="council" data-global-tab="battle-brief" onclick="openGlobalScrollShortcut(event,'council','battle-brief')">&#x6230;&#x60C5;&#x7E3D;&#x532F;&#x5831;</button><button class="global-scroll-button" type="button" data-global-panel="council" data-global-tab="council-roster" onclick="openGlobalScrollShortcut(event,'council','council-roster')">&#x90E8;&#x968A;&#x9663;&#x5BB9;</button><button class="global-scroll-button" type="button" data-global-panel="council" data-global-tab="market-watch" onclick="openGlobalScrollShortcut(event,'council','market-watch')">&#x53F0;&#x7F8E;&#x80A1;&#x5927;&#x76E4;</button><button class="global-scroll-button" type="button" data-global-panel="council" data-global-tab="macro-overview" onclick="openGlobalScrollShortcut(event,'council','macro-overview')">&#x7F8E;&#x80A1;&#x7E3D;&#x7D93;</button></div></section>
       <section class="global-scroll-group"><div class="global-scroll-group-title">&#x91AB;&#x9928;</div><div class="global-scroll-buttons"><button class="global-scroll-button" type="button" data-global-panel="medical" data-global-tab="medical-quick" onclick="openGlobalScrollShortcut(event,'medical','medical-quick')">&#x5FEB;&#x901F;&#x8A18;&#x9304;</button><button class="global-scroll-button" type="button" data-global-panel="medical" data-global-tab="medical-tarot" onclick="openGlobalScrollShortcut(event,'medical','medical-tarot')">&#x62BD;&#x724C;&#x8A18;&#x9304;</button><button class="global-scroll-button" type="button" data-global-panel="medical" data-global-tab="medical-stats" onclick="openGlobalScrollShortcut(event,'medical','medical-stats')">&#x724C;&#x5361;&#x7D71;&#x8A08;</button><button class="global-scroll-button" type="button" data-global-panel="medical" data-global-tab="medical-painmap" onclick="openGlobalScrollShortcut(event,'medical','medical-painmap')">&#x75BC;&#x75DB;&#x5730;&#x5716;</button></div></section>
       <section class="global-scroll-group"><div class="global-scroll-group-title">&#x53F8;&#x5929;&#x76E3;</div><div class="global-scroll-buttons"><button class="global-scroll-button" type="button" data-global-panel="stars" data-global-tab="stars-home" onclick="openGlobalScrollShortcut(event,'stars','stars-home')">&#x547D;&#x76E4;&#x7E3D;&#x89BD;</button><button class="global-scroll-button" type="button" data-global-panel="stars" data-global-tab="stars-chronicle" onclick="openGlobalScrollShortcut(event,'stars','stars-chronicle')">&#x4E8B;&#x4EF6;&#x7DE8;&#x5E74;</button></div></section>
@@ -6095,7 +6112,6 @@ function switchTab(btn,key){
   else if(key==='taiwan-macro')loadTaiwanMacro();
   else if(key==='council-roster')loadCouncilDashboard();
   else if(key==='council-task')resetRetiredTaskStatus();
-  else if(key==='div-calc')initDivCalc();
   else if(key==='medical-tarot')initMedicalTarotForm();
   else if(key==='medical-stats')initMedicalCardStats();
   else if(key==='medical-painmap')initMedicalPainMap();
@@ -8301,15 +8317,14 @@ function renderFinancePanel(initialTab){
   var panelExtra=document.getElementById('p-extra');
   if(panelExtra)panelExtra.innerHTML='<span class="finance-panel-status-dot err" id="finance-panel-status-dot" title="財政連線失敗" aria-label="財政連線失敗"></span>';
   setEmpireCardApiPendingStatus('finance');
-  var financeTabs=['booking-form','finance-accs','domestic-yearly','dividend-center','div-calc'];
+  var financeTabs=['booking-form','finance-accs','domestic-yearly','dividend-center'];
   var targetTab=financeTabs.indexOf(initialTab)>=0?initialTab:'booking-form';
   currentTab=targetTab;
   setFinancePanelTabs([
     {key:'booking-form',label:'快速記帳'},
     {key:'finance-accs',label:'國庫現況'},
     {key:'domestic-yearly',label:'年度財報'},
-    {key:'dividend-center',label:'持股與配息'},
-    {key:'div-calc',label:'配息試算'}
+    {key:'dividend-center',label:'持股與配息'}
   ],targetTab);
   document.getElementById('p-body').innerHTML=`
     <div class="pane ${targetTab==='finance-accs'?'active':''}" id="pane-finance-accs">
@@ -8332,9 +8347,6 @@ function renderFinancePanel(initialTab){
         <span class="api-action">⚙ 設定</span>
       </div>
       <div id="annual-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:80%"></div></div>
-    </div>
-    <div class="pane ${targetTab==='div-calc'?'active':''}" id="pane-div-calc">
-      <div id="div-calc-content"></div>
     </div>
     `;
   if(targetTab==='booking-form'){
@@ -15451,7 +15463,6 @@ initAdvisorDuoVideoPlayback();
             <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'finance','booking-form')"><span class="advisor-btn-tag">記</span>快速記帳</button>
             <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'finance','domestic-yearly')"><span class="advisor-btn-tag">年</span>年度財報</button>
             <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'finance','dividend-center')"><span class="advisor-btn-tag">股</span>持股與配息</button>
-            <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'finance','div-calc')"><span class="advisor-btn-tag">息</span>配息試算</button>
           </div>
         </section>
         <section class="advisor-menu-section">
@@ -16056,11 +16067,110 @@ async function advisorAIRefreshGoldQuote(btn){
 function advisorAIQuickCommands(){
   return [
     {label:'快速轉帳',command:'__quick_transfer__'},
+    {label:'配息試算',command:'__dividend_calculator__'},
     {label:'配息記錄',command:'__dividend_record__'},
     {label:'載具超商',command:'__member_cards__'},
     {label:'退稅查詢',command:'__etf_tax_lookup__'},
     {label:'複製載具',command:'複製載具'}
   ];
+}
+
+var advisorDividendCalcMarket='tw';
+var advisorDividendCalcFrequency='monthly';
+
+function advisorAIOpenDividendCalculator(){
+  var panel=advisorAIActivePanel();
+  if(!panel)return;
+  advisorShortcutOpenKind='dividend-calculator';
+  panel.innerHTML=`${advisorAIHeaderHtml()}
+    <div class="advisor-div-calc-card">
+      <div class="advisor-shortcut-title">🧮 配息試算</div>
+      <div class="advisor-shortcut-hint">只在本頁計算，不會儲存、不會寫入配息紀錄。</div>
+      <div class="advisor-div-calc-market" role="group" aria-label="市場">
+        <button class="advisor-div-calc-btn active" id="advisor-div-calc-tw" type="button" onclick="advisorDividendCalcSetMarket('tw')">🇹🇼 台股</button>
+        <button class="advisor-div-calc-btn" id="advisor-div-calc-us" type="button" onclick="advisorDividendCalcSetMarket('us')">🇺🇸 美股</button>
+      </div>
+      <div class="advisor-div-calc-grid">
+        <div class="advisor-div-calc-field"><label for="advisor-div-calc-investment">投入金額（台幣）</label><input id="advisor-div-calc-investment" type="number" min="0" step="1" placeholder="例如 100000" inputmode="decimal" oninput="advisorDividendCalcUpdate()"></div>
+        <div class="advisor-div-calc-field"><label for="advisor-div-calc-price">股價（${advisorDividendCalcMarket==='us'?'USD':'TWD'}）</label><input id="advisor-div-calc-price" type="number" min="0" step="0.01" placeholder="例如 52.2" inputmode="decimal" oninput="advisorDividendCalcUpdate()"></div>
+        <div class="advisor-div-calc-field"><label for="advisor-div-calc-shares">持股股數（可選）</label><input id="advisor-div-calc-shares" type="number" min="0" step="1" placeholder="留白則由投入金額反推" inputmode="decimal" oninput="advisorDividendCalcUpdate()"></div>
+        <div class="advisor-div-calc-field"><label for="advisor-div-calc-rate">每股配息（${advisorDividendCalcMarket==='us'?'USD':'TWD'}）</label><input id="advisor-div-calc-rate" type="number" min="0" step="0.0001" placeholder="例如 0.82" inputmode="decimal" oninput="advisorDividendCalcUpdate()"></div>
+        <div class="advisor-div-calc-field" id="advisor-div-calc-fx-field"><label for="advisor-div-calc-fx">USD／TWD 匯率</label><input id="advisor-div-calc-fx" type="number" min="0" step="0.01" value="32.5" inputmode="decimal" oninput="advisorDividendCalcUpdate()"></div>
+        <div class="advisor-div-calc-field" id="advisor-div-calc-tax-field"><label for="advisor-div-calc-tax">美股預扣稅率（%）</label><input id="advisor-div-calc-tax" type="number" min="0" max="100" step="1" value="30" inputmode="decimal" oninput="advisorDividendCalcUpdate()"></div>
+      </div>
+      <div class="advisor-shortcut-hint" style="margin:9px 0 4px">配息頻率</div>
+      <div class="advisor-div-calc-frequency" role="group" aria-label="配息頻率">
+        <button class="advisor-div-calc-btn active" id="advisor-div-calc-monthly" type="button" onclick="advisorDividendCalcSetFrequency('monthly')">月配</button>
+        <button class="advisor-div-calc-btn" id="advisor-div-calc-quarterly" type="button" onclick="advisorDividendCalcSetFrequency('quarterly')">季配</button>
+        <button class="advisor-div-calc-btn" id="advisor-div-calc-semiannual" type="button" onclick="advisorDividendCalcSetFrequency('semiannual')">半年配</button>
+        <button class="advisor-div-calc-btn" id="advisor-div-calc-annual" type="button" onclick="advisorDividendCalcSetFrequency('annual')">年配</button>
+      </div>
+      <div class="advisor-div-calc-note" id="advisor-div-calc-note">填入投入金額、股價與每股配息後即時估算；持股股數有填寫時會優先採用。</div>
+      <div class="advisor-div-calc-result" aria-live="polite">
+        <div class="advisor-div-calc-result-item primary"><span>月均配息（台幣）</span><strong id="advisor-div-calc-monthly-result">—</strong></div>
+        <div class="advisor-div-calc-result-item"><span>可計算股數</span><strong id="advisor-div-calc-shares-result">—</strong></div>
+        <div class="advisor-div-calc-result-item"><span>單次配息</span><strong id="advisor-div-calc-once-result">—</strong></div>
+        <div class="advisor-div-calc-result-item"><span>年配息估算</span><strong id="advisor-div-calc-annual-result">—</strong></div>
+        <div class="advisor-div-calc-result-item"><span>年化配息率</span><strong id="advisor-div-calc-yield-result">—</strong></div>
+      </div>
+      <button class="advisor-shortcut-secondary" type="button" onclick="openAdvisorAI()" style="margin-top:10px">返回龐統軍師</button>
+    </div>`;
+  advisorDividendCalcSetMarket(advisorDividendCalcMarket);
+  advisorDividendCalcSetFrequency(advisorDividendCalcFrequency);
+}
+
+function advisorDividendCalcSetMarket(market){
+  advisorDividendCalcMarket=market==='us'?'us':'tw';
+  var tw=document.getElementById('advisor-div-calc-tw');
+  var us=document.getElementById('advisor-div-calc-us');
+  if(tw)tw.classList.toggle('active',advisorDividendCalcMarket==='tw');
+  if(us)us.classList.toggle('active',advisorDividendCalcMarket==='us');
+  var priceLabel=document.querySelector('label[for="advisor-div-calc-price"]');
+  var rateLabel=document.querySelector('label[for="advisor-div-calc-rate"]');
+  if(priceLabel)priceLabel.textContent='股價（'+(advisorDividendCalcMarket==='us'?'USD':'TWD')+'）';
+  if(rateLabel)rateLabel.textContent='每股配息（'+(advisorDividendCalcMarket==='us'?'USD':'TWD')+'）';
+  var fxField=document.getElementById('advisor-div-calc-fx-field');
+  var taxField=document.getElementById('advisor-div-calc-tax-field');
+  if(fxField)fxField.style.display=advisorDividendCalcMarket==='us'?'':'none';
+  if(taxField)taxField.style.display=advisorDividendCalcMarket==='us'?'':'none';
+  advisorDividendCalcUpdate();
+}
+
+function advisorDividendCalcSetFrequency(frequency){
+  advisorDividendCalcFrequency=frequency;
+  ['monthly','quarterly','semiannual','annual'].forEach(function(item){
+    var button=document.getElementById('advisor-div-calc-'+item);
+    if(button)button.classList.toggle('active',item===frequency);
+  });
+  advisorDividendCalcUpdate();
+}
+
+function advisorDividendCalcUpdate(){
+  var get=function(id){return parseFloat(document.getElementById(id)&&document.getElementById(id).value)||0;};
+  var investment=get('advisor-div-calc-investment');
+  var price=get('advisor-div-calc-price');
+  var enteredShares=get('advisor-div-calc-shares');
+  var rate=get('advisor-div-calc-rate');
+  var fx=advisorDividendCalcMarket==='us'?get('advisor-div-calc-fx')||32.5:1;
+  var taxInput=document.getElementById('advisor-div-calc-tax');
+  var taxRate=taxInput&&taxInput.value!==''?parseFloat(taxInput.value):30;
+  var taxFactor=advisorDividendCalcMarket==='us'?Math.max(0,1-(isNaN(taxRate)?30:taxRate)/100):1;
+  var shares=enteredShares>0?Math.floor(enteredShares):(investment>0&&price>0?Math.floor(investment/(price*fx)):0);
+  var set=function(id,value){var el=document.getElementById(id);if(el)el.textContent=value;};
+  set('advisor-div-calc-shares-result',shares?shares.toLocaleString('zh-TW')+' 股':'—');
+  if(!(shares>0&&price>0&&rate>0)){
+    set('advisor-div-calc-monthly-result','—');set('advisor-div-calc-once-result','—');set('advisor-div-calc-annual-result','—');set('advisor-div-calc-yield-result','—');
+    return;
+  }
+  var once=shares*rate*fx*taxFactor;
+  var annualCount={monthly:12,quarterly:4,semiannual:2,annual:1}[advisorDividendCalcFrequency]||12;
+  var annual=once*annualCount;
+  var monthly=annual/12;
+  var capital=enteredShares>0?shares*price*fx:investment;
+  set('advisor-div-calc-monthly-result',fmtFull(monthly));
+  set('advisor-div-calc-once-result',fmtFull(once));
+  set('advisor-div-calc-annual-result',fmtFull(annual));
+  set('advisor-div-calc-yield-result',capital>0?(annual/capital*100).toFixed(2)+'%':'—');
 }
 
 function advisorAIQuickCommandSelectHtml(){
@@ -16300,6 +16410,11 @@ function advisorAIRunQuickCommand(select){
   if(command==='__quick_transfer__'){
     if(select)select.value='';
     advisorAIOpenQuickTransfer();
+    return;
+  }
+  if(command==='__dividend_calculator__'){
+    if(select)select.value='';
+    advisorAIOpenDividendCalculator();
     return;
   }
   if(command==='__dividend_record__'){
