@@ -11361,7 +11361,7 @@ function renderDividendCenter(data,includeArchitecture){
   var tradePending=dividendPendingDisplayRows(data.holdingTradePending||[]);
   var tradeRows=tradePending.map(renderHoldingTradePendingRow).join('')||'<div class="dividend-empty">目前沒有待入帳持股記錄。</div>';
   return `
-    ${includeArchitecture?renderDividendEntryForm()+renderHoldingTradeEntryForm():''}
+    ${includeArchitecture?renderHoldingTradeEntryForm():''}
     <div style="display:flex;gap:8px;margin-bottom:12px">
       <button class="dividend-use-btn" style="width:auto;margin:0" onclick="loadDividendCenterPanel(true)">重新整理</button>
       <span class="result-msg" id="dividend-center-msg"></span>
