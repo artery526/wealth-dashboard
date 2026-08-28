@@ -6164,7 +6164,11 @@ function renderStorePanel(initialTab){
     </div>`;
   renderStoreForm();
   setEmpireCardApiPendingStatus('store');
-  if(API_URL)loadStoreRecords(true);
+  if(storeRecordsCache.length || storeRecordsCacheFetchedAt){
+    renderStoreDateFilters();
+    renderStoreList();
+  }
+  if(API_URL)loadStoreRecords(false);
   else document.getElementById('store-list-content').innerHTML=setupNotice();
   if(initialTab)setTimeout(function(){
     var btn=document.querySelector('.panel-menu-item[data-panel-tab="'+initialTab+'"]');
@@ -6177,6 +6181,8 @@ var storeSearchTerm='';
 var storeFilterYear=String(new Date().getFullYear());
 var storeFilterMonth=String(new Date().getMonth()+1).padStart(2,'0');
 var storeRecordsPromise=null;
+var storeRecordsCacheFetchedAt=0;
+var STORE_RECORDS_CACHE_TTL=30000;
 
 function renderStoreForm(){
   var el=document.getElementById('store-form-content');
@@ -6260,11 +6266,16 @@ function renderStoreList(){
 }
 
 function loadStoreRecords(force){
-  if(storeRecordsPromise&&!force)return storeRecordsPromise;
+  if(storeRecordsPromise)return storeRecordsPromise;
   if(!API_URL){setEmpireCardStatus('store','err','尚未設定 API');return Promise.reject(new Error('尚未設定 API'));}
+  if(!force&&storeRecordsCacheFetchedAt&&Date.now()-storeRecordsCacheFetchedAt<STORE_RECORDS_CACHE_TTL){
+    setEmpireCardStatus('store','ok','倉庫資料已載入');
+    return Promise.resolve(storeRecordsCache);
+  }
   setEmpireCardStatus('store','pending');
   storeRecordsPromise=apiGet({action:'storeRecords'}).then(function(data){
     storeRecordsCache=(data&&data.records)||[];
+    storeRecordsCacheFetchedAt=Date.now();
     renderStoreDateFilters();
     renderStoreList();
     setEmpireCardStatus('store','ok','倉庫資料已載入');
