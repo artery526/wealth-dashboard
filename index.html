@@ -4947,15 +4947,7 @@ function bookingQuickChipsHtml(selectId,items){
   `</div>`;
 }
 function bookingExpensePresetsHtml(){
-  var items=[
-    {label:'外食',cat:'🍔大餐簡餐',account:'🏔️玉山銀行',note:'外食簡餐'},
-    {label:'超商',cat:'🍴超商外食',account:'🔖中國信託',note:'超商消費'},
-    {label:'現金',cat:'🍴超商外食',account:'💰Cash',note:'現金支付'},
-    {label:'APP',cat:'📱APP訂閱',account:'🏔️玉山銀行',note:'APP訂閱'}
-  ];
-  return `<div class="booking-preset-grid">`+items.map(function(item){
-    return `<button class="booking-preset-card" type="button" onclick="applyBookingExpensePreset('${esc(item.cat)}','${esc(item.account)}','${esc(item.note)}')">${esc(item.label)}<span>${esc(stripIconText(item.account))}</span></button>`;
-  }).join('')+`</div>`;
+  return '';
 }
 function focusBookingField(id){
   setTimeout(function(){
