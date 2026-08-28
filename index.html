@@ -1858,13 +1858,13 @@ body::after{
 .finance-panel-tabs .ptab{flex:0 0 auto;min-width:112px;padding:8px 14px;border:1px solid rgba(232,192,80,.28);border-radius:6px;color:#bda36d;font-size:12px;letter-spacing:1px}
 .finance-panel-tabs .ptab.active{border-color:rgba(232,192,80,.64);color:var(--gold);background:rgba(232,192,80,.1)}
 .finance-panel-tabs .ptab:hover:not(.active){border-color:rgba(232,192,80,.48);background:rgba(232,192,80,.06)}
-.finance-tab-menu-trigger{width:34px;border:1px solid rgba(232,192,80,.34);border-radius:6px;background:transparent;color:var(--gold);font-size:12px;cursor:pointer;transition:all .18s}
+.finance-tab-menu-trigger{display:none;align-items:center;justify-content:center;gap:6px;flex:1;min-width:0;border:1px solid rgba(232,192,80,.34);border-radius:6px;background:transparent;color:var(--gold);font-size:12px;cursor:pointer;transition:all .18s}
 .finance-tab-menu-trigger:hover,.finance-tab-menu-trigger:focus-visible{border-color:var(--gold);background:rgba(232,192,80,.1);outline:none}
 .finance-tab-menu-trigger .panel-menu-caret{display:inline-block}
 .finance-panel-tabs.is-open .finance-tab-menu-trigger .panel-menu-caret{transform:rotate(180deg)}
 .finance-tab-menu{position:absolute;z-index:12;top:calc(100% + 4px);right:10px;display:none;width:178px;padding:6px;border:1px solid rgba(232,192,80,.5);border-radius:8px;background:linear-gradient(145deg,rgba(34,24,9,.98),rgba(8,6,3,.99));box-shadow:0 14px 32px rgba(0,0,0,.48),0 0 18px rgba(232,192,80,.12)}
 .finance-panel-tabs.is-open .finance-tab-menu{display:grid;gap:3px}
-@media(max-width:540px){.finance-panel-tabs .ptab{min-width:0;flex:1;padding:8px 6px;font-size:11px}.finance-tab-menu-trigger{width:30px}}
+@media(max-width:540px){.finance-panel-tabs .ptab{display:none}.finance-tab-menu-trigger{display:inline-flex;width:auto}.finance-tab-menu{right:0;width:min(220px,calc(100vw - 36px))}}
 
 .panel-body{flex:1;overflow-y:auto;padding:16px 18px 20px}
 .panel-body::-webkit-scrollbar{width:4px}
@@ -6015,13 +6015,12 @@ function setFinancePanelTabs(tabs,targetTab){
   if(!tabBar)return;
   tabBar.classList.remove('panel-tabs-hidden');
   tabBar.classList.add('finance-panel-tabs');
-  var primary=tabs.slice(0,2);
-  var secondary=tabs.slice(2);
-  tabBar.innerHTML=primary.map(function(tab){
+  var activeLabel=(tabs.find(function(tab){return tab.key===targetTab;})||tabs[0]).label;
+  tabBar.innerHTML=tabs.map(function(tab){
     return `<button class="ptab ${tab.key===targetTab?'active':''}" type="button" data-panel-tab="${tab.key}" onclick="switchTab(this,'${tab.key}')">${tab.label}</button>`;
   }).join('')+
-    `<button class="finance-tab-menu-trigger" type="button" aria-label="其他財政分頁" aria-expanded="false" onclick="toggleFinanceTabMenu(event)"><span class="panel-menu-caret" aria-hidden="true">▼</span></button>`+
-    `<div class="finance-tab-menu" role="menu">${secondary.map(function(tab){
+    `<button class="finance-tab-menu-trigger" type="button" aria-label="財政分頁選單" aria-expanded="false" onclick="toggleFinanceTabMenu(event)"><span class="finance-tab-menu-label">${activeLabel}</span><span class="panel-menu-caret" aria-hidden="true">▼</span></button>`+
+    `<div class="finance-tab-menu" role="menu">${tabs.map(function(tab){
       return `<button class="panel-menu-item ${tab.key===targetTab?'active':''}" type="button" role="menuitem" data-panel-tab="${tab.key}" onclick="switchTab(this,'${tab.key}')">${tab.label}</button>`;
     }).join('')}</div>`;
 }
@@ -6066,6 +6065,14 @@ function syncPanelMenuTab(key){
   });
 }
 
+function syncFinanceTabMenuTrigger(key){
+  var tabBar=document.getElementById('p-tabs');
+  if(!tabBar)return;
+  var item=tabBar.querySelector('.finance-tab-menu [data-panel-tab="'+key+'"]');
+  var label=tabBar.querySelector('.finance-tab-menu-label');
+  if(item&&label)label.textContent=item.textContent.trim();
+}
+
 document.addEventListener('click',function(event){
   if(!event.target.closest('.panel-menu-anchor'))closePanelTitleMenu();
   if(!event.target.closest('.finance-panel-tabs'))closeFinanceTabMenu();
@@ -6090,6 +6097,7 @@ function switchTab(btn,key){
     syncPanelMenuTab(key);
     closePanelTitleMenu();
   }
+  syncFinanceTabMenuTrigger(key);
   closeFinanceTabMenu();
   if(currentPanel==='domestic'||currentPanel==='finance'){
     if(key==='booking-form')renderBookingHeaderDate();
