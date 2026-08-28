@@ -5826,7 +5826,16 @@ function openPanel(key,initialTab){
     key='finance';
     initialTab=initialTab||'booking-form';
   }
-  if(currentPanel===key){closePanel();return}
+  if(currentPanel===key){
+    if(initialTab){
+      var samePanelTab=document.querySelector('.ptab[onclick*="'+initialTab+'"]');
+      if(samePanelTab)switchTab(samePanelTab,initialTab);
+      document.getElementById('overlay').classList.add('open');
+      return;
+    }
+    closePanel();
+    return;
+  }
   document.querySelectorAll('.card').forEach(c=>c.classList.remove('active'));
   var activeCard=document.getElementById('c-'+key);
   if(activeCard)activeCard.classList.add('active');
@@ -5837,7 +5846,7 @@ function openPanel(key,initialTab){
   document.getElementById('panel').classList.toggle('stars-wide',key==='stars');
   document.getElementById('panel').classList.toggle('store-wide',key==='store');
   currentPanel=key;
-  if(key==='finance')renderFinancePanel();
+  if(key==='finance')renderFinancePanel(initialTab);
   else if(key==='domestic'){setEmpireCardApiPendingStatus('domestic');renderDomesticPanel();}
   else if(key==='market')renderMarketPanel();
   else if(key==='council'){setEmpireCardApiPendingStatus('council');renderCouncilPanel(initialTab);}
@@ -6054,7 +6063,7 @@ function switchTab(btn,key){
     else{
       var extra=document.getElementById('p-extra');
       if(extra)extra.innerHTML=domesticPanelStatusDotHtml();
-      setEmpireCardApiPendingStatus('domestic');
+      setEmpireCardApiPendingStatus(bookingPanelStatusKey());
     }
   }
   if(key==='finance-accs'){
@@ -8271,11 +8280,14 @@ async function submitMedicalTarotRecord(e){
     setTarotStatus(err.message||'同步失敗','err');
   }
 }
-function renderFinancePanel(){
+function renderFinancePanel(initialTab){
   setPanelHead('⚱️','Finance · Treasury','財政');
   var panelExtra=document.getElementById('p-extra');
   if(panelExtra)panelExtra.innerHTML='<span class="finance-panel-status-dot err" id="finance-panel-status-dot" title="財政連線失敗" aria-label="財政連線失敗"></span>';
   setEmpireCardApiPendingStatus('finance');
+  var financeTabs=['finance-accs','booking-form','dividend-center','domestic-yearly','div-calc'];
+  var targetTab=financeTabs.indexOf(initialTab)>=0?initialTab:'booking-form';
+  currentTab=targetTab;
   setPanelMenuTabs([
     {key:'finance-accs',label:'國庫現況'},
     {key:'booking-form',label:'快速記帳'},
@@ -8283,8 +8295,12 @@ function renderFinancePanel(){
     {key:'domestic-yearly',label:'年度財報'},
     {key:'div-calc',label:'配息試算'}
   ]);
+  var initialTabButton=document.querySelector('.ptab[onclick*="'+targetTab+'"]');
+  if(initialTabButton)initialTabButton.classList.add('active');
+  var initialMenuItem=document.querySelector('.panel-menu-item[data-panel-tab="'+targetTab+'"]');
+  if(initialMenuItem)initialMenuItem.classList.add('active');
   document.getElementById('p-body').innerHTML=`
-    <div class="pane active" id="pane-finance-accs">
+    <div class="pane ${targetTab==='finance-accs'?'active':''}" id="pane-finance-accs">
       <div id="acc-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:75%"></div><div class="skel-line skel" style="width:85%"></div></div>
       <details class="finance-collapse finance-pledge-collapse">
         <summary><span class="finance-collapse-title">🏦 質押信貸</span><span class="finance-collapse-meta" id="pledge-collapse-meta">讀取中</span></summary>
@@ -8293,7 +8309,11 @@ function renderFinancePanel(){
         </div>
       </details>
     </div>
-    <div class="pane" id="pane-domestic-yearly">
+    <div class="pane ${targetTab==='booking-form'?'active':''}" id="pane-booking-form"></div>
+    <div class="pane ${targetTab==='dividend-center'?'active':''}" id="pane-dividend-center">
+      <div id="dividend-center-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:80%"></div></div>
+    </div>
+    <div class="pane ${targetTab==='domestic-yearly'?'active':''}" id="pane-domestic-yearly">
       <div class="api-bar">
         <div class="api-dot ${API_URL?'ok':'err'}"></div>
         <span class="api-label">${API_URL?'年度財報 API 已連線':'尚未設定 API'}</span>
@@ -8301,13 +8321,18 @@ function renderFinancePanel(){
       </div>
       <div id="annual-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:80%"></div></div>
     </div>
-    <div class="pane" id="pane-div-calc">
+    <div class="pane ${targetTab==='div-calc'?'active':''}" id="pane-div-calc">
       <div id="div-calc-content"></div>
     </div>
     `;
-  if(API_URL){
-    loadAccounts();
-    loadPledgePanel();
+  if(targetTab==='booking-form'){
+    renderBookingHeaderDate();
+    initBookingForm();
+  }else if(targetTab==='dividend-center'){
+    loadDividendCenterPanel();
+  }else if(API_URL&&targetTab==='finance-accs'){
+      loadAccounts();
+      loadPledgePanel();
   }
 }
 
@@ -8452,10 +8477,6 @@ function renderTreasuryOverview(all,filtered,monthly,assetSnapshot,totalRow){
       </div>
       <div class="treasury-main">${fmtFull(totalAsset)}</div>
       <div class="treasury-sub ${totalAssetDelta>0?'up':(totalAssetDelta<0?'down':'')}">總資產較昨 ${esc(totalDeltaText)}</div>
-    </div>
-    <div class="pane" id="pane-booking-form"></div>
-    <div class="pane" id="pane-dividend-center">
-      <div id="dividend-center-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:80%"></div></div>
     </div>
     <div class="treasury-grid">
       <div class="treasury-card">
