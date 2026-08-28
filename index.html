@@ -1790,7 +1790,7 @@ body::after{
 }
 .panel.council-wide{max-width:980px}
 .panel.domestic-wide{max-width:920px}
-.panel.finance-wide{max-width:820px}
+.panel.finance-wide{max-width:920px}
 .panel.medical-wide{max-width:1080px}
 .panel.stars-wide{max-width:min(1280px,96vw)}
 .panel.foodhouse-wide{max-width:760px}
@@ -4375,6 +4375,8 @@ html[data-theme="deep-blue"] .advisor-ai-standalone .advisor-ai-quick-select:foc
       <button class="card-scroll-toggle" type="button" aria-expanded="false" onclick="toggleCardScroll(event,this)">打開卷軸</button>
       <div class="card-shortcuts" aria-label="&#x8CA1;&#x653F;&#x5FEB;&#x6377;&#x5165;&#x53E3;">
         <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'finance','finance-accs')">&#x570B;&#x5EAB;&#x73FE;&#x6CC1;</button>
+        <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'finance','booking-form')">&#x5FEB;&#x901F;&#x8A18;&#x5E33;</button>
+        <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'finance','dividend-center')">&#x6301;&#x80A1;&#x8207;&#x914D;&#x606F;</button>
         <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'finance','domestic-yearly')">&#x5E74;&#x5EA6;&#x8CA1;&#x5831;</button>
         <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'finance','div-calc')">&#x914D;&#x606F;&#x8A66;&#x7B97;</button>
       </div>
@@ -4406,8 +4408,8 @@ html[data-theme="deep-blue"] .advisor-ai-standalone .advisor-ai-quick-select:foc
       </div>
       <button class="card-scroll-toggle" type="button" aria-expanded="false" onclick="toggleCardScroll(event,this)">打開卷軸</button>
       <div class="card-shortcuts" aria-label="&#x5167;&#x653F;&#x5FEB;&#x6377;&#x5165;&#x53E3;">
-        <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'domestic','booking-form')">&#x5FEB;&#x901F;&#x8A18;&#x5E33;</button>
-        <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'domestic','dividend-center')">&#x6301;&#x80A1;&#x5099;&#x5FD8;</button>
+        <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'finance','booking-form')">&#x5FEB;&#x901F;&#x8A18;&#x5E33;</button>
+        <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'finance','dividend-center')">&#x6301;&#x80A1;&#x8207;&#x914D;&#x606F;</button>
       </div>
     </div>
 
@@ -4580,8 +4582,7 @@ html[data-theme="deep-blue"] .advisor-ai-standalone .advisor-ai-quick-select:foc
   <section class="global-scroll-menu" role="dialog" aria-modal="true" aria-labelledby="global-scroll-menu-title" onclick="event.stopPropagation()">
     <div class="global-scroll-menu-head"><div><div class="global-scroll-menu-title" id="global-scroll-menu-title">🐉&#x7687;&#x5BAE;&#x5C0E;&#x822A;</div></div><button class="global-scroll-menu-close" type="button" aria-label="&#x95DC;&#x9589;" onclick="closeGlobalScrollMenu()">&#x00D7;</button></div>
     <div class="global-scroll-groups">
-      <section class="global-scroll-group"><div class="global-scroll-group-title">&#x8CA1;&#x653F;</div><div class="global-scroll-buttons"><button class="global-scroll-button" type="button" data-global-panel="finance" data-global-tab="finance-accs" onclick="openGlobalScrollShortcut(event,'finance','finance-accs')">&#x570B;&#x5EAB;&#x73FE;&#x6CC1;</button><button class="global-scroll-button" type="button" data-global-panel="finance" data-global-tab="domestic-yearly" onclick="openGlobalScrollShortcut(event,'finance','domestic-yearly')">&#x5E74;&#x5EA6;&#x8CA1;&#x5831;</button><button class="global-scroll-button" type="button" data-global-panel="finance" data-global-tab="div-calc" onclick="openGlobalScrollShortcut(event,'finance','div-calc')">&#x914D;&#x606F;&#x8A66;&#x7B97;</button></div></section>
-      <section class="global-scroll-group"><div class="global-scroll-group-title">&#x5167;&#x653F;</div><div class="global-scroll-buttons"><button class="global-scroll-button" type="button" data-global-panel="domestic" data-global-tab="booking-form" onclick="openGlobalScrollShortcut(event,'domestic','booking-form')">&#x5FEB;&#x901F;&#x8A18;&#x5E33;</button><button class="global-scroll-button" type="button" data-global-panel="domestic" data-global-tab="dividend-center" onclick="openGlobalScrollShortcut(event,'domestic','dividend-center')">&#x6301;&#x80A1;&#x5099;&#x5FD8;</button></div></section>
+      <section class="global-scroll-group"><div class="global-scroll-group-title">&#x8CA1;&#x653F;</div><div class="global-scroll-buttons"><button class="global-scroll-button" type="button" data-global-panel="finance" data-global-tab="finance-accs" onclick="openGlobalScrollShortcut(event,'finance','finance-accs')">&#x570B;&#x5EAB;&#x73FE;&#x6CC1;</button><button class="global-scroll-button" type="button" data-global-panel="finance" data-global-tab="booking-form" onclick="openGlobalScrollShortcut(event,'finance','booking-form')">&#x5FEB;&#x901F;&#x8A18;&#x5E33;</button><button class="global-scroll-button" type="button" data-global-panel="finance" data-global-tab="dividend-center" onclick="openGlobalScrollShortcut(event,'finance','dividend-center')">&#x6301;&#x80A1;&#x8207;&#x914D;&#x606F;</button><button class="global-scroll-button" type="button" data-global-panel="finance" data-global-tab="domestic-yearly" onclick="openGlobalScrollShortcut(event,'finance','domestic-yearly')">&#x5E74;&#x5EA6;&#x8CA1;&#x5831;</button><button class="global-scroll-button" type="button" data-global-panel="finance" data-global-tab="div-calc" onclick="openGlobalScrollShortcut(event,'finance','div-calc')">&#x914D;&#x606F;&#x8A66;&#x7B97;</button></div></section>
       <section class="global-scroll-group"><div class="global-scroll-group-title">&#x8ECD;&#x6A5F;&#x8655;</div><div class="global-scroll-buttons"><button class="global-scroll-button" type="button" data-global-panel="council" data-global-tab="battle-brief" onclick="openGlobalScrollShortcut(event,'council','battle-brief')">&#x6230;&#x60C5;&#x7E3D;&#x532F;&#x5831;</button><button class="global-scroll-button" type="button" data-global-panel="council" data-global-tab="council-roster" onclick="openGlobalScrollShortcut(event,'council','council-roster')">&#x90E8;&#x968A;&#x9663;&#x5BB9;</button><button class="global-scroll-button" type="button" data-global-panel="council" data-global-tab="market-watch" onclick="openGlobalScrollShortcut(event,'council','market-watch')">&#x53F0;&#x7F8E;&#x80A1;&#x5927;&#x76E4;</button><button class="global-scroll-button" type="button" data-global-panel="council" data-global-tab="macro-overview" onclick="openGlobalScrollShortcut(event,'council','macro-overview')">&#x7F8E;&#x80A1;&#x7E3D;&#x7D93;</button></div></section>
       <section class="global-scroll-group"><div class="global-scroll-group-title">&#x91AB;&#x9928;</div><div class="global-scroll-buttons"><button class="global-scroll-button" type="button" data-global-panel="medical" data-global-tab="medical-quick" onclick="openGlobalScrollShortcut(event,'medical','medical-quick')">&#x5FEB;&#x901F;&#x8A18;&#x9304;</button><button class="global-scroll-button" type="button" data-global-panel="medical" data-global-tab="medical-tarot" onclick="openGlobalScrollShortcut(event,'medical','medical-tarot')">&#x62BD;&#x724C;&#x8A18;&#x9304;</button><button class="global-scroll-button" type="button" data-global-panel="medical" data-global-tab="medical-stats" onclick="openGlobalScrollShortcut(event,'medical','medical-stats')">&#x724C;&#x5361;&#x7D71;&#x8A08;</button><button class="global-scroll-button" type="button" data-global-panel="medical" data-global-tab="medical-painmap" onclick="openGlobalScrollShortcut(event,'medical','medical-painmap')">&#x75BC;&#x75DB;&#x5730;&#x5716;</button></div></section>
       <section class="global-scroll-group"><div class="global-scroll-group-title">&#x53F8;&#x5929;&#x76E3;</div><div class="global-scroll-buttons"><button class="global-scroll-button" type="button" data-global-panel="stars" data-global-tab="stars-home" onclick="openGlobalScrollShortcut(event,'stars','stars-home')">&#x547D;&#x76E4;&#x7E3D;&#x89BD;</button><button class="global-scroll-button" type="button" data-global-panel="stars" data-global-tab="stars-chronicle" onclick="openGlobalScrollShortcut(event,'stars','stars-chronicle')">&#x4E8B;&#x4EF6;&#x7DE8;&#x5E74;</button></div></section>
@@ -5821,12 +5822,16 @@ async function saveCfg(){
 // ══════════════════════════════════════════
 function openPanel(key,initialTab){
   if(!webVerifyIsAuthorized()){empireUnlockNotice();return;}
+  if(key==='domestic'){
+    key='finance';
+    initialTab=initialTab||'booking-form';
+  }
   if(currentPanel===key){closePanel();return}
   document.querySelectorAll('.card').forEach(c=>c.classList.remove('active'));
   var activeCard=document.getElementById('c-'+key);
   if(activeCard)activeCard.classList.add('active');
   document.getElementById('panel').classList.toggle('council-wide',key==='council');
-  document.getElementById('panel').classList.toggle('domestic-wide',key==='domestic');
+  document.getElementById('panel').classList.toggle('domestic-wide',key==='domestic'||key==='finance');
   document.getElementById('panel').classList.toggle('finance-wide',key==='finance');
   document.getElementById('panel').classList.toggle('medical-wide',key==='medical');
   document.getElementById('panel').classList.toggle('stars-wide',key==='stars');
@@ -5926,6 +5931,7 @@ function openEmpireCardShortcut(event,panel,tab){
     openArkWall(tab);
     return;
   }
+  if(panel==='domestic')panel='finance';
   var openedNewPanel=currentPanel!==panel;
   if(openedNewPanel){
     openPanel(panel,tab);
@@ -6043,7 +6049,7 @@ function switchTab(btn,key){
     syncPanelMenuTab(key);
     closePanelTitleMenu();
   }
-  if(currentPanel==='domestic'){
+  if(currentPanel==='domestic'||currentPanel==='finance'){
     if(key==='booking-form')renderBookingHeaderDate();
     else{
       var extra=document.getElementById('p-extra');
@@ -8270,7 +8276,13 @@ function renderFinancePanel(){
   var panelExtra=document.getElementById('p-extra');
   if(panelExtra)panelExtra.innerHTML='<span class="finance-panel-status-dot err" id="finance-panel-status-dot" title="財政連線失敗" aria-label="財政連線失敗"></span>';
   setEmpireCardApiPendingStatus('finance');
-  setPanelMenuTabs([{key:'finance-accs',label:'國庫現況'},{key:'domestic-yearly',label:'年度財報'},{key:'div-calc',label:'配息試算'}]);
+  setPanelMenuTabs([
+    {key:'finance-accs',label:'國庫現況'},
+    {key:'booking-form',label:'快速記帳'},
+    {key:'dividend-center',label:'持股與配息'},
+    {key:'domestic-yearly',label:'年度財報'},
+    {key:'div-calc',label:'配息試算'}
+  ]);
   document.getElementById('p-body').innerHTML=`
     <div class="pane active" id="pane-finance-accs">
       <div id="acc-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:75%"></div><div class="skel-line skel" style="width:85%"></div></div>
@@ -8440,6 +8452,10 @@ function renderTreasuryOverview(all,filtered,monthly,assetSnapshot,totalRow){
       </div>
       <div class="treasury-main">${fmtFull(totalAsset)}</div>
       <div class="treasury-sub ${totalAssetDelta>0?'up':(totalAssetDelta<0?'down':'')}">總資產較昨 ${esc(totalDeltaText)}</div>
+    </div>
+    <div class="pane" id="pane-booking-form"></div>
+    <div class="pane" id="pane-dividend-center">
+      <div id="dividend-center-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:80%"></div></div>
     </div>
     <div class="treasury-grid">
       <div class="treasury-card">
@@ -8647,21 +8663,21 @@ function refreshBookingAccountBalances(){
 async function initBookingForm(){
   var el=document.getElementById('pane-booking-form');
   if(!el)return;
-  if(!API_URL){setEmpireCardStatus('domestic','err','尚未設定 API');el.innerHTML=setupNotice();return}
-  if(el.dataset.bookingReady==='1'){setEmpireCardStatus('domestic','ok','記帳設定已載入');return;}
+  if(!API_URL){setEmpireCardStatus(bookingPanelStatusKey(),'err','尚未設定 API');el.innerHTML=setupNotice();return}
+  if(el.dataset.bookingReady==='1'){setEmpireCardStatus(bookingPanelStatusKey(),'ok','記帳設定已載入');return;}
   if(el.dataset.bookingLoading==='1'&&bookingFormInitPromise)return bookingFormInitPromise;
   var initSeq=++bookingFormInitSeq;
   el.dataset.bookingLoading='1';
-  setEmpireCardStatus('domestic','pending');
+  setEmpireCardStatus(bookingPanelStatusKey(),'pending');
   bookingFormInitPromise=(async function(){
   var configRefresh=apiGet({action:'config'}).then(function(nextCfg){
     cfg=nextCfg||{categories:[],sources:[],accounts:[],holdings:[],dividendSymbols:[]};
     try{localStorage.setItem('wealth_booking_config_v1',JSON.stringify(cfg));}catch(e){}
-    setEmpireCardStatus('domestic','ok','記帳設定已載入');
+    setEmpireCardStatus(bookingPanelStatusKey(),'ok','記帳設定已載入');
     return cfg;
   }).catch(function(e){
     console.error(e);
-    setEmpireCardStatus('domestic','err',e.message||'設定載入失敗');
+    setEmpireCardStatus(bookingPanelStatusKey(),'err',e.message||'設定載入失敗');
     return cfg;
   });
   if(initSeq!==bookingFormInitSeq||el!==document.getElementById('pane-booking-form'))return;
@@ -8854,7 +8870,12 @@ function currentBookingDateValue(){
 }
 
 function domesticPanelStatusDotHtml(){
+  if(currentPanel==='finance')return '<span class="finance-panel-status-dot err" id="finance-panel-status-dot" title="財政連線失敗" aria-label="財政連線失敗"></span>';
   return '<span class="empire-panel-status-dot err" id="domestic-panel-status-dot" title="內政連線失敗" aria-label="內政連線失敗"></span>';
+}
+
+function bookingPanelStatusKey(){
+  return currentPanel==='finance'?'finance':'domestic';
 }
 
 function renderBookingHeaderDate(){
@@ -8865,7 +8886,7 @@ function renderBookingHeaderDate(){
     <button class="booking-date-btn" id="booking-date-btn" type="button" onclick="openBookingHeaderDatePicker()">${formatBookingHeaderDate(value)}</button>
     <input class="booking-date-native" type="date" id="booking-date-native" value="${esc(value)}" onchange="setBookingDateForAll(this.value)">
   </div>`;
-  setEmpireCardApiPendingStatus('domestic');
+  setEmpireCardApiPendingStatus(currentPanel==='finance'?'finance':'domestic');
 }
 
 function syncBookingHeaderDate(){
@@ -11004,13 +11025,13 @@ async function submitTransfer(e){
 async function loadRecentBooking(){
   var el=document.getElementById('recent-content');
   if(!el)return;
-  if(!API_URL){setEmpireCardStatus('domestic','err','尚未設定 API');el.innerHTML=setupNotice();return}
-  setEmpireCardStatus('domestic','pending');
+  if(!API_URL){setEmpireCardStatus(bookingPanelStatusKey(),'err','尚未設定 API');el.innerHTML=setupNotice();return}
+  setEmpireCardStatus(bookingPanelStatusKey(),'pending');
   try{
     var txns=await apiGet({action:'transactions',ym:currentYM(),recentDays:14});
     txns=Array.isArray(txns)?txns.slice(0,15):[];
     bookingRecentRows=txns;
-    setEmpireCardStatus('domestic','ok','最近記錄已載入');
+    setEmpireCardStatus(bookingPanelStatusKey(),'ok','最近記錄已載入');
     if(txns&&txns.length){
       el.innerHTML='<div class="txn-list-title" id="booking-recent-title">最近紀錄｜近 15 筆</div>'+
         txns.map(function(t,idx){
@@ -11037,7 +11058,7 @@ async function loadRecentBooking(){
     }
     el.innerHTML='<div style="color:#5a4018;font-family:var(--sans);font-size:12px;padding:20px 0;text-align:center">本月沒有最近紀錄</div>';
   }catch(e){
-    setEmpireCardStatus('domestic','err',e.message||'最近記錄讀取失敗');
+    setEmpireCardStatus(bookingPanelStatusKey(),'err',e.message||'最近記錄讀取失敗');
     el.innerHTML='<div style="color:var(--coral);font-family:var(--sans);font-size:12px;padding:12px 0">'+esc(e.message)+'</div>';
   }
 }
@@ -11199,18 +11220,18 @@ async function voidStockTrade(rowId,btn){
 async function loadDividendCenterPanel(force){
   var el=document.getElementById('dividend-center-content');
   if(!el)return;
-  if(!API_URL){setEmpireCardStatus('domestic','err','尚未設定 API');el.innerHTML=setupNotice();return}
-  setEmpireCardStatus('domestic','pending');
+  if(!API_URL){setEmpireCardStatus(bookingPanelStatusKey(),'err','尚未設定 API');el.innerHTML=setupNotice();return}
+  setEmpireCardStatus(bookingPanelStatusKey(),'pending');
   try{
     el.innerHTML='<div class="skel-line skel"></div><div class="skel-line skel" style="width:80%"></div><div class="skel-line skel" style="width:60%"></div>';
     var data=await loadDividendCenter(!!force);
     el.innerHTML=renderDividendCenter(data,true);
     initDividendEntryForm(data);
-    setEmpireCardStatus('domestic','ok','持股備忘錄已載入');
+    setEmpireCardStatus(bookingPanelStatusKey(),'ok','持股備忘錄已載入');
   }catch(e){
     var msg=(e&&e.message)||'持股備忘錄讀取失敗';
     if(msg.indexOf('連線逾時')>=0)msg='持股備忘錄讀取較慢，請再按一次重新整理。';
-    setEmpireCardStatus('domestic','err',msg);
+    setEmpireCardStatus(bookingPanelStatusKey(),'err',msg);
     el.innerHTML=`<div style="color:var(--coral);font-family:var(--sans);font-size:12px;padding:12px 0">${esc(msg)}</div>`;
   }
 }
@@ -15394,15 +15415,10 @@ initAdvisorDuoVideoPlayback();
           <button class="advisor-menu-toggle" type="button" onclick="toggleAdvisorMenuGroup(this)" aria-expanded="false"><span class="advisor-menu-mark">財</span>財政<span class="advisor-menu-caret">▼</span></button>
           <div class="advisor-btn-group">
             <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'finance','finance-accs')"><span class="advisor-btn-tag">庫</span>國庫現況</button>
+            <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'finance','booking-form')"><span class="advisor-btn-tag">記</span>快速記帳</button>
+            <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'finance','dividend-center')"><span class="advisor-btn-tag">股</span>持股與配息</button>
             <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'finance','domestic-yearly')"><span class="advisor-btn-tag">年</span>年度財報</button>
             <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'finance','div-calc')"><span class="advisor-btn-tag">息</span>配息試算</button>
-          </div>
-        </section>
-        <section class="advisor-menu-section">
-          <button class="advisor-menu-toggle" type="button" onclick="toggleAdvisorMenuGroup(this)" aria-expanded="false"><span class="advisor-menu-mark">內</span>內政<span class="advisor-menu-caret">▼</span></button>
-          <div class="advisor-btn-group">
-            <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'domestic','booking-form')"><span class="advisor-btn-tag">記</span>快速記帳</button>
-            <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'domestic','dividend-center')"><span class="advisor-btn-tag">股</span>持股備忘</button>
           </div>
         </section>
         <section class="advisor-menu-section">
