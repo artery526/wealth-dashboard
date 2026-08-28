@@ -5060,7 +5060,7 @@ function parseApiJsonText(text){
   throw new Error('API returned non-JSON response');
 }
 function isApiWriteAction(action){
-  return /^(expense|income|transfer|transactionUndo|stockTradeVoid|dividendEntry|dividendDelete|holdingTradeEntry|holdingTradeDelete|calendarCreate|calendarDelete|taskCreate|taskDelete|storeRecordCreate|storeRecordUpdate|storeRecordDelete|macroLongReportGenerate|macroLongReportTriggerInstall|taiwanStockReviewGenerate)$/.test(action||'');
+  return /^(expense|income|transfer|transactionUndo|stockTradeVoid|dividendEntry|dividendDelete|holdingTradeEntry|holdingTradeDelete|calendarCreate|calendarDelete|taskCreate|taskDelete|eventChronicleSave|eventChronicleEdit|eventChronicleDelete|storeRecordCreate|storeRecordUpdate|storeRecordDelete|macroLongReportGenerate|macroLongReportTriggerInstall|taiwanStockReviewGenerate)$/.test(action||'');
 }
 function apiWriteTimeoutMs(action){
   action=String(action||'');
@@ -5197,16 +5197,15 @@ function isAbortLikeError(err){
 }
 
 async function eventChronicleApiRequest(method,path,body,timeoutMs){
-  var token=cleanToken(WRITE_TOKEN);
-  if(!token)throw new Error('尚未設定 NAS 管理寫入令');
-  var options={method:method,cache:'no-store',redirect:'follow',headers:{'Authorization':'Bearer '+token,'Accept':'application/json'}};
-  if(body!==undefined){options.headers['Content-Type']='application/json';options.body=JSON.stringify(body);}
-  var r=await fetchWithTimeout(EVENT_CHRONICLE_NAS_API_URL+path,options,timeoutMs||20000);
-  var text=await r.text();
-  var data;
-  try{data=JSON.parse(text);}catch(e){throw new Error('NAS 事件 API 回傳格式無效');}
-  if(!r.ok)throw new Error(data.error||'NAS 事件 API 失敗：HTTP '+r.status);
-  return data;
+  // 事件編年資料來源是主試算表，必須走 Apps Script eventChronicle
+  // route；NAS 的同名端點是管理端 API，會要求 Admin access。
+  if(method==='GET')return apiGet({action:'eventChronicle'},timeoutMs||30000);
+  var action=method==='POST'?'eventChronicleSave':method==='PUT'?'eventChronicleEdit':method==='DELETE'?'eventChronicleDelete':'';
+  if(!action)throw new Error('不支援的事件編年操作');
+  var rowNumber=path&&path.match(/\/([^/]+)$/);
+  var payload=Object.assign({},body||{});
+  if(rowNumber)payload.rowNumber=decodeURIComponent(rowNumber[1]);
+  return apiPost(Object.assign({action:action},payload));
 }
 
 function eventChronicleRowKey(row){
@@ -6730,7 +6729,7 @@ async function removeEventChronicle(rowNumber,event){
   rowNumber=decodeURIComponent(String(rowNumber||''));
   var row=eventChronicleCache.find(function(item){return eventChronicleRowKey(item)===String(rowNumber);});
   if(!row)return;
-  if(!confirm('確定移除「'+String(row.name||'未命名')+'」？此操作會刪除 NAS 中的事件記錄。'))return;
+  if(!confirm('確定移除「'+String(row.name||'未命名')+'」？此操作會刪除事件編年記錄。'))return;
   try{
     await eventChronicleApiRequest('DELETE','/api/event-chronicle/'+encodeURIComponent(String(rowNumber)),undefined,30000);
     try{localStorage.removeItem(STARS_CHRONICLE_CACHE_KEY);}catch(ignore){}
