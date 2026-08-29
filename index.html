@@ -929,7 +929,6 @@ body::after{
 #c-domestic.domestic-landscape,
 #c-council.military-landscape,
 #c-medical.medical-landscape,
-#c-stars.stars-landscape,
 #c-wall.wall-landscape{
   width:502px;
 }
@@ -940,14 +939,12 @@ body::after{
   #c-domestic.domestic-landscape,
   #c-council.military-landscape,
   #c-medical.medical-landscape,
-  #c-stars.stars-landscape,
   #c-wall.wall-landscape{width:100%;min-width:0;max-width:502px;justify-self:center}
 }
 #c-finance.finance-landscape .art,
 #c-domestic.domestic-landscape .art,
 #c-council.military-landscape .art,
 #c-medical.medical-landscape .art,
-#c-stars.stars-landscape .art,
 #c-wall.wall-landscape .art{
   height:auto!important;
   aspect-ratio:16/9;
@@ -956,7 +953,6 @@ body::after{
 #c-domestic.domestic-landscape .card-video,
 #c-council.military-landscape .card-video,
 #c-medical.medical-landscape .card-video,
-#c-stars.stars-landscape .card-video,
 #c-wall.wall-landscape .card-video{
   object-fit:cover;
   object-position:center center;
@@ -3279,7 +3275,6 @@ body::after{
   #c-domestic.domestic-landscape,
   #c-council.military-landscape,
   #c-medical.medical-landscape,
-  #c-stars.stars-landscape,
   #c-wall.wall-landscape{
     grid-column:auto;
     width:100%;
@@ -3289,7 +3284,6 @@ body::after{
   #c-domestic.domestic-landscape .art,
   #c-council.military-landscape .art,
   #c-medical.medical-landscape .art,
-  #c-stars.stars-landscape .art,
   #c-wall.wall-landscape .art{
     height:auto!important;
     aspect-ratio:16/9;
@@ -3349,7 +3343,6 @@ body::after{
   #c-domestic.domestic-landscape,
   #c-council.military-landscape,
   #c-medical.medical-landscape,
-  #c-stars.stars-landscape,
   #c-wall.wall-landscape{
     grid-column:auto;
     max-width:100%;
@@ -3358,7 +3351,6 @@ body::after{
   #c-domestic.domestic-landscape .art,
   #c-council.military-landscape .art,
   #c-medical.medical-landscape .art,
-  #c-stars.stars-landscape .art,
   #c-wall.wall-landscape .art{
     height:auto!important;
     aspect-ratio:16/9;
@@ -3441,12 +3433,11 @@ body::after{
   background:#090713;
 }
 
-/* 六張主入口卡統一為 1:1 方塊；桌機三欄、手機兩欄時保持等比例縮放。 */
+/* 主入口卡統一為 1:1 方塊；桌機三欄、手機兩欄時保持等比例縮放。 */
 #c-finance.finance-landscape .art,
 #c-domestic.domestic-landscape .art,
 #c-council.military-landscape .art,
 #c-medical.medical-landscape .art,
-#c-stars.stars-landscape .art,
 #c-wall.wall-landscape .art,
 #c-store.store-landscape .art{
   height:auto!important;
@@ -3454,7 +3445,6 @@ body::after{
 }
 #c-council.military-landscape .card-video,
 #c-medical.medical-landscape .card-video,
-#c-stars.stars-landscape .card-video,
 #c-wall.wall-landscape .card-video{
   object-fit:cover!important;
 }
@@ -4475,36 +4465,6 @@ html[data-theme="deep-blue"] .advisor-ai-standalone .advisor-ai-quick-select:foc
       </div>
     </div>
 
-    <!-- Stars -->
-    <div class="card stars-landscape" id="c-stars" onclick="openPanel('stars')">
-      <div class="frame">
-        <div class="corner tl"></div><div class="corner tr"></div>
-        <div class="corner bl"></div><div class="corner br"></div>
-        <div class="gem">★</div>
-        <div class="art" style="position:relative;overflow:hidden;height:427px;border-bottom:none;">
-          <video
-            class="card-video"
-            data-src="starsv3.mp4"
-            poster="stars-card-poster-v3.jpg"
-            autoplay
-            muted
-            playsinline
-            preload="none"
-            style="width:100%;height:100%;display:block;object-fit:cover;object-position:center center;"
-          ></video>
-          <div style="position:absolute;bottom:0;left:0;right:0;z-index:4;
-            background:linear-gradient(to top,rgba(8,5,3,.95) 0%,rgba(8,5,3,.5) 50%,transparent 100%);
-            padding:16px 12px 12px;text-align:center;pointer-events:none;">
-            <span class="empire-card-caption">司天監</span>
-          </div>
-        </div>
-      </div>
-      <button class="card-scroll-toggle" type="button" aria-expanded="false" onclick="toggleCardScroll(event,this)">打開卷軸</button>
-      <div class="card-shortcuts" aria-label="&#x53F8;&#x5929;&#x76E3;&#x5FEB;&#x6377;&#x5165;&#x53E3;">
-        <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'stars','stars-home')">&#x547D;&#x76E4;&#x7E3D;&#x89BD;</button>
-      </div>
-    </div>
-
     <!-- Wall -->
     <div class="card wall-landscape" id="c-wall" onclick="openArkWall()">
       <div class="frame">
@@ -4581,9 +4541,8 @@ html[data-theme="deep-blue"] .advisor-ai-standalone .advisor-ai-quick-select:foc
       <section class="global-scroll-group"><div class="global-scroll-group-title">&#x8CA1;&#x653F;</div><div class="global-scroll-buttons"><button class="global-scroll-button" type="button" data-global-panel="finance" data-global-tab="finance-accs" onclick="openGlobalScrollShortcut(event,'finance','finance-accs')">&#x570B;&#x5EAB;&#x73FE;&#x6CC1;</button><button class="global-scroll-button" type="button" data-global-panel="finance" data-global-tab="booking-form" onclick="openGlobalScrollShortcut(event,'finance','booking-form')">&#x5FEB;&#x901F;&#x8A18;&#x5E33;</button><button class="global-scroll-button" type="button" data-global-panel="finance" data-global-tab="domestic-yearly" onclick="openGlobalScrollShortcut(event,'finance','domestic-yearly')">&#x5E74;&#x5EA6;&#x8CA1;&#x5831;</button><button class="global-scroll-button" type="button" data-global-panel="finance" data-global-tab="dividend-center" onclick="openGlobalScrollShortcut(event,'finance','dividend-center')">&#x6301;&#x80A1;&#x8207;&#x914D;&#x606F;</button></div></section>
       <section class="global-scroll-group"><div class="global-scroll-group-title">&#x8ECD;&#x6A5F;&#x8655;</div><div class="global-scroll-buttons"><button class="global-scroll-button" type="button" data-global-panel="council" data-global-tab="battle-brief" onclick="openGlobalScrollShortcut(event,'council','battle-brief')">&#x6230;&#x60C5;&#x7E3D;&#x532F;&#x5831;</button><button class="global-scroll-button" type="button" data-global-panel="council" data-global-tab="council-roster" onclick="openGlobalScrollShortcut(event,'council','council-roster')">&#x90E8;&#x968A;&#x9663;&#x5BB9;</button><button class="global-scroll-button" type="button" data-global-panel="council" data-global-tab="market-watch" onclick="openGlobalScrollShortcut(event,'council','market-watch')">&#x53F0;&#x7F8E;&#x80A1;&#x5927;&#x76E4;</button><button class="global-scroll-button" type="button" data-global-panel="council" data-global-tab="macro-overview" onclick="openGlobalScrollShortcut(event,'council','macro-overview')">&#x7F8E;&#x80A1;&#x7E3D;&#x7D93;</button></div></section>
       <section class="global-scroll-group"><div class="global-scroll-group-title">&#x91AB;&#x9928;</div><div class="global-scroll-buttons"><button class="global-scroll-button" type="button" data-global-panel="medical" data-global-tab="medical-quick" onclick="openGlobalScrollShortcut(event,'medical','medical-quick')">&#x5FEB;&#x901F;&#x8A18;&#x9304;</button><button class="global-scroll-button" type="button" data-global-panel="medical" data-global-tab="medical-tarot" onclick="openGlobalScrollShortcut(event,'medical','medical-tarot')">&#x62BD;&#x724C;&#x8A18;&#x9304;</button><button class="global-scroll-button" type="button" data-global-panel="medical" data-global-tab="medical-stats" onclick="openGlobalScrollShortcut(event,'medical','medical-stats')">&#x724C;&#x5361;&#x7D71;&#x8A08;</button><button class="global-scroll-button" type="button" data-global-panel="medical" data-global-tab="medical-painmap" onclick="openGlobalScrollShortcut(event,'medical','medical-painmap')">&#x75BC;&#x75DB;&#x5730;&#x5716;</button></div></section>
-      <section class="global-scroll-group"><div class="global-scroll-group-title">&#x53F8;&#x5929;&#x76E3;</div><div class="global-scroll-buttons"><button class="global-scroll-button" type="button" data-global-panel="stars" data-global-tab="stars-home" onclick="openGlobalScrollShortcut(event,'stars','stars-home')">&#x547D;&#x76E4;&#x7E3D;&#x89BD;</button></div></section>
       <section class="global-scroll-group"><div class="global-scroll-group-title">&#x57CE;&#x7246;</div><div class="global-scroll-buttons"><button class="global-scroll-button" type="button" data-global-panel="wall" data-global-tab="wall" onclick="openGlobalScrollShortcut(event,'wall','wall')">&#x751F;&#x6D3B;&#x65E5;&#x8A18;</button><button class="global-scroll-button" type="button" data-global-panel="wall" data-global-tab="memo" onclick="openGlobalScrollShortcut(event,'wall','memo')">&#x5099;&#x5FD8;&#x96A8;&#x7B46;</button><button class="global-scroll-button" type="button" data-global-panel="wall" data-global-tab="market" onclick="openGlobalScrollShortcut(event,'wall','market')">&#x80A1;&#x5E02;&#x6559;&#x5BA4;</button><button class="global-scroll-button" type="button" onclick="openGlobalScrollAdmin(event)">&#x65B0;&#x589E;&#x8A18;&#x9304;</button></div></section>
-      <section class="global-scroll-group"><div class="global-scroll-group-title">太倉</div><div class="global-scroll-buttons"><button class="global-scroll-button" type="button" data-global-panel="store" data-global-tab="store-list" onclick="openGlobalScrollShortcut(event,'store','store-list')">物品總覽</button><button class="global-scroll-button" type="button" data-global-panel="store" data-global-tab="store-chronicle" onclick="openGlobalScrollShortcut(event,'store','store-chronicle')">事件編年</button><button class="global-scroll-button" type="button" data-global-panel="store" data-global-tab="store-add" onclick="openGlobalScrollShortcut(event,'store','store-add')">新增記錄</button></div></section>
+      <section class="global-scroll-group"><div class="global-scroll-group-title">太倉</div><div class="global-scroll-buttons"><button class="global-scroll-button" type="button" data-global-panel="store" data-global-tab="store-list" onclick="openGlobalScrollShortcut(event,'store','store-list')">物品總覽</button><button class="global-scroll-button" type="button" data-global-panel="store" data-global-tab="store-chronicle" onclick="openGlobalScrollShortcut(event,'store','store-chronicle')">事件編年</button><button class="global-scroll-button" type="button" data-global-panel="store" data-global-tab="store-add" onclick="openGlobalScrollShortcut(event,'store','store-add')">新增記錄</button><button class="global-scroll-button" type="button" data-global-panel="stars" data-global-tab="stars-home" onclick="openGlobalScrollShortcut(event,'stars','stars-home')">命盤總覽</button></div></section>
     </div>
   </section>
 </div>
@@ -15492,17 +15451,12 @@ initAdvisorDuoVideoPlayback();
           </div>
         </section>
         <section class="advisor-menu-section">
-          <button class="advisor-menu-toggle" type="button" onclick="toggleAdvisorMenuGroup(this)" aria-expanded="false"><span class="advisor-menu-mark">星</span>司天監<span class="advisor-menu-caret">▼</span></button>
-          <div class="advisor-btn-group">
-            <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'stars','stars-home')"><span class="advisor-btn-tag">命</span>命盤總覽</button>
-          </div>
-        </section>
-        <section class="advisor-menu-section">
           <button class="advisor-menu-toggle" type="button" onclick="toggleAdvisorMenuGroup(this)" aria-expanded="false"><span class="advisor-menu-mark">倉</span>太倉<span class="advisor-menu-caret">▼</span></button>
           <div class="advisor-btn-group">
             <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'store','store-list')"><span class="advisor-btn-tag">物</span>物品總覽</button>
             <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'store','store-chronicle')"><span class="advisor-btn-tag">史</span>事件編年</button>
             <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'store','store-add')"><span class="advisor-btn-tag">記</span>新增記錄</button>
+            <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'stars','stars-home')"><span class="advisor-btn-tag">命</span>命盤總覽</button>
           </div>
         </section>
         <section class="advisor-menu-section">
