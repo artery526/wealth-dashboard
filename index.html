@@ -1363,7 +1363,8 @@ body::after{
 .advisor-ai-daily-update-link:hover{background:rgba(232,192,80,.16)}
 .advisor-ai-daily-patrol{display:grid;gap:8px;min-height:92px;padding:9px 8px;border:1px solid rgba(232,192,80,.16);border-radius:7px;background:rgba(0,0,0,.2);animation:advisorDailyPatrolIn .28s ease-out}
 .advisor-ai-daily-patrol-kicker{font-family:var(--sans);font-size:11px;font-weight:900;color:#b99550;letter-spacing:.4px}
-.advisor-ai-daily-patrol-result{font-family:var(--font);font-size:15px;font-weight:900;line-height:1.65;color:#f3df9a}
+.advisor-ai-daily-patrol-result{font-family:var(--font);font-size:15px;font-weight:900;line-height:1.65;color:#f3df9a;white-space:pre-line}
+.advisor-ai-daily-patrol-murmur{padding-top:7px;border-top:1px solid rgba(232,192,80,.14);font-family:var(--font);font-size:13px;font-weight:850;line-height:1.7;color:#d8c18a;white-space:pre-line}
 .advisor-ai-daily-patrol-result.pending{color:#c8b07a}
 .advisor-ai-daily-patrol-actions{display:flex;justify-content:flex-end}
 .advisor-ai-daily-patrol-dots{display:flex;justify-content:center;gap:5px}
@@ -17399,6 +17400,29 @@ function advisorAIDailyUpdateItems(data){
     {module:'store',icon:'🏛️',title:'太倉',tab:'store-list',message:'今日尚無新的物品記錄。'}
   ].map(function(base){return Object.assign({},base,source[base.module]||{target:base.module,updated:false});});
 }
+function advisorAIDailyMurmurData(data){
+  data=data||{};
+  var accounts=Array.isArray(data.accounts)?data.accounts:[];
+  var monthly=data.monthly||{};
+  var stock=accounts.find(function(row){return advisorAIAccountMatches(row&&row.name,'💵國泰Stock');});
+  var stockValue=stock&&isFinite(Number(stock.value))?Number(stock.value):null;
+  var savingRate=advisorAISavingRateNumber(monthly.savingRate);
+  var finance=[];
+  if(stockValue!==null)finance.push('軍師發現國泰Stock帳上約 '+Math.round(stockValue).toLocaleString('zh-TW')+' 銀兩可用。');
+  if(monthly.savingRate!==''&&monthly.savingRate!=null){
+    finance.push('本月儲蓄率 '+savingRate.toFixed(1)+'%。'+(savingRate>=60?'主公可適度犒賞自己。':savingRate<30?'先穩住開支，暫緩揮霍。':'糧草尚穩，可小幅犒賞自己。'));
+  }
+  var market=data.market||{};
+  var marketStance=String((market.summary||{}).stance||market.stance||'').trim();
+  var macro=data.macro||{};
+  var judgment=macro.judgment||macro.summary||{};
+  var scenario=String(judgment.scenario||judgment.conclusion||macro.scenario||'').trim();
+  var score=judgment.score!==''&&judgment.score!=null?Number(judgment.score):null;
+  return {
+    finance:finance.join('\n')||'軍師正在盤點國庫，暫未取得帳戶細節。',
+    council:[marketStance?'軍師發現台美股目前採「'+marketStance+'」劇本，先穩住城門。':'台美股風向資料尚在整理，先保持觀望。',scenario?'軍師檢查美股總經，當前判斷為「'+scenario+'」'+(score!==null&&!isNaN(score)?'，金融壓力分數 '+score+'。':'。'):'美股總經資料尚在整理，暫不妄下結論。'].join('\n')
+  };
+}
 function advisorAIDailyUpdatesHtml(data, state, activeIndex){
   data=data||{};
   var date=String(data.date||today()).replace(/-/g,'/');
@@ -17413,7 +17437,8 @@ function advisorAIDailyUpdatesHtml(data, state, activeIndex){
   var item=items[index];
   var target=item.target||item.module;
   var patrolMessage=item.updated===false?item.message:(item.message||'已有新資料');
-  var rows='<div class="advisor-ai-daily-patrol"><div class="advisor-ai-daily-patrol-kicker">'+esc(item.icon)+' 龐統軍師正在巡視 '+esc(item.title)+'…</div><div class="advisor-ai-daily-patrol-result '+(item.updated===false?'pending':'')+'">'+esc(patrolMessage)+'</div><div class="advisor-ai-daily-patrol-actions"><button class="advisor-ai-daily-update-link" type="button" onclick="openEmpireCardShortcut(event,\''+target+'\',\''+item.tab+'\')">查看</button></div></div><div class="advisor-ai-daily-patrol-dots">'+items.map(function(_,dotIndex){return '<span class="advisor-ai-daily-patrol-dot '+(dotIndex===index?'active':'')+'" aria-hidden="true"></span>';}).join('')+'</div>';
+  var murmur=item.murmur?'<div class="advisor-ai-daily-patrol-murmur">'+esc(item.murmur)+'</div>':'';
+  var rows='<div class="advisor-ai-daily-patrol"><div class="advisor-ai-daily-patrol-kicker">'+esc(item.icon)+' 龐統軍師正在巡視 '+esc(item.title)+'…</div><div class="advisor-ai-daily-patrol-result '+(item.updated===false?'pending':'')+'">'+esc(patrolMessage)+'</div>'+murmur+'<div class="advisor-ai-daily-patrol-actions"><button class="advisor-ai-daily-update-link" type="button" onclick="openEmpireCardShortcut(event,\''+target+'\',\''+item.tab+'\')">查看</button></div></div><div class="advisor-ai-daily-patrol-dots">'+items.map(function(_,dotIndex){return '<span class="advisor-ai-daily-patrol-dot '+(dotIndex===index?'active':'')+'" aria-hidden="true"></span>';}).join('')+'</div>';
   var warning=errors.length?'<div class="advisor-ai-daily-updates-error" style="margin-top:7px">部分情報暫時無法取得</div>':'';
   return '<div class="advisor-ai-daily-updates-title"><span>📜 今日更新</span><span class="advisor-ai-daily-updates-date">'+esc(date)+'</span></div><div class="advisor-ai-daily-update-list">'+rows+'</div>'+warning;
 }
@@ -17452,14 +17477,18 @@ async function loadAdvisorAIDailyUpdates(){
     });
   }
   try{
-    var data=await advisorAIDailyUpdatesPromise;
+    var results=await Promise.allSettled([advisorAIDailyUpdatesPromise,apiGet({action:'accounts'}),apiGet({action:'monthly',ym:currentYM()}),apiGet({action:'marketDashboard'}),apiGet({action:'macroOverview'}),loadArkWallEntries(false)]);
+    if(results[0].status!=='fulfilled')throw results[0].reason||new Error('今日更新讀取失敗');
+    var data=results[0].status==='fulfilled'?results[0].value:{};
+    var murmur=advisorAIDailyMurmurData({accounts:results[1].status==='fulfilled'?results[1].value:[],monthly:results[2].status==='fulfilled'?results[2].value:{},market:results[3].status==='fulfilled'?results[3].value:{},macro:results[4].status==='fulfilled'?results[4].value:{}});
+    data=Object.assign({},data,{items:(data.items||[]).map(function(item){return Object.assign({},item,{murmur:murmur[item.module]||''});})});
     try{
-      var wallEntries=await loadArkWallEntries(false);
+      var wallEntries=results[5].status==='fulfilled'?results[5].value:[];
       var wallToday=wallEntries.filter(function(entry){
         return String(entry&&entry.date||'').replace(/-/g,'/').slice(0,10)===String(data.date||today()).slice(0,10);
       });
       if(wallToday.length){
-        data=Object.assign({},data,{items:(data.items||[]).concat([{module:'wall',icon:'🧱',title:'城牆',message:'今日新增生活日記 '+wallToday.length+' 篇',count:wallToday.length,updated:true,target:'wall',tab:'wall'}])});
+        data=Object.assign({},data,{items:(data.items||[]).concat([{module:'wall',icon:'🧱',title:'城牆',message:'今日新增生活日記 '+wallToday.length+' 篇',count:wallToday.length,updated:true,target:'wall',tab:'wall',murmur:'城牆今日有新篇章，軍師建議主公稍後詳閱。'}])});
       }
     }catch(wallError){
       data=Object.assign({},data,{errors:(data.errors||[]).concat([{module:'wall',message:wallError&&wallError.message?wallError.message:'城牆情報暫不可得'}])});
