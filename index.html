@@ -4502,7 +4502,6 @@ html[data-theme="deep-blue"] .advisor-ai-standalone .advisor-ai-quick-select:foc
       <button class="card-scroll-toggle" type="button" aria-expanded="false" onclick="toggleCardScroll(event,this)">打開卷軸</button>
       <div class="card-shortcuts" aria-label="&#x53F8;&#x5929;&#x76E3;&#x5FEB;&#x6377;&#x5165;&#x53E3;">
         <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'stars','stars-home')">&#x547D;&#x76E4;&#x7E3D;&#x89BD;</button>
-        <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'stars','stars-chronicle')">&#x4E8B;&#x4EF6;&#x7DE8;&#x5E74;</button>
       </div>
     </div>
 
@@ -4559,13 +4558,14 @@ html[data-theme="deep-blue"] .advisor-ai-standalone .advisor-ai-quick-select:foc
           <div style="position:absolute;bottom:0;left:0;right:0;z-index:4;
             background:linear-gradient(to top,rgba(8,5,3,.95) 0%,rgba(8,5,3,.5) 50%,transparent 100%);
             padding:16px 12px 12px;text-align:center;pointer-events:none;">
-            <span class="empire-card-caption">倉庫</span>
+            <span class="empire-card-caption">太倉</span>
           </div>
         </div>
       </div>
       <button class="card-scroll-toggle" type="button" aria-expanded="false" onclick="toggleCardScroll(event,this)">打開卷軸</button>
-      <div class="card-shortcuts" aria-label="倉庫快捷入口">
+      <div class="card-shortcuts" aria-label="太倉快捷入口">
         <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'store','store-list')">物品總覽</button>
+        <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'store','store-chronicle')">事件編年</button>
         <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'store','store-add')">新增記錄</button>
       </div>
     </div>
@@ -4581,9 +4581,9 @@ html[data-theme="deep-blue"] .advisor-ai-standalone .advisor-ai-quick-select:foc
       <section class="global-scroll-group"><div class="global-scroll-group-title">&#x8CA1;&#x653F;</div><div class="global-scroll-buttons"><button class="global-scroll-button" type="button" data-global-panel="finance" data-global-tab="finance-accs" onclick="openGlobalScrollShortcut(event,'finance','finance-accs')">&#x570B;&#x5EAB;&#x73FE;&#x6CC1;</button><button class="global-scroll-button" type="button" data-global-panel="finance" data-global-tab="booking-form" onclick="openGlobalScrollShortcut(event,'finance','booking-form')">&#x5FEB;&#x901F;&#x8A18;&#x5E33;</button><button class="global-scroll-button" type="button" data-global-panel="finance" data-global-tab="domestic-yearly" onclick="openGlobalScrollShortcut(event,'finance','domestic-yearly')">&#x5E74;&#x5EA6;&#x8CA1;&#x5831;</button><button class="global-scroll-button" type="button" data-global-panel="finance" data-global-tab="dividend-center" onclick="openGlobalScrollShortcut(event,'finance','dividend-center')">&#x6301;&#x80A1;&#x8207;&#x914D;&#x606F;</button></div></section>
       <section class="global-scroll-group"><div class="global-scroll-group-title">&#x8ECD;&#x6A5F;&#x8655;</div><div class="global-scroll-buttons"><button class="global-scroll-button" type="button" data-global-panel="council" data-global-tab="battle-brief" onclick="openGlobalScrollShortcut(event,'council','battle-brief')">&#x6230;&#x60C5;&#x7E3D;&#x532F;&#x5831;</button><button class="global-scroll-button" type="button" data-global-panel="council" data-global-tab="council-roster" onclick="openGlobalScrollShortcut(event,'council','council-roster')">&#x90E8;&#x968A;&#x9663;&#x5BB9;</button><button class="global-scroll-button" type="button" data-global-panel="council" data-global-tab="market-watch" onclick="openGlobalScrollShortcut(event,'council','market-watch')">&#x53F0;&#x7F8E;&#x80A1;&#x5927;&#x76E4;</button><button class="global-scroll-button" type="button" data-global-panel="council" data-global-tab="macro-overview" onclick="openGlobalScrollShortcut(event,'council','macro-overview')">&#x7F8E;&#x80A1;&#x7E3D;&#x7D93;</button></div></section>
       <section class="global-scroll-group"><div class="global-scroll-group-title">&#x91AB;&#x9928;</div><div class="global-scroll-buttons"><button class="global-scroll-button" type="button" data-global-panel="medical" data-global-tab="medical-quick" onclick="openGlobalScrollShortcut(event,'medical','medical-quick')">&#x5FEB;&#x901F;&#x8A18;&#x9304;</button><button class="global-scroll-button" type="button" data-global-panel="medical" data-global-tab="medical-tarot" onclick="openGlobalScrollShortcut(event,'medical','medical-tarot')">&#x62BD;&#x724C;&#x8A18;&#x9304;</button><button class="global-scroll-button" type="button" data-global-panel="medical" data-global-tab="medical-stats" onclick="openGlobalScrollShortcut(event,'medical','medical-stats')">&#x724C;&#x5361;&#x7D71;&#x8A08;</button><button class="global-scroll-button" type="button" data-global-panel="medical" data-global-tab="medical-painmap" onclick="openGlobalScrollShortcut(event,'medical','medical-painmap')">&#x75BC;&#x75DB;&#x5730;&#x5716;</button></div></section>
-      <section class="global-scroll-group"><div class="global-scroll-group-title">&#x53F8;&#x5929;&#x76E3;</div><div class="global-scroll-buttons"><button class="global-scroll-button" type="button" data-global-panel="stars" data-global-tab="stars-home" onclick="openGlobalScrollShortcut(event,'stars','stars-home')">&#x547D;&#x76E4;&#x7E3D;&#x89BD;</button><button class="global-scroll-button" type="button" data-global-panel="stars" data-global-tab="stars-chronicle" onclick="openGlobalScrollShortcut(event,'stars','stars-chronicle')">&#x4E8B;&#x4EF6;&#x7DE8;&#x5E74;</button></div></section>
+      <section class="global-scroll-group"><div class="global-scroll-group-title">&#x53F8;&#x5929;&#x76E3;</div><div class="global-scroll-buttons"><button class="global-scroll-button" type="button" data-global-panel="stars" data-global-tab="stars-home" onclick="openGlobalScrollShortcut(event,'stars','stars-home')">&#x547D;&#x76E4;&#x7E3D;&#x89BD;</button></div></section>
       <section class="global-scroll-group"><div class="global-scroll-group-title">&#x57CE;&#x7246;</div><div class="global-scroll-buttons"><button class="global-scroll-button" type="button" data-global-panel="wall" data-global-tab="wall" onclick="openGlobalScrollShortcut(event,'wall','wall')">&#x751F;&#x6D3B;&#x65E5;&#x8A18;</button><button class="global-scroll-button" type="button" data-global-panel="wall" data-global-tab="memo" onclick="openGlobalScrollShortcut(event,'wall','memo')">&#x5099;&#x5FD8;&#x96A8;&#x7B46;</button><button class="global-scroll-button" type="button" data-global-panel="wall" data-global-tab="market" onclick="openGlobalScrollShortcut(event,'wall','market')">&#x80A1;&#x5E02;&#x6559;&#x5BA4;</button><button class="global-scroll-button" type="button" onclick="openGlobalScrollAdmin(event)">&#x65B0;&#x589E;&#x8A18;&#x9304;</button></div></section>
-      <section class="global-scroll-group"><div class="global-scroll-group-title">倉庫</div><div class="global-scroll-buttons"><button class="global-scroll-button" type="button" data-global-panel="store" data-global-tab="store-list" onclick="openGlobalScrollShortcut(event,'store','store-list')">倉物品總覽</button><button class="global-scroll-button" type="button" data-global-panel="store" data-global-tab="store-add" onclick="openGlobalScrollShortcut(event,'store','store-add')">倉新增紀錄</button></div></section>
+      <section class="global-scroll-group"><div class="global-scroll-group-title">太倉</div><div class="global-scroll-buttons"><button class="global-scroll-button" type="button" data-global-panel="store" data-global-tab="store-list" onclick="openGlobalScrollShortcut(event,'store','store-list')">物品總覽</button><button class="global-scroll-button" type="button" data-global-panel="store" data-global-tab="store-chronicle" onclick="openGlobalScrollShortcut(event,'store','store-chronicle')">事件編年</button><button class="global-scroll-button" type="button" data-global-panel="store" data-global-tab="store-add" onclick="openGlobalScrollShortcut(event,'store','store-add')">新增記錄</button></div></section>
     </div>
   </section>
 </div>
@@ -6122,7 +6122,7 @@ function switchTab(btn,key){
   else if(key==='medical-tarot')initMedicalTarotForm();
   else if(key==='medical-stats')initMedicalCardStats();
   else if(key==='medical-painmap')initMedicalPainMap();
-  else if(key==='stars-chronicle')loadEventChronicle();
+  else if(key==='store-chronicle')loadEventChronicle();
   else if(key==='store-list')loadStoreRecords();
 }
 
@@ -6133,33 +6133,33 @@ function renderStarsPanel(){
   var panelExtra=document.getElementById('p-extra');
   if(panelExtra)panelExtra.innerHTML='<span class="empire-panel-status-dot err" id="stars-panel-status-dot" title="司天監連線失敗" aria-label="司天監連線失敗"></span>';
   setEmpireCardApiPendingStatus('stars');
-  setPanelMenuTabs([{key:'stars-home',label:'命盤總覽'},{key:'stars-chronicle',label:'事件編年'}]);
+  setPanelMenuTabs([{key:'stars-home',label:'命盤總覽'}]);
   document.getElementById('p-body').innerHTML=`
     <div class="pane active" id="pane-stars-home">
       <div id="ziwei-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:78%"></div></div>
-    </div>
-    <div class="pane" id="pane-stars-chronicle">
-      <div id="chronicle-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:72%"></div></div>
     </div>`;
   if(API_URL)loadZiweiCharts();
   else document.getElementById('ziwei-content').innerHTML=setupNotice();
 }
 
 function renderStorePanel(initialTab){
-  setPanelHead('庫','Store · Warehouse','倉庫');
+  setPanelHead('庫','Store · Warehouse','太倉');
   var panelExtra=document.getElementById('p-extra');
-  if(panelExtra)panelExtra.innerHTML='<span class="empire-panel-status-dot err" id="store-panel-status-dot" title="倉庫連線失敗" aria-label="倉庫連線失敗"></span>';
-  setPanelMenuTabs([{key:'store-list',label:'物品總覽'},{key:'store-add',label:'新增記錄'}]);
+  if(panelExtra)panelExtra.innerHTML='<span class="empire-panel-status-dot err" id="store-panel-status-dot" title="太倉連線失敗" aria-label="太倉連線失敗"></span>';
+  setPanelMenuTabs([{key:'store-list',label:'物品總覽'},{key:'store-chronicle',label:'事件編年'},{key:'store-add',label:'新增記錄'}]);
   document.getElementById('p-body').innerHTML=`
     <div class="pane active" id="pane-store-list">
-      <div class="store-panel-intro"><div class="store-panel-title">Store｜倉庫物品</div><div class="store-panel-sub">搜尋物品名稱、所在地點或編號，快速找到收納位置。</div></div>
+      <div class="store-panel-intro"><div class="store-panel-title">Store｜太倉物品</div><div class="store-panel-sub">搜尋物品名稱、所在地點或編號，快速找到收納位置。</div></div>
       <div class="store-toolbar"><input class="store-search" id="store-search" type="search" placeholder="搜尋物品、位置或編號" oninput="storeSearchTerm=this.value;renderStoreList()"><button class="store-add-button" type="button" onclick="switchStoreTab('store-add')">＋新增記錄</button></div>
       <div class="store-date-filters" id="store-date-filters" aria-label="記錄年月篩選"></div>
       <div class="store-count" id="store-count"></div>
       <div id="store-list-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:78%"></div></div>
     </div>
+    <div class="pane" id="pane-store-chronicle">
+      <div id="chronicle-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:72%"></div></div>
+    </div>
     <div class="pane" id="pane-store-add">
-      <div class="store-panel-intro"><div class="store-panel-title" id="store-form-title">新增倉庫記錄</div><div class="store-panel-sub">登記物品名稱、所在地點、編號、說明與記錄時間。</div></div>
+      <div class="store-panel-intro"><div class="store-panel-title" id="store-form-title">新增太倉記錄</div><div class="store-panel-sub">登記物品名稱、所在地點、編號、說明與記錄時間。</div></div>
       <div id="store-form-content"></div>
     </div>`;
   renderStoreForm();
@@ -6322,7 +6322,7 @@ function resetStoreForm(){
   var submitEl=document.getElementById('store-submit');
   var cancelEl=document.getElementById('store-cancel-edit');
   if(rowEl)rowEl.value='';
-  if(titleEl)titleEl.textContent='新增倉庫記錄';
+  if(titleEl)titleEl.textContent='新增太倉記錄';
   if(submitEl)submitEl.textContent='儲存記錄';
   if(cancelEl)cancelEl.hidden=true;
   var dateEl=document.getElementById('store-record-date');
@@ -6362,7 +6362,7 @@ async function submitStoreRecord(event){
   if(status)status.textContent='正在儲存…';
   try{
     await apiPost({action:editRow?'storeRecordUpdate':'storeRecordCreate',row:editRow||undefined,itemName:itemName,location:location,code:code,description:description,recordDate:recordDate});
-    if(status)status.textContent=editRow?'已更新倉庫記錄':'已新增倉庫記錄';
+    if(status)status.textContent=editRow?'已更新倉庫記錄':'已新增太倉記錄';
     resetStoreForm();
     await loadStoreRecords(true);
     switchStoreTab('store-list');
@@ -6607,7 +6607,7 @@ async function loadEventChronicle(){
     content.innerHTML=setupNotice();
     if(dot)dot.className='api-dot err';
     if(label)label.textContent='尚未設定 NAS 通行令';
-    setEmpireCardStatus('stars','err','尚未設定 NAS 通行令');
+    setEmpireCardStatus('store','err','尚未設定 NAS 通行令');
     return;
   }
   var cached=readStarsCache(STARS_CHRONICLE_CACHE_KEY,true);
@@ -6617,9 +6617,9 @@ async function loadEventChronicle(){
     renderEventChronicle();
     if(dot)dot.className='api-dot pending';
     if(label)label.textContent=starsCacheLabel(cached,'事件快取先顯示')+'，背景更新中';
-    setEmpireCardStatus('stars','pending','事件快取先顯示');
+    setEmpireCardStatus('store','pending','事件快取先顯示');
   }else{
-    setEmpireCardStatus('stars','pending');
+    setEmpireCardStatus('store','pending');
     content.innerHTML='<div class="skel-line skel"></div><div class="skel-line skel" style="width:72%"></div><div class="skel-line skel" style="width:54%"></div>';
   }
   try{
@@ -6632,18 +6632,18 @@ async function loadEventChronicle(){
     writeStarsCache(STARS_CHRONICLE_CACHE_KEY,eventChronicleCache);
     if(dot)dot.className='api-dot ok';
     if(label)label.textContent='已連線 · '+eventChronicleCache.length+' 筆事件';
-    setEmpireCardStatus('stars','ok',eventChronicleCache.length+' 筆事件');
+    setEmpireCardStatus('store','ok',eventChronicleCache.length+' 筆事件');
     renderEventChronicle();
   }catch(e){
     if(cached&&Array.isArray(cached.data)&&cached.data.length){
       if(dot)dot.className='api-dot ok';
       if(label)label.textContent=starsCacheLabel(cached,'事件快取先顯示')+'，更新失敗';
-      setEmpireCardStatus('stars','ok','事件快取可用');
+      setEmpireCardStatus('store','ok','事件快取可用');
       console.warn(e);
     }else{
       if(dot)dot.className='api-dot err';
       if(label)label.textContent='讀取失敗';
-      setEmpireCardStatus('stars','err',e.message||'讀取失敗');
+      setEmpireCardStatus('store','err',e.message||'讀取失敗');
       content.innerHTML='<div class="battle-empty" style="color:var(--coral)">讀取事件編年史失敗：'+esc(e.message)+'</div>';
     }
   }
@@ -15495,7 +15495,14 @@ initAdvisorDuoVideoPlayback();
           <button class="advisor-menu-toggle" type="button" onclick="toggleAdvisorMenuGroup(this)" aria-expanded="false"><span class="advisor-menu-mark">星</span>司天監<span class="advisor-menu-caret">▼</span></button>
           <div class="advisor-btn-group">
             <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'stars','stars-home')"><span class="advisor-btn-tag">命</span>命盤總覽</button>
-            <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'stars','stars-chronicle')"><span class="advisor-btn-tag">史</span>事件編年</button>
+          </div>
+        </section>
+        <section class="advisor-menu-section">
+          <button class="advisor-menu-toggle" type="button" onclick="toggleAdvisorMenuGroup(this)" aria-expanded="false"><span class="advisor-menu-mark">倉</span>太倉<span class="advisor-menu-caret">▼</span></button>
+          <div class="advisor-btn-group">
+            <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'store','store-list')"><span class="advisor-btn-tag">物</span>物品總覽</button>
+            <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'store','store-chronicle')"><span class="advisor-btn-tag">史</span>事件編年</button>
+            <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'store','store-add')"><span class="advisor-btn-tag">記</span>新增記錄</button>
           </div>
         </section>
         <section class="advisor-menu-section">
