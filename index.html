@@ -981,8 +981,15 @@ body::after{
 .store-add-button:hover,.store-secondary-button:hover{border-color:rgba(29,158,117,.84);background:rgba(29,158,117,.22)}
 .store-count{min-height:18px;margin:0 0 9px;color:#8aa7b6;font:800 12px var(--sans)}
 .store-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-.store-item-card{display:grid;gap:7px;border:1px solid rgba(65,157,194,.3);border-radius:9px;background:linear-gradient(160deg,rgba(8,35,51,.78),rgba(4,14,23,.78));padding:12px;min-width:0}
+.store-item-card{position:relative;display:grid;gap:7px;border:1px solid rgba(65,157,194,.3);border-radius:9px;background:linear-gradient(160deg,rgba(8,35,51,.78),rgba(4,14,23,.78));padding:12px;min-width:0}
+.store-item-card-head{display:flex;align-items:flex-start;gap:8px;min-width:0;padding-right:34px}
 .store-item-name{font:900 18px/1.35 var(--font);color:#dff7ff;overflow-wrap:anywhere}
+.store-item-menu{position:absolute;top:9px;right:9px;z-index:3}
+.store-item-menu-button{display:grid;place-items:center;width:30px;height:30px;border:1px solid rgba(65,157,194,.52);border-radius:7px;background:rgba(6,27,43,.9);color:#bcefff;font-size:16px;line-height:1;cursor:pointer}
+.store-item-menu-button:hover,.store-item-menu.is-open .store-item-menu-button{border-color:#71d8f7;background:rgba(20,74,98,.9);color:#fff3bf}
+.store-item-menu-panel{display:none;position:absolute;top:35px;right:0;min-width:86px;padding:5px;border:1px solid rgba(65,157,194,.58);border-radius:8px;background:#071d2a;box-shadow:0 8px 20px rgba(0,0,0,.38)}
+.store-item-menu.is-open .store-item-menu-panel{display:grid;gap:4px}
+.store-item-menu-panel .store-item-action{width:100%;box-sizing:border-box}
 .store-item-meta{display:grid;grid-template-columns:auto minmax(0,1fr);gap:3px 8px;font:800 12px/1.55 var(--sans)}
 .store-item-label{color:#6ea4b7}.store-item-value{color:#bcefff;overflow-wrap:anywhere}
 .store-item-actions{display:flex;justify-content:flex-end;gap:7px;margin-top:3px}
@@ -6218,15 +6225,35 @@ function renderStoreList(){
   }
   el.innerHTML='<div class="store-grid">'+rows.map(function(record){
     return '<article class="store-item-card">'+
-      '<div class="store-item-name">'+esc(record.itemName||'未命名物品')+'</div>'+
+      '<div class="store-item-card-head"><div class="store-item-name">'+esc(record.itemName||'未命名物品')+'</div></div>'+
       '<div class="store-item-meta">'+
         '<span class="store-item-label">所在地點</span><span class="store-item-value">'+esc(record.location||'—')+'</span>'+
         '<span class="store-item-label">編號</span><span class="store-item-value">'+esc(record.code||'—')+'</span>'+
         '<span class="store-item-label">說明</span><span class="store-item-value">'+esc(record.description||'—')+'</span>'+
         '<span class="store-item-label">記錄時間</span><span class="store-item-value">'+esc(record.recordDate||'—')+'</span>'+
-      '</div><div class="store-item-actions"><button class="store-item-action" type="button" onclick="editStoreRecord('+Number(record.row)+')">編輯</button><button class="store-item-action danger" type="button" onclick="removeStoreRecord('+Number(record.row)+')">移除</button></div></article>';
+      '</div><div class="store-item-menu"><button class="store-item-menu-button" type="button" aria-label="'+esc(record.itemName||'物品')+'操作選單" title="操作選單" aria-expanded="false" onclick="toggleStoreItemMenu(event,this)">⚙</button><div class="store-item-menu-panel" role="menu"><button class="store-item-action" type="button" role="menuitem" onclick="editStoreRecord('+Number(record.row)+')">編輯</button><button class="store-item-action danger" type="button" role="menuitem" onclick="removeStoreRecord('+Number(record.row)+')">移除</button></div></div></article>';
   }).join('')+'</div>';
 }
+
+function toggleStoreItemMenu(event,button){
+  if(event)event.stopPropagation();
+  var menu=button&&button.closest?button.closest('.store-item-menu'):null;
+  if(!menu)return;
+  document.querySelectorAll('.store-item-menu.is-open').forEach(function(item){
+    if(item!==menu){item.classList.remove('is-open');var other=item.querySelector('.store-item-menu-button');if(other)other.setAttribute('aria-expanded','false');}
+  });
+  var open=menu.classList.toggle('is-open');
+  button.setAttribute('aria-expanded',open?'true':'false');
+}
+
+document.addEventListener('click',function(event){
+  if(event.target.closest('.store-item-menu'))return;
+  document.querySelectorAll('.store-item-menu.is-open').forEach(function(menu){
+    menu.classList.remove('is-open');
+    var button=menu.querySelector('.store-item-menu-button');
+    if(button)button.setAttribute('aria-expanded','false');
+  });
+});
 
 function loadStoreRecords(force){
   if(storeRecordsPromise)return storeRecordsPromise;
