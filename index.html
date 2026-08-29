@@ -301,9 +301,6 @@ body::after{
 .global-scroll-group:nth-child(6) .global-scroll-button::before{content:'倉'}
 .global-scroll-button:hover,.global-scroll-button:focus-visible{transform:translateY(-1px);border-color:rgba(255,218,105,.83);background:linear-gradient(180deg,rgba(112,77,26,.72),rgba(30,20,8,.88));outline:none}
 .card-scroll-toggle,.card-shortcuts{display:none!important}
-#c-store .card-scroll-toggle{display:block!important}
-#c-store .card-shortcuts{display:none!important}
-#c-store.shortcuts-open .card-shortcuts{display:grid!important}
 /* ── Today Agenda ── */
 .today-agenda{
   position:relative;
@@ -4530,7 +4527,6 @@ html[data-theme="deep-blue"] .advisor-ai-standalone .advisor-ai-quick-select:foc
         <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'store','store-list')">物品總覽</button>
         <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'store','store-chronicle')">事件編年</button>
         <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'store','store-add')">新增記錄</button>
-        <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'stars','stars-home')">命盤總覽</button>
       </div>
     </div>
 
@@ -4546,7 +4542,7 @@ html[data-theme="deep-blue"] .advisor-ai-standalone .advisor-ai-quick-select:foc
       <section class="global-scroll-group"><div class="global-scroll-group-title">&#x8ECD;&#x6A5F;&#x8655;</div><div class="global-scroll-buttons"><button class="global-scroll-button" type="button" data-global-panel="council" data-global-tab="battle-brief" onclick="openGlobalScrollShortcut(event,'council','battle-brief')">&#x6230;&#x60C5;&#x7E3D;&#x532F;&#x5831;</button><button class="global-scroll-button" type="button" data-global-panel="council" data-global-tab="council-roster" onclick="openGlobalScrollShortcut(event,'council','council-roster')">&#x90E8;&#x968A;&#x9663;&#x5BB9;</button><button class="global-scroll-button" type="button" data-global-panel="council" data-global-tab="market-watch" onclick="openGlobalScrollShortcut(event,'council','market-watch')">&#x53F0;&#x7F8E;&#x80A1;&#x5927;&#x76E4;</button><button class="global-scroll-button" type="button" data-global-panel="council" data-global-tab="macro-overview" onclick="openGlobalScrollShortcut(event,'council','macro-overview')">&#x7F8E;&#x80A1;&#x7E3D;&#x7D93;</button></div></section>
       <section class="global-scroll-group"><div class="global-scroll-group-title">&#x91AB;&#x9928;</div><div class="global-scroll-buttons"><button class="global-scroll-button" type="button" data-global-panel="medical" data-global-tab="medical-quick" onclick="openGlobalScrollShortcut(event,'medical','medical-quick')">&#x5FEB;&#x901F;&#x8A18;&#x9304;</button><button class="global-scroll-button" type="button" data-global-panel="medical" data-global-tab="medical-tarot" onclick="openGlobalScrollShortcut(event,'medical','medical-tarot')">&#x62BD;&#x724C;&#x8A18;&#x9304;</button><button class="global-scroll-button" type="button" data-global-panel="medical" data-global-tab="medical-stats" onclick="openGlobalScrollShortcut(event,'medical','medical-stats')">&#x724C;&#x5361;&#x7D71;&#x8A08;</button><button class="global-scroll-button" type="button" data-global-panel="medical" data-global-tab="medical-painmap" onclick="openGlobalScrollShortcut(event,'medical','medical-painmap')">&#x75BC;&#x75DB;&#x5730;&#x5716;</button></div></section>
       <section class="global-scroll-group"><div class="global-scroll-group-title">&#x57CE;&#x7246;</div><div class="global-scroll-buttons"><button class="global-scroll-button" type="button" data-global-panel="wall" data-global-tab="wall" onclick="openGlobalScrollShortcut(event,'wall','wall')">&#x751F;&#x6D3B;&#x65E5;&#x8A18;</button><button class="global-scroll-button" type="button" data-global-panel="wall" data-global-tab="memo" onclick="openGlobalScrollShortcut(event,'wall','memo')">&#x5099;&#x5FD8;&#x96A8;&#x7B46;</button><button class="global-scroll-button" type="button" data-global-panel="wall" data-global-tab="market" onclick="openGlobalScrollShortcut(event,'wall','market')">&#x80A1;&#x5E02;&#x6559;&#x5BA4;</button><button class="global-scroll-button" type="button" onclick="openGlobalScrollAdmin(event)">&#x65B0;&#x589E;&#x8A18;&#x9304;</button></div></section>
-      <section class="global-scroll-group"><div class="global-scroll-group-title">太倉</div><div class="global-scroll-buttons"><button class="global-scroll-button" type="button" data-global-panel="store" data-global-tab="store-list" onclick="openGlobalScrollShortcut(event,'store','store-list')">物品總覽</button><button class="global-scroll-button" type="button" data-global-panel="store" data-global-tab="store-chronicle" onclick="openGlobalScrollShortcut(event,'store','store-chronicle')">事件編年</button><button class="global-scroll-button" type="button" data-global-panel="store" data-global-tab="store-add" onclick="openGlobalScrollShortcut(event,'store','store-add')">新增記錄</button><button class="global-scroll-button" type="button" data-global-panel="stars" data-global-tab="stars-home" onclick="openGlobalScrollShortcut(event,'stars','stars-home')">命盤總覽</button></div></section>
+      <section class="global-scroll-group"><div class="global-scroll-group-title">太倉</div><div class="global-scroll-buttons"><button class="global-scroll-button" type="button" data-global-panel="store" data-global-tab="store-list" onclick="openGlobalScrollShortcut(event,'store','store-list')">物品總覽</button><button class="global-scroll-button" type="button" data-global-panel="store" data-global-tab="store-chronicle" onclick="openGlobalScrollShortcut(event,'store','store-chronicle')">事件編年</button><button class="global-scroll-button" type="button" data-global-panel="store" data-global-tab="store-add" onclick="openGlobalScrollShortcut(event,'store','store-add')">新增記錄</button></div></section>
     </div>
   </section>
 </div>
@@ -6086,6 +6082,7 @@ function switchTab(btn,key){
   else if(key==='medical-stats')initMedicalCardStats();
   else if(key==='medical-painmap')initMedicalPainMap();
   else if(key==='store-chronicle')loadEventChronicle();
+  else if(key==='stars-home')loadZiweiCharts();
   else if(key==='store-list')loadStoreRecords();
 }
 
@@ -6109,7 +6106,7 @@ function renderStorePanel(initialTab){
   setPanelHead('庫','Store · Warehouse','太倉');
   var panelExtra=document.getElementById('p-extra');
   if(panelExtra)panelExtra.innerHTML='<span class="empire-panel-status-dot err" id="store-panel-status-dot" title="太倉連線失敗" aria-label="太倉連線失敗"></span>';
-  setPanelMenuTabs([{key:'store-list',label:'物品總覽'},{key:'store-chronicle',label:'事件編年'},{key:'store-add',label:'新增記錄'}]);
+  setPanelMenuTabs([{key:'store-list',label:'物品總覽'},{key:'store-chronicle',label:'事件編年'},{key:'store-add',label:'新增記錄'},{key:'stars-home',label:'命盤總覽'}]);
   document.getElementById('p-body').innerHTML=`
     <div class="pane active" id="pane-store-list">
       <div class="store-panel-intro"><div class="store-panel-title">Store｜太倉物品</div><div class="store-panel-sub">搜尋物品名稱、所在地點或編號，快速找到收納位置。</div></div>
@@ -6124,6 +6121,9 @@ function renderStorePanel(initialTab){
     <div class="pane" id="pane-store-add">
       <div class="store-panel-intro"><div class="store-panel-title" id="store-form-title">新增太倉記錄</div><div class="store-panel-sub">登記物品名稱、所在地點、編號、說明與記錄時間。</div></div>
       <div id="store-form-content"></div>
+    </div>
+    <div class="pane" id="pane-stars-home">
+      <div id="ziwei-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:78%"></div></div>
     </div>`;
   renderStoreForm();
   setEmpireCardApiPendingStatus('store');
@@ -15460,7 +15460,6 @@ initAdvisorDuoVideoPlayback();
             <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'store','store-list')"><span class="advisor-btn-tag">物</span>物品總覽</button>
             <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'store','store-chronicle')"><span class="advisor-btn-tag">史</span>事件編年</button>
             <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'store','store-add')"><span class="advisor-btn-tag">記</span>新增記錄</button>
-            <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'stars','stars-home')"><span class="advisor-btn-tag">命</span>命盤總覽</button>
           </div>
         </section>
         <section class="advisor-menu-section">
