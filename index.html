@@ -17391,6 +17391,7 @@ async function loadAdvisorAIGranaryBrief(){
 
 function advisorAIDailyUpdateItems(data){
   var source={};
+  var murmurs=(data&&data.murmurs)||{};
   (Array.isArray(data&&data.items)?data.items:[]).forEach(function(item){source[item.module]=item;});
   return [
     {module:'finance',icon:'💰',title:'財政部',tab:'booking-form',message:'主公今日尚未記帳。'},
@@ -17398,7 +17399,11 @@ function advisorAIDailyUpdateItems(data){
     {module:'medical',icon:'🏥',title:'醫館',tab:'medical-painmap',message:'主公今日尚未記錄。'},
     {module:'wall',icon:'🧱',title:'城牆',tab:'wall',message:'今日尚無新的城牆紀錄。'},
     {module:'store',icon:'🏛️',title:'太倉',tab:'store-list',message:'今日尚無新的物品記錄。'}
-  ].map(function(base){return Object.assign({},base,source[base.module]||{target:base.module,updated:false});});
+  ].map(function(base){
+    var item=Object.assign({},base,source[base.module]||{target:base.module,updated:false});
+    if(!item.murmur&&murmurs[base.module])item.murmur=murmurs[base.module];
+    return item;
+  });
 }
 function advisorAIDailyMurmurData(data){
   data=data||{};
@@ -17420,7 +17425,10 @@ function advisorAIDailyMurmurData(data){
   var score=judgment.score!==''&&judgment.score!=null?Number(judgment.score):null;
   return {
     finance:finance.join('\n')||'軍師正在盤點國庫，暫未取得帳戶細節。',
-    council:[marketStance?'軍師發現台美股目前採「'+marketStance+'」劇本，先穩住城門。':'台美股風向資料尚在整理，先保持觀望。',scenario?'軍師檢查美股總經，當前判斷為「'+scenario+'」'+(score!==null&&!isNaN(score)?'，金融壓力分數 '+score+'。':'。'):'美股總經資料尚在整理，暫不妄下結論。'].join('\n')
+    council:[marketStance?'軍師發現台美股目前採「'+marketStance+'」劇本，先穩住城門。':'台美股風向資料尚在整理，先保持觀望。',scenario?'軍師檢查美股總經，當前判斷為「'+scenario+'」'+(score!==null&&!isNaN(score)?'，金融壓力分數 '+score+'。':'。'):'美股總經資料尚在整理，暫不妄下結論。'].join('\n'),
+    medical:'軍師巡視醫館，提醒主公身體狀況也要列入每日戰報。',
+    wall:'軍師巡視城牆，今日有新篇章便值得留下足跡。',
+    store:'軍師巡視太倉，物品有進有出，庫存才不會失去方向。'
   };
 }
 function advisorAIDailyUpdatesHtml(data, state, activeIndex){
@@ -17481,7 +17489,7 @@ async function loadAdvisorAIDailyUpdates(){
     if(results[0].status!=='fulfilled')throw results[0].reason||new Error('今日更新讀取失敗');
     var data=results[0].status==='fulfilled'?results[0].value:{};
     var murmur=advisorAIDailyMurmurData({accounts:results[1].status==='fulfilled'?results[1].value:[],monthly:results[2].status==='fulfilled'?results[2].value:{},market:results[3].status==='fulfilled'?results[3].value:{},macro:results[4].status==='fulfilled'?results[4].value:{}});
-    data=Object.assign({},data,{items:(data.items||[]).map(function(item){return Object.assign({},item,{murmur:murmur[item.module]||''});})});
+    data=Object.assign({},data,{murmurs:murmur,items:(data.items||[]).map(function(item){return Object.assign({},item,{murmur:murmur[item.module]||''});})});
     try{
       var wallEntries=results[5].status==='fulfilled'?results[5].value:[];
       var wallToday=wallEntries.filter(function(entry){
