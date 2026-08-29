@@ -4752,6 +4752,10 @@ var chronicleEditingRowNumber = 0;
 var STARS_CACHE_TTL = 10 * 60 * 1000;
 var STARS_ZIWEI_CACHE_KEY = 'wealth_stars_ziwei_v1';
 var STARS_CHRONICLE_CACHE_KEY = 'wealth_stars_chronicle_v6';
+var intelligenceCache = null;
+var intelligencePromise = null;
+var intelligenceFilter = '';
+var intelligenceStatus = null;
 
 var DEFAULT_MEDICAL_OPTIONS = {
   emotions: ['😎開心','🤔思考疑惑','🤕頭痛','😴想睡疲累','🥲難過','😡生氣','😮‍💨無奈','🫶感恩','😁豁然開朗'],
@@ -6093,6 +6097,7 @@ function switchTab(btn,key){
   else if(key==='macro-overview')loadMacroOverview();
   else if(key==='taiwan-macro')loadTaiwanMacro();
   else if(key==='council-roster')loadCouncilDashboard();
+  else if(key==='external-intelligence')loadExternalIntelligence();
   else if(key==='council-task')resetRetiredTaskStatus();
   else if(key==='medical-tarot')initMedicalTarotForm();
   else if(key==='medical-stats')initMedicalCardStats();
@@ -6646,6 +6651,76 @@ async function loadEventChronicle(){
       content.innerHTML='<div class="battle-empty" style="color:var(--coral)">讀取事件編年史失敗：'+esc(e.message)+'</div>';
     }
   }
+}
+
+async function loadExternalIntelligence(force){
+  var content=document.getElementById('intelligence-content');
+  var label=document.getElementById('intelligence-label');
+  var dot=document.getElementById('intelligence-dot');
+  if(!content)return;
+  var cached=intelligenceCache;
+  if(cached&&!force)renderExternalIntelligence(cached);
+  if(!arkWallReadToken()&&!arkWallWriteToken()){
+    content.innerHTML=setupNotice();
+    if(dot)dot.className='api-dot err';
+    if(label)label.textContent='尚未設定 NAS 通行令';
+    return;
+  }
+  if(!intelligencePromise||force){
+    intelligencePromise=arkWallFetch('/api/intelligence?limit=50').then(function(data){
+      intelligenceCache=data;
+      intelligenceStatus=data.status||null;
+      renderExternalIntelligence(data);
+      if(dot)dot.className='api-dot ok';
+      if(label)label.textContent='已連線 · '+(data.total||0)+' 則情報';
+      return data;
+    }).catch(function(e){
+      if(dot)dot.className='api-dot err';
+      if(label)label.textContent='情報讀取失敗';
+      if(!cached)content.innerHTML='<div class="battle-empty" style="color:var(--coral)">外部情報讀取失敗：'+esc(e.message)+'</div>';
+      console.warn(e);
+    }).finally(function(){intelligencePromise=null;});
+  }
+  return intelligencePromise;
+}
+
+function renderExternalIntelligence(data){
+  var content=document.getElementById('intelligence-content');
+  if(!content)return;
+  var items=Array.isArray(data&&data.items)?data.items:[];
+  if(intelligenceFilter)items=items.filter(function(item){return String(item.category||'')===intelligenceFilter;});
+  var status=data&&data.status||{};
+  var statusText=status.state==='completed'?'最近採集完成':status.state==='completed-with-errors'?'最近採集完成，但有來源失敗':status.state==='running'?'採集中…':'尚未執行採集';
+  content.innerHTML=`
+    <div class="api-bar"><div class="api-dot ${status.state==='completed'?'ok':status.state==='running'?'pending':'err'}" id="intelligence-status-dot"></div><span class="api-label">${esc(statusText)}${status.finishedAt?' · '+esc(new Date(status.finishedAt).toLocaleString('zh-TW')):''}</span></div>
+    <div class="chronicle-toolbar"><select class="chronicle-search" onchange="intelligenceFilter=this.value;renderExternalIntelligence(intelligenceCache)"><option value="">全部分類</option><option value="市場">市場</option><option value="基金">基金</option><option value="總經">總經</option><option value="公司公告">公司公告</option></select><button class="cfg-verify-btn" type="button" onclick="refreshExternalIntelligence()">重新採集</button><span class="chronicle-count">${items.length} 則</span></div>
+    <div class="intelligence-list">${items.length?items.map(renderIntelligenceCard).join(''):'<div class="battle-empty">目前沒有情報。請先在 NAS 設定來源並執行採集。</div>'}</div>`;
+}
+
+function renderIntelligenceCard(item){
+  var sourceUrl=String(item.sourceUrl||'').trim();
+  var tags=Array.isArray(item.tags)?item.tags.join(' · '):'';
+  return `<article class="battle-section" style="margin-bottom:12px"><div class="battle-section-title">${esc(item.title||'未命名情報')}</div><div style="color:var(--muted);font-size:12px;margin:4px 0 10px">${esc(item.category||'其他')} · ${esc(item.source||'未知來源')} · ${esc(item.publishedAt?new Date(item.publishedAt).toLocaleString('zh-TW'):'時間未知')}</div><div style="white-space:pre-wrap;line-height:1.7">${esc(item.summary||item.content||'')}</div>${tags?`<div style="color:var(--muted);font-size:11px;margin-top:8px">${esc(tags)}</div>`:''}<div class="chronicle-entry-actions" style="margin-top:10px"><a class="cfg-verify-btn" href="${esc(sourceUrl)}" target="_blank" rel="noopener noreferrer">查看原文</a><button class="cfg-verify-btn" type="button" onclick="addIntelligenceToChronicle(${JSON.stringify(item.id||'')})">加入事件編年</button></div></article>`;
+}
+
+async function refreshExternalIntelligence(){
+  try{
+    await arkWallFetch('/api/intelligence/refresh',{method:'POST',wallWrite:true,headers:{'Content-Type':'application/json'},body:'{}'});
+    var label=document.getElementById('intelligence-label');
+    if(label)label.textContent='採集已排入背景工作';
+    setTimeout(function(){loadExternalIntelligence(true);},1500);
+  }catch(e){showMsg('intelligence-content','✗ '+(e.message||'重新採集失敗'),'err');}
+}
+
+async function addIntelligenceToChronicle(id){
+  var item=(intelligenceCache&&intelligenceCache.items||[]).find(function(row){return String(row.id)===String(id);});
+  if(!item)return;
+  var name=String(item.title||'外部情報').slice(0,120);
+  if(!confirm('將「'+name+'」加入事件編年？'))return;
+  try{
+    await eventChronicleApiRequest('POST','/api/event-chronicle',{name:name,date:String(item.publishedAt||today()).slice(0,10),price:1,mode:'單一事件耗時',durationDays:1,note:'來源：'+String(item.sourceUrl||'')},30000);
+    alert('已加入事件編年史');
+  }catch(e){alert('加入失敗：'+(e.message||'未知錯誤'));}
 }
 
 function renderEventChronicle(){
@@ -13269,9 +13344,10 @@ function renderCouncilPanel(initialTab){
     {key:'council-roster',label:'部隊陣容'},
     {key:'market-watch',label:'台美股大盤'},
     {key:'macro-overview',label:'美股總經'},
-    {key:'taiwan-macro',label:'台灣總體經濟'}
+    {key:'taiwan-macro',label:'台灣總體經濟'},
+    {key:'external-intelligence',label:'外部情報'}
   ]);
-  var targetTab=['battle-brief','council-roster','market-watch','macro-overview','taiwan-macro'].indexOf(initialTab)>=0?initialTab:'battle-brief';
+  var targetTab=['battle-brief','council-roster','market-watch','macro-overview','taiwan-macro','external-intelligence'].indexOf(initialTab)>=0?initialTab:'battle-brief';
   currentTab=targetTab;
   var apiReady=hasMainApiCredentials();
   var lockedNotice=setupNotice();
@@ -13291,6 +13367,10 @@ function renderCouncilPanel(initialTab){
     <div class="pane ${targetTab==='taiwan-macro'?'active':''}" id="pane-taiwan-macro">
       <div id="taiwan-macro-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:82%"></div><div class="skel-line skel" style="width:68%"></div></div>
     </div>
+    <div class="pane ${targetTab==='external-intelligence'?'active':''}" id="pane-external-intelligence">
+      <div class="api-bar"><div class="api-dot pending" id="intelligence-dot"></div><span class="api-label" id="intelligence-label">載入外部情報…</span></div>
+      <div id="intelligence-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:82%"></div><div class="skel-line skel" style="width:68%"></div></div>
+    </div>
     <div class="pane" id="pane-council-task">
       ${renderRetiredTaskNotice()}
     </div>`;
@@ -13304,6 +13384,7 @@ function renderCouncilPanel(initialTab){
     else if(targetTab==='market-watch')loadMarketDashboard();
     else if(targetTab==='macro-overview')loadMacroOverview();
     else if(targetTab==='taiwan-macro')loadTaiwanMacro();
+    else if(targetTab==='external-intelligence')loadExternalIntelligence();
   }
   if(API_URL&&targetTab!=='council-roster')setTimeout(prefetchMarketDashboard,300);
 }
