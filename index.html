@@ -1350,6 +1350,18 @@ body::after{
 .advisor-ai-granary-brief.loading,.advisor-ai-granary-brief.error{font-family:var(--sans);font-size:12px;font-weight:850;color:#9f8248;text-align:center}
 .advisor-ai-granary-brief.cached{border-color:rgba(232,192,80,.24);color:#e4d19a}
 .advisor-ai-granary-meta{position:relative;z-index:1;margin-top:5px;font-family:var(--sans);font-size:10px;font-weight:850;line-height:1.45;color:#9f8248;text-align:right;text-shadow:none}
+.advisor-ai-daily-updates{position:relative;overflow:hidden;border:1px solid rgba(232,192,80,.28);border-radius:9px;background:linear-gradient(135deg,rgba(36,24,8,.72),rgba(8,6,3,.88));padding:10px 11px;margin:0 0 10px;color:#ead9a8}
+.advisor-ai-daily-updates-title{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px;font-family:var(--font);font-size:15px;font-weight:950;color:#f0dfa0}
+.advisor-ai-daily-updates-date{font-family:var(--sans);font-size:10px;font-weight:800;color:#a98a48;white-space:nowrap}
+.advisor-ai-daily-update-list{display:grid;gap:6px}
+.advisor-ai-daily-update{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:7px;align-items:center;padding:7px 8px;border:1px solid rgba(232,192,80,.16);border-radius:7px;background:rgba(0,0,0,.2)}
+.advisor-ai-daily-update-icon{font-size:16px;line-height:1}
+.advisor-ai-daily-update-copy{min-width:0;font-family:var(--sans);font-size:12px;line-height:1.5}
+.advisor-ai-daily-update-title{display:block;font-weight:950;color:#f3df9a}
+.advisor-ai-daily-update-message{display:block;color:#d7c28b;white-space:normal}
+.advisor-ai-daily-update-link{border:1px solid rgba(232,192,80,.34);border-radius:5px;background:rgba(232,192,80,.08);color:#f4d783;font-family:var(--sans);font-size:10px;font-weight:900;padding:5px 7px;cursor:pointer;white-space:nowrap}
+.advisor-ai-daily-update-link:hover{background:rgba(232,192,80,.16)}
+.advisor-ai-daily-updates-empty,.advisor-ai-daily-updates-error{font-family:var(--sans);font-size:11px;line-height:1.55;color:#a98a48;text-align:center}
 .advisor-ai-standalone{position:fixed;left:calc(50% + 44px);top:116px;z-index:2950;width:min(690px,calc(100vw - 150px));border:1.5px solid rgba(232,192,80,.55);border-radius:0 16px 16px 16px;background:linear-gradient(145deg,rgba(26,16,5,.96),rgba(10,7,3,.96));backdrop-filter:blur(8px);padding:18px 20px 16px;box-shadow:0 18px 42px rgba(0,0,0,.62),0 0 28px rgba(232,192,80,.18),0 0 0 9999px rgba(0,0,0,.52);opacity:0;pointer-events:none;transform:translateX(-50%) translateY(-8px);transition:opacity .18s,transform .18s}
 .advisor-ai-standalone::before{content:'';position:absolute;left:-10px;top:42px;border:5px solid transparent;border-right-color:rgba(232,192,80,.55)}
 .advisor-ai-standalone::after{content:'';position:absolute;left:-8px;top:43px;border:4px solid transparent;border-right-color:#1a1005}
@@ -5256,6 +5268,7 @@ var ADVISOR_REMINDER_CACHE_KEY='empire_today_advisor_reminder_v1';
 var ADVISOR_AI_GRANARY_CACHE_KEY='empire_advisor_ai_granary_brief_v1';
 var advisorReminderPromise=null;
 var advisorAIGranaryPromise=null;
+var advisorAIDailyUpdatesPromise=null;
 var FINANCE_TREASURY_CACHE_KEY='wealth_finance_treasury_v6';
 var FINANCE_TREASURY_CACHE_PREFIX='wealth_finance_treasury_v';
 var FINANCE_PLEDGE_CACHE_KEY='wealth_finance_pledge_v2';
@@ -16670,6 +16683,7 @@ function openAdvisorAI(targetPanel){
   panel.innerHTML=`${advisorAIHeaderHtml('🗡️主公，請下令')}
      <div class="advisor-ai-portrait"><img class="advisor-ai-portrait-img" src="1menu.png" alt="龐統軍師"></div>
     <div class="advisor-ai-granary-brief loading" id="advisor-ai-granary-brief"><span>龐統正在檢視帝國糧倉…</span></div>
+    <div class="advisor-ai-daily-updates loading" id="advisor-ai-daily-updates"><div class="advisor-ai-daily-updates-error">龐統正在整理今日更新…</div></div>
     <div class="advisor-ai-row">
       <input class="advisor-ai-input" id="advisor-ai-input" type="text" placeholder="輸入指令…" onkeydown="advisorAIKey(event)">
       <button class="advisor-shortcut-submit" id="advisor-ai-submit" type="button" onclick="runAdvisorAICommand(this)">執行</button>
@@ -16682,6 +16696,7 @@ function openAdvisorAI(targetPanel){
     if(input)input.focus();
   },0);
   loadAdvisorAIGranaryBrief();
+  loadAdvisorAIDailyUpdates();
 }
 
 function advisorAIDatabaseSheetUrl(range){
@@ -17360,6 +17375,50 @@ async function loadAdvisorAIGranaryBrief(){
   }catch(err){
     if(cached)advisorAIRenderGranaryBrief(el,cached,'cached','糧倉資料暫未更新，顯示上次評估');
     else advisorAIRenderGranaryBrief(el,{message:'🪶 主公，糧倉戰情暫不可得；龐統仍可聽令辦事。'},'error');
+  }
+}
+
+function advisorAIDailyUpdatesHtml(data, state){
+  data=data||{};
+  var date=String(data.date||today()).replace(/-/g,'/');
+  var items=Array.isArray(data.items)?data.items:[];
+  var errors=Array.isArray(data.errors)?data.errors:[];
+  if(state==='loading')return '<div class="advisor-ai-daily-updates-title"><span>📜 今日更新</span><span class="advisor-ai-daily-updates-date">'+esc(date)+'</span></div><div class="advisor-ai-daily-updates-error">龐統正在整理今日更新…</div>';
+  if(!items.length){
+    var empty=errors.length?'今日部分情報暫時無法取得，請稍後再試。':'今日尚無新的帝國紀錄。';
+    return '<div class="advisor-ai-daily-updates-title"><span>📜 今日更新</span><span class="advisor-ai-daily-updates-date">'+esc(date)+'</span></div><div class="advisor-ai-daily-updates-empty">'+esc(empty)+'</div>';
+  }
+  var rows=items.map(function(item){
+    var target=item.target==='finance'?'finance':item.target==='council'?'council':'medical';
+    var tab=target==='finance'?'booking-form':target==='council'?'battle-brief':'medical-painmap';
+    return '<div class="advisor-ai-daily-update"><span class="advisor-ai-daily-update-icon">'+esc(item.icon||'📌')+'</span><div class="advisor-ai-daily-update-copy"><strong class="advisor-ai-daily-update-title">'+esc(item.title||'更新')+'</strong><span class="advisor-ai-daily-update-message">'+esc(item.message||'已有新資料')+'</span></div><button class="advisor-ai-daily-update-link" type="button" onclick="openEmpireCardShortcut(event,\''+target+'\',\''+tab+'\')">查看</button></div>';
+  }).join('');
+  var warning=errors.length?'<div class="advisor-ai-daily-updates-error" style="margin-top:7px">部分情報暫時無法取得</div>':'';
+  return '<div class="advisor-ai-daily-updates-title"><span>📜 今日更新</span><span class="advisor-ai-daily-updates-date">'+esc(date)+'</span></div><div class="advisor-ai-daily-update-list">'+rows+'</div>'+warning;
+}
+function renderAdvisorAIDailyUpdates(data,state){
+  var el=document.getElementById('advisor-ai-daily-updates');
+  if(!el)return;
+  el.className='advisor-ai-daily-updates '+(state||'');
+  el.innerHTML=advisorAIDailyUpdatesHtml(data,state);
+}
+async function loadAdvisorAIDailyUpdates(){
+  var el=document.getElementById('advisor-ai-daily-updates');
+  if(!el)return;
+  if(!hasMainApiCredentials()){
+    renderAdvisorAIDailyUpdates({date:today(),items:[],errors:[{message:'尚未設定 API'}]},'error');
+    return;
+  }
+  renderAdvisorAIDailyUpdates({date:today()},'loading');
+  if(!advisorAIDailyUpdatesPromise){
+    advisorAIDailyUpdatesPromise=apiGet({action:'dailyUpdates'},45000).finally(function(){
+      advisorAIDailyUpdatesPromise=null;
+    });
+  }
+  try{
+    renderAdvisorAIDailyUpdates(await advisorAIDailyUpdatesPromise);
+  }catch(e){
+    renderAdvisorAIDailyUpdates({date:today(),items:[],errors:[{message:e&&e.message?e.message:'今日更新讀取失敗'}]},'error');
   }
 }
 
