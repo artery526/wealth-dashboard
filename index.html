@@ -17416,7 +17416,19 @@ async function loadAdvisorAIDailyUpdates(){
     });
   }
   try{
-    renderAdvisorAIDailyUpdates(await advisorAIDailyUpdatesPromise);
+    var data=await advisorAIDailyUpdatesPromise;
+    try{
+      var wallEntries=await loadArkWallEntries(false);
+      var wallToday=wallEntries.filter(function(entry){
+        return String(entry&&entry.date||'').replace(/-/g,'/').slice(0,10)===String(data.date||today()).slice(0,10);
+      });
+      if(wallToday.length){
+        data=Object.assign({},data,{items:(data.items||[]).concat([{module:'wall',icon:'🧱',title:'城牆',message:'今日新增生活日記 '+wallToday.length+' 篇',count:wallToday.length,updated:true,target:'wall',tab:'wall'}])});
+      }
+    }catch(wallError){
+      data=Object.assign({},data,{errors:(data.errors||[]).concat([{module:'wall',message:wallError&&wallError.message?wallError.message:'城牆情報暫不可得'}])});
+    }
+    renderAdvisorAIDailyUpdates(data);
   }catch(e){
     renderAdvisorAIDailyUpdates({date:today(),items:[],errors:[{message:e&&e.message?e.message:'今日更新讀取失敗'}]},'error');
   }
