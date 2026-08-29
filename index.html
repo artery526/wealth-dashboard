@@ -301,6 +301,9 @@ body::after{
 .global-scroll-group:nth-child(6) .global-scroll-button::before{content:'倉'}
 .global-scroll-button:hover,.global-scroll-button:focus-visible{transform:translateY(-1px);border-color:rgba(255,218,105,.83);background:linear-gradient(180deg,rgba(112,77,26,.72),rgba(30,20,8,.88));outline:none}
 .card-scroll-toggle,.card-shortcuts{display:none!important}
+#c-store .card-scroll-toggle{display:block!important}
+#c-store .card-shortcuts{display:none!important}
+#c-store.shortcuts-open .card-shortcuts{display:grid!important}
 /* ── Today Agenda ── */
 .today-agenda{
   position:relative;
