@@ -6700,7 +6700,23 @@ function renderExternalIntelligence(data){
 function renderIntelligenceCard(item){
   var sourceUrl=String(item.sourceUrl||'').trim();
   var tags=Array.isArray(item.tags)?item.tags.join(' · '):'';
-  return `<article class="battle-section" style="margin-bottom:12px"><div class="battle-section-title">${esc(item.title||'未命名情報')}</div><div style="color:var(--muted);font-size:12px;margin:4px 0 10px">${esc(item.category||'其他')} · ${esc(item.source||'未知來源')} · ${esc(item.publishedAt?new Date(item.publishedAt).toLocaleString('zh-TW'):'時間未知')}</div><div style="white-space:pre-wrap;line-height:1.7">${esc(item.summary||item.content||'')}</div>${tags?`<div style="color:var(--muted);font-size:11px;margin-top:8px">${esc(tags)}</div>`:''}<div class="chronicle-entry-actions" style="margin-top:10px"><a class="cfg-verify-btn" href="${esc(sourceUrl)}" target="_blank" rel="noopener noreferrer">查看原文</a><button class="cfg-verify-btn" type="button" onclick="addIntelligenceToChronicle(${JSON.stringify(item.id||'')})">加入事件編年</button></div></article>`;
+  var navHtml=Array.isArray(item.navHistory)&&item.navHistory.length?renderIntelligenceNavHistory(item):'';
+  return `<article class="battle-section" style="margin-bottom:12px"><div class="battle-section-title">${esc(item.title||'未命名情報')}</div><div style="color:var(--muted);font-size:12px;margin:4px 0 10px">${esc(item.category||'其他')} · ${esc(item.source||'未知來源')} · ${esc(item.publishedAt?new Date(item.publishedAt).toLocaleString('zh-TW'):'時間未知')}</div><div style="white-space:pre-wrap;line-height:1.7">${esc(item.summary||item.content||'')}</div>${navHtml}${tags?`<div style="color:var(--muted);font-size:11px;margin-top:8px">${esc(tags)}</div>`:''}<div class="chronicle-entry-actions" style="margin-top:10px"><a class="cfg-verify-btn" href="${esc(sourceUrl)}" target="_blank" rel="noopener noreferrer">查看原文</a><button class="cfg-verify-btn" type="button" onclick="addIntelligenceToChronicle(${JSON.stringify(item.id||'')})">加入事件編年</button></div></article>`;
+}
+
+function renderIntelligenceNavHistory(item){
+  var rows=(item.navHistory||[]).filter(function(row){return row&&Number.isFinite(Number(row.nav));}).slice(0,30);
+  if(!rows.length)return '';
+  var values=rows.map(function(row){return Number(row.nav);});
+  var min=Math.min.apply(Math,values),max=Math.max.apply(Math,values),span=max-min||1;
+  var points=rows.slice().reverse().map(function(row,index){
+    var x=4+(index*292/Math.max(1,rows.length-1));
+    var y=56-((Number(row.nav)-min)/span*48);
+    return x.toFixed(1)+','+y.toFixed(1);
+  }).join(' ');
+  var latest=rows[0];
+  var table=rows.map(function(row){return `<tr><td>${esc(row.date)}</td><td>${Number(row.nav).toFixed(2)}</td><td>${row.change==null?'--':Number(row.change).toFixed(2)}</td><td>${row.changePct==null?'--':Number(row.changePct).toFixed(2)+'%'}</td></tr>`;}).join('');
+  return `<div style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(122,88,40,.18)"><div style="font-weight:700;margin-bottom:4px">近 30 日淨值</div><div style="color:var(--muted);font-size:12px;margin-bottom:6px">最新 ${Number(latest.nav).toFixed(2)} · 資料日 ${esc(latest.date)} · 共 ${rows.length} 筆</div><svg viewBox="0 0 300 64" width="100%" height="64" role="img" aria-label="近30日淨值走勢圖" style="display:block;overflow:visible"><polyline points="${points}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".8"></polyline></svg><details><summary style="cursor:pointer;color:var(--muted);font-size:12px">查看每日明細</summary><div style="overflow:auto;margin-top:8px"><table style="width:100%;font-size:11px;border-collapse:collapse"><thead><tr><th style="text-align:left">日期</th><th style="text-align:right">淨值</th><th style="text-align:right">漲跌</th><th style="text-align:right">漲跌幅</th></tr></thead><tbody>${table}</tbody></table></div></details></div>`;
 }
 
 async function refreshExternalIntelligence(){
