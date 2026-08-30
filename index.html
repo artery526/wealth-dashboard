@@ -3184,6 +3184,7 @@ body::after{
 .ark-wall-detail-text p{margin:0}
 .ark-wall-detail-text p+p{margin-top:1em}
 .ark-wall-inline-photo{display:block;max-width:100%;max-height:680px;margin:12px 0;border-radius:8px;object-fit:contain}
+.ark-wall-inline-video{display:block;width:min(100%,900px);max-height:680px;margin:12px 0;border-radius:8px;background:#050403}
 .ark-wall-detail-text.copy-ready{cursor:copy}
 .ark-wall-copy-hint{position:absolute;right:10px;top:8px;border:1px solid rgba(78,217,255,.3);border-radius:7px;background:rgba(3,8,10,.84);color:#aeefff;font-family:var(--sans);font-size:11px;font-weight:900;line-height:1;padding:6px 8px;opacity:.78;pointer-events:none}
 .ark-wall-copy-hint.ok{border-color:rgba(29,158,117,.52);background:rgba(5,22,16,.88);color:#d6ffed;opacity:1}
@@ -9801,7 +9802,11 @@ function arkWallMarkdownHtml(markdown){
     var match;
     while((match=pattern.exec(source))){
       html+=esc(source.slice(cursor,match.index)).replace(/\n/g,'<br>');
-      html+='<img class="ark-wall-inline-photo" src="'+esc(arkWallUrl(match[2]))+'" alt="'+esc(match[1]||'照片')+'" loading="lazy">';
+      var mediaUrl=arkWallUrl(match[2]);
+      var isVideo=/^video:/i.test(match[1])||/\.(mp4|mov|m4v|webm)(?:[?#]|$)/i.test(mediaUrl);
+      html+=isVideo
+        ?'<video class="ark-wall-inline-video" controls preload="metadata" src="'+esc(mediaUrl)+'"></video>'
+        :'<img class="ark-wall-inline-photo" src="'+esc(mediaUrl)+'" alt="'+esc(match[1]||'照片')+'" loading="lazy">';
       cursor=match.index+match[0].length;
     }
     html+=esc(source.slice(cursor)).replace(/\n/g,'<br>');
