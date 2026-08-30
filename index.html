@@ -1332,11 +1332,6 @@ body::after{
 .advisor-ai-input:focus{border-color:var(--gold2)}
 .advisor-ai-portrait{position:absolute;left:-204px;top:-62px;width:220px;pointer-events:none;z-index:1}
 .advisor-ai-portrait-img{display:block;width:100%;max-height:286px;object-fit:contain;object-position:center bottom;filter:drop-shadow(0 0 24px rgba(232,192,80,.24))}
-.advisor-ai-examples{margin-top:10px;border:1px solid rgba(232,192,80,.16);border-radius:9px;background:rgba(0,0,0,.34);padding:9px 10px;font-family:var(--sans);font-size:11px;line-height:1.65;color:#9f8248}
-.advisor-ai-examples-title{font-size:10px;font-weight:950;letter-spacing:2px;color:#d5ad55;margin-bottom:4px}
-.advisor-ai-examples-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 9px}
-.advisor-ai-example{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.advisor-ai-example code{font-family:var(--mono);font-size:11px;color:#e7c77a;background:rgba(232,192,80,.08);border-radius:5px;padding:1px 4px}
 .advisor-ai-tool-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
 .advisor-ai-database-stack{display:grid;gap:8px}
 .advisor-ai-video-stack{display:grid;gap:8px}
@@ -3719,7 +3714,6 @@ html[data-theme="deep-blue"] .advisor-dialog::before{border-bottom-color:rgba(79
 html[data-theme="deep-blue"] .advisor-dialog::after{border-bottom-color:#0d2c40}
 html[data-theme="deep-blue"] .advisor-btn-group,
 html[data-theme="deep-blue"] .advisor-shortcut-panel,
-html[data-theme="deep-blue"] .advisor-ai-examples,
 html[data-theme="deep-blue"] .advisor-ai-quick-transfer-form{
   background:rgba(6,28,44,.78);border-color:rgba(65,157,194,.34);
 }
@@ -3781,8 +3775,6 @@ html[data-theme="deep-blue"] .advisor-ai-result,
 html[data-theme="deep-blue"] .advisor-ai-granary-brief,
 html[data-theme="deep-blue"] .advisor-ai-gold-quote{background:linear-gradient(145deg,rgba(13,52,73,.8),rgba(5,20,32,.82));border-color:rgba(65,157,194,.34);color:#d8eef5}
 html[data-theme="deep-blue"] .advisor-dividend-meta,
-html[data-theme="deep-blue"] .advisor-ai-examples,
-html[data-theme="deep-blue"] .advisor-ai-example code,
 html[data-theme="deep-blue"] .advisor-ai-gold-quote-note{color:#78aec0}
 html[data-theme="deep-blue"] .advisor-dividend-amount,
 html[data-theme="deep-blue"] .advisor-ai-gold-quote-title,
@@ -16161,22 +16153,6 @@ function advisorAIOpenDividendRecord(){
   advisorAILoadDividendQuickOptions(false);
 }
 
-function advisorAIExamplesHtml(){
-  var examples=[
-    ['轉帳','國泰s 轉 現金 1000'],
-    ['配息入帳','AIPI 3249'],
-    ['黃金查詢','黃金（5台兩）'],
-    ['股票賣出','賣出 100股 IAU 156000'],
-    ['股票買入','買入 12.02股 施羅德 54000']
-  ];
-  return `<div class="advisor-ai-examples">
-    <div class="advisor-ai-examples-title">口令範例</div>
-    <div class="advisor-ai-examples-grid">${examples.map(function(row){
-      return `<div class="advisor-ai-example">${esc(row[0])}：<code>${esc(row[1])}</code></div>`;
-    }).join('')}</div>
-  </div>`;
-}
-
 function advisorAIOpenGoldQuote(){
   var panel=advisorAIActivePanel();
   if(!panel)return;
@@ -16699,7 +16675,6 @@ function openAdvisorAI(targetPanel){
       <input class="advisor-ai-input" id="advisor-ai-input" type="text" placeholder="輸入指令…" onkeydown="advisorAIKey(event)">
       <button class="advisor-shortcut-submit" id="advisor-ai-submit" type="button" onclick="runAdvisorAICommand(this)">執行</button>
     </div>
-    ${advisorAIExamplesHtml()}
     <div class="advisor-shortcut-msg" id="advisor-ai-msg"></div>`;
   advisorAILoadDividendQuickOptions(false);
   setTimeout(function(){
