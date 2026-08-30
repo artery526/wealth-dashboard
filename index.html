@@ -2687,6 +2687,13 @@ body::after{
 .chronicle-card-menu-panel button.danger:hover{border-color:#ef7755;background:rgba(91,34,24,.58)}
 .chronicle-note-detail{display:none;grid-column:1/-1;border-top:1px solid rgba(184,137,46,.22);padding-top:8px;white-space:pre-wrap}
 .chronicle-row.is-open .chronicle-note-detail{display:block}
+.chronicle-media-input{grid-column:1/-1}
+.chronicle-media-input input{display:block;margin-top:6px;width:100%;box-sizing:border-box}
+.chronicle-media-hint{display:block;margin-top:4px;color:var(--muted);font-size:11px;line-height:1.5}
+.chronicle-media-grid{display:flex;flex-wrap:wrap;gap:7px;grid-column:1/-1;margin-top:3px}
+.chronicle-media-grid img,.chronicle-media-grid video{display:block;width:112px;height:82px;object-fit:cover;border:1px solid rgba(78,217,255,.28);border-radius:6px;background:#061b2b}
+.chronicle-media-grid a{position:relative;display:block}
+.chronicle-media-grid a::after{content:'開啟';position:absolute;right:3px;bottom:3px;padding:2px 4px;border-radius:3px;background:rgba(0,0,0,.72);color:#fff;font:700 9px var(--sans)}
 @media(max-width:760px){.ziwei-overview{grid-template-columns:1fr}.ziwei-sidebar{border-right:0;border-bottom:1px solid rgba(232,192,80,.62)}.ziwei-main:before{border-left:0;border-top:1px solid rgba(78,217,255,.75)}.ziwei-list{max-height:220px}.ziwei-viewer-head{flex-direction:column}.ziwei-tools{justify-content:flex-start}.ziwei-stage{min-height:260px;padding:10px}.chronicle-toolbar{align-items:stretch;flex-direction:column}.chronicle-search{width:100%}.chronicle-count{white-space:normal}}
 @media(max-width:760px){.chronicle-entry-grid{grid-template-columns:1fr 1fr}.chronicle-entry-grid label:first-child{grid-column:1/-1}}
 @media(max-width:980px){.chronicle-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -5180,11 +5187,12 @@ function isAbortLikeError(err){
 
 async function eventChronicleApiRequest(method,path,body,timeoutMs){
   // 事件編年以 NAS 為唯一來源；讀取使用通行令，寫入使用 NAS 管理寫入令。
+  var isFormData=typeof FormData!=='undefined'&&body instanceof FormData;
   return arkWallFetch(path||'/api/event-chronicle',{
     method:method,
     wallWrite:method!=='GET',
-    headers:body!==undefined?{'Content-Type':'application/json'}:undefined,
-    body:body!==undefined?JSON.stringify(body):undefined
+    headers:body!==undefined&&!isFormData?{'Content-Type':'application/json'}:undefined,
+    body:body!==undefined?(isFormData?body:JSON.stringify(body)):undefined
   });
 }
 
@@ -6767,6 +6775,7 @@ function renderEventChronicle(){
         <label>價格<input id="chronicle-entry-price" type="number" min="0.01" step="0.01" required placeholder="0" oninput="updateChroniclePreview()"></label>
         <label>成本模式<select id="chronicle-entry-mode" onchange="toggleChronicleDuration();updateChroniclePreview()"><option value="長期成本">長期成本</option><option value="單一事件耗時">單一事件耗時</option></select></label>
         <label id="chronicle-entry-duration-wrap" class="hidden">耗時日數<input id="chronicle-entry-duration" type="number" min="1" step="1" value="1" oninput="updateChroniclePreview()"></label>
+        <label class="chronicle-media-input" for="chronicle-entry-media">照片／影片（編輯既有事件時新增）<input id="chronicle-entry-media" type="file" accept="image/*,video/mp4,video/quicktime,video/webm,video/x-m4v" multiple disabled><span class="chronicle-media-hint">支援照片與 MP4／MOV／M4V／WebM，每次最多 6 個；檔案會保存到 NAS。</span></label>
       </div>
       <div class="chronicle-entry-preview" id="chronicle-entry-preview">請填入價格以預覽日、月與每日成本</div>
       <div class="chronicle-entry-actions"><button class="cfg-verify-btn" id="chronicle-entry-submit" type="submit">加入記錄</button><button class="chronicle-entry-cancel hidden" id="chronicle-entry-cancel" type="button" onclick="cancelEditEventChronicle()">取消編輯</button><div class="result-msg" id="chronicle-entry-msg"></div></div>
@@ -6816,12 +6825,22 @@ async function submitEventChronicle(e){
   var price=parseFloat((document.getElementById('chronicle-entry-price')||{}).value)||0;
   var mode=(document.getElementById('chronicle-entry-mode')||{}).value;
   var durationDays=parseInt((document.getElementById('chronicle-entry-duration')||{}).value,10)||0;
+  var mediaInput=document.getElementById('chronicle-entry-media');
+  var mediaFiles=mediaInput&&mediaInput.files?Array.from(mediaInput.files):[];
   if(!name||!date||price<=0||(mode==='單一事件耗時'&&durationDays<=0)){showMsg('chronicle-entry-msg','請填寫完整記錄資料','err');return;}
+  if(mediaFiles.length&&!chronicleEditingRowNumber){showMsg('chronicle-entry-msg','請先儲存事件，再透過編輯加入照片或影片','err');return;}
   if(btn) {btn.disabled=true;btn.textContent='寫入中…';}
   try{
     var payload={name:name,date:date,price:price,mode:mode,durationDays:durationDays};
     if(chronicleEditingRowNumber){
-      await eventChronicleApiRequest('PUT','/api/event-chronicle/'+encodeURIComponent(String(chronicleEditingRowNumber)),payload,30000);
+      var eventId=String(chronicleEditingRowNumber);
+      await eventChronicleApiRequest('PUT','/api/event-chronicle/'+encodeURIComponent(eventId),payload,30000);
+      if(mediaFiles.length){
+        if(msg)msg.textContent='資料已儲存，附件上傳中…';
+        var formData=new FormData();
+        mediaFiles.forEach(function(file){formData.append('media',file,file.name);});
+        await eventChronicleApiRequest('POST','/api/event-chronicle/'+encodeURIComponent(eventId)+'/media',formData,180000);
+      }
     }else{
       await eventChronicleApiRequest('POST','/api/event-chronicle',payload,30000);
     }
@@ -6849,6 +6868,8 @@ function resetChronicleEntryForm(){
   if(mode)mode.value='長期成本';
   var duration=document.getElementById('chronicle-entry-duration');
   if(duration)duration.value='1';
+  var media=document.getElementById('chronicle-entry-media');
+  if(media){media.value='';media.disabled=true;}
   toggleChronicleDuration();
   updateChroniclePreview();
 }
@@ -6873,11 +6894,13 @@ function beginEditEventChronicle(rowNumber){
   var price=document.getElementById('chronicle-entry-price');
   var mode=document.getElementById('chronicle-entry-mode');
   var duration=document.getElementById('chronicle-entry-duration');
+  var media=document.getElementById('chronicle-entry-media');
   if(name)name.value=row.name||'';
   if(date)date.value=String(row.date||'').replace(/\//g,'-');
   if(price)price.value=String(row.price||'').replace(/,/g,'');
   if(mode)mode.value=/單一|單次|耗時/.test(String(row.mode||''))?'單一事件耗時':'長期成本';
   if(duration)duration.value=parseInt(String(row.days||row.durationDays||'').replace(/[^0-9]/g,''),10)||1;
+  if(media)media.disabled=false;
   toggleChronicleDuration();
   updateChroniclePreview();
   var form=document.querySelector('.chronicle-entry');
@@ -6963,6 +6986,7 @@ function renderChronicleCard(row){
   var mode=getChronicleMode(row);
   var date=String(row.date||'').trim()||'--';
   var note=String(row.note||'').trim();
+  var mediaHtml=renderChronicleMedia(row);
   if(mode==='duration'){
     var tail=note||'尚無備註';
     return `<div class="chronicle-row is-toggle" role="button" tabindex="0" onclick="toggleChronicleNote(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleChronicleNote(this)}">
@@ -6971,6 +6995,7 @@ function renderChronicleCard(row){
       <div class="chronicle-cell" data-label="經歷日">${esc(String(row.days||'').trim()||'--')}</div>
       <div class="chronicle-cell chronicle-cost-value" data-label="每日成本">${esc(String(row.dailyCost||'').trim()||'--')}</div>
       <div class="chronicle-cell chronicle-note-detail" data-label="備註">${esc(tail)}</div>
+      ${mediaHtml}
       ${chronicleCardActions(row)}
     </div>`;
   }
@@ -6982,8 +7007,22 @@ function renderChronicleCard(row){
     <div class="chronicle-cell" data-label="經歷月">${esc(months)}</div>
     <div class="chronicle-cell" data-label="經歷日">${esc(days)}</div>
     <div class="chronicle-cell chronicle-cost-value" data-label="每日花費">${esc(dailyCost)}</div>
+    ${mediaHtml}
     ${chronicleCardActions(row)}
   </div>`;
+}
+
+function renderChronicleMedia(row){
+  var media=Array.isArray(row&&row.media)?row.media:[];
+  if(!media.length)return '';
+  return '<div class="chronicle-media-grid" onclick="event.stopPropagation()">'+media.map(function(item){
+    var url=arkWallUrl(item.url||'');
+    var label=String(item.fileName||'事件附件');
+    if(item.type==='video'||/^video\//i.test(String(item.mimeType||''))){
+      return '<a href="'+esc(url)+'" target="_blank" rel="noopener noreferrer" aria-label="開啟影片 '+esc(label)+'"><video controls preload="metadata" src="'+esc(url)+'"></video></a>';
+    }
+    return '<a href="'+esc(url)+'" target="_blank" rel="noopener noreferrer" aria-label="開啟照片 '+esc(label)+'"><img loading="lazy" src="'+esc(url)+'" alt="'+esc(label)+'"></a>';
+  }).join('')+'</div>';
 }
 
 function renderEventChronicleList(){
