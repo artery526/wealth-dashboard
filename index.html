@@ -2692,8 +2692,10 @@ body::after{
 .chronicle-media-hint{display:block;margin-top:4px;color:var(--muted);font-size:11px;line-height:1.5}
 .chronicle-media-grid{display:flex;flex-wrap:wrap;gap:7px;grid-column:1/-1;margin-top:3px}
 .chronicle-media-grid img,.chronicle-media-grid video{display:block;width:112px;height:82px;object-fit:cover;border:1px solid rgba(78,217,255,.28);border-radius:6px;background:#061b2b}
-.chronicle-media-grid a{position:relative;display:block}
-.chronicle-media-grid a::after{content:'開啟';position:absolute;right:3px;bottom:3px;padding:2px 4px;border-radius:3px;background:rgba(0,0,0,.72);color:#fff;font:700 9px var(--sans)}
+.chronicle-media-button{position:relative;display:block;padding:0;border:0;background:transparent;cursor:pointer}
+.chronicle-media-button::after{content:'放大';position:absolute;right:3px;bottom:3px;padding:2px 4px;border-radius:3px;background:rgba(0,0,0,.72);color:#fff;font:700 9px var(--sans)}
+.chronicle-media-button:hover img,.chronicle-media-button:hover .chronicle-media-video-placeholder{border-color:#71d8f7;filter:brightness(1.1)}
+.chronicle-media-video-placeholder{display:grid;place-items:center;width:112px;height:82px;box-sizing:border-box;border:1px solid rgba(78,217,255,.28);border-radius:6px;background:linear-gradient(145deg,#15506a,#061b2b);color:#dff7ff;font:900 15px var(--sans);transition:border-color .16s,filter .16s}
 @media(max-width:760px){.ziwei-overview{grid-template-columns:1fr}.ziwei-sidebar{border-right:0;border-bottom:1px solid rgba(232,192,80,.62)}.ziwei-main:before{border-left:0;border-top:1px solid rgba(78,217,255,.75)}.ziwei-list{max-height:220px}.ziwei-viewer-head{flex-direction:column}.ziwei-tools{justify-content:flex-start}.ziwei-stage{min-height:260px;padding:10px}.chronicle-toolbar{align-items:stretch;flex-direction:column}.chronicle-search{width:100%}.chronicle-count{white-space:normal}}
 @media(max-width:760px){.chronicle-entry-grid{grid-template-columns:1fr 1fr}.chronicle-entry-grid label:first-child{grid-column:1/-1}}
 @media(max-width:980px){.chronicle-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -7015,14 +7017,30 @@ function renderChronicleCard(row){
 function renderChronicleMedia(row){
   var media=Array.isArray(row&&row.media)?row.media:[];
   if(!media.length)return '';
-  return '<div class="chronicle-media-grid" onclick="event.stopPropagation()">'+media.map(function(item){
-    var url=arkWallUrl(item.url||'');
+  var rowKey=encodeURIComponent(eventChronicleRowKey(row));
+  return '<div class="chronicle-media-grid" onclick="event.stopPropagation()">'+media.map(function(item,index){
     var label=String(item.fileName||'事件附件');
     if(item.type==='video'||/^video\//i.test(String(item.mimeType||''))){
-      return '<a href="'+esc(url)+'" target="_blank" rel="noopener noreferrer" aria-label="開啟影片 '+esc(label)+'"><video controls preload="metadata" src="'+esc(url)+'"></video></a>';
+      return '<button class="chronicle-media-button" type="button" onclick="openEventChronicleMedia(event,\''+rowKey+'\','+index+')" aria-label="播放影片 '+esc(label)+'"><span class="chronicle-media-video-placeholder">▶ 影片</span></button>';
     }
-    return '<a href="'+esc(url)+'" target="_blank" rel="noopener noreferrer" aria-label="開啟照片 '+esc(label)+'"><img loading="lazy" src="'+esc(url)+'" alt="'+esc(label)+'"></a>';
+    return '<button class="chronicle-media-button" type="button" onclick="openEventChronicleMedia(event,\''+rowKey+'\','+index+')" aria-label="查看照片 '+esc(label)+'"><img loading="lazy" src="'+esc(arkWallUrl(item.url||''))+'" alt="'+esc(label)+'"></button>';
   }).join('')+'</div>';
+}
+
+function openEventChronicleMedia(event,rowKey,index){
+  if(event){event.preventDefault();event.stopPropagation();}
+  rowKey=decodeURIComponent(String(rowKey||''));
+  var row=eventChronicleCache.find(function(item){return eventChronicleRowKey(item)===rowKey;});
+  if(!row)return;
+  var media=Array.isArray(row.media)?row.media.map(function(item,mediaIndex){
+    var isVideo=item.type==='video'||/^video\//i.test(String(item.mimeType||''));
+    return {id:rowKey+'-'+mediaIndex,type:isVideo?'video':'photo',url:arkWallUrl(item.url||''),title:item.fileName||'事件附件',item:item};
+  }).filter(function(item){return item.url;}):[];
+  if(!media.length)return;
+  index=Math.max(0,Math.min(Number(index)||0,media.length-1));
+  arkWallLightboxItems=media;
+  arkWallLightboxIndex=index;
+  arkWallShowLightboxIndex(index);
 }
 
 function renderEventChronicleList(){
