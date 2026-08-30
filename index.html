@@ -6925,7 +6925,15 @@ async function removeEventChronicle(rowNumber,event){
 
 function chronicleCardActions(row){
   var key=encodeURIComponent(eventChronicleRowKey(row));
-  return '<div class="chronicle-card-menu" onclick="event.stopPropagation()"><button class="chronicle-card-menu-button" type="button" aria-label="事件操作選單" title="操作選單" aria-expanded="false" onclick="toggleChronicleCardMenu(event,this)">⚙</button><div class="chronicle-card-menu-panel" role="menu"><button type="button" role="menuitem" onclick="event.stopPropagation();beginEditEventChronicle(\''+key+'\')">編輯</button><button type="button" class="danger" role="menuitem" onclick="event.stopPropagation();removeEventChronicle(\''+key+'\',event)">移除</button></div></div>';
+  var media=Array.isArray(row&&row.media)?row.media:[];
+  var photoNumber=0;
+  var videoNumber=0;
+  var mediaActions=media.map(function(item,index){
+    var isVideo=item.type==='video'||/^video\//i.test(String(item.mimeType||''));
+    var label=isVideo?'影片'+(++videoNumber):'照片'+(++photoNumber);
+    return '<button type="button" role="menuitem" onclick="openEventChronicleMedia(event,\''+key+'\','+index+')">'+label+'</button>';
+  }).join('');
+  return '<div class="chronicle-card-menu" onclick="event.stopPropagation()"><button class="chronicle-card-menu-button" type="button" aria-label="事件操作選單" title="操作選單" aria-expanded="false" onclick="toggleChronicleCardMenu(event,this)">⚙</button><div class="chronicle-card-menu-panel" role="menu">'+mediaActions+'<button type="button" role="menuitem" onclick="event.stopPropagation();beginEditEventChronicle(\''+key+'\')">編輯</button><button type="button" class="danger" role="menuitem" onclick="event.stopPropagation();removeEventChronicle(\''+key+'\',event)">移除</button></div></div>';
 }
 
 function toggleChronicleCardMenu(event,button){
@@ -6988,7 +6996,6 @@ function renderChronicleCard(row){
   var mode=getChronicleMode(row);
   var date=String(row.date||'').trim()||'--';
   var note=String(row.note||'').trim();
-  var mediaHtml=renderChronicleMedia(row);
   if(mode==='duration'){
     var tail=note||'尚無備註';
     return `<div class="chronicle-row is-toggle" role="button" tabindex="0" onclick="toggleChronicleNote(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleChronicleNote(this)}">
@@ -6997,7 +7004,6 @@ function renderChronicleCard(row){
       <div class="chronicle-cell" data-label="經歷日">${esc(String(row.days||'').trim()||'--')}</div>
       <div class="chronicle-cell chronicle-cost-value" data-label="每日成本">${esc(String(row.dailyCost||'').trim()||'--')}</div>
       <div class="chronicle-cell chronicle-note-detail" data-label="備註">${esc(tail)}</div>
-      ${mediaHtml}
       ${chronicleCardActions(row)}
     </div>`;
   }
@@ -7009,22 +7015,8 @@ function renderChronicleCard(row){
     <div class="chronicle-cell" data-label="經歷月">${esc(months)}</div>
     <div class="chronicle-cell" data-label="經歷日">${esc(days)}</div>
     <div class="chronicle-cell chronicle-cost-value" data-label="每日花費">${esc(dailyCost)}</div>
-    ${mediaHtml}
     ${chronicleCardActions(row)}
   </div>`;
-}
-
-function renderChronicleMedia(row){
-  var media=Array.isArray(row&&row.media)?row.media:[];
-  if(!media.length)return '';
-  var rowKey=encodeURIComponent(eventChronicleRowKey(row));
-  return '<div class="chronicle-media-grid" onclick="event.stopPropagation()">'+media.map(function(item,index){
-    var label=String(item.fileName||'事件附件');
-    if(item.type==='video'||/^video\//i.test(String(item.mimeType||''))){
-      return '<button class="chronicle-media-button" type="button" onclick="openEventChronicleMedia(event,\''+rowKey+'\','+index+')" aria-label="播放影片 '+esc(label)+'"><span class="chronicle-media-video-placeholder">▶ 影片</span></button>';
-    }
-    return '<button class="chronicle-media-button" type="button" onclick="openEventChronicleMedia(event,\''+rowKey+'\','+index+')" aria-label="查看照片 '+esc(label)+'"><img loading="lazy" src="'+esc(arkWallUrl(item.url||''))+'" alt="'+esc(label)+'"></button>';
-  }).join('')+'</div>';
 }
 
 function openEventChronicleMedia(event,rowKey,index){
