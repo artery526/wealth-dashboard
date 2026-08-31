@@ -17647,6 +17647,7 @@ function advisorAIDailyUpdateItems(data){
   var murmurs=(data&&data.murmurs)||{};
   (Array.isArray(data&&data.items)?data.items:[]).forEach(function(item){source[item.module]=item;});
   return [
+    {module:'agenda',icon:'📅',title:'今日行程',tab:'',message:'今日尚無安排。'},
     {module:'finance',icon:'💰',title:'財政部',tab:'booking-form',message:'主公今日尚未記帳。'},
     {module:'council',icon:'⚔️',title:'軍機處',tab:'battle-brief',message:'今日尚無新的軍師報告。'},
     {module:'medical',icon:'🏥',title:'醫館',tab:'medical-painmap',message:'主公今日尚未記錄。'},
@@ -17657,6 +17658,16 @@ function advisorAIDailyUpdateItems(data){
     if(!item.murmur&&murmurs[base.module])item.murmur=murmurs[base.module];
     return item;
   });
+}
+function advisorAIDailyAgendaItem(result){
+  if(!result||result.status!=='fulfilled'){
+    return {module:'agenda',icon:'📅',title:'今日行程',message:'Google 今日行程暫時無法取得。',updated:false,target:'schedule',tab:'',murmur:'請至朝中政務確認 Google Calendar 授權狀態。'};
+  }
+  var events=Array.isArray(result.value&&result.value.events)?result.value.events:[];
+  if(!events.length)return {module:'agenda',icon:'📅',title:'今日行程',message:'今日尚無安排。',updated:false,target:'schedule',tab:'',murmur:'軍師已巡視行程，今日可保留一些從容時間。'};
+  var next=events[0]||{};
+  var nextLabel=[String(next.timeText||'整日'),String(next.title||'未命名行程')].join('｜');
+  return {module:'agenda',icon:'📅',title:'今日行程',message:'今日共有 '+events.length+' 件行程，下一項：'+nextLabel,updated:true,target:'schedule',tab:'',murmur:'軍師提醒主公：先掌握下一個行程，再安排今日軍務。'};
 }
 function advisorAIDailyMurmurData(data){
   data=data||{};
@@ -17699,7 +17710,8 @@ function advisorAIDailyUpdatesHtml(data, state, activeIndex){
   var target=item.target||item.module;
   var patrolMessage=item.updated===false?item.message:(item.message||'已有新資料');
   var murmur=item.murmur?'<div class="advisor-ai-daily-patrol-murmur">'+esc(item.murmur)+'</div>':'';
-  var rows='<div class="advisor-ai-daily-patrol"><div class="advisor-ai-daily-patrol-kicker">'+esc(item.icon)+' 龐統軍師正在巡視 '+esc(item.title)+'…</div><div class="advisor-ai-daily-patrol-result '+(item.updated===false?'pending':'')+'">'+esc(patrolMessage)+'</div>'+murmur+'<div class="advisor-ai-daily-patrol-actions"><button class="advisor-ai-daily-update-link" type="button" onclick="openEmpireCardShortcut(event,\''+target+'\',\''+item.tab+'\')">查看</button></div></div><div class="advisor-ai-daily-patrol-dots">'+items.map(function(_,dotIndex){return '<span class="advisor-ai-daily-patrol-dot '+(dotIndex===index?'active':'')+'" aria-hidden="true"></span>';}).join('')+'</div>';
+  var viewAction=item.module==='agenda'?'advisorAIShowSchedule(this)':'openEmpireCardShortcut(event,\''+target+'\',\''+item.tab+'\')';
+  var rows='<div class="advisor-ai-daily-patrol"><div class="advisor-ai-daily-patrol-kicker">'+esc(item.icon)+' 龐統軍師正在巡視 '+esc(item.title)+'…</div><div class="advisor-ai-daily-patrol-result '+(item.updated===false?'pending':'')+'">'+esc(patrolMessage)+'</div>'+murmur+'<div class="advisor-ai-daily-patrol-actions"><button class="advisor-ai-daily-update-link" type="button" onclick="'+viewAction+'">查看</button></div></div><div class="advisor-ai-daily-patrol-dots">'+items.map(function(_,dotIndex){return '<span class="advisor-ai-daily-patrol-dot '+(dotIndex===index?'active':'')+'" aria-hidden="true"></span>';}).join('')+'</div>';
   var warning=errors.length?'<div class="advisor-ai-daily-updates-error" style="margin-top:7px">部分情報暫時無法取得</div>':'';
   return '<div class="advisor-ai-daily-updates-title"><span>📜 今日更新</span><span class="advisor-ai-daily-updates-date">'+esc(date)+'</span></div><div class="advisor-ai-daily-update-list">'+rows+'</div>'+warning;
 }
@@ -17738,11 +17750,12 @@ async function loadAdvisorAIDailyUpdates(){
     });
   }
   try{
-    var results=await Promise.allSettled([advisorAIDailyUpdatesPromise,apiGet({action:'accounts'}),apiGet({action:'monthly',ym:currentYM()}),apiGet({action:'marketDashboard'}),apiGet({action:'macroOverview'}),loadArkWallEntries(false)]);
+    var results=await Promise.allSettled([advisorAIDailyUpdatesPromise,apiGet({action:'accounts'}),apiGet({action:'monthly',ym:currentYM()}),apiGet({action:'marketDashboard'}),apiGet({action:'macroOverview'}),loadArkWallEntries(false),apiGet({action:'todayCalendar',mode:'today'},30000)]);
     if(results[0].status!=='fulfilled')throw results[0].reason||new Error('今日更新讀取失敗');
     var data=results[0].status==='fulfilled'?results[0].value:{};
     var murmur=advisorAIDailyMurmurData({accounts:results[1].status==='fulfilled'?results[1].value:[],monthly:results[2].status==='fulfilled'?results[2].value:{},market:results[3].status==='fulfilled'?results[3].value:{},macro:results[4].status==='fulfilled'?results[4].value:{}});
     data=Object.assign({},data,{murmurs:murmur,items:(data.items||[]).map(function(item){return Object.assign({},item,{murmur:murmur[item.module]||''});})});
+    data=Object.assign({},data,{items:(data.items||[]).concat([advisorAIDailyAgendaItem(results[6])])});
     try{
       var wallEntries=results[5].status==='fulfilled'?results[5].value:[];
       var wallToday=wallEntries.filter(function(entry){
