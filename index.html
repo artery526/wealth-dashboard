@@ -6247,6 +6247,8 @@ function syncStoreHeaderDate(){
   var input=document.getElementById('store-record-date');
   var button=document.getElementById('store-header-date-button');
   if(input&&button)button.textContent=formatStoreShortDate(input.value);
+  var chronicleDate=document.getElementById('chronicle-entry-date');
+  if(input&&chronicleDate){chronicleDate.value=input.value;updateChroniclePreview();}
 }
 
 function focusStoreInlineForm(){
@@ -6949,7 +6951,7 @@ function renderEventChronicle(){
       <div class="chronicle-entry-title" id="chronicle-entry-title">加入記錄</div>
       <div class="chronicle-entry-grid">
         <label>主要記錄名稱<input id="chronicle-entry-name" type="text" maxlength="100" required placeholder="例如：更換冷氣"></label>
-        <label>日期<input id="chronicle-entry-date" type="date" value="${today()}" required onchange="updateChroniclePreview()"></label>
+        <input id="chronicle-entry-date" type="hidden" value="${today()}">
         <label>價格<input id="chronicle-entry-price" type="number" min="0.01" step="0.01" required placeholder="0" oninput="updateChroniclePreview()"></label>
         <label>成本模式<select id="chronicle-entry-mode" onchange="toggleChronicleDuration();updateChroniclePreview()"><option value="長期成本">長期成本</option><option value="單一事件耗時">單一事件耗時</option></select></label>
         <label id="chronicle-entry-duration-wrap" class="hidden">耗時日數<input id="chronicle-entry-duration" type="number" min="1" step="1" value="1" oninput="updateChroniclePreview()"></label>
@@ -6964,6 +6966,7 @@ function renderEventChronicle(){
     </div>
     <div class="chronicle-list" id="chronicle-list"></div>`;
   toggleChronicleDuration();
+  syncStoreHeaderDate();
   updateChroniclePreview();
   renderEventChronicleList();
 }
@@ -7048,6 +7051,7 @@ function resetChronicleEntryForm(){
   if(duration)duration.value='1';
   var media=document.getElementById('chronicle-entry-media');
   if(media){media.value='';media.disabled=true;}
+  syncStoreHeaderDate();
   toggleChronicleDuration();
   updateChroniclePreview();
 }
@@ -7075,6 +7079,8 @@ function beginEditEventChronicle(rowNumber){
   var media=document.getElementById('chronicle-entry-media');
   if(name)name.value=row.name||'';
   if(date)date.value=String(row.date||'').replace(/\//g,'-');
+  var storeDate=document.getElementById('store-record-date');
+  if(storeDate&&date&&date.value){storeDate.value=date.value;syncStoreHeaderDate();}
   if(price)price.value=String(row.price||'').replace(/,/g,'');
   if(mode)mode.value=/單一|單次|耗時/.test(String(row.mode||''))?'單一事件耗時':'長期成本';
   if(duration)duration.value=parseInt(String(row.days||row.durationDays||'').replace(/[^0-9]/g,''),10)||1;
