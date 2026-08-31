@@ -3199,7 +3199,8 @@ body::after{
 .ark-wall-lightbox.open{opacity:1;pointer-events:auto}
 .ark-wall-lightbox-img,.ark-wall-lightbox-video{display:block;max-width:min(96vw,1100px);max-height:88vh;border:1px solid rgba(232,192,80,.34);border-radius:8px;background:#050403;object-fit:contain;box-shadow:0 18px 48px rgba(0,0,0,.55)}
 .ark-wall-lightbox-video{width:min(96vw,1100px)}
-.ark-wall-lightbox-img[hidden],.ark-wall-lightbox-video[hidden],.ark-wall-lightbox-caption[hidden],.ark-wall-lightbox-nav[hidden],.ark-wall-lightbox-count[hidden]{display:none}
+.ark-wall-lightbox-pdf{display:block;width:min(96vw,1100px);height:min(88vh,820px);border:1px solid rgba(232,192,80,.34);border-radius:8px;background:#fff;box-shadow:0 18px 48px rgba(0,0,0,.55)}
+.ark-wall-lightbox-img[hidden],.ark-wall-lightbox-video[hidden],.ark-wall-lightbox-pdf[hidden],.ark-wall-lightbox-caption[hidden],.ark-wall-lightbox-nav[hidden],.ark-wall-lightbox-count[hidden]{display:none}
 .ark-wall-lightbox-caption{max-width:min(96vw,1100px);border:1px solid rgba(78,217,255,.24);border-radius:8px;background:rgba(3,8,10,.86);color:#d9fbff;font-family:var(--sans);font-size:12px;font-weight:800;line-height:1.65;padding:8px 10px;text-align:left;overflow-wrap:anywhere}
 .ark-wall-lightbox-caption b{color:#f0dfa0}
 .ark-wall-lightbox-close{position:absolute;top:18px;right:18px;width:42px;height:42px;border:1px solid rgba(232,192,80,.38);border-radius:8px;background:rgba(8,6,3,.86);color:#f0dfa0;font-family:var(--sans);font-size:18px;font-weight:900;cursor:pointer}
@@ -7048,7 +7049,8 @@ function openEventChronicleMedia(event,rowKey,index){
   if(!row)return;
   var media=Array.isArray(row.media)?row.media.map(function(item,mediaIndex){
     var isVideo=item.type==='video'||/^video\//i.test(String(item.mimeType||''));
-    return {id:rowKey+'-'+mediaIndex,type:isVideo?'video':'photo',url:arkWallUrl(item.url||''),title:item.fileName||'事件附件',item:item};
+    var isPdf=item.type==='pdf'||String(item.mimeType||'').toLowerCase()==='application/pdf';
+    return {id:rowKey+'-'+mediaIndex,type:isVideo?'video':isPdf?'pdf':'photo',url:arkWallUrl(item.url||''),title:item.fileName||'事件附件',item:item};
   }).filter(function(item){return item.url;}):[];
   if(!media.length)return;
   index=Math.max(0,Math.min(Number(index)||0,media.length-1));
@@ -10512,6 +10514,7 @@ function arkWallShowLightboxIndex(index){
   arkWallLightboxIndex=(index+arkWallLightboxItems.length)%arkWallLightboxItems.length;
   var media=arkWallLightboxItems[arkWallLightboxIndex];
   if(media.type==='video')openArkWallVideo(media.url,media.title,media.item,true);
+  else if(media.type==='pdf')openArkWallPdf(media.url,media.title,media.item,true);
   else openArkWallPhoto(media.url,media.title,media.item,true);
 }
 
@@ -10561,7 +10564,7 @@ function ensureArkWallLightbox(){
   box.className='ark-wall-lightbox';
   box.id='ark-wall-lightbox';
   box.onclick=function(event){if(event.target===box)closeArkWallPhoto();};
-  box.innerHTML='<button class="ark-wall-lightbox-close" type="button" onclick="closeArkWallPhoto()" aria-label="Close media">x</button><button class="ark-wall-lightbox-nav ark-wall-lightbox-prev" data-lightbox-sequence type="button" onclick="arkWallLightboxStep(-1,event)" aria-label="Previous media">&#8249;</button><button class="ark-wall-lightbox-nav ark-wall-lightbox-next" data-lightbox-sequence type="button" onclick="arkWallLightboxStep(1,event)" aria-label="Next media">&#8250;</button><img class="ark-wall-lightbox-img" alt=""><video class="ark-wall-lightbox-video" controls playsinline preload="metadata" hidden></video><div class="ark-wall-lightbox-caption" hidden></div><div class="ark-wall-lightbox-count" data-lightbox-count hidden></div>';
+  box.innerHTML='<button class="ark-wall-lightbox-close" type="button" onclick="closeArkWallPhoto()" aria-label="Close media">x</button><button class="ark-wall-lightbox-nav ark-wall-lightbox-prev" data-lightbox-sequence type="button" onclick="arkWallLightboxStep(-1,event)" aria-label="Previous media">&#8249;</button><button class="ark-wall-lightbox-nav ark-wall-lightbox-next" data-lightbox-sequence type="button" onclick="arkWallLightboxStep(1,event)" aria-label="Next media">&#8250;</button><img class="ark-wall-lightbox-img" alt=""><video class="ark-wall-lightbox-video" controls playsinline preload="metadata" hidden></video><iframe class="ark-wall-lightbox-pdf" title="PDF 附件" hidden></iframe><div class="ark-wall-lightbox-caption" hidden></div><div class="ark-wall-lightbox-count" data-lightbox-count hidden></div>';
   document.body.appendChild(box);
   bindArkWallLightboxEvents(box);
   return box;
@@ -10627,12 +10630,14 @@ function openArkWallPhoto(url,title,item,preserveSequence){
   var box=ensureArkWallLightbox();
   var img=box.querySelector('.ark-wall-lightbox-img');
   var video=box.querySelector('.ark-wall-lightbox-video');
+  var pdf=box.querySelector('.ark-wall-lightbox-pdf');
   if(video){
     try{video.pause();}catch(e){}
     video.removeAttribute('src');
     video.hidden=true;
     video.load();
   }
+  if(pdf){pdf.removeAttribute('src');pdf.hidden=true;}
   if(img){
     img.hidden=false;
     img.src=url;
@@ -10651,6 +10656,7 @@ function openArkWallVideo(url,title,item,preserveSequence){
   var box=ensureArkWallLightbox();
   var img=box.querySelector('.ark-wall-lightbox-img');
   var video=box.querySelector('.ark-wall-lightbox-video');
+  var pdf=box.querySelector('.ark-wall-lightbox-pdf');
   if(img){
     img.removeAttribute('src');
     img.hidden=true;
@@ -10662,6 +10668,24 @@ function openArkWallVideo(url,title,item,preserveSequence){
     video.load();
     video.play().catch(function(){});
   }
+  if(pdf){pdf.removeAttribute('src');pdf.hidden=true;}
+  setArkWallMediaCaption(box,item,title);
+  updateArkWallLightboxControls(box);
+  box.classList.add('open');
+}
+
+function openArkWallPdf(url,title,item,preserveSequence){
+  if(!preserveSequence){
+    arkWallLightboxItems=[];
+    arkWallLightboxIndex=-1;
+  }
+  var box=ensureArkWallLightbox();
+  var img=box.querySelector('.ark-wall-lightbox-img');
+  var video=box.querySelector('.ark-wall-lightbox-video');
+  var pdf=box.querySelector('.ark-wall-lightbox-pdf');
+  if(img){img.removeAttribute('src');img.hidden=true;}
+  if(video){try{video.pause();}catch(e){} video.removeAttribute('src');video.hidden=true;video.load();}
+  if(pdf){pdf.src=url;pdf.hidden=false;}
   setArkWallMediaCaption(box,item,title);
   updateArkWallLightboxControls(box);
   box.classList.add('open');
@@ -10683,6 +10707,8 @@ function closeArkWallPhoto(){
     video.hidden=true;
     video.load();
   }
+  var pdf=box.querySelector('.ark-wall-lightbox-pdf');
+  if(pdf){pdf.removeAttribute('src');pdf.hidden=true;}
   var caption=box.querySelector('.ark-wall-lightbox-caption');
   if(caption){
     caption.innerHTML='';
