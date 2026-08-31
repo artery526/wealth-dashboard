@@ -1016,7 +1016,10 @@ body::after{
 .store-form-label{color:#8aa7b6;font:900 12px var(--sans)}
 .store-form-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:2px}
 .store-form-status{min-height:18px;color:#a8f1d6;font:800 12px var(--sans)}
-@media(max-width:650px){.store-grid,.store-form-grid{grid-template-columns:1fr}.store-form-group.full{grid-column:auto}.store-toolbar,.store-date-filters{grid-template-columns:1fr}.store-add-button{width:100%}.store-item-card{padding:10px}.store-item-card-head{align-items:center;padding-right:84px}.store-item-heading{gap:6px}.store-item-name{font-size:16px}.store-item-location-inline{font-size:11px}.store-item-date-button{top:10px;right:43px;font-size:11px}.store-item-menu{top:8px;right:8px}.store-item-meta .store-location-meta,.store-item-meta .store-date-meta{display:none}}
+.store-header-date-button{border:1px solid rgba(232,192,80,.55);border-radius:7px;background:rgba(232,192,80,.1);color:#fff3bf;font:900 12px var(--sans);padding:5px 7px;cursor:pointer;white-space:nowrap}
+.store-header-date-button:hover{border-color:#fff3bf;background:rgba(232,192,80,.2)}
+.store-header-date-input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+@media(max-width:650px){.store-grid,.store-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.store-form-group.full{grid-column:1/-1}.store-toolbar,.store-date-filters{grid-template-columns:1fr}.store-add-button{width:100%}.store-item-card{padding:10px}.store-item-card-head{align-items:center;padding-right:84px}.store-item-heading{gap:6px}.store-item-name{font-size:16px}.store-item-location-inline{font-size:11px}.store-item-date-button{top:10px;right:43px;font-size:11px}.store-item-menu{top:8px;right:8px}.store-item-meta .store-location-meta,.store-item-meta .store-date-meta{display:none}.store-header-date-button{font-size:11px;padding:4px 5px}}
 .market-lord{
   position:absolute;
   top:-65px;
@@ -6170,7 +6173,7 @@ function renderStarsPanel(){
 function renderStorePanel(initialTab){
   setPanelHead('庫','Store · Warehouse','太倉');
   var panelExtra=document.getElementById('p-extra');
-  if(panelExtra)panelExtra.innerHTML='<span class="empire-panel-status-dot err" id="store-panel-status-dot" title="太倉連線失敗" aria-label="太倉連線失敗"></span>';
+  if(panelExtra)panelExtra.innerHTML='<button class="store-header-date-button" id="store-header-date-button" type="button" title="修改記錄日期" onclick="chooseStoreFormDate(event)">'+formatStoreShortDate(getStoreTodayInputValue())+'</button><input class="store-header-date-input" id="store-record-date" type="date" value="'+getStoreTodayInputValue()+'" required onchange="syncStoreHeaderDate()"><span class="empire-panel-status-dot err" id="store-panel-status-dot" title="太倉連線失敗" aria-label="太倉連線失敗"></span>';
   setPanelMenuTabs([{key:'store-list',label:'物品總覽'},{key:'store-chronicle',label:'事件編年'},{key:'stars-home',label:'命盤總覽'}]);
   document.getElementById('p-body').innerHTML=`
     <div class="pane active" id="pane-store-list">
@@ -6221,14 +6224,25 @@ function renderStoreForm(targetId){
         <div class="store-form-group"><label class="store-form-label" for="store-item-name">物品名稱</label><input class="form-control" id="store-item-name" type="text" maxlength="120" placeholder="例如：備用 HDMI 線" required></div>
         <div class="store-form-group"><label class="store-form-label" for="store-location">所在地點</label><input class="form-control" id="store-location" type="text" maxlength="120" placeholder="例如：三樓 A 區第 2 箱"></div>
         <div class="store-form-group"><label class="store-form-label" for="store-code">編號</label><input class="form-control" id="store-code" type="text" maxlength="80" placeholder="例如：W3-A-001"></div>
-        <div class="store-form-group"><label class="store-form-label" for="store-record-date">記錄時間</label><input class="form-control" id="store-record-date" type="date" required></div>
-        <div class="store-form-group full"><label class="store-form-label" for="store-description">說明</label><textarea class="form-control" id="store-description" maxlength="500" placeholder="補充用途、數量或辨識方式"></textarea></div>
+        <div class="store-form-group"><label class="store-form-label" for="store-description">說明</label><textarea class="form-control" id="store-description" maxlength="500" placeholder="補充用途、數量或辨識方式"></textarea></div>
         <div class="store-form-group full"><label class="store-form-label" for="store-attachments">附件（照片、影片或 PDF，可複選）</label><input class="form-control" id="store-attachments" type="file" accept="image/*,video/mp4,video/quicktime,video/webm,.heic,.heif,.mp4,.mov,.m4v,.webm,application/pdf,.pdf" multiple></div>
       </div>
       <div class="store-form-actions"><button class="store-add-button" id="store-submit" type="submit">儲存記錄</button><button class="store-secondary-button" id="store-cancel-edit" type="button" hidden onclick="resetStoreForm()">清除</button><span class="store-form-status" id="store-form-status" aria-live="polite"></span></div>
     </form>`;
   var dateEl=document.getElementById('store-record-date');
-  if(dateEl)dateEl.value=getStoreTodayInputValue();
+  if(dateEl){dateEl.value=getStoreTodayInputValue();syncStoreHeaderDate();}
+}
+
+function chooseStoreFormDate(event){
+  if(event){event.preventDefault();event.stopPropagation();}
+  var input=document.getElementById('store-record-date');
+  if(input){try{if(input.showPicker){input.showPicker();return;}}catch(e){}input.click();}
+}
+
+function syncStoreHeaderDate(){
+  var input=document.getElementById('store-record-date');
+  var button=document.getElementById('store-header-date-button');
+  if(input&&button)button.textContent=formatStoreShortDate(input.value);
 }
 
 function focusStoreInlineForm(){
@@ -6472,6 +6486,7 @@ function editStoreRecord(row){
     'store-record-date':storeDateInputValue(record.recordDate)||getStoreTodayInputValue()
   };
   Object.keys(fields).forEach(function(id){var el=document.getElementById(id);if(el)el.value=fields[id];});
+  syncStoreHeaderDate();
   var status=document.getElementById('store-form-status');
   if(status)status.textContent='正在編輯第 '+record.row+' 筆記錄';
 }
@@ -6488,7 +6503,7 @@ function resetStoreForm(){
   if(submitEl)submitEl.textContent='儲存記錄';
   if(cancelEl)cancelEl.hidden=true;
   var dateEl=document.getElementById('store-record-date');
-  if(dateEl)dateEl.value=getStoreTodayInputValue();
+  if(dateEl){dateEl.value=getStoreTodayInputValue();syncStoreHeaderDate();}
   var status=document.getElementById('store-form-status');
   if(status)status.textContent='';
 }
