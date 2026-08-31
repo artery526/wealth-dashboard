@@ -6955,7 +6955,7 @@ function renderEventChronicle(){
         <input id="chronicle-entry-date" type="hidden" value="${today()}">
         <label>價格<input id="chronicle-entry-price" type="number" min="0.01" step="0.01" required placeholder="0" oninput="updateChroniclePreview()"></label>
         <label>成本模式<select id="chronicle-entry-mode" onchange="toggleChronicleDuration();updateChroniclePreview()"><option value="長期成本">長期成本</option><option value="單一事件耗時">單一事件耗時</option></select></label>
-        <label class="chronicle-media-input" for="chronicle-entry-media" title="上傳照片、影片或 PDF"><span class="chronicle-media-upload-button" aria-hidden="true">⬆</span><input id="chronicle-entry-media" type="file" accept="image/*,video/mp4,video/quicktime,video/webm,video/x-m4v,application/pdf,.pdf" multiple disabled></label>
+        <label class="chronicle-media-input" for="chronicle-entry-media" title="上傳照片、影片或 PDF"><span class="chronicle-media-upload-button" aria-hidden="true">⬆</span><input id="chronicle-entry-media" type="file" accept="image/*,video/mp4,video/quicktime,video/webm,video/x-m4v,application/pdf,.pdf" multiple></label>
         <label id="chronicle-entry-duration-wrap" class="hidden">耗時日數<input id="chronicle-entry-duration" type="number" min="1" step="1" value="1" oninput="updateChroniclePreview()"></label>
       </div>
       <div class="chronicle-entry-preview" id="chronicle-entry-preview">請填入價格以預覽日、月與每日成本</div>
@@ -7010,21 +7010,24 @@ async function submitEventChronicle(e){
   var mediaInput=document.getElementById('chronicle-entry-media');
   var mediaFiles=mediaInput&&mediaInput.files?Array.from(mediaInput.files):[];
   if(!name||!date||price<=0||(mode==='單一事件耗時'&&durationDays<=0)){showMsg('chronicle-entry-msg','請填寫完整記錄資料','err');return;}
-  if(mediaFiles.length&&!chronicleEditingRowNumber){showMsg('chronicle-entry-msg','請先儲存事件，再透過編輯加入照片或影片','err');return;}
+  if(mediaFiles.length>6){showMsg('chronicle-entry-msg','每次最多選擇 6 個附件','err');return;}
   if(btn) {btn.disabled=true;btn.textContent='寫入中…';}
   try{
     var payload={name:name,date:date,price:price,mode:mode,durationDays:durationDays};
+    var eventId='';
     if(chronicleEditingRowNumber){
-      var eventId=String(chronicleEditingRowNumber);
+      eventId=String(chronicleEditingRowNumber);
       await eventChronicleApiRequest('PUT','/api/event-chronicle/'+encodeURIComponent(eventId),payload,30000);
-      if(mediaFiles.length){
-        if(msg)msg.textContent='資料已儲存，附件上傳中…';
-        var formData=new FormData();
-        mediaFiles.forEach(function(file){formData.append('media',file,file.name);});
-        await eventChronicleApiRequest('POST','/api/event-chronicle/'+encodeURIComponent(eventId)+'/media',formData,180000);
-      }
     }else{
-      await eventChronicleApiRequest('POST','/api/event-chronicle',payload,30000);
+      var created=await eventChronicleApiRequest('POST','/api/event-chronicle',payload,30000);
+      eventId=String(created&&created.event&&created.event.id||'');
+    }
+    if(mediaFiles.length){
+      if(msg)msg.textContent='資料已儲存，附件上傳中…';
+      if(!eventId)throw new Error('事件已儲存，但找不到附件所屬編號');
+      var formData=new FormData();
+      mediaFiles.forEach(function(file){formData.append('media',file,file.name);});
+      await eventChronicleApiRequest('POST','/api/event-chronicle/'+encodeURIComponent(eventId)+'/media',formData,180000);
     }
     try{localStorage.removeItem(STARS_CHRONICLE_CACHE_KEY);}catch(ignore){}
     showMsg('chronicle-entry-msg',chronicleEditingRowNumber?'✓ 事件已更新':'✓ 已加入事件編年史','ok');
@@ -7051,7 +7054,7 @@ function resetChronicleEntryForm(){
   var duration=document.getElementById('chronicle-entry-duration');
   if(duration)duration.value='1';
   var media=document.getElementById('chronicle-entry-media');
-  if(media){media.value='';media.disabled=true;}
+  if(media){media.value='';media.disabled=false;}
   syncStoreHeaderDate();
   toggleChronicleDuration();
   updateChroniclePreview();
