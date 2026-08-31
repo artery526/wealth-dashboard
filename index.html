@@ -6797,7 +6797,7 @@ function renderEventChronicle(){
         <label>價格<input id="chronicle-entry-price" type="number" min="0.01" step="0.01" required placeholder="0" oninput="updateChroniclePreview()"></label>
         <label>成本模式<select id="chronicle-entry-mode" onchange="toggleChronicleDuration();updateChroniclePreview()"><option value="長期成本">長期成本</option><option value="單一事件耗時">單一事件耗時</option></select></label>
         <label id="chronicle-entry-duration-wrap" class="hidden">耗時日數<input id="chronicle-entry-duration" type="number" min="1" step="1" value="1" oninput="updateChroniclePreview()"></label>
-        <label class="chronicle-media-input" for="chronicle-entry-media">照片／影片（編輯既有事件時新增）<input id="chronicle-entry-media" type="file" accept="image/*,video/mp4,video/quicktime,video/webm,video/x-m4v" multiple disabled><span class="chronicle-media-hint">支援照片與 MP4／MOV／M4V／WebM，每次最多 6 個；檔案會保存到 NAS。</span></label>
+        <label class="chronicle-media-input" for="chronicle-entry-media">照片／影片／PDF（編輯既有事件時新增）<input id="chronicle-entry-media" type="file" accept="image/*,video/mp4,video/quicktime,video/webm,video/x-m4v,application/pdf,.pdf" multiple disabled><span class="chronicle-media-hint">支援照片、MP4／MOV／M4V／WebM／PDF，每次最多 6 個；檔案會保存到 NAS。</span></label>
       </div>
       <div class="chronicle-entry-preview" id="chronicle-entry-preview">請填入價格以預覽日、月與每日成本</div>
       <div class="chronicle-entry-actions"><button class="cfg-verify-btn" id="chronicle-entry-submit" type="submit">加入記錄</button><button class="chronicle-entry-cancel hidden" id="chronicle-entry-cancel" type="button" onclick="cancelEditEventChronicle()">取消編輯</button><div class="result-msg" id="chronicle-entry-msg"></div></div>
@@ -6948,9 +6948,11 @@ function chronicleCardActions(row){
   var media=Array.isArray(row&&row.media)?row.media:[];
   var photoNumber=0;
   var videoNumber=0;
+  var pdfNumber=0;
   var mediaActions=media.map(function(item,index){
     var isVideo=item.type==='video'||/^video\//i.test(String(item.mimeType||''));
-    var label=isVideo?'影片'+(++videoNumber):'照片'+(++photoNumber);
+    var isPdf=item.type==='pdf'||String(item.mimeType||'').toLowerCase()==='application/pdf';
+    var label=isVideo?'影片'+(++videoNumber):isPdf?'PDF'+(++pdfNumber):'照片'+(++photoNumber);
     return '<button type="button" role="menuitem" onclick="openEventChronicleMedia(event,\''+key+'\','+index+')">'+label+'</button>';
   }).join('');
   return '<div class="chronicle-card-menu" onclick="event.stopPropagation()"><button class="chronicle-card-menu-button" type="button" aria-label="事件操作選單" title="操作選單" aria-expanded="false" onclick="toggleChronicleCardMenu(event,this)">⚙</button><div class="chronicle-card-menu-panel" role="menu">'+mediaActions+'<button type="button" role="menuitem" onclick="event.stopPropagation();beginEditEventChronicle(\''+key+'\')">編輯</button><button type="button" class="danger" role="menuitem" onclick="event.stopPropagation();removeEventChronicle(\''+key+'\',event)">移除</button></div></div>';
