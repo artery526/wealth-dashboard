@@ -990,6 +990,10 @@ body::after{
 .store-item-menu-panel{display:none;position:absolute;top:35px;right:0;min-width:86px;padding:5px;border:1px solid rgba(65,157,194,.58);border-radius:8px;background:#071d2a;box-shadow:0 8px 20px rgba(0,0,0,.38)}
 .store-item-menu.is-open .store-item-menu-panel{display:grid;gap:4px}
 .store-item-menu-panel .store-item-action{width:100%;box-sizing:border-box}
+.store-item-attachments{display:grid;gap:4px;padding:3px 2px 5px;border-bottom:1px solid rgba(65,157,194,.25)}
+.store-item-attachments-title,.store-item-attachment-empty,.store-item-attachments>span{color:#8aa7b6;font:800 11px var(--sans);white-space:nowrap}
+.store-item-attachments-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
+.store-item-attachment{height:27px!important;padding:0 5px!important;font-size:10px!important}
 .store-item-meta{display:grid;grid-template-columns:auto minmax(0,1fr);gap:3px 8px;font:800 12px/1.55 var(--sans)}
 .store-item-label{color:#6ea4b7}.store-item-value{color:#bcefff;overflow-wrap:anywhere}
 .store-item-actions{display:flex;justify-content:flex-end;gap:7px;margin-top:3px}
@@ -6159,11 +6163,12 @@ function renderStorePanel(initialTab){
   setPanelHead('庫','Store · Warehouse','太倉');
   var panelExtra=document.getElementById('p-extra');
   if(panelExtra)panelExtra.innerHTML='<span class="empire-panel-status-dot err" id="store-panel-status-dot" title="太倉連線失敗" aria-label="太倉連線失敗"></span>';
-  setPanelMenuTabs([{key:'store-list',label:'物品總覽'},{key:'store-chronicle',label:'事件編年'},{key:'store-add',label:'新增記錄'},{key:'stars-home',label:'命盤總覽'}]);
+  setPanelMenuTabs([{key:'store-list',label:'物品總覽'},{key:'store-chronicle',label:'事件編年'},{key:'stars-home',label:'命盤總覽'}]);
   document.getElementById('p-body').innerHTML=`
     <div class="pane active" id="pane-store-list">
       <div class="store-panel-intro"><div class="store-panel-title">Store｜太倉物品</div><div class="store-panel-sub">搜尋物品名稱、所在地點或編號，快速找到收納位置。</div></div>
-      <div class="store-toolbar"><input class="store-search" id="store-search" type="search" placeholder="搜尋物品、位置或編號" oninput="storeSearchTerm=this.value;renderStoreList()"><button class="store-add-button" type="button" onclick="switchStoreTab('store-add')">＋新增記錄</button></div>
+      <div class="store-inline-form" id="store-inline-form"></div>
+      <div class="store-toolbar"><input class="store-search" id="store-search" type="search" placeholder="搜尋物品、位置或編號" oninput="storeSearchTerm=this.value;renderStoreList()"><button class="store-add-button" type="button" onclick="focusStoreInlineForm()">＋新增記錄</button></div>
       <div class="store-date-filters" id="store-date-filters" aria-label="記錄年月篩選"></div>
       <div class="store-count" id="store-count"></div>
       <div id="store-list-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:78%"></div></div>
@@ -6171,14 +6176,10 @@ function renderStorePanel(initialTab){
     <div class="pane" id="pane-store-chronicle">
       <div id="chronicle-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:72%"></div></div>
     </div>
-    <div class="pane" id="pane-store-add">
-      <div class="store-panel-intro"><div class="store-panel-title" id="store-form-title">新增太倉記錄</div><div class="store-panel-sub">登記物品名稱、所在地點、編號、說明與記錄時間。</div></div>
-      <div id="store-form-content"></div>
-    </div>
     <div class="pane" id="pane-stars-home">
       <div id="ziwei-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:78%"></div></div>
     </div>`;
-  renderStoreForm();
+  renderStoreForm('store-inline-form');
   setEmpireCardApiPendingStatus('store');
   if(storeRecordsCache.length || storeRecordsCacheFetchedAt){
     renderStoreDateFilters();
@@ -6189,6 +6190,7 @@ function renderStorePanel(initialTab){
   if(initialTab)setTimeout(function(){
     var btn=document.querySelector('.panel-menu-item[data-panel-tab="'+initialTab+'"]');
     if(btn)switchTab(btn,initialTab);
+    if(initialTab==='store-add')focusStoreInlineForm();
   },0);
 }
 
@@ -6199,9 +6201,10 @@ var storeFilterMonth=String(new Date().getMonth()+1).padStart(2,'0');
 var storeRecordsPromise=null;
 var storeRecordsCacheFetchedAt=0;
 var STORE_RECORDS_CACHE_TTL=30000;
+var storeRecordMediaCache={};
 
-function renderStoreForm(){
-  var el=document.getElementById('store-form-content');
+function renderStoreForm(targetId){
+  var el=document.getElementById(targetId||'store-form-content');
   if(!el)return;
   el.innerHTML=`
     <form class="store-form" onsubmit="submitStoreRecord(event)">
@@ -6218,6 +6221,14 @@ function renderStoreForm(){
     </form>`;
   var dateEl=document.getElementById('store-record-date');
   if(dateEl)dateEl.value=getStoreTodayInputValue();
+}
+
+function focusStoreInlineForm(){
+  var el=document.getElementById('store-inline-form');
+  if(!el)return;
+  el.scrollIntoView({behavior:'smooth',block:'start'});
+  var nameEl=document.getElementById('store-item-name');
+  if(nameEl)setTimeout(function(){nameEl.focus();},180);
 }
 
 function getStoreTodayInputValue(){
@@ -6278,7 +6289,7 @@ function renderStoreList(){
         '<span class="store-item-label">編號</span><span class="store-item-value">'+esc(record.code||'—')+'</span>'+
         '<span class="store-item-label">說明</span><span class="store-item-value">'+esc(record.description||'—')+'</span>'+
         '<span class="store-item-label">記錄時間</span><span class="store-item-value">'+esc(record.recordDate||'—')+'</span>'+
-      '</div><div class="store-item-menu"><button class="store-item-menu-button" type="button" aria-label="'+esc(record.itemName||'物品')+'操作選單" title="操作選單" aria-expanded="false" onclick="toggleStoreItemMenu(event,this)">⚙</button><div class="store-item-menu-panel" role="menu"><button class="store-item-action" type="button" role="menuitem" onclick="editStoreRecord('+Number(record.row)+')">編輯</button><button class="store-item-action danger" type="button" role="menuitem" onclick="removeStoreRecord('+Number(record.row)+')">移除</button></div></div></article>';
+      '</div><div class="store-item-menu"><button class="store-item-menu-button" type="button" aria-label="'+esc(record.itemName||'物品')+'操作選單" title="操作選單" aria-expanded="false" onclick="toggleStoreItemMenu(event,this)">⚙</button><div class="store-item-menu-panel" role="menu"><div class="store-item-attachments" data-store-media="'+Number(record.row)+'"><span>附件載入中…</span></div><button class="store-item-action" type="button" role="menuitem" onclick="editStoreRecord('+Number(record.row)+')">編輯</button><button class="store-item-action danger" type="button" role="menuitem" onclick="removeStoreRecord('+Number(record.row)+')">移除</button></div></div></article>';
   }).join('')+'</div>';
 }
 
@@ -6291,6 +6302,58 @@ function toggleStoreItemMenu(event,button){
   });
   var open=menu.classList.toggle('is-open');
   button.setAttribute('aria-expanded',open?'true':'false');
+  if(open){
+    var mediaEl=menu.querySelector('[data-store-media]');
+    if(mediaEl&&!mediaEl.dataset.loaded&&!mediaEl.dataset.loading)loadStoreRecordMedia(mediaEl.dataset.storeMedia,mediaEl);
+  }
+}
+
+async function loadStoreRecordMedia(row,target){
+  if(!target)return;
+  target.dataset.loading='true';
+  try{
+    var data=storeRecordMediaCache[row];
+    if(!data){
+      data=await arkWallFetch('/api/store-records/'+encodeURIComponent(String(row))+'/media');
+      storeRecordMediaCache[row]=(data&&Array.isArray(data.media))?data.media:[];
+      data=storeRecordMediaCache[row];
+    }
+    target.innerHTML=renderStoreRecordMediaLinks(row,data);
+    target.dataset.loaded='true';
+  }catch(e){
+    console.error(e);
+    target.innerHTML='<span class="store-item-attachment-empty">附件讀取失敗</span>';
+  }finally{delete target.dataset.loading;}
+}
+
+function renderStoreRecordMediaLinks(row,items){
+  if(!items.length)return '<span class="store-item-attachment-empty">尚無附件</span>';
+  var counters={photo:0,video:0,pdf:0};
+  var links=items.map(function(item,index){
+    var mime=String(item.mimeType||'').toLowerCase();
+    var isVideo=item.type==='video'||mime.indexOf('video/')===0;
+    var isPdf=item.type==='pdf'||mime==='application/pdf';
+    var type=isVideo?'video':isPdf?'pdf':'photo';
+    counters[type]++;
+    var label=(type==='video'?'影片':type==='pdf'?'PDF':'照片')+counters[type];
+    return '<button class="store-item-action store-item-attachment" type="button" role="menuitem" onclick="openStoreRecordMedia(event,'+Number(row)+','+index+')">'+label+'</button>';
+  }).join('');
+  return '<div class="store-item-attachments-title">附件</div><div class="store-item-attachments-list">'+links+'</div>';
+}
+
+function openStoreRecordMedia(event,row,index){
+  if(event){event.preventDefault();event.stopPropagation();}
+  var items=storeRecordMediaCache[String(row)]||storeRecordMediaCache[row]||[];
+  var media=items.map(function(item,mediaIndex){
+    var mime=String(item.mimeType||'').toLowerCase();
+    var isVideo=item.type==='video'||mime.indexOf('video/')===0;
+    var isPdf=item.type==='pdf'||mime==='application/pdf';
+    return {id:String(row)+'-'+mediaIndex,type:isVideo?'video':isPdf?'pdf':'photo',url:arkWallUrl(item.url||''),title:item.fileName||'物品附件',item:item};
+  }).filter(function(item){return item.url;});
+  if(!media.length)return;
+  arkWallLightboxItems=media;
+  arkWallLightboxIndex=Math.max(0,Math.min(Number(index)||0,media.length-1));
+  arkWallShowLightboxIndex(arkWallLightboxIndex);
 }
 
 document.addEventListener('click',function(event){
@@ -6330,7 +6393,7 @@ function loadStoreRecords(force){
 function editStoreRecord(row){
   var record=storeRecordsCache.find(function(item){return Number(item.row)===Number(row);});
   if(!record)return;
-  switchStoreTab('store-add');
+  focusStoreInlineForm();
   var rowEl=document.getElementById('store-edit-row');
   var titleEl=document.getElementById('store-form-title');
   var submitEl=document.getElementById('store-submit');
@@ -6352,7 +6415,7 @@ function editStoreRecord(row){
 }
 
 function resetStoreForm(){
-  var form=document.querySelector('#pane-store-add form');
+  var form=document.querySelector('#store-inline-form form')||document.querySelector('#pane-store-add form');
   if(form)form.reset();
   var rowEl=document.getElementById('store-edit-row');
   var titleEl=document.getElementById('store-form-title');
@@ -6410,7 +6473,6 @@ async function submitStoreRecord(event){
     if(status)status.textContent=editRow?'已更新倉庫記錄':'已新增太倉記錄';
     resetStoreForm();
     await loadStoreRecords(true);
-    switchStoreTab('store-list');
   }catch(e){
     console.error(e);
     if(status)status.textContent=e.message||'儲存失敗';
