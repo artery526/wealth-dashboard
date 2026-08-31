@@ -982,8 +982,16 @@ body::after{
 .store-count{min-height:18px;margin:0 0 9px;color:#8aa7b6;font:800 12px var(--sans)}
 .store-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .store-item-card{position:relative;display:grid;gap:7px;border:1px solid rgba(65,157,194,.3);border-radius:9px;background:linear-gradient(160deg,rgba(8,35,51,.78),rgba(4,14,23,.78));padding:12px;min-width:0}
-.store-item-card-head{display:flex;align-items:flex-start;gap:8px;min-width:0;padding-right:34px}
+.store-item-card-head{display:flex;align-items:flex-start;gap:8px;min-width:0;padding-right:82px}
+.store-item-heading{display:flex;align-items:center;gap:8px;min-width:0;flex:1}
 .store-item-name{font:900 18px/1.35 var(--font);color:#dff7ff;overflow-wrap:anywhere}
+.store-item-location-inline{font:800 12px/1.4 var(--sans);color:#8aa7b6;overflow-wrap:anywhere}
+.store-location-meta,.store-date-meta{display:contents}
+.store-item-attachment-trigger{display:inline-grid;place-items:center;width:25px;height:25px;flex:0 0 25px;border:1px solid rgba(232,192,80,.55);border-radius:999px;background:rgba(232,192,80,.12);color:#fff3bf;font:900 16px/1 var(--sans);cursor:pointer}
+.store-item-attachment-trigger:hover{border-color:#fff3bf;background:rgba(232,192,80,.24)}
+.store-item-attachment-input,.store-item-date-input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.store-item-date-button{position:absolute;top:12px;right:46px;height:27px;border:0;background:transparent;color:#fff3bf;font:900 12px var(--sans);padding:0;cursor:pointer;white-space:nowrap}
+.store-item-date-button:hover{text-decoration:underline}
 .store-item-menu{position:absolute;top:9px;right:9px;z-index:3}
 .store-item-menu-button{display:grid;place-items:center;width:30px;height:30px;border:1px solid rgba(65,157,194,.52);border-radius:7px;background:rgba(6,27,43,.9);color:#bcefff;font-size:16px;line-height:1;cursor:pointer}
 .store-item-menu-button:hover,.store-item-menu.is-open .store-item-menu-button{border-color:#71d8f7;background:rgba(20,74,98,.9);color:#fff3bf}
@@ -1008,7 +1016,7 @@ body::after{
 .store-form-label{color:#8aa7b6;font:900 12px var(--sans)}
 .store-form-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:2px}
 .store-form-status{min-height:18px;color:#a8f1d6;font:800 12px var(--sans)}
-@media(max-width:650px){.store-grid,.store-form-grid{grid-template-columns:1fr}.store-form-group.full{grid-column:auto}.store-toolbar,.store-date-filters{grid-template-columns:1fr}.store-add-button{width:100%}}
+@media(max-width:650px){.store-grid,.store-form-grid{grid-template-columns:1fr}.store-form-group.full{grid-column:auto}.store-toolbar,.store-date-filters{grid-template-columns:1fr}.store-add-button{width:100%}.store-item-card{padding:10px}.store-item-card-head{align-items:center;padding-right:84px}.store-item-heading{gap:6px}.store-item-name{font-size:16px}.store-item-location-inline{font-size:11px}.store-item-date-button{top:10px;right:43px;font-size:11px}.store-item-menu{top:8px;right:8px}.store-item-meta .store-location-meta,.store-item-meta .store-date-meta{display:none}}
 .market-lord{
   position:absolute;
   top:-65px;
@@ -6282,15 +6290,69 @@ function renderStoreList(){
     return;
   }
   el.innerHTML='<div class="store-grid">'+rows.map(function(record){
+    var row=Number(record.row);
+    var dateValue=storeDateInputValue(record.recordDate)||getStoreTodayInputValue();
     return '<article class="store-item-card">'+
-      '<div class="store-item-card-head"><div class="store-item-name">'+esc(record.itemName||'未命名物品')+'</div></div>'+
+      '<div class="store-item-card-head"><div class="store-item-heading"><div class="store-item-name">'+esc(record.itemName||'未命名物品')+'</div><button class="store-item-attachment-trigger" type="button" title="上傳附件" aria-label="上傳 '+esc(record.itemName||'物品')+' 附件" onclick="chooseStoreRecordAttachment(event,'+row+')">⬆</button><input class="store-item-attachment-input" id="store-attachment-'+row+'" type="file" accept="image/*,video/mp4,video/quicktime,video/webm,.heic,.heif,.mp4,.mov,.m4v,.webm,application/pdf,.pdf" multiple onchange="uploadStoreRecordAttachment(event,'+row+',this)"><span class="store-item-location-inline">'+esc(record.location||'—')+'</span></div><button class="store-item-date-button" type="button" title="修改記錄日期" onclick="chooseStoreRecordDate(event,'+row+')">'+esc(formatStoreShortDate(dateValue))+'</button><input class="store-item-date-input" id="store-date-'+row+'" type="date" value="'+esc(dateValue)+'" onchange="saveStoreRecordDate(event,'+row+',this)"></div>'+
       '<div class="store-item-meta">'+
-        '<span class="store-item-label">所在地點</span><span class="store-item-value">'+esc(record.location||'—')+'</span>'+
+        '<span class="store-item-label store-location-meta">所在地點</span><span class="store-item-value store-location-meta">'+esc(record.location||'—')+'</span>'+
         '<span class="store-item-label">編號</span><span class="store-item-value">'+esc(record.code||'—')+'</span>'+
         '<span class="store-item-label">說明</span><span class="store-item-value">'+esc(record.description||'—')+'</span>'+
-        '<span class="store-item-label">記錄時間</span><span class="store-item-value">'+esc(record.recordDate||'—')+'</span>'+
+        '<span class="store-item-label store-date-meta">記錄時間</span><span class="store-item-value store-date-meta">'+esc(record.recordDate||'—')+'</span>'+
       '</div><div class="store-item-menu"><button class="store-item-menu-button" type="button" aria-label="'+esc(record.itemName||'物品')+'操作選單" title="操作選單" aria-expanded="false" onclick="toggleStoreItemMenu(event,this)">⚙</button><div class="store-item-menu-panel" role="menu"><div class="store-item-attachments" data-store-media="'+Number(record.row)+'"><span>附件載入中…</span></div><button class="store-item-action" type="button" role="menuitem" onclick="editStoreRecord('+Number(record.row)+')">編輯</button><button class="store-item-action danger" type="button" role="menuitem" onclick="removeStoreRecord('+Number(record.row)+')">移除</button></div></div></article>';
   }).join('')+'</div>';
+}
+
+function formatStoreShortDate(value){
+  var match=String(value||'').match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})$/);
+  return match?String(match[1]).slice(-2)+'/'+String(Number(match[2])).padStart(2,'0')+'/'+String(Number(match[3])).padStart(2,'0'):String(value||'--');
+}
+
+function chooseStoreRecordDate(event,row){
+  if(event){event.preventDefault();event.stopPropagation();}
+  var input=document.getElementById('store-date-'+Number(row));
+  if(input){try{if(input.showPicker){input.showPicker();return;}}catch(e){}input.click();}
+}
+
+async function saveStoreRecordDate(event,row,input){
+  if(event){event.preventDefault();event.stopPropagation();}
+  var value=input&&input.value||'';
+  var record=storeRecordsCache.find(function(item){return Number(item.row)===Number(row);});
+  if(!record||!value)return;
+  try{
+    setEmpireCardStatus('store','pending','正在更新記錄日期');
+    await apiPost({action:'storeRecordUpdate',row:record.row,itemName:record.itemName||'',location:record.location||'',code:record.code||'',description:record.description||'',recordDate:value});
+    record.recordDate=value.replace(/-/g,'/');
+    renderStoreDateFilters();
+    renderStoreList();
+    setEmpireCardStatus('store','ok','倉庫資料已更新');
+  }catch(e){
+    console.error(e);
+    setEmpireCardStatus('store','err',e.message||'日期更新失敗');
+  }
+}
+
+function chooseStoreRecordAttachment(event,row){
+  if(event){event.preventDefault();event.stopPropagation();}
+  var input=document.getElementById('store-attachment-'+Number(row));
+  if(input)input.click();
+}
+
+async function uploadStoreRecordAttachment(event,row,input){
+  if(event)event.stopPropagation();
+  var files=input&&input.files?Array.from(input.files):[];
+  if(!files.length)return;
+  try{
+    setEmpireCardStatus('store','pending','附件上傳中…');
+    await uploadStoreRecordMedia(Number(row),files);
+    delete storeRecordMediaCache[String(row)];
+    delete storeRecordMediaCache[row];
+    renderStoreList();
+    setEmpireCardStatus('store','ok','附件已上傳');
+  }catch(e){
+    console.error(e);
+    setEmpireCardStatus('store','err',e.message||'附件上傳失敗');
+  }finally{if(input)input.value='';}
 }
 
 function toggleStoreItemMenu(event,button){
