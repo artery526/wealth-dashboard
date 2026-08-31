@@ -6211,6 +6211,7 @@ function renderStoreForm(){
         <div class="store-form-group"><label class="store-form-label" for="store-code">編號</label><input class="form-control" id="store-code" type="text" maxlength="80" placeholder="例如：W3-A-001"></div>
         <div class="store-form-group"><label class="store-form-label" for="store-record-date">記錄時間</label><input class="form-control" id="store-record-date" type="date" required></div>
         <div class="store-form-group full"><label class="store-form-label" for="store-description">說明</label><textarea class="form-control" id="store-description" maxlength="500" placeholder="補充用途、數量或辨識方式"></textarea></div>
+        <div class="store-form-group full"><label class="store-form-label" for="store-attachments">附件（照片、影片或 PDF，可複選）</label><input class="form-control" id="store-attachments" type="file" accept="image/*,video/mp4,video/quicktime,video/webm,.heic,.heif,.mp4,.mov,.m4v,.webm,application/pdf,.pdf" multiple></div>
       </div>
       <div class="store-form-actions"><button class="store-add-button" id="store-submit" type="submit">儲存記錄</button><button class="store-secondary-button" id="store-cancel-edit" type="button" hidden onclick="resetStoreForm()">清除</button><span class="store-form-status" id="store-form-status" aria-live="polite"></span></div>
     </form>`;
@@ -6390,13 +6391,21 @@ async function submitStoreRecord(event){
   var code=(document.getElementById('store-code')||{}).value||'';
   var description=(document.getElementById('store-description')||{}).value||'';
   var recordDate=(document.getElementById('store-record-date')||{}).value||'';
+  var attachmentInput=document.getElementById('store-attachments');
+  var attachments=attachmentInput&&attachmentInput.files?Array.from(attachmentInput.files):[];
   var editRow=Number((document.getElementById('store-edit-row')||{}).value||0);
   if(!String(itemName).trim()){if(status)status.textContent='請輸入物品名稱';return;}
   if(!API_URL){if(status)status.textContent='尚未設定 API';return;}
   if(button)button.disabled=true;
   if(status)status.textContent='正在儲存…';
   try{
-    await apiPost({action:editRow?'storeRecordUpdate':'storeRecordCreate',row:editRow||undefined,itemName:itemName,location:location,code:code,description:description,recordDate:recordDate});
+    var saved=await apiPost({action:editRow?'storeRecordUpdate':'storeRecordCreate',row:editRow||undefined,itemName:itemName,location:location,code:code,description:description,recordDate:recordDate});
+    var savedRow=Number(saved&&saved.row||editRow||0);
+    if(attachments.length){
+      if(status)status.textContent='資料已儲存，附件上傳中…';
+      if(!savedRow)throw new Error('記錄已儲存，但找不到附件所屬記錄編號');
+      await uploadStoreRecordMedia(savedRow,attachments);
+    }
     if(status)status.textContent=editRow?'已更新倉庫記錄':'已新增太倉記錄';
     resetStoreForm();
     await loadStoreRecords(true);
@@ -6405,6 +6414,12 @@ async function submitStoreRecord(event){
     console.error(e);
     if(status)status.textContent=e.message||'儲存失敗';
   }finally{if(button)button.disabled=false;}
+}
+
+async function uploadStoreRecordMedia(row,files){
+  var formData=new FormData();
+  files.forEach(function(file){formData.append('media',file,file.name);});
+  return eventChronicleApiRequest('POST','/api/store-records/'+encodeURIComponent(String(row))+'/media',formData,180000);
 }
 
 function pruneFinanceTreasuryCacheVersions(){
