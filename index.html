@@ -972,6 +972,7 @@ body::after{
 .store-panel-title{font:900 20px var(--font);color:#bcefff;letter-spacing:1px}
 .store-panel-sub{font:800 12px/1.65 var(--sans);color:#8aa7b6}
 .store-toolbar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-bottom:10px}
+.store-count-row{display:flex;align-items:center;gap:8px;min-width:0;margin-bottom:9px}
 .store-date-filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:10px}
 .store-date-filter{height:38px;border:1px solid rgba(65,157,194,.52);border-radius:8px;background:#061b2b;color:#dff7ff;padding:0 10px;font:850 13px var(--sans);outline:none}
 .store-date-filter:focus{border-color:#71d8f7;box-shadow:0 0 0 2px rgba(53,184,228,.14)}
@@ -979,7 +980,11 @@ body::after{
 .store-search:focus{border-color:#71d8f7;box-shadow:0 0 0 2px rgba(53,184,228,.14)}
 .store-add-button,.store-secondary-button{height:38px;border:1px solid rgba(29,158,117,.52);border-radius:8px;background:rgba(29,158,117,.14);color:#a8f1d6;font:900 12px var(--sans);padding:0 12px;cursor:pointer;white-space:nowrap}
 .store-add-button:hover,.store-secondary-button:hover{border-color:rgba(29,158,117,.84);background:rgba(29,158,117,.22)}
-.store-count{min-height:18px;margin:0 0 9px;color:#8aa7b6;font:800 12px var(--sans)}
+.store-count{flex:1;min-width:0;min-height:18px;margin:0;color:#8aa7b6;font:800 12px var(--sans)}
+.store-search-toggle{display:grid;place-items:center;width:32px;height:30px;border:1px solid rgba(65,157,194,.52);border-radius:7px;background:rgba(6,27,43,.9);color:#fff3bf;font-size:17px;line-height:1;cursor:pointer}
+.store-search-toggle:hover,.store-search-toggle.is-open{border-color:#71d8f7;background:rgba(20,74,98,.9)}
+.store-search-inline{flex:0 1 180px;width:180px;height:30px;box-sizing:border-box;border:1px solid rgba(65,157,194,.52);border-radius:7px;background:#061b2b;color:#dff7ff;padding:0 8px;font:850 12px var(--sans);outline:none}
+.store-search-inline:focus{border-color:#71d8f7;box-shadow:0 0 0 2px rgba(53,184,228,.14)}
 .store-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .store-item-card{position:relative;display:grid;gap:7px;border:1px solid rgba(65,157,194,.3);border-radius:9px;background:linear-gradient(160deg,rgba(8,35,51,.78),rgba(4,14,23,.78));padding:12px;min-width:0}
 .store-item-card-head{display:flex;align-items:flex-start;gap:8px;min-width:0;padding-right:82px}
@@ -1019,7 +1024,7 @@ body::after{
 .store-header-date-button{border:1px solid rgba(232,192,80,.55);border-radius:7px;background:rgba(232,192,80,.1);color:#fff3bf;font:900 12px var(--sans);padding:5px 7px;cursor:pointer;white-space:nowrap}
 .store-header-date-button:hover{border-color:#fff3bf;background:rgba(232,192,80,.2)}
 .store-header-date-input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
-@media(max-width:650px){.store-grid{grid-template-columns:1fr}.store-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.store-form-group.full{grid-column:1/-1}.store-toolbar,.store-date-filters{grid-template-columns:1fr}.store-add-button{width:100%}.store-item-card{padding:10px}.store-item-card-head{align-items:center;padding-right:84px}.store-item-heading{gap:6px}.store-item-name{min-width:0;flex:1;font-size:16px}.store-item-location-inline{max-width:42%;font-size:11px}.store-item-date-button{top:10px;right:43px;font-size:11px}.store-item-menu{top:8px;right:8px}.store-item-meta .store-location-meta,.store-item-meta .store-date-meta{display:none}.store-header-date-button{font-size:11px;padding:4px 5px}}
+@media(max-width:650px){.store-grid{grid-template-columns:1fr}.store-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.store-form-group.full{grid-column:1/-1}.store-toolbar,.store-date-filters{grid-template-columns:1fr}.store-add-button{width:100%}.store-count-row{flex-wrap:wrap}.store-search-inline{order:3;flex:1 1 100%;width:100%}.store-item-card{padding:10px}.store-item-card-head{align-items:center;padding-right:84px}.store-item-heading{gap:6px}.store-item-name{min-width:0;flex:1;font-size:16px}.store-item-location-inline{max-width:42%;font-size:11px}.store-item-date-button{top:10px;right:43px;font-size:11px}.store-item-menu{top:8px;right:8px}.store-item-meta .store-location-meta,.store-item-meta .store-date-meta{display:none}.store-header-date-button{font-size:11px;padding:4px 5px}}
 .market-lord{
   position:absolute;
   top:-65px;
@@ -6179,9 +6184,9 @@ function renderStorePanel(initialTab){
     <div class="pane active" id="pane-store-list">
       <div class="store-panel-intro"><div class="store-panel-title">Store｜太倉物品</div><div class="store-panel-sub">搜尋物品名稱、所在地點或編號，快速找到收納位置。</div></div>
       <div class="store-inline-form" id="store-inline-form"></div>
-      <div class="store-toolbar"><input class="store-search" id="store-search" type="search" placeholder="搜尋物品、位置或編號" oninput="storeSearchTerm=this.value;renderStoreList()"><button class="store-add-button" type="button" onclick="focusStoreInlineForm()">＋新增記錄</button></div>
+      <div class="store-toolbar"><button class="store-add-button" type="button" onclick="focusStoreInlineForm()">＋新增記錄</button></div>
       <div class="store-date-filters" id="store-date-filters" aria-label="記錄年月篩選"></div>
-      <div class="store-count" id="store-count"></div>
+      <div class="store-count-row"><div class="store-count" id="store-count"></div><button class="store-search-toggle" id="store-search-toggle" type="button" title="搜尋物品、位置或編號" aria-label="搜尋物品、位置或編號" aria-expanded="false" onclick="toggleStoreSearch(event)">🔍</button><input class="store-search-inline" id="store-search" type="search" placeholder="搜尋物品、位置或編號" aria-label="搜尋物品、位置或編號" hidden oninput="storeSearchTerm=this.value;renderStoreList()"></div>
       <div id="store-list-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:78%"></div></div>
     </div>
     <div class="pane" id="pane-store-chronicle">
@@ -6251,6 +6256,18 @@ function focusStoreInlineForm(){
   el.scrollIntoView({behavior:'smooth',block:'start'});
   var nameEl=document.getElementById('store-item-name');
   if(nameEl)setTimeout(function(){nameEl.focus();},180);
+}
+
+function toggleStoreSearch(event){
+  if(event){event.preventDefault();event.stopPropagation();}
+  var input=document.getElementById('store-search');
+  var button=document.getElementById('store-search-toggle');
+  if(!input||!button)return;
+  var open=input.hidden;
+  input.hidden=!open;
+  button.classList.toggle('is-open',open);
+  button.setAttribute('aria-expanded',open?'true':'false');
+  if(open)input.focus();
 }
 
 function getStoreTodayInputValue(){
