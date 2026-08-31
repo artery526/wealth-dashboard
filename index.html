@@ -6184,7 +6184,6 @@ function renderStorePanel(initialTab){
     <div class="pane active" id="pane-store-list">
       <div class="store-panel-intro"><div class="store-panel-title">Store｜太倉物品</div><div class="store-panel-sub">搜尋物品名稱、所在地點或編號，快速找到收納位置。</div></div>
       <div class="store-inline-form" id="store-inline-form"></div>
-      <div class="store-toolbar"><button class="store-add-button" type="button" onclick="focusStoreInlineForm()">＋新增記錄</button></div>
       <div class="store-date-filters" id="store-date-filters" aria-label="記錄年月篩選"></div>
       <div class="store-count-row"><div class="store-count" id="store-count"></div><button class="store-search-toggle" id="store-search-toggle" type="button" title="搜尋物品、位置或編號" aria-label="搜尋物品、位置或編號" aria-expanded="false" onclick="toggleStoreSearch(event)">🔍</button><input class="store-search-inline" id="store-search" type="search" placeholder="搜尋物品、位置或編號" aria-label="搜尋物品、位置或編號" hidden oninput="storeSearchTerm=this.value;renderStoreList()"></div>
       <div id="store-list-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:78%"></div></div>
