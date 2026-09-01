@@ -1286,6 +1286,7 @@ body::after{
 .advisor-ai-quick-select option:checked{background:#0f6b57;color:#fff}
 .advisor-ai-quick-select:focus{border-color:#fff2b8;box-shadow:0 0 0 2px rgba(29,158,117,.25),0 0 18px rgba(29,158,117,.22)}
 .advisor-ai-quick-tools{display:flex;align-items:center;gap:6px;min-width:0}
+.advisor-ai-header-date{font-family:var(--mono);font-size:11px;font-weight:900;letter-spacing:.3px;color:#d8b45d;white-space:nowrap}
 .advisor-ai-dividend-select{width:132px;flex:0 1 132px;min-width:0;border:1px solid rgba(232,192,80,.58);border-radius:999px;background:linear-gradient(145deg,#3d2a09,#1b1004);color:#fff0b0;font-family:var(--sans);font-size:12px;font-weight:900;text-align:center;text-align-last:center;padding:8px 7px;outline:none;cursor:pointer}
 .advisor-ai-dividend-select option{background:#1b1004;color:#fff0b0;font-size:12px}
 .advisor-ai-dividend-select:focus{border-color:#fff2b8;box-shadow:0 0 0 2px rgba(232,192,80,.2)}
@@ -16475,6 +16476,7 @@ function advisorAIHeaderHtml(title){
     <div class="advisor-ai-head-row">
       <div class="advisor-ai-quick-tools">
         ${advisorAIQuickCommandSelectHtml()}
+        <span class="advisor-ai-header-date" aria-label="今日日期">${advisorAICompactDate()}</span>
       </div>
       <div class="advisor-ai-title-wrap">
         <div class="advisor-ai-funds" id="advisor-ai-funds">${advisorAIHeaderFundsHtml(fundsCache&&fundsCache.cash,fundsCache&&fundsCache.stock)}</div>
@@ -16488,6 +16490,11 @@ function advisorAIHeaderHtml(title){
     </div>
     <div class="advisor-ai-expense-quick-status" id="advisor-ai-expense-quick-status"></div>
     `;
+}
+
+function advisorAICompactDate(){
+  var parts=today().split('-');
+  return parts.length===3?parts[0].slice(-2)+'/'+parts[1]+'/'+parts[2]:today();
 }
 
 function advisorAIQuickExpenseCategoriesHtml(){
@@ -17815,10 +17822,10 @@ function advisorAIDailyUpdatesHtml(data, state, activeIndex){
   data=data||{};
   var date=String(data.date||today()).replace(/-/g,'/');
   var errors=Array.isArray(data.errors)?data.errors:[];
-  if(state==='loading')return '<div class="advisor-ai-daily-updates-title"><span>📜 今日更新</span><span class="advisor-ai-daily-updates-date">'+esc(date)+'</span></div><div class="advisor-ai-daily-updates-error">龐統正在整理今日更新…</div>';
+  if(state==='loading')return '<div class="advisor-ai-daily-updates-error">龐統正在整理今日情報…</div>';
   if(!Array.isArray(data.items)&&errors.length){
     var empty=errors.length?'今日部分情報暫時無法取得，請稍後再試。':'今日尚無新的帝國紀錄。';
-    return '<div class="advisor-ai-daily-updates-title"><span>📜 今日更新</span><span class="advisor-ai-daily-updates-date">'+esc(date)+'</span></div><div class="advisor-ai-daily-updates-empty">'+esc(empty)+'</div>';
+    return '<div class="advisor-ai-daily-updates-empty">'+esc(empty)+'</div>';
   }
   var items=advisorAIDailyUpdateItems(data);
   var index=Math.max(0,Math.min(Number(activeIndex)||0,items.length-1));
@@ -17830,7 +17837,7 @@ function advisorAIDailyUpdatesHtml(data, state, activeIndex){
   var viewAction=item.module==='agenda'?'advisorAIShowSchedule(this)':'openEmpireCardShortcut(event,\''+target+'\',\''+item.tab+'\')';
   var rows='<div class="advisor-ai-daily-patrol"><div class="advisor-ai-daily-patrol-kicker">'+esc(item.icon)+' 龐統軍師正在巡視 '+esc(item.title)+'…</div><div class="advisor-ai-daily-patrol-result '+(item.updated===false?'pending':'')+'">'+esc(patrolMessage)+'</div>'+murmur+'<div class="advisor-ai-daily-patrol-nav"><button class="advisor-ai-daily-update-link" type="button" onclick="advisorAIDailyUpdateStep(-1)">‹ 上一則</button><button class="advisor-ai-daily-update-link" type="button" onclick="'+viewAction+'">查看</button><button class="advisor-ai-daily-update-link" type="button" onclick="advisorAIDailyUpdateStep(1)">下一則 ›</button></div></div><div class="advisor-ai-daily-patrol-dots">'+items.map(function(_,dotIndex){return '<span class="advisor-ai-daily-patrol-dot '+(dotIndex===index?'active':'')+'" aria-hidden="true"></span>';}).join('')+'</div>';
   var warning=errors.length?'<div class="advisor-ai-daily-updates-error" style="margin-top:7px">部分情報暫時無法取得</div>':'';
-  return '<div class="advisor-ai-daily-updates-title"><span>📜 今日更新</span><span class="advisor-ai-daily-updates-date">'+esc(date)+'</span></div>'+brief+'<div class="advisor-ai-daily-update-list">'+rows+'</div>'+warning;
+  return brief+'<div class="advisor-ai-daily-update-list">'+rows+'</div>'+warning;
 }
 function renderAdvisorAIDailyUpdates(data,state,activeIndex){
   var el=document.getElementById('advisor-ai-daily-updates');
