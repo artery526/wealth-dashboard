@@ -15178,14 +15178,12 @@ function advisorWorldTaiwanStockReviewHtml(data){
   var head='<div class="advisor-world-title-row"><div class="advisor-world-title">📈 台股</div><div class="advisor-world-tabs"><button class="advisor-world-tab-btn" type="button" onclick="openAdvisorWorldSituation(event,false)">🏛 帝國晨報</button><button class="advisor-world-tab-btn" type="button" onclick="openAdvisorSectorRotation(event)">📊 產業</button></div></div>';
   if(!report){
     return '<div class="advisor-world-card advisor-tw-review">'+head+''+
-      '<div class="advisor-tw-review-kicker">GPT 軍師月評</div>'+
-      '<div class="advisor-tw-review-text" style="margin-top:10px">目前尚未建立月評。待最新台灣總體經濟資料完成後，可產生本月 GPT 軍師分析。</div>'+
+      '<div class="advisor-tw-review-text" style="margin-top:10px">目前尚未建立月評。待最新台灣總體經濟資料完成後，可產生本月分析。</div>'+
       '<div class="advisor-tw-review-actions"><button class="home-agenda-refresh" type="button" onclick="advisorWorldGenerateTaiwanStockReview(event)">產生本月月評</button></div>'+
       '</div>';
   }
   var missing=report.missingFields?'<div class="advisor-tw-review-missing">資料尚未公布：'+esc(report.missingFields)+'<br>本月判斷信心已下調，待官方資料補齊後可重新產生。</div>':'';
   return '<div class="advisor-world-card advisor-tw-review">'+head+
-    '<div class="advisor-tw-review-kicker">GPT 軍師月評</div>'+
     '<div class="advisor-tw-review-meta">資料月份 '+esc(report.dataMonth||report.month||'--')+' · '+esc(report.model||'gpt-5.6-luna')+' · 信心 '+esc(report.confidence||'中')+'</div>'+
     '<div class="advisor-tw-review-statuses">'+
       '<div class="advisor-tw-review-status">景氣階段<strong>'+esc(report.stage||'景氣中性')+'</strong></div>'+
@@ -15206,7 +15204,7 @@ async function openAdvisorTaiwanStockReview(event){
   if(event&&event.stopPropagation)event.stopPropagation();
   var panel=document.getElementById('advisor-world-slot')||document.getElementById('advisor-shortcut-panel');
   if(!panel)return;
-  panel.innerHTML='<div class="advisor-world-card advisor-tw-review"><div class="advisor-world-title-row"><div class="advisor-world-title">📈 台股</div><div class="advisor-world-tabs"><button class="advisor-world-tab-btn" type="button" onclick="openAdvisorWorldSituation(event,false)">🏛 帝國晨報</button><button class="advisor-world-tab-btn" type="button" onclick="openAdvisorSectorRotation(event)">📊 產業</button></div></div><div class="advisor-tw-review-text" style="margin-top:12px;text-align:center">正在調閱 GPT 軍師月評…</div></div>';
+  panel.innerHTML='<div class="advisor-world-card advisor-tw-review"><div class="advisor-world-title-row"><div class="advisor-world-title">📈 台股</div><div class="advisor-world-tabs"><button class="advisor-world-tab-btn" type="button" onclick="openAdvisorWorldSituation(event,false)">🏛 帝國晨報</button><button class="advisor-world-tab-btn" type="button" onclick="openAdvisorSectorRotation(event)">📊 產業</button></div></div><div class="advisor-tw-review-text" style="margin-top:12px;text-align:center">正在調閱台股月評…</div></div>';
   if(!API_URL){panel.innerHTML=advisorWorldTaiwanStockReviewHtml({latest:null,message:'尚未設定 API URL'});return;}
   try{var data=await advisorWorldTaiwanStockReviewRequest();panel.innerHTML=advisorWorldTaiwanStockReviewHtml(data);if(panel.scrollIntoView)panel.scrollIntoView({block:'nearest',behavior:'smooth'});}
   catch(err){panel.innerHTML='<div class="advisor-world-card advisor-tw-review"><div class="advisor-world-title-row"><div class="advisor-world-title">📈 台股</div><div class="advisor-world-tabs"><button class="advisor-world-tab-btn" type="button" onclick="openAdvisorWorldSituation(event,false)">🏛 帝國晨報</button><button class="advisor-world-tab-btn" type="button" onclick="openAdvisorSectorRotation(event)">📊 產業</button></div></div><div class="advisor-tw-review-missing">月評讀取失敗：'+esc(err&&err.message?err.message:'請稍後再試')+'</div></div>';}
@@ -15243,7 +15241,7 @@ async function advisorWorldGenerateTaiwanStockReview(event){
   if(event&&event.stopPropagation)event.stopPropagation();
   var panel=document.getElementById('advisor-world-slot')||document.getElementById('advisor-shortcut-panel');
   if(!panel||taiwanStockReviewGeneratePromise)return;
-  panel.innerHTML='<div class="advisor-world-card advisor-tw-review"><div class="advisor-world-title-row"><div class="advisor-world-title">📈 台股</div><button class="advisor-world-tab-btn" type="button" onclick="openAdvisorWorldSituation(event,false)">🏛 帝國晨報</button></div><div class="advisor-tw-review-text" style="margin-top:12px;text-align:center">GPT 軍師正在根據最新月資料撰寫，請稍候…</div></div>';
+  panel.innerHTML='<div class="advisor-world-card advisor-tw-review"><div class="advisor-world-title-row"><div class="advisor-world-title">📈 台股</div><button class="advisor-world-tab-btn" type="button" onclick="openAdvisorWorldSituation(event,false)">🏛 帝國晨報</button></div><div class="advisor-tw-review-text" style="margin-top:12px;text-align:center">軍師正在根據最新月資料撰寫，請稍候…</div></div>';
   taiwanStockReviewGeneratePromise=apiPost({action:'taiwanStockReviewGenerate'},90000).then(function(){return advisorWorldTaiwanStockReviewRequest();}).then(function(data){panel.innerHTML=advisorWorldTaiwanStockReviewHtml(data);return data;}).catch(function(err){panel.innerHTML='<div class="advisor-world-card advisor-tw-review"><div class="advisor-world-title-row"><div class="advisor-world-title">📈 台股</div><button class="advisor-world-tab-btn" type="button" onclick="openAdvisorWorldSituation(event,false)">🏛 帝國晨報</button></div><div class="advisor-tw-review-missing">月評產生失敗：'+esc(err&&err.message?err.message:'請稍後再試')+'<br>若訊息涉及密鑰，請確認 API 設定中的 WRITE_TOKEN 與後端設定一致。</div></div>';}).finally(function(){taiwanStockReviewGeneratePromise=null;});
   return taiwanStockReviewGeneratePromise;
 }
