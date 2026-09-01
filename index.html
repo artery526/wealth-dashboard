@@ -1382,6 +1382,8 @@ body::after{
 .advisor-ai-daily-patrol-murmur{padding-top:7px;border-top:1px solid rgba(232,192,80,.14);font-family:var(--font);font-size:13px;font-weight:850;line-height:1.7;color:#d8c18a;white-space:pre-line}
 .advisor-ai-daily-patrol-result.pending{color:#c8b07a}
 .advisor-ai-daily-patrol-actions{display:flex;justify-content:flex-end}
+.advisor-ai-daily-patrol-nav{display:flex;justify-content:space-between;gap:8px}
+.advisor-ai-daily-patrol-nav .advisor-ai-daily-update-link{min-width:76px}
 .advisor-ai-daily-patrol-dots{display:flex;justify-content:center;gap:5px}
 .advisor-ai-daily-patrol-dot{width:6px;height:6px;border-radius:50%;background:rgba(232,192,80,.28);transition:background .2s,transform .2s}
 .advisor-ai-daily-patrol-dot.active{background:var(--gold);transform:scale(1.25);box-shadow:0 0 8px rgba(232,192,80,.42)}
@@ -5315,6 +5317,8 @@ var advisorReminderPromise=null;
 var advisorAIGranaryPromise=null;
 var advisorAIDailyUpdatesPromise=null;
 var advisorAIDailyUpdatesTimer=null;
+var advisorAIDailyUpdatesData=null;
+var advisorAIDailyUpdatesIndex=0;
 var FINANCE_TREASURY_CACHE_KEY='wealth_finance_treasury_v6';
 var FINANCE_TREASURY_CACHE_PREFIX='wealth_finance_treasury_v';
 var FINANCE_PLEDGE_CACHE_KEY='wealth_finance_pledge_v2';
@@ -17061,7 +17065,6 @@ function openAdvisorAI(targetPanel){
   advisorAIScheduleOpen=false;
   panel.innerHTML=`${advisorAIHeaderHtml('🗡️主公，請下令')}
      <div class="advisor-ai-portrait"><img class="advisor-ai-portrait-img" src="1menu.png" alt="龐統軍師"></div>
-    <div class="advisor-ai-granary-brief loading" id="advisor-ai-granary-brief"><span>龐統正在檢視帝國糧倉…</span></div>
     <div class="advisor-ai-daily-updates loading" id="advisor-ai-daily-updates"><div class="advisor-ai-daily-updates-error">龐統正在整理今日更新…</div></div>
     <div class="advisor-ai-row">
       <input class="advisor-ai-input" id="advisor-ai-input" type="text" placeholder="輸入指令…" onkeydown="advisorAIKey(event)">
@@ -17073,7 +17076,6 @@ function openAdvisorAI(targetPanel){
     var input=document.getElementById('advisor-ai-input');
     if(input)input.focus();
   },0);
-  loadAdvisorAIGranaryBrief();
   loadAdvisorAIDailyUpdates();
 }
 
@@ -17821,13 +17823,14 @@ function advisorAIDailyUpdatesHtml(data, state, activeIndex){
   var items=advisorAIDailyUpdateItems(data);
   var index=Math.max(0,Math.min(Number(activeIndex)||0,items.length-1));
   var item=items[index];
+  var brief=data.brief?'<div class="advisor-ai-granary-brief"><span>'+esc(data.brief)+'</span></div>':'';
   var target=item.target||item.module;
   var patrolMessage=item.updated===false?item.message:(item.message||'已有新資料');
   var murmur=item.murmur?'<div class="advisor-ai-daily-patrol-murmur">'+esc(item.murmur)+'</div>':'';
   var viewAction=item.module==='agenda'?'advisorAIShowSchedule(this)':'openEmpireCardShortcut(event,\''+target+'\',\''+item.tab+'\')';
-  var rows='<div class="advisor-ai-daily-patrol"><div class="advisor-ai-daily-patrol-kicker">'+esc(item.icon)+' 龐統軍師正在巡視 '+esc(item.title)+'…</div><div class="advisor-ai-daily-patrol-result '+(item.updated===false?'pending':'')+'">'+esc(patrolMessage)+'</div>'+murmur+'<div class="advisor-ai-daily-patrol-actions"><button class="advisor-ai-daily-update-link" type="button" onclick="'+viewAction+'">查看</button></div></div><div class="advisor-ai-daily-patrol-dots">'+items.map(function(_,dotIndex){return '<span class="advisor-ai-daily-patrol-dot '+(dotIndex===index?'active':'')+'" aria-hidden="true"></span>';}).join('')+'</div>';
+  var rows='<div class="advisor-ai-daily-patrol"><div class="advisor-ai-daily-patrol-kicker">'+esc(item.icon)+' 龐統軍師正在巡視 '+esc(item.title)+'…</div><div class="advisor-ai-daily-patrol-result '+(item.updated===false?'pending':'')+'">'+esc(patrolMessage)+'</div>'+murmur+'<div class="advisor-ai-daily-patrol-nav"><button class="advisor-ai-daily-update-link" type="button" onclick="advisorAIDailyUpdateStep(-1)">‹ 上一則</button><button class="advisor-ai-daily-update-link" type="button" onclick="'+viewAction+'">查看</button><button class="advisor-ai-daily-update-link" type="button" onclick="advisorAIDailyUpdateStep(1)">下一則 ›</button></div></div><div class="advisor-ai-daily-patrol-dots">'+items.map(function(_,dotIndex){return '<span class="advisor-ai-daily-patrol-dot '+(dotIndex===index?'active':'')+'" aria-hidden="true"></span>';}).join('')+'</div>';
   var warning=errors.length?'<div class="advisor-ai-daily-updates-error" style="margin-top:7px">部分情報暫時無法取得</div>':'';
-  return '<div class="advisor-ai-daily-updates-title"><span>📜 今日更新</span><span class="advisor-ai-daily-updates-date">'+esc(date)+'</span></div><div class="advisor-ai-daily-update-list">'+rows+'</div>'+warning;
+  return '<div class="advisor-ai-daily-updates-title"><span>📜 今日更新</span><span class="advisor-ai-daily-updates-date">'+esc(date)+'</span></div>'+brief+'<div class="advisor-ai-daily-update-list">'+rows+'</div>'+warning;
 }
 function renderAdvisorAIDailyUpdates(data,state,activeIndex){
   var el=document.getElementById('advisor-ai-daily-updates');
@@ -17840,15 +17843,17 @@ function stopAdvisorAIDailyUpdatesPatrol(){
 }
 function startAdvisorAIDailyUpdatesPatrol(data){
   stopAdvisorAIDailyUpdatesPatrol();
+  advisorAIDailyUpdatesData=data||{};
+  advisorAIDailyUpdatesIndex=0;
+  renderAdvisorAIDailyUpdates(advisorAIDailyUpdatesData,'',advisorAIDailyUpdatesIndex);
+}
+function advisorAIDailyUpdateStep(step){
+  var data=advisorAIDailyUpdatesData;
+  if(!data)return;
   var items=advisorAIDailyUpdateItems(data);
-  var index=0;
-  renderAdvisorAIDailyUpdates(data,'',index);
-  advisorAIDailyUpdatesTimer=setInterval(function(){
-    var panel=advisorAIActivePanel();
-    if(!panel||!document.getElementById('advisor-ai-daily-updates')){stopAdvisorAIDailyUpdatesPatrol();return;}
-    index=(index+1)%items.length;
-    renderAdvisorAIDailyUpdates(data,'',index);
-  },3200);
+  if(!items.length)return;
+  advisorAIDailyUpdatesIndex=(advisorAIDailyUpdatesIndex+Number(step||0)+items.length)%items.length;
+  renderAdvisorAIDailyUpdates(data,'',advisorAIDailyUpdatesIndex);
 }
 async function loadAdvisorAIDailyUpdates(){
   var el=document.getElementById('advisor-ai-daily-updates');
@@ -17864,12 +17869,17 @@ async function loadAdvisorAIDailyUpdates(){
     });
   }
   try{
-    var results=await Promise.allSettled([advisorAIDailyUpdatesPromise,apiGet({action:'accounts'}),apiGet({action:'monthly',ym:currentYM()}),apiGet({action:'marketDashboard'}),apiGet({action:'macroOverview'}),loadArkWallEntries(false),apiGet({action:'todayCalendar',mode:'today'},30000)]);
+    var results=await Promise.allSettled([advisorAIDailyUpdatesPromise,apiGet({action:'accounts'}),apiGet({action:'monthly',ym:currentYM()}),apiGet({action:'marketDashboard'}),apiGet({action:'macroOverview'}),loadArkWallEntries(false),apiGet({action:'todayCalendar',mode:'today'},30000),apiGet({action:'foodhouseDashboard',ym:currentYM()}),loadDividendCenter(false)]);
     if(results[0].status!=='fulfilled')throw results[0].reason||new Error('今日更新讀取失敗');
     var data=results[0].status==='fulfilled'?results[0].value:{};
     var murmur=advisorAIDailyMurmurData({accounts:results[1].status==='fulfilled'?results[1].value:[],monthly:results[2].status==='fulfilled'?results[2].value:{},market:results[3].status==='fulfilled'?results[3].value:{},macro:results[4].status==='fulfilled'?results[4].value:{}});
     data=Object.assign({},data,{murmurs:murmur,items:(data.items||[]).map(function(item){return Object.assign({},item,{murmur:murmur[item.module]||''});})});
     data=Object.assign({},data,{items:(data.items||[]).concat([advisorAIDailyAgendaItem(results[6])])});
+    var foodhouse=results[7].status==='fulfilled'?(results[7].value||{}):{};
+    var foodhouseMonthly=((foodhouse.core||{}).monthly)||foodhouse.monthly||{};
+    var dividend=results[8].status==='fulfilled'?(results[8].value||{}):{};
+    var briefSourceAvailable=results[7].status==='fulfilled'||results[8].status==='fulfilled';
+    data=Object.assign({},data,{brief:briefSourceAvailable?advisorAIGranarySentence(foodhouseMonthly.income!=null||foodhouseMonthly.expense!=null?foodhouseMonthly:results[2].status==='fulfilled'?results[2].value:{},dividend):'龐統軍師短評暫時無法取得，請稍後再試。'});
     try{
       var wallEntries=results[5].status==='fulfilled'?results[5].value:[];
       var wallToday=wallEntries.filter(function(entry){
