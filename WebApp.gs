@@ -6077,13 +6077,14 @@ function getMedicalRecords_() {
   return { status: 'success', records: records };
 }
 
-function getMedicalCardStats_() {
+function getMedicalCardStats_(p) {
   var ss = getMedicalSpreadsheet_();
+  var monthsLimit = getMedicalStatsMonthsLimit_(p);
   return {
     status: 'success',
     cardStats: {
-      tarot: readMedicalStatsSheet_(ss.getSheetByName(MEDICAL_CARD_STATS_SHEET_NAME), MEDICAL_CARD_STATS_COLUMNS),
-      osho: readMedicalStatsSheet_(ss.getSheetByName(MEDICAL_OSHO_STATS_SHEET_NAME), MEDICAL_OSHO_STATS_COLUMNS)
+      tarot: readMedicalStatsSheet_(ss.getSheetByName(MEDICAL_CARD_STATS_SHEET_NAME), MEDICAL_CARD_STATS_COLUMNS, { monthsLimit: monthsLimit }),
+      osho: readMedicalStatsSheet_(ss.getSheetByName(MEDICAL_OSHO_STATS_SHEET_NAME), MEDICAL_OSHO_STATS_COLUMNS, { monthsLimit: monthsLimit })
     }
   };
 }
@@ -6677,19 +6678,103 @@ function getMedicalSettingOptions_(ss) {
   };
 }
 
-function readMedicalStatsSheet_(sheet, columns) {
-  if (!sheet || sheet.getLastRow() < 2) return [];
-  var lastRow = getLastMedicalDataRowByColumn_(sheet, 1);
-  if (lastRow < 2) return [];
-  return sheet.getRange(2, 1, lastRow - 1, columns.length).getDisplayValues()
-    .filter(function(row) { return String(row[0] || '').trim(); })
-    .map(function(row) {
-      var item = {};
-      columns.forEach(function(key, index) {
-        item[key] = String(row[index] || '').trim();
-      });
-      return item;
+function getMedicalStatsMonthsLimit_(p) {
+  var raw = p && (p.monthsLimit || p.monthLimit || p.limitMonths);
+  var limit = Number(raw || 12);
+  if (!isFinite(limit) || limit <= 0) limit = 12;
+  return Math.max(1, Math.min(60, Math.floor(limit)));
+}
+
+function mapMedicalStatsRows_(rows, columns) {
+  return rows.map(function(row) {
+    var item = {};
+    var values = Array.isArray(row) ? row : row.values;
+    columns.forEach(function(key, index) {
+      item[key] = String(values[index] || '').trim();
     });
+    if (!Array.isArray(row) && row.rowNumber) item._row = row.rowNumber;
+    return item;
+  });
+}
+
+function readMedicalStatsSheet_(sheet, columns, options) {
+  if (!sheet || sheet.getLastRow() < 2) return [];
+  var monthsLimit = Number(options && options.monthsLimit || 0);
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) return [];
+  if (monthsLimit > 0) {
+    var rows = [];
+    var months = {};
+    var monthCount = 0;
+    var cursor = lastRow;
+    var batchSize = 200;
+    while (cursor >= 2) {
+      var rowCount = Math.min(batchSize, cursor - 1);
+      var firstRow = cursor - rowCount + 1;
+      var batch = sheet.getRange(firstRow, 1, rowCount, columns.length).getDisplayValues();
+      for (var i = batch.length - 1; i >= 0; i--) {
+        var row = batch[i];
+        var month = String(row[0] || '').trim();
+        if (!month) continue;
+        if (!months[month]) {
+          if (monthCount >= monthsLimit) return mapMedicalStatsRows_(rows, columns);
+          months[month] = true;
+          monthCount++;
+        }
+        rows.unshift({ values: row, rowNumber: firstRow + i + 1 });
+      }
+      cursor = firstRow - 1;
+    }
+    return mapMedicalStatsRows_(rows, columns);
+  }
+  var allRows = sheet.getRange(2, 1, lastRow - 1, columns.length).getDisplayValues()
+    .map(function(row, index) { return { values: row, rowNumber: index + 2 }; })
+    .filter(function(row) { return String(row.values[0] || '').trim(); });
+  return mapMedicalStatsRows_(allRows, columns);
+}
+
+function updateMedicalCardStats_(p) {
+  var sheetName = String(p && p.sheet || '').trim();
+  var columns = sheetName === MEDICAL_OSHO_STATS_SHEET_NAME
+    ? MEDICAL_OSHO_STATS_COLUMNS
+    : (sheetName === MEDICAL_CARD_STATS_SHEET_NAME ? MEDICAL_CARD_STATS_COLUMNS : null);
+  if (!columns) throw new Error('不允許更新此牌卡分頁');
+  var entries = Array.isArray(p.rows) ? p.rows : [];
+  if (!entries.length) throw new Error('缺少要更新的牌卡記錄');
+  var sheet = getMedicalSpreadsheet_().getSheetByName(sheetName);
+  if (!sheet) throw new Error('找不到牌卡分頁：' + sheetName);
+  var width = columns.length;
+  entries.forEach(function(entry) {
+    var rowNumber = Number(entry && entry.row);
+    if (!isFinite(rowNumber) || rowNumber < 2 || rowNumber > sheet.getLastRow()) throw new Error('牌卡記錄列號不正確');
+    var old = sheet.getRange(rowNumber, 1, 1, width).getDisplayValues()[0];
+    var date = String(entry.date || old[2] || '').trim();
+    var time = String(entry.time || '').trim();
+    if (!time) time = String(old[1] || '').trim().slice(11);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error('日期格式不正確');
+    old[0] = date.slice(0, 7);
+    old[1] = (date + ' ' + time).trim();
+    old[2] = date;
+    if (sheetName === MEDICAL_CARD_STATS_SHEET_NAME) {
+      if (entry.spreadType !== undefined) old[4] = String(entry.spreadType || '').trim();
+      if (entry.positionIndex !== undefined) old[5] = String(entry.positionIndex || '').trim();
+      if (entry.positionName !== undefined) old[6] = String(entry.positionName || '').trim();
+      if (entry.cardId !== undefined) old[8] = String(entry.cardId || '').trim();
+      if (entry.cardName !== undefined) old[9] = String(entry.cardName || '').trim();
+      if (entry.orientation !== undefined) old[10] = String(entry.orientation || '').trim() || '❌';
+      if (entry.displayName !== undefined) old[11] = String(entry.displayName || '').trim();
+      if (entry.topic !== undefined) old[12] = String(entry.topic || '').trim();
+      if (entry.notes !== undefined) old[13] = String(entry.notes || '').trim();
+    } else {
+      if (entry.cardId !== undefined) old[4] = String(entry.cardId || '').trim();
+      if (entry.cardName !== undefined) old[5] = String(entry.cardName || '').trim();
+      if (entry.displayName !== undefined) old[6] = String(entry.displayName || '').trim();
+      if (entry.topic !== undefined) old[7] = String(entry.topic || '').trim();
+      if (entry.notes !== undefined) old[8] = String(entry.notes || '').trim();
+    }
+    sheet.getRange(rowNumber, 1, 1, width).setValues([old]);
+  });
+  return { status: 'success', message: '牌卡記錄已更新', sheet: sheetName, rows: entries.length };
 }
 
 function getLastMedicalDataRowByColumn_(sheet, column) {
