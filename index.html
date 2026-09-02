@@ -5239,6 +5239,11 @@ function eventChronicleRowKey(row){
 async function apiPost(body){
   if(!API_URL)throw new Error('未設定 API 網址');
   body=Object.assign({},body||{});
+  if(/^(expense|income|transfer)$/.test(String(body.action||''))){
+    // 金額欄統一送正數；支出、收入或轉帳方向由 action／帳戶欄位決定。
+    if(body.amount!==undefined)body.amount=Math.abs(Number(body.amount)||0);
+    if(body.stockAmount!==undefined)body.stockAmount=Math.abs(Number(body.stockAmount)||0);
+  }
   if(/^(expense|income|transfer)$/.test(String(body.action||''))&&!body.requestId){
     body.requestId='web-'+(window.crypto&&crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random().toString(36).slice(2));
   }
