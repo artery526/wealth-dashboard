@@ -4754,7 +4754,7 @@ var cfg = (function(){
   }catch(e){}
   return { categories: [], sources: [], accounts: [], holdings: [], dividendSymbols: [] };
 })();
-var BOOKING_FALLBACK_CATEGORIES = ['🛒全聯食材','🍽️餐飲食材','🏠家居用品','🛵機車交通','💻3C產品','💧水電瓦斯','🏦稅務勞健保','🧥服飾外貌','⚒️房屋修繕','💊醫療保健','☎️電信網路','📱APP訂閱','📖書籍教材','👩Sis學貸/支出','💸租屋管理費','🛎️旅遊住宿','🤹娛樂費用','👤公益樂捐','🎅爸媽代繳'];
+var BOOKING_FALLBACK_CATEGORIES = ['🛒全聯食材','🍽️外食餐飲','🏠家居用品','🛵機車交通','💻3C產品','💧水電瓦斯','🏦稅務勞健保','🧥服飾外貌','⚒️房屋修繕','💊醫療保健','☎️電信網路','📱APP訂閱','📖書籍教材','👩Sis學貸/支出','💸租屋管理費','🛎️旅遊住宿','🤹娛樂費用','👤公益樂捐','🎅爸媽代繳'];
 var BOOKING_FALLBACK_SOURCES = ['👷工作所得','💰投資理財','🪙副業兼職','💲交易所得','🤶爸媽收入','🪙機構退稅'];
 var BOOKING_FALLBACK_ACCOUNTS = ['💰Cash','💵國泰Stock','🔖中國信託','🟩連線商業銀行','🏔️玉山銀行'];
 var holdingsCache = [];
@@ -9141,7 +9141,7 @@ async function initBookingForm(){
     stockSymbols.map(s=>`<option value="${esc(s.value)}">${esc(s.label)}</option>`).join('');
   var divOpts=`<option value="">選擇配息標的</option>`+dividendSymbols.map(s=>`<option value="${esc(s.value)}">${esc(s.label)}</option>`).join('');
   var expenseCatChips=bookingQuickChipsHtml('e-cat',[
-    {label:'🍽️餐飲',value:'🍽️餐飲食材'},
+    {label:'🍽️外食',value:'🍽️外食餐飲'},
     {label:'🛒食材',value:'🛒全聯食材'},
     {label:'👩Sis',value:'👩Sis學貸/支出'},
     {label:'🏠家居',value:'🏠家居用品'},
@@ -16318,7 +16318,7 @@ function advisorShortcutSpecs(){
     withdraw:{title:'日常提款',amountLabel:'提款金額',hint:'國泰Stock → Cash，直接記錄轉帳。',action:'transfer',from:'💵國泰Stock',to:'💰Cash',note:'日常提款'},
     cashpay:{title:'現金支付',amountLabel:'消費金額',hint:'Cash 支出，請選擇完整消費項目。',action:'expense',account:'💰Cash',cat:'',note:'現金支付',needCategory:true},
     dining:{title:'外食簡餐',amountLabel:'消費金額',hint:'玉山銀行支出，請選擇完整消費項目。',action:'expense',account:'🏔️玉山銀行',cat:'',note:'外食簡餐',needCategory:true},
-    store:{title:'超商消費',amountLabel:'消費金額',hint:'固定分類：🍽️餐飲食材；帳戶：🔖中國信託。',action:'expense',account:'🔖中國信託',cat:'🍽️餐飲食材',note:'超商消費'}
+    store:{title:'超商消費',amountLabel:'消費金額',hint:'固定分類：🍽️外食餐飲；帳戶：🔖中國信託。',action:'expense',account:'🔖中國信託',cat:'🍽️外食餐飲',note:'超商消費'}
   };
 }
 
@@ -17296,7 +17296,7 @@ function advisorAITransferCommand(raw,amount){
 
 function advisorAICategoryAliases(){
   return [
-    {label:'🍽️餐飲食材',keys:['外食','超商','早餐','午餐','晚餐','便當','咖啡','大餐','簡餐','聚餐','火鍋','餐廳','外送','外送餐飲']},
+    {label:'🍽️外食餐飲',keys:['外食','超商','早餐','午餐','晚餐','便當','咖啡','大餐','簡餐','聚餐','火鍋','餐廳','外送','外送餐飲']},
     {label:'🛒全聯食材',keys:['食材','全聯','買菜','菜錢']},
     {label:'🏠家居用品',keys:['家居','家用品','生活用品','日用品']},
     {label:'⛽機車加油',keys:['加油','油錢','機車加油','中油']},
