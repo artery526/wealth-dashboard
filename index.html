@@ -1646,6 +1646,14 @@ body::after{
 .mcs-tarot-chip{font-family:var(--sans);font-size:13px;font-weight:800;color:#f0dfa0;background:rgba(184,137,46,.12);border:1px solid rgba(184,137,46,.2);border-radius:999px;padding:4px 9px;line-height:1.45}
 .mcs-tarot-question{font-family:var(--sans);font-size:13px;color:#c09a50;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere}
 .mcs-empty{font-family:var(--sans);font-size:14px;color:#5a4028;text-align:center;padding:14px 6px}
+.mcs-edit-btn{border:1px solid rgba(232,192,80,.42);border-radius:5px;background:rgba(232,192,80,.08);color:var(--gold);padding:5px 9px;font:800 12px var(--sans);cursor:pointer;white-space:nowrap}
+.mcs-edit-btn:hover{background:rgba(232,192,80,.2);border-color:rgba(232,192,80,.7)}
+.mcs-edit-modal{position:fixed;inset:0;z-index:5200;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.7)}
+.mcs-edit-card{width:min(560px,calc(100vw - 28px));max-height:88vh;overflow:auto;border:1px solid rgba(232,192,80,.58);border-radius:12px;background:linear-gradient(160deg,#211607,#080604);box-shadow:0 22px 70px rgba(0,0,0,.72);padding:16px}
+.mcs-edit-card h3{margin:0 0 12px;color:#fff0b8;font:900 18px var(--sans)}
+.mcs-edit-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.mcs-edit-field{display:grid;gap:5px}.mcs-edit-field.full{grid-column:1/-1}.mcs-edit-field label{font:800 12px var(--sans);color:var(--gold)}
+.mcs-edit-field input,.mcs-edit-field textarea{width:100%;box-sizing:border-box;border:1px solid rgba(184,137,46,.42);border-radius:6px;background:rgba(10,8,4,.8);color:#f0dfa0;padding:8px;font:14px var(--sans);outline:none}.mcs-edit-field textarea{min-height:76px;resize:vertical}
+.mcs-edit-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}.mcs-edit-actions button{min-height:34px;border-radius:6px;padding:7px 12px;font:800 12px var(--sans);cursor:pointer}.mcs-edit-cancel{border:1px solid rgba(184,137,46,.4);background:transparent;color:#c09a50}.mcs-edit-save{border:1px solid rgba(29,158,117,.6);background:rgba(29,158,117,.18);color:var(--teal)}
 @media(max-width:540px){.mcs-stat-row{grid-template-columns:1fr 1fr}.mcs-osho-item{grid-template-columns:1fr;gap:5px}.mcs-tarot-head{align-items:flex-start;flex-direction:column;gap:4px}}
 /* ── 疼痛地圖分頁 ── */
 .mpm-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
@@ -7885,7 +7893,8 @@ async function medicalPost(body){
     getRecords:'medicalRecords',
     getCardStats:'medicalCardStats',
     quickRecord:'medicalQuickRecord',
-    tarotRecord:'medicalTarotRecord'
+    tarotRecord:'medicalTarotRecord',
+    updateCardStats:'medicalCardStatsUpdate'
   };
   var action=map[body&&body._action]||body.action;
   if(!action)throw new Error('醫館 action 未指定');
@@ -18938,14 +18947,15 @@ function mcsRenderOshoList(containerId,rows,emptyText){
     .filter(function(r){return String(r['紀錄時間']||r['顯示牌名']||r['解讀/備註']||'').trim();})
     .slice().sort(function(a,b){return String(b['紀錄時間']||'').localeCompare(String(a['紀錄時間']||''));});
   if(!list.length){el.innerHTML='<div class="mcs-empty">'+mcsEsc(emptyText)+'</div>';return;}
-  el.innerHTML='<div class="mcs-osho-list">'+list.map(function(r){
+  _mcsEditOshoRows=list;
+  el.innerHTML='<div class="mcs-osho-list">'+list.map(function(r,index){
     var recTime=String(r['紀錄時間']||'').trim()||String(r['抽牌日期']||'').trim()||'未記錄時間';
     var cardName=String(r['顯示牌名']||'').trim()||String(r['牌卡名稱']||'').trim()||'未抽取';
     var note=String(r['解讀/備註']||'').trim()||'尚未填寫解讀。';
     return '<div class="mcs-osho-item">'
       +'<div class="mcs-osho-date">'+mcsEsc(recTime)+'</div>'
       +'<div class="mcs-osho-card">'+mcsEsc(cardName)+'</div>'
-      +'<div class="mcs-osho-note">'+mcsEsc(note)+'</div>'
+      +'<div class="mcs-osho-note">'+mcsEsc(note)+' <button type="button" class="mcs-edit-btn" onclick="mcsOpenEdit(\'osho\','+index+')">✏️ 編輯</button></div>'
       +'</div>';
   }).join('')+'</div>';
 }
@@ -18976,26 +18986,78 @@ function mcsRenderTarotList(containerId,rows,emptyText){
     var spread=mcsFirstValue(r,['牌陣','牌陣類型','抽牌類型','spreadType','drawType']);
     var question=mcsFirstValue(r,['抽牌問題','問題','question','牌卡訊息','解讀/備註','備註','tarotNotes']);
     var key=[recTime||date||('row-'+index),spread,question].join('|');
-    if(!groups[key])groups[key]={time:recTime||date||'未記錄時間',spread:spread,question:question,cards:[]};
+    if(!groups[key])groups[key]={time:recTime||date||'未記錄時間',spread:spread,question:question,cards:[],rows:[]};
     var card=mcsCardWithPosition(r);
-    if(card&&groups[key].cards.indexOf(card)<0)groups[key].cards.push(card);
+    if(card&& !groups[key].cards.some(function(item){return item.label===card;}))groups[key].cards.push({label:card,row:r});
+    groups[key].rows.push(r);
     if(!groups[key].spread&&groups[key].cards.length>=3)groups[key].spread='三張';
   });
   var list=Object.keys(groups).map(function(k){return groups[k];})
     .filter(function(g){return g.cards.length||g.question||g.time;})
     .sort(function(a,b){return String(b.time||'').localeCompare(String(a.time||''));});
   if(!list.length){el.innerHTML='<div class="mcs-empty">'+mcsEsc(emptyText)+'</div>';return;}
-  el.innerHTML='<div class="mcs-tarot-list">'+list.map(function(g){
+  _mcsEditTarotGroups=list;
+  el.innerHTML='<div class="mcs-tarot-list">'+list.map(function(g,index){
     var spread=g.spread||((g.cards||[]).length>=3?'三張':'單張');
-    var cards=(g.cards&&g.cards.length?g.cards:['未抽取']).map(function(card){
-      return '<span class="mcs-tarot-chip">'+mcsEsc(card)+'</span>';
+    var cards=(g.cards&&g.cards.length?g.cards:[{label:'未抽取'}]).map(function(card){
+      return '<span class="mcs-tarot-chip">'+mcsEsc(card.label)+'</span>';
     }).join('');
     return '<div class="mcs-tarot-item">'
-      +'<div class="mcs-tarot-head"><div class="mcs-tarot-time">'+mcsEsc(g.time||'未記錄時間')+'</div><div class="mcs-tarot-spread">'+mcsEsc(spread)+'</div></div>'
+      +'<div class="mcs-tarot-head"><div class="mcs-tarot-time">'+mcsEsc(g.time||'未記錄時間')+'</div><div><span class="mcs-tarot-spread">'+mcsEsc(spread)+'</span> <button type="button" class="mcs-edit-btn" onclick="mcsOpenEdit(\'tarot\','+index+')">✏️ 編輯</button></div></div>'
       +'<div class="mcs-tarot-cards">'+cards+'</div>'
       +'<div class="mcs-tarot-question">'+mcsEsc(g.question||'未記錄抽牌問題。')+'</div>'
       +'</div>';
   }).join('')+'</div>';
+}
+
+var _mcsEditOshoRows=[];
+var _mcsEditTarotGroups=[];
+function mcsEditValue(v){return mcsEsc(String(v==null?'':v));}
+function mcsEditDateTime(row){
+  var raw=mcsFirstValue(row,['紀錄時間','抽牌日期','date']);
+  var match=raw.match(/^(\d{4}-\d{2}-\d{2})(?:[ T](\d{1,2}:\d{2}))?/);
+  return {date:match?match[1]:mcsFirstValue(row,['抽牌日期','date']),time:match&&match[2]?match[2]:''};
+}
+function mcsCloseEdit(){var el=document.getElementById('mcs-edit-modal');if(el)el.remove();}
+function mcsOpenEdit(kind,index){
+  var isOsho=kind==='osho';
+  var group=isOsho?_mcsEditOshoRows[index]:_mcsEditTarotGroups[index];
+  if(!group)return;
+  var rows=isOsho?[group]:(group.rows||[]);
+  var first=rows[0]||{};
+  var dt=mcsEditDateTime(first);
+  var topic=mcsFirstValue(first,['提問/主題','抽牌問題','關鍵字']);
+  var notes=mcsFirstValue(first,['解讀/備註','牌卡訊息','備註']);
+  var cardFields=isOsho
+    ?'<div class="mcs-edit-field full"><label>奧修牌卡名稱</label><input name="card-0" value="'+mcsEditValue(mcsFirstValue(first,['牌卡名稱','顯示牌名']))+'" required></div>'
+    :rows.map(function(row,i){return '<div class="mcs-edit-field"><label>第 '+(i+1)+' 張牌卡</label><input name="card-'+i+'" value="'+mcsEditValue(mcsFirstValue(row,['牌卡名稱','顯示牌名']))+'" required></div><div class="mcs-edit-field"><label>正逆位</label><input name="orientation-'+i+'" value="'+mcsEditValue(mcsFirstValue(row,['正逆位']))+'"></div>';}).join('');
+  var modal=document.createElement('div');
+  modal.id='mcs-edit-modal';modal.className='mcs-edit-modal';
+  modal.innerHTML='<div class="mcs-edit-card"><h3>✏️ 修正'+(isOsho?'奧修抽牌記錄':'塔羅抽牌明細')+'</h3><form id="mcs-edit-form"><div class="mcs-edit-grid">'
+    +'<div class="mcs-edit-field"><label>抽牌日期</label><input name="date" type="date" value="'+mcsEditValue(dt.date)+'" required></div>'
+    +'<div class="mcs-edit-field"><label>紀錄時間</label><input name="time" type="time" value="'+mcsEditValue(dt.time)+'"></div>'
+    +cardFields
+    +'<div class="mcs-edit-field full"><label>提問／主題</label><textarea name="topic">'+mcsEditValue(topic)+'</textarea></div>'
+    +'<div class="mcs-edit-field full"><label>解讀／備註</label><textarea name="notes">'+mcsEditValue(notes)+'</textarea></div>'
+    +'</div><div class="mcs-edit-actions"><button type="button" class="mcs-edit-cancel">取消</button><button type="submit" class="mcs-edit-save">儲存修正</button></div></form></div>';
+  document.body.appendChild(modal);
+  modal.querySelector('.mcs-edit-cancel').onclick=mcsCloseEdit;
+  modal.addEventListener('click',function(e){if(e.target===modal)mcsCloseEdit();});
+  modal.querySelector('form').onsubmit=async function(e){
+    e.preventDefault();var form=e.target,save=form.querySelector('.mcs-edit-save');save.disabled=true;save.textContent='儲存中…';
+    try{
+      var base={date:form.date.value,time:form.time.value,topic:form.topic.value,notes:form.notes.value};
+      var payload=rows.map(function(row,i){
+        var next=Object.assign({},base,{row:row._row});
+        next.cardName=form['card-'+(isOsho?0:i)].value.trim();
+        if(isOsho)next.displayName=next.cardName;
+        else{next.orientation=form['orientation-'+i].value.trim()||'❌';next.displayName=next.cardName+(next.orientation==='❌'?'':next.orientation);}
+        return next;
+      });
+      await medicalPost({_action:'updateCardStats',sheet:isOsho?'奧修禪卡統計':'牌卡統計',rows:payload});
+      _mcsCache=null; mcsCloseEdit(); await initMedicalCardStats();
+    }catch(err){save.disabled=false;save.textContent='儲存修正';alert('牌卡記錄更新失敗：'+(err.message||err));}
+  };
 }
 
 // ══════════════════════════════════════════════════════════════
