@@ -18980,7 +18980,12 @@ function mcsRenderTarotList(containerId,rows,emptyText){
   var el=document.getElementById(containerId);
   if(!el)return;
   var groups={};
-  (rows||[]).forEach(function(r,index){
+  var orderedRows=(rows||[]).slice().sort(function(a,b){
+    var ai=Number(mcsFirstValue(a,['牌序','牌位序','positionIndex']))||999;
+    var bi=Number(mcsFirstValue(b,['牌序','牌位序','positionIndex']))||999;
+    return ai-bi || String(a['紀錄時間']||'').localeCompare(String(b['紀錄時間']||''));
+  });
+  orderedRows.forEach(function(r,index){
     var recTime=mcsFirstValue(r,['紀錄時間','抽牌時間','recordTime','createdAt'])||mcsFirstValue(r,['抽牌日期','日期','date']);
     var date=mcsFirstValue(r,['抽牌日期','日期','date']);
     var spread=mcsFirstValue(r,['牌陣','牌陣類型','抽牌類型','spreadType','drawType']);
@@ -18988,7 +18993,7 @@ function mcsRenderTarotList(containerId,rows,emptyText){
     var key=[recTime||date||('row-'+index),spread,question].join('|');
     if(!groups[key])groups[key]={time:recTime||date||'未記錄時間',spread:spread,question:question,cards:[],rows:[]};
     var card=mcsCardWithPosition(r);
-    if(card&& !groups[key].cards.some(function(item){return item.label===card;}))groups[key].cards.push({label:card,row:r});
+    if(card)groups[key].cards.push({label:card,row:r});
     groups[key].rows.push(r);
     if(!groups[key].spread&&groups[key].cards.length>=3)groups[key].spread='三張';
   });
