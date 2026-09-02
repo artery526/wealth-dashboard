@@ -4943,14 +4943,13 @@ function uniqueBookingOptions(values){
 function filterRemovedBookingAccounts(values){
   return (values||[]).filter(function(value){
     var key=stripIconText(value).replace(/\s+/g,'').toLowerCase();
-    return key!=='永豐銀行'&&key!=='永豐';
+    // These accounts remain valid historical labels, but must never re-enter
+    // the active quick-booking account set from API config or local fallback.
+    return key!=='永豐銀行'&&key!=='永豐'&&key!=='國泰money'&&key!=='國泰m'&&key!=='sis國泰世華'&&key!=='cube';
   });
 }
 function filterHiddenBookingAccounts(values){
-  return filterRemovedBookingAccounts(values).filter(function(value){
-    var key=stripIconText(value).replace(/\s+/g,'').toLowerCase();
-    return key!=='國泰money'&&key!=='國泰m'&&key!=='sis國泰世華'&&key!=='cube';
-  });
+  return filterRemovedBookingAccounts(values);
 }
 function bookingOptionMatches(value,target){
   var raw=String(value||'');
