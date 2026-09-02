@@ -7886,7 +7886,7 @@ function initPainAreaChips(areas){
   });
 }
 
-async function medicalPost(body){
+async function medicalPost(body,timeoutMs){
   if(!hasMainApiCredentials())throw new Error('未設定主 API');
   var map={
     getOptions:'medicalOptions',
@@ -7898,7 +7898,7 @@ async function medicalPost(body){
   };
   var action=map[body&&body._action]||body.action;
   if(!action)throw new Error('醫館 action 未指定');
-  var data=await apiPostJson(Object.assign({},body,{action:action}));
+  var data=await apiPostJson(Object.assign({},body,{action:action}),timeoutMs);
   if(data.status!=='success'&&data.status!=='test_ok')throw new Error(data.message||'醫館同步失敗');
   return data;
 }
@@ -18836,7 +18836,7 @@ async function initMedicalCardStats(){
   var charts=['mcs-osho-chart','mcs-tarot-chart','mcs-osho-records','mcs-tarot-records'];
   charts.forEach(function(id){var el=document.getElementById(id);if(el)el.innerHTML='<div class="mcs-empty">⏳ 載入中…</div>';});
   try{
-    if(!_mcsPromise)_mcsPromise=medicalPost({_action:'getCardStats',monthsLimit:MCS_MONTHS_LIMIT}).finally(function(){_mcsPromise=null;});
+    if(!_mcsPromise)_mcsPromise=mcsFetchStatsWithRetry_().finally(function(){_mcsPromise=null;});
     var result=await _mcsPromise;
     _mcsCache=result.cardStats||{tarot:[],osho:[]};
     mcsPopulateMonthSel(_mcsCache);
@@ -18850,7 +18850,7 @@ async function initMedicalCardStats(){
     console.error('mcs: getCardStats failed',err);
     charts.forEach(function(id){
       var el=document.getElementById(id);
-      if(el)el.innerHTML='<div class="mcs-empty" style="color:var(--coral)">⚠️ 統計讀取失敗：'+mcsEsc(err.message)+'</div>';
+      if(el)el.innerHTML='<div class="mcs-empty" style="color:var(--coral)">⚠️ 統計讀取失敗：'+mcsEsc(err.message)+' <button type="button" class="mcs-edit-btn" onclick="initMedicalCardStats()">重新載入</button></div>';
     });
   }
 }
@@ -19008,6 +19008,15 @@ function mcsRenderTarotList(containerId,rows,emptyText){
       +'<div class="mcs-tarot-question">'+mcsEsc(g.question||'未記錄抽牌問題。')+'</div>'
       +'</div>';
   }).join('')+'</div>';
+}
+
+async function mcsFetchStatsWithRetry_(){
+  var lastError;
+  for(var attempt=0;attempt<2;attempt++){
+    try{return await medicalPost({_action:'getCardStats',monthsLimit:MCS_MONTHS_LIMIT},30000);}
+    catch(err){lastError=err;if(attempt===0)await new Promise(function(resolve){setTimeout(resolve,700);});}
+  }
+  throw lastError||new Error('統計讀取失敗');
 }
 
 var _mcsEditOshoRows=[];
