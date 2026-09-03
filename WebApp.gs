@@ -2077,8 +2077,9 @@ function getDailyAssetSnapshot(ss) {
   values.forEach(function(row, index) {
     var hasDate = String(row[0] || '').trim() !== '' || row[0] instanceof Date;
     var hasMarketValue = row[1] !== '' && row[1] !== null && row[1] !== undefined;
-    if (!hasDate && !hasMarketValue) return;
-    if (!hasMarketValue) return;
+    var hasTotalAssetValue = row[8] !== '' && row[8] !== null && row[8] !== undefined;
+    if (!hasDate && !hasMarketValue && !hasTotalAssetValue) return;
+    if (!hasMarketValue && !hasTotalAssetValue) return;
     rows.push(dailyAssetSnapshotRow_(row, index + 2, tz));
   });
   rows.sort(function(a, b) {
