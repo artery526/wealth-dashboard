@@ -16654,7 +16654,7 @@ function advisorAIOpenDividendCalculator(){
         <button class="advisor-div-calc-btn" id="advisor-div-calc-us" type="button" onclick="advisorDividendCalcSetMarket('us')">🇺🇸 美股</button>
       </div>
       <div class="advisor-div-calc-grid">
-        <div class="advisor-div-calc-field"><label for="advisor-div-calc-investment">投入金額（台幣）</label><input id="advisor-div-calc-investment" type="number" min="0" step="1" placeholder="例如 100000" inputmode="decimal" oninput="advisorDividendCalcUpdate()"></div>
+        <div class="advisor-div-calc-field"><label for="advisor-div-calc-investment">投入金額（台幣，自動計算）</label><input id="advisor-div-calc-investment" type="number" min="0" step="0.01" placeholder="輸入股數與股價後自動帶入" inputmode="decimal" oninput="advisorDividendCalcUpdate()"></div>
         <div class="advisor-div-calc-field"><label for="advisor-div-calc-price">股價（${advisorDividendCalcMarket==='us'?'USD':'TWD'}）</label><input id="advisor-div-calc-price" type="number" min="0" step="0.01" placeholder="例如 52.2" inputmode="decimal" oninput="advisorDividendCalcUpdate()"></div>
         <div class="advisor-div-calc-field"><label for="advisor-div-calc-shares">持股股數（可選）</label><input id="advisor-div-calc-shares" type="number" min="0" step="1" placeholder="留白則由投入金額反推" inputmode="decimal" oninput="advisorDividendCalcUpdate()"></div>
         <div class="advisor-div-calc-field"><label for="advisor-div-calc-rate">每股配息（${advisorDividendCalcMarket==='us'?'USD':'TWD'}）</label><input id="advisor-div-calc-rate" type="number" min="0" step="0.0001" placeholder="例如 0.82" inputmode="decimal" oninput="advisorDividendCalcUpdate()"></div>
@@ -16710,6 +16710,7 @@ function advisorDividendCalcSetFrequency(frequency){
 
 function advisorDividendCalcUpdate(){
   var get=function(id){return parseFloat(document.getElementById(id)&&document.getElementById(id).value)||0;};
+  var investmentInput=document.getElementById('advisor-div-calc-investment');
   var investment=get('advisor-div-calc-investment');
   var price=get('advisor-div-calc-price');
   var enteredShares=get('advisor-div-calc-shares');
@@ -16719,6 +16720,8 @@ function advisorDividendCalcUpdate(){
   var taxRate=taxInput&&taxInput.value!==''?parseFloat(taxInput.value):30;
   var taxFactor=advisorDividendCalcMarket==='us'?Math.max(0,1-(isNaN(taxRate)?30:taxRate)/100):1;
   var shares=enteredShares>0?Math.floor(enteredShares):(investment>0&&price>0?Math.floor(investment/(price*fx)):0);
+  var calculatedCapital=enteredShares>0&&price>0?shares*price*fx:0;
+  if(investmentInput&&calculatedCapital>0)investmentInput.value=String(Math.round(calculatedCapital*100)/100);
   var set=function(id,value){var el=document.getElementById(id);if(el)el.textContent=value;};
   set('advisor-div-calc-shares-result',shares?shares.toLocaleString('zh-TW')+' 股':'—');
   if(!(shares>0&&price>0&&rate>0)){
@@ -16729,7 +16732,7 @@ function advisorDividendCalcUpdate(){
   var annualCount={monthly:12,quarterly:4,semiannual:2,annual:1}[advisorDividendCalcFrequency]||12;
   var annual=once*annualCount;
   var monthly=annual/12;
-  var capital=enteredShares>0?shares*price*fx:investment;
+  var capital=enteredShares>0?calculatedCapital:investment;
   set('advisor-div-calc-monthly-result',fmtFull(monthly));
   set('advisor-div-calc-once-result',fmtFull(once));
   set('advisor-div-calc-annual-result',fmtFull(annual));
