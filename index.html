@@ -17819,6 +17819,7 @@ function advisorAIDailyMurmurData(data){
   data=data||{};
   var accounts=Array.isArray(data.accounts)?data.accounts:[];
   var monthly=data.monthly||{};
+  var assetTrend=data.assetSnapshot&&data.assetSnapshot.totalAssetTrend30d;
   var stock=accounts.find(function(row){return advisorAIAccountMatches(row&&row.name,'💵國泰Stock');});
   var stockValue=stock&&isFinite(Number(stock.value))?Number(stock.value):null;
   var savingRate=advisorAISavingRateNumber(monthly.savingRate);
@@ -17826,6 +17827,9 @@ function advisorAIDailyMurmurData(data){
   if(stockValue!==null)finance.push('軍師發現國泰Stock帳上約 '+Math.round(stockValue).toLocaleString('zh-TW')+' 銀兩可用。');
   if(monthly.savingRate!==''&&monthly.savingRate!=null){
     finance.push('本月儲蓄率 '+savingRate.toFixed(1)+'%。'+(savingRate>=60?'主公可適度犒賞自己。':savingRate<30?'先穩住開支，暫緩揮霍。':'糧草尚穩，可小幅犒賞自己。'));
+  }
+  if(assetTrend&&isFinite(Number(assetTrend.changeAmount))&&isFinite(Number(assetTrend.changePct))){
+    finance.push('軍師報告近30日總資產變化 '+(Number(assetTrend.changeAmount)>=0?'+':'')+Math.round(Number(assetTrend.changeAmount)).toLocaleString('zh-TW')+'（'+(Number(assetTrend.changePct)>=0?'+':'')+Number(assetTrend.changePct).toFixed(2)+'%）。');
   }
   var market=data.market||{};
   var marketStance=String((market.summary||{}).stance||market.stance||'').trim();
@@ -17899,10 +17903,10 @@ async function loadAdvisorAIDailyUpdates(){
     });
   }
   try{
-    var results=await Promise.allSettled([advisorAIDailyUpdatesPromise,apiGet({action:'accounts'}),apiGet({action:'monthly',ym:currentYM()}),apiGet({action:'marketDashboard'}),apiGet({action:'macroOverview'}),loadArkWallEntries(false),apiGet({action:'todayCalendar',mode:'today'},30000),apiGet({action:'foodhouseDashboard',ym:currentYM()}),loadDividendCenter(false)]);
+    var results=await Promise.allSettled([advisorAIDailyUpdatesPromise,apiGet({action:'accounts'}),apiGet({action:'monthly',ym:currentYM()}),apiGet({action:'marketDashboard'}),apiGet({action:'macroOverview'}),loadArkWallEntries(false),apiGet({action:'todayCalendar',mode:'today'},30000),apiGet({action:'foodhouseDashboard',ym:currentYM()}),loadDividendCenter(false),apiGet({action:'assetSnapshot'})]);
     if(results[0].status!=='fulfilled')throw results[0].reason||new Error('今日更新讀取失敗');
     var data=results[0].status==='fulfilled'?results[0].value:{};
-    var murmur=advisorAIDailyMurmurData({accounts:results[1].status==='fulfilled'?results[1].value:[],monthly:results[2].status==='fulfilled'?results[2].value:{},market:results[3].status==='fulfilled'?results[3].value:{},macro:results[4].status==='fulfilled'?results[4].value:{}});
+    var murmur=advisorAIDailyMurmurData({accounts:results[1].status==='fulfilled'?results[1].value:[],monthly:results[2].status==='fulfilled'?results[2].value:{},market:results[3].status==='fulfilled'?results[3].value:{},macro:results[4].status==='fulfilled'?results[4].value:{},assetSnapshot:results[9].status==='fulfilled'?results[9].value:{}});
     data=Object.assign({},data,{murmurs:murmur,items:(data.items||[]).map(function(item){return Object.assign({},item,{murmur:murmur[item.module]||''});})});
     data=Object.assign({},data,{items:(data.items||[]).concat([advisorAIDailyAgendaItem(results[6])])});
     var foodhouse=results[7].status==='fulfilled'?(results[7].value||{}):{};
