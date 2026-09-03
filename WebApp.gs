@@ -8063,22 +8063,11 @@ function getDailyUpdates_(ss) {
     var incomeCount = transactions.filter(function(row) { return row.type === '收入'; }).length;
     var expenseCount = transactions.filter(function(row) { return row.type === '支出'; }).length;
     var transferCount = transactions.filter(function(row) { return row.type === '轉帳'; }).length;
-    var assetTrend = null;
-    try {
-      var assetSnapshot = getDailyAssetSnapshot(getExternalDbSpreadsheet_()) || {};
-      var trend = assetSnapshot.totalAssetTrend30d;
-      if (trend && isFinite(Number(trend.changeAmount)) && isFinite(Number(trend.changePct))) {
-        assetTrend = '近30日總資產變化 ' + (Number(trend.changeAmount) >= 0 ? '+' : '') + Math.round(Number(trend.changeAmount)).toLocaleString('zh-TW') + '（' + (Number(trend.changePct) >= 0 ? '+' : '') + Number(trend.changePct).toFixed(2) + '%）';
-      }
-    } catch (assetError) {
-      errors.push({ module: 'finance', message: assetError.message || '資產快照讀取失敗' });
-    }
-    if (transactions.length || assetTrend) {
+    if (transactions.length) {
       var financeParts = ['今日記帳 ' + transactions.length + ' 筆'];
       if (incomeCount) financeParts.push('收入 ' + incomeCount + ' 筆');
       if (expenseCount) financeParts.push('支出 ' + expenseCount + ' 筆');
       if (transferCount) financeParts.push('轉帳 ' + transferCount + ' 筆');
-      if (assetTrend) financeParts.push(assetTrend);
       items.push({ module: 'finance', icon: '💰', title: '財政部', message: financeParts.join('，'), count: transactions.length, updated: true, target: 'finance', tab: 'booking-form' });
     }
   } catch (e) { errors.push({ module: 'finance', message: e.message || '財政資料讀取失敗' }); }
