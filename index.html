@@ -1958,6 +1958,8 @@ body::after{
 .finance-accounts-collapse.is-masked .acc-val::after{content:'***';font-family:var(--mono);font-size:17px;color:var(--gold)}
 .finance-accounts-collapse.is-masked .treasury-total-delta{font-size:0;color:transparent}
 .finance-accounts-collapse.is-masked .treasury-total-delta::after{content:'較昨日 ***';font-family:var(--mono);font-size:11px;color:#8d6a2a}
+.finance-accounts-collapse.is-masked .treasury-total-trend{font-size:0;color:transparent}
+.finance-accounts-collapse.is-masked .treasury-total-trend::after{content:'近30日 ***';font-family:var(--mono);font-size:11px;color:#8d6a2a}
 .finance-accounts-collapse.is-masked .treasury-monthly-row strong{font-size:0;color:transparent}
 .finance-accounts-collapse.is-masked .treasury-monthly-row strong::after{content:'***';font-family:var(--mono);font-size:15px}
 .finance-accounts-collapse.is-masked .treasury-monthly-income::after{color:var(--coral)}
@@ -2002,6 +2004,9 @@ body::after{
 .treasury-total-delta{font-family:var(--mono);font-size:11px;margin-top:2px}
 .treasury-total-delta.up{color:var(--coral)}
 .treasury-total-delta.down{color:var(--teal)}
+.treasury-total-trend{font-family:var(--mono);font-size:11px;margin-top:2px;color:#d8b45d}
+.treasury-total-trend.up{color:var(--coral)}
+.treasury-total-trend.down{color:var(--teal)}
 .acc-total-row{
   border-top:1px solid #2a1c08;padding-top:10px;
   display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;
@@ -9006,10 +9011,17 @@ function renderTreasuryAccountTotalAssetCard(assetSnapshot,totalAssetAccount,mon
   var deltaOk=delta!==null&&delta!==undefined&&!isNaN(Number(delta))&&isFinite(Number(delta));
   var deltaClass=deltaOk?(Number(delta)<0?'down':'up'):'';
   var deltaText=deltaOk?advisorSignedCurrency(Number(delta)):'--';
+  var trend=assetSnapshot&&assetSnapshot.totalAssetTrend30d;
+  var trendChange=Number(trend&&trend.changeAmount);
+  var trendPct=Number(trend&&trend.changePct);
+  var trendOk=trend&&isFinite(trendChange)&&isFinite(trendPct);
+  var trendClass=trendOk?(trendChange<0?'down':'up'):'';
+  var trendText=trendOk?'近'+(Number(trend.days)||30)+'日 '+advisorSignedCurrency(trendChange)+' ('+(trendPct>=0?'+':'')+trendPct.toFixed(2)+'%)':'近30日資料不足';
   return `<div class="acc-item treasury-total-card">
     <div class="acc-name">帝國寶庫</div>
     <div class="acc-val">${fmtFull(total)}</div>
     <div class="treasury-total-delta ${deltaClass}">較昨日 ${deltaText}</div>
+    <div class="treasury-total-trend ${trendClass}">${esc(trendText)}</div>
     <div class="treasury-monthly-title"><span>本月收入／支出</span><span class="treasury-monthly-saving">🪙${esc(monthly.savingRate||'—')}</span></div>
     <div class="treasury-monthly-row"><span>收入</span><strong class="treasury-monthly-income">${fmtFull(monthly.income)}</strong></div>
     <div class="treasury-monthly-row"><span>支出</span><strong class="treasury-monthly-expense">${fmtFull(monthly.expense)}</strong></div>
