@@ -2066,7 +2066,8 @@ function getDailyAssetSnapshot(ss) {
       latestMarketValue: null,
       previousMarketValue: null,
       dailyChangeAmount: null,
-      dailyChangePct: null
+      dailyChangePct: null,
+      totalAssetTrend30d: null
     };
   }
 
@@ -2091,6 +2092,7 @@ function getDailyAssetSnapshot(ss) {
   var dailyChangePct = null;
   var totalAssetChangeAmount = null;
   var totalAssetChangePct = null;
+  var totalAssetTrend30d = null;
   if (latest && previous) {
     dailyChangeAmount = latest.investmentMarketValue - previous.investmentMarketValue;
     if (previous.investmentMarketValue) {
@@ -2101,6 +2103,31 @@ function getDailyAssetSnapshot(ss) {
       if (previous.totalAssetValue) {
         totalAssetChangePct = totalAssetChangeAmount / previous.totalAssetValue * 100;
       }
+    }
+  }
+  if (latest && latest.totalAssetValue !== null) {
+    var trendCutoff = latest.dateValue - 30 * 24 * 60 * 60 * 1000;
+    var trendBase = null;
+    for (var trendIndex = 0; trendIndex < rows.length; trendIndex++) {
+      var candidate = rows[trendIndex];
+      if (candidate.dateValue >= latest.dateValue) break;
+      if (candidate.dateValue >= trendCutoff && candidate.totalAssetValue !== null) {
+        trendBase = candidate;
+        break;
+      }
+    }
+    if (trendBase) {
+      var trendChangeAmount = latest.totalAssetValue - trendBase.totalAssetValue;
+      var trendChangePct = trendBase.totalAssetValue ? trendChangeAmount / trendBase.totalAssetValue * 100 : null;
+      totalAssetTrend30d = {
+        fromDate: trendBase.date,
+        toDate: latest.date,
+        days: Math.max(0, Math.round((latest.dateValue - trendBase.dateValue) / (24 * 60 * 60 * 1000))),
+        baseValue: trendBase.totalAssetValue,
+        latestValue: latest.totalAssetValue,
+        changeAmount: trendChangeAmount,
+        changePct: trendChangePct
+      };
     }
   }
 
@@ -2115,7 +2142,8 @@ function getDailyAssetSnapshot(ss) {
     latestTotalAssetValue: latest ? latest.totalAssetValue : null,
     previousTotalAssetValue: previous ? previous.totalAssetValue : null,
     totalAssetChangeAmount: totalAssetChangeAmount,
-    totalAssetChangePct: totalAssetChangePct
+    totalAssetChangePct: totalAssetChangePct,
+    totalAssetTrend30d: totalAssetTrend30d
   };
 }
 
