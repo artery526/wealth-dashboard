@@ -2117,6 +2117,15 @@ function getDailyAssetSnapshot(ss) {
         break;
       }
     }
+    if (!trendBase) {
+      for (var fallbackIndex = rows.length - 1; fallbackIndex >= 0; fallbackIndex--) {
+        var fallbackCandidate = rows[fallbackIndex];
+        if (fallbackCandidate.dateValue < latest.dateValue && fallbackCandidate.totalAssetValue !== null) {
+          trendBase = fallbackCandidate;
+          break;
+        }
+      }
+    }
     if (trendBase) {
       var trendChangeAmount = latest.totalAssetValue - trendBase.totalAssetValue;
       var trendChangePct = trendBase.totalAssetValue ? trendChangeAmount / trendBase.totalAssetValue * 100 : null;
