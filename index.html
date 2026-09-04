@@ -1408,6 +1408,7 @@ body::after{
 .advisor-duo-role>.advisor-web-verify-dot{position:absolute;top:-4px;right:-4px;width:14px;height:14px;z-index:4;pointer-events:none}
 .advisor-ai-verify-status{display:inline-flex;align-items:center;gap:5px;margin-left:4px;font-family:var(--sans);font-size:10px;font-weight:900;color:#bcefff;white-space:normal;flex-wrap:wrap;line-height:1.4}
 .advisor-ai-verify-status .advisor-web-verify-dot{width:10px;height:10px}
+.advisor-ai-verify-label{font-weight:900;color:#bcefff}
 .advisor-ai-verify-legend{margin-left:4px;color:#78aec0;letter-spacing:0;font-weight:700}
 .empire-card-status-dot{position:absolute;top:10px;right:10px;z-index:6;width:14px;height:14px;border-radius:999px;border:1px solid rgba(255,238,190,.58);background:var(--gold);box-shadow:0 0 14px rgba(232,192,80,.58),inset 0 1px 0 rgba(255,255,255,.22);pointer-events:none}
 .empire-card-status-dot.ok{background:var(--teal);box-shadow:0 0 14px rgba(29,158,117,.62),inset 0 1px 0 rgba(255,255,255,.22)}
@@ -5791,6 +5792,10 @@ function advisorAIWebVerifyStatusHtml(){
   if(msg)title+='：'+msg;
   return `<span class="advisor-web-verify-dot ${cls}" id="advisor-web-verify-dot" title="${esc(title)}" aria-label="${esc(title)}"></span>`;
 }
+function advisorAIWebVerifyStatusLabel(){
+  var status=webVerifyStoredStatus();
+  return status==='ok'?'成功':(status==='pending'?'驗證中':'不成功');
+}
 function advisorAIUpdateWebVerifyStatus(){
   var status=webVerifyStoredStatus();
   var cls=status==='ok'?'ok':(status==='pending'?'pending':'err');
@@ -5801,6 +5806,9 @@ function advisorAIUpdateWebVerifyStatus(){
     dot.className='advisor-web-verify-dot '+cls;
     dot.title=title;
     dot.setAttribute('aria-label',title);
+  });
+  document.querySelectorAll('.advisor-ai-verify-label').forEach(function(label){
+    label.textContent=advisorAIWebVerifyStatusLabel();
   });
 }
 async function verifyWebAccess(){
@@ -16532,7 +16540,7 @@ function advisorAIHeaderHtml(title){
       <div class="advisor-ai-quick-tools">
         ${advisorAIQuickCommandSelectHtml()}
         <span class="advisor-ai-header-date" aria-label="今日日期">${advisorAICompactDate()}</span>
-        <span class="advisor-ai-verify-status" aria-label="龐統城門驗證狀態">${advisorAIWebVerifyStatusHtml()}<span>城門</span><span class="advisor-ai-verify-legend">🟢成功　🟡驗證中　🔴不成功</span></span>
+        <span class="advisor-ai-verify-status" aria-label="龐統城門驗證狀態">${advisorAIWebVerifyStatusHtml()}<span class="advisor-ai-verify-label">${advisorAIWebVerifyStatusLabel()}</span></span>
       </div>
       <div class="advisor-ai-title-wrap">
         <div class="advisor-ai-funds" id="advisor-ai-funds">${advisorAIHeaderFundsHtml(fundsCache&&fundsCache.cash,fundsCache&&fundsCache.stock)}</div>
