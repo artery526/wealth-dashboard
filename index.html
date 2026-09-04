@@ -1406,6 +1406,13 @@ body::after{
 .advisor-web-verify-dot.ok{background:var(--teal);box-shadow:0 0 14px rgba(29,158,117,.62),inset 0 1px 0 rgba(255,255,255,.24)}
 .advisor-web-verify-dot.pending{background:var(--gold);box-shadow:0 0 14px rgba(232,192,80,.55),inset 0 1px 0 rgba(255,255,255,.24)}
 .advisor-duo-role>.advisor-web-verify-dot{position:absolute;top:-4px;right:-4px;width:14px;height:14px;z-index:4;pointer-events:none}
+.advisor-ai-verify-status{display:inline-flex;align-items:center;gap:5px;margin-left:4px;font-family:var(--sans);font-size:10px;font-weight:900;color:#bcefff;white-space:normal;flex-wrap:wrap;line-height:1.4}
+.advisor-ai-verify-status .advisor-web-verify-dot{width:10px;height:10px}
+.advisor-ai-verify-legend{margin-left:4px;color:#78aec0;letter-spacing:0;font-weight:700}
+.empire-card-status-dot{position:absolute;top:10px;right:10px;z-index:6;width:14px;height:14px;border-radius:999px;border:1px solid rgba(255,238,190,.58);background:var(--gold);box-shadow:0 0 14px rgba(232,192,80,.58),inset 0 1px 0 rgba(255,255,255,.22);pointer-events:none}
+.empire-card-status-dot.ok{background:var(--teal);box-shadow:0 0 14px rgba(29,158,117,.62),inset 0 1px 0 rgba(255,255,255,.22)}
+.empire-card-status-dot.err{background:var(--coral);box-shadow:0 0 14px rgba(231,87,71,.55),inset 0 1px 0 rgba(255,255,255,.22)}
+.empire-card-status-dot.pending{background:var(--gold);box-shadow:0 0 14px rgba(232,192,80,.58),inset 0 1px 0 rgba(255,255,255,.22)}
 .empire-access-lock{position:absolute;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;padding:24px;border:1px solid rgba(232,192,80,.26);background:rgba(8,5,3,.58);backdrop-filter:blur(2px);color:#f4e5b7;text-align:center;pointer-events:auto}
 .empire-access-lock-inner{max-width:360px;border:1px solid rgba(232,192,80,.38);border-radius:9px;background:rgba(18,11,4,.92);padding:18px 22px;box-shadow:0 0 22px rgba(0,0,0,.42)}
 .empire-access-lock-title{font-family:'Noto Serif TC',serif;font-size:20px;font-weight:950;letter-spacing:1px;color:#ffe8a3}
@@ -4413,7 +4420,6 @@ html[data-theme="deep-blue"] .advisor-ai-standalone .advisor-ai-quick-select:foc
         <div class="advisor-duo" aria-label="選擇軍師">
           <button class="advisor-duo-role pangtong" type="button" onclick="openAdvisorAIFromOrb(event)" title="龐統 · 軍師AI">
             <span class="advisor-duo-stage"><video class="advisor-duo-video" data-src="1menuv3.mp4" poster="1menu.png" muted playsinline preload="none" aria-label="龐統軍師"></video></span>
-            <span class="advisor-web-verify-dot err" id="advisor-web-verify-dot" title="網頁驗證未通過" aria-label="網頁驗證未通過"></span>
           </button>
           <button class="advisor-duo-role zhuge" type="button" onclick="openAdvisorDialog(event)" title="諸葛 · 軍師">
             <span class="advisor-duo-stage"><video class="advisor-duo-video" data-src="2menuv3.mp4" poster="2menu.png" muted playsinline preload="none" aria-label="諸葛軍師"></video></span>
@@ -4461,6 +4467,7 @@ html[data-theme="deep-blue"] .advisor-ai-standalone .advisor-ai-quick-select:foc
     <!-- 財政 -->
     <div class="card finance-landscape" id="c-finance" onclick="openFinanceCard(event)">
       <div class="frame">
+        <span class="empire-card-status-dot pending" id="finance-card-status-dot" title="財政尚未完成連線驗證" aria-label="財政尚未完成連線驗證"></span>
         <div class="corner tl"></div><div class="corner tr"></div>
         <div class="corner bl"></div><div class="corner br"></div>
         <div class="gem">⚱️</div>
@@ -4495,6 +4502,7 @@ html[data-theme="deep-blue"] .advisor-ai-standalone .advisor-ai-quick-select:foc
     <!-- 軍機處 -->
     <div class="card military-landscape" id="c-council" onclick="openPanel('council')">
       <div class="frame">
+        <span class="empire-card-status-dot pending" id="council-card-status-dot" title="軍機處尚未完成連線驗證" aria-label="軍機處尚未完成連線驗證"></span>
         <div class="corner tl"></div><div class="corner tr"></div>
         <div class="corner bl"></div><div class="corner br"></div>
         <div class="gem">📜</div>
@@ -4528,6 +4536,7 @@ html[data-theme="deep-blue"] .advisor-ai-standalone .advisor-ai-quick-select:foc
     <!-- 醫館 -->
     <div class="card medical-landscape" id="c-medical" onclick="openPanel('medical')">
       <div class="frame">
+        <span class="empire-card-status-dot pending" id="medical-card-status-dot" title="醫館尚未完成連線驗證" aria-label="醫館尚未完成連線驗證"></span>
         <div class="corner tl"></div><div class="corner tr"></div>
         <div class="corner bl"></div><div class="corner br"></div>
         <div class="gem">✚</div>
@@ -4561,6 +4570,7 @@ html[data-theme="deep-blue"] .advisor-ai-standalone .advisor-ai-quick-select:foc
     <!-- Wall -->
     <div class="card wall-landscape" id="c-wall" onclick="openArkWall()">
       <div class="frame">
+        <span class="empire-card-status-dot pending" id="wall-card-status-dot" title="城牆尚未完成連線驗證" aria-label="城牆尚未完成連線驗證"></span>
         <div class="corner tl"></div><div class="corner tr"></div>
         <div class="corner bl"></div><div class="corner br"></div>
         <div class="gem">城</div>
@@ -4594,6 +4604,7 @@ html[data-theme="deep-blue"] .advisor-ai-standalone .advisor-ai-quick-select:foc
     <!-- Store 倉庫 -->
     <div class="card store-landscape" id="c-store" onclick="openPanel('store')">
       <div class="frame">
+        <span class="empire-card-status-dot pending" id="store-card-status-dot" title="太倉尚未完成連線驗證" aria-label="太倉尚未完成連線驗證"></span>
         <div class="corner tl"></div><div class="corner tr"></div>
         <div class="corner bl"></div><div class="corner br"></div>
         <div class="gem">庫</div>
@@ -6719,14 +6730,14 @@ function setEmpireCardStatus(key,status,message){
   var text=status==='ok'?label+'連線成功':(status==='pending'?label+'連線中':label+'連線失敗');
   if(message)text+='：'+message;
   var targets=key==='finance'
-    ? [{id:'finance-panel-status-dot',cls:'finance-panel-status-dot'}]
+    ? [{id:'finance-panel-status-dot',cls:'finance-panel-status-dot'},{id:'finance-card-status-dot',cls:'empire-card-status-dot'}]
     : [];
-  if(key==='domestic')targets.push({id:'domestic-panel-status-dot',cls:'empire-panel-status-dot'});
-  if(key==='council')targets.push({id:'council-panel-status-dot',cls:'empire-panel-status-dot'});
-  if(key==='medical')targets.push({id:'medical-panel-status-dot',cls:'empire-panel-status-dot'});
-  if(key==='stars')targets.push({id:'stars-panel-status-dot',cls:'empire-panel-status-dot'});
-  if(key==='wall')targets.push({id:'wall-panel-status-dot',cls:'empire-panel-status-dot'});
-  if(key==='store')targets.push({id:'store-panel-status-dot',cls:'empire-panel-status-dot'});
+  if(key==='domestic')targets.push({id:'domestic-panel-status-dot',cls:'empire-panel-status-dot'},{id:'domestic-card-status-dot',cls:'empire-card-status-dot'});
+  if(key==='council')targets.push({id:'council-panel-status-dot',cls:'empire-panel-status-dot'},{id:'council-card-status-dot',cls:'empire-card-status-dot'});
+  if(key==='medical')targets.push({id:'medical-panel-status-dot',cls:'empire-panel-status-dot'},{id:'medical-card-status-dot',cls:'empire-card-status-dot'});
+  if(key==='stars')targets.push({id:'stars-panel-status-dot',cls:'empire-panel-status-dot'},{id:'stars-card-status-dot',cls:'empire-card-status-dot'});
+  if(key==='wall')targets.push({id:'wall-panel-status-dot',cls:'empire-panel-status-dot'},{id:'wall-card-status-dot',cls:'empire-card-status-dot'});
+  if(key==='store')targets.push({id:'store-panel-status-dot',cls:'empire-panel-status-dot'},{id:'store-card-status-dot',cls:'empire-card-status-dot'});
   targets.forEach(function(target){
     var dot=document.getElementById(target.id);
     if(dot){
@@ -15759,7 +15770,7 @@ function setupNotice(){
   restoreRememberedWebAccess();
   initTodayAgenda();
   initHomeAgenda();
-  setEmpireCardApiPendingStatus('finance');
+  initEmpireCardStatuses();
   setTimeout(function(){
     if(webVerifyIsAuthorized())prefetchFinanceDashboard();
   },2200);
@@ -16521,6 +16532,7 @@ function advisorAIHeaderHtml(title){
       <div class="advisor-ai-quick-tools">
         ${advisorAIQuickCommandSelectHtml()}
         <span class="advisor-ai-header-date" aria-label="今日日期">${advisorAICompactDate()}</span>
+        <span class="advisor-ai-verify-status" aria-label="龐統城門驗證狀態">${advisorAIWebVerifyStatusHtml()}<span>城門</span><span class="advisor-ai-verify-legend">🟢成功　🟡驗證中　🔴不成功</span></span>
       </div>
       <div class="advisor-ai-title-wrap">
         <div class="advisor-ai-funds" id="advisor-ai-funds">${advisorAIHeaderFundsHtml(fundsCache&&fundsCache.cash,fundsCache&&fundsCache.stock)}</div>
