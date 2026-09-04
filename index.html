@@ -5721,10 +5721,10 @@ async function advisorAIDirectLogin(event){
     renderCfgWebVerifyStatus('pending','請先補齊 API、記帳密鑰與城牆通行令');
     return;
   }
-  setWebVerifyStatus('pending','正在直接登入龐統軍師');
+  setWebVerifyStatus('pending','正在驗證城門密碼');
   try{
     await verifyWebAccess();
-    setWebVerifyStatus('ok','直接登入成功，帝國城門已開啟');
+    setWebVerifyStatus('ok','城門驗證成功，帝國城門已開啟');
     advisorAILoadDividendQuickOptions(true);
   }catch(e){
     var msg=e&&e.message?e.message:'直接登入失敗';
@@ -5786,7 +5786,7 @@ function setWebVerifyStatus(status,message){
 function advisorAIWebVerifyStatusHtml(){
   var status=webVerifyStoredStatus();
   var cls=status==='ok'?'ok':(status==='pending'?'pending':'err');
-  var title=status==='ok'?'網頁驗證通過':(status==='pending'?'網頁驗證中':'網頁驗證未通過');
+  var title=status==='ok'?'城門驗證成功':(status==='pending'?'城門驗證中':'城門驗證不成功');
   var msg=webVerifyStoredMessage();
   if(msg)title+='：'+msg;
   return `<span class="advisor-web-verify-dot ${cls}" id="advisor-web-verify-dot" title="${esc(title)}" aria-label="${esc(title)}"></span>`;
@@ -5794,7 +5794,7 @@ function advisorAIWebVerifyStatusHtml(){
 function advisorAIUpdateWebVerifyStatus(){
   var status=webVerifyStoredStatus();
   var cls=status==='ok'?'ok':(status==='pending'?'pending':'err');
-  var title=status==='ok'?'網頁驗證通過':(status==='pending'?'網頁驗證中':'網頁驗證未通過');
+  var title=status==='ok'?'城門驗證成功':(status==='pending'?'城門驗證中':'城門驗證不成功');
   var msg=webVerifyStoredMessage();
   if(msg)title+='：'+msg;
   document.querySelectorAll('.advisor-web-verify-dot').forEach(function(dot){
@@ -5857,13 +5857,13 @@ function persistCfgInputs(values){
 async function verifyCfgWebAccess(){
   var btn=document.getElementById('cfg-verify-btn');
   persistCfgInputs(readCfgInputs());
-  setWebVerifyStatus('pending','正在驗證 API 與 WRITE_TOKEN');
-  renderCfgWebVerifyStatus('pending','正在驗證 API 與 WRITE_TOKEN');
+  setWebVerifyStatus('pending','正在驗證城門密碼');
+  renderCfgWebVerifyStatus('pending','正在驗證城門密碼');
   if(btn)btn.disabled=true;
   try{
     await verifyWebAccess();
-    setWebVerifyStatus('ok','API 與 WRITE_TOKEN 已通過');
-    renderCfgWebVerifyStatus('ok','網頁驗證成功');
+    setWebVerifyStatus('ok','城門驗證成功');
+    renderCfgWebVerifyStatus('ok','城門驗證成功');
   }catch(e){
     console.error(e);
     var msg=e.message||'驗證失敗';
@@ -5892,10 +5892,10 @@ async function saveCfg(){
     arkWallLoaded=false;
     openArkWall();
   }
-  setWebVerifyStatus('pending','正在驗證 API 與 WRITE_TOKEN');
+  setWebVerifyStatus('pending','正在驗證城門密碼');
   try{
     await verifyWebAccess();
-    setWebVerifyStatus('ok','API 與 WRITE_TOKEN 已通過');
+    setWebVerifyStatus('ok','城門驗證成功');
   }catch(e){
     console.error(e);
     setWebVerifyStatus('err',e.message||'驗證失敗');
