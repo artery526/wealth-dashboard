@@ -684,6 +684,13 @@ body::after{
     margin:0;
   }
 }
+@media(max-width:768px){
+  .home-primary-grid{grid-template-columns:1fr;gap:16px;margin-bottom:16px}
+  .home-primary-grid>.home-agenda-calendar{grid-column:auto;grid-row:auto}
+  .home-primary-grid>.home-agenda-court{grid-column:auto;grid-row:auto}
+  .home-agenda-body{grid-template-columns:1fr;max-height:none;overflow:visible}
+  .home-agenda-body .agenda-section+.agenda-section{border-left:0;border-top:1px solid rgba(232,192,80,.18);padding-left:0;padding-top:14px}
+}
 @media(max-width:540px){
   .today-agenda{width:100%;margin-top:0}
   .court-agenda{position:relative;left:auto;top:auto;transform:none;width:100%;order:2}
@@ -700,9 +707,6 @@ body::after{
   .agenda-time{width:max-content;max-width:100%;min-height:0}
   .calendar-create-form{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
   .calendar-create-btn{grid-column:1/-1;width:100%;min-height:40px}
-  .home-primary-grid{grid-template-columns:1fr;gap:16px;margin-bottom:16px}
-  .home-primary-grid>.home-agenda-calendar{grid-column:auto;grid-row:auto}
-  .home-primary-grid>.home-agenda-court{grid-column:auto;grid-row:auto}
   .home-calendar-day{aspect-ratio:auto;min-height:34px}
   .home-agenda-body{grid-template-columns:1fr}
   .home-agenda-body{max-height:none;overflow:visible}
