@@ -4843,7 +4843,6 @@ var bookingFormInitSeq = 0;
 var bookingRecentRows = [];
 var currentPanel = null;
 var currentTab = null;
-var HEALTH_JOURNAL_URL = 'https://artery526.github.io/health-app/medical-journal.html';
 var medicalOptionsCache = null;
 var ziweiChartsCache = [];
 var ziweiChartsPromise = null;
@@ -7832,7 +7831,6 @@ function renderMedicalPanel(){
         </div>
         <div class="medical-actions">
           <button class="medical-submit" id="medical-submit" type="submit">送出快記</button>
-          <a class="medical-link" href="${HEALTH_JOURNAL_URL}" target="_blank" rel="noopener">完整記錄</a>
           <span class="medical-status" id="medical-status">讀取設定選項中…</span>
         </div>
       </form>
@@ -7929,7 +7927,6 @@ function renderMedicalPanel(){
         </div>
         <div class="medical-actions">
           <button class="medical-submit" id="tarot-submit" type="submit">送出抽牌紀錄</button>
-          <a class="medical-link" href="${HEALTH_JOURNAL_URL}" target="_blank" rel="noopener">完整記錄</a>
           <span class="medical-status" id="tarot-status"></span>
         </div>
       </form>
