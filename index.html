@@ -590,6 +590,19 @@ body::after{
   position:relative;z-index:1;
   display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;
 }
+.home-calendar-week-controls{display:none}
+.home-calendar-week-controls button{
+  min-height:30px;
+  border:1px solid rgba(77,169,214,.38);
+  border-radius:5px;
+  background:rgba(5,24,42,.72);
+  color:#bdeaff;
+  font-family:var(--sans);
+  font-size:11px;
+  font-weight:900;
+  cursor:pointer;
+}
+.home-calendar-week-controls button:hover{border-color:rgba(113,216,255,.78);background:rgba(31,113,153,.34)}
 .home-calendar-weekday{
   display:flex;align-items:center;justify-content:center;
   min-height:22px;
@@ -690,6 +703,11 @@ body::after{
   .home-primary-grid>.home-agenda-court{grid-column:1/-1;grid-row:auto}
   .home-agenda-body{grid-template-columns:1fr;max-height:none;overflow:visible}
   .home-agenda-body .agenda-section+.agenda-section{border-left:0;border-top:1px solid rgba(232,192,80,.18);padding-left:0;padding-top:14px}
+  .home-calendar-week-controls{display:grid;grid-template-columns:1fr auto 1fr;gap:5px;margin:-2px 0 7px}
+  .home-calendar-week-controls button:first-child{text-align:left;padding-left:8px}
+  .home-calendar-week-controls button:last-child{text-align:right;padding-right:8px}
+  .home-calendar-week-controls button:nth-child(2){padding:0 9px}
+  .home-calendar-day{font-size:11px}
 }
 @media(max-width:540px){
   .today-agenda{width:100%;margin-top:0}
@@ -4489,6 +4507,11 @@ html[data-theme="deep-blue"] .advisor-ai-standalone .advisor-ai-quick-select:foc
         </div>
         <div class="home-agenda-date" id="home-calendar-today" hidden></div>
       </div>
+      <div class="home-calendar-week-controls" aria-label="週曆切換">
+        <button type="button" onclick="shiftHomeCalendarWeek(-1)" aria-label="上一週">‹ 上週</button>
+        <button type="button" onclick="jumpHomeCalendarToday()">回今天</button>
+        <button type="button" onclick="shiftHomeCalendarWeek(1)" aria-label="下一週">下週 ›</button>
+      </div>
       <div class="home-calendar-grid" id="home-calendar-grid" aria-live="polite"></div>
     </div>
     <div class="home-agenda-court" id="home-agenda-court">
@@ -8188,26 +8211,43 @@ function renderHomeCalendar(){
   var grid=document.getElementById('home-calendar-grid');
   if(!grid)return;
   var now=new Date();
-  var year=now.getFullYear();
-  var month=now.getMonth();
-  var todayDate=now.getDate();
   var todayText=localDateText_(now);
   if(!homeAgendaSelectedDate)homeAgendaSelectedDate=todayText;
   var weeks=['日','一','二','三','四','五','六'];
+  var isMobileWeek=window.matchMedia&&window.matchMedia('(max-width:768px)').matches;
+  var viewDate=isMobileWeek?homeCalendarDateFromText_(homeAgendaSelectedDate):now;
+  if(!viewDate)viewDate=now;
+  var year=viewDate.getFullYear();
+  var month=viewDate.getMonth();
   var monthEl=document.getElementById('home-calendar-month');
   var todayEl=document.getElementById('home-calendar-today');
   var lunarEl=document.getElementById('home-calendar-lunar');
-  if(monthEl)monthEl.textContent=year+'年'+(month+1)+'月('+weeks[now.getDay()]+')';
+  if(monthEl)monthEl.textContent=year+'年'+(month+1)+'月('+weeks[viewDate.getDay()]+')';
   if(todayEl)todayEl.textContent='';
-  if(lunarEl)lunarEl.textContent=lunarDateLabel(now);
-  var first=new Date(year,month,1);
-  var startOffset=first.getDay();
-  var daysInMonth=new Date(year,month+1,0).getDate();
-  var prevDays=new Date(year,month,0).getDate();
+  if(lunarEl)lunarEl.textContent=lunarDateLabel(viewDate);
   var cells=[];
   weeks.forEach(function(w){
     cells.push('<div class="home-calendar-weekday">'+esc(w)+'</div>');
   });
+  if(isMobileWeek){
+    var weekStart=new Date(year,month,viewDate.getDate()-viewDate.getDay());
+    for(var wi=0;wi<7;wi++){
+      var weekDate=new Date(weekStart.getFullYear(),weekStart.getMonth(),weekStart.getDate()+wi);
+      var weekKey=localDateText_(weekDate);
+      var weekCls='home-calendar-day selectable';
+      if(weekDate.getMonth()!==month)weekCls+=' muted';
+      if(weekKey===todayText)weekCls+=' today';
+      if(weekKey===homeAgendaSelectedDate)weekCls+=' selected';
+      var weekAttrs=' role="button" tabindex="0" aria-label="查看'+esc(agendaDateLabelFromText_(weekKey))+'行程" onclick="selectHomeCalendarDate(\''+weekKey+'\')"';
+      cells.push('<div class="'+weekCls+'"'+weekAttrs+'>'+String(weekDate.getDate()).padStart(2,'0')+'</div>');
+    }
+    grid.innerHTML=cells.join('');
+    return;
+  }
+  var first=new Date(year,month,1);
+  var startOffset=first.getDay();
+  var daysInMonth=new Date(year,month+1,0).getDate();
+  var prevDays=new Date(year,month,0).getDate();
   for(var i=0;i<42;i++){
     var day=i-startOffset+1;
     var label=day;
@@ -8229,6 +8269,21 @@ function renderHomeCalendar(){
     cells.push('<div class="'+cls+'"'+attrs+'>'+label+'</div>');
   }
   grid.innerHTML=cells.join('');
+}
+
+function homeCalendarDateFromText_(dateText){
+  var match=String(dateText||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  return match?new Date(Number(match[1]),Number(match[2])-1,Number(match[3])):null;
+}
+
+function shiftHomeCalendarWeek(direction){
+  var base=homeCalendarDateFromText_(homeAgendaSelectedDate)||new Date();
+  base.setDate(base.getDate()+(Number(direction)||0)*7);
+  selectHomeCalendarDate(localDateText_(base));
+}
+
+function jumpHomeCalendarToday(){
+  selectHomeCalendarDate(localDateText_(new Date()));
 }
 
 function initHomeAgenda(){
