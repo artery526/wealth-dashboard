@@ -685,9 +685,9 @@ body::after{
   }
 }
 @media(max-width:768px){
-  .home-primary-grid{grid-template-columns:1fr;gap:16px;margin-bottom:16px}
+  .home-primary-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:16px}
   .home-primary-grid>.home-agenda-calendar{grid-column:auto;grid-row:auto}
-  .home-primary-grid>.home-agenda-court{grid-column:auto;grid-row:auto}
+  .home-primary-grid>.home-agenda-court{grid-column:1/-1;grid-row:auto}
   .home-agenda-body{grid-template-columns:1fr;max-height:none;overflow:visible}
   .home-agenda-body .agenda-section+.agenda-section{border-left:0;border-top:1px solid rgba(232,192,80,.18);padding-left:0;padding-top:14px}
 }
