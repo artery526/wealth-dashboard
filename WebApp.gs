@@ -1549,6 +1549,7 @@ function readAccountChangesForYm_(ss, ym, recentDays) {
     if (!isWithinRecentTxnWindow_(row[1], cutoffStamp)) return;
     changes.push({
       rowId: i + 2,
+      createdAt: formatTxnDateTime_(row[0]),
       date: formatTxnDate(row[1]),
       ym: rowYm,
       type: String(row[3] || '').trim(),
@@ -1617,6 +1618,7 @@ function attachAccountChange_(txn, changes, used, criteria) {
     secondaryDelta: change.secondaryAccount ? Math.round(change.secondaryDelta) : '',
     secondaryAfter: change.secondaryAccount ? Math.round(change.secondaryAfter) : ''
   };
+  txn.createdAt = change.createdAt || '';
   return txn;
 }
 
@@ -8911,6 +8913,7 @@ function getTransactions(ss, ym, recentDays) {
             secondaryDelta: transferChange.secondaryAccount ? Math.round(transferChange.secondaryDelta) : '',
             secondaryAfter: transferChange.secondaryAccount ? Math.round(transferChange.secondaryAfter) : ''
           };
+          transferTxn.createdAt = transferChange.createdAt || '';
         }
         txns.push(transferTxn);
       } else if (isStockLedgerType_(type)) {
