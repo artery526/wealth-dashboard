@@ -4487,7 +4487,7 @@ html[data-theme="deep-blue"] .advisor-ai-standalone .advisor-ai-quick-select:foc
           <div class="home-agenda-title"><span class="home-lunar-date" id="home-calendar-lunar">--</span></div>
           <div class="home-agenda-date" id="home-calendar-month">--</div>
         </div>
-        <div class="home-agenda-date" id="home-calendar-today">--</div>
+        <div class="home-agenda-date" id="home-calendar-today" hidden></div>
       </div>
       <div class="home-calendar-grid" id="home-calendar-grid" aria-live="polite"></div>
     </div>
@@ -8197,8 +8197,8 @@ function renderHomeCalendar(){
   var monthEl=document.getElementById('home-calendar-month');
   var todayEl=document.getElementById('home-calendar-today');
   var lunarEl=document.getElementById('home-calendar-lunar');
-  if(monthEl)monthEl.textContent=year+'年'+(month+1)+'月';
-  if(todayEl)todayEl.textContent='今日 '+(month+1)+'/'+todayDate+' 星期'+weeks[now.getDay()];
+  if(monthEl)monthEl.textContent=year+'年'+(month+1)+'月('+weeks[now.getDay()]+')';
+  if(todayEl)todayEl.textContent='';
   if(lunarEl)lunarEl.textContent=lunarDateLabel(now);
   var first=new Date(year,month,1);
   var startOffset=first.getDay();
