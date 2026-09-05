@@ -295,6 +295,18 @@ var READ_ACTION_HANDLERS_ = {
   pledgeLoans: function() { return getPledgeLoans(getExternalDbSpreadsheet_()); },
   assetSnapshot: function() { return getDailyAssetSnapshot(getExternalDbSpreadsheet_()); },
   transactions: function(ss, p) { return getTransactions(ss, p.ym, p.recentDays); },
+  ledgerRequestStatus: function(ss, p) {
+    var key = String(p.requestId || '').trim();
+    if (!key || key.length > 160) throw new Error('無效的記帳編號');
+    var db = ss.getSheetByName('資料庫');
+    if (!db) throw new Error('找不到資料庫');
+    var row = 0;
+    if (db.getLastRow() > 1 && db.getMaxColumns() >= LEDGER_REQUEST_ID_COLUMN) {
+      var match = db.getRange(2, LEDGER_REQUEST_ID_COLUMN, db.getLastRow()-1, 1).createTextFinder(key).matchEntireCell(true).useRegularExpression(false).findNext();
+      if (match) row = match.getRow();
+    }
+    return {requestId:key, recorded:row > 0, row:row};
+  },
   accountChanges: function(ss, p) { return getAccountChanges(ss, p.ym); },
   stockTrades: function(ss, p) { return getStockTrades(ss, p.ym); },
   dividendCenter: function(ss) { return getDividendCenter(ss); },
