@@ -2883,6 +2883,21 @@ body::after{
 .api-label{font-family:var(--sans);font-size:11px;color:#7a5c28;flex:1}
 .api-action{display:none;font-family:var(--sans);font-size:10px;color:var(--gold2)}
 
+/* Unified data freshness metadata */
+.data-freshness{
+  display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;
+  margin:0 0 12px;padding:7px 10px;
+  border:1px solid rgba(184,137,46,.2);border-radius:7px;
+  background:rgba(10,8,4,.42);font-family:var(--sans);font-size:10px;
+  line-height:1.45;color:#9a7a3c;
+}
+.data-freshness-item{display:inline-flex;align-items:center;gap:5px;min-width:0}
+.data-freshness-item strong{color:#d8c185;font-weight:850;white-space:nowrap}
+.data-freshness-cache{display:inline-flex;align-items:center;gap:4px;color:var(--teal);font-weight:900;white-space:nowrap}
+.data-freshness-cache.cached{color:var(--gold)}
+.data-freshness-cache::before{content:'●';font-size:8px}
+@media(max-width:540px){.data-freshness{gap:4px 9px;padding:6px 8px;font-size:9px}.data-freshness-item strong{max-width:145px;overflow:hidden;text-overflow:ellipsis}}
+
 /* ── Top Status Bar ── */
 /* ── Top Nav ── */
 .top-nav{
@@ -4798,6 +4813,7 @@ function readDividendCenterStorageCache(){
 var dividendCenterStorageCache=readDividendCenterStorageCache();
 var dividendCenterCache=dividendCenterStorageCache&&dividendCenterStorageCache.data||null;
 var dividendCenterFetchedAt=dividendCenterStorageCache&&dividendCenterStorageCache.savedAt||0;
+var dividendCenterLastLoadedFromCache=!!dividendCenterStorageCache;
 var DIVIDEND_CENTER_TIMEOUT_MS = 45000;
 var bookingDividendHiddenRows = {};
 var bookingDividendExpanded = false;
@@ -6265,6 +6281,7 @@ function renderStarsPanel(){
   setPanelMenuTabs([{key:'stars-home',label:'命盤總覽'}]);
   document.getElementById('p-body').innerHTML=`
     <div class="pane active" id="pane-stars-home">
+      <div id="stars-freshness">${dataFreshnessHtml()}</div>
       <div id="ziwei-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:78%"></div></div>
     </div>`;
   if(API_URL)loadZiweiCharts();
@@ -6282,12 +6299,15 @@ function renderStorePanel(initialTab){
       <div class="store-inline-form" id="store-inline-form"></div>
       <div class="store-date-filters" id="store-date-filters" aria-label="記錄年月篩選"></div>
       <div class="store-count-row"><div class="store-count" id="store-count"></div><button class="store-search-toggle" id="store-search-toggle" type="button" title="搜尋物品、位置或編號" aria-label="搜尋物品、位置或編號" aria-expanded="false" onclick="toggleStoreSearch(event)">🔍</button><input class="store-search-inline" id="store-search" type="search" placeholder="搜尋物品、位置或編號" aria-label="搜尋物品、位置或編號" hidden oninput="storeSearchTerm=this.value;renderStoreList()"></div>
+      <div id="store-freshness">${dataFreshnessHtml()}</div>
       <div id="store-list-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:78%"></div></div>
     </div>
     <div class="pane" id="pane-store-chronicle">
+      <div id="chronicle-freshness">${dataFreshnessHtml()}</div>
       <div id="chronicle-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:72%"></div></div>
     </div>
     <div class="pane" id="pane-stars-home">
+      <div id="stars-freshness">${dataFreshnessHtml()}</div>
       <div id="ziwei-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:78%"></div></div>
     </div>`;
   renderStoreForm('store-inline-form');
@@ -6559,6 +6579,7 @@ function loadStoreRecords(force){
   if(storeRecordsPromise)return storeRecordsPromise;
   if(!API_URL){setEmpireCardStatus('store','err','尚未設定 API');return Promise.reject(new Error('尚未設定 API'));}
   if(!force&&storeRecordsCacheFetchedAt&&Date.now()-storeRecordsCacheFetchedAt<STORE_RECORDS_CACHE_TTL){
+    setDataFreshness('store-freshness',dataFreshnessMeta(storeRecordsCache,storeRecordsCacheFetchedAt,true));
     setEmpireCardStatus('store','ok','倉庫資料已載入');
     return Promise.resolve(storeRecordsCache);
   }
@@ -6566,6 +6587,7 @@ function loadStoreRecords(force){
   storeRecordsPromise=apiGet({action:'storeRecords'}).then(function(data){
     storeRecordsCache=(data&&data.records)||[];
     storeRecordsCacheFetchedAt=Date.now();
+    setDataFreshness('store-freshness',dataFreshnessMeta(storeRecordsCache,storeRecordsCacheFetchedAt,false));
     renderStoreDateFilters();
     renderStoreList();
     setEmpireCardStatus('store','ok','倉庫資料已載入');
@@ -6816,6 +6838,80 @@ function writeTimedMarketCache(key,data){
   try{localStorage.setItem(key,JSON.stringify({savedAt:Date.now(),data:data}));}catch(e){}
 }
 
+function readMarketCacheEntry(key,allowExpired){
+  try{
+    var cached=JSON.parse(localStorage.getItem(key)||'null');
+    if(cached&&cached.data&&(allowExpired||Date.now()-Number(cached.savedAt||0)<MARKET_CACHE_TTL))return cached;
+  }catch(e){}
+  return null;
+}
+
+function freshnessDataDate(value){
+  if(!value)return '';
+  if(Array.isArray(value)){
+    var dates=value.map(freshnessDataDate).filter(Boolean).sort();
+    return dates.length?dates[dates.length-1]:'';
+  }
+  if(typeof value!=='object')return String(value||'').trim();
+  var keys=['dataDate','sourceDate','asOfDate','reportDate','tradingDate','snapshotDate','date'];
+  for(var i=0;i<keys.length;i++){
+    var direct=String(value[keys[i]]||'').trim();
+    if(direct)return direct;
+  }
+  if(value.summary){
+    var summaryDate=freshnessDataDate(value.summary);
+    if(summaryDate)return summaryDate;
+  }
+  if(value.judgment){
+    var judgmentDate=freshnessDataDate(value.judgment);
+    if(judgmentDate)return judgmentDate;
+  }
+  if(value.rows){
+    var rowDate=freshnessDataDate(value.rows);
+    if(rowDate)return rowDate;
+  }
+  return String(value.updatedAt||'').trim();
+}
+
+function freshnessDateText(value,withTime){
+  var text=String(value||'').trim();
+  if(!text)return '--';
+  if(/^\d{8}$/.test(text))text=text.slice(0,4)+'/'+text.slice(4,6)+'/'+text.slice(6);
+  text=text.replace(/^(\d{4})-(\d{2})-(\d{2})/,'$1/$2/$3');
+  if(!withTime){
+    var dateMatch=text.match(/^(\d{4}\/\d{2}\/\d{2})/);
+    if(dateMatch)return dateMatch[1];
+  }
+  var timestamp=Number(value);
+  if(isFinite(timestamp)&&timestamp>100000000000){
+    var date=new Date(timestamp);
+    if(!isNaN(date.getTime()))return date.toLocaleString('zh-TW',{hour12:false});
+  }
+  return text;
+}
+
+function dataFreshnessHtml(meta){
+  meta=meta||{};
+  var known=!!meta.fetchedAt;
+  var cached=!!meta.cached;
+  var cacheText=!known?'尚未取得':(cached?'顯示快取':'即時取得');
+  return `<div class="data-freshness" aria-label="資料新鮮度">
+    <span class="data-freshness-item">資料日期 <strong>${esc(freshnessDateText(meta.dataDate,false))}</strong></span>
+    <span class="data-freshness-item">上次取得 <strong>${esc(freshnessDateText(meta.fetchedAt,true))}</strong></span>
+    <span class="data-freshness-cache${cached&&known?' cached':''}">${cacheText}</span>
+  </div>`;
+}
+
+function dataFreshnessMeta(data,fetchedAt,cached,fallbackDate){
+  var obtainedAt=fetchedAt==null||fetchedAt===false?Date.now():fetchedAt;
+  return {dataDate:fallbackDate||freshnessDataDate(data),fetchedAt:obtainedAt,cached:!!cached};
+}
+
+function setDataFreshness(id,meta){
+  var host=document.getElementById(id);
+  if(host)host.innerHTML=dataFreshnessHtml(meta);
+}
+
 function readStarsCache(key,allowExpired){
   try{
     var cached=JSON.parse(localStorage.getItem(key)||'null');
@@ -6867,6 +6963,7 @@ async function loadZiweiCharts(){
   var cached=readStarsCache(STARS_ZIWEI_CACHE_KEY,true);
   if(cached&&Array.isArray(cached.data)&&cached.data.length){
     ziweiChartsCache=cached.data;
+    setDataFreshness('stars-freshness',dataFreshnessMeta(cached.data,cached.savedAt,true));
     renderZiweiLayout();
     if(dot)dot.className='api-dot pending';
     if(label)label.textContent=starsCacheLabel(cached,'命盤快取先顯示')+'，背景更新中';
@@ -6883,6 +6980,7 @@ async function loadZiweiCharts(){
     ziweiChartsCache=data.rows||[];
     ziweiDetailCache={};
     writeStarsCache(STARS_ZIWEI_CACHE_KEY,ziweiChartsCache);
+    setDataFreshness('stars-freshness',dataFreshnessMeta(data,false,false));
     if(dot)dot.className='api-dot ok';
     if(label)label.textContent='已連線 · '+ziweiChartsCache.length+' 筆命盤索引';
     setEmpireCardStatus('stars','ok',ziweiChartsCache.length+' 筆命盤索引');
@@ -6917,6 +7015,7 @@ async function loadEventChronicle(){
   var cached=readStarsCache(STARS_CHRONICLE_CACHE_KEY,true);
   if(cached&&Array.isArray(cached.data)&&cached.data.length){
     eventChronicleCache=cached.data;
+    setDataFreshness('chronicle-freshness',dataFreshnessMeta(cached.data,cached.savedAt,true));
     eventChronicleSortedCache=sortEventChronicleRows(eventChronicleCache);
     renderEventChronicle();
     if(dot)dot.className='api-dot pending';
@@ -6933,6 +7032,7 @@ async function loadEventChronicle(){
     var data=await eventChroniclePromise;
     eventChronicleCache=data.rows||[];
     eventChronicleSortedCache=sortEventChronicleRows(eventChronicleCache);
+    setDataFreshness('chronicle-freshness',dataFreshnessMeta(data,false,false));
     writeStarsCache(STARS_CHRONICLE_CACHE_KEY,eventChronicleCache);
     if(dot)dot.className='api-dot ok';
     if(label)label.textContent='已連線 · '+eventChronicleCache.length+' 筆事件';
@@ -8806,16 +8906,19 @@ function renderFinancePanel(initialTab){
   ],targetTab);
   document.getElementById('p-body').innerHTML=`
     <div class="pane ${targetTab==='finance-accs'?'active':''}" id="pane-finance-accs">
+      <div id="finance-treasury-freshness">${dataFreshnessHtml()}</div>
       <div id="acc-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:75%"></div><div class="skel-line skel" style="width:85%"></div></div>
       <details class="finance-collapse finance-pledge-collapse">
         <summary><span class="finance-collapse-title">🏦 質押信貸</span><span class="finance-collapse-meta" id="pledge-collapse-meta">讀取中</span></summary>
         <div class="finance-collapse-body">
+          <div id="finance-pledge-freshness">${dataFreshnessHtml()}</div>
           <div id="pledge-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:75%"></div></div>
         </div>
       </details>
     </div>
     <div class="pane ${targetTab==='booking-form'?'active':''}" id="pane-booking-form"></div>
     <div class="pane ${targetTab==='dividend-center'?'active':''}" id="pane-dividend-center">
+      <div id="finance-dividend-freshness">${dataFreshnessHtml()}</div>
       <div id="dividend-center-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:80%"></div></div>
     </div>
     <div class="pane ${targetTab==='domestic-yearly'?'active':''}" id="pane-domestic-yearly">
@@ -8824,6 +8927,7 @@ function renderFinancePanel(initialTab){
         <span class="api-label">${API_URL?'年度財報 API 已連線':'尚未設定 API'}</span>
         <span class="api-action">⚙ 設定</span>
       </div>
+      <div id="finance-yearly-freshness">${dataFreshnessHtml()}</div>
       <div id="annual-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:80%"></div></div>
     </div>
     `;
@@ -8844,18 +8948,26 @@ async function loadAccounts(){
   if(!API_URL){
     el.innerHTML=setupNotice();return;
   }
-  var cached=readTimedFinanceCache(FINANCE_TREASURY_CACHE_KEY)||readStaleFinanceCache(FINANCE_TREASURY_CACHE_KEY);
-  if(cached)renderAccounts(cached.accs,cached.monthly,el,cached.assetSnapshot,cached.bills,true);
+  var cachedEntry=readFinanceCacheEntry(FINANCE_TREASURY_CACHE_KEY,false)||readFinanceCacheEntry(FINANCE_TREASURY_CACHE_KEY,true);
+  var cached=cachedEntry?cachedEntry.data:null;
+  if(cached){
+    setDataFreshness('finance-treasury-freshness',dataFreshnessMeta(cached,cachedEntry.savedAt,true));
+    renderAccounts(cached.accs,cached.monthly,el,cached.assetSnapshot,cached.bills,true);
+  }
   setFinanceCardStatus('pending');
   if(financeTreasuryPromise){
     return financeTreasuryPromise.then(function(data){
-      if(data&&data.accs&&document.getElementById('acc-content'))renderAccounts(data.accs,data.monthly,document.getElementById('acc-content'),data.assetSnapshot,data.bills,false);
+      if(data&&data.accs){
+        setDataFreshness('finance-treasury-freshness',dataFreshnessMeta(data,false,false));
+        if(document.getElementById('acc-content'))renderAccounts(data.accs,data.monthly,document.getElementById('acc-content'),data.assetSnapshot,data.bills,false);
+      }
       if(data&&data.accs)setFinanceCardStatus('ok');
       return data;
     });
   }
   financeTreasuryPromise=fetchFinanceTreasuryData(cached).then(function(data){
     writeTimedFinanceCache(FINANCE_TREASURY_CACHE_KEY,data);
+    setDataFreshness('finance-treasury-freshness',dataFreshnessMeta(data,false,false));
     if(document.getElementById('acc-content'))renderAccounts(data.accs,data.monthly,document.getElementById('acc-content'),data.assetSnapshot,data.bills,false);
     setFinanceCardStatus('ok');
     return data;
@@ -11360,13 +11472,15 @@ function setBookingSelectHoldingValue(selectEl,symbol,display){
 async function loadDividendCenter(force){
   var now=Date.now();
   if(!force&&dividendCenterCache&&(now-dividendCenterFetchedAt)<DIVIDEND_CACHE_TTL){
+    dividendCenterLastLoadedFromCache=true;
     updateBookingPendingBadges(dividendCenterCache);
     return dividendCenterCache;
   }
   var data=await apiGet({action:'dividendCenter'},DIVIDEND_CENTER_TIMEOUT_MS);
   dividendCenterCache=data||{rows:[],pending:[],holdingTradePending:[],monthlyTotal:0,settingFx:32.5,dividendHoldings:[]};
-  dividendCenterFetchedAt=now;
-  try{localStorage.setItem(DIVIDEND_CENTER_STORAGE_KEY,JSON.stringify({savedAt:now,data:dividendCenterCache}));}catch(e){}
+  dividendCenterFetchedAt=Date.now();
+  dividendCenterLastLoadedFromCache=false;
+  try{localStorage.setItem(DIVIDEND_CENTER_STORAGE_KEY,JSON.stringify({savedAt:dividendCenterFetchedAt,data:dividendCenterCache}));}catch(e){}
   updateBookingPendingBadges(dividendCenterCache);
   return dividendCenterCache;
 }
@@ -11904,6 +12018,7 @@ async function loadDividendCenterPanel(force){
   try{
     el.innerHTML='<div class="skel-line skel"></div><div class="skel-line skel" style="width:80%"></div><div class="skel-line skel" style="width:60%"></div>';
     var data=await loadDividendCenter(!!force);
+    setDataFreshness('finance-dividend-freshness',dataFreshnessMeta(data,dividendCenterFetchedAt,dividendCenterLastLoadedFromCache));
     el.innerHTML=renderDividendCenter(data,true);
     initDividendEntryForm(data);
     setEmpireCardStatus(bookingPanelStatusKey(),'ok','持股備忘錄已載入');
@@ -12457,6 +12572,7 @@ async function deleteHoldingTradePending(rowId,btn){
     var data=await loadDividendCenter(true);
     var center=document.getElementById('dividend-center-content');
     if(center){
+      setDataFreshness('finance-dividend-freshness',dataFreshnessMeta(data,dividendCenterFetchedAt,dividendCenterLastLoadedFromCache));
       center.innerHTML=renderDividendCenter(data,true);
       initDividendEntryForm(data);
     }
@@ -12721,12 +12837,19 @@ async function loadDomesticYearly(forceRefresh){
     return financeYearlyPromises[selected];
   }
   if(!API_URL){el.innerHTML=setupNotice();return}
-  var cached=forceRefresh?null:readTimedFinanceCache(cacheKey);
-  if(cached)renderDomesticYearly(cached.data,cached.history,cached.years,selected,true);
+  var cachedEntry=forceRefresh?null:readFinanceCacheEntry(cacheKey,false);
+  var cached=cachedEntry?cachedEntry.data:null;
+  if(cached){
+    setDataFreshness('finance-yearly-freshness',dataFreshnessMeta(cached,cachedEntry.savedAt,true));
+    renderDomesticYearly(cached.data,cached.history,cached.years,selected,true);
+  }
   else el.innerHTML='<div class="skel-line skel"></div><div class="skel-line skel" style="width:80%"></div><div class="skel-line skel" style="width:65%"></div>';
   if(financeYearlyPromises[selected]){
     return financeYearlyPromises[selected].then(function(packed){
-      if(packed&&isCurrentRequest())renderDomesticYearly(packed.data,packed.history,packed.years,selected,false);
+      if(packed&&isCurrentRequest()){
+        setDataFreshness('finance-yearly-freshness',dataFreshnessMeta(packed,false,false));
+        renderDomesticYearly(packed.data,packed.history,packed.years,selected,false);
+      }
       return packed;
     });
   }
@@ -12741,7 +12864,10 @@ async function loadDomesticYearly(forceRefresh){
     var years=financeYearlySelectYears(history,selected,manifest);
     var packed={data:data,history:history,years:years};
     writeTimedFinanceCache(cacheKey,packed);
-    if(isCurrentRequest())renderDomesticYearly(data,history,years,selected,false);
+    if(isCurrentRequest()){
+      setDataFreshness('finance-yearly-freshness',dataFreshnessMeta(packed,false,false));
+      renderDomesticYearly(data,history,years,selected,false);
+    }
     return packed;
   }).catch(function(e){
     if(!cached&&isCurrentRequest())el.innerHTML=`<div style="color:var(--coral);font-family:var(--sans);font-size:12px;padding:12px 0">${esc(e.message)}</div>`;
@@ -13708,8 +13834,12 @@ async function loadBattleBrief(force){
     setCouncilPanelStatusIfActive('err','尚未設定 API');
     return null;
   }
-  var cached=readTimedMarketCache(BATTLE_BRIEF_CACHE_KEY);
-  if(cached&&!force)renderBattleBrief(cached,el);
+  var cachedEntry=readMarketCacheEntry(BATTLE_BRIEF_CACHE_KEY,false);
+  var cached=cachedEntry?cachedEntry.data:null;
+  if(cached&&!force){
+    setDataFreshness('battle-freshness',dataFreshnessMeta(cached,cachedEntry.savedAt,true));
+    renderBattleBrief(cached,el);
+  }
   setCouncilPanelStatusIfActive('pending',cached&&!force?'戰情快取更新中':'戰情總匯報讀取中');
   if(battleBriefPromise&&!force)return battleBriefPromise.then(function(data){
     if(data&&document.getElementById('battle-brief-content'))renderBattleBrief(data,document.getElementById('battle-brief-content'));
@@ -13717,6 +13847,7 @@ async function loadBattleBrief(force){
   });
   battleBriefPromise=apiGet({action:'battleBrief'},45000).then(function(data){
     writeTimedMarketCache(BATTLE_BRIEF_CACHE_KEY,data);
+    setDataFreshness('battle-freshness',dataFreshnessMeta(data,false,false));
     renderBattleBrief(data,el);
     setCouncilPanelStatusIfActive('ok','戰情總匯報已更新');
     return data;
@@ -13839,6 +13970,7 @@ function renderMarketPanel(){
         <span class="api-label" id="market-label">${API_URL?'載入市場快報…':'尚未設定 API'}</span>
         <span class="api-action">⚙ 設定</span>
       </div>
+      <div id="market-freshness">${dataFreshnessHtml()}</div>
       <div id="market-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:82%"></div><div class="skel-line skel" style="width:68%"></div></div>
     </div>
     <div class="pane" id="pane-macro-overview">
@@ -13847,6 +13979,7 @@ function renderMarketPanel(){
         <span class="api-label" id="macro-label">${API_URL?'載入美股總經…':'尚未設定 API'}</span>
         <span class="api-action">⚙ 設定</span>
       </div>
+      <div id="macro-freshness">${dataFreshnessHtml()}</div>
       <div id="macro-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:82%"></div><div class="skel-line skel" style="width:68%"></div></div>
     </div>`;
   if(API_URL)loadMarketDashboard();
@@ -13875,15 +14008,19 @@ function renderCouncilPanel(initialTab){
   var lockedNotice=setupNotice();
   document.getElementById('p-body').innerHTML=`
     <div class="pane ${targetTab==='battle-brief'?'active':''}" id="pane-battle-brief">
+      <div id="battle-freshness">${dataFreshnessHtml()}</div>
       <div id="battle-brief-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:82%"></div><div class="skel-line skel" style="width:68%"></div></div>
     </div>
     <div class="pane ${targetTab==='council-roster'?'active':''}" id="pane-council-roster">
+      <div id="council-roster-freshness">${dataFreshnessHtml()}</div>
       <div id="council-content">${apiReady?'':lockedNotice}</div>
     </div>
     <div class="pane ${targetTab==='market-watch'?'active':''}" id="pane-market-watch">
+      <div id="market-freshness">${dataFreshnessHtml()}</div>
       <div id="market-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:82%"></div><div class="skel-line skel" style="width:68%"></div></div>
     </div>
     <div class="pane ${targetTab==='macro-overview'?'active':''}" id="pane-macro-overview">
+      <div id="macro-freshness">${dataFreshnessHtml()}</div>
       <div id="macro-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:82%"></div><div class="skel-line skel" style="width:68%"></div></div>
     </div>
     <div class="pane ${targetTab==='taiwan-macro'?'active':''}" id="pane-taiwan-macro">
@@ -13941,9 +14078,11 @@ async function loadCouncilDashboard(){
   setEmpireCardStatus('council','pending');
   var cached=councilDashboardCache||readCouncilRosterStorageCache();
   if(!councilDashboardCache&&cached)councilDashboardCache=cached;
+  var cachedFetchedAt=councilDashboardFetchedAt||(cached&&cached.cachedAt)||0;
   var cacheFresh=cached&&(Date.now()-councilDashboardFetchedAt<COUNCIL_DASHBOARD_CACHE_TTL);
   if(cached){
     holdingsCache=cached.holdings.length?cached.holdings:holdingsCache;
+    setDataFreshness('council-roster-freshness',dataFreshnessMeta(cached,cachedFetchedAt,true));
     renderCouncilRoster(mergeCouncilRows(cached.holdings,cached.heroes,{}),el,cached.assetSnapshot,cached.dividendProjection);
     setEmpireCardStatus('council',cacheFresh&&cached.holdingsLoaded&&API_URL?'ok':'pending',cacheFresh&&cached.holdingsLoaded&&API_URL?'武將與持股同步':'已顯示上次資料 · 背景更新中');
     if(cacheFresh)return;
@@ -13958,6 +14097,7 @@ async function loadCouncilDashboard(){
     var assetSnapshot=results.assetSnapshot;
     var dividendProjection=results.dividendProjection;
     cacheCouncilDashboardResults(results);
+    setDataFreshness('council-roster-freshness',dataFreshnessMeta(results,councilDashboardFetchedAt,false));
     renderCouncilRoster(mergeCouncilRows(holdings,heroes,armySettings),el,assetSnapshot,dividendProjection);
     var dot=document.getElementById('council-dot');
     var lbl=document.getElementById('council-label');
@@ -14735,8 +14875,12 @@ async function loadMarketDashboard(){
     el.innerHTML=setupNotice();
     return;
   }
-  var cached=readTimedMarketCache(MARKET_DASHBOARD_CACHE_KEY);
-  if(cached)renderMarketDashboard(cached,el);
+  var cachedEntry=readMarketCacheEntry(MARKET_DASHBOARD_CACHE_KEY,false);
+  var cached=cachedEntry?cachedEntry.data:null;
+  if(cached){
+    setDataFreshness('market-freshness',dataFreshnessMeta(cached,cachedEntry.savedAt,true));
+    renderMarketDashboard(cached,el);
+  }
   setCouncilPanelStatusIfActive('pending',cached?'快取資料更新中':'台美股大盤讀取中');
   var dot=document.getElementById('market-dot');
   var lbl=document.getElementById('market-label');
@@ -14744,6 +14888,7 @@ async function loadMarketDashboard(){
   if(marketDashboardPromise){
     return marketDashboardPromise.then(function(data){
       if(data&&document.getElementById('market-content')){
+        setDataFreshness('market-freshness',dataFreshnessMeta(data,false,false));
         renderMarketDashboard(data,document.getElementById('market-content'));
         ensureMarketMarginData(data).then(function(){
           writeTimedMarketCache(MARKET_DASHBOARD_CACHE_KEY,data);
@@ -14755,6 +14900,7 @@ async function loadMarketDashboard(){
     });
   }
   marketDashboardPromise=apiGet({action:'marketDashboard'}).then(function(data){
+    setDataFreshness('market-freshness',dataFreshnessMeta(data,false,false));
     renderMarketDashboard(data,el);
     writeTimedMarketCache(MARKET_DASHBOARD_CACHE_KEY,data);
     var dot=document.getElementById('market-dot');
@@ -14910,19 +15056,27 @@ async function loadMacroOverview(){
     el.innerHTML=setupNotice();
     return;
   }
-  var cached=readTimedMarketCache(MARKET_MACRO_CACHE_KEY);
-  if(cached)renderMacroOverview(cached,el);
+  var cachedEntry=readMarketCacheEntry(MARKET_MACRO_CACHE_KEY,false);
+  var cached=cachedEntry?cachedEntry.data:null;
+  if(cached){
+    setDataFreshness('macro-freshness',dataFreshnessMeta(cached,cachedEntry.savedAt,true));
+    renderMacroOverview(cached,el);
+  }
   else el.innerHTML='<div class="skel-line skel"></div><div class="skel-line skel" style="width:82%"></div><div class="skel-line skel" style="width:68%"></div>';
   setCouncilPanelStatusIfActive('pending',cached?'快取資料更新中':'美股總經讀取中');
   var lbl=document.getElementById('macro-label');
   if(cached&&lbl)lbl.textContent='快取資料 · 更新中…';
   if(macroOverviewPromise){
     return macroOverviewPromise.then(function(data){
-      if(data&&document.getElementById('macro-content'))renderMacroOverview(data,document.getElementById('macro-content'));
+      if(data&&document.getElementById('macro-content')){
+        setDataFreshness('macro-freshness',dataFreshnessMeta(data,false,false));
+        renderMacroOverview(data,document.getElementById('macro-content'));
+      }
       return data;
     });
   }
   macroOverviewPromise=apiGet({action:'macroOverview'}).then(function(data){
+    setDataFreshness('macro-freshness',dataFreshnessMeta(data,false,false));
     renderMacroOverview(data,el);
     writeTimedMarketCache(MARKET_MACRO_CACHE_KEY,data);
     var dot=document.getElementById('macro-dot');
@@ -14990,12 +15144,19 @@ async function loadPledgePanel(){
     el.innerHTML=setupNotice();
     return;
   }
-  var cached=readTimedFinanceCache(FINANCE_PLEDGE_CACHE_KEY);
-  if(cached)renderPledgePanel(cached,el);
+  var cachedEntry=readFinanceCacheEntry(FINANCE_PLEDGE_CACHE_KEY,false);
+  var cached=cachedEntry?cachedEntry.data:null;
+  if(cached){
+    setDataFreshness('finance-pledge-freshness',dataFreshnessMeta(cached,cachedEntry.savedAt,true));
+    renderPledgePanel(cached,el);
+  }
   setFinanceCardStatus('pending',cached?'質押信貸快取更新中':'質押信貸讀取中');
   if(financePledgePromise){
     return financePledgePromise.then(function(data){
-      if(data&&document.getElementById('pledge-content'))renderPledgePanel(data,document.getElementById('pledge-content'));
+      if(data){
+        setDataFreshness('finance-pledge-freshness',dataFreshnessMeta(data,false,false));
+        if(document.getElementById('pledge-content'))renderPledgePanel(data,document.getElementById('pledge-content'));
+      }
       if(data)setFinanceCardStatus('ok','質押信貸已連線');
       return data;
     });
@@ -15003,6 +15164,7 @@ async function loadPledgePanel(){
   financePledgePromise=apiGet({action:'pledgeLoans'}).then(function(data){
     data=data||{pledges:[],loans:[]};
     writeTimedFinanceCache(FINANCE_PLEDGE_CACHE_KEY,data);
+    setDataFreshness('finance-pledge-freshness',dataFreshnessMeta(data,false,false));
     if(document.getElementById('pledge-content'))renderPledgePanel(data,document.getElementById('pledge-content'));
     setFinanceCardStatus('ok','質押信貸已連線');
     return data;
