@@ -5277,6 +5277,37 @@ async function eventChronicleApiRequest(method,path,body,timeoutMs){
 function eventChronicleRowKey(row){
   return String((row&&row.id)||((row&&row.rowNumber)||''));
 }
+var ledgerPendingBusy={};
+async function submitLedgerPending(body){
+  var key='ledger-pending-v1:'+API_URL+':'+body.action;
+  if(ledgerPendingBusy[key])throw new Error('這筆交易正在確認，請稍候');
+  ledgerPendingBusy[key]=true;
+  try{
+    var fingerprint=JSON.stringify(Object.keys(body).filter(k=>k!=='requestId').sort().map(k=>[k,body[k]]));
+    var pending=JSON.parse(localStorage.getItem(key)||'null');
+    if(pending){
+      var status;
+      try{status=await apiGet({action:'ledgerRequestStatus',requestId:pending.requestId});}
+      catch(e){throw new Error('結果待確認：查詢入帳狀態失敗，請稍後再次確認。原編號已保留。');}
+      if(status.requestId!==pending.requestId||typeof status.recorded!=='boolean')throw new Error('結果待確認：後端未提供有效確認結果。');
+      if(status.recorded){
+        localStorage.removeItem(key);
+        invalidateFinanceDashboardCache();
+        if(pending.fingerprint!==fingerprint)throw new Error('上一筆交易已確認入帳；目前欄位已變更，請確認後再次送出新交易。');
+        return {message:'已確認入帳',duplicate:true,row:status.row};
+      }
+      if(pending.fingerprint!==fingerprint)throw new Error('結果待確認：上一筆尚未查到入帳，請還原原交易內容後重試，避免把修改內容當成新交易。');
+    }else{
+      pending={requestId:body.requestId,fingerprint:fingerprint};
+      localStorage.setItem(key,JSON.stringify(pending));
+    }
+    try{
+      var result=await apiPostJson(Object.assign({},body,{requestId:pending.requestId}),45000);
+      localStorage.removeItem(key);
+      return result;
+    }catch(e){throw new Error('結果待確認：'+e.message+' 再次送出會先查入帳狀態，並沿用原編號。');}
+  }finally{delete ledgerPendingBusy[key];}
+}
 async function apiPost(body){
   if(!API_URL)throw new Error('未設定 API 網址');
   body=Object.assign({},body||{});
@@ -5291,6 +5322,7 @@ async function apiPost(body){
   WRITE_TOKEN=cleanToken(WRITE_TOKEN);
   if(!WRITE_TOKEN)throw new Error('未設定記帳密鑰');
   if(String(body&&body.action||'')!=='verifyWriteToken'&&!webVerifyIsAuthorized())throw new Error('城門尚未開啟，請先完成龐統軍師驗證');
+  if(/^(expense|income|transfer)$/.test(body.action||''))return submitLedgerPending(body);
   if(body&&/^(advisorAiParse|advisorDividendMemo|expense|income|transfer|ziweiInterpretationSave|ziweiChartUpload|ziweiChartDelete)$/.test(body.action||'')){
     var jsonTimeout=((isApiWriteAction(body.action||'')||body.action==='advisorDividendMemo')?45000:undefined);
     return apiPostJson(body,jsonTimeout);
