@@ -2649,7 +2649,7 @@ body::after{
 .battle-holding-snapshot-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 14px}
 .battle-snapshot-toolbar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;color:#b8944d;font:800 13px var(--sans)}
 .battle-snapshot-toolbar>div{display:flex;gap:5px}.battle-snapshot-range{border:1px solid #4a3210;border-radius:999px;background:#0c0804;color:#9b7a3d;padding:4px 9px;font:800 12px var(--sans);cursor:pointer}.battle-snapshot-range.is-active{background:#2b1b07;color:#ffe6a1;border-color:#d5a83d}
-.battle-snapshot-row{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(96px,1fr) minmax(76px,.8fr) auto;gap:9px;align-items:center;padding:7px 0;border-top:1px solid rgba(184,148,77,.16);font-family:var(--sans);font-size:13px}.battle-snapshot-row strong{color:var(--ink);font-family:var(--mono);font-size:14px}.battle-snapshot-row em{color:var(--teal);font-style:normal;font-family:var(--mono);font-size:13px}.battle-snapshot-row small{color:#7a6030;text-align:right;font-size:11px}.battle-snapshot-row .battle-snapshot-yesterday{display:block;text-align:left;color:#8f7547;font-size:12px;margin-top:3px}
+.battle-snapshot-row{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(96px,1fr) minmax(76px,.8fr) auto;gap:9px;align-items:center;padding:7px 0;border-top:1px solid rgba(184,148,77,.16);font-family:var(--sans);font-size:13px}.battle-snapshot-row strong{color:var(--ink);font-family:var(--mono);font-size:14px}.battle-snapshot-row em{color:var(--teal);font-style:normal;font-family:var(--mono);font-size:13px}.battle-snapshot-row small{color:#7a6030;text-align:right;font-size:11px}.battle-snapshot-row .battle-snapshot-yesterday{display:block;text-align:left;color:#8f7547;font-size:12px;margin-top:3px}.battle-holding-chart-link{display:inline-block;margin-left:5px;color:#e8c050;text-decoration:none;font-size:15px;line-height:1;vertical-align:baseline}.battle-holding-chart-link:hover,.battle-holding-chart-link:focus{filter:brightness(1.25);text-decoration:none}
 @media (max-width:960px){.battle-snapshot-toolbar{flex-wrap:wrap;align-items:center}.battle-snapshot-toolbar>div{margin-left:auto}.battle-snapshot-row{grid-template-columns:minmax(0,1fr) auto!important;grid-template-rows:auto auto auto;gap:4px 8px;padding:9px 0;font-size:14px}.battle-snapshot-row>span{grid-column:1!important;grid-row:1 / span 2!important;min-width:0;overflow-wrap:normal;word-break:normal}.battle-snapshot-row>strong{grid-column:2!important;grid-row:1!important;text-align:right;white-space:nowrap;font-size:15px}.battle-snapshot-row>em{grid-column:2!important;grid-row:2!important;text-align:right;white-space:nowrap;font-size:14px}.battle-snapshot-row>small:not(.battle-snapshot-yesterday){grid-column:1 / -1!important;grid-row:3!important;text-align:right;font-size:10px}.battle-snapshot-row .battle-snapshot-yesterday{font-size:12px}}
 @media (max-width:960px){.battle-holding-snapshot-grid{grid-template-columns:1fr;gap:0}}
 .battle-cell.subtle{font-size:11px;color:#8d7138;font-weight:700}
@@ -13530,6 +13530,17 @@ function battleFinanceSnapshotYesterdayText(latest,previous){
   return '昨 '+battleFinanceSnapshotValueText(previous);
 }
 
+function battleHoldingChartLinkHtml(name){
+  var key=normalizeKey(name),code='';
+  if(key==='00985B')code='00985B';
+  else if(key==='00997A')code='00997A';
+  else if(key==='CHPY')code='CHPY';
+  else if(key==='MLPI')code='MLPI';
+  if(!code)return '';
+  var url='https://tw.stock.yahoo.com/quote/'+encodeURIComponent(code+'.TW')+'/technical-analysis';
+  return ` <a class="battle-holding-chart-link" href="${url}" target="_blank" rel="noopener noreferrer" aria-label="${code} Yahoo 技術分析" title="開啟 ${code} Yahoo 技術分析">📈</a>`;
+}
+
 function battleFinanceSnapshotHtml(snapshotType,holdingColumn){
   var state=battleFinanceSnapshotState,data=state.data||{};
   var records=(data.records||[]).filter(function(record){return record.snapshotType===snapshotType;});
@@ -13541,7 +13552,7 @@ function battleFinanceSnapshotHtml(snapshotType,holdingColumn){
     for(var i=points.length-2;i>=0;i--){
       if(battleFinanceSnapshotDateKey(points[i])!==latestDate){previous=points[i];break;}
     }
-    return `<div class="battle-snapshot-row"><span>${esc(latest.name)}<small class="battle-snapshot-yesterday">${esc(battleFinanceSnapshotYesterdayText(latest,previous))}</small></span><strong>${esc(battleFinanceSnapshotValueText(latest))}</strong><em>${esc(battleFinanceSnapshotDeltaText(latest,previous))}</em><small>${esc(battleUpdatedAtText(latest.capturedAt||latest.recordSourceDate))}</small></div>`;
+    return `<div class="battle-snapshot-row"><span>${esc(latest.name)}${battleHoldingChartLinkHtml(latest.name)}<small class="battle-snapshot-yesterday">${esc(battleFinanceSnapshotYesterdayText(latest,previous))}</small></span><strong>${esc(battleFinanceSnapshotValueText(latest))}</strong><em>${esc(battleFinanceSnapshotDeltaText(latest,previous))}</em><small>${esc(battleUpdatedAtText(latest.capturedAt||latest.recordSourceDate))}</small></div>`;
   });
   var rows=rowParts.join('');
   if(snapshotType==='holdings'){
@@ -13851,7 +13862,6 @@ function renderBattleBrief(data,el){
   battleFinanceSnapshotState.liveFunds=Array.isArray(data.funds)?data.funds:[];
   battleBriefHoldings=holdings;
   var etfHoldingChange=data.etfHoldingChange||{};
-  var holdingsHtml=`<div id="battle-price-comparison-host">${battlePriceComparisonHtml()}</div>`;
   el.innerHTML=`<div class="battle-report-head">
     <div>
       <div class="battle-report-title">戰情總匯報</div>
@@ -13876,12 +13886,7 @@ function renderBattleBrief(data,el){
       <div id="battle-margin-snapshot-host"></div>
       <div id="battle-holdings-right-snapshot-host"></div>
     </div>
-    <div class="battle-section wide">
-      <div class="battle-section-title">K線走勢圖</div>
-      ${holdingsHtml}
-    </div>
   </div>`;
-  setTimeout(function(){loadBattleBriefPriceHistory();},0);
   setTimeout(function(){loadBattleFinanceSnapshots(false);},0);
 }
 
