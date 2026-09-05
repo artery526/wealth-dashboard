@@ -2322,6 +2322,7 @@ body::after{
 .txn-badge.in{background:var(--teal-l);color:var(--teal)}
 .txn-badge.transfer{background:rgba(124,111,192,.12);color:var(--purple)}
 .txn-date{font-family:var(--mono);font-size:10px;color:#5a4018;flex-shrink:0}
+.txn-created-at{display:block;margin-top:2px;font-size:9px;color:#9a7430;letter-spacing:0}
 .txn-cat{flex:1;font-family:var(--sans);font-size:12px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .txn-amt{font-family:var(--mono);font-size:12px;font-weight:700;flex-shrink:0}
 .txn-amt.out{color:var(--coral)}.txn-amt.in{color:var(--teal)}.txn-amt.transfer{color:var(--purple)}
@@ -4759,7 +4760,7 @@ html[data-theme="deep-blue"] .advisor-ai-standalone .advisor-ai-quick-select:foc
 // ══════════════════════════════════════════
 //  State & Config
 // ══════════════════════════════════════════
-var CANONICAL_API_URL = 'https://script.google.com/macros/s/AKfycbyjjbR3MJ2GShZmEe6IU6FHzZrxSrBRMvXoqL6Wn1Q7Ldszm1p08Y8cxJFkkzAI-woa/exec';
+var CANONICAL_API_URL = 'https://script.google.com/macros/s/AKfycbyShZS0LibQvIiZyxiag7oGLnL41XCrPBp4ti2IFaHSI3E8gP3iznxix0k7G6wkPgzq/exec';
 var EVENT_CHRONICLE_NAS_API_URL = 'https://api.ark-os26.cc';
 var LEGACY_API_DEPLOYMENT_IDS = [
   'AKfycbwBhxif_vONIC4m8mxWZB2q2bk3Hyy1lBkCkFSg66OLwQxPQL-Ktsc7BdTgZQZAc4bO',
@@ -11697,6 +11698,55 @@ function stopBookingSubmitEvent(e){
   if(e&&e.stopPropagation)e.stopPropagation();
 }
 
+function bookingDateMonthDay(value){
+  var text=String(value||'').trim().replace(/-/g,'/');
+  var match=text.match(/^(?:\d{4}\/)?(\d{1,2})\/(\d{1,2})/);
+  return match?String(match[1]).padStart(2,'0')+'/'+String(match[2]).padStart(2,'0'):'';
+}
+
+function recentCreatedAtStamp(value){
+  if(!value)return 0;
+  if(typeof value==='number')return value;
+  var text=String(value).trim();
+  var match=text.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2}))?)?/);
+  if(match)return new Date(Number(match[1]),Number(match[2])-1,Number(match[3]),Number(match[4]||0),Number(match[5]||0),Number(match[6]||0)).getTime();
+  var parsed=Date.parse(text);
+  return isNaN(parsed)?0:parsed;
+}
+
+function formatRecentCreatedAt(value){
+  var stamp=recentCreatedAtStamp(value);
+  if(!stamp)return '';
+  var date=new Date(stamp);
+  return String(date.getHours()).padStart(2,'0')+':'+String(date.getMinutes()).padStart(2,'0');
+}
+
+function recentTxnLooksLikeBooking(t,body){
+  if(!t||!body)return false;
+  var created=recentCreatedAtStamp(t.createdAt);
+  if(!created||Date.now()-created>15*60*1000||Date.now()-created<-2*60*1000)return false;
+  if(bookingDateMonthDay(t.date)!==bookingDateMonthDay(body.date))return false;
+  if(Math.round(Number(t.amount)||0)!==Math.round(Number(body.amount)||0))return false;
+  if(body.action==='expense')return t.type==='支出'&&String(t.cat||'')===String(body.cat||'')&&recentTxnAccount(t)===String(body.account||'');
+  if(body.action==='income'){
+    return t.type==='收入'&&String(t.cat||'')===String(body.source||'')&&recentTxnAccount(t)===String(body.account||'')&&(!body.divSymbol||!t.divSymbol||normalizeKey(t.divSymbol)===normalizeKey(body.divSymbol));
+  }
+  if(body.action!=='transfer')return false;
+  if(body.stockMode==='1'){
+    var stockType=body.stockType==='sell'?'賣出股票':'買入股票';
+    var parts=recentTxnStockParts(t);
+    return t.type===stockType&&normalizeKey(parts.symbol)===normalizeKey(body.stockSymbol||'')&&parts.from===String(body.from||'')&&parts.to===String(body.to||'');
+  }
+  return t.type==='轉帳'&&recentTxnAccount(t)===String(body.from||'')&&recentTxnSecondaryAccount(t)===String(body.to||'');
+}
+
+function confirmRecentBooking(body){
+  var match=(bookingRecentRows||[]).find(function(row){return recentTxnLooksLikeBooking(row,body);});
+  if(!match)return true;
+  var created=formatRecentCreatedAt(match.createdAt)||'剛剛';
+  return window.confirm('近期已有一筆相同條件的記帳（'+created+'）。\n可能是重複記帳，仍要送出嗎？');
+}
+
 async function submitExpense(e){
   stopBookingSubmitEvent(e);
   var btn=document.getElementById('btn-expense');
@@ -11707,6 +11757,7 @@ async function submitExpense(e){
   var amt=parseFloat(document.getElementById('e-amount').value)||0;
   var note=document.getElementById('e-note').value;
   if(!date||!cat||!acc||amt<=0){showMsg('msg-expense','請填寫所有必填欄位','err');return}
+  if(!confirmRecentBooking({action:'expense',date:date,cat:cat,account:acc,amount:amt}))return;
   btn.disabled=true;btn.textContent='記錄中…';
   try{
     await apiPost({action:'expense',date:date.replace(/-/g,'/'),cat,account:acc,amount:amt,note});
@@ -11714,6 +11765,7 @@ async function submitExpense(e){
     invalidateBookingAccountBalances();
     document.getElementById('e-amount').value='';
     document.getElementById('e-note').value='';
+    loadRecentBooking();
     focusBookingField('e-amount');
   }catch(e){showMsg('msg-expense','✗ '+e.message,'err')}
   btn.disabled=false;btn.textContent='記錄支出';
@@ -11736,6 +11788,7 @@ async function submitIncome(e){
   var dividendRowId=(document.getElementById('i-amount')&&document.getElementById('i-amount').dataset.dividendRowId)||'';
   if(!date||!src||!acc||amt<=0){showMsg('msg-income','請填寫所有必填欄位','err');return}
   if(isInvestSrc(src)&&!divSym){showMsg('msg-income','請選擇持股標的作為入帳帳戶','err');return}
+  if(!confirmRecentBooking({action:'income',date:date,source:src,account:acc,amount:amt,divSymbol:divSym}))return;
   btn.disabled=true;btn.textContent='記錄中…';
   try{
     await apiPost({action:'income',date:date.replace(/-/g,'/'),source:src,account:acc,amount:amt,note,divSymbol:divSym,
@@ -11746,6 +11799,7 @@ async function submitIncome(e){
     document.getElementById('i-amount').value='';
     syncDivNote();
     clearIncomeDividendAutofill();
+    loadRecentBooking();
     focusBookingField('i-amount');
   }catch(e){showMsg('msg-income','✗ '+e.message,'err')}
   btn.disabled=false;btn.textContent='記錄收入';
@@ -11763,6 +11817,7 @@ async function submitAccountTransfer(e){
   var note=document.getElementById('a-note').value;
   if(!date||!from||!to||amt<=0){showMsg('msg-transfer','請填寫所有必填欄位','err');return}
   if(from===to){showMsg('msg-transfer','轉出和轉入帳戶不能相同','err');return}
+  if(!confirmRecentBooking({action:'transfer',date:date,from:from,to:to,amount:amt}))return;
   btn.disabled=true;btn.textContent='記錄中…';
   try{
     await apiPost({action:'transfer',date:date.replace(/-/g,'/'),from,to,amount:amt,label:'',note});
@@ -11770,6 +11825,7 @@ async function submitAccountTransfer(e){
     invalidateBookingAccountBalances();
     document.getElementById('a-amount').value='';
     document.getElementById('a-note').value='';
+    loadRecentBooking();
     focusBookingField('a-amount');
   }catch(e){showMsg('msg-transfer','✗ '+e.message,'err')}
   btn.disabled=false;btn.textContent=isMergedStockTrade()?'記錄交易':'記錄轉帳';
@@ -11794,6 +11850,7 @@ async function submitStockTransfer(e){
   if(!date||!from||!to||!stockSym||stockAmt<=0){showMsg('msg-transfer','請填寫所有必填欄位','err');return}
   if(from===to){showMsg('msg-transfer','轉出和轉入帳戶不能相同','err');return}
   if(stockShares<=0){showMsg('msg-transfer','請填寫交易股數','err');return}
+  if(!confirmRecentBooking({action:'transfer',date:date,from:from,to:to,amount:stockAmt,stockMode:'1',stockType:stockType,stockSymbol:stockSym}))return;
   btn.disabled=true;btn.textContent='記錄中…';
   try{
     await apiPost({action:'transfer',date:date.replace(/-/g,'/'),from,to,amount:stockAmt,label:stockSym,note,
@@ -11806,6 +11863,7 @@ async function submitStockTransfer(e){
     document.getElementById('a-amount').value='';
     document.getElementById('t-stock-shares').value='';
     clearTransferDividendAutofill();
+    loadRecentBooking();
     focusBookingField('t-stock-shares');
   }catch(e){showMsg('msg-transfer','✗ '+e.message,'err')}
   btn.disabled=false;btn.textContent=isMergedStockTrade()?'記錄交易':'記錄轉帳';
@@ -11837,9 +11895,10 @@ async function loadRecentBooking(){
           var undo=t.undoable?
             '<button class="txn-undo" type="button" title="撤銷這筆紀錄" onclick="undoRecentTxn(\''+encodeURIComponent(t.source||'')+'\','+(Number(t.rowId)||0)+',\''+encodeURIComponent(type)+'\',this)">撤銷</button>':'';
           var balance=renderTxnAccountChange(t.accountChange);
+          var createdAt=formatRecentCreatedAt(t.createdAt);
           return '<div class="txn-item">'+
             '<span class="txn-badge '+tone+'">'+esc(type)+'</span>'+
-            '<span class="txn-date">'+esc(t.date)+'</span>'+
+            '<span class="txn-date">'+esc(t.date)+(createdAt?'<span class="txn-created-at">'+esc(createdAt)+'</span>':'')+'</span>'+
             '<span class="txn-cat">'+esc(t.cat)+'</span>'+
             '<span class="txn-amt '+tone+'">'+sign+fmtFull(t.amount)+'</span>'+
             balance+
