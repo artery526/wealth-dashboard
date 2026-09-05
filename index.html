@@ -7839,18 +7839,9 @@ function renderMedicalPanel(){
       </form>
     </div>
     <div class="pane" id="pane-medical-tarot">
-      <div class="council-army-title">🃏 抽牌紀錄</div>
+      <div class="council-army-title">🃏 抽牌記錄</div>
       <form class="tarot-form" id="medical-tarot-form">
         <div class="tarot-form-grid">
-          <div class="medical-field" style="grid-column:1/-1">
-            <label>紀錄時間</label>
-            <div style="display:flex;gap:8px;align-items:center">
-              <span style="font-size:18px;cursor:pointer;flex-shrink:0" onclick="document.getElementById('tarot-dt-date').showPicker&&document.getElementById('tarot-dt-date').showPicker()" title="選擇日期">📅</span>
-              <input class="medical-input" id="tarot-dt-date" type="date" style="flex:1;min-width:0">
-              <span style="font-size:18px;cursor:pointer;flex-shrink:0" onclick="document.getElementById('tarot-dt-time').showPicker&&document.getElementById('tarot-dt-time').showPicker()" title="選擇時間">🕐</span>
-              <input class="medical-input" id="tarot-dt-time" type="time" step="60" style="flex:1;min-width:0">
-            </div>
-          </div>
           <div class="medical-field" style="grid-column:1/-1">
             <label>抽牌類型</label>
             <div class="tarot-mode-switch">
@@ -7929,7 +7920,7 @@ function renderMedicalPanel(){
           <div class="tarot-summary-box" id="tarot-summary">未抽取（❌）× ❌</div>
         </div>
         <div class="medical-actions">
-          <button class="medical-submit" id="tarot-submit" type="submit">送出抽牌紀錄</button>
+          <button class="medical-submit" id="tarot-submit" type="submit">送出抽牌記錄</button>
           <span class="medical-status" id="tarot-status"></span>
         </div>
       </form>
@@ -7946,7 +7937,7 @@ function renderMedicalPanel(){
       </div>
       <div class="council-army-title" style="font-size:13px;margin-bottom:8px">禪｜奧修牌卡統計</div>
       <div id="mcs-osho-chart"><div class="mcs-empty">⏳ 載入中…</div></div>
-      <div class="council-army-title" style="font-size:13px;margin:16px 0 8px">記｜奧修抽牌紀錄</div>
+      <div class="council-army-title" style="font-size:13px;margin:16px 0 8px">記｜奧修抽牌記錄</div>
       <div id="mcs-osho-records"><div class="mcs-empty">⏳ 載入中…</div></div>
       <div class="council-army-title" style="font-size:13px;margin:16px 0 8px">塔｜塔羅卡牌統計</div>
       <div id="mcs-tarot-chart"><div class="mcs-empty">⏳ 載入中…</div></div>
@@ -8710,7 +8701,7 @@ async function submitMedicalQuickRecord(e){
   }
 }
 
-// ── 抽牌紀錄 tab ─────────────────────────────────────────────
+// ── 抽牌記錄 tab ─────────────────────────────────────────────
 var _selectedTarotKws=[];
 var _tarotDrawMode='single';
 var TAROT_THREE_POSITIONS=['第一張','第二張','第三張'];
@@ -8757,12 +8748,10 @@ function updateMedicalTarotPreviews(){
 async function initMedicalTarotForm(){
   var form=document.getElementById('medical-tarot-form');
   if(!form)return;
-  // 時間預填
-  var now=new Date();
-  var dateEl=document.getElementById('tarot-dt-date');
-  var timeEl=document.getElementById('tarot-dt-time');
-  if(dateEl&&!dateEl.value)dateEl.value=today();
-  if(timeEl&&!timeEl.value)timeEl.value=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+  // 與醫館標題右側的共用日期時間同步
+  var sharedTime=document.getElementById('medical-time');
+  if(sharedTime&&!sharedTime.value)sharedTime.value=localDateTimeValue();
+  syncMedicalHeaderTime();
   // 載入選項
   var options=await loadMedicalOptions();
   fillMedicalSelect('tarot-card',options.tarots,'選擇塔羅牌');
@@ -8900,10 +8889,12 @@ function setTarotStatus(message,type){
 async function submitMedicalTarotRecord(e){
   if(e&&e.preventDefault)e.preventDefault();
   var btn=document.getElementById('tarot-submit');
-  var dateEl=document.getElementById('tarot-dt-date');
-  var timeEl2=document.getElementById('tarot-dt-time');
-  var date=dateEl&&dateEl.value?dateEl.value:today();
-  var time=timeEl2&&timeEl2.value?timeEl2.value:(function(){var n=new Date();return String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');})();
+  var sharedTime=document.getElementById('medical-time');
+  if(sharedTime&&!sharedTime.value)sharedTime.value=localDateTimeValue();
+  syncMedicalHeaderTime();
+  var timeValue=sharedTime&&sharedTime.value?sharedTime.value:localDateTimeValue();
+  var date=timeValue.slice(0,10);
+  var time=timeValue.slice(11,16);
   var tarot=(document.getElementById('tarot-card')||{}).value||'未抽取';
   var tarotPosition=(document.getElementById('tarot-pos')||{}).value||'❌';
   var oracle=(document.getElementById('tarot-oracle')||{}).value||'❌';
@@ -8933,7 +8924,7 @@ async function submitMedicalTarotRecord(e){
     });
     _mcsCache=null;
     _mcsPromise=null;
-    setTarotStatus('已同步抽牌紀錄：牌卡統計 +'+(data.cardRows||0)+' 列；奧修禪卡統計 +'+(data.oshoRows||0)+' 列','ok');
+    setTarotStatus('已同步抽牌記錄：牌卡統計 +'+(data.cardRows||0)+' 列；奧修禪卡統計 +'+(data.oshoRows||0)+' 列','ok');
     if(btn)btn.disabled=false;
   }catch(err){
     if(btn)btn.disabled=false;
@@ -19279,7 +19270,7 @@ function mcRenderByMonth(month){
   // 渲染圖表
   mcsRenderChart('mcs-osho-chart',oshoRows,lbl+'尚無奧修禪卡紀錄',_mcsOracleImages,'time');
   mcsRenderChart('mcs-tarot-chart',tarotRows,lbl+'尚無塔羅牌卡紀錄',_mcsCardImages,'count');
-  mcsRenderOshoList('mcs-osho-records',oshoRows,lbl+'尚無奧修抽牌紀錄');
+  mcsRenderOshoList('mcs-osho-records',oshoRows,lbl+'尚無奧修抽牌記錄');
   mcsRenderTarotList('mcs-tarot-records',tarotRows,lbl+'尚無塔羅抽牌明細');
 }
 
