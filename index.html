@@ -529,13 +529,31 @@ body::after{
 .task-create-btn{align-self:end}
 .task-create-btn{border:1px solid rgba(232,192,80,.5);border-radius:4px;background:rgba(184,137,46,.22);color:#f0dfa0;font-family:var(--sans);font-size:11px;font-weight:900;padding:6px 9px;cursor:pointer}
 .task-create-btn:disabled,.task-delete-btn:disabled{opacity:.5;cursor:wait}
-.home-agenda{
+.home-primary-grid{
+  position:relative;
   width:min(1026px,100%);
   margin:0 auto 22px;
   display:grid;
-  grid-template-columns:minmax(276px,304px) minmax(0,1fr);
-  gap:14px;
-  align-items:stretch;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:22px;
+  align-items:start;
+}
+.home-primary-grid>#empire-cards{display:contents}
+.home-primary-grid>#empire-cards>.card{order:1}
+.home-primary-grid>.home-agenda-calendar{
+  position:relative;
+  z-index:30;
+  grid-column:3;
+  grid-row:2;
+  order:2;
+  min-width:0;
+}
+.home-primary-grid>.home-agenda-court{
+  grid-column:1/-1;
+  grid-row:3;
+  order:3;
+  z-index:30;
+  width:100%;
 }
 .home-agenda-calendar,.home-agenda-court{
   position:relative;
@@ -665,7 +683,6 @@ body::after{
     width:min(220px,38vw);
     margin:0;
   }
-  .home-agenda{grid-template-columns:1fr}
 }
 @media(max-width:540px){
   .today-agenda{width:100%;margin-top:0}
@@ -683,10 +700,12 @@ body::after{
   .agenda-time{width:max-content;max-width:100%;min-height:0}
   .calendar-create-form{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
   .calendar-create-btn{grid-column:1/-1;width:100%;min-height:40px}
-  .home-agenda{margin-bottom:16px}
+  .home-primary-grid{grid-template-columns:1fr;gap:16px;margin-bottom:16px}
+  .home-primary-grid>.home-agenda-calendar{grid-column:auto;grid-row:auto}
+  .home-primary-grid>.home-agenda-court{grid-column:auto;grid-row:auto}
   .home-calendar-day{aspect-ratio:auto;min-height:34px}
   .home-agenda-body{grid-template-columns:1fr}
-  .home-agenda-body{max-height:340px}
+  .home-agenda-body{max-height:none;overflow:visible}
   .home-agenda-body .agenda-section+.agenda-section{border-left:0;border-top:1px solid rgba(232,192,80,.18);padding-left:0;padding-top:14px}
   .home-agenda-head{align-items:flex-start;flex-direction:column}
   .home-agenda-actions{width:100%;justify-content:flex-start}
@@ -4457,7 +4476,7 @@ html[data-theme="deep-blue"] .advisor-ai-standalone .advisor-ai-quick-select:foc
 
   </div>
 
-  <section class="home-agenda" aria-label="本月月曆與朝中政務">
+  <section class="home-primary-grid" aria-label="五張內政卡片、本月月曆與朝中政務">
     <div class="home-agenda-calendar">
       <div class="home-agenda-head">
         <div>
@@ -4481,7 +4500,6 @@ html[data-theme="deep-blue"] .advisor-ai-standalone .advisor-ai-quick-select:foc
         </section>
       </div>
     </div>
-  </section>
 
   <div class="cards empire-locked" id="empire-cards">
     <div class="empire-access-lock" id="empire-access-lock" aria-live="polite">
@@ -4657,6 +4675,7 @@ html[data-theme="deep-blue"] .advisor-ai-standalone .advisor-ai-quick-select:foc
     </div>
 
   </div><!-- /cards -->
+  </section>
 </div><!-- /wrap -->
 
 <!-- ══ Panel Overlay ══ -->
