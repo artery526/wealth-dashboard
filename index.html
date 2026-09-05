@@ -13537,8 +13537,11 @@ function battleHoldingChartLinkHtml(name){
   else if(key==='CHPY')code='CHPY';
   else if(key==='MLPI')code='MLPI';
   if(!code)return '';
-  var url='https://tw.stock.yahoo.com/quote/'+encodeURIComponent(code+'.TW')+'/technical-analysis';
-  return ` <a class="battle-holding-chart-link" href="${url}" target="_blank" rel="noopener noreferrer" aria-label="${code} Yahoo 技術分析" title="開啟 ${code} Yahoo 技術分析">📈</a>`;
+  var url=(code==='MLPI'||code==='CHPY')
+    ? 'https://www.cmoney.tw/forum/usstock/etf/'+code+'?s=technical-analysis'
+    : 'https://tw.stock.yahoo.com/quote/'+encodeURIComponent(code+'.TW')+'/technical-analysis';
+  var source=code==='MLPI'||code==='CHPY'?'CMoney':'Yahoo';
+  return ` <a class="battle-holding-chart-link" href="${url}" target="_blank" rel="noopener noreferrer" aria-label="${code} ${source} 技術分析" title="開啟 ${code} ${source} 技術分析">📈</a>`;
 }
 
 function battleFinanceSnapshotHtml(snapshotType,holdingColumn){
