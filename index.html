@@ -13525,9 +13525,28 @@ function battleFinanceSnapshotDateKey(item){
   return match?match[1]:raw.slice(0,10);
 }
 
-function battleFinanceSnapshotYesterdayText(latest,previous){
-  if(!previous)return '昨日 --';
-  return '昨 '+battleFinanceSnapshotValueText(previous);
+function battleFinanceSnapshotRangeDays(range){
+  return range==='7d'?7:range==='1m'?31:93;
+}
+
+function battleFinanceSnapshotRangeLabel(range){
+  return range==='7d'?'7天前':range==='1m'?'1個月前':'3個月前';
+}
+
+function battleFinanceSnapshotBaseline(points,latest,range){
+  var latestTime=Date.parse(String(latest&&latest.capturedAt||latest&&latest.recordSourceDate||''));
+  if(!isFinite(latestTime))return points.length>1?points[0]:null;
+  var target=latestTime-battleFinanceSnapshotRangeDays(range)*24*60*60*1000, candidate=null;
+  points.forEach(function(point){
+    var pointTime=Date.parse(String(point&&point.capturedAt||point&&point.recordSourceDate||''));
+    if(isFinite(pointTime)&&pointTime<=target)candidate=point;
+  });
+  return candidate||(points.length>1?points[0]:null);
+}
+
+function battleFinanceSnapshotPeriodText(latest,baseline,range){
+  if(!baseline)return battleFinanceSnapshotRangeLabel(range)+' --';
+  return battleFinanceSnapshotRangeLabel(range)+' '+battleFinanceSnapshotValueText(baseline);
 }
 
 function battleHoldingChartLinkHtml(name){
@@ -13551,11 +13570,8 @@ function battleFinanceSnapshotHtml(snapshotType,holdingColumn){
   records.forEach(function(record){(record.items||[]).forEach(function(item){var key=item.code+'|'+item.name;(grouped[key]||(grouped[key]=[])).push(Object.assign({},item,{capturedAt:record.capturedAt,recordSourceDate:record.sourceDate}));});});
   var rowParts=Object.keys(grouped).map(function(key){
     var points=grouped[key].sort(function(a,b){return String(a.capturedAt).localeCompare(String(b.capturedAt));});
-    var latest=points[points.length-1],latestDate=battleFinanceSnapshotDateKey(latest),previous=null;
-    for(var i=points.length-2;i>=0;i--){
-      if(battleFinanceSnapshotDateKey(points[i])!==latestDate){previous=points[i];break;}
-    }
-    return `<div class="battle-snapshot-row"><span>${esc(latest.name)}${battleHoldingChartLinkHtml(latest.name)}<small class="battle-snapshot-yesterday">${esc(battleFinanceSnapshotYesterdayText(latest,previous))}</small></span><strong>${esc(battleFinanceSnapshotValueText(latest))}</strong><em>${esc(battleFinanceSnapshotDeltaText(latest,previous))}</em><small>${esc(battleUpdatedAtText(latest.capturedAt||latest.recordSourceDate))}</small></div>`;
+    var latest=points[points.length-1],baseline=battleFinanceSnapshotBaseline(points,latest,state.range);
+    return `<div class="battle-snapshot-row"><span>${esc(latest.name)}${battleHoldingChartLinkHtml(latest.name)}<small class="battle-snapshot-yesterday">${esc(battleFinanceSnapshotPeriodText(latest,baseline,state.range))}</small></span><strong>${esc(battleFinanceSnapshotValueText(latest))}</strong><em>${esc(battleFinanceSnapshotDeltaText(latest,baseline))}</em><small>${esc(battleUpdatedAtText(latest.capturedAt||latest.recordSourceDate))}</small></div>`;
   });
   var rows=rowParts.join('');
   if(snapshotType==='holdings'){
@@ -13572,7 +13588,7 @@ function battleFinanceSnapshotHtml(snapshotType,holdingColumn){
     var rightRows=ordered.filter(function(row){return leftRows.indexOf(row)<0;});
     rows=holdingColumn==='left'?leftRows.join(''):holdingColumn==='right'?rightRows.join(''):`<div class="battle-holding-snapshot-grid"><div>${leftRows.join('')}</div><div>${rightRows.join('')}</div></div>`;
   }
-  var title=snapshotType==='holdings'?'持股標的昨日數值對比':'昨日數值對比';
+  var title=snapshotType==='holdings'?'持股標的期間數值對比':'期間數值對比';
   var body=state.error?`<div class="battle-price-loading">${esc(state.error)}</div>${rows}`:(rows||'<div class="battle-price-loading">尚未有 NAS 快照資料</div>');
   return `<div class="battle-snapshot-panel"><div class="battle-snapshot-toolbar"><span>${title}</span><div>${['7d','1m','3m'].map(function(range){return `<button type="button" class="battle-snapshot-range ${state.range===range?'is-active':''}" onclick="setBattleFinanceSnapshotRange('${range}')">${range==='7d'?'7天':range==='1m'?'1個月':'3個月'}</button>`;}).join('')}</div></div>${body}</div>`;
 }
@@ -13585,9 +13601,9 @@ function battleLiveFundSnapshotHtml(funds){
     var change=item.change===''||item.change==null?(previous==null?null:current-previous):Number(item.change);
     var pct=item.changePct===''||item.changePct==null?null:Number(item.changePct);
     var changeText=pct==null||!isFinite(pct)?'--':(pct>0?'+':'')+pct.toFixed(2)+'%';
-    return `<div class="battle-snapshot-row"><span>${esc(item.name)}<small class="battle-snapshot-yesterday">昨 ${previous==null?'--':battleFinanceSnapshotValueText({value:previous})}</small></span><strong>${esc(battleFinanceSnapshotValueText({value:current}))}</strong><em>${esc(changeText)}</em><small>${esc(battleUpdatedAtText(item.updatedAt||item.dataTime||item.fetchedAt))}</small></div>`;
+    return `<div class="battle-snapshot-row"><span>${esc(item.name)}<small class="battle-snapshot-yesterday">${esc(battleFinanceSnapshotRangeLabel(battleFinanceSnapshotState.range))} ${previous==null?'--':battleFinanceSnapshotValueText({value:previous})}</small></span><strong>${esc(battleFinanceSnapshotValueText({value:current}))}</strong><em>${esc(changeText)}</em><small>${esc(battleUpdatedAtText(item.updatedAt||item.dataTime||item.fetchedAt))}</small></div>`;
   }).join('');
-  var title='昨日數值對比';
+  var title='期間數值對比';
   var body=rows||'<div class="battle-price-loading">尚未取得基金淨值</div>';
   return `<div class="battle-snapshot-panel"><div class="battle-snapshot-toolbar"><span>${title}</span><div>${['7d','1m','3m'].map(function(range){return `<button type="button" class="battle-snapshot-range ${battleFinanceSnapshotState.range===range?'is-active':''}" onclick="setBattleFinanceSnapshotRange('${range}')">${range==='7d'?'7天':range==='1m'?'1個月':'3個月'}</button>`;}).join('')}</div></div>${body}</div>`;
 }
@@ -13597,7 +13613,8 @@ function updateBattleFinanceSnapshotViews(){
   var marginHost=document.getElementById('battle-margin-snapshot-host');
   var holdingsLeftHost=document.getElementById('battle-holdings-left-snapshot-host');
   var holdingsRightHost=document.getElementById('battle-holdings-right-snapshot-host');
-  if(fundHost)fundHost.innerHTML=battleFinanceSnapshotState.liveFunds.length?battleLiveFundSnapshotHtml(battleFinanceSnapshotState.liveFunds):battleFinanceSnapshotHtml('fund-nav');
+  var fundRecords=((battleFinanceSnapshotState.data&&battleFinanceSnapshotState.data.records)||[]).some(function(record){return record.snapshotType==='fund-nav'&&(record.items||[]).length;});
+  if(fundHost)fundHost.innerHTML=fundRecords?battleFinanceSnapshotHtml('fund-nav'):battleLiveFundSnapshotHtml(battleFinanceSnapshotState.liveFunds);
   if(marginHost)marginHost.innerHTML=battleFinanceSnapshotHtml('twse-margin');
   if(holdingsLeftHost)holdingsLeftHost.innerHTML=battleFinanceSnapshotHtml('holdings','left');
   if(holdingsRightHost)holdingsRightHost.innerHTML=battleFinanceSnapshotHtml('holdings','right');
