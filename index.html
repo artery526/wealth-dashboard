@@ -13563,7 +13563,7 @@ function battleFinanceSnapshotHtml(snapshotType,holdingColumn){
     var rowByName={};
     rowParts.forEach(function(row,index){
       var nameMatch=row.match(/<span>([^<]+)/);
-      if(nameMatch)rowByName[nameMatch[1]]=row;
+      if(nameMatch)rowByName[nameMatch[1].trim()]=row;
     });
     var ordered=preferred.filter(function(name){return rowByName[name];}).map(function(name){return rowByName[name];});
     Object.keys(rowByName).forEach(function(name){if(preferred.indexOf(name)<0)ordered.push(rowByName[name]);});
