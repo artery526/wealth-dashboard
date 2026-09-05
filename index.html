@@ -1864,6 +1864,7 @@ body::after{
 }
 .overlay.open{opacity:1;pointer-events:auto}
 @media(min-width:600px){.overlay{align-items:center}}
+@media(max-width:599px){.overlay.medical-overlay{align-items:center}.overlay.medical-overlay .panel{border-radius:16px}}
 
 .panel{
   width:100%;max-width:520px;max-height:92vh;
@@ -5992,6 +5993,7 @@ function openPanel(key,initialTab){
   document.getElementById('panel').classList.toggle('medical-wide',key==='medical');
   document.getElementById('panel').classList.toggle('stars-wide',key==='stars');
   document.getElementById('panel').classList.toggle('store-wide',key==='store');
+  document.getElementById('overlay').classList.toggle('medical-overlay',key==='medical');
   currentPanel=key;
   if(key==='finance')renderFinancePanel(initialTab);
   else if(key==='domestic'){setEmpireCardApiPendingStatus('domestic');renderDomesticPanel();}
@@ -6006,6 +6008,7 @@ function openPanel(key,initialTab){
 function closePanel(){
   closePanelTitleMenu();
   document.getElementById('overlay').classList.remove('open');
+  document.getElementById('overlay').classList.remove('medical-overlay');
   document.getElementById('panel').classList.remove('council-wide');
   document.getElementById('panel').classList.remove('domestic-wide');
   document.getElementById('panel').classList.remove('finance-wide');
