@@ -1577,6 +1577,14 @@ body::after{
 .medical-form{display:grid;gap:12px}
 .medical-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .medical-field label{display:block;margin-bottom:5px;font-family:var(--sans);font-size:11px;font-weight:800;color:#9a7430;letter-spacing:1px}
+.medical-header-time{display:inline-flex;align-items:center;gap:5px;min-width:0}
+.medical-time-btn{border:1px solid rgba(232,192,80,.48);border-radius:7px;background:rgba(232,192,80,.08);color:var(--gold);padding:6px 8px;font-family:var(--mono);font-size:11px;font-weight:900;letter-spacing:.4px;cursor:pointer;white-space:nowrap}
+.medical-time-native{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.medical-panel-status-text{font-family:var(--sans);font-size:10px;font-weight:800;color:#63d8c1;white-space:nowrap}
+.medical-notes-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.medical-notes-head label{margin-bottom:5px}
+.medical-notes-toggle{border:1px solid rgba(232,192,80,.42);border-radius:5px;background:rgba(232,192,80,.06);color:var(--gold);padding:4px 8px;font-family:var(--sans);font-size:10px;font-weight:800;cursor:pointer}
+.medical-notes-field .medical-textarea[hidden]{display:none}
 .medical-input,.medical-select,.medical-textarea{
   width:100%;
   min-width:0;
@@ -1844,7 +1852,7 @@ body::after{
 .hero-add-plus{font-size:34px;color:#a89060;margin-bottom:10px}
 @keyframes heroEffectSweep{to{transform:rotate(360deg)}}
 @media(max-width:860px){.council-roster-group{grid-template-columns:1fr}.council-roster{grid-template-columns:1fr}.council-roster-total{border-left:0;border-top:1px solid rgba(184,137,46,.22);padding-left:0;padding-top:10px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.hero-card{grid-template-columns:112px minmax(0,1fr);grid-template-rows:auto auto auto}.hero-visual-stack{grid-row:1/3}.hero-effect{grid-column:2;grid-row:2}.hero-bottom{grid-column:1/-1;grid-row:auto;border-left:0;border-top:1px solid rgba(184,137,46,.24);padding:10px 0 0;grid-template-columns:repeat(2,minmax(0,1fr))}.council-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.council-pantry{grid-template-columns:1fr}}
-@media(max-width:540px){.panel.council-wide,.panel.domestic-wide,.panel.finance-wide,.panel.medical-wide{max-width:100%}.council-roster-group{padding:8px}.council-roster-head{align-items:flex-start;flex-direction:column}.council-roster{grid-template-columns:1fr;gap:8px}.council-roster-total{grid-template-columns:1fr}.council-summary{grid-template-columns:1fr 1fr}.council-pantry{padding:12px}.pantry-main,.pantry-gauge-wrap{grid-template-columns:1fr;display:grid}.pantry-extra{grid-template-columns:1fr}.medical-form-grid{grid-template-columns:1fr}.hero-card{grid-template-columns:1fr;min-height:0;padding:8px;gap:7px}.hero-visual-stack{width:86px;grid-row:auto;justify-self:center}.hero-visual{width:100%}.hero-effect{grid-column:1;grid-row:auto;padding:7px 8px}.hero-effect-text{font-size:10px}.hero-bottom{grid-template-columns:1fr}.hero-symbol{font-size:12px}.hero-name{font-size:18px;gap:4px}.hero-type-inline{font-size:10px}.hero-value-under-badge,.hero-price-under-value{font-size:10px}.hero-metrics-panel{position:static;width:100%;margin-top:0;padding:9px 10px;background:rgba(8,7,5,.94);font-size:12px}}
+@media(max-width:540px){.panel.council-wide,.panel.domestic-wide,.panel.finance-wide,.panel.medical-wide{max-width:100%}.council-roster-group{padding:8px}.council-roster-head{align-items:flex-start;flex-direction:column}.council-roster{grid-template-columns:1fr;gap:8px}.council-roster-total{grid-template-columns:1fr}.council-summary{grid-template-columns:1fr 1fr}.council-pantry{padding:12px}.pantry-main,.pantry-gauge-wrap{grid-template-columns:1fr;display:grid}.pantry-extra{grid-template-columns:1fr}.medical-form-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.medical-select{padding-left:7px;padding-right:7px;font-size:12px}.hero-card{grid-template-columns:1fr;min-height:0;padding:8px;gap:7px}.hero-visual-stack{width:86px;grid-row:auto;justify-self:center}.hero-visual{width:100%}.hero-effect{grid-column:1;grid-row:auto;padding:7px 8px}.hero-effect-text{font-size:10px}.hero-bottom{grid-template-columns:1fr}.hero-symbol{font-size:12px}.hero-name{font-size:18px;gap:4px}.hero-type-inline{font-size:10px}.hero-value-under-badge,.hero-price-under-value{font-size:10px}.hero-metrics-panel{position:static;width:100%;margin-top:0;padding:9px 10px;background:rgba(8,7,5,.94);font-size:12px}}
 @media(max-width:540px){.panel.foodhouse-wide{max-width:100%}}
 
 /* ── Panel overlay ── */
@@ -7782,7 +7790,7 @@ function fitZiwei(){
 function renderMedicalPanel(){
   setPanelHead('✚','Clinic · Recovery','醫館');
   var panelExtra=document.getElementById('p-extra');
-  if(panelExtra)panelExtra.innerHTML='<span class="empire-panel-status-dot err" id="medical-panel-status-dot" title="醫館連線失敗" aria-label="醫館連線失敗"></span>';
+  if(panelExtra)panelExtra.innerHTML='<span class="medical-header-time"><button class="medical-time-btn" id="medical-time-button" type="button" onclick="openMedicalTimePicker()" aria-label="選擇紀錄日期與時間">--/--/--</button><input class="medical-time-native" id="medical-time" type="datetime-local" aria-label="紀錄日期與時間"></span><span class="empire-panel-status-dot pending" id="medical-panel-status-dot" title="醫館載入中" aria-label="醫館載入中"></span><span class="medical-panel-status-text" id="medical-panel-status-text">載入中</span>';
   setPanelMenuTabs([{key:'medical-quick',label:'快速記錄'},{key:'medical-tarot',label:'抽牌記錄'},{key:'medical-stats',label:'牌卡統計'},{key:'medical-painmap',label:'疼痛地圖'}]);
   var el=document.getElementById('p-body');
   if(!hasMainApiCredentials()){
@@ -7798,20 +7806,16 @@ function renderMedicalPanel(){
       <form class="medical-form" id="medical-quick-form">
         <div class="medical-form-grid">
           <div class="medical-field">
-            <label for="medical-time">紀錄時間</label>
-            <input class="medical-input" id="medical-time" type="datetime-local">
-          </div>
-          <div class="medical-field">
             <label for="medical-cause">起因</label>
             <select class="medical-select" id="medical-cause"></select>
-          </div>
-          <div class="medical-field" style="grid-column:1/-1">
-            <label>疼痛部位（可複選）</label>
-            <div class="pain-area-group" id="medical-pain-area-group"></div>
           </div>
           <div class="medical-field">
             <label for="medical-pain-level">疼痛程度</label>
             <select class="medical-select" id="medical-pain-level"></select>
+          </div>
+          <div class="medical-field" style="grid-column:1/-1">
+            <label>疼痛部位（可複選）</label>
+            <div class="pain-area-group" id="medical-pain-area-group"></div>
           </div>
           <div class="medical-field">
             <label for="medical-med">使用藥物</label>
@@ -7821,9 +7825,9 @@ function renderMedicalPanel(){
             <label for="medical-dose">服用藥量</label>
             <select class="medical-select" id="medical-dose"></select>
           </div>
-          <div class="medical-field" style="grid-column:1/-1">
-            <label for="medical-notes">備註／觀察</label>
-            <textarea class="medical-textarea" id="medical-notes" maxlength="500" placeholder="補充症狀、心情變化、用藥後反應或其他觀察..."></textarea>
+          <div class="medical-field medical-notes-field" style="grid-column:1/-1">
+            <div class="medical-notes-head"><label for="medical-notes">備註／觀察</label><button class="medical-notes-toggle" id="medical-notes-toggle" type="button" aria-expanded="false" aria-controls="medical-notes">展開</button></div>
+            <textarea class="medical-textarea" id="medical-notes" maxlength="500" placeholder="補充症狀、心情變化、用藥後反應或其他觀察..." hidden></textarea>
           </div>
         </div>
         <div class="medical-actions">
@@ -7985,6 +7989,42 @@ function fillMedicalSelect(id,values,placeholder){
     var label=typeof v==='object'?(v.label||v.value):v;
     return '<option value="'+esc(value)+'">'+esc(label)+'</option>';
   }).join('');
+}
+
+function setMedicalPanelHeaderStatus(message,type){
+  var dot=document.getElementById('medical-panel-status-dot');
+  var text=document.getElementById('medical-panel-status-text');
+  if(dot){dot.className='empire-panel-status-dot '+(type||'pending');dot.title='醫館'+(message||'');dot.setAttribute('aria-label','醫館'+(message||''));}
+  if(text)text.textContent=message||'';
+}
+
+function syncMedicalHeaderTime(){
+  var input=document.getElementById('medical-time');
+  var button=document.getElementById('medical-time-button');
+  if(!button)return;
+  var value=input&&input.value||'';
+  var match=value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  button.textContent=match?match[1].slice(2)+'/'+match[2]+'/'+match[3]:'--/--/--';
+}
+
+function openMedicalTimePicker(){
+  var input=document.getElementById('medical-time');
+  if(!input)return;
+  try{if(input.showPicker){input.showPicker();return;}}catch(e){}
+  input.focus();
+  input.click();
+}
+
+function toggleMedicalNotes(){
+  var field=document.querySelector('.medical-notes-field');
+  var button=document.getElementById('medical-notes-toggle');
+  var textarea=document.getElementById('medical-notes');
+  if(!button||!textarea)return;
+  var open=field&&field.classList.toggle('is-open');
+  textarea.hidden=!open;
+  button.textContent=open?'收合':'展開';
+  button.setAttribute('aria-expanded',open?'true':'false');
+  if(open)textarea.focus();
 }
 
 var MEDICAL_PAIN_LEVEL_OPTIONS=[
@@ -8606,6 +8646,10 @@ async function initMedicalQuickForm(){
   if(!form)return;
   var timeEl=document.getElementById('medical-time');
   if(timeEl&&!timeEl.value)timeEl.value=localDateTimeValue();
+  if(timeEl){timeEl.addEventListener('input',syncMedicalHeaderTime);timeEl.addEventListener('change',syncMedicalHeaderTime);}
+  syncMedicalHeaderTime();
+  var notesToggle=document.getElementById('medical-notes-toggle');
+  if(notesToggle)notesToggle.addEventListener('click',toggleMedicalNotes);
   fillMedicalSelect('medical-pain-level',MEDICAL_PAIN_LEVEL_OPTIONS,'選擇疼痛程度');
   fillMedicalSelect('medical-dose',Array.from({length:7},function(_,i){return i+'顆';}),'選擇藥量');
   form.addEventListener('submit',submitMedicalQuickRecord);
@@ -8614,7 +8658,9 @@ async function initMedicalQuickForm(){
   initPainAreaChips(options.painAreas);
   fillMedicalSelect('medical-cause',options.causes,'選擇起因');
   fillMedicalSelect('medical-med',options.meds,'選擇藥物');
-  setMedicalStatus(medicalOptionsCache===DEFAULT_MEDICAL_OPTIONS?'已載入備援選項，可直接快記':'已載入設定選項','ok');
+  var usingFallback=medicalOptionsCache===DEFAULT_MEDICAL_OPTIONS;
+  setMedicalStatus(usingFallback?'已載入備援選項，可直接快記':'已載入設定選項','ok');
+  setMedicalPanelHeaderStatus(usingFallback?'備援':'成功',usingFallback?'err':'ok');
 }
 
 async function submitMedicalQuickRecord(e){
@@ -8639,6 +8685,7 @@ async function submitMedicalQuickRecord(e){
   try{
     if(btn)btn.disabled=true;
     setMedicalStatus('同步醫館中…');
+    setMedicalPanelHeaderStatus('同步中…','pending');
     var data=await medicalPost({
       _action:'quickRecord',
       _append:true,
@@ -8652,11 +8699,13 @@ async function submitMedicalQuickRecord(e){
       notes:notes
     });
     setMedicalStatus('已同步到情緒倉庫，第 '+(data.row||'新')+' 列','ok');
+    setMedicalPanelHeaderStatus('成功','ok');
     setEmpireCardStatus('medical','ok','同步完成');
     if(btn)btn.disabled=false;
   }catch(err){
     if(btn)btn.disabled=false;
     setMedicalStatus(err.message||'同步失敗','err');
+    setMedicalPanelHeaderStatus('失敗','err');
     setEmpireCardStatus('medical','err',err.message||'同步失敗');
   }
 }
