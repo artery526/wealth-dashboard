@@ -1,4 +1,5 @@
 const { test, expect } = require('@playwright/test');
+const fs = require('node:fs');
 const path = require('node:path');
 
 const dashboardUrl = 'file:///' + path.resolve(__dirname, '..', 'index.html').replace(/\\/g, '/');
@@ -11,6 +12,52 @@ test('battle brief panel renders with stable formatting', async ({ page }) => {
   await page.evaluate(() => {
     window.API_URL = '';
     window.WRITE_TOKEN = '';
+    window.loadBattleBriefPriceHistory = () => Promise.resolve(null);
+    window.loadBattleFinanceSnapshots = () => Promise.resolve(null);
+    window.battleFinanceSnapshotState = {
+      range: '7d',
+      error: '',
+      data: {
+        records: [
+          {
+            snapshotType: 'fund-nav',
+            sourceDate: '2026-07-31',
+            capturedAt: '2026-07-31T08:00:00+08:00',
+            items: [
+              { name: 'fund-a', code: 'fund-a', value: 49.8, snapshotType: 'fund-nav' },
+              { name: 'fund-b', code: 'fund-b', value: 139.7, snapshotType: 'fund-nav' }
+            ]
+          },
+          {
+            snapshotType: 'fund-nav',
+            sourceDate: '2026-08-01',
+            capturedAt: '2026-08-01T08:00:00+08:00',
+            items: [
+              { name: 'fund-a', code: 'fund-a', value: 50.1, snapshotType: 'fund-nav' },
+              { name: 'fund-b', code: 'fund-b', value: 140.8096, snapshotType: 'fund-nav' }
+            ]
+          },
+          {
+            snapshotType: 'twse-margin',
+            sourceDate: '2026-07-31',
+            capturedAt: '2026-07-31T08:00:00+08:00',
+            items: [
+              { name: '台股融資餘額', code: '^TWII', value: 500000000000, snapshotType: 'twse-margin' },
+              { name: '台股維持率', code: '^TWII', value: 168, snapshotType: 'twse-margin' }
+            ]
+          },
+          {
+            snapshotType: 'twse-margin',
+            sourceDate: '2026-08-01',
+            capturedAt: '2026-08-01T08:00:00+08:00',
+            items: [
+              { name: '台股融資餘額', code: '^TWII', value: 507462771000, snapshotType: 'twse-margin' },
+              { name: '台股維持率', code: '^TWII', value: 169.81, snapshotType: 'twse-margin' }
+            ]
+          }
+        ]
+      }
+    };
     window.councilDashboardCache = {
       heroes: [{ symbol: 'QQQI', assetName: 'QQQI', heroName: 'QQQI', enabled: true, sortOrder: 1 }],
       holdings: [{ symbol: 'QQQI', name: 'QQQI', cost: 100, marketValue: 110 }],
@@ -33,6 +80,7 @@ test('battle brief panel renders with stable formatting', async ({ page }) => {
         { name: 'QQQI', code: 'QQQI', current: 53.04, previous: 52.68, change: 0.36, changePct: 0.6834 }
       ]
     }, document.getElementById('battle-brief-content'));
+    updateBattleFinanceSnapshotViews();
   });
 
   await expect(page.locator('.ptab.active')).toHaveAttribute('onclick', /battle-brief/);
@@ -40,25 +88,21 @@ test('battle brief panel renders with stable formatting', async ({ page }) => {
   await expect(reportSections.nth(0).locator('.battle-section-title')).toHaveText('00997A 持股變化與軍師短評');
   const fundSection = page.locator('.battle-section', { hasText: '基金淨值' });
   const marginSection = page.locator('.battle-section', { hasText: '台股融資與維持率' });
-  await expect(fundSection.locator('.battle-line-current')).toHaveText(['50.1', '140.81']);
-  await expect(marginSection.locator('.battle-line-current')).toHaveText(['5,074.63 億', '169.81%']);
-  await expect(marginSection.locator('.battle-line-delta').first()).toContainText('74.63 億');
+  await expect(fundSection.locator('.battle-snapshot-row strong')).toHaveText(['50.1', '140.81']);
+  await expect(marginSection.locator('.battle-snapshot-row strong')).toHaveText(['5074.63 億', '169.81%']);
+  await expect(marginSection.locator('.battle-snapshot-row em').first()).toContainText('74.63 億');
   expect(pageErrors).toEqual([]);
 });
 
-test('pangtong battle brief is a standalone button below video download', async ({ page }) => {
+test('legacy advisor video cards are removed while scene NPC controls remain', async ({ page }) => {
   await page.goto(dashboardUrl);
-  await page.evaluate(() => {
-    window.API_URL = '';
-    window.WRITE_TOKEN = '';
-    openAdvisorAI();
-  });
 
-  await expect(page.locator('#advisor-ai-quick-select option[value="戰情總匯報"]')).toHaveCount(0);
-  await expect(page.locator('.advisor-ai-video-stack button')).toHaveText(['影片下載', '戰情總匯報']);
+  await expect(page.locator('.advisor-duo-role')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: '龐統，開啟角色面板' })).toBeVisible();
+  await expect(page.getByRole('button', { name: '諸葛亮，開啟角色面板' })).toBeVisible();
 });
 
-test('remembered Pangtong verification restores the empire after reload', async ({ page }) => {
+test('remembered Pangtong verification restores the empire without blocking re-verification', async ({ page }) => {
   await page.goto(dashboardUrl);
 
   const result = await page.evaluate(async () => {
@@ -85,7 +129,7 @@ test('remembered Pangtong verification restores the empire after reload', async 
     };
   });
 
-  expect(result).toEqual({ authorizedDuringRestore: true, authorized: true, unlocked: true, status: 'ok', verifyCalls: 1 });
+  expect(result).toEqual({ authorizedDuringRestore: true, authorized: true, unlocked: true, status: 'ok', verifyCalls: 0 });
 });
 
 test('battle brief no longer renders the retired army allocation snapshot', async ({ page }) => {
@@ -151,4 +195,26 @@ test('council roster shows the cached roster before refreshing', async ({ page }
   });
 
   expect(result).toEqual({ oldValue: '1 檔', newValue: '2 檔', hasSkeleton: false });
+});
+
+test('store panel shows cached records before a refresh and reuses fresh data', async ({ page }) => {
+  await page.goto(dashboardUrl);
+
+  const result = await page.evaluate(async () => {
+    API_URL = 'https://example.test/exec';
+    WRITE_TOKEN = 'remembered-token';
+    setWebVerifyStatus('ok', '網頁驗證成功');
+    storeRecordsCache = [{ row: 5, itemName: '備用 HDMI 線', location: '三樓 A 區', code: 'W3-A-001', description: '', recordDate: '2026/08/28' }];
+    storeFilterYear = '2026';
+    storeFilterMonth = '08';
+    storeRecordsCacheFetchedAt = Date.now();
+    let apiCalls = 0;
+    apiGet = () => { apiCalls += 1; return Promise.resolve({ records: [{ row: 5, itemName: '備用 HDMI 線', location: '三樓 A 區', code: 'W3-A-001', description: '', recordDate: '2026/08/28' }] }); };
+    renderStorePanel('store-list');
+    const immediate = document.querySelector('.store-item-name')?.textContent || '';
+    await loadStoreRecords(false);
+    return { immediate, apiCalls };
+  });
+
+  expect(result).toEqual({ immediate: '備用 HDMI 線', apiCalls: 0 });
 });
