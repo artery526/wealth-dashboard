@@ -109,13 +109,25 @@ test('mobile calendar defaults to a compact palace badge and expands the weekly 
   const slot = page.locator('#mobile-calendar-slot');
   const toggle = page.locator('#home-calendar-mobile-toggle');
   const details = page.locator('#home-calendar-details');
+  const agendaSlot = page.locator('#scene-agenda-slot');
+  const agendaToggle = page.locator('#scene-agenda-toggle');
+  const agendaDetails = page.locator('#scene-agenda-details');
   await expect(toggle).toBeVisible();
+  await expect(agendaToggle).toBeVisible();
   await expect(toggle).toHaveAttribute('aria-expanded', 'false');
   await expect(page.locator('#home-calendar-mobile-lunar')).toHaveText(/^農曆M\d{2}/);
   await expect(page.locator('#home-calendar-mobile-date')).toHaveText(/^\d{4}\/\d{2}\/\d{2}（[日一二三四五六]）$/);
   await expect(details).toBeHidden();
+  await expect(agendaDetails).toBeHidden();
   await expect(slot).not.toHaveClass(/is-expanded/);
   expect(await page.locator('#home-agenda-calendar').evaluate(element => element.parentElement.id)).toBe('mobile-calendar-slot');
+  const compactSizes = await page.evaluate(() => {
+    const calendar = document.querySelector('#home-agenda-calendar').getBoundingClientRect();
+    const agenda = document.querySelector('.scene-agenda-card').getBoundingClientRect();
+    return { calendarWidth: calendar.width, calendarHeight: calendar.height, agendaWidth: agenda.width, agendaHeight: agenda.height };
+  });
+  expect(Math.abs(compactSizes.calendarWidth - compactSizes.agendaWidth)).toBeLessThanOrEqual(1);
+  expect(Math.abs(compactSizes.calendarHeight - compactSizes.agendaHeight)).toBeLessThanOrEqual(1);
 
   await toggle.click();
   await expect(toggle).toHaveAttribute('aria-expanded', 'true');
@@ -127,6 +139,20 @@ test('mobile calendar defaults to a compact palace badge and expands the weekly 
   await toggle.click();
   await expect(toggle).toHaveAttribute('aria-expanded', 'false');
   await expect(details).toBeHidden();
+
+  await page.evaluate(() => updateSceneAgendaPreview([
+    { timeText: '18:30 - 23:30', title: '💳富邦.永豐.中信' },
+    { timeText: '整日', title: '第二筆行程' },
+    { timeText: '20:00 - 21:00', title: '不應顯示的第三筆行程' }
+  ]));
+  await expect(page.locator('#scene-agenda-preview .scene-agenda-preview-item')).toHaveCount(2);
+  await expect(page.locator('#scene-agenda-preview')).toContainText('18：30 - 23：30');
+  await expect(page.locator('#scene-agenda-preview')).toContainText('💳富邦.永豐.中信');
+  await expect(page.locator('#scene-agenda-preview')).not.toContainText('不應顯示的第三筆行程');
+  await agendaToggle.click();
+  await expect(agendaSlot).toHaveClass(/is-expanded/);
+  await expect(agendaDetails).toBeVisible();
+  await expect(slot).toBeHidden();
 });
 
 test('desktop calendar uses the same compact palace badge and weekly view', async ({ page }) => {
@@ -146,7 +172,8 @@ test('desktop calendar uses the same compact palace badge and weekly view', asyn
   await expect(details).toBeVisible();
   await expect(page.locator('.mobile-calendar-slot .home-calendar-week-controls')).toBeVisible();
   await expect(page.locator('#home-calendar-grid .home-calendar-day')).toHaveCount(7);
-  await expect(page.locator('#home-agenda-court .agenda-section')).toHaveCount(2);
+  await expect(page.locator('#scene-agenda-details .agenda-section')).toHaveCount(1);
+  await expect(page.locator('#home-agenda-court .agenda-section')).toHaveCount(1);
 });
 
 test('remembered Pangtong verification restores the empire without blocking re-verification', async ({ page }) => {
