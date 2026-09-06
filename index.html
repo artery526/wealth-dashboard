@@ -3705,6 +3705,7 @@ body::after{
 }
 
 /* 底部政務區：月曆、行程、待辦事項桌面三欄並排。 */
+.home-agenda-wrap{min-height:0;padding-bottom:0}
 .home-agenda-bottom{
   position:relative;
   z-index:4;
@@ -4588,7 +4589,7 @@ html[data-theme="deep-blue"] .advisor-ai-standalone .advisor-ai-quick-select:foc
 <!-- 保留既有解鎖狀態錨點；首頁舊影片卡片已移除。 -->
 <div id="empire-cards" class="cards empire-locked" hidden aria-hidden="true"></div>
 
-<div class="wrap">
+<div class="wrap home-agenda-wrap">
   <section class="home-agenda-bottom" aria-label="月曆、行程與待辦事項">
     <div class="home-agenda-calendar">
       <div class="home-agenda-head">
