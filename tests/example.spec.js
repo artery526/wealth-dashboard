@@ -102,6 +102,32 @@ test('legacy advisor video cards are removed while scene NPC controls remain', a
   await expect(page.getByRole('button', { name: '諸葛亮，開啟角色面板' })).toBeVisible();
 });
 
+test('mobile calendar defaults to a compact palace badge and expands the weekly view', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(dashboardUrl);
+
+  const slot = page.locator('#mobile-calendar-slot');
+  const toggle = page.locator('#home-calendar-mobile-toggle');
+  const details = page.locator('#home-calendar-details');
+  await expect(toggle).toBeVisible();
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  await expect(page.locator('#home-calendar-mobile-lunar')).toHaveText(/^農曆M\d{2}/);
+  await expect(page.locator('#home-calendar-mobile-date')).toHaveText(/^\d{4}\/\d{2}\/\d{2}（[日一二三四五六]）$/);
+  await expect(details).toBeHidden();
+  await expect(slot).not.toHaveClass(/is-expanded/);
+  expect(await page.locator('#home-agenda-calendar').evaluate(element => element.parentElement.id)).toBe('mobile-calendar-slot');
+
+  await toggle.click();
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+  await expect(slot).toHaveClass(/is-expanded/);
+  await expect(details).toBeVisible();
+  await expect(page.locator('#home-calendar-grid .home-calendar-day')).toHaveCount(7);
+
+  await toggle.click();
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  await expect(details).toBeHidden();
+});
+
 test('remembered Pangtong verification restores the empire without blocking re-verification', async ({ page }) => {
   await page.goto(dashboardUrl);
 
