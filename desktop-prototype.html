@@ -5,7 +5,7 @@
 <title>帝國指揮所・桌面預覽</title>
 <link rel="stylesheet" href="./desktop-prototype.css">
 <body>
-<header><span>桌面場景預覽 · 諸葛亮、陳群、華佗、劉備與司馬懿已入駐</span><span id="status" role="status">正在預載角色影格…</span><a href="./index.html">返回目前指揮所</a></header>
+<header><span>桌面場景預覽 · 龐統、諸葛亮、陳群、華佗、劉備與司馬懿已入駐</span><span id="status" role="status">正在預載角色影格…</span><a href="./index.html">返回目前指揮所</a></header>
 <main class="scene-viewport" aria-label="帝國指揮所地圖，可左右滑動">
   <div class="scene">
     <img class="map" src="./junshifu-map.png?v=20260906-bg2" alt="帝國指揮所：財政、醫館、王府、軍機處、太倉與指揮所">
@@ -24,7 +24,7 @@
   <div id="character-actions" class="actions"></div>
   <p id="panel-status" role="status">預覽模式，按鈕尚未串接後端。</p><button id="close-panel">關閉</button>
 </dialog>
-<script src="./characterAnimations.js?v=20260906-npc7"></script>
+<script src="./characterAnimations.js?v=20260906-npc8"></script>
 <script src="./AnimatedCharacter.js?v=20260906-npc6"></script>
 <script>
 const AnimatedCharacterClass = window.AnimatedCharacter;
@@ -33,11 +33,13 @@ const huatuoConfig = window.huatuoAnimations;
 const liubeiConfig = window.liubeiAnimations;
 const simayiConfig = window.simayiAnimations;
 const zhugeConfig = window.zhugeAnimations;
+const pangtongConfig = window.pangtongAnimations;
 const positions = window.characterPositions;
 const panel = document.querySelector('dialog');
 const status = document.querySelector('#status');
 const npcs = {};
 const profiles = {
+  pangtong: { name: '龐統', role: '龐統軍師', domain: '掌管：帝國糧草・快速查詢・ AI 軍務', quote: '「飲酒非為醉，借此觀勢；時機一到，自有奇策。」', actions: ['快速查詢', '查看糧草', '軍師工具', '交辦事項'] },
   zhuge: { name: '諸葛亮', role: '諸葛軍師', domain: '掌管：軍師府邸・晨報・策略', quote: '「觀天時，察人心，方能運籌帷幄。」', actions: ['查看晨報', '策略研判', '軍師工具', '交辦事項'] },
   chenqun: { name: '陳群', role: '財政軍師', domain: '掌管：記帳・國庫・財報', quote: '「主公，今日財政帳目已備妥，是否查看？」', actions: ['查看財政', '查看財報', '國庫', '交辦事項'] },
   huatuo: { name: '華佗', role: '醫館顧問', domain: '掌管：健康・抽牌・統計', quote: '「主公，藥材與身體狀況皆已檢視。」', actions: ['健康紀錄', '抽牌統計', '查看藥材', '交辦事項'] },
@@ -71,12 +73,13 @@ document.querySelectorAll('.hotspot').forEach(button => button.onclick = () => {
   else if (button.dataset.place === '軍機處') openPanel('simayi');
   else status.textContent = `${button.dataset.place}：場景位置預覽，人物待加入。`;
 });
+npcs.pangtong = new AnimatedCharacterClass({character:'龐統', animationConfig:pangtongConfig, position:positions.pangtong, mount:document.querySelector('#characters'), onClick:() => openPanel('pangtong')});
 npcs.zhuge = new AnimatedCharacterClass({character:'諸葛亮', animationConfig:zhugeConfig, position:positions.zhuge, mount:document.querySelector('#characters'), onClick:() => openPanel('zhuge')});
 npcs.chenqun = new AnimatedCharacterClass({character:'陳群', animationConfig:chenqunConfig, position:positions.chenqun, mount:document.querySelector('#characters'), onClick:() => openPanel('chenqun')});
 npcs.huatuo = new AnimatedCharacterClass({character:'華佗', animationConfig:huatuoConfig, position:positions.huatuo, mount:document.querySelector('#characters'), onClick:() => openPanel('huatuo')});
 npcs.liubei = new AnimatedCharacterClass({character:'劉備', animationConfig:liubeiConfig, position:positions.liubei, mount:document.querySelector('#characters'), onClick:() => openPanel('liubei')});
 npcs.simayi = new AnimatedCharacterClass({character:'司馬懿', animationConfig:simayiConfig, position:positions.simayi, mount:document.querySelector('#characters'), onClick:() => openPanel('simayi')});
-Promise.all(Object.values(npcs).map(npc => npc.loaded)).then(() => { status.textContent = '諸葛亮、陳群、華佗、劉備與司馬懿已入駐 · 軍師府邸正在運籌帷幄'; }).catch(() => { status.textContent = '角色圖片載入失敗，請重新整理；地圖仍可使用。'; });
+Promise.all(Object.values(npcs).map(npc => npc.loaded)).then(() => { status.textContent = '龐統、諸葛亮、陳群、華佗、劉備與司馬懿已入駐 · 軍師府邸正在運籌帷幄'; }).catch(() => { status.textContent = '角色圖片載入失敗，請重新整理；地圖仍可使用。'; });
 const sceneViewport = document.querySelector('.scene-viewport');
 const centerScene = () => { if (matchMedia('(max-width: 768px)').matches) sceneViewport.scrollLeft = (sceneViewport.scrollWidth - sceneViewport.clientWidth) / 2; };
 addEventListener('load', centerScene);

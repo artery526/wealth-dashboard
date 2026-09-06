@@ -1,11 +1,45 @@
 // All timing values are milliseconds. Original PNG files remain untouched.
 window.DEBUG_CHARACTERS = false;
 const characterPositions = {
+  pangtong: { top: '10%', left: '37%', width: '8.8%' },
   zhuge: { top: '10%', left: '46%', width: '8.8%' },
   chenqun: { top: '27%', left: '27%', width: '7.8%' },
   huatuo: { top: '27%', left: '69%', width: '8%' },
   liubei: { top: '30%', left: '46%', width: '8%' },
   simayi: { top: '47%', left: '16%', width: '11%' }
+};
+const pangtongAnimations = {
+  name: '龐統',
+  frames: {
+    '01': './龐統/站立握酒瓶01.png',
+    '02': './龐統/酒瓶喝酒02.png',
+    '03': './龐統/睡眠小憩03.png',
+    '04': './龐統/喝酒遠望04.png',
+    '05': './龐統/帶酒行走05.png',
+    '06': './龐統/帶酒行走放下酒瓶06.png',
+    '07': './龐統/行走放下酒瓶拿出卷軸07.png',
+    '08': './龐統/指點地圖08.png'
+  },
+  breathing: [
+    { frame: '01', state: 'idle', duration: [900, 1800] }
+  ],
+  events: {
+    secondaryIdle: { interval: [8000, 16000], sequence: [
+      { frame: '02', state: 'drink', duration: [1500, 3000] },
+      { frame: '04', state: 'gaze', duration: [800, 1400] },
+      { frame: '01', state: 'idle', duration: [900, 1800] }
+    ] },
+    specialAction: { interval: [18000, 36000], sequence: [
+      { frame: '05', state: 'walk-drink', duration: [700, 1100] },
+      { frame: '06', state: 'put-down', duration: [650, 1000] },
+      { frame: '07', state: 'scroll', duration: [900, 1400] },
+      { frame: '08', state: 'point-map', duration: [1800, 4200] },
+      { frame: '01', state: 'idle', duration: [1000, 1800] }
+    ] }
+  },
+  timing: {
+    idle: [900, 1800]
+  }
 };
 const zhugeAnimations = {
   name: '諸葛亮',
@@ -181,6 +215,7 @@ const simayiAnimations = {
   }
 };
 window.characterPositions = characterPositions;
+window.pangtongAnimations = pangtongAnimations;
 window.zhugeAnimations = zhugeAnimations;
 window.chenqunAnimations = chenqunAnimations;
 window.huatuoAnimations = huatuoAnimations;
