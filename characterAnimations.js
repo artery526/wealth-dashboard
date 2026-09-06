@@ -9,6 +9,15 @@ const characterPositions = {
   simayi: { top: '47%', left: '16%', width: '11%' },
   manchong: { top: '47%', left: '76%', width: '10%' }
 };
+const characterMobilePositions = {
+  pangtong: { top: '15%', left: '34%', width: '15%' },
+  zhuge: { top: '15%', left: '51%', width: '15%' },
+  liubei: { top: '37%', left: '43%', width: '14%' },
+  chenqun: { top: '43%', left: '16%', width: '16%' },
+  huatuo: { top: '43%', left: '69%', width: '16%' },
+  simayi: { top: '62%', left: '16%', width: '17%' },
+  manchong: { top: '62%', left: '67%', width: '17%' }
+};
 const pangtongAnimations = {
   name: '龐統',
   frames: {
@@ -255,6 +264,7 @@ const manchongAnimations = {
   }
 };
 window.characterPositions = characterPositions;
+window.characterMobilePositions = characterMobilePositions;
 window.pangtongAnimations = pangtongAnimations;
 window.zhugeAnimations = zhugeAnimations;
 window.chenqunAnimations = chenqunAnimations;

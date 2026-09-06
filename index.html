@@ -4513,10 +4513,10 @@ html[data-theme="deep-blue"] .advisor-ai-standalone .advisor-ai-quick-select:foc
 .npc-web-scene .character-art img[hidden],.npc-web-scene .animated-character[hidden]{display:none}
 .npc-web-scene .animated-character:hover .character-art,.npc-web-scene .animated-character:focus-visible .character-art{transform:scale(1.04);filter:drop-shadow(0 0 7px rgba(255,224,165,.76))}
 .npc-web-scene .character-debug{display:none}
-@media(max-width:768px){.npc-web-scene{width:100%;margin:8px 0 18px;border-left:0;border-right:0;border-radius:0}.npc-web-scene-stage{min-width:0}}
+@media(max-width:768px){.npc-web-scene{width:100%;margin:8px 0 18px;border-left:0;border-right:0;border-radius:0}.npc-web-scene-stage{min-width:0;aspect-ratio:9/16}.npc-web-scene .animated-character{top:var(--mobile-top)!important;left:var(--mobile-left)!important;width:var(--mobile-width)!important}}
 @media(prefers-reduced-motion:reduce){.npc-web-scene .character-art{transition:none}.npc-web-scene .animated-character:hover .character-art{transform:none}}
 </style>
-<script src="./characterAnimations.js?v=20260906-web6"></script>
+<script src="./characterAnimations.js?v=20260906-web7"></script>
 <script src="./AnimatedCharacter.js?v=20260906-web1"></script>
 </head>
 <body>
@@ -4578,7 +4578,10 @@ html[data-theme="deep-blue"] .advisor-ai-standalone .advisor-ai-quick-select:foc
 
 <section class="npc-web-scene" id="npc-web-scene">
   <div class="npc-web-scene-stage" id="npc-web-scene-stage">
-    <img class="npc-web-scene-map" src="./junshifu-map.png?v=20260906-bg2" alt="帝國指揮所戶外場景：財政、醫館、王府、軍機處、太倉與指揮所">
+    <picture>
+      <source media="(max-width:768px)" srcset="./mobileBG.png?v=20260906-mobile1">
+      <img class="npc-web-scene-map" src="./junshifu-map.png?v=20260906-bg2" alt="帝國指揮所場景：財政、醫館、王府、軍機處、太倉與指揮所">
+    </picture>
   </div>
 </section>
 
@@ -19689,6 +19692,12 @@ function mpmRender(records){
       mount:mount,
       onClick:routes[id]
     });
+    var mobilePosition=window.characterMobilePositions&&window.characterMobilePositions[id];
+    if(mobilePosition){
+      npcs[id].button.style.setProperty('--mobile-top',mobilePosition.top);
+      npcs[id].button.style.setProperty('--mobile-left',mobilePosition.left);
+      npcs[id].button.style.setProperty('--mobile-width',mobilePosition.width);
+    }
   });
   Promise.all(Object.values(npcs).map(function(npc){return npc.loaded;})).then(function(){
     if(status)status.textContent='龐統、諸葛亮、陳群、華佗、劉備、司馬懿與滿寵已入駐 · 點擊人物開啟正式面板';
