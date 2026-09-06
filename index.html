@@ -4421,7 +4421,25 @@ html[data-theme="deep-blue"] .advisor-ai-standalone .advisor-ai-quick-select:hov
 html[data-theme="deep-blue"] .advisor-ai-standalone .advisor-ai-quick-select:focus{
   border-color:#d1b7ff;box-shadow:0 0 0 2px rgba(185,149,255,.16),0 0 20px rgba(141,82,214,.28);outline:none;
 }
+
+/* ── 網頁端戶外 NPC 場景：角色共用既有面板路由 ── */
+.npc-web-scene{position:relative;z-index:1;width:min(1536px,calc(100% - 28px));margin:16px auto 24px;overflow:hidden;border:1px solid rgba(232,192,80,.38);border-radius:14px;background:#07121e;box-shadow:0 14px 40px rgba(0,0,0,.42)}
+.npc-web-scene-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 14px;border-bottom:1px solid rgba(232,192,80,.22);background:linear-gradient(135deg,rgba(232,192,80,.1),rgba(7,18,30,.92));color:#f2dfaa}
+.npc-web-scene-title{font-family:var(--sans);font-size:15px;font-weight:900;letter-spacing:2px}
+.npc-web-scene-status{font-family:var(--sans);font-size:11px;color:#9bb9c4;white-space:nowrap}
+.npc-web-scene-stage{position:relative;aspect-ratio:3/2;overflow:hidden}
+.npc-web-scene-map{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:cover}
+.npc-web-scene .animated-character{position:absolute;z-index:2;aspect-ratio:2/3;border:0;padding:0;background:transparent;cursor:pointer}
+.npc-web-scene .character-art{position:absolute;inset:0;display:block;transform-origin:50% 95%;transition:transform .2s ease,filter .2s ease}
+.npc-web-scene .character-art img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:center bottom}
+.npc-web-scene .character-art img[hidden],.npc-web-scene .animated-character[hidden]{display:none}
+.npc-web-scene .animated-character:hover .character-art,.npc-web-scene .animated-character:focus-visible .character-art{transform:scale(1.04);filter:drop-shadow(0 0 7px rgba(255,224,165,.76))}
+.npc-web-scene .character-debug{display:none}
+@media(max-width:768px){.npc-web-scene{width:100%;margin:8px 0 18px;border-left:0;border-right:0;border-radius:0}.npc-web-scene-head{align-items:flex-start;flex-direction:column;gap:4px}.npc-web-scene-title{font-size:13px}.npc-web-scene-status{font-size:10px;white-space:normal}.npc-web-scene-stage{min-width:0}}
+@media(prefers-reduced-motion:reduce){.npc-web-scene .character-art{transition:none}.npc-web-scene .animated-character:hover .character-art{transform:none}}
 </style>
+<script src="./characterAnimations.js?v=20260906-web1"></script>
+<script src="./AnimatedCharacter.js?v=20260906-web1"></script>
 </head>
 <body>
 
@@ -4479,6 +4497,16 @@ html[data-theme="deep-blue"] .advisor-ai-standalone .advisor-ai-quick-select:foc
 </div>
 
 <div class="advisor-ai-standalone" id="advisor-ai-standalone" aria-live="polite"></div>
+
+<section class="npc-web-scene" id="npc-web-scene" aria-labelledby="npc-web-scene-title">
+  <div class="npc-web-scene-head">
+    <div class="npc-web-scene-title" id="npc-web-scene-title">帝國指揮所 · 戶外場景</div>
+    <div class="npc-web-scene-status" id="npc-web-scene-status" role="status">正在預載角色影格…</div>
+  </div>
+  <div class="npc-web-scene-stage" id="npc-web-scene-stage">
+    <img class="npc-web-scene-map" src="./junshifu-map.png?v=20260906-bg2" alt="帝國指揮所戶外場景：財政、醫館、王府、軍機處、太倉與指揮所">
+  </div>
+</section>
 
 <div class="wrap">
   <div class="hdr">
@@ -19741,6 +19769,43 @@ function mpmRender(records){
       +'</div></div>';
   }).join('')+'</div>';
 }
+</script>
+<script>
+// 網頁端場景只負責人物與路由，正式面板仍由既有 overlay 系統管理。
+(function initWebNpcScene(){
+  var mount=document.getElementById('npc-web-scene-stage');
+  var status=document.getElementById('npc-web-scene-status');
+  if(!mount||!window.AnimatedCharacter||!window.characterPositions)return;
+  var configs={
+    chenqun:window.chenqunAnimations,
+    huatuo:window.huatuoAnimations,
+    liubei:window.liubeiAnimations,
+    simayi:window.simayiAnimations
+  };
+  var routes={
+    chenqun:function(){openPanel('finance');},
+    huatuo:function(){openPanel('medical');},
+    liubei:function(){openArkWall('wall');},
+    simayi:function(){openPanel('council');}
+  };
+  var npcs={};
+  Object.keys(configs).forEach(function(id){
+    if(!configs[id]||!window.characterPositions[id]||!routes[id])return;
+    npcs[id]=new window.AnimatedCharacter({
+      character:configs[id].name,
+      animationConfig:configs[id],
+      position:window.characterPositions[id],
+      mount:mount,
+      onClick:routes[id]
+    });
+  });
+  Promise.all(Object.values(npcs).map(function(npc){return npc.loaded;})).then(function(){
+    if(status)status.textContent='陳群、華佗、劉備與司馬懿已入駐 · 點擊人物開啟正式面板';
+  }).catch(function(){
+    if(status)status.textContent='部分角色影格載入失敗，請重新整理。';
+  });
+  window.addEventListener('pagehide',function(){Object.values(npcs).forEach(function(npc){npc.destroy();});},{once:true});
+})();
 </script>
 <script>
 if ('serviceWorker' in navigator) {

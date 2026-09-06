@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-Hant">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>帝國指揮所・桌面預覽</title>
+<link rel="stylesheet" href="./desktop-prototype.css">
+<body>
+<header><span>桌面場景預覽 · 陳群、華佗、劉備與司馬懿已入駐</span><span id="status" role="status">正在預載角色影格…</span><a href="./index.html">返回目前指揮所</a></header>
+<main class="scene-viewport" aria-label="帝國指揮所地圖，可左右滑動">
+  <div class="scene">
+    <img class="map" src="./junshifu-map.png?v=20260906-bg2" alt="帝國指揮所：財政、醫館、王府、軍機處、太倉與指揮所">
+    <button class="hotspot" style="left:12%;top:16%;width:15%;height:10%" data-place="財政" aria-label="財政"></button>
+    <button class="hotspot" style="left:75%;top:15%;width:14%;height:10%" data-place="醫館" aria-label="醫館"></button>
+    <button class="hotspot" style="left:9%;top:42%;width:16%;height:11%" data-place="軍機處" aria-label="軍機處"></button>
+    <button class="hotspot" style="left:41%;top:30%;width:18%;height:11%" data-place="王府" aria-label="王府"></button>
+    <button class="hotspot" style="left:75%;top:44%;width:16%;height:11%" data-place="太倉" aria-label="太倉"></button>
+    <div id="characters"></div>
+  </div>
+</main>
+<dialog id="character-panel" aria-labelledby="character-title">
+  <h1 id="character-title">陳群</h1><p id="character-role" class="role">財政軍師</p><p id="character-domain">掌管：記帳・國庫・財報</p>
+  <blockquote id="character-quote">「主公，今日財政帳目已備妥，是否查看？」</blockquote>
+  <div id="character-actions" class="actions"></div>
+  <p id="panel-status" role="status">預覽模式，按鈕尚未串接後端。</p><button id="close-panel">關閉</button>
+</dialog>
+<script src="./characterAnimations.js?v=20260906-npc6"></script>
+<script src="./AnimatedCharacter.js?v=20260906-npc6"></script>
+<script>
+const AnimatedCharacterClass = window.AnimatedCharacter;
+const chenqunConfig = window.chenqunAnimations;
+const huatuoConfig = window.huatuoAnimations;
+const liubeiConfig = window.liubeiAnimations;
+const simayiConfig = window.simayiAnimations;
+const positions = window.characterPositions;
+const panel = document.querySelector('dialog');
+const status = document.querySelector('#status');
+const npcs = {};
+const profiles = {
+  chenqun: { name: '陳群', role: '財政軍師', domain: '掌管：記帳・國庫・財報', quote: '「主公，今日財政帳目已備妥，是否查看？」', actions: ['查看財政', '查看財報', '國庫', '交辦事項'] },
+  huatuo: { name: '華佗', role: '醫館顧問', domain: '掌管：健康・抽牌・統計', quote: '「主公，藥材與身體狀況皆已檢視。」', actions: ['健康紀錄', '抽牌統計', '查看藥材', '交辦事項'] },
+  liubei: { name: '劉備', role: '漢室主公', domain: '掌管：城牆・日記・備忘', quote: '「以仁義聚人心，以信義成大事。」', actions: ['生活日記', '備忘隨筆', '股市教室', '新增記錄'] },
+  simayi: { name: '司馬懿', role: '軍機軍師', domain: '掌管：戰情・部隊・台美總經', quote: '「先觀其勢，再定其局；勝負往往藏在未動之前。」', actions: ['查看戰情', '部隊陣容', '快捷戰報', '總經戰情'] }
+};
+function openPanel(id) {
+  const npc = npcs[id];
+  const profile = profiles[id];
+  if (!npc || !profile) return;
+  Object.values(npcs).forEach(character => character.setPanelOpen(character === npc));
+  document.querySelector('#character-title').textContent = profile.name;
+  document.querySelector('#character-role').textContent = profile.role;
+  document.querySelector('#character-domain').textContent = profile.domain;
+  document.querySelector('#character-quote').textContent = profile.quote;
+  document.querySelector('#panel-status').textContent = '預覽模式，按鈕尚未串接後端。';
+  document.querySelector('#character-actions').innerHTML = profile.actions.map(action => `<button type="button">${action}</button>`).join('');
+  panel.showModal();
+}
+panel.addEventListener('close', () => Object.values(npcs).forEach(npc => npc.setPanelOpen(false)));
+document.querySelector('#close-panel').onclick = () => panel.close();
+document.querySelector('#character-actions').addEventListener('click', event => {
+  const button = event.target.closest('button');
+  if (button) document.querySelector('#panel-status').textContent = `${button.textContent}：介面預覽，尚未串接後端。`;
+});
+document.querySelectorAll('.hotspot').forEach(button => button.onclick = () => {
+  if (button.dataset.place === '財政') openPanel('chenqun');
+  else if (button.dataset.place === '醫館') openPanel('huatuo');
+  else if (button.dataset.place === '王府') openPanel('liubei');
+  else if (button.dataset.place === '軍機處') openPanel('simayi');
+  else status.textContent = `${button.dataset.place}：場景位置預覽，人物待加入。`;
+});
+npcs.chenqun = new AnimatedCharacterClass({character:'陳群', animationConfig:chenqunConfig, position:positions.chenqun, mount:document.querySelector('#characters'), onClick:() => openPanel('chenqun')});
+npcs.huatuo = new AnimatedCharacterClass({character:'華佗', animationConfig:huatuoConfig, position:positions.huatuo, mount:document.querySelector('#characters'), onClick:() => openPanel('huatuo')});
+npcs.liubei = new AnimatedCharacterClass({character:'劉備', animationConfig:liubeiConfig, position:positions.liubei, mount:document.querySelector('#characters'), onClick:() => openPanel('liubei')});
+npcs.simayi = new AnimatedCharacterClass({character:'司馬懿', animationConfig:simayiConfig, position:positions.simayi, mount:document.querySelector('#characters'), onClick:() => openPanel('simayi')});
+Promise.all(Object.values(npcs).map(npc => npc.loaded)).then(() => { status.textContent = '陳群、華佗、劉備與司馬懿已入駐 · 軍機處正在研判戰局'; }).catch(() => { status.textContent = '角色圖片載入失敗，請重新整理；地圖仍可使用。'; });
+const sceneViewport = document.querySelector('.scene-viewport');
+const centerScene = () => { if (matchMedia('(max-width: 768px)').matches) sceneViewport.scrollLeft = (sceneViewport.scrollWidth - sceneViewport.clientWidth) / 2; };
+addEventListener('load', centerScene);
+addEventListener('resize', centerScene);
+window.addEventListener('pagehide', () => Object.values(npcs).forEach(npc => npc.destroy()), {once:true});
+</script>
+</body></html>
