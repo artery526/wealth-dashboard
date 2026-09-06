@@ -3707,8 +3707,9 @@ body::after{
 /* 底部政務區：月曆、行程、待辦事項桌面三欄並排。 */
 .home-agenda-bottom{
   position:relative;
+  z-index:4;
   width:min(1026px,100%);
-  margin:22px auto 22px;
+  margin:-124px auto 22px;
   display:grid;
   grid-template-columns:repeat(3,minmax(0,1fr));
   gap:22px;
