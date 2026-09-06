@@ -3704,6 +3704,86 @@ body::after{
   box-shadow:0 0 12px rgba(49,174,226,.14),inset 0 1px 0 rgba(213,246,255,.1);
 }
 
+/* 底部政務區：月曆、行程、待辦事項桌面三欄並排。 */
+.home-agenda-bottom{
+  position:relative;
+  width:min(1026px,100%);
+  margin:22px auto 22px;
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:22px;
+  align-items:start;
+}
+.home-agenda-bottom>.home-agenda-calendar{
+  grid-column:1;
+  grid-row:1;
+  min-width:0;
+}
+.home-agenda-bottom>.home-agenda-court{
+  grid-column:2/4;
+  grid-row:1;
+  min-width:0;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+  padding:0;
+  overflow:visible;
+  border:0;
+  background:transparent;
+  box-shadow:none;
+}
+.home-agenda-bottom .home-agenda-global-refresh{
+  grid-column:1/-1;
+  justify-self:end;
+}
+.home-agenda-bottom .home-agenda-body{
+  display:contents;
+  max-height:none;
+  overflow:visible;
+}
+.home-agenda-bottom .home-agenda-body .agenda-section{
+  min-width:0;
+  padding:14px;
+  border:1px solid rgba(77,169,214,.42);
+  border-radius:8px;
+  background:
+    radial-gradient(circle at 10% 0,rgba(42,135,184,.22),transparent 34%),
+    linear-gradient(145deg,rgba(10,37,61,.96),rgba(4,15,27,.98));
+  box-shadow:0 12px 32px rgba(0,8,18,.44),inset 0 1px 0 rgba(180,232,255,.12);
+}
+.home-agenda-bottom .home-agenda-body .agenda-section+.agenda-section{
+  border-left:1px solid rgba(77,169,214,.42);
+  padding-left:14px;
+}
+@media(max-width:768px){
+  .home-agenda-bottom{
+    grid-template-columns:1fr;
+    gap:14px;
+    margin:16px auto 18px;
+  }
+  .home-agenda-bottom>.home-agenda-calendar,
+  .home-agenda-bottom>.home-agenda-court{
+    grid-column:1;
+    grid-row:auto;
+  }
+  .home-agenda-bottom>.home-agenda-court{
+    grid-template-columns:1fr;
+    gap:14px;
+  }
+  .home-agenda-bottom .home-agenda-global-refresh{
+    grid-column:1;
+    justify-self:start;
+  }
+  .home-agenda-bottom .home-agenda-body .agenda-section{
+    grid-column:1;
+    grid-row:auto;
+  }
+  .home-agenda-bottom .home-agenda-body .agenda-section+.agenda-section{
+    border-left:1px solid rgba(77,169,214,.42);
+    padding-left:14px;
+  }
+}
+
 /* 深藍內政：主卡片全面移除舊版金棕主色。 */
 html[data-theme="deep-blue"] .card .frame{
   border-color:rgba(74,177,218,.62);
@@ -4526,36 +4606,7 @@ html[data-theme="deep-blue"] .advisor-ai-standalone .advisor-ai-quick-select:foc
 
   </div>
 
-  <section class="home-primary-grid" aria-label="五張內政卡片、本月月曆與朝中政務">
-    <div class="home-agenda-calendar">
-      <div class="home-agenda-head">
-        <div>
-          <div class="home-agenda-title"><span class="home-lunar-date" id="home-calendar-lunar">--</span></div>
-          <div class="home-agenda-date" id="home-calendar-month">--</div>
-        </div>
-        <div class="home-agenda-date" id="home-calendar-today" hidden></div>
-      </div>
-      <div class="home-calendar-week-controls" aria-label="週曆切換">
-        <button type="button" onclick="shiftHomeCalendarWeek(-1)" aria-label="上一週">‹ 上週</button>
-        <button type="button" onclick="jumpHomeCalendarToday()">回今天</button>
-        <button type="button" onclick="shiftHomeCalendarWeek(1)" aria-label="下一週">下週 ›</button>
-      </div>
-      <div class="home-calendar-grid" id="home-calendar-grid" aria-live="polite"></div>
-    </div>
-    <div class="home-agenda-court" id="home-agenda-court">
-      <button class="home-agenda-global-refresh" id="home-agenda-refresh" type="button" onclick="refreshHomeAgenda()">更新</button>
-      <div class="home-agenda-body" id="home-agenda-body">
-        <section class="agenda-section">
-          <div class="agenda-section-title">今日行程</div>
-          <div class="today-agenda-loading">軍師正在調閱今日行程…</div>
-        </section>
-        <section class="agenda-section">
-          <div class="agenda-section-title">待辦事項</div>
-          <div class="today-agenda-loading">軍師正在調閱待辦事項…</div>
-        </section>
-      </div>
-    </div>
-
+  <section class="home-primary-grid" aria-label="五張內政卡片與帝國場景">
   <div class="cards empire-locked" id="empire-cards">
     <div class="empire-access-lock" id="empire-access-lock" aria-live="polite">
       <div class="empire-access-lock-inner">
@@ -4730,6 +4781,36 @@ html[data-theme="deep-blue"] .advisor-ai-standalone .advisor-ai-quick-select:foc
     </div>
 
   </div><!-- /cards -->
+  </section>
+  <section class="home-agenda-bottom" aria-label="月曆、行程與待辦事項">
+    <div class="home-agenda-calendar">
+      <div class="home-agenda-head">
+        <div>
+          <div class="home-agenda-title"><span>月曆</span><span class="home-lunar-date" id="home-calendar-lunar">--</span></div>
+          <div class="home-agenda-date" id="home-calendar-month">--</div>
+        </div>
+        <div class="home-agenda-date" id="home-calendar-today" hidden></div>
+      </div>
+      <div class="home-calendar-week-controls" aria-label="週曆切換">
+        <button type="button" onclick="shiftHomeCalendarWeek(-1)" aria-label="上一週">‹ 上週</button>
+        <button type="button" onclick="jumpHomeCalendarToday()">回今天</button>
+        <button type="button" onclick="shiftHomeCalendarWeek(1)" aria-label="下一週">下週 ›</button>
+      </div>
+      <div class="home-calendar-grid" id="home-calendar-grid" aria-live="polite"></div>
+    </div>
+    <div class="home-agenda-court" id="home-agenda-court">
+      <button class="home-agenda-global-refresh" id="home-agenda-refresh" type="button" onclick="refreshHomeAgenda()">更新</button>
+      <div class="home-agenda-body" id="home-agenda-body">
+        <section class="agenda-section">
+          <div class="agenda-section-title">今日行程</div>
+          <div class="today-agenda-loading">軍師正在調閱今日行程…</div>
+        </section>
+        <section class="agenda-section">
+          <div class="agenda-section-title">待辦事項</div>
+          <div class="today-agenda-loading">軍師正在調閱待辦事項…</div>
+        </section>
+      </div>
+    </div>
   </section>
 </div><!-- /wrap -->
 
