@@ -136,6 +136,8 @@ test('mobile calendar defaults to a compact palace badge and expands the weekly 
   });
   expect(Math.abs(compactSizes.calendarWidth - compactSizes.agendaWidth)).toBeLessThanOrEqual(1);
   expect(Math.abs(compactSizes.calendarHeight - compactSizes.agendaHeight)).toBeLessThanOrEqual(1);
+  expect(compactSizes.calendarWidth).toBeLessThan(180);
+  expect(compactSizes.calendarHeight).toBeLessThanOrEqual(80);
 
   await toggle.click();
   await expect(toggle).toHaveAttribute('aria-expanded', 'true');

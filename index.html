@@ -4531,12 +4531,12 @@ html[data-theme="deep-blue"] .advisor-ai-standalone .advisor-ai-quick-select:foc
 .npc-web-scene .character-art img[hidden],.npc-web-scene .animated-character[hidden]{display:none}
 .npc-web-scene .animated-character:hover .character-art,.npc-web-scene .animated-character:focus-visible .character-art{transform:scale(1.04);filter:drop-shadow(0 0 7px rgba(255,224,165,.76))}
 .npc-web-scene .character-debug{display:none}
-.scene-widget-dock{position:absolute;z-index:7;top:18px;left:18px;width:min(472px,calc(100% - 36px));display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;align-items:start;transition:top .2s ease,left .2s ease,right .2s ease,width .2s ease}
+.scene-widget-dock{position:absolute;z-index:7;top:18px;left:18px;width:min(440px,calc(100% - 36px));display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;align-items:start;transition:top .2s ease,left .2s ease,right .2s ease,width .2s ease}
 .mobile-calendar-slot,.scene-agenda-slot{display:block;position:relative;min-width:0}
 .scene-widget-dock.calendar-expanded,.scene-widget-dock.agenda-expanded{grid-template-columns:1fr}
 .scene-widget-dock.calendar-expanded .scene-agenda-slot,.scene-widget-dock.agenda-expanded .mobile-calendar-slot{display:none}
-.mobile-calendar-slot .home-agenda-calendar{width:100%;padding:0;overflow:hidden;border:1px solid rgba(225,177,73,.82);border-radius:10px;background:linear-gradient(145deg,rgba(76,46,17,.97),rgba(31,17,6,.98));box-shadow:0 10px 28px rgba(0,0,0,.48),inset 0 1px 0 rgba(255,236,177,.2)}
-.mobile-calendar-slot .home-calendar-mobile-toggle{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto auto;align-items:center;width:100%;min-height:96px;padding:10px 12px;border:0;background:linear-gradient(135deg,rgba(119,76,27,.94),rgba(54,30,9,.98));color:#ffe6a2;text-align:left;cursor:pointer}
+.mobile-calendar-slot .home-agenda-calendar{width:100%;padding:0;overflow:hidden;border:1px solid rgba(225,177,73,.82);border-radius:8px;background:linear-gradient(145deg,rgba(76,46,17,.97),rgba(31,17,6,.98));box-shadow:0 10px 28px rgba(0,0,0,.48),inset 0 1px 0 rgba(255,236,177,.2)}
+.mobile-calendar-slot .home-calendar-mobile-toggle{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto auto;align-items:center;width:100%;min-height:74px;padding:7px 10px;border:0;background:linear-gradient(135deg,rgba(119,76,27,.94),rgba(54,30,9,.98));color:#ffe6a2;text-align:left;cursor:pointer}
 .home-calendar-mobile-lunar{font:900 13px/1.3 var(--sans);letter-spacing:.5px}
 .home-calendar-mobile-date{grid-column:1;grid-row:2;margin-top:3px;font:900 14px/1.35 var(--mono);color:#fff0bd}
 .home-calendar-mobile-caret{grid-column:2;grid-row:1/3;margin-left:8px;font:900 16px var(--sans);color:#e9bd5d;transition:transform .18s ease}
@@ -4553,12 +4553,12 @@ html[data-theme="deep-blue"] .advisor-ai-standalone .advisor-ai-quick-select:foc
 .mobile-calendar-slot .home-calendar-day{border-color:rgba(232,192,80,.18);background:rgba(13,8,3,.42);color:#ead59d}
 .mobile-calendar-slot .home-calendar-day:hover{border-color:rgba(255,225,142,.74);background:rgba(184,137,46,.22)}
 .mobile-calendar-slot .home-calendar-day.today,.mobile-calendar-slot .home-calendar-day.selected{border-color:#ffe5a0;background:linear-gradient(180deg,#5a3713,#211006);color:#fff6d4;box-shadow:0 0 0 2px rgba(232,192,80,.3),0 0 14px rgba(232,192,80,.2)}
-.scene-agenda-card{width:100%;overflow:hidden;border:1px solid rgba(225,177,73,.82);border-radius:10px;background:linear-gradient(145deg,rgba(76,46,17,.97),rgba(31,17,6,.98));box-shadow:0 10px 28px rgba(0,0,0,.48),inset 0 1px 0 rgba(255,236,177,.2)}
-.scene-agenda-toggle{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;width:100%;min-height:96px;padding:8px 10px;border:0;background:linear-gradient(135deg,rgba(119,76,27,.94),rgba(54,30,9,.98));color:#ffe6a2;text-align:left;cursor:pointer}
-.scene-agenda-preview{display:grid;gap:5px;min-width:0}
-.scene-agenda-preview-item{display:grid;gap:1px;min-width:0}
-.scene-agenda-preview-time{font:900 11px/1.25 var(--mono);color:#f3d884;white-space:nowrap}
-.scene-agenda-preview-title{overflow:hidden;font:900 12px/1.3 var(--font);color:#fff0bd;text-overflow:ellipsis;white-space:nowrap}
+.scene-agenda-card{width:100%;overflow:hidden;border:1px solid rgba(225,177,73,.82);border-radius:8px;background:linear-gradient(145deg,rgba(76,46,17,.97),rgba(31,17,6,.98));box-shadow:0 10px 28px rgba(0,0,0,.48),inset 0 1px 0 rgba(255,236,177,.2)}
+.scene-agenda-toggle{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;width:100%;min-height:74px;padding:6px 8px;border:0;background:linear-gradient(135deg,rgba(119,76,27,.94),rgba(54,30,9,.98));color:#ffe6a2;text-align:left;cursor:pointer}
+.scene-agenda-preview{display:grid;gap:3px;min-width:0}
+.scene-agenda-preview-item{display:grid;gap:0;min-width:0}
+.scene-agenda-preview-time{font:900 10px/1.15 var(--mono);color:#f3d884;white-space:nowrap}
+.scene-agenda-preview-title{overflow:hidden;font:900 11px/1.15 var(--font);color:#fff0bd;text-overflow:ellipsis;white-space:nowrap}
 .scene-agenda-preview-status{font:900 12px/1.5 var(--font);color:#ead59d}
 .scene-agenda-caret{margin-left:7px;font:900 16px var(--sans);color:#e9bd5d;transition:transform .18s ease}
 .scene-agenda-slot.is-expanded .scene-agenda-caret{transform:rotate(180deg)}
@@ -4575,9 +4575,9 @@ html[data-theme="deep-blue"] .scene-agenda-details .home-agenda-global-refresh{b
   .npc-web-scene{width:100%;margin:8px 0 18px;border-left:0;border-right:0;border-radius:0}
   .npc-web-scene-stage{min-width:0;aspect-ratio:9/16}
   .npc-web-scene .animated-character{top:var(--mobile-top)!important;left:var(--mobile-left)!important;width:var(--mobile-width)!important}
-  .scene-widget-dock{top:2.2%;left:3%;right:3%;width:auto}
+  .scene-widget-dock{top:2.2%;left:5%;right:5%;width:auto}
   .scene-widget-dock.calendar-expanded,.scene-widget-dock.agenda-expanded{top:10px;left:10px;right:10px}
-  .mobile-calendar-slot .home-calendar-mobile-toggle,.scene-agenda-toggle{min-height:96px;padding-left:9px;padding-right:9px}
+  .mobile-calendar-slot .home-calendar-mobile-toggle,.scene-agenda-toggle{min-height:74px;padding-left:8px;padding-right:8px}
   .home-calendar-mobile-date{font-size:12px}
   .scene-agenda-details{max-height:72vh}
 }
