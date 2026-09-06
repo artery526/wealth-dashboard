@@ -4438,7 +4438,7 @@ html[data-theme="deep-blue"] .advisor-ai-standalone .advisor-ai-quick-select:foc
 @media(max-width:768px){.npc-web-scene{width:100%;margin:8px 0 18px;border-left:0;border-right:0;border-radius:0}.npc-web-scene-head{align-items:flex-start;flex-direction:column;gap:4px}.npc-web-scene-title{font-size:13px}.npc-web-scene-status{font-size:10px;white-space:normal}.npc-web-scene-stage{min-width:0}}
 @media(prefers-reduced-motion:reduce){.npc-web-scene .character-art{transition:none}.npc-web-scene .animated-character:hover .character-art{transform:none}}
 </style>
-<script src="./characterAnimations.js?v=20260906-web1"></script>
+<script src="./characterAnimations.js?v=20260906-web2"></script>
 <script src="./AnimatedCharacter.js?v=20260906-web1"></script>
 </head>
 <body>
@@ -19777,12 +19777,14 @@ function mpmRender(records){
   var status=document.getElementById('npc-web-scene-status');
   if(!mount||!window.AnimatedCharacter||!window.characterPositions)return;
   var configs={
+    zhuge:window.zhugeAnimations,
     chenqun:window.chenqunAnimations,
     huatuo:window.huatuoAnimations,
     liubei:window.liubeiAnimations,
     simayi:window.simayiAnimations
   };
   var routes={
+    zhuge:function(event){openAdvisorDialog(event);},
     chenqun:function(){openPanel('finance');},
     huatuo:function(){openPanel('medical');},
     liubei:function(){openArkWall('wall');},
@@ -19800,7 +19802,7 @@ function mpmRender(records){
     });
   });
   Promise.all(Object.values(npcs).map(function(npc){return npc.loaded;})).then(function(){
-    if(status)status.textContent='陳群、華佗、劉備與司馬懿已入駐 · 點擊人物開啟正式面板';
+    if(status)status.textContent='諸葛亮、陳群、華佗、劉備與司馬懿已入駐 · 點擊人物開啟正式面板';
   }).catch(function(){
     if(status)status.textContent='部分角色影格載入失敗，請重新整理。';
   });

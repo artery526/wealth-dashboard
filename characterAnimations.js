@@ -1,10 +1,46 @@
 // All timing values are milliseconds. Original PNG files remain untouched.
 window.DEBUG_CHARACTERS = false;
 const characterPositions = {
+  zhuge: { top: '10%', left: '46%', width: '8.8%' },
   chenqun: { top: '27%', left: '27%', width: '7.8%' },
   huatuo: { top: '27%', left: '69%', width: '8%' },
   liubei: { top: '30%', left: '46%', width: '8%' },
   simayi: { top: '47%', left: '16%', width: '11%' }
+};
+const zhugeAnimations = {
+  name: '諸葛亮',
+  frames: {
+    '01': './諸葛亮/待機站立01.png',
+    '02': './諸葛亮/輕搖羽扇02.png',
+    '03': './諸葛亮/輕搖羽扇03.png',
+    '04': './諸葛亮/輕搖羽扇04.png',
+    '05': './諸葛亮/揮扇指揮05.png',
+    '06': './諸葛亮/提出計策06.png',
+    '07': './諸葛亮/提出計策電燈泡07.png',
+    '08': './諸葛亮/運籌帷幄08.png'
+  },
+  breathing: [
+    { frame: '02', duration: [250, 400] },
+    { frame: '03', duration: [250, 400] },
+    { frame: '04', duration: [250, 400] },
+    { frame: '01', state: 'idle', duration: [800, 1800] }
+  ],
+  events: {
+    secondaryIdle: { interval: [7000, 14000], sequence: [
+      { frame: '03', state: 'fan', duration: [700, 1400] },
+      { frame: '01', state: 'idle', duration: [800, 1800] }
+    ] },
+    specialAction: { interval: [18000, 36000], sequence: [
+      { frame: '05', state: 'command', duration: [550, 900] },
+      { frame: '06', state: 'strategy', duration: [700, 1200] },
+      { frame: '07', state: 'strategy-light', duration: [1600, 3000] },
+      { frame: '08', state: 'planning', duration: [1800, 4200] },
+      { frame: '01', state: 'idle', duration: [1000, 1800] }
+    ] }
+  },
+  timing: {
+    idle: [800, 1800]
+  }
 };
 const chenqunAnimations = {
   name: '陳群',
@@ -145,6 +181,7 @@ const simayiAnimations = {
   }
 };
 window.characterPositions = characterPositions;
+window.zhugeAnimations = zhugeAnimations;
 window.chenqunAnimations = chenqunAnimations;
 window.huatuoAnimations = huatuoAnimations;
 window.liubeiAnimations = liubeiAnimations;
