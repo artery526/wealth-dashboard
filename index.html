@@ -4504,9 +4504,6 @@ html[data-theme="deep-blue"] .advisor-ai-standalone .advisor-ai-quick-select:foc
 
 /* ── 網頁端戶外 NPC 場景：角色共用既有面板路由 ── */
 .npc-web-scene{position:relative;z-index:3;width:min(1536px,calc(100% - 28px));margin:16px auto 24px;overflow:hidden;border:1px solid rgba(232,192,80,.38);border-radius:14px;background:#07121e;box-shadow:0 14px 40px rgba(0,0,0,.42)}
-.npc-web-scene-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 14px;border-bottom:1px solid rgba(232,192,80,.22);background:linear-gradient(135deg,rgba(232,192,80,.1),rgba(7,18,30,.92));color:#f2dfaa}
-.npc-web-scene-title{font-family:var(--sans);font-size:15px;font-weight:900;letter-spacing:2px}
-.npc-web-scene-status{font-family:var(--sans);font-size:11px;color:#9bb9c4;white-space:nowrap}
 .npc-web-scene-stage{position:relative;aspect-ratio:3/2;overflow:hidden}
 .npc-web-scene-map{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:cover}
 .npc-web-scene .animated-character{position:absolute;z-index:2;aspect-ratio:2/3;border:0;padding:0;background:transparent;cursor:pointer}
@@ -4515,7 +4512,7 @@ html[data-theme="deep-blue"] .advisor-ai-standalone .advisor-ai-quick-select:foc
 .npc-web-scene .character-art img[hidden],.npc-web-scene .animated-character[hidden]{display:none}
 .npc-web-scene .animated-character:hover .character-art,.npc-web-scene .animated-character:focus-visible .character-art{transform:scale(1.04);filter:drop-shadow(0 0 7px rgba(255,224,165,.76))}
 .npc-web-scene .character-debug{display:none}
-@media(max-width:768px){.npc-web-scene{width:100%;margin:8px 0 18px;border-left:0;border-right:0;border-radius:0}.npc-web-scene-head{align-items:flex-start;flex-direction:column;gap:4px}.npc-web-scene-title{font-size:13px}.npc-web-scene-status{font-size:10px;white-space:normal}.npc-web-scene-stage{min-width:0}}
+@media(max-width:768px){.npc-web-scene{width:100%;margin:8px 0 18px;border-left:0;border-right:0;border-radius:0}.npc-web-scene-stage{min-width:0}}
 @media(prefers-reduced-motion:reduce){.npc-web-scene .character-art{transition:none}.npc-web-scene .animated-character:hover .character-art{transform:none}}
 </style>
 <script src="./characterAnimations.js?v=20260906-web6"></script>
@@ -4578,11 +4575,7 @@ html[data-theme="deep-blue"] .advisor-ai-standalone .advisor-ai-quick-select:foc
 
 <div class="advisor-ai-standalone" id="advisor-ai-standalone" aria-live="polite"></div>
 
-<section class="npc-web-scene" id="npc-web-scene" aria-labelledby="npc-web-scene-title">
-  <div class="npc-web-scene-head">
-    <div class="npc-web-scene-title" id="npc-web-scene-title">帝國指揮所 · 戶外場景</div>
-    <div class="npc-web-scene-status" id="npc-web-scene-status" role="status">正在預載角色影格…</div>
-  </div>
+<section class="npc-web-scene" id="npc-web-scene">
   <div class="npc-web-scene-stage" id="npc-web-scene-stage">
     <img class="npc-web-scene-map" src="./junshifu-map.png?v=20260906-bg2" alt="帝國指揮所戶外場景：財政、醫館、王府、軍機處、太倉與指揮所">
   </div>
