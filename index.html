@@ -4891,6 +4891,7 @@ var bookingRecentRows = [];
 var currentPanel = null;
 var currentTab = null;
 var medicalOptionsCache = null;
+var medicalOptionsLastError = '';
 var ziweiChartsCache = [];
 var ziweiChartsPromise = null;
 var ziweiSelectedId = '';
@@ -8035,6 +8036,14 @@ function setMedicalPanelHeaderStatus(message,type){
   if(text)text.textContent=message||'';
 }
 
+function medicalStatusReason(message){
+  var value=String(message||'');
+  if(/密鑰|金鑰|WRITE_TOKEN|未授權|401|403/i.test(value))return '密鑰不正確';
+  if(/逾時|timeout|timed out/i.test(value))return '連線逾時';
+  if(/未設定.*API|尚未設定.*API/i.test(value))return '未設定 API';
+  return value?'讀取失敗':'不成功';
+}
+
 function syncMedicalHeaderTime(){
   var input=document.getElementById('medical-time');
   var button=document.getElementById('medical-time-button');
@@ -8678,9 +8687,11 @@ async function deleteGoogleTask(btn,taskId,taskListId){
 
 async function loadMedicalOptions(){
   if(medicalOptionsCache){
-    setEmpireCardStatus('medical',medicalOptionsCache===DEFAULT_MEDICAL_OPTIONS?'err':'ok',medicalOptionsCache===DEFAULT_MEDICAL_OPTIONS?'使用備援選項':'設定選項已載入');
+    var cachedFallback=medicalOptionsCache===DEFAULT_MEDICAL_OPTIONS;
+    setEmpireCardStatus('medical',cachedFallback?'err':'ok',cachedFallback?(medicalOptionsLastError||'使用備援選項'):'設定選項已載入');
     return medicalOptionsCache;
   }
+  medicalOptionsLastError='';
   setEmpireCardApiPendingStatus('medical');
   try{
     var data=await medicalPost({_action:'getOptions'});
@@ -8701,11 +8712,13 @@ async function loadMedicalOptions(){
     };
     _mcsCardImages=medicalOptionsCache.cardImages;
     _mcsOracleImages=medicalOptionsCache.oracleImages;
+    medicalOptionsLastError='';
     setEmpireCardStatus('medical','ok','設定選項已載入');
   }catch(e){
     console.warn(e);
     medicalOptionsCache=DEFAULT_MEDICAL_OPTIONS;
-    setEmpireCardStatus('medical','err',e.message||'載入備援選項');
+    medicalOptionsLastError=e.message||'載入備援選項';
+    setEmpireCardStatus('medical','err',medicalOptionsLastError);
   }
   return medicalOptionsCache;
 }
@@ -8729,7 +8742,7 @@ async function initMedicalQuickForm(){
   fillMedicalSelect('medical-med',options.meds,'選擇藥物');
   var usingFallback=medicalOptionsCache===DEFAULT_MEDICAL_OPTIONS;
   setMedicalStatus(usingFallback?'已載入備援選項，可直接快記':'已載入設定選項','ok');
-  setMedicalPanelHeaderStatus(usingFallback?'備援':'成功',usingFallback?'err':'ok');
+  setMedicalPanelHeaderStatus(usingFallback?(medicalOptionsLastError?medicalStatusReason(medicalOptionsLastError):'備援'):'成功',usingFallback?'err':'ok');
 }
 
 async function submitMedicalQuickRecord(e){
