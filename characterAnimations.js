@@ -3,7 +3,7 @@ window.DEBUG_CHARACTERS = false;
 const characterPositions = {
   pangtong: { top: '10%', left: '41%', width: '8.8%' },
   zhuge: { top: '10%', left: '50%', width: '8.8%' },
-  chenqun: { top: '27%', left: '27%', width: '7.8%' },
+  chenqun: { top: '25.5%', left: '25.5%', width: '7.8%' },
   huatuo: { top: '27%', left: '69%', width: '8%' },
   liubei: { top: '30%', left: '46%', width: '8%' },
   simayi: { top: '47%', left: '16%', width: '11%' }
