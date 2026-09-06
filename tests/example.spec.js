@@ -110,7 +110,7 @@ test('legacy advisor video cards are removed while scene NPC controls remain', a
   await expect(zhuge).toHaveCSS('--mobile-top', '27.5%');
   await expect(zhuge).toHaveCSS('--mobile-left', '68.5%');
   await expect(zhuge).toHaveCSS('--mobile-width', '13%');
-  await expect(liubei).toHaveCSS('--mobile-top', '23.5%');
+  await expect(liubei).toHaveCSS('--mobile-top', 'calc(23.5% - 56px)');
   await expect(liubei).toHaveCSS('--mobile-left', '43%');
   await expect(liubei).toHaveCSS('--mobile-width', '14%');
 });
