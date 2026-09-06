@@ -121,11 +121,32 @@ test('mobile calendar defaults to a compact palace badge and expands the weekly 
   await expect(toggle).toHaveAttribute('aria-expanded', 'true');
   await expect(slot).toHaveClass(/is-expanded/);
   await expect(details).toBeVisible();
+  await expect(page.locator('.mobile-calendar-slot .home-calendar-week-controls')).toBeVisible();
   await expect(page.locator('#home-calendar-grid .home-calendar-day')).toHaveCount(7);
 
   await toggle.click();
   await expect(toggle).toHaveAttribute('aria-expanded', 'false');
   await expect(details).toBeHidden();
+});
+
+test('desktop calendar uses the same compact palace badge and weekly view', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.goto(dashboardUrl);
+
+  const slot = page.locator('#mobile-calendar-slot');
+  const toggle = page.locator('#home-calendar-mobile-toggle');
+  const details = page.locator('#home-calendar-details');
+  await expect(toggle).toBeVisible();
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  await expect(details).toBeHidden();
+  expect(await page.locator('#home-agenda-calendar').evaluate(element => element.parentElement.id)).toBe('mobile-calendar-slot');
+
+  await toggle.click();
+  await expect(slot).toHaveClass(/is-expanded/);
+  await expect(details).toBeVisible();
+  await expect(page.locator('.mobile-calendar-slot .home-calendar-week-controls')).toBeVisible();
+  await expect(page.locator('#home-calendar-grid .home-calendar-day')).toHaveCount(7);
+  await expect(page.locator('#home-agenda-court .agenda-section')).toHaveCount(2);
 });
 
 test('remembered Pangtong verification restores the empire without blocking re-verification', async ({ page }) => {
