@@ -2384,12 +2384,27 @@ body::after{
 .txn-balance{min-width:190px;max-width:38%;font-family:var(--sans);font-size:10px;color:#7a5c28;line-height:1.35;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0}
 .txn-balance-path{display:block;overflow:hidden;text-overflow:ellipsis}
 .txn-balance strong{display:block;font-family:var(--mono);font-size:10px;color:var(--gold);font-weight:800;overflow:hidden;text-overflow:ellipsis}
+.booking-write-queue{margin-top:14px;padding:10px 11px;border:1px solid rgba(184,137,46,.24);border-radius:8px;background:rgba(10,8,4,.34)}
+.booking-queue-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+.booking-queue-title{font-family:var(--sans);font-size:10px;font-weight:900;letter-spacing:1px;color:var(--gold)}
+.booking-queue-hint{font-family:var(--sans);font-size:9px;color:#7a5c28}
+.booking-queue-empty{font-family:var(--sans);font-size:10px;color:#5a4018;padding:5px 0}
+.booking-queue-item{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:8px;padding:7px 0;border-top:1px solid #1e1408}
+.booking-queue-item:first-child{border-top:0}
+.booking-queue-status{font-family:var(--sans);font-size:10px;font-weight:900;white-space:nowrap}
+.booking-queue-status.processing{color:var(--gold)}
+.booking-queue-status.success{color:var(--teal)}
+.booking-queue-status.confirm{color:#f0b35b}
+.booking-queue-status.failed{color:var(--coral)}
+.booking-queue-detail{min-width:0;font-family:var(--sans);font-size:11px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.booking-queue-time{font-family:var(--mono);font-size:9px;color:#7a5c28;white-space:nowrap}
 @media(max-width:640px){
   .txn-item{display:grid;grid-template-columns:auto auto 1fr auto;align-items:center;gap:6px}
   .txn-cat{grid-column:1/4;white-space:normal;line-height:1.35}
   .txn-balance{grid-column:1/-1;max-width:none;min-width:0;text-align:left;white-space:normal}
   .txn-repeat,.txn-undo{padding:5px 8px}
 }
+@media(max-width:480px){.booking-queue-item{grid-template-columns:auto minmax(0,1fr);gap:5px}.booking-queue-time{grid-column:2}.booking-queue-detail{font-size:10px}}
 
 /* ── Annual battle room ── */
 .annual-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
@@ -5267,6 +5282,66 @@ function eventChronicleRowKey(row){
   return String((row&&row.id)||((row&&row.rowNumber)||''));
 }
 var ledgerPendingBusy={};
+var bookingWriteQueue=[];
+var BOOKING_WRITE_QUEUE_MAX=5;
+
+function bookingQueueSignature(body){
+  body=body||{};
+  return [body.action,body.date,body.cat||'',body.account||'',body.amount||''].join('|');
+}
+
+function bookingQueueTimeText(value){
+  var date=value instanceof Date?value:new Date(value||Date.now());
+  if(isNaN(date.getTime()))return '--:--';
+  return String(date.getHours()).padStart(2,'0')+':'+String(date.getMinutes()).padStart(2,'0')+':'+String(date.getSeconds()).padStart(2,'0');
+}
+
+function renderBookingWriteQueue(){
+  var el=document.getElementById('booking-queue-content');
+  if(!el)return;
+  if(!bookingWriteQueue.length){
+    el.innerHTML='<div class="booking-queue-empty">目前沒有支出寫入中的項目</div>';
+    return;
+  }
+  var labels={processing:'記錄中',success:'已成功記錄',confirm:'結果待確認',failed:'記錄失敗'};
+  el.innerHTML=bookingWriteQueue.slice().reverse().map(function(item){
+    var label=labels[item.status]||'處理中';
+    var detail=[item.cat,item.account,fmtFull(item.amount)].filter(Boolean).join(' · ');
+    var message=item.message&&item.status!=='success'?' · '+item.message:'';
+    return '<div class="booking-queue-item">'+
+      '<span class="booking-queue-status '+esc(item.status)+'">'+label+'</span>'+
+      '<span class="booking-queue-detail" title="'+esc(detail+message)+'">'+esc(detail+message)+'</span>'+
+      '<span class="booking-queue-time">'+esc(item.timeText||'--:--:--')+'</span>'+
+    '</div>';
+  }).join('');
+}
+
+function bookingQueueAdd(body){
+  var signature=bookingQueueSignature(body);
+  var existing=bookingWriteQueue.find(function(item){return item.signature===signature&&(item.status==='processing'||item.status==='confirm');});
+  if(existing){
+    existing.status='processing';
+    existing.message='再次確認中';
+    existing.timeText=bookingQueueTimeText(Date.now());
+    renderBookingWriteQueue();
+    return existing.id;
+  }
+  var item={id:'booking-'+Date.now()+'-'+Math.random().toString(36).slice(2),signature:signature,cat:body.cat||'支出',account:body.account||'',amount:body.amount||0,status:'processing',message:'',timeText:bookingQueueTimeText(Date.now())};
+  bookingWriteQueue.push(item);
+  if(bookingWriteQueue.length>BOOKING_WRITE_QUEUE_MAX)bookingWriteQueue.shift();
+  renderBookingWriteQueue();
+  return item.id;
+}
+
+function bookingQueueUpdate(id,status,message){
+  var item=bookingWriteQueue.find(function(row){return row.id===id;});
+  if(!item)return;
+  item.status=status;
+  item.message=message||'';
+  item.timeText=bookingQueueTimeText(Date.now());
+  renderBookingWriteQueue();
+}
+
 async function submitLedgerPending(body){
   var key='ledger-pending-v1:'+API_URL+':'+body.action;
   if(ledgerPendingBusy[key])throw new Error('這筆交易正在確認，請稍候');
@@ -9452,6 +9527,10 @@ async function initBookingForm(){
       </div>
       <button class="submit-btn expense" id="btn-expense" type="button" onclick="submitExpense(event)">記錄支出</button>
       <span class="result-msg" id="msg-expense"></span>
+      <section class="booking-write-queue" aria-labelledby="booking-queue-title">
+        <div class="booking-queue-head"><span class="booking-queue-title" id="booking-queue-title">記帳佇列</span><span class="booking-queue-hint">確認每筆寫入結果</span></div>
+        <div id="booking-queue-content"><div class="booking-queue-empty">目前沒有支出寫入中的項目</div></div>
+      </section>
     </div>
 
     <!-- 收入支出：收入模式 -->
@@ -11806,16 +11885,22 @@ async function submitExpense(e){
   var note=document.getElementById('e-note').value;
   if(!date||!cat||!acc||amt<=0){showMsg('msg-expense','請填寫所有必填欄位','err');return}
   if(!confirmRecentBooking({action:'expense',date:date,cat:cat,account:acc,amount:amt}))return;
+  var queueId=bookingQueueAdd({action:'expense',date:date,cat:cat,account:acc,amount:amt});
   btn.disabled=true;btn.textContent='記錄中…';
   try{
     await apiPost({action:'expense',date:date.replace(/-/g,'/'),cat,account:acc,amount:amt,note});
+    bookingQueueUpdate(queueId,'success','');
     showMsg('msg-expense','✓ 已記錄！','ok');
     invalidateBookingAccountBalances();
     document.getElementById('e-amount').value='';
     document.getElementById('e-note').value='';
     loadRecentBooking();
     focusBookingField('e-amount');
-  }catch(e){showMsg('msg-expense','✗ '+e.message,'err')}
+  }catch(e){
+    var queueStatus=String(e&&e.message||'').indexOf('結果待確認')>=0?'confirm':'failed';
+    bookingQueueUpdate(queueId,queueStatus,e&&e.message||'寫入失敗');
+    showMsg('msg-expense','✗ '+e.message,'err');
+  }
   btn.disabled=false;btn.textContent='記錄支出';
 }
 
