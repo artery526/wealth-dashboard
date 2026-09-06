@@ -100,14 +100,19 @@ test('legacy advisor video cards are removed while scene NPC controls remain', a
   await expect(page.locator('.advisor-duo-role')).toHaveCount(0);
   const pangtong = page.getByRole('button', { name: '龐統，開啟角色面板' });
   const zhuge = page.getByRole('button', { name: '諸葛亮，開啟角色面板' });
+  const liubei = page.getByRole('button', { name: '劉備，開啟角色面板' });
   await expect(pangtong).toBeVisible();
   await expect(zhuge).toBeVisible();
+  await expect(liubei).toBeVisible();
   await expect(pangtong).toHaveCSS('--mobile-top', '27.5%');
   await expect(pangtong).toHaveCSS('--mobile-left', '19.5%');
   await expect(pangtong).toHaveCSS('--mobile-width', '13%');
   await expect(zhuge).toHaveCSS('--mobile-top', '27.5%');
   await expect(zhuge).toHaveCSS('--mobile-left', '68.5%');
   await expect(zhuge).toHaveCSS('--mobile-width', '13%');
+  await expect(liubei).toHaveCSS('--mobile-top', '27.5%');
+  await expect(liubei).toHaveCSS('--mobile-left', '43%');
+  await expect(liubei).toHaveCSS('--mobile-width', '14%');
 });
 
 test('mobile calendar defaults to a compact palace badge and expands the weekly view', async ({ page }) => {
