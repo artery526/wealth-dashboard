@@ -120,13 +120,18 @@ test('mobile calendar defaults to a compact palace badge and expands the weekly 
   const agendaSlot = page.locator('#scene-agenda-slot');
   const agendaToggle = page.locator('#scene-agenda-toggle');
   const agendaDetails = page.locator('#scene-agenda-details');
+  const taskSlot = page.locator('#scene-task-slot');
+  const taskToggle = page.locator('#scene-task-toggle');
+  const taskDetails = page.locator('#scene-task-details');
   await expect(toggle).toBeVisible();
   await expect(agendaToggle).toBeVisible();
+  await expect(taskToggle).toBeVisible();
   await expect(toggle).toHaveAttribute('aria-expanded', 'false');
   await expect(page.locator('#home-calendar-mobile-lunar')).toHaveText(/^農曆M\d{2}/);
   await expect(page.locator('#home-calendar-mobile-date')).toHaveText(/^\d{4}\/\d{2}\/\d{2}（[日一二三四五六]）$/);
   await expect(details).toBeHidden();
   await expect(agendaDetails).toBeHidden();
+  await expect(taskDetails).toBeHidden();
   await expect(slot).not.toHaveClass(/is-expanded/);
   expect(await page.locator('#home-agenda-calendar').evaluate(element => element.parentElement.id)).toBe('mobile-calendar-slot');
   const compactSizes = await page.evaluate(() => {
@@ -163,6 +168,27 @@ test('mobile calendar defaults to a compact palace badge and expands the weekly 
   await expect(agendaSlot).toHaveClass(/is-expanded/);
   await expect(agendaDetails).toBeVisible();
   await expect(slot).toBeHidden();
+
+  await agendaToggle.click();
+  await page.evaluate(() => {
+    const tasks = [
+      { id: '1', taskListId: 'list', title: '➡️CoCo飲料兌換' },
+      { id: '2', taskListId: 'list', title: '📋拖鞋換大號' },
+      { id: '3', taskListId: 'list', title: '🛒買筆電' },
+      { id: '4', taskListId: 'list', title: '不應顯示的第四筆待辦' }
+    ];
+    updateSceneTaskPreview(tasks);
+    setHomeAgendaSections('今日行程', '<div>今日無行程</div>', renderGoogleTasks(tasks));
+  });
+  await expect(page.locator('#scene-task-preview .scene-task-preview-item')).toHaveCount(3);
+  await expect(page.locator('#scene-task-preview')).toContainText('➡️CoCo飲料兌換');
+  await expect(page.locator('#scene-task-preview')).toContainText('📋拖鞋換大號');
+  await expect(page.locator('#scene-task-preview')).not.toContainText('不應顯示的第四筆待辦');
+  await taskToggle.click();
+  await expect(taskSlot).toHaveClass(/is-expanded/);
+  await expect(taskDetails).toBeVisible();
+  await expect(page.locator('#scene-task-details .task-create-form')).toBeVisible();
+  await expect(page.locator('.home-agenda-wrap')).toBeHidden();
 });
 
 test('desktop calendar uses the same compact palace badge and weekly view', async ({ page }) => {
@@ -183,7 +209,8 @@ test('desktop calendar uses the same compact palace badge and weekly view', asyn
   await expect(page.locator('.mobile-calendar-slot .home-calendar-week-controls')).toBeVisible();
   await expect(page.locator('#home-calendar-grid .home-calendar-day')).toHaveCount(7);
   await expect(page.locator('#scene-agenda-details .agenda-section')).toHaveCount(1);
-  await expect(page.locator('#home-agenda-court .agenda-section')).toHaveCount(1);
+  await expect(page.locator('#scene-task-details .agenda-section')).toHaveCount(1);
+  await expect(page.locator('#home-agenda-court .agenda-section')).toHaveCount(0);
 });
 
 test('remembered Pangtong verification restores the empire without blocking re-verification', async ({ page }) => {
