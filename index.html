@@ -4518,7 +4518,7 @@ html[data-theme="deep-blue"] .advisor-ai-standalone .advisor-ai-quick-select:foc
 @media(max-width:768px){.npc-web-scene{width:100%;margin:8px 0 18px;border-left:0;border-right:0;border-radius:0}.npc-web-scene-head{align-items:flex-start;flex-direction:column;gap:4px}.npc-web-scene-title{font-size:13px}.npc-web-scene-status{font-size:10px;white-space:normal}.npc-web-scene-stage{min-width:0}}
 @media(prefers-reduced-motion:reduce){.npc-web-scene .character-art{transition:none}.npc-web-scene .animated-character:hover .character-art{transform:none}}
 </style>
-<script src="./characterAnimations.js?v=20260906-web5"></script>
+<script src="./characterAnimations.js?v=20260906-web6"></script>
 <script src="./AnimatedCharacter.js?v=20260906-web1"></script>
 </head>
 <body>
@@ -4606,7 +4606,7 @@ html[data-theme="deep-blue"] .advisor-ai-standalone .advisor-ai-quick-select:foc
 
   </div>
 
-  <section class="home-primary-grid" aria-label="五張內政卡片與帝國場景">
+  <section class="home-primary-grid" aria-label="四張內政卡片與帝國場景">
   <div class="cards empire-locked" id="empire-cards">
     <div class="empire-access-lock" id="empire-access-lock" aria-live="polite">
       <div class="empire-access-lock-inner">
@@ -4745,38 +4745,6 @@ html[data-theme="deep-blue"] .advisor-ai-standalone .advisor-ai-quick-select:foc
         <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'wall','memo')">備忘隨筆</button>
         <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'wall','market')">股市教室</button>
         <button class="card-shortcut" type="button" onclick="openArkWallAdminShortcut(event)">新增記錄</button>
-      </div>
-    </div>
-
-    <!-- Store 倉庫 -->
-    <div class="card store-landscape" id="c-store" onclick="openPanel('store')">
-      <div class="frame">
-        <div class="corner tl"></div><div class="corner tr"></div>
-        <div class="corner bl"></div><div class="corner br"></div>
-        <div class="gem">庫</div>
-        <div class="art" style="position:relative;overflow:hidden;height:427px;border-bottom:none;">
-          <video
-            class="card-video"
-            data-src="storelv1.mp4"
-            poster="store.png"
-            autoplay
-            muted
-            playsinline
-            preload="none"
-            style="width:100%;height:100%;display:block;object-fit:cover;object-position:center center;"
-          ></video>
-          <div style="position:absolute;bottom:0;left:0;right:0;z-index:4;
-            background:linear-gradient(to top,rgba(8,5,3,.95) 0%,rgba(8,5,3,.5) 50%,transparent 100%);
-            padding:16px 12px 12px;text-align:center;pointer-events:none;">
-            <span class="empire-card-caption">太倉</span>
-          </div>
-        </div>
-      </div>
-      <button class="card-scroll-toggle" type="button" aria-expanded="false" onclick="toggleCardScroll(event,this)">打開卷軸</button>
-      <div class="card-shortcuts" aria-label="太倉快捷入口">
-        <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'store','store-list')">物品總覽</button>
-        <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'store','store-chronicle')">事件編年</button>
-        <button class="card-shortcut" type="button" onclick="openEmpireCardShortcut(event,'store','store-add')">新增記錄</button>
       </div>
     </div>
 
@@ -19863,7 +19831,8 @@ function mpmRender(records){
     chenqun:window.chenqunAnimations,
     huatuo:window.huatuoAnimations,
     liubei:window.liubeiAnimations,
-    simayi:window.simayiAnimations
+    simayi:window.simayiAnimations,
+    manchong:window.manchongAnimations
   };
   var routes={
     pangtong:function(event){openAdvisorAIFromOrb(event);},
@@ -19871,7 +19840,8 @@ function mpmRender(records){
     chenqun:function(){openPanel('finance');},
     huatuo:function(){openPanel('medical');},
     liubei:function(){openArkWall('wall');},
-    simayi:function(){openPanel('council');}
+    simayi:function(){openPanel('council');},
+    manchong:function(){openPanel('store');}
   };
   var npcs={};
   Object.keys(configs).forEach(function(id){
@@ -19885,7 +19855,7 @@ function mpmRender(records){
     });
   });
   Promise.all(Object.values(npcs).map(function(npc){return npc.loaded;})).then(function(){
-    if(status)status.textContent='龐統、諸葛亮、陳群、華佗、劉備與司馬懿已入駐 · 點擊人物開啟正式面板';
+    if(status)status.textContent='龐統、諸葛亮、陳群、華佗、劉備、司馬懿與滿寵已入駐 · 點擊人物開啟正式面板';
   }).catch(function(){
     if(status)status.textContent='部分角色影格載入失敗，請重新整理。';
   });

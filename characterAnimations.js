@@ -6,7 +6,8 @@ const characterPositions = {
   chenqun: { top: '25.5%', left: '25.5%', width: '7.8%' },
   huatuo: { top: '27%', left: '69%', width: '8%' },
   liubei: { top: '30%', left: '46%', width: '8%' },
-  simayi: { top: '47%', left: '16%', width: '11%' }
+  simayi: { top: '47%', left: '16%', width: '11%' },
+  manchong: { top: '47%', left: '76%', width: '10%' }
 };
 const pangtongAnimations = {
   name: '龐統',
@@ -214,6 +215,45 @@ const simayiAnimations = {
     idle: [800, 1800]
   }
 };
+const manchongAnimations = {
+  name: '滿寵',
+  frames: {
+    '01': './滿寵/站立待命01.png',
+    '02': './滿寵/查看帳冊02.png',
+    '03': './滿寵/提筆登記03.png',
+    '04': './滿寵/核對貨單04.png',
+    '05': './滿寵/驗收貨物05.png',
+    '06': './滿寵/蓋章確認06.png',
+    '07': './滿寵/指揮入庫07.png',
+    '08': './滿寵/指揮入庫工人08.png',
+    '09': './滿寵/指揮入庫工人09.png',
+    '10': './滿寵/工人回家10.png'
+  },
+  breathing: [
+    { frame: '02', duration: [300, 500] },
+    { frame: '04', duration: [350, 550] },
+    { frame: '01', state: 'idle', duration: [800, 1800] }
+  ],
+  events: {
+    secondaryIdle: { interval: [7000, 14000], sequence: [
+      { frame: '05', state: 'inspect-goods', duration: [700, 1300] },
+      { frame: '06', state: 'stamp', duration: [500, 900] },
+      { frame: '01', state: 'idle', duration: [800, 1800] }
+    ] },
+    specialAction: { interval: [18000, 36000], sequence: [
+      { frame: '03', state: 'write-ledger', duration: [700, 1100] },
+      { frame: '04', state: 'check-invoice', duration: [600, 1000] },
+      { frame: '07', state: 'direct-inbound', duration: [500, 900] },
+      { frame: '08', state: 'direct-workers', duration: [750, 1200] },
+      { frame: '09', state: 'direct-workers-hold', duration: [1400, 2600] },
+      { frame: '10', state: 'workers-depart', duration: [900, 1500] },
+      { frame: '01', state: 'idle', duration: [1000, 1800] }
+    ] }
+  },
+  timing: {
+    idle: [800, 1800]
+  }
+};
 window.characterPositions = characterPositions;
 window.pangtongAnimations = pangtongAnimations;
 window.zhugeAnimations = zhugeAnimations;
@@ -221,3 +261,4 @@ window.chenqunAnimations = chenqunAnimations;
 window.huatuoAnimations = huatuoAnimations;
 window.liubeiAnimations = liubeiAnimations;
 window.simayiAnimations = simayiAnimations;
+window.manchongAnimations = manchongAnimations;
