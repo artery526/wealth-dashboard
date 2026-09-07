@@ -8136,7 +8136,19 @@ async function medicalPost(body,timeoutMs){
   };
   var action=map[body&&body._action]||body.action;
   if(!action)throw new Error('醫館 action 未指定');
-  var data=await apiPostJson(Object.assign({},body,{action:action}),timeoutMs);
+  var readAction=/^(medicalOptions|medicalRecords|medicalCardStats)$/.test(action);
+  var requestTimeout=timeoutMs||(readAction?45000:15000);
+  var attempts=readAction?2:1;
+  var data;
+  for(var attempt=0;attempt<attempts;attempt++){
+    try{
+      data=await apiPostJson(Object.assign({},body,{action:action}),requestTimeout);
+      break;
+    }catch(err){
+      if(attempt>=attempts-1||!isTransientApiError(err))throw err;
+      await delay(900);
+    }
+  }
   if(data.status!=='success'&&data.status!=='test_ok')throw new Error(data.message||'醫館同步失敗');
   return data;
 }
