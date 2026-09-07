@@ -108,11 +108,11 @@ test('legacy advisor video cards are removed while scene NPC controls remain', a
   await expect(manchong).toBeVisible();
   expect(await page.evaluate(() => window.characterPositions.pangtong.left)).toBe('39%');
   expect(await page.evaluate(() => window.characterPositions.zhuge.left)).toBe('52%');
-  await expect(pangtong).toHaveCSS('--mobile-top', 'calc(27.5% - 48px)');
-  await expect(pangtong).toHaveCSS('--mobile-left', '19.5%');
+  await expect(pangtong).toHaveCSS('--mobile-top', '39%');
+  await expect(pangtong).toHaveCSS('--mobile-left', '35%');
   await expect(pangtong).toHaveCSS('--mobile-width', '13%');
-  await expect(zhuge).toHaveCSS('--mobile-top', 'calc(27.5% - 48px)');
-  await expect(zhuge).toHaveCSS('--mobile-left', '68.5%');
+  await expect(zhuge).toHaveCSS('--mobile-top', '39%');
+  await expect(zhuge).toHaveCSS('--mobile-left', '52%');
   await expect(zhuge).toHaveCSS('--mobile-width', '13%');
   await expect(liubei).toHaveCSS('--mobile-top', 'calc(23.5% - 36px)');
   await expect(liubei).toHaveCSS('--mobile-left', '43%');
