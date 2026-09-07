@@ -278,28 +278,6 @@ body::after{
   color:var(--gold);
   font-size:10px;
 }
-.global-scroll-overlay{position:fixed;inset:0;z-index:2900;display:none;align-items:center;justify-content:center;padding:22px;background:rgba(3,2,1,.72);backdrop-filter:blur(5px)}
-.global-scroll-overlay.open{display:flex}
-.global-scroll-menu{display:flex;flex-direction:column;width:min(760px,100%);height:auto;max-height:min(calc(100vh - 44px),760px);overflow:hidden;border:1px solid rgba(232,192,80,.68);border-radius:18px;background:radial-gradient(ellipse at 50% 0,rgba(255,235,169,.14),transparent 48%),linear-gradient(135deg,rgba(53,36,15,.98),rgba(12,8,4,.98));box-shadow:0 24px 70px rgba(0,0,0,.62),inset 0 1px 0 rgba(255,245,202,.2);padding:18px}
-.global-scroll-menu-head{position:relative;z-index:5;flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 -1px 13px;border-bottom:1px solid rgba(232,192,80,.27);background:linear-gradient(180deg,rgba(40,28,12,.99),rgba(28,19,8,.97));padding:12px 1px 12px}
-.global-scroll-menu-head>div{flex:1;min-width:0}
-.global-scroll-menu-title{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#f7e6b2;font-family:var(--font);font-size:22px;font-weight:900;letter-spacing:2px;line-height:1;white-space:nowrap;text-align:center}
-.global-scroll-menu-subtitle{margin-top:3px;color:#bca66f;font-family:var(--sans);font-size:12px;font-weight:700}
-.global-scroll-menu-close{position:relative;z-index:6;flex:0 0 auto;width:36px;height:36px;border:1px solid rgba(232,192,80,.58);border-radius:50%;background:rgba(0,0,0,.42);color:#f6df9c;font-size:23px;line-height:1;cursor:pointer;pointer-events:auto;touch-action:manipulation}
-.global-scroll-menu-close:hover{border-color:rgba(255,220,112,.9);background:rgba(232,192,80,.12)}
-.global-scroll-groups{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;min-height:0;overflow-y:auto;padding-right:2px}
-.global-scroll-group{border:1px solid rgba(190,144,50,.3);border-radius:11px;background:rgba(9,6,3,.42);padding:10px}
-.global-scroll-group-title{display:none}
-.global-scroll-buttons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
-.global-scroll-button{display:flex;align-items:center;justify-content:flex-start;gap:8px;min-height:38px;border:1px solid rgba(196,155,62,.36);border-radius:7px;background:linear-gradient(180deg,rgba(78,52,18,.58),rgba(18,12,6,.8));color:#f1de9e;font-family:var(--sans);font-size:13px;font-weight:900;line-height:1.2;text-align:left;padding:6px 8px;cursor:pointer;transition:transform .14s,border-color .14s,background .14s}
-.global-scroll-button::before{display:inline-flex;align-items:center;justify-content:center;flex:0 0 25px;width:25px;height:25px;border:1px solid rgba(232,192,80,.86);border-radius:50%;background:rgba(232,192,80,.08);color:#f2cf65;font-family:var(--font);font-size:13px;font-weight:900;line-height:1;box-shadow:0 0 8px rgba(232,192,80,.1),inset 0 0 5px rgba(232,192,80,.12)}
-.global-scroll-group:nth-child(1) .global-scroll-button::before{content:'財'}
-.global-scroll-group:nth-child(2) .global-scroll-button::before{content:'軍'}
-.global-scroll-group:nth-child(3) .global-scroll-button::before{content:'醫'}
-.global-scroll-group:nth-child(4) .global-scroll-button::before{content:'監'}
-.global-scroll-group:nth-child(5) .global-scroll-button::before{content:'牆'}
-.global-scroll-group:nth-child(6) .global-scroll-button::before{content:'倉'}
-.global-scroll-button:hover,.global-scroll-button:focus-visible{transform:translateY(-1px);border-color:rgba(255,218,105,.83);background:linear-gradient(180deg,rgba(112,77,26,.72),rgba(30,20,8,.88));outline:none}
 .card-scroll-toggle,.card-shortcuts{display:none!important}
 /* ── Today Agenda ── */
 .today-agenda{
@@ -1263,9 +1241,6 @@ body::after{
 @media(max-width:540px){.foodhouse-warroom-grid{grid-template-columns:1fr}.foodhouse-advisor-reminder .advisor-summary-grid{grid-template-columns:1fr}.foodhouse-advisor-reminder .advisor-summary-line{font-size:18px}.foodhouse-monthly-viz{grid-template-columns:104px minmax(0,1fr);gap:9px}.foodhouse-savings-gauge,.foodhouse-savings-gauge svg{width:104px}}
 .finance-reminder-wrap{margin:0 0 12px}
 .advisor-dialog-top-actions{position:absolute;top:8px;right:50px;z-index:2;display:flex;align-items:center;gap:6px;max-width:calc(100% - 96px)}
-.advisor-dialog-nav{width:32px;height:32px;border:1px solid rgba(232,192,80,.58);border-radius:10px;background:linear-gradient(145deg,rgba(79,54,17,.94),rgba(22,13,5,.96));color:#f7e6b2;font-family:var(--sans);font-size:18px;line-height:1;cursor:pointer;box-shadow:0 0 14px rgba(232,192,80,.16),inset 0 1px 0 rgba(255,246,216,.2);transition:transform .16s,filter .16s,border-color .16s}
-.advisor-dialog-nav:hover,.advisor-dialog-nav:focus-visible{border-color:rgba(255,218,105,.95);filter:brightness(1.1);transform:translateY(-1px);outline:none}
-.advisor-dialog-nav:active{transform:translateY(0)}
 .advisor-dialog-tool{width:32px;height:32px;border:1px solid rgba(232,192,80,.48);border-radius:8px;background:linear-gradient(145deg,rgba(79,54,17,.9),rgba(22,13,5,.96));color:#f7e6b2;font-family:var(--sans);font-size:17px;line-height:1;cursor:pointer;box-shadow:0 0 14px rgba(232,192,80,.12),inset 0 1px 0 rgba(255,246,216,.18);transition:transform .16s,filter .16s,border-color .16s}
 .advisor-dialog-tool:hover,.advisor-dialog-tool:focus-visible{border-color:rgba(255,218,105,.95);filter:brightness(1.1);transform:translateY(-1px);outline:none}
 .advisor-dialog-tool:active{transform:translateY(0)}
@@ -1475,7 +1450,7 @@ body::after{
 .advisor-close{position:absolute;top:6px;right:8px;z-index:5;width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:rgba(10,7,3,.72);border:1px solid rgba(232,192,80,.38);border-radius:8px;color:#c49b47;font-size:15px;cursor:pointer;transition:color .2s,background .2s,border-color .2s;line-height:1;padding:0}
 .advisor-close:hover{color:var(--gold)}
  @media(max-width:480px){.advisor-overlay{padding:0;background:rgba(0,0,0,0);transition:background .18s}.advisor-overlay.open{background:rgba(0,0,0,.52)}.advisor-wrap{position:fixed;left:6px;top:108px;display:flex;align-items:flex-start;transform:translateY(-8px);opacity:0;pointer-events:none;transition:opacity .18s,transform .18s}.advisor-overlay.open .advisor-wrap{transform:translateY(0);opacity:1;pointer-events:auto}.advisor-img{width:124px;margin-top:-31px}.advisor-dialog{margin-top:0;margin-left:-14px;width:calc(100vw - 122px);max-height:calc(100vh - 128px);padding:12px 12px 10px;border-radius:0 14px 14px 14px}.advisor-dialog::before{top:42px}.advisor-dialog::after{top:43px}.advisor-reminder-card{padding:10px 11px 11px}.advisor-reminder-title{font-size:12px}.advisor-reminder-text{font-size:12px;line-height:1.68}.advisor-btn-grid{gap:8px}.advisor-menu-toggle{min-height:42px;font-size:16px;letter-spacing:2px}.advisor-menu-mark{width:20px;height:20px;font-size:11px}.advisor-btn-group{gap:6px;border-radius:7px}.advisor-menu-section.is-open .advisor-btn-group{padding:7px;max-height:220px}.advisor-btn{font-size:12px;padding:8px 4px;letter-spacing:0;gap:3px}.advisor-btn-tag{width:14px;height:14px;font-size:9px}.advisor-btn-spacer{min-height:32px}}
- @media(max-width:480px){.advisor-overlay{padding:10px 8px;justify-content:center}.advisor-wrap{left:8px;right:8px;top:54px;width:auto;align-items:center}.advisor-img{width:90px;max-height:102px;margin:0 auto -14px}.advisor-dialog{margin:0;width:100%;max-height:calc(100vh - 146px);border-radius:14px}.advisor-dialog::before{top:-9px}.advisor-dialog::after{top:-7px}.advisor-dialog-top-actions{top:8px;right:48px;gap:4px;max-width:calc(100% - 88px)}.advisor-dialog-nav,.advisor-dialog-tool{width:28px;height:28px}.advisor-dialog-nav{font-size:16px}.advisor-dialog-tool{font-size:15px}.advisor-dialog-tool-status{top:35px;font-size:10px}.advisor-close{top:6px;right:7px;width:30px;height:30px;font-size:14px}}
+  @media(max-width:480px){.advisor-overlay{padding:10px 8px;justify-content:center}.advisor-wrap{left:8px;right:8px;top:54px;width:auto;align-items:center}.advisor-img{width:90px;max-height:102px;margin:0 auto -14px}.advisor-dialog{margin:0;width:100%;max-height:calc(100vh - 146px);border-radius:14px}.advisor-dialog::before{top:-9px}.advisor-dialog::after{top:-7px}.advisor-dialog-top-actions{top:8px;right:48px;gap:4px;max-width:calc(100% - 88px)}.advisor-dialog-tool{width:28px;height:28px;font-size:15px}.advisor-dialog-tool-status{top:35px;font-size:10px}.advisor-close{top:6px;right:7px;width:30px;height:30px;font-size:14px}}
 @media(max-width:480px){.advisor-ai-dividend-select{width:112px;flex:0 1 112px}.advisor-ai-dividend-quick-input{width:88px;flex:1 1 88px}.advisor-ai-dividend-quick-estimate{width:94px;flex:1 1 94px}.advisor-ai-dividend-quick-btn{width:42px;min-width:42px}}
 @media(max-width:480px){.advisor-ai-quick-transfer-form{grid-template-columns:1fr 1fr;gap:7px}.advisor-ai-quick-transfer-field.amount{grid-column:1}.advisor-ai-quick-transfer-submit{grid-column:2;align-self:end;width:100%}}
 @media(max-width:480px){.advisor-ai-expense-quick-row{gap:5px}.advisor-ai-expense-quick-select{font-size:11px;padding:6px}.advisor-ai-expense-quick-amount{width:78px;flex-basis:78px;font-size:12px}.advisor-ai-expense-quick-btn{width:40px;min-width:40px}}
@@ -3440,16 +3415,6 @@ body::after{
   .advisor-duo-role.pangtong .advisor-duo-stage,
   .advisor-duo-role.zhuge .advisor-duo-stage{height:190px}
   .advisor-duo-label{min-width:96px;font-size:11px;padding:5px 8px}
-  .global-scroll-overlay{align-items:center;padding:10px;overflow:hidden}
-  .global-scroll-menu{height:calc(100dvh - 20px);max-height:calc(100dvh - 20px);border-radius:15px;padding:14px}
-  .global-scroll-menu-head{padding-top:10px;padding-bottom:10px;background:linear-gradient(180deg,rgba(40,28,12,.99),rgba(28,19,8,.98))}
-  .global-scroll-groups{grid-template-columns:1fr;overflow-y:auto;padding-right:1px}
-  .global-scroll-menu-close{width:40px;height:40px;font-size:25px}
-  .global-scroll-menu-title{font-size:19px}
-  .global-scroll-groups{grid-template-columns:1fr;gap:8px}
-  .global-scroll-group{padding:9px}
-  .global-scroll-group-title{font-size:15px;margin-bottom:7px}
-  .global-scroll-button{min-height:36px;font-size:12px}
   .hdr-char{
     width:100%;
     height:auto;
@@ -4015,12 +3980,10 @@ html[data-theme="deep-blue"] .advisor-ai-fund-pill strong{color:#dff7ff}
 html[data-theme="deep-blue"] .advisor-ai-config-btn,
 html[data-theme="deep-blue"] .advisor-ai-close,
 html[data-theme="deep-blue"] .advisor-close,
-html[data-theme="deep-blue"] .advisor-dialog-nav,
 html[data-theme="deep-blue"] .advisor-dialog-tool{background:linear-gradient(145deg,#15506a,#08283b);border-color:rgba(79,181,220,.58);color:#bcefff}
 html[data-theme="deep-blue"] .advisor-ai-config-btn:hover,
 html[data-theme="deep-blue"] .advisor-ai-close:hover,
 html[data-theme="deep-blue"] .advisor-close:hover,
-html[data-theme="deep-blue"] .advisor-dialog-nav:hover,
 html[data-theme="deep-blue"] .advisor-dialog-tool:hover{background:#1d6b89;border-color:#8fe4ff;color:#effbff}
 html[data-theme="deep-blue"] .advisor-dividend-row,
 html[data-theme="deep-blue"] .advisor-ai-result,
@@ -4244,58 +4207,6 @@ html[data-theme="deep-blue"] #ark-wall-overlay .ark-wall-menu-item:focus-visible
 html[data-theme="deep-blue"] #ark-wall-overlay .ark-wall-menu-item.active{
   border-color:rgba(185,149,255,.56);background:rgba(126,82,184,.24);color:#eadbff;
 }
-html[data-theme="deep-blue"] .global-scroll-button[data-global-panel="wall"]{
-  border-color:rgba(141,100,194,.5);
-  background:linear-gradient(180deg,rgba(67,43,105,.7),rgba(20,11,35,.88));
-  color:#eadbff;
-}
-html[data-theme="deep-blue"] .global-scroll-button[data-global-panel="wall"]::before{
-  border-color:rgba(185,149,255,.78);background:rgba(126,82,184,.18);color:#d7c3f4;
-  box-shadow:0 0 8px rgba(141,82,214,.18),inset 0 0 5px rgba(185,149,255,.16);
-}
-html[data-theme="deep-blue"] .global-scroll-button[data-global-panel="wall"]:hover,
-html[data-theme="deep-blue"] .global-scroll-button[data-global-panel="wall"]:focus-visible{
-  border-color:#c29aff;background:linear-gradient(180deg,rgba(100,63,146,.82),rgba(31,17,52,.94));color:#f3eaff;
-}
-html[data-theme="deep-blue"] .global-scroll-menu{
-  border-color:rgba(79,181,220,.72);
-  background:radial-gradient(ellipse at 50% 0,rgba(105,221,255,.12),transparent 48%),linear-gradient(145deg,#0d2c40,#06131d 78%,#030b13);
-  box-shadow:0 24px 70px rgba(0,7,15,.78),0 0 28px rgba(35,158,205,.18),inset 0 1px 0 rgba(220,250,255,.08);
-}
-html[data-theme="deep-blue"] .global-scroll-menu-head{
-  border-bottom-color:rgba(79,181,220,.34);
-  background:linear-gradient(180deg,rgba(13,52,73,.98),rgba(6,24,38,.98));
-}
-html[data-theme="deep-blue"] .global-scroll-menu-title{color:#bcefff;text-shadow:0 0 12px rgba(63,190,232,.22)}
-html[data-theme="deep-blue"] .global-scroll-menu-close{
-  border-color:rgba(79,181,220,.58);background:rgba(3,16,26,.58);color:#dff7ff;
-}
-html[data-theme="deep-blue"] .global-scroll-menu-close:hover{border-color:#8fe4ff;background:rgba(54,174,218,.2)}
-html[data-theme="deep-blue"] .global-scroll-group{
-  border-color:rgba(65,157,194,.34);background:rgba(6,28,44,.78);
-}
-html[data-theme="deep-blue"] .global-scroll-button{
-  border-color:rgba(79,181,220,.55);background:linear-gradient(145deg,#15506a,#08283b);color:#e8faff;
-  box-shadow:0 2px 8px rgba(0,0,0,.4),inset 0 1px 0 rgba(220,250,255,.1);
-}
-html[data-theme="deep-blue"] .global-scroll-button::before{
-  border-color:rgba(79,181,220,.72);background:rgba(3,16,26,.58);color:#8fe4ff;box-shadow:0 0 8px rgba(35,158,205,.16),inset 0 0 5px rgba(79,181,220,.12);
-}
-html[data-theme="deep-blue"] .global-scroll-button:hover,
-html[data-theme="deep-blue"] .global-scroll-button:focus-visible{
-  border-color:#8fe4ff;background:linear-gradient(145deg,#1d6b89,#0b354d);box-shadow:0 4px 16px rgba(35,158,205,.3);outline:none;
-}
-html[data-theme="deep-blue"] .global-scroll-button[data-global-panel="wall"]{
-  border-color:rgba(79,181,220,.55);background:linear-gradient(145deg,#15506a,#08283b);color:#e8faff;
-}
-html[data-theme="deep-blue"] .global-scroll-button[data-global-panel="wall"]::before{
-  border-color:rgba(79,181,220,.72);background:rgba(3,16,26,.58);color:#8fe4ff;
-}
-html[data-theme="deep-blue"] .global-scroll-button[data-global-panel="wall"]:hover,
-html[data-theme="deep-blue"] .global-scroll-button[data-global-panel="wall"]:focus-visible{
-  border-color:#8fe4ff;background:linear-gradient(145deg,#1d6b89,#0b354d);color:#e8faff;
-}
-
 /* 王府 > 新增印記：使用深藍／冷青介面 */
 html[data-theme="deep-blue"] #ark-wall-moments .ark-wall-moment-add,
 html[data-theme="deep-blue"] #ark-wall-moment-modal .ark-wall-moment-action{
@@ -4759,20 +4670,6 @@ html[data-theme="deep-blue"] .scene-task-details .home-agenda-global-refresh{bor
     </div>
   </section>
 </div><!-- /wrap -->
-
-<!-- ══ Panel Overlay ══ -->
-<div class="global-scroll-overlay" id="global-scroll-overlay" onclick="closeGlobalScrollMenu()" aria-hidden="true">
-  <section class="global-scroll-menu" role="dialog" aria-modal="true" aria-labelledby="global-scroll-menu-title" onclick="event.stopPropagation()">
-    <div class="global-scroll-menu-head"><div><div class="global-scroll-menu-title" id="global-scroll-menu-title">🐉&#x7687;&#x5BAE;&#x5C0E;&#x822A;</div></div><button class="global-scroll-menu-close" type="button" aria-label="&#x95DC;&#x9589;" onclick="closeGlobalScrollMenu()">&#x00D7;</button></div>
-    <div class="global-scroll-groups">
-      <section class="global-scroll-group"><div class="global-scroll-group-title">&#x8CA1;&#x653F;</div><div class="global-scroll-buttons"><button class="global-scroll-button" type="button" data-global-panel="finance" data-global-tab="finance-accs" onclick="openGlobalScrollShortcut(event,'finance','finance-accs')">&#x570B;&#x5EAB;&#x73FE;&#x6CC1;</button><button class="global-scroll-button" type="button" data-global-panel="finance" data-global-tab="booking-form" onclick="openGlobalScrollShortcut(event,'finance','booking-form')">&#x5FEB;&#x901F;&#x8A18;&#x5E33;</button><button class="global-scroll-button" type="button" data-global-panel="finance" data-global-tab="domestic-yearly" onclick="openGlobalScrollShortcut(event,'finance','domestic-yearly')">&#x5E74;&#x5EA6;&#x8CA1;&#x5831;</button><button class="global-scroll-button" type="button" data-global-panel="finance" data-global-tab="dividend-center" onclick="openGlobalScrollShortcut(event,'finance','dividend-center')">&#x6301;&#x80A1;&#x8207;&#x914D;&#x606F;</button></div></section>
-      <section class="global-scroll-group"><div class="global-scroll-group-title">&#x8ECD;&#x6A5F;&#x8655;</div><div class="global-scroll-buttons"><button class="global-scroll-button" type="button" data-global-panel="council" data-global-tab="battle-brief" onclick="openGlobalScrollShortcut(event,'council','battle-brief')">&#x6230;&#x60C5;&#x7E3D;&#x532F;&#x5831;</button><button class="global-scroll-button" type="button" data-global-panel="council" data-global-tab="council-roster" onclick="openGlobalScrollShortcut(event,'council','council-roster')">&#x90E8;&#x968A;&#x9663;&#x5BB9;</button><button class="global-scroll-button" type="button" data-global-panel="council" data-global-tab="market-watch" onclick="openGlobalScrollShortcut(event,'council','market-watch')">&#x53F0;&#x7F8E;&#x80A1;&#x5927;&#x76E4;</button><button class="global-scroll-button" type="button" data-global-panel="council" data-global-tab="macro-overview" onclick="openGlobalScrollShortcut(event,'council','macro-overview')">&#x7F8E;&#x80A1;&#x7E3D;&#x7D93;</button></div></section>
-      <section class="global-scroll-group"><div class="global-scroll-group-title">&#x91AB;&#x9928;</div><div class="global-scroll-buttons"><button class="global-scroll-button" type="button" data-global-panel="medical" data-global-tab="medical-quick" onclick="openGlobalScrollShortcut(event,'medical','medical-quick')">&#x5FEB;&#x901F;&#x8A18;&#x9304;</button><button class="global-scroll-button" type="button" data-global-panel="medical" data-global-tab="medical-tarot" onclick="openGlobalScrollShortcut(event,'medical','medical-tarot')">&#x62BD;&#x724C;&#x8A18;&#x9304;</button><button class="global-scroll-button" type="button" data-global-panel="medical" data-global-tab="medical-stats" onclick="openGlobalScrollShortcut(event,'medical','medical-stats')">&#x724C;&#x5361;&#x7D71;&#x8A08;</button><button class="global-scroll-button" type="button" data-global-panel="medical" data-global-tab="medical-painmap" onclick="openGlobalScrollShortcut(event,'medical','medical-painmap')">&#x75BC;&#x75DB;&#x5730;&#x5716;</button></div></section>
-      <section class="global-scroll-group"><div class="global-scroll-group-title">王府</div><div class="global-scroll-buttons"><button class="global-scroll-button" type="button" data-global-panel="wall" data-global-tab="wall" onclick="openGlobalScrollShortcut(event,'wall','wall')">&#x751F;&#x6D3B;&#x65E5;&#x8A18;</button><button class="global-scroll-button" type="button" data-global-panel="wall" data-global-tab="memo" onclick="openGlobalScrollShortcut(event,'wall','memo')">&#x5099;&#x5FD8;&#x96A8;&#x7B46;</button><button class="global-scroll-button" type="button" data-global-panel="wall" data-global-tab="market" onclick="openGlobalScrollShortcut(event,'wall','market')">&#x80A1;&#x5E02;&#x6559;&#x5BA4;</button><button class="global-scroll-button" type="button" onclick="openGlobalScrollAdmin(event)">&#x65B0;&#x589E;&#x8A18;&#x9304;</button></div></section>
-      <section class="global-scroll-group"><div class="global-scroll-group-title">太倉</div><div class="global-scroll-buttons"><button class="global-scroll-button" type="button" data-global-panel="store" data-global-tab="store-list" onclick="openGlobalScrollShortcut(event,'store','store-list')">物品總覽</button><button class="global-scroll-button" type="button" data-global-panel="store" data-global-tab="store-chronicle" onclick="openGlobalScrollShortcut(event,'store','store-chronicle')">事件編年</button><button class="global-scroll-button" type="button" data-global-panel="store" data-global-tab="store-add" onclick="openGlobalScrollShortcut(event,'store','store-add')">新增記錄</button></div></section>
-    </div>
-  </section>
-</div>
 
 <div class="overlay" id="overlay" onclick="overlayClick(event)">
   <div class="panel" id="panel">
@@ -6187,44 +6084,6 @@ function openFinanceCard(event){
   openPanel('finance');
 }
 
-function globalScrollMenu(){return document.getElementById('global-scroll-overlay')}
-function closeGlobalScrollMenu(){
-  var menu=globalScrollMenu();
-  var launcher=document.getElementById('global-scroll-launcher');
-  if(menu){menu.classList.remove('open');menu.setAttribute('aria-hidden','true')}
-  if(launcher)launcher.setAttribute('aria-expanded','false');
-}
-function toggleGlobalScrollMenu(event){
-  if(event){event.preventDefault();event.stopPropagation()}
-  var menu=globalScrollMenu();
-  var launcher=document.getElementById('global-scroll-launcher');
-  if(!menu)return;
-  var willOpen=!menu.classList.contains('open');
-  if(willOpen){
-    closeAdvisorAIStandalone();
-    closeAdvisorDialog();
-    menu.scrollTop=0;
-    var groups=menu.querySelector('.global-scroll-groups');
-    if(groups)groups.scrollTop=0;
-    menu.classList.add('open');
-    menu.setAttribute('aria-hidden','false');
-  }else{
-    menu.classList.remove('open');
-    menu.setAttribute('aria-hidden','true');
-  }
-  if(launcher)launcher.setAttribute('aria-expanded',willOpen?'true':'false');
-}
-function openGlobalScrollShortcut(event,panel,tab){
-  if(event){event.preventDefault();event.stopPropagation()}
-  closeGlobalScrollMenu();
-  openEmpireCardShortcut(event,panel,tab);
-}
-function openGlobalScrollAdmin(event){
-  if(event){event.preventDefault();event.stopPropagation()}
-  closeGlobalScrollMenu();
-  openArkWallAdminShortcut(event);
-}
-
 function toggleCardScroll(event,btn){
   if(event){
     if(event.preventDefault)event.preventDefault();
@@ -6397,7 +6256,6 @@ document.addEventListener('keydown',function(event){
   if(event.key==='Escape'){
     closePanelTitleMenu();
     closeArkWallViewMenu();
-    closeGlobalScrollMenu();
   }
 });
 
@@ -16788,7 +16646,6 @@ initAdvisorDuoVideoPlayback();
     <div class="advisor-dialog">
       <button class="advisor-close" onclick="closeAdvisorDialog()">✕</button>
        <div class="advisor-dialog-top-actions" aria-label="諸葛軍師快捷工具">
-         <button class="advisor-dialog-nav" id="global-scroll-launcher" type="button" onclick="toggleGlobalScrollMenu(event)" title="皇宮導航" aria-label="皇宮導航" aria-expanded="false">🏯</button>
          <button class="advisor-dialog-tool" type="button" onclick="advisorAIOpenVideoDownload()" title="影片下載" aria-label="影片下載">📽️</button>
          <button class="advisor-dialog-tool" type="button" onclick="advisorAIOpenDatabaseSheet()" title="進入資料庫" aria-label="進入資料庫">📂</button>
          <span class="advisor-dialog-tool-status" id="advisor-dialog-tool-status" aria-live="polite"></span>
