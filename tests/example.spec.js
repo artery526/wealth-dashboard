@@ -6,10 +6,11 @@ const dashboardUrl = 'file:///' + path.resolve(__dirname, '..', 'index.html').re
 
 test('Pangtong income shortcuts map to fixed Stock account', async ({ page }) => {
   await page.goto(dashboardUrl);
-  const commands = await page.evaluate(() => ['工作','兼職','買賣','爸媽','退稅'].map(keyword => advisorAICommand(keyword + ' 5000')));
+  const commands = await page.evaluate(() => ['工作','兼職','房租','買賣','爸媽','退稅'].map(keyword => advisorAICommand(keyword + ' 5000')));
   expect(commands).toEqual([
     { intent: 'income', source: '👷工作所得', account: '💵國泰Stock', amount: 5000, note: '龐統口令：工作' },
     { intent: 'income', source: '🪙副業兼職', account: '💵國泰Stock', amount: 5000, note: '龐統口令：兼職' },
+    { intent: 'income', source: '🪙副業兼職', account: '💵國泰Stock', amount: 5000, note: '龐統口令：房租' },
     { intent: 'income', source: '💲交易所得', account: '💵國泰Stock', amount: 5000, note: '龐統口令：買賣' },
     { intent: 'income', source: '🤶爸媽收入', account: '💵國泰Stock', amount: 5000, note: '龐統口令：爸媽' },
     { intent: 'income', source: '🪙機構退稅', account: '💵國泰Stock', amount: 5000, note: '龐統口令：退稅' }
