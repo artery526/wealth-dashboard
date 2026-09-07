@@ -113,6 +113,8 @@ test('legacy advisor video cards are removed while scene NPC controls remain', a
   await expect(liubei).toHaveCSS('--mobile-top', 'calc(23.5% - 56px)');
   await expect(liubei).toHaveCSS('--mobile-left', '43%');
   await expect(liubei).toHaveCSS('--mobile-width', '14%');
+  expect(await page.evaluate(() => Object.keys(window.chenqunAnimations.frames).length)).toBe(17);
+  expect(await page.evaluate(() => window.chenqunAnimations.frames['17'])).toBe('./陳群/chenqun_idle_17.png');
 });
 
 test('mobile calendar defaults to a compact palace badge and expands the weekly view', async ({ page }) => {

@@ -88,7 +88,7 @@ const zhugeAnimations = {
 };
 const chenqunAnimations = {
   name: '陳群',
-  frames: Object.fromEntries(Array.from({ length: 8 }, (_, i) => {
+  frames: Object.fromEntries(Array.from({ length: 17 }, (_, i) => {
     const key = String(i + 1).padStart(2, '0');
     return [key, `./陳群/chenqun_idle_${key}.png`];
   })),
@@ -105,6 +105,15 @@ const chenqunAnimations = {
       { frame: '07', state: 'scroll', duration: [400, 650] },
       { frame: '08', state: 'scroll', duration: [2000, 5000] },
       { frame: '07', state: 'scroll', duration: [400, 650] },
+      { frame: '09', state: 'treasury', duration: [700, 1100] },
+      { frame: '10', state: 'treasury', duration: [700, 1100] },
+      { frame: '11', state: 'writing', duration: [700, 1100] },
+      { frame: '12', state: 'grain', duration: [700, 1100] },
+      { frame: '13', state: 'idle', duration: [700, 1100] },
+      { frame: '14', state: 'grain', duration: [700, 1100] },
+      { frame: '15', state: 'grain', duration: [700, 1100] },
+      { frame: '16', state: 'grain', duration: [700, 1100] },
+      { frame: '17', state: 'grain', duration: [700, 1100] },
       { frame: '01', state: 'idle', duration: [800, 1800] }
     ] }
   },
