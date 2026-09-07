@@ -106,6 +106,8 @@ test('legacy advisor video cards are removed while scene NPC controls remain', a
   await expect(zhuge).toBeVisible();
   await expect(liubei).toBeVisible();
   await expect(manchong).toBeVisible();
+  expect(await page.evaluate(() => window.characterPositions.pangtong.left)).toBe('39%');
+  expect(await page.evaluate(() => window.characterPositions.zhuge.left)).toBe('52%');
   await expect(pangtong).toHaveCSS('--mobile-top', '27.5%');
   await expect(pangtong).toHaveCSS('--mobile-left', '19.5%');
   await expect(pangtong).toHaveCSS('--mobile-width', '13%');
@@ -209,6 +211,17 @@ test('mobile calendar defaults to a compact palace badge and expands the weekly 
 test('desktop calendar uses the same compact palace badge and weekly view', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 720 });
   await page.goto(dashboardUrl);
+
+  const sceneLayout = await page.evaluate(() => {
+    const stage = document.getElementById('npc-web-scene-stage').getBoundingClientRect();
+    const calendar = document.getElementById('mobile-calendar-slot').getBoundingClientRect();
+    const agenda = document.getElementById('scene-agenda-slot').getBoundingClientRect();
+    return { calendarLeft: calendar.left - stage.left, agendaRight: stage.right - agenda.right };
+  });
+  expect(sceneLayout.calendarLeft).toBeGreaterThanOrEqual(17);
+  expect(sceneLayout.calendarLeft).toBeLessThanOrEqual(19);
+  expect(sceneLayout.agendaRight).toBeGreaterThanOrEqual(17);
+  expect(sceneLayout.agendaRight).toBeLessThanOrEqual(19);
 
   const slot = page.locator('#mobile-calendar-slot');
   const toggle = page.locator('#home-calendar-mobile-toggle');
