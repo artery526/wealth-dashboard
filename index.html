@@ -4532,6 +4532,8 @@ html[data-theme="deep-blue"] .advisor-ai-standalone .advisor-ai-quick-select:foc
 .npc-web-scene .animated-character:hover .character-art,.npc-web-scene .animated-character:focus-visible .character-art{transform:scale(1.04);filter:drop-shadow(0 0 7px rgba(255,224,165,.76))}
 .npc-web-scene .character-debug{display:none}
 .scene-widget-dock{position:absolute;z-index:7;top:18px;left:18px;right:18px;width:auto;display:grid;grid-template-columns:repeat(2,minmax(0,216px));justify-content:space-between;gap:8px;align-items:start;transition:top .2s ease,left .2s ease,right .2s ease,width .2s ease}
+.scene-widget-dock.calendar-expanded{left:18px;right:auto;width:min(440px,calc(100% - 36px))}
+.scene-widget-dock.agenda-expanded{left:auto;right:18px;width:min(440px,calc(100% - 36px))}
 .mobile-calendar-slot,.scene-agenda-slot{display:block;position:relative;min-width:0}
 .scene-widget-dock.calendar-expanded,.scene-widget-dock.agenda-expanded{grid-template-columns:1fr}
 .scene-widget-dock.calendar-expanded .scene-agenda-slot,.scene-widget-dock.agenda-expanded .mobile-calendar-slot{display:none}
@@ -4594,7 +4596,7 @@ html[data-theme="deep-blue"] .scene-task-details .home-agenda-global-refresh{bor
   .npc-web-scene-stage{min-width:0;aspect-ratio:9/16}
   .npc-web-scene .animated-character{top:var(--mobile-top)!important;left:var(--mobile-left)!important;width:var(--mobile-width)!important}
   .scene-widget-dock{top:2.2%;left:5%;right:5%;width:auto;grid-template-columns:repeat(2,minmax(0,1fr));justify-content:normal}
-  .scene-widget-dock.calendar-expanded,.scene-widget-dock.agenda-expanded{top:10px;left:10px;right:10px}
+  .scene-widget-dock.calendar-expanded,.scene-widget-dock.agenda-expanded{top:10px;left:10px;right:10px;width:auto}
   .mobile-calendar-slot .home-calendar-mobile-toggle,.scene-agenda-toggle{min-height:74px;padding-left:8px;padding-right:8px}
   .home-calendar-mobile-date{font-size:12px}
   .scene-agenda-details{max-height:72vh}

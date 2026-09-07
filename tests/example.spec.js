@@ -234,6 +234,7 @@ test('desktop calendar uses the same compact palace badge and weekly view', asyn
   await toggle.click();
   await expect(slot).toHaveClass(/is-expanded/);
   await expect(details).toBeVisible();
+  expect((await slot.boundingBox()).width).toBeLessThanOrEqual(440);
   await expect(page.locator('.mobile-calendar-slot .home-calendar-week-controls')).toBeVisible();
   await expect(page.locator('#home-calendar-grid .home-calendar-day')).toHaveCount(7);
   await expect(page.locator('#scene-agenda-details .agenda-section')).toHaveCount(1);
