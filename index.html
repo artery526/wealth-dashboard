@@ -2003,8 +2003,8 @@ body::after{
 .finance-accounts-collapse.is-masked .treasury-monthly-expense::after{color:var(--teal)}
 .finance-accounts-collapse.is-masked .treasury-account-merge-value{font-size:0;color:transparent}
 .finance-accounts-collapse.is-masked .treasury-account-merge-value::after{content:'***';font-family:var(--mono);font-size:19px;color:var(--gold)}
-.finance-accounts-collapse.is-masked .treasury-monthly-saving{font-size:0;color:transparent}
-.finance-accounts-collapse.is-masked .treasury-monthly-saving::after{content:'🪙***';font-family:var(--sans);font-size:14px;color:#8d6a2a}
+.finance-accounts-collapse.is-masked .treasury-saving-rate{font-size:0;color:transparent}
+.finance-accounts-collapse.is-masked .treasury-saving-rate::after{content:'🪙月儲蓄率 ***';font-family:var(--sans);font-size:13px;color:#8d6a2a}
 .finance-accounts-collapse.is-masked .res-details{font-size:0;color:transparent}
 .finance-accounts-collapse.is-masked .res-details::after{content:'***';font-family:var(--mono);font-size:15px;color:var(--gold)}
 .finance-collapse .res-section-title,.finance-collapse .pledge-section-title{display:none}
@@ -2083,15 +2083,16 @@ body::after{
 .treasury-account-merge-cell{display:flex;align-items:baseline;gap:8px;min-width:0;padding:2px 0;border:0;background:transparent}
 .treasury-account-merge-label{flex:1;min-width:0;font-family:var(--sans);font-size:14px;font-weight:800;color:#8d6a2a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .treasury-account-merge-value{margin-top:0;font-family:var(--mono);font-size:19px;font-weight:900;color:var(--gold);white-space:nowrap}
+.treasury-saving-rate{display:flex;align-items:baseline;gap:6px;margin-top:5px;padding-top:5px;border-top:1px solid rgba(232,192,80,.14);font-family:var(--sans);font-size:12px;font-weight:900;color:#8d6a2a;white-space:nowrap}
+.treasury-saving-rate strong{font-family:var(--mono);font-size:14px;color:var(--gold)}
 .treasury-hidden-account{margin-top:8px;padding-top:6px;border-top:1px solid rgba(232,192,80,.14)}
 .treasury-hidden-account>summary{display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;list-style:none;font-family:var(--sans);font-size:12px;font-weight:900;color:#8d6a2a;white-space:nowrap}
 .treasury-hidden-account>summary::-webkit-details-marker{display:none}
 .treasury-hidden-account>summary:after{content:'顯示';border:1px solid rgba(232,192,80,.3);border-radius:999px;padding:2px 7px;font-size:10px;color:var(--gold)}
 .treasury-hidden-account[open]>summary:after{content:'隱藏'}
 .treasury-hidden-account .treasury-account-merge-cell{margin-top:4px}
-.treasury-monthly-saving{font-family:var(--sans);font-size:13px;font-weight:900;color:#8d6a2a;letter-spacing:0;white-space:nowrap}
 @media(max-width:680px){.acc-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 6px}.acc-item{min-width:0}.acc-name{font-size:12px}.acc-val{font-size:15px}.treasury-cash-stock-card .acc-name{font-size:14px}.treasury-cash-stock-card .treasury-account-merge-cell{display:block}.treasury-cash-stock-card .treasury-account-merge-label{font-size:12px}.treasury-cash-stock-card .treasury-account-merge-value{margin-top:1px;font-size:16px}}
-@media(max-width:680px){.finance-accounts-collapse.is-masked .acc-val::after{font-size:15px}.finance-accounts-collapse.is-masked .treasury-account-merge-value::after{font-size:16px}.finance-accounts-collapse.is-masked .treasury-monthly-saving::after{font-size:13px}.finance-accounts-collapse.is-masked .res-details::after{font-size:14px}}
+@media(max-width:680px){.finance-accounts-collapse.is-masked .acc-val::after{font-size:15px}.finance-accounts-collapse.is-masked .treasury-account-merge-value::after{font-size:16px}.finance-accounts-collapse.is-masked .treasury-saving-rate::after{font-size:12px}.finance-accounts-collapse.is-masked .res-details::after{font-size:14px}}
 
 /* ── Quick Booking ── */
 .btabs{display:none}
@@ -9386,7 +9387,7 @@ function renderAccounts(accs,monthly,el,assetSnapshot,bills,stale){
   });
 
   var totalAssetHtml=renderTreasuryAccountTotalAssetCard(assetSnapshot,totalAssetAccount,monthly);
-  var cashStockHtml=renderTreasuryCashStockCard(cashAccount,cathayStockAccount);
+  var cashStockHtml=renderTreasuryCashStockCard(cashAccount,cathayStockAccount,monthly);
   var leftAccounts=ordinaryAccounts.filter(function(a){
     return stripIconText(a&&a.name).replace(/\s+/g,'').toLowerCase()!=='cube';
   });
@@ -9445,13 +9446,13 @@ function renderTreasuryAccountTotalAssetCard(assetSnapshot,totalAssetAccount,mon
     <div class="acc-val">${fmtFull(total)}</div>
     <div class="treasury-total-delta ${deltaClass}">較昨日 ${deltaText}</div>
     <div class="treasury-total-trend ${trendClass}">${esc(trendText)}</div>
-    <div class="treasury-monthly-title"><span>本月收入／支出</span><span class="treasury-monthly-saving">🪙${esc(monthly.savingRate||'—')}</span></div>
+    <div class="treasury-monthly-title"><span>月收／支</span></div>
     <div class="treasury-monthly-row"><span>收入</span><strong class="treasury-monthly-income">${fmtFull(monthly.income)}</strong></div>
     <div class="treasury-monthly-row"><span>支出</span><strong class="treasury-monthly-expense">${fmtFull(monthly.expense)}</strong></div>
   </div>`;
 }
 
-function renderTreasuryCashStockCard(cashAccount,cathayStockAccount){
+function renderTreasuryCashStockCard(cashAccount,cathayStockAccount,monthly){
   if(!cashAccount&&!cathayStockAccount)return '';
   function cell(account,label){
     if(!account)return '';
@@ -9463,6 +9464,7 @@ function renderTreasuryCashStockCard(cashAccount,cathayStockAccount){
     <div class="treasury-account-merge-grid">
       ${cell(cashAccount,'💰現金Cash')}
       ${cell(cathayStockAccount,stockLabel)}
+      ${cathayStockAccount?`<div class="treasury-saving-rate"><span>🪙月儲蓄率</span><strong>${esc(monthly&&monthly.savingRate||'—')}</strong></div>`:''}
     </div>
   </div>`;
 }
