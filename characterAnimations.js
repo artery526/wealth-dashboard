@@ -5,7 +5,7 @@ const characterPositions = {
   zhuge: { top: '10%', left: '50%', width: '8.8%' },
   chenqun: { top: '25.5%', left: '25.5%', width: '7.8%' },
   huatuo: { top: '27%', left: '69%', width: '8%' },
-  liubei: { top: '30%', left: '46%', width: '8%' },
+  liubei: { top: 'calc(30% + 20px)', left: '46%', width: '8%' },
   simayi: { top: '47%', left: '16%', width: '11%' },
   manchong: { top: '47%', left: '76%', width: '10%' }
 };
