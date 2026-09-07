@@ -101,9 +101,11 @@ test('legacy advisor video cards are removed while scene NPC controls remain', a
   const pangtong = page.getByRole('button', { name: '龐統，開啟角色面板' });
   const zhuge = page.getByRole('button', { name: '諸葛亮，開啟角色面板' });
   const liubei = page.getByRole('button', { name: '劉備，開啟角色面板' });
+  const manchong = page.getByRole('button', { name: '滿寵，開啟角色面板' });
   await expect(pangtong).toBeVisible();
   await expect(zhuge).toBeVisible();
   await expect(liubei).toBeVisible();
+  await expect(manchong).toBeVisible();
   await expect(pangtong).toHaveCSS('--mobile-top', '27.5%');
   await expect(pangtong).toHaveCSS('--mobile-left', '19.5%');
   await expect(pangtong).toHaveCSS('--mobile-width', '13%');
@@ -115,6 +117,8 @@ test('legacy advisor video cards are removed while scene NPC controls remain', a
   await expect(liubei).toHaveCSS('--mobile-width', '14%');
   expect(await page.evaluate(() => Object.keys(window.chenqunAnimations.frames).length)).toBe(17);
   expect(await page.evaluate(() => window.chenqunAnimations.frames['17'])).toBe('./陳群/chenqun_idle_17.png');
+  await expect(manchong.locator('img')).toHaveCount(10);
+  expect(await page.evaluate(() => Object.keys(window.manchongAnimations.frames).length)).toBe(10);
 });
 
 test('mobile calendar defaults to a compact palace badge and expands the weekly view', async ({ page }) => {
