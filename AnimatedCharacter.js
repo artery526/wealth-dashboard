@@ -23,7 +23,7 @@ window.AnimatedCharacter = class AnimatedCharacter {
       clearTimeout(this.timer);
       this.queue = [];
       if (!this.ready || this.destroyed) return;
-      this.show('01', 'idle');
+      this.show(this.config.idleFrame || '01', 'idle');
       if (document.hidden || this.motion.matches) return;
       this.resetDeadlines();
       this.schedule(this.config.timing.idle);

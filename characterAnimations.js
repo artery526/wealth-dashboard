@@ -233,39 +233,43 @@ const simayiAnimations = {
     idle: [800, 1800]
   }
 };
+const manchongAssetVersion = '20260907-manchong-weapons1';
+const manchongAsset = file => `./滿寵/${file}?v=${manchongAssetVersion}`;
 const manchongAnimations = {
   name: '滿寵',
+  idleFrame: '05',
   frames: {
-    '01': './滿寵/站立待命01.png',
-    '02': './滿寵/查看帳冊02.png',
-    '03': './滿寵/提筆登記03.png',
-    '04': './滿寵/核對貨單04.png',
-    '05': './滿寵/驗收貨物05.png',
-    '06': './滿寵/蓋章確認06.png',
-    '07': './滿寵/指揮入庫07.png',
-    '08': './滿寵/指揮入庫工人08.png',
-    '09': './滿寵/指揮入庫工人09.png',
-    '10': './滿寵/工人回家10.png'
+    '01': manchongAsset('站立待命01.png'),
+    '02': manchongAsset('查看帳冊02.png'),
+    '03': manchongAsset('提筆登記03.png'),
+    '04': manchongAsset('核對貨單04.png'),
+    '05': manchongAsset('驗收貨物05.png'),
+    '06': manchongAsset('蓋章確認06.png'),
+    '07': manchongAsset('指揮入庫07.png'),
+    '08': manchongAsset('指揮入庫工人08.png'),
+    '09': manchongAsset('指揮入庫工人09.png')
   },
   breathing: [
-    { frame: '02', duration: [300, 500] },
-    { frame: '04', duration: [350, 550] },
-    { frame: '01', state: 'idle', duration: [800, 1800] }
+    { frame: '05', state: 'inspect-armor', duration: [700, 1200] },
+    { frame: '08', state: 'weapons-ready', duration: [700, 1200] },
+    { frame: '09', state: 'weapons-ready-hold', duration: [900, 1600] },
+    { frame: '05', state: 'idle', duration: [800, 1800] }
   ],
   events: {
     secondaryIdle: { interval: [7000, 14000], sequence: [
-      { frame: '05', state: 'inspect-goods', duration: [700, 1300] },
-      { frame: '06', state: 'stamp', duration: [500, 900] },
-      { frame: '01', state: 'idle', duration: [800, 1800] }
+      { frame: '05', state: 'inspect-armor', duration: [700, 1300] },
+      { frame: '08', state: 'weapons-ready', duration: [700, 1100] },
+      { frame: '09', state: 'weapons-ready-hold', duration: [1000, 1600] },
+      { frame: '05', state: 'idle', duration: [800, 1800] }
     ] },
     specialAction: { interval: [18000, 36000], sequence: [
-      { frame: '03', state: 'write-ledger', duration: [700, 1100] },
-      { frame: '04', state: 'check-invoice', duration: [600, 1000] },
+      { frame: '05', state: 'inspect-armor', duration: [700, 1100] },
+      { frame: '06', state: 'stamp', duration: [500, 900] },
       { frame: '07', state: 'direct-inbound', duration: [500, 900] },
       { frame: '08', state: 'direct-workers', duration: [750, 1200] },
       { frame: '09', state: 'direct-workers-hold', duration: [1400, 2600] },
-      { frame: '10', state: 'workers-depart', duration: [900, 1500] },
-      { frame: '01', state: 'idle', duration: [1000, 1800] }
+      { frame: '08', state: 'weapons-ready', duration: [750, 1200] },
+      { frame: '05', state: 'idle', duration: [1000, 1800] }
     ] }
   },
   timing: {

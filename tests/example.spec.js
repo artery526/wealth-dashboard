@@ -117,8 +117,11 @@ test('legacy advisor video cards are removed while scene NPC controls remain', a
   await expect(liubei).toHaveCSS('--mobile-width', '14%');
   expect(await page.evaluate(() => Object.keys(window.chenqunAnimations.frames).length)).toBe(17);
   expect(await page.evaluate(() => window.chenqunAnimations.frames['17'])).toBe('./陳群/chenqun_idle_17.png');
-  await expect(manchong.locator('img')).toHaveCount(10);
-  expect(await page.evaluate(() => Object.keys(window.manchongAnimations.frames).length)).toBe(10);
+  await expect(manchong.locator('img')).toHaveCount(9);
+  expect(await page.evaluate(() => Object.keys(window.manchongAnimations.frames).length)).toBe(9);
+  expect(await page.evaluate(() => window.manchongAnimations.idleFrame)).toBe('05');
+  expect(await page.evaluate(() => Object.values(window.manchongAnimations.frames).every(src => src.includes('?v=20260907-manchong-weapons1')))).toBeTruthy();
+  expect(await page.evaluate(() => JSON.stringify(window.manchongAnimations).includes('工人回家10.png'))).toBeFalsy();
   expect(await page.evaluate(() => window.characterPositions.liubei.top)).toBe('calc(30% + 20px)');
 });
 
