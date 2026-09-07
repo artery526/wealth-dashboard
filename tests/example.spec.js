@@ -108,13 +108,13 @@ test('legacy advisor video cards are removed while scene NPC controls remain', a
   await expect(manchong).toBeVisible();
   expect(await page.evaluate(() => window.characterPositions.pangtong.left)).toBe('39%');
   expect(await page.evaluate(() => window.characterPositions.zhuge.left)).toBe('52%');
-  await expect(pangtong).toHaveCSS('--mobile-top', 'calc(27.5% - 28px)');
+  await expect(pangtong).toHaveCSS('--mobile-top', 'calc(27.5% - 48px)');
   await expect(pangtong).toHaveCSS('--mobile-left', '19.5%');
   await expect(pangtong).toHaveCSS('--mobile-width', '13%');
-  await expect(zhuge).toHaveCSS('--mobile-top', 'calc(27.5% - 28px)');
+  await expect(zhuge).toHaveCSS('--mobile-top', 'calc(27.5% - 48px)');
   await expect(zhuge).toHaveCSS('--mobile-left', '68.5%');
   await expect(zhuge).toHaveCSS('--mobile-width', '13%');
-  await expect(liubei).toHaveCSS('--mobile-top', 'calc(23.5% - 56px)');
+  await expect(liubei).toHaveCSS('--mobile-top', 'calc(23.5% - 36px)');
   await expect(liubei).toHaveCSS('--mobile-left', '43%');
   await expect(liubei).toHaveCSS('--mobile-width', '14%');
   expect(await page.evaluate(() => Object.keys(window.chenqunAnimations.frames).length)).toBe(17);
@@ -124,7 +124,7 @@ test('legacy advisor video cards are removed while scene NPC controls remain', a
   expect(await page.evaluate(() => window.manchongAnimations.idleFrame)).toBe('05');
   expect(await page.evaluate(() => Object.values(window.manchongAnimations.frames).every(src => src.includes('?v=20260907-manchong-weapons1')))).toBeTruthy();
   expect(await page.evaluate(() => JSON.stringify(window.manchongAnimations).includes('工人回家10.png'))).toBeFalsy();
-  expect(await page.evaluate(() => window.characterPositions.liubei.top)).toBe('calc(30% + 20px)');
+  expect(await page.evaluate(() => window.characterPositions.liubei.top)).toBe('calc(30% + 40px)');
 });
 
 test('mobile calendar defaults to a compact palace badge and expands the weekly view', async ({ page }) => {

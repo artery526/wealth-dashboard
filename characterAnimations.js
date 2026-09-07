@@ -5,14 +5,14 @@ const characterPositions = {
   zhuge: { top: '10%', left: '52%', width: '8.8%' },
   chenqun: { top: '25.5%', left: '25.5%', width: '7.8%' },
   huatuo: { top: '27%', left: '69%', width: '8%' },
-  liubei: { top: 'calc(30% + 20px)', left: '46%', width: '8%' },
+  liubei: { top: 'calc(30% + 40px)', left: '46%', width: '8%' },
   simayi: { top: '47%', left: '16%', width: '11%' },
   manchong: { top: '47%', left: '76%', width: '10%' }
 };
 const characterMobilePositions = {
-  pangtong: { top: 'calc(27.5% - 28px)', left: '19.5%', width: '13%' },
-  zhuge: { top: 'calc(27.5% - 28px)', left: '68.5%', width: '13%' },
-  liubei: { top: 'calc(23.5% - 56px)', left: '43%', width: '14%' },
+  pangtong: { top: 'calc(27.5% - 48px)', left: '19.5%', width: '13%' },
+  zhuge: { top: 'calc(27.5% - 48px)', left: '68.5%', width: '13%' },
+  liubei: { top: 'calc(23.5% - 36px)', left: '43%', width: '14%' },
   chenqun: { top: '43%', left: '16%', width: '16%' },
   huatuo: { top: '43%', left: '69%', width: '16%' },
   simayi: { top: '62%', left: '16%', width: '17%' },
