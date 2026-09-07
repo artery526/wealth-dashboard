@@ -3238,6 +3238,16 @@ body::after{
 .ark-wall-menu-item:hover,.ark-wall-menu-item:focus-visible{border-color:rgba(232,192,80,.34);background:rgba(232,192,80,.1);color:#f0dfa0;outline:none}
 .ark-wall-menu-item.active{border-color:rgba(232,192,80,.44);background:rgba(232,192,80,.15);color:var(--gold)}
 .ark-wall-memo-tools{display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,320px);gap:10px;align-items:start;margin-bottom:12px}
+.ark-wall-memo-filter{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px}
+.ark-wall-memo-select{height:36px;min-width:112px;border:1px solid rgba(184,137,46,.36);border-radius:8px;background:rgba(10,8,4,.82);color:#f0dfa0;font-family:var(--sans);font-size:13px;font-weight:850;padding:0 10px;outline:none}
+.ark-wall-memo-select:focus{border-color:rgba(232,192,80,.72);box-shadow:0 0 0 2px rgba(232,192,80,.12)}
+.ark-wall-memo-list{display:grid;gap:7px;margin-top:4px}
+.ark-wall-memo-row{display:grid;grid-template-columns:112px minmax(0,1fr);gap:10px;align-items:center;width:100%;border:1px solid rgba(184,137,46,.2);border-radius:8px;background:rgba(10,8,4,.48);color:#e8d9ae;text-align:left;padding:10px 12px;cursor:pointer}
+.ark-wall-memo-row:hover{border-color:rgba(232,192,80,.58);background:rgba(232,192,80,.08)}
+.ark-wall-memo-date{font-family:var(--mono);font-size:12px;font-weight:900;color:#bda36d;white-space:nowrap}
+.ark-wall-memo-star{color:#f0c94a;font-size:16px;line-height:1}
+.ark-wall-memo-title{min-width:0;font-family:var(--sans);font-size:14px;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ark-wall-memo-row.pinned{border-color:rgba(232,192,80,.4);background:rgba(232,192,80,.1)}
 .ark-wall-memo-tags{display:flex;gap:7px;flex-wrap:wrap}
 .ark-wall-memo-tag{border:1px solid rgba(29,158,117,.28);border-radius:999px;background:rgba(29,158,117,.08);color:#a8f1d6;font-family:var(--sans);font-size:12px;font-weight:900;padding:7px 10px;cursor:pointer;transition:border-color .18s,background .18s,color .18s}
 .ark-wall-memo-tag:hover{border-color:rgba(29,158,117,.54);background:rgba(29,158,117,.13)}
@@ -10200,6 +10210,8 @@ var arkWallSelectedYear='';
 var arkWallSelectedMonth='';
 var arkWallMemoTag='全部';
 var arkWallMemoSearch='';
+var arkWallMemoYear='';
+var arkWallMemoMonth='';
 var arkWallSearchOpen=false;
 var arkWallLibrarySummary=null;
 var arkWallLibrarySelectedYear='';
@@ -10717,6 +10729,47 @@ function setArkWallMemoTag(tag){
   renderArkWallList();
 }
 
+function arkWallMemoBaseEntries(){
+  return arkWallEntries.filter(function(entry){
+    var tags=Array.isArray(entry&&entry.tags)?entry.tags:[];
+    if(!tags.some(function(tag){return ARK_WALL_MEMO_TAGS.indexOf(tag)>=0;}))return false;
+    if(arkWallMemoTag&&arkWallMemoTag!=='全部'&&tags.indexOf(arkWallMemoTag)<0)return false;
+    return true;
+  });
+}
+
+function arkWallMemoMonthKeys(){
+  var seen={};
+  arkWallMemoBaseEntries().forEach(function(entry){
+    var parts=arkWallDateParts(entry);
+    if(/^\d{4}$/.test(parts.year)&&/^\d{2}$/.test(parts.month))seen[parts.year+'-'+parts.month]=true;
+  });
+  return Object.keys(seen).sort(function(a,b){return b.localeCompare(a);});
+}
+
+function syncArkWallMemoPeriod(){
+  var keys=arkWallMemoMonthKeys();
+  if(!keys.length){arkWallMemoYear='';arkWallMemoMonth='';return;}
+  var now=today().slice(0,7);
+  var preferred=keys.indexOf(now)>=0?now:keys[0];
+  var selected=arkWallMemoYear&&arkWallMemoMonth?arkWallMemoYear+'-'+arkWallMemoMonth:'';
+  if(keys.indexOf(selected)<0)selected=preferred;
+  arkWallMemoYear=selected.slice(0,4);
+  arkWallMemoMonth=selected.slice(5,7);
+}
+
+function setArkWallMemoYear(year){
+  arkWallMemoYear=String(year||'');
+  var months=arkWallMemoMonthKeys().filter(function(key){return key.slice(0,4)===arkWallMemoYear;}).map(function(key){return key.slice(5);});
+  if(months.indexOf(arkWallMemoMonth)<0)arkWallMemoMonth=months[0]||'';
+  renderArkWallList();
+}
+
+function setArkWallMemoMonth(month){
+  arkWallMemoMonth=String(month||'');
+  renderArkWallList();
+}
+
 function setArkWallMemoSearch(value){
   arkWallMemoSearch=String(value||'');
   arkWallSearchOpen=true;
@@ -10836,11 +10889,34 @@ function renderArkWallTaggedList(options){
 }
 
 function renderArkWallMemoList(){
-  return renderArkWallTaggedList({
-    title:'備忘隨筆',
-    tags:ARK_WALL_MEMO_TAGS,
-    emptyText:'沒有符合條件的備忘隨筆。'
+  var base=arkWallMemoBaseEntries();
+  var query=String(arkWallMemoSearch||'').trim().toLowerCase();
+  syncArkWallMemoPeriod();
+  var years=Array.from(new Set(arkWallMemoMonthKeys().map(function(key){return key.slice(0,4);}))).sort(function(a,b){return b.localeCompare(a);});
+  var months=arkWallMemoMonthKeys().filter(function(key){return key.slice(0,4)===arkWallMemoYear;}).map(function(key){return key.slice(5);});
+  var selectedKey=arkWallMemoYear&&arkWallMemoMonth?arkWallMemoYear+'-'+arkWallMemoMonth:'';
+  var entries=base.filter(function(entry){
+    if(query)return arkWallEntrySearchText(entry).indexOf(query)>=0;
+    var parts=arkWallDateParts(entry);
+    return parts.year+'-'+parts.month===selectedKey||!!entry.pinned;
   });
+  entries=arkWallSortEntries(entries);
+  var tags=['全部'].concat(ARK_WALL_MEMO_TAGS);
+  var tagButtons=tags.map(function(tag){return '<button class="ark-wall-memo-tag '+(arkWallMemoTag===tag?'active':'')+'" type="button" data-memo-tag="'+esc(tag)+'" onclick="setArkWallMemoTag(\''+esc(tag)+'\')">'+esc(tag)+'</button>';}).join('');
+  var yearOptions=arkWallSelectOptions(years,arkWallMemoYear,function(year){return year+'年';});
+  var monthOptions=arkWallSelectOptions(months,arkWallMemoMonth,function(month){return Number(month)+'月';});
+  var list=entries.map(function(entry){
+    var id=entry.id||entry.slug||'';
+    var pin=!!entry.pinned;
+    return '<button class="ark-wall-memo-row '+(pin?'pinned':'')+'" type="button" onclick="openArkWallEntry(\''+esc(id)+'\')">'
+      +'<span class="ark-wall-memo-date">'+(pin?'<span class="ark-wall-memo-star" title="置頂">&#9733;</span> ':esc(entry.date||'未定日期'))+'</span>'
+      +'<span class="ark-wall-memo-title">'+esc(entry.title||'未命名紀錄')+'</span>'
+    +'</button>';
+  }).join('');
+  return '<div class="ark-wall-memo-tools"><div class="ark-wall-memo-tags">'+tagButtons+'</div>'+renderArkWallSearchBox()+'</div>'
+    +'<div class="ark-wall-memo-filter"><select class="ark-wall-memo-select" aria-label="年份" onchange="setArkWallMemoYear(this.value)">'+yearOptions+'</select><select class="ark-wall-memo-select" aria-label="月份" onchange="setArkWallMemoMonth(this.value)">'+monthOptions+'</select></div>'
+    +'<div class="ark-wall-count">備忘隨筆 · '+entries.length+' 篇</div>'
+    +(list?'<div class="ark-wall-memo-list">'+list+'</div>':'<div class="travel-status">沒有符合條件的備忘隨筆。</div>');
 }
 
 function renderArkWallMarketList(){
