@@ -2005,6 +2005,8 @@ body::after{
 .finance-accounts-collapse.is-masked .treasury-account-merge-value::after{content:'***';font-family:var(--mono);font-size:19px;color:var(--gold)}
 .finance-accounts-collapse.is-masked .treasury-saving-rate{font-size:0;color:transparent}
 .finance-accounts-collapse.is-masked .treasury-saving-rate::after{content:'🪙月儲蓄率 ***';font-family:var(--sans);font-size:13px;color:#8d6a2a}
+.finance-accounts-collapse.is-masked .treasury-class-equivalent{font-size:0;color:transparent}
+.finance-accounts-collapse.is-masked .treasury-class-equivalent::after{content:'堂課換算 ***';font-family:var(--sans);font-size:12px;color:#8d6a2a}
 .finance-accounts-collapse.is-masked .res-details{font-size:0;color:transparent}
 .finance-accounts-collapse.is-masked .res-details::after{content:'***';font-family:var(--mono);font-size:15px;color:var(--gold)}
 .finance-collapse .res-section-title,.finance-collapse .pledge-section-title{display:none}
@@ -2085,6 +2087,9 @@ body::after{
 .treasury-account-merge-value{margin-top:0;font-family:var(--mono);font-size:19px;font-weight:900;color:var(--gold);white-space:nowrap}
 .treasury-saving-rate{display:flex;align-items:baseline;gap:6px;margin-top:5px;padding-top:5px;border-top:1px solid rgba(232,192,80,.14);font-family:var(--sans);font-size:12px;font-weight:900;color:#8d6a2a;white-space:nowrap}
 .treasury-saving-rate strong{font-family:var(--mono);font-size:14px;color:var(--gold)}
+.treasury-class-equivalent{margin-top:3px;font-family:var(--sans);font-size:12px;font-weight:900;white-space:nowrap}
+.treasury-class-equivalent.less{color:var(--coral)}
+.treasury-class-equivalent.more{color:var(--teal)}
 .treasury-hidden-account{margin-top:8px;padding-top:6px;border-top:1px solid rgba(232,192,80,.14)}
 .treasury-hidden-account>summary{display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;list-style:none;font-family:var(--sans);font-size:12px;font-weight:900;color:#8d6a2a;white-space:nowrap}
 .treasury-hidden-account>summary::-webkit-details-marker{display:none}
@@ -9464,7 +9469,7 @@ function renderTreasuryCashStockCard(cashAccount,cathayStockAccount,monthly){
     <div class="treasury-account-merge-grid">
       ${cell(cashAccount,'💰現金Cash')}
       ${cell(cathayStockAccount,stockLabel)}
-      ${cathayStockAccount?`<div class="treasury-saving-rate"><span>🪙月儲蓄率</span><strong>${esc(monthly&&monthly.savingRate||'—')}</strong></div>`:''}
+      ${cathayStockAccount?`<div class="treasury-saving-rate"><span>🪙月儲蓄率</span><strong>${esc(monthly&&monthly.savingRate||'—')}</strong></div>${(()=>{var income=Number(monthly&&monthly.income)||0;var expense=Number(monthly&&monthly.expense)||0;var classValue=(income-expense)/405;return isFinite(classValue)?`<div class="treasury-class-equivalent ${classValue>=0?'less':'more'}">${classValue>=0?'可少上 '+classValue.toFixed(2)+' 堂課':'需多上 '+Math.abs(classValue).toFixed(2)+' 堂課'}</div>`:''})()}`:''}
     </div>
   </div>`;
 }
