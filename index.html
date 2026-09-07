@@ -2222,7 +2222,10 @@ body::after{
 .booking-transfer-grid:not(.stock-mode) .transfer-amount-field{grid-column:1/-1;grid-row:2}
 .booking-transfer-grid:not(.stock-mode) .booking-chip-row{display:none}
 .booking-transfer-grid:not(.stock-mode) .booking-chip-select-wrap.hidden{display:block!important}
-.booking-income-grid{grid-template-columns:1fr 1fr}
+.booking-income-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.booking-income-grid>.form-group{min-width:0}
+.booking-income-grid>.form-group>.form-control{width:100%;min-width:0;box-sizing:border-box}
+.booking-income-grid .booking-source-label{min-width:0}
 .booking-income-grid .income-wide{grid-column:1/-1}
 .income-account-lock-status{margin-top:4px;font-family:var(--sans);font-size:10px;line-height:1.3;color:var(--teal)}
 .booking-transfer-mode .booking-mode-btn.buy.active{border-color:rgba(216,90,48,.65);background:var(--coral-l);color:var(--coral);box-shadow:0 0 12px rgba(216,90,48,.16)}
@@ -2240,7 +2243,7 @@ body::after{
 @media(max-width:560px){
   .booking-interface-tab{font-size:11px;padding:8px 2px;letter-spacing:0}
   .booking-entry-grid,.booking-transfer-grid{grid-template-columns:1fr}
-  .booking-income-grid{grid-template-columns:1fr 1fr;gap:6px}
+  .booking-income-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
   .booking-expense-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
   .booking-expense-grid .form-label{font-size:10px;letter-spacing:0}
   .booking-expense-grid .form-control{font-size:12px;padding:8px 7px}
