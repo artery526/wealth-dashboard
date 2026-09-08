@@ -5528,7 +5528,7 @@ var MARKET_DASHBOARD_CACHE_KEY='wealth_market_dashboard_v1';
 var MARKET_SECTOR_ROTATION_CACHE_KEY='wealth_market_sector_rotation_v1';
 var MARKET_MACRO_CACHE_KEY='wealth_market_macro_v4';
 var MARKET_LONG_REPORT_CACHE_KEY='wealth_market_long_report_v1';
-var BATTLE_BRIEF_CACHE_KEY='wealth_battle_brief_v1';
+var BATTLE_BRIEF_CACHE_KEY='wealth_battle_brief_v2';
 var MARKET_CACHE_TTL=2*60*60*1000;
 var BATTLE_PRICE_HISTORY_CACHE_KEY='wealth_battle_price_history_v4';
 var BATTLE_PRICE_HISTORY_CACHE_TTL=6*60*60*1000;
@@ -14253,6 +14253,11 @@ function battleEtfShortList(text,emptyText){
 function battleEtfChangeHtml(data){
   data=data||{};
   var latest=data.latest||null;
+  if(latest&&latest.previousDate&&/首筆或同資料日快照已建立/.test(String(latest.commentary||''))){
+    latest.commentary='已完成與 '+latest.previousDate+' 快照比較，本次未偵測到達異動門檻的持股變化。';
+  }
+  var themesText=String(latest&&latest.themesText||'').trim();
+  if(themesText==='待累積第二筆快照')themesText='';
   var official=data.officialUrl||'https://www.capitalfund.com.tw/etf/product/detail/502/portfolio';
   var updatedText=latest&&(latest.createdAt||latest.updatedAt||latest.fetchedAt||data.updatedAt);
   if(!data.hasData||!latest){
@@ -14287,7 +14292,7 @@ function battleEtfChangeHtml(data){
       </div>
       <div class="battle-etf-box">
         <div class="battle-etf-label">主題變化</div>
-        <div class="battle-etf-list">${battleEtfShortList(latest.themesText,'本次未偵測到主題權重變化')}</div>
+        <div class="battle-etf-list">${battleEtfShortList(themesText,'本次未偵測到主題權重變化')}</div>
       </div>
       <div class="battle-etf-box">
         <div class="battle-etf-label">新增 / 移除</div>
