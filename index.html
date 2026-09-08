@@ -4538,7 +4538,7 @@ html[data-theme="deep-blue"] .scene-task-details .home-agenda-global-refresh{bor
 }
 @media(prefers-reduced-motion:reduce){.npc-web-scene .character-art{transition:none}.npc-web-scene .animated-character:hover .character-art{transform:none}}
 </style>
-<script src="./characterAnimations.js?v=20260908-web21"></script>
+<script src="./characterAnimations.js?v=20260908-web22"></script>
 <script src="./AnimatedCharacter.js?v=20260908-web3"></script>
 <style>
 .council-review-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:16px 0 10px;font-family:var(--sans)}
@@ -20191,7 +20191,8 @@ function mpmRender(records){
     huatuo:window.huatuoAnimations,
     liubei:window.liubeiAnimations,
     simayi:window.simayiAnimations,
-    manchong:window.manchongAnimations
+    manchong:window.manchongAnimations,
+    xunyu:window.xunyuAnimations
   };
   var routes={
     pangtong:function(event){openAdvisorAIFromOrb(event);},
@@ -20200,7 +20201,8 @@ function mpmRender(records){
     huatuo:function(){openPanel('medical');},
     liubei:function(){openArkWall('wall');},
     simayi:function(){openPanel('council');},
-    manchong:function(){openPanel('store');}
+    manchong:function(){openPanel('store');},
+    xunyu:function(){if(typeof window.openXunyuPanel==='function')window.openXunyuPanel();}
   };
   var npcs={};
   Object.keys(configs).forEach(function(id){
@@ -20220,7 +20222,7 @@ function mpmRender(records){
     }
   });
   Promise.all(Object.values(npcs).map(function(npc){return npc.loaded;})).then(function(){
-    if(status)status.textContent='龐統、諸葛亮、陳群、華佗、劉備、司馬懿與滿寵已入駐 · 點擊人物開啟正式面板';
+    if(status)status.textContent='龐統、諸葛亮、陳群、華佗、劉備、司馬懿、滿寵與荀彧已入駐 · 點擊人物開啟正式面板';
   }).catch(function(){
     if(status)status.textContent='部分角色影格載入失敗，請重新整理。';
   });

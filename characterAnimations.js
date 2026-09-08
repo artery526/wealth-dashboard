@@ -7,7 +7,8 @@ const characterPositions = {
   huatuo: { top: '27%', left: '69%', width: '8%' },
   liubei: { top: 'calc(30% + 40px)', left: '46%', width: '8%' },
   simayi: { top: '47%', left: '16%', width: '11%' },
-  manchong: { top: '47%', left: '76%', width: '10%' }
+  manchong: { top: '47%', left: '76%', width: '10%' },
+  xunyu: { top: '69%', left: '46%', width: '9%' }
 };
 const characterMobilePositions = {
   pangtong: { top: 'calc(27.5% - 24px)', left: '19.5%', width: '13%' },
@@ -16,7 +17,8 @@ const characterMobilePositions = {
   chenqun: { top: '43%', left: '16%', width: '16%' },
   huatuo: { top: '43%', left: '69%', width: '16%' },
   simayi: { top: '62%', left: '16%', width: '17%' },
-  manchong: { top: '62%', left: '67%', width: '17%' }
+  manchong: { top: '62%', left: '67%', width: '17%' },
+  xunyu: { top: '72%', left: '43%', width: '14%' }
 };
 const pangtongAnimations = {
   name: '龐統',
@@ -298,6 +300,50 @@ const manchongAnimations = {
     idle: [800, 1800]
   }
 };
+const xunyuAssetVersion = '20260908-xunyu-shangshutai1';
+const xunyuAsset = file => `./荀彧/${file}?v=${xunyuAssetVersion}`;
+const xunyuAnimations = {
+  name: '荀彧',
+  frames: {
+    '01': xunyuAsset('文雅待命01.png'),
+    '02': xunyuAsset('文雅呼吸上揚02.png'),
+    '03': xunyuAsset('文雅呼吸下沉02.png'),
+    '04': xunyuAsset('文雅接收情報04.png'),
+    '05': xunyuAsset('文雅翻閱情報05.png'),
+    '06': xunyuAsset('文雅繼續翻閱情報06.png'),
+    '07': xunyuAsset('文雅沉思07.png'),
+    '08': xunyuAsset('文雅發現重點08.png'),
+    '09': xunyuAsset('文雅展開總覽09.png'),
+    '10': xunyuAsset('文雅秀出統計表10.png'),
+    '11': xunyuAsset('文雅秀出統計表指出數據11.png'),
+    '12': xunyuAsset('文雅報告完畢12.png')
+  },
+  breathing: [
+    { frame: '02', duration: [300, 500] },
+    { frame: '03', duration: [350, 550] },
+    { frame: '01', state: 'idle', duration: [800, 1800] }
+  ],
+  events: {
+    secondaryIdle: { interval: [7000, 14000], sequence: [
+      { frame: '04', state: 'receive-intelligence', duration: [700, 1200] },
+      { frame: '05', state: 'review-intelligence', duration: [700, 1200] },
+      { frame: '06', state: 'review-intelligence-hold', duration: [1000, 1800] },
+      { frame: '01', state: 'idle', duration: [800, 1800] }
+    ] },
+    specialAction: { interval: [18000, 36000], sequence: [
+      { frame: '07', state: 'think', duration: [700, 1200] },
+      { frame: '08', state: 'spot-key-point', duration: [700, 1200] },
+      { frame: '09', state: 'open-overview', duration: [700, 1200] },
+      { frame: '10', state: 'show-statistics', duration: [900, 1500] },
+      { frame: '11', state: 'point-to-data', duration: [1200, 2200] },
+      { frame: '12', state: 'report-complete', duration: [1000, 1800] },
+      { frame: '01', state: 'idle', duration: [1000, 1800] }
+    ] }
+  },
+  timing: {
+    idle: [800, 1800]
+  }
+};
 window.characterPositions = characterPositions;
 window.characterMobilePositions = characterMobilePositions;
 window.pangtongAnimations = pangtongAnimations;
@@ -307,3 +353,4 @@ window.huatuoAnimations = huatuoAnimations;
 window.liubeiAnimations = liubeiAnimations;
 window.simayiAnimations = simayiAnimations;
 window.manchongAnimations = manchongAnimations;
+window.xunyuAnimations = xunyuAnimations;

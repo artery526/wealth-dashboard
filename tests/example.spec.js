@@ -203,10 +203,12 @@ test('legacy advisor video cards are removed while scene NPC controls remain', a
   const zhuge = page.getByRole('button', { name: '諸葛亮，開啟角色面板' });
   const liubei = page.getByRole('button', { name: '劉備，開啟角色面板' });
   const manchong = page.getByRole('button', { name: '滿寵，開啟角色面板' });
+  const xunyu = page.getByRole('button', { name: '荀彧，開啟角色面板' });
   await expect(pangtong).toBeVisible();
   await expect(zhuge).toBeVisible();
   await expect(liubei).toBeVisible();
   await expect(manchong).toBeVisible();
+  await expect(xunyu).toBeVisible();
   await expect(page.locator('.npc-web-scene-map')).toHaveAttribute('src', './junshifu-map.png?v=20260908-bg3');
   expect(await page.evaluate(() => window.characterPositions.pangtong.left)).toBe('39%');
   expect(await page.evaluate(() => window.characterPositions.zhuge.left)).toBe('52%');
@@ -233,6 +235,10 @@ test('legacy advisor video cards are removed while scene NPC controls remain', a
   expect(await page.evaluate(() => Object.values(window.manchongAnimations.frames).every(src => src.includes('?v=20260907-manchong-weapons1')))).toBeTruthy();
   expect(await page.evaluate(() => JSON.stringify(window.manchongAnimations).includes('工人回家10.png'))).toBeFalsy();
   expect(await page.evaluate(() => window.characterPositions.liubei.top)).toBe('calc(30% + 40px)');
+  await expect(xunyu.locator('img')).toHaveCount(12);
+  expect(await page.evaluate(() => Object.keys(window.xunyuAnimations.frames).length)).toBe(12);
+  expect(await page.evaluate(() => window.xunyuAnimations.frames['12'])).toBe('./荀彧/文雅報告完畢12.png?v=20260908-xunyu-shangshutai1');
+  expect(await page.evaluate(() => window.xunyuAnimations.events.specialAction.sequence.map(step => step.frame))).toEqual(['07', '08', '09', '10', '11', '12', '01']);
 });
 
 test('mobile calendar defaults to a compact palace badge and expands the weekly view', async ({ page }) => {
