@@ -207,6 +207,7 @@ test('legacy advisor video cards are removed while scene NPC controls remain', a
   await expect(zhuge).toBeVisible();
   await expect(liubei).toBeVisible();
   await expect(manchong).toBeVisible();
+  await expect(page.locator('.npc-web-scene-map')).toHaveAttribute('src', './junshifu-map.png?v=20260908-bg3');
   expect(await page.evaluate(() => window.characterPositions.pangtong.left)).toBe('39%');
   expect(await page.evaluate(() => window.characterPositions.zhuge.left)).toBe('52%');
   await expect(pangtong).toHaveCSS('--mobile-top', 'calc(27.5% - 24px)');
