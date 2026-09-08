@@ -36,6 +36,16 @@ test('Pangtong financial commands show a confirmation card before writing', asyn
   await expect(page.locator('#advisor-shortcut-panel').getByRole('button', { name: '確認記錄' })).toBeVisible();
 });
 
+test('Pangtong quick transfer entry and transfer commands are removed', async ({ page }) => {
+  await page.goto(dashboardUrl);
+  const result = await page.evaluate(() => ({
+    quickCommands: advisorAIQuickCommands().map(item => item.label),
+    transferCommand: advisorAICommand('國泰轉玉山 1000')
+  }));
+  expect(result.quickCommands).not.toContain('快速轉帳');
+  expect(result.transferCommand.intent).toBe('unknown');
+});
+
 test('battle brief panel renders with stable formatting', async ({ page }) => {
   const pageErrors = [];
   page.on('pageerror', error => pageErrors.push(error.message));
