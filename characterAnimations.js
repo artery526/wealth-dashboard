@@ -158,20 +158,28 @@ const huatuoAnimations = {
     idle: [800, 1800]
   }
 };
+const liubeiAssetVersion = '20260908-liubei-battle1';
+const liubeiAsset = file => `./劉備/${file}?v=${liubeiAssetVersion}`;
 const liubeiAnimations = {
   name: '劉備',
   frames: {
-    '01': './劉備/站立01.png',
-    '02': './劉備/大笑02.png',
-    '03': './劉備/眨眼03.png',
-    '04': './劉備/呼吸上升04.png',
-    '05': './劉備/呼吸下沉05.png',
-    '06': './劉備/思考06.png',
-    '07': './劉備/翻開書卷07.png',
-    '08': './劉備/放下書卷08.png',
-    '09': './劉備/撰寫回憶09.png',
-    '10': './劉備/放下卷軸苦思10.png',
-    '11': './劉備/放下卷軸揮劍出擊11.png'
+    '01': liubeiAsset('站立01.png'),
+    '02': liubeiAsset('大笑02.png'),
+    '03': liubeiAsset('眨眼03.png'),
+    '04': liubeiAsset('呼吸上升04.png'),
+    '05': liubeiAsset('呼吸下沉05.png'),
+    '06': liubeiAsset('思考06.png'),
+    '07': liubeiAsset('翻開書卷07.png'),
+    '08': liubeiAsset('放下書卷08.png'),
+    '09': liubeiAsset('撰寫回憶09.png'),
+    '10': liubeiAsset('放下卷軸苦思10.png'),
+    '11': liubeiAsset('放下卷軸揮劍出擊11.png'),
+    '12': liubeiAsset('放下卷軸揮劍出擊出兵12.png'),
+    '13': liubeiAsset('放下卷軸揮劍出擊出兵13.png'),
+    '14': liubeiAsset('放下卷軸揮劍出擊出兵廝殺14.png'),
+    '15': liubeiAsset('放下卷軸揮劍出擊出兵廝殺15.png'),
+    '16': liubeiAsset('放下卷軸揮劍出擊出兵廝殺16.png'),
+    '17': liubeiAsset('王府前站立17.png')
   },
   breathing: [
     { frame: '05', duration: [250, 400] },
@@ -191,6 +199,12 @@ const liubeiAnimations = {
       { frame: '09', state: 'write-memory', duration: [2200, 5000] },
       { frame: '10', state: 'think-scroll', duration: [800, 1400] },
       { frame: '11', state: 'sword-strike', duration: [900, 1600] },
+      { frame: '12', state: 'march-to-battle', duration: [900, 1500] },
+      { frame: '13', state: 'lead-the-army', duration: [900, 1500] },
+      { frame: '14', state: 'battle-clash', duration: [1000, 1700] },
+      { frame: '15', state: 'battle-victory', duration: [1200, 2200] },
+      { frame: '16', state: 'return-to-palace', duration: [1200, 2200] },
+      { frame: '17', state: 'palace-stand', duration: [1000, 1800] },
       { frame: '01', state: 'idle', duration: [1000, 1800] }
     ] }
   },

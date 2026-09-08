@@ -218,6 +218,10 @@ test('legacy advisor video cards are removed while scene NPC controls remain', a
   await expect(liubei).toHaveCSS('--mobile-top', 'calc(23.5% - 36px)');
   await expect(liubei).toHaveCSS('--mobile-left', '43%');
   await expect(liubei).toHaveCSS('--mobile-width', '14%');
+  await expect(liubei.locator('img')).toHaveCount(17);
+  expect(await page.evaluate(() => Object.keys(window.liubeiAnimations.frames).length)).toBe(17);
+  expect(await page.evaluate(() => window.liubeiAnimations.frames['17'])).toBe('./劉備/王府前站立17.png?v=20260908-liubei-battle1');
+  expect(await page.evaluate(() => window.liubeiAnimations.events.specialAction.sequence.map(step => step.frame))).toEqual(['07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '01']);
   expect(await page.evaluate(() => Object.keys(window.chenqunAnimations.frames).length)).toBe(17);
   expect(await page.evaluate(() => window.chenqunAnimations.frames['17'])).toBe('./陳群/chenqun_idle_17.png');
   await expect(manchong.locator('img')).toHaveCount(9);
