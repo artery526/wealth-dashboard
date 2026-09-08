@@ -16157,9 +16157,20 @@ async function openAdvisorTaiwanStockReview(event){
   catch(err){panel.innerHTML='<div class="advisor-world-card advisor-tw-review"><div class="advisor-world-title-row"><div class="advisor-world-title">📈 台股</div><div class="advisor-world-tabs"><button class="advisor-world-tab-btn" type="button" onclick="openAdvisorWorldSituation(event,false)">🏛 帝國晨報</button><button class="advisor-world-tab-btn" type="button" onclick="openAdvisorSectorRotation(event)">📊 產業</button></div></div><div class="advisor-tw-review-missing">月評讀取失敗：'+esc(err&&err.message?err.message:'請稍後再試')+'</div></div>';}
 }
 
+function advisorWorldSectorItemText(item){
+  if(item==null)return '';
+  if(typeof item==='string'||typeof item==='number')return String(item);
+  if(typeof item==='object'){
+    var label=item.name||item.sector||item.theme||item.title||item.label||item.code;
+    if(label)return String(label);
+    try{return JSON.stringify(item)}catch(error){return ''}
+  }
+  return String(item);
+}
 function advisorWorldSectorListHtml(title,items){
   items=Array.isArray(items)?items:[];
-  return '<div class="advisor-sector-list"><strong>'+esc(title)+'</strong><span>'+esc(items.length?items.join('、'):'資料不足')+'</span></div>';
+  var labels=items.map(advisorWorldSectorItemText).filter(Boolean);
+  return '<div class="advisor-sector-list"><strong>'+esc(title)+'</strong><span>'+esc(labels.length?labels.join('、'):'資料不足')+'</span></div>';
 }
 function advisorWorldSectorHtml(data){
   data=data||{};
