@@ -250,7 +250,7 @@ test('mobile calendar defaults to a compact palace badge and expands the weekly 
   const taskDetails = page.locator('#scene-task-details');
   await expect(toggle).toBeVisible();
   await expect(agendaToggle).toBeVisible();
-  await expect(taskToggle).toBeVisible();
+  await expect(taskToggle).toBeHidden();
   await expect(toggle).toHaveAttribute('aria-expanded', 'false');
   await expect(page.locator('#home-calendar-mobile-lunar')).toHaveText(/^農曆M\d{2}/);
   await expect(page.locator('#home-calendar-mobile-date')).toHaveText(/^\d{4}\/\d{2}\/\d{2}（[日一二三四五六]）$/);
@@ -309,10 +309,10 @@ test('mobile calendar defaults to a compact palace badge and expands the weekly 
   await expect(page.locator('#scene-task-preview')).toContainText('➡️CoCo飲料兌換');
   await expect(page.locator('#scene-task-preview')).toContainText('📋拖鞋換大號');
   await expect(page.locator('#scene-task-preview')).not.toContainText('不應顯示的第四筆待辦');
-  await taskToggle.click();
-  await expect(taskSlot).toHaveClass(/is-expanded/);
-  await expect(taskDetails).toBeVisible();
-  await expect(page.locator('#scene-task-details .task-create-form')).toBeVisible();
+  await expect(taskSlot).toBeHidden();
+  await expect(taskDetails).toBeHidden();
+  await expect(page.locator('#scene-task-details .task-create-form')).toHaveCount(1);
+  expect(await page.evaluate(() => typeof window.toggleSceneTask === 'function' && typeof window.updateSceneTaskPreview === 'function')).toBeTruthy();
   await expect(page.locator('.home-agenda-wrap')).toBeHidden();
 });
 

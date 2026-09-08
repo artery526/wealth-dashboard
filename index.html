@@ -4503,7 +4503,8 @@ html[data-theme="deep-blue"] .advisor-ai-standalone .advisor-ai-quick-select:foc
 .scene-agenda-details::-webkit-scrollbar-thumb{background:#6d481b;border-radius:4px}
 .scene-agenda-details .home-agenda-global-refresh{position:static}
 html[data-theme="deep-blue"] .scene-agenda-details .home-agenda-global-refresh{border-color:rgba(196,151,61,.58);background:linear-gradient(180deg,#2c1f0c,#171007);color:#e9c96f}
-.scene-task-slot{position:absolute;z-index:8;left:50%;bottom:2.5%;width:min(340px,72%);transform:translateX(-50%);transition:left .2s ease,right .2s ease,bottom .2s ease,width .2s ease,transform .2s ease}
+/* 待辦資料與接口保留，暫不在網頁場景顯示，之後接入荀彧面板。 */
+.scene-task-slot{display:none;position:absolute;z-index:8;left:50%;bottom:2.5%;width:min(340px,72%);transform:translateX(-50%);transition:left .2s ease,right .2s ease,bottom .2s ease,width .2s ease,transform .2s ease}
 .scene-task-card{width:100%;overflow:hidden;border:1px solid rgba(225,177,73,.82);border-radius:8px;background:linear-gradient(145deg,rgba(76,46,17,.97),rgba(31,17,6,.98));box-shadow:0 10px 28px rgba(0,0,0,.48),inset 0 1px 0 rgba(255,236,177,.2)}
 .scene-task-toggle{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;width:100%;min-height:74px;padding:7px 10px;border:0;background:linear-gradient(135deg,rgba(119,76,27,.94),rgba(54,30,9,.98));color:#ffe6a2;text-align:left;cursor:pointer}
 .scene-task-preview{display:grid;gap:3px;min-width:0}
