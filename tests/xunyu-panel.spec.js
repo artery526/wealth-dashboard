@@ -2,6 +2,58 @@ const { test, expect } = require('@playwright/test');
 const path = require('node:path');
 const url = 'file:///' + path.resolve(__dirname, '..', 'index.html').replace(/\\/g, '/');
 
+async function openBriefs(page) {
+  await page.evaluate(() => {
+    window.xyNasCalls = [];
+    medicalPost = () => Promise.resolve({status:'success',records:[
+      {recordTime:currentYM().replace('/','-')+'-02 10:00'}, {recordTime:currentYM().replace('/','-')+'-02 21:00'},
+      {recordTime:currentYM().replace('/','-')+'-03 08:00'}, {recordTime:'2020-01-01 09:00'}]});
+    xyFixtures.storeRecords = {records:[{itemName:'舊物品',recordDate:'2020/01/01'},{itemName:'新物品',recordDate:today()}]};
+    xyFixtures.macroOverview = {hasData:true,sourceDate:'2026-09-01',judgment:{summary:'總經觀察中'}};
+    eventChronicleApiRequest = () => Promise.resolve({rows:[{name:'新事件',date:today()}]});
+    arkWallFetch = route => { xyNasCalls.push(route); return Promise.resolve(route.includes('expeditions') ? {entries:[
+      {title:'舊紀錄',updatedAt:'2020-01-01'}, {title:'最近更新',updatedAt:'2026-09-08'}, {title:'次近更新',updatedAt:'2026-09-07'}
+    ]} : {status:{state:'completed-with-errors'},items:[{title:'外部消息',publishedAt:'2026-09-06'}]}); };
+    openXunyuPanel();
+  });
+  expect(await page.evaluate(() => xyNasCalls)).toEqual([]);
+  await page.getByRole('button',{name:'各署摘要',exact:true}).click();
+}
+
+test('optional briefs load lazily, count unique medical days and show recent records with dates', async ({page}) => {
+  await openBriefs(page);
+  await expect(page.locator('[data-xy-source="medical"]')).toContainText('本月記錄 2 天');
+  await expect(page.locator('[data-xy-source="medical"]')).toContainText('-03 08:00');
+  await expect(page.locator('[data-xy-source="store"]')).toContainText('新物品');
+  await expect(page.locator('[data-xy-source="wall"] li')).toHaveCount(2);
+  await expect(page.locator('[data-xy-source="wall"] li').first()).toContainText('最近更新');
+  await expect(page.locator('[data-xy-source="macro"]')).toContainText('2026-09-01');
+  await expect(page.locator('[data-xy-source="intelligence"]')).toContainText('部分來源失敗');
+  await page.getByLabel('醫館', {exact:true}).uncheck();
+  await expect(page.locator('[data-xy-source="medical"]')).toHaveCount(0);
+  await page.getByRole('button',{name:'內政總覽',exact:true}).click();
+  await expect(page.locator('.xy-table tbody tr')).toHaveCount(12);
+  await page.getByRole('button',{name:'各署摘要',exact:true}).click();
+  await expect(page.getByLabel('醫館',{exact:true})).not.toBeChecked();
+});
+
+test('brief source failure retains previous data, retries independently and supports mobile layout', async ({page}) => {
+  await page.setViewportSize({width:390,height:844});
+  await openBriefs(page);
+  await expect(page.locator('[data-xy-source="wall"]')).toContainText('最近更新');
+  await page.evaluate(async () => { arkWallFetch = () => Promise.reject(new Error('NAS 離線')); await refreshXunyuPanel('wall'); });
+  await expect(page.locator('[data-xy-source="wall"]')).toContainText('保留上次資料');
+  await expect(page.locator('[data-xy-source="medical"]')).toContainText('本月記錄 2 天');
+  await page.evaluate(() => { arkWallFetch = () => Promise.resolve({entries:[]}); });
+  await page.locator('[data-xy-retry="wall"]').click();
+  await expect(page.locator('[data-xy-source="wall"]')).toContainText('目前沒有記錄');
+  expect(await page.locator('#xunyu-dashboard').evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true);
+  await page.screenshot({path:'test-results/xunyu-briefs-mobile.png'});
+  await page.evaluate(() => { renderCouncilPanel = tab => { document.getElementById('p-body').textContent = tab; }; });
+  await page.locator('[data-xy-source="macro"] button[data-xy-detail]').click();
+  await expect(page.locator('#p-body')).toHaveText('macro-overview');
+});
+
 test.beforeEach(async ({ page }) => {
   await page.goto(url);
   await page.evaluate(() => {
