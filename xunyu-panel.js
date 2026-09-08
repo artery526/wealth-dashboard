@@ -59,11 +59,11 @@
     if (!rows) return '<p class="xy-empty">部隊資料尚未取得</p>';
     if (!rows.length) return '<p class="xy-empty">目前沒有持股</p>';
     var ordered = rows.slice().sort(function (a,b) { return (number(b.marketValue) || 0) - (number(a.marketValue) || 0); });
-    return '<table class="xy-table"><thead><tr><th>標的</th><th>含息 ROI</th><th>市值占比</th></tr></thead><tbody>' + ordered.slice(0,5).map(function (row) {
+    return '<table class="xy-table"><caption class="sr-only">全部部隊持股簡報</caption><thead><tr><th>標的</th><th>含息 ROI</th><th>市值占比</th></tr></thead><tbody>' + ordered.map(function (row) {
       var cost = number(row.cost), ret = number(row.totalReturn), value = number(row.marketValue);
       var weight = m.market > 0 && value !== null ? value / m.market * 100 : null;
       return '<tr><th scope="row">' + esc(row.symbol || row.name || '未命名') + '</th><td>' + pct(cost > 0 && ret !== null ? ret / cost * 100 : null) + '</td><td>' + (state.masked ? '••••' : weight === null ? '—' : weight.toFixed(1) + '%') + '</td></tr>';
-    }).join('') + '</tbody></table><p class="xy-note">市值前五檔／共 ' + rows.length + ' 檔 · 含息 ROI 為累計報酬率</p>';
+    }).join('') + '</tbody></table><p class="xy-note">完整列出 ' + rows.length + ' 檔 · 依市值由高至低 · 含息 ROI 為累計報酬率</p>';
   }
   function agendaHtml(key) {
     var payload = state.data[key];
