@@ -6073,7 +6073,7 @@ function openPanel(key,initialTab){
   document.querySelectorAll('.card').forEach(c=>c.classList.remove('active'));
   var activeCard=document.getElementById('c-'+key);
   if(activeCard)activeCard.classList.add('active');
-  document.getElementById('panel').classList.toggle('council-wide',key==='council');
+  document.getElementById('panel').classList.toggle('council-wide',key==='council'||key==='xunyu');
   document.getElementById('panel').classList.toggle('domestic-wide',key==='domestic'||key==='finance');
   document.getElementById('panel').classList.toggle('finance-wide',key==='finance');
   document.getElementById('panel').classList.toggle('medical-wide',key==='medical');
@@ -6085,6 +6085,7 @@ function openPanel(key,initialTab){
   else if(key==='domestic'){setEmpireCardApiPendingStatus('domestic');renderDomesticPanel();}
   else if(key==='market')renderMarketPanel();
   else if(key==='council'){setEmpireCardApiPendingStatus('council');renderCouncilPanel(initialTab);}
+  else if(key==='xunyu')renderXunyuPanel();
   else if(key==='medical'){setEmpireCardApiPendingStatus('medical');renderMedicalPanel();}
   else if(key==='stars'){setEmpireCardApiPendingStatus('stars');renderStarsPanel();}
   else if(key==='store'){setEmpireCardApiPendingStatus('store');renderStorePanel(initialTab);}
@@ -9280,7 +9281,8 @@ function fetchFinanceTreasuryData(cached){
       accs:results[0].value||[],
       monthly:monthly,
       assetSnapshot:results[3].status==='fulfilled'?results[3].value:null,
-      bills:results[4].status==='fulfilled'?results[4].value:null
+      bills:results[4].status==='fulfilled'?results[4].value:null,
+      sourceStatus:{monthly:results[1].status,transactions:results[2].status,assetSnapshot:results[3].status}
     };
     return data;
   });
@@ -20238,5 +20240,7 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
+<link rel="stylesheet" href="./xunyu-panel.css?v=20260908-v1">
+<script src="./xunyu-panel.js?v=20260908-v1"></script>
 </body>
 </html>
