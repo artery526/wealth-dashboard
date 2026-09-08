@@ -14258,29 +14258,36 @@ async function loadBattleBrief(force){
   }
   var cachedEntry=readMarketCacheEntry(BATTLE_BRIEF_CACHE_KEY,false);
   var cached=cachedEntry?cachedEntry.data:null;
-  if(cached&&!force){
+  if(cached&&!el.querySelector('.battle-report-head')){
     setDataFreshness('battle-freshness',dataFreshnessMeta(cached,cachedEntry.savedAt,true));
     renderBattleBrief(cached,el);
   }
   setCouncilPanelStatusIfActive('pending',cached&&!force?'戰情快取更新中':'戰情總匯報讀取中');
-  if(battleBriefPromise&&!force)return battleBriefPromise.then(function(data){
-    if(data&&document.getElementById('battle-brief-content'))renderBattleBrief(data,document.getElementById('battle-brief-content'));
-    return data;
-  });
-  battleBriefPromise=apiGet({action:'battleBrief'},45000).then(function(data){
+  if(!battleBriefPromise)battleBriefPromise=apiGet({action:'battleBrief'},45000).finally(function(){battleBriefPromise=null;});
+  var warning=el.querySelector('.battle-refresh-warning');
+  if(warning)warning.remove();
+  el.querySelectorAll('.battle-report-refresh').forEach(function(button){button.disabled=true;});
+  return battleBriefPromise.then(function(data){
+    if(!data)throw new Error('戰情總匯報暫時無法更新');
     writeTimedMarketCache(BATTLE_BRIEF_CACHE_KEY,data);
+    if(document.getElementById('battle-brief-content')!==el)return data;
     setDataFreshness('battle-freshness',dataFreshnessMeta(data,false,false));
     renderBattleBrief(data,el);
     setCouncilPanelStatusIfActive('ok','戰情總匯報已更新');
     return data;
   }).catch(function(e){
-    if(!cached||force)el.innerHTML=`<div style="color:var(--coral);font-family:var(--sans);font-size:12px;padding:12px 0">${esc(e.message||'戰情總匯報讀取失敗')}</div>`;
-    setCouncilPanelStatusIfActive(cached&&!force?'pending':'err',cached&&!force?'顯示戰情快取':'戰情總匯報讀取失敗');
+    if(document.getElementById('battle-brief-content')!==el)return null;
+    var retained=!!el.querySelector('.battle-report-head');
+    var oldWarning=el.querySelector('.battle-refresh-warning');
+    if(oldWarning)oldWarning.remove();
+    var message='<div class="battle-refresh-warning" role="status">'+(retained?'更新失敗，保留上次成功資料。':'戰情總匯報讀取失敗。')+esc(e.message||'請稍後再試')+'</div>';
+    if(retained)el.insertAdjacentHTML('afterbegin',message);
+    else el.innerHTML=message+'<button class="battle-report-refresh" type="button" onclick="loadBattleBrief(true)">重試</button>';
+    setCouncilPanelStatusIfActive('err',retained?'更新失敗，顯示上次戰情':'戰情總匯報讀取失敗');
     return null;
   }).finally(function(){
-    battleBriefPromise=null;
+    el.querySelectorAll('.battle-report-refresh').forEach(function(button){button.disabled=false;});
   });
-  return battleBriefPromise;
 }
 
 async function loadHoldings(){
@@ -16336,7 +16343,7 @@ async function taiwanMacroUpdate(){
   taiwanMacroSyncPromise=apiGet({action:'taiwanMacroUpdate'},120000).then(function(result){
     if(!result||result.ok===false)throw new Error(result&&result.error||'官方資料同步失敗');
     return loadTaiwanMacro(true);
-  }).then(function(result){setCouncilPanelStatusIfActive('ok','台灣總體經濟同步完成');return result;}).catch(function(error){
+  }).then(function(result){renderTaiwanMacroSections();return result;}).catch(function(error){
     setCouncilPanelStatusIfActive('err','台灣總體經濟同步失敗');
     var el=document.getElementById('taiwan-macro-content');
     if(el&&!el.textContent.trim())el.innerHTML='<div class="taiwan-macro-empty">同步失敗：'+esc(error&&error.message||'請稍後再試')+'</div>';
@@ -16344,14 +16351,56 @@ async function taiwanMacroUpdate(){
   }).finally(function(){taiwanMacroSyncPromise=null;});
   return taiwanMacroSyncPromise;
 }
-async function loadTaiwanMacro(force,range){
-  var el=document.getElementById('taiwan-macro-content'); if(!el)return;
-  range=range||'1Y';
+// Council stability: independent sections, shared requests and latest selected range.
+var taiwanMacroView={range:'1Y',overview:null,history:{},errors:{},requests:{}};
+function renderTaiwanMacroSections(){
+  var el=document.getElementById('taiwan-macro-content');
+  if(!el)return;
+  var state=taiwanMacroView,range=state.range;
+  if(!el.querySelector('[data-taiwan-overview]'))el.innerHTML='<div data-taiwan-overview></div><div data-taiwan-history></div>';
+  var overview=el.querySelector('[data-taiwan-overview]');
+  var history=el.querySelector('[data-taiwan-history]');
+  if(state.overview){
+    renderTaiwanMacro(state.overview,{},overview,range);
+    var embedded=overview.querySelector('.taiwan-macro-history');
+    if(embedded)embedded.remove();
+  }else overview.innerHTML='<div class="taiwan-macro-empty">'+(state.requests.overview?'最新指標讀取中…':'最新指標尚未取得')+'</div>';
+  function notice(key,hasData,part){
+    if(!state.errors[key])return state.requests[key]?'<div role="status">'+(hasData?'更新中，顯示上次成功資料…':'讀取中…')+'</div>':'';
+    return '<div class="taiwan-macro-empty" role="status">'+(hasData?'更新失敗，保留上次成功資料。':'讀取失敗。')+esc(state.errors[key])+' <button class="battle-report-refresh" type="button" onclick="loadTaiwanMacro(true,undefined,\''+part+'\')">重試此區</button></div>';
+  }
+  overview.insertAdjacentHTML('afterbegin',notice('overview',!!state.overview,'overview'));
+  var controls=['6M','1Y','3Y','5Y'].map(function(item){return '<button class="'+(range===item?'active':'')+'" type="button" onclick="loadTaiwanMacro(false,\''+item+'\',\'history\')">'+item+'</button>';}).join('');
+  var data=state.history[range];
+  history.innerHTML='<div class="taiwan-macro-history"><div class="taiwan-macro-history-head"><div class="taiwan-macro-section-title">歷史趨勢</div><div class="taiwan-macro-range">'+controls+'</div></div>'+notice('history:'+range,!!data,'history')+(data?taiwanMacroChart(data.rows||[],'business_cycle_score','景氣綜合判斷分數')+taiwanMacroChart(data.rows||[],'exports_yoy','出口 YoY'):'')+'</div>';
+  var pending=state.requests.overview||state.requests['history:'+range];
+  var failed=state.errors.overview||state.errors['history:'+range];
+  setCouncilPanelStatusIfActive(pending?'pending':failed?'err':'ok',pending?'台灣總體經濟更新中':failed?'部分資料更新失敗':'台灣總體經濟已連線');
+}
+async function loadTaiwanMacro(force,range,section){
+  var el=document.getElementById('taiwan-macro-content');if(!el)return;
   if(!API_URL){el.innerHTML=setupNotice();return;}
-  if(!force&&taiwanMacroPromise){return taiwanMacroPromise;}
-  setCouncilPanelStatusIfActive('pending','台灣總體經濟讀取中');
-  taiwanMacroPromise=Promise.all([apiGet({action:'taiwanMacroOverview'},30000),apiGet({action:'taiwanMacroHistory',range:range},30000)]).then(function(result){renderTaiwanMacro(result[0],result[1],el,range);setCouncilPanelStatusIfActive('ok','台灣總體經濟已連線');return result;}).catch(function(error){el.innerHTML='<div class="taiwan-macro-empty">台灣總體經濟讀取失敗：'+esc(error&&error.message||'請稍後再試')+'</div>';setCouncilPanelStatusIfActive('err','台灣總體經濟讀取失敗');throw error;}).finally(function(){taiwanMacroPromise=null;});
-  return taiwanMacroPromise;
+  var state=taiwanMacroView;
+  range=range||state.range;
+  if(['6M','1Y','3Y','5Y'].indexOf(range)<0)range='1Y';
+  state.range=range;
+  function request(key,params,save){
+    if(state.requests[key])return state.requests[key];
+    delete state.errors[key];
+    state.requests[key]=Promise.resolve().then(function(){return apiGet(params,30000);}).then(function(data){
+      save(data);return data;
+    }).catch(function(error){state.errors[key]=error&&error.message||'請稍後再試';return null;}).finally(function(){
+      delete state.requests[key];renderTaiwanMacroSections();
+    });
+    return state.requests[key];
+  }
+  var jobs=[];
+  if(section!=='history')jobs.push(request('overview',{action:'taiwanMacroOverview'},function(data){state.overview=data;}));
+  if(section!=='overview')jobs.push(request('history:'+range,{action:'taiwanMacroHistory',range:range},function(data){state.history[range]=data;}));
+  renderTaiwanMacroSections();
+  var pending=Promise.all(jobs);
+  taiwanMacroPromise=pending;
+  return pending.finally(function(){if(taiwanMacroPromise===pending)taiwanMacroPromise=null;});
 }
 
 function setupNotice(){
