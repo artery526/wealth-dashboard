@@ -17,6 +17,25 @@ test('Pangtong income shortcuts map to fixed Stock account', async ({ page }) =>
   ]);
 });
 
+test('Pangtong financial commands show a confirmation card before writing', async ({ page }) => {
+  await page.goto(dashboardUrl);
+  await page.evaluate(() => {
+    const panel = document.getElementById('advisor-shortcut-panel');
+    panel.innerHTML = '';
+    advisorAIShowWriteConfirmation({
+      intent: 'income',
+      source: '🪙副業兼職',
+      account: '💵國泰Stock',
+      amount: 5000,
+      note: '龐統口令：兼職'
+    });
+  });
+  await expect(page.locator('#advisor-shortcut-panel')).toContainText('請確認財務操作');
+  await expect(page.locator('#advisor-shortcut-panel')).toContainText('收入來源：🪙副業兼職');
+  await expect(page.locator('#advisor-shortcut-panel').getByRole('button', { name: '取消' })).toBeVisible();
+  await expect(page.locator('#advisor-shortcut-panel').getByRole('button', { name: '確認記錄' })).toBeVisible();
+});
+
 test('battle brief panel renders with stable formatting', async ({ page }) => {
   const pageErrors = [];
   page.on('pageerror', error => pageErrors.push(error.message));
