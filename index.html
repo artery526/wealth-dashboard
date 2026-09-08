@@ -4456,10 +4456,10 @@ html[data-theme="deep-blue"] .advisor-ai-standalone .advisor-ai-quick-select:foc
 .npc-web-scene-stage{position:relative;aspect-ratio:3/2;overflow:hidden}
 .npc-web-scene-map{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:cover;filter:brightness(.68) saturate(.82) contrast(.96)}
 .npc-web-scene .animated-character{position:absolute;z-index:2;aspect-ratio:2/3;border:0;padding:0;background:transparent;cursor:pointer}
-.npc-web-scene .character-art{position:absolute;inset:0;display:block;transform-origin:50% 95%;transition:transform .2s ease,filter .2s ease}
+.npc-web-scene .character-art{position:absolute;inset:0;display:block;transform:scale(var(--frame-scale,1));transform-origin:50% 95%;transition:transform .2s ease,filter .2s ease}
 .npc-web-scene .character-art img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:center bottom}
 .npc-web-scene .character-art img[hidden],.npc-web-scene .animated-character[hidden]{display:none}
-.npc-web-scene .animated-character:hover .character-art,.npc-web-scene .animated-character:focus-visible .character-art{transform:scale(1.04);filter:drop-shadow(0 0 7px rgba(255,224,165,.76))}
+.npc-web-scene .animated-character:hover .character-art,.npc-web-scene .animated-character:focus-visible .character-art{transform:scale(calc(var(--frame-scale,1) * 1.04));filter:drop-shadow(0 0 7px rgba(255,224,165,.76))}
 .npc-web-scene .character-debug{display:none}
 .scene-widget-dock{position:absolute;z-index:7;top:18px;left:18px;right:18px;width:auto;display:grid;grid-template-columns:repeat(2,minmax(0,216px));justify-content:space-between;gap:8px;align-items:start;transition:top .2s ease,left .2s ease,right .2s ease,width .2s ease}
 .scene-widget-dock.calendar-expanded{left:18px;right:auto;width:min(440px,calc(100% - 36px))}
@@ -4537,8 +4537,8 @@ html[data-theme="deep-blue"] .scene-task-details .home-agenda-global-refresh{bor
 }
 @media(prefers-reduced-motion:reduce){.npc-web-scene .character-art{transition:none}.npc-web-scene .animated-character:hover .character-art{transform:none}}
 </style>
-<script src="./characterAnimations.js?v=20260908-web20"></script>
-<script src="./AnimatedCharacter.js?v=20260907-web2"></script>
+<script src="./characterAnimations.js?v=20260908-web21"></script>
+<script src="./AnimatedCharacter.js?v=20260908-web3"></script>
 <style>
 .council-review-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:16px 0 10px;font-family:var(--sans)}
 .council-review-toolbar .council-army-title{margin:0;width:100%}

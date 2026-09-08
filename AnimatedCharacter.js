@@ -55,6 +55,7 @@ window.AnimatedCharacter = class AnimatedCharacter {
   }
   show(frame, state) {
     for (const [key, img] of Object.entries(this.images)) img.hidden = key !== frame;
+    this.art.style.setProperty('--frame-scale', String(this.config.frameScale?.[frame] || 1));
     this.state = state;
     this.button.dataset.state = state;
     this.button.dataset.frame = frame;

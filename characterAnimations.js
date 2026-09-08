@@ -162,6 +162,14 @@ const liubeiAssetVersion = '20260908-liubei-battle1';
 const liubeiAsset = file => `./劉備/${file}?v=${liubeiAssetVersion}`;
 const liubeiAnimations = {
   name: '劉備',
+  frameScale: {
+    '12': 1.65,
+    '13': 1.65,
+    '14': 1.65,
+    '15': 1.65,
+    '16': 1.65,
+    '17': 1.2
+  },
   frames: {
     '01': liubeiAsset('站立01.png'),
     '02': liubeiAsset('大笑02.png'),
