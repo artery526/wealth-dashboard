@@ -1034,8 +1034,11 @@ body::after{
 .store-item-attachments-title,.store-item-attachment-empty,.store-item-attachments>span{color:#8aa7b6;font:800 11px var(--sans);white-space:nowrap}
 .store-item-attachments-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
 .store-item-attachment{height:27px!important;padding:0 5px!important;font-size:10px!important}
-.store-item-meta{display:grid;grid-template-columns:auto minmax(0,1fr);gap:3px 8px;font:800 12px/1.55 var(--sans)}
-.store-item-label{color:#6ea4b7}.store-item-value{color:#bcefff;overflow-wrap:anywhere}
+.store-item-meta{display:grid;gap:7px;font:800 12px/1.55 var(--sans)}
+.store-item-badges{display:flex;flex-wrap:wrap;gap:7px}
+.store-item-badge{display:inline-flex;align-items:center;gap:6px;min-width:0;padding:4px 8px;border:1px solid rgba(65,157,194,.42);border-radius:7px;background:rgba(6,27,43,.58)}
+.store-item-badge-label{color:#6ea4b7;white-space:nowrap}.store-item-badge-value{color:#bcefff;overflow-wrap:anywhere}
+.store-item-description{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;min-width:0}.store-item-label{color:#6ea4b7}.store-item-value{color:#bcefff;overflow-wrap:anywhere}
 .store-item-actions{display:flex;justify-content:flex-end;gap:7px;margin-top:3px}
 .store-item-action{height:30px;border:1px solid rgba(65,157,194,.42);border-radius:7px;background:rgba(6,27,43,.76);color:#aeefff;font:900 11px var(--sans);padding:0 10px;cursor:pointer}
 .store-item-action:hover{border-color:#71d8f7;background:rgba(20,74,98,.78)}
@@ -1051,7 +1054,7 @@ body::after{
 .store-header-date-button{border:1px solid rgba(232,192,80,.55);border-radius:7px;background:rgba(232,192,80,.1);color:#fff3bf;font:900 12px var(--sans);padding:5px 7px;cursor:pointer;white-space:nowrap}
 .store-header-date-button:hover{border-color:#fff3bf;background:rgba(232,192,80,.2)}
 .store-header-date-input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
-@media(max-width:650px){.store-grid{grid-template-columns:1fr}.store-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.store-form-group.full{grid-column:1/-1}.store-toolbar,.store-date-filters{grid-template-columns:1fr}.store-add-button{width:100%}.store-count-row{flex-wrap:wrap}.store-search-inline{order:3;flex:1 1 100%;width:100%}.store-item-card{padding:10px}.store-item-card-head{align-items:center;padding-right:84px}.store-item-heading{gap:6px}.store-item-name{min-width:0;flex:1;font-size:16px}.store-item-location-inline{max-width:42%;font-size:11px}.store-item-date-button{top:10px;right:43px;font-size:11px}.store-item-menu{top:8px;right:8px}.store-item-meta .store-location-meta,.store-item-meta .store-date-meta{display:none}.store-header-date-button{font-size:11px;padding:4px 5px}}
+@media(max-width:650px){.store-grid{grid-template-columns:1fr}.store-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.store-form-group.full{grid-column:1/-1}.store-toolbar,.store-date-filters{grid-template-columns:1fr}.store-add-button{width:100%}.store-count-row{flex-wrap:wrap}.store-search-inline{order:3;flex:1 1 100%;width:100%}.store-item-card{padding:10px}.store-item-card-head{align-items:center;padding-right:84px}.store-item-heading{gap:6px}.store-item-name{min-width:0;flex:1;font-size:16px}.store-item-date-button{top:10px;right:43px;font-size:11px}.store-item-menu{top:8px;right:8px}.store-header-date-button{font-size:11px;padding:4px 5px}}
 .market-lord{
   position:absolute;
   top:-65px;
@@ -6495,19 +6498,17 @@ function renderStoreList(){
     var row=Number(record.row);
     var dateValue=storeDateInputValue(record.recordDate)||getStoreTodayInputValue();
     return '<article class="store-item-card">'+
-      '<div class="store-item-card-head"><div class="store-item-heading"><div class="store-item-name">'+esc(record.itemName||'未命名物品')+'</div><button class="store-item-attachment-trigger" type="button" title="上傳附件" aria-label="上傳 '+esc(record.itemName||'物品')+' 附件" onclick="chooseStoreRecordAttachment(event,'+row+')">⬆</button><input class="store-item-attachment-input" id="store-attachment-'+row+'" type="file" accept="image/*,video/mp4,video/quicktime,video/webm,.heic,.heif,.mp4,.mov,.m4v,.webm,application/pdf,.pdf" multiple onchange="uploadStoreRecordAttachment(event,'+row+',this)"><span class="store-item-location-inline">'+esc(record.location||'—')+'</span></div><button class="store-item-date-button" type="button" title="修改記錄日期" onclick="chooseStoreRecordDate(event,'+row+')">'+esc(formatStoreShortDate(dateValue))+'</button><input class="store-item-date-input" id="store-date-'+row+'" type="date" value="'+esc(dateValue)+'" onchange="saveStoreRecordDate(event,'+row+',this)"></div>'+
+      '<div class="store-item-card-head"><div class="store-item-heading"><div class="store-item-name">'+esc(record.itemName||'未命名物品')+'</div><button class="store-item-attachment-trigger" type="button" title="上傳附件" aria-label="上傳 '+esc(record.itemName||'物品')+' 附件" onclick="chooseStoreRecordAttachment(event,'+row+')">⬆</button><input class="store-item-attachment-input" id="store-attachment-'+row+'" type="file" accept="image/*,video/mp4,video/quicktime,video/webm,.heic,.heif,.mp4,.mov,.m4v,.webm,application/pdf,.pdf" multiple onchange="uploadStoreRecordAttachment(event,'+row+',this)"></div><button class="store-item-date-button" type="button" title="修改記錄日期" onclick="chooseStoreRecordDate(event,'+row+')">'+esc(formatStoreShortDate(dateValue))+'</button><input class="store-item-date-input" id="store-date-'+row+'" type="date" value="'+esc(dateValue)+'" onchange="saveStoreRecordDate(event,'+row+',this)"></div>'+
       '<div class="store-item-meta">'+
-        '<span class="store-item-label store-location-meta">所在地點</span><span class="store-item-value store-location-meta">'+esc(record.location||'—')+'</span>'+
-        '<span class="store-item-label">編號</span><span class="store-item-value">'+esc(record.code||'—')+'</span>'+
-        '<span class="store-item-label">說明</span><span class="store-item-value">'+esc(record.description||'—')+'</span>'+
-        '<span class="store-item-label store-date-meta">記錄時間</span><span class="store-item-value store-date-meta">'+esc(record.recordDate||'—')+'</span>'+
+        '<div class="store-item-badges"><span class="store-item-badge"><span class="store-item-badge-label">地點</span><span class="store-item-badge-value">['+esc(record.location||'—')+']</span></span><span class="store-item-badge"><span class="store-item-badge-label">編號</span><span class="store-item-badge-value">['+esc(record.code||'—')+']</span></span></div>'+
+        '<div class="store-item-description"><span class="store-item-label">說明</span><span class="store-item-value">'+esc(record.description||'—')+'</span></div>'+
       '</div><div class="store-item-menu"><button class="store-item-menu-button" type="button" aria-label="'+esc(record.itemName||'物品')+'操作選單" title="操作選單" aria-expanded="false" onclick="toggleStoreItemMenu(event,this)">⚙</button><div class="store-item-menu-panel" role="menu"><div class="store-item-attachments" data-store-media="'+Number(record.row)+'"><span>附件載入中…</span></div><button class="store-item-action" type="button" role="menuitem" onclick="editStoreRecord('+Number(record.row)+')">編輯</button><button class="store-item-action danger" type="button" role="menuitem" onclick="removeStoreRecord('+Number(record.row)+')">移除</button></div></div></article>';
   }).join('')+'</div>';
 }
 
 function formatStoreShortDate(value){
   var match=String(value||'').match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})$/);
-  return match?String(match[1]).slice(-2)+'/'+String(Number(match[2])).padStart(2,'0')+'/'+String(Number(match[3])).padStart(2,'0'):String(value||'--');
+  return match?String(match[1]).slice(-2)+'.'+String(Number(match[2])).padStart(2,'0')+'.'+String(Number(match[3])).padStart(2,'0'):String(value||'--');
 }
 
 function chooseStoreRecordDate(event,row){
