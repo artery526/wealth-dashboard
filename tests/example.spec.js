@@ -46,6 +46,25 @@ test('Pangtong quick transfer entry and transfer commands are removed', async ({
   expect(result.transferCommand.intent).toBe('unknown');
 });
 
+test('Pangtong income dropdown builds a fixed Stock income command', async ({ page }) => {
+  await page.goto(dashboardUrl);
+  const result = await page.evaluate(() => {
+    const panel = document.getElementById('advisor-shortcut-panel');
+    openAdvisorAI(panel);
+    const select = document.getElementById('advisor-ai-income-select');
+    return {
+      optionLabels: Array.from(select.options).map(option => option.textContent),
+      command: advisorAIQuickIncomeCommand('👷工作所得', '5000')
+    };
+  });
+  expect(result.optionLabels).toEqual([
+    '收入來源', '💰投資理財', '👷工作所得', '🪙副業兼職', '💲交易所得', '🤶爸媽收入', '🪙機構退稅'
+  ]);
+  expect(result.command).toEqual({
+    intent: 'income', source: '👷工作所得', account: '💵國泰Stock', amount: 5000, note: '龐統下拉收入：👷工作所得'
+  });
+});
+
 test('battle brief panel renders with stable formatting', async ({ page }) => {
   const pageErrors = [];
   page.on('pageerror', error => pageErrors.push(error.message));
