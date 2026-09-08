@@ -3232,6 +3232,7 @@ body::after{
 .ark-wall-memo-date{font-family:var(--mono);font-size:12px;font-weight:900;color:#bda36d;white-space:nowrap}
 .ark-wall-memo-star{color:#f0c94a;font-size:16px;line-height:1}
 .ark-wall-memo-title{min-width:0;font-family:var(--sans);font-size:14px;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(max-width:760px){.ark-wall-memo-row{grid-template-columns:minmax(0,1fr);gap:5px;min-height:64px}.ark-wall-memo-title{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;white-space:normal;line-height:1.5}.ark-wall-memo-select{height:44px}}
 .ark-wall-memo-row.pinned{border-color:rgba(232,192,80,.4);background:rgba(232,192,80,.1)}
 .ark-wall-memo-tags{display:flex;gap:7px;flex-wrap:wrap}
 .ark-wall-memo-tag{border:1px solid rgba(29,158,117,.28);border-radius:999px;background:rgba(29,158,117,.08);color:#a8f1d6;font-family:var(--sans);font-size:12px;font-weight:900;padding:7px 10px;cursor:pointer;transition:border-color .18s,background .18s,color .18s}
@@ -10806,18 +10807,23 @@ function renderArkWallMemoList(){
   var tagButtons=tags.map(function(tag){return '<button class="ark-wall-memo-tag '+(arkWallMemoTag===tag?'active':'')+'" type="button" data-memo-tag="'+esc(tag)+'" onclick="setArkWallMemoTag(\''+esc(tag)+'\')">'+esc(tag)+'</button>';}).join('');
   var yearOptions=arkWallSelectOptions(years,arkWallMemoYear,function(year){return year+'年';});
   var monthOptions=arkWallSelectOptions(months,arkWallMemoMonth,function(month){return Number(month)+'月';});
-  var list=entries.map(function(entry){
+  function memoRows(items){return items.map(function(entry){
     var id=entry.id||entry.slug||'';
     var pin=!!entry.pinned;
     return '<button class="ark-wall-memo-row '+(pin?'pinned':'')+'" type="button" onclick="openArkWallEntry(\''+esc(id)+'\')">'
-      +'<span class="ark-wall-memo-date">'+(pin?'<span class="ark-wall-memo-star" title="置頂">&#9733;</span> ':esc(entry.date||'未定日期'))+'</span>'
+      +'<span class="ark-wall-memo-date">'+(pin?'<span class="ark-wall-memo-star" title="置頂">&#9733;</span> ':'')+esc(entry.date||'未定日期')+'</span>'
       +'<span class="ark-wall-memo-title">'+esc(entry.title||'未命名紀錄')+'</span>'
     +'</button>';
-  }).join('');
+  }).join('');}
+  var pinned=entries.filter(function(entry){return !!entry.pinned;});
+  var regular=entries.filter(function(entry){return !entry.pinned;});
+  var list=(pinned.length?'<div class="ark-wall-month-title">★ 置頂文章 · '+pinned.length+' 篇'+(query?'':'（跨月份）')+'</div><div class="ark-wall-memo-list">'+memoRows(pinned)+'</div>':'')
+    +'<div class="ark-wall-month-title">'+esc(query?'搜尋所有月份':arkWallMonthLabel(arkWallMemoYear,arkWallMemoMonth)+'文章')+' · '+regular.length+' 篇</div>'
+    +(regular.length?'<div class="ark-wall-memo-list">'+memoRows(regular)+'</div>':'<div class="travel-status">沒有符合條件的非置頂文章。</div>');
   return '<div class="ark-wall-memo-tools"><div class="ark-wall-memo-tags">'+tagButtons+'</div>'+renderArkWallSearchBox()+'</div>'
     +'<div class="ark-wall-memo-filter"><select class="ark-wall-memo-select" aria-label="年份" onchange="setArkWallMemoYear(this.value)">'+yearOptions+'</select><select class="ark-wall-memo-select" aria-label="月份" onchange="setArkWallMemoMonth(this.value)">'+monthOptions+'</select></div>'
     +'<div class="ark-wall-count">備忘隨筆 · '+entries.length+' 篇</div>'
-    +(list?'<div class="ark-wall-memo-list">'+list+'</div>':'<div class="travel-status">沒有符合條件的備忘隨筆。</div>');
+    +list;
 }
 
 function renderArkWallMarketList(){
