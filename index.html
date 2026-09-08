@@ -2276,6 +2276,9 @@ body::after{
 }
 .dividend-use-btn:hover{box-shadow:0 0 14px rgba(124,111,192,.38)}
 .dividend-section-title{font-family:var(--sans);font-size:10px;letter-spacing:3px;color:#7a6030;text-transform:uppercase;border-bottom:1px solid #1e1408;padding-bottom:7px;margin:15px 0 9px}
+.dividend-center-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin:0 0 12px}
+.dividend-center-tab{min-width:0;padding:9px 8px;border:1px solid rgba(232,192,80,.28);border-radius:7px;background:rgba(232,192,80,.05);color:#9a7430;font-family:var(--sans);font-size:12px;font-weight:900;cursor:pointer}
+.dividend-center-tab.active{border-color:rgba(124,111,192,.7);background:linear-gradient(180deg,rgba(71,59,147,.72),rgba(43,33,92,.72));color:#fff}
 .dividend-pending-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid #1e1408}
 .dividend-pending-name{font-family:var(--sans);font-size:12px;font-weight:800;color:var(--ink)}
 .dividend-pending-meta{font-family:var(--sans);font-size:12px;font-weight:800;color:#c09a50;margin-top:4px;line-height:1.5}
@@ -4846,6 +4849,7 @@ var bookingDividendHiddenRows = {};
 var bookingDividendExpanded = false;
 var bookingDividendPickerOpen = false;
 var bookingHoldingTradePickerOpen = false;
+var dividendCenterView = 'pending';
 var DIVIDEND_CACHE_TTL = 5 * 60 * 1000;
 var DIVIDEND_AUTOFILL_SYMBOLS = ['CHPY','AIPI','QQQI','MLPI','PLTY','00997A'];
 var heroCache = [];
@@ -12435,7 +12439,7 @@ async function loadDividendCenterPanel(force){
     var data=await loadDividendCenter(!!force);
     setDataFreshness('finance-dividend-freshness',dataFreshnessMeta(data,dividendCenterFetchedAt,dividendCenterLastLoadedFromCache));
     el.innerHTML=renderDividendCenter(data,true);
-    initDividendEntryForm(data);
+    initDividendCenterView(data);
     setEmpireCardStatus(bookingPanelStatusKey(),'ok','持股備忘錄已載入');
   }catch(e){
     var msg=(e&&e.message)||'持股備忘錄讀取失敗';
@@ -12466,7 +12470,7 @@ async function refreshDividendViewsAfterEntry(){
     var center=document.getElementById('dividend-center-content');
     if(center){
       center.innerHTML=renderDividendCenter(data,true);
-      initDividendEntryForm(data);
+      initDividendCenterView(data);
     }
     var booking=document.getElementById('booking-dividend-pending');
     if(booking)booking.innerHTML=renderBookingDividendPending(data);
@@ -12530,22 +12534,83 @@ function renderBookingHoldingTradePicker(data){
     </div>`;
 }
 
+function setDividendCenterView(view){
+  dividendCenterView=view==='calculator'?'calculator':'pending';
+  var el=document.getElementById('dividend-center-content');
+  if(!el)return;
+  el.innerHTML=renderDividendCenter(dividendCenterCache||{},true);
+  initDividendCenterView(dividendCenterCache||{});
+}
+
+function openDividendCalculatorInFinanceCenter(){
+  dividendCenterView='calculator';
+  openEmpireCardShortcut(null,'finance','dividend-center');
+}
+
+function initDividendCenterView(data){
+  if(dividendCenterView==='calculator'){
+    advisorDividendCalcSetMarket(advisorDividendCalcMarket);
+    advisorDividendCalcSetFrequency(advisorDividendCalcFrequency);
+    return;
+  }
+  initDividendEntryForm(data);
+}
+
+function renderDividendCalculatorPanel(){
+  return `<div class="advisor-div-calc-card dividend-center-calculator">
+      <div class="advisor-shortcut-title">🧮 配息試算</div>
+      <div class="advisor-shortcut-hint">只在本頁計算，不會儲存、不會寫入配息紀錄。</div>
+      <div class="advisor-div-calc-market" role="group" aria-label="市場">
+        <button class="advisor-div-calc-btn active" id="advisor-div-calc-tw" type="button" onclick="advisorDividendCalcSetMarket('tw')">🇹🇼 台股</button>
+        <button class="advisor-div-calc-btn" id="advisor-div-calc-us" type="button" onclick="advisorDividendCalcSetMarket('us')">🇺🇸 美股</button>
+      </div>
+      <div class="advisor-div-calc-grid">
+        <div class="advisor-div-calc-field"><label for="advisor-div-calc-investment">投入金額（台幣，自動計算）</label><input id="advisor-div-calc-investment" type="number" min="0" step="0.01" placeholder="輸入股數與股價後自動帶入" inputmode="decimal" oninput="advisorDividendCalcUpdate()"></div>
+        <div class="advisor-div-calc-field"><label for="advisor-div-calc-price">股價（${advisorDividendCalcMarket==='us'?'USD':'TWD'}）</label><input id="advisor-div-calc-price" type="number" min="0" step="0.01" placeholder="例如 52.2" inputmode="decimal" oninput="advisorDividendCalcUpdate()"></div>
+        <div class="advisor-div-calc-field"><label for="advisor-div-calc-shares">持股股數（可選）</label><input id="advisor-div-calc-shares" type="number" min="0" step="1" placeholder="留白則由投入金額反推" inputmode="decimal" oninput="advisorDividendCalcUpdate()"></div>
+        <div class="advisor-div-calc-field"><label for="advisor-div-calc-rate">每股配息（${advisorDividendCalcMarket==='us'?'USD':'TWD'}）</label><input id="advisor-div-calc-rate" type="number" min="0" step="0.0001" placeholder="例如 0.82" inputmode="decimal" oninput="advisorDividendCalcUpdate()"></div>
+        <div class="advisor-div-calc-field" id="advisor-div-calc-fx-field"><label for="advisor-div-calc-fx">USD／TWD 匯率</label><input id="advisor-div-calc-fx" type="number" min="0" step="0.01" value="32.5" inputmode="decimal" oninput="advisorDividendCalcUpdate()"></div>
+        <div class="advisor-div-calc-field" id="advisor-div-calc-tax-field"><label for="advisor-div-calc-tax">美股預扣稅率（%）</label><input id="advisor-div-calc-tax" type="number" min="0" max="100" step="1" value="30" inputmode="decimal" oninput="advisorDividendCalcUpdate()"></div>
+      </div>
+      <div class="advisor-shortcut-hint" style="margin:9px 0 4px">配息頻率</div>
+      <div class="advisor-div-calc-frequency" role="group" aria-label="配息頻率">
+        <button class="advisor-div-calc-btn active" id="advisor-div-calc-monthly" type="button" onclick="advisorDividendCalcSetFrequency('monthly')">月配</button>
+        <button class="advisor-div-calc-btn" id="advisor-div-calc-quarterly" type="button" onclick="advisorDividendCalcSetFrequency('quarterly')">季配</button>
+        <button class="advisor-div-calc-btn" id="advisor-div-calc-semiannual" type="button" onclick="advisorDividendCalcSetFrequency('semiannual')">半年配</button>
+        <button class="advisor-div-calc-btn" id="advisor-div-calc-annual" type="button" onclick="advisorDividendCalcSetFrequency('annual')">年配</button>
+      </div>
+      <div class="advisor-div-calc-note" id="advisor-div-calc-note">填入投入金額、股價與每股配息後即時估算；持股股數有填寫時會優先採用。</div>
+      <div class="advisor-div-calc-result" aria-live="polite">
+        <div class="advisor-div-calc-result-item primary"><span>月均配息（台幣）</span><strong id="advisor-div-calc-monthly-result">—</strong></div>
+        <div class="advisor-div-calc-result-item"><span>可計算股數</span><strong id="advisor-div-calc-shares-result">—</strong></div>
+        <div class="advisor-div-calc-result-item"><span>單次配息</span><strong id="advisor-div-calc-once-result">—</strong></div>
+        <div class="advisor-div-calc-result-item"><span>年配息估算</span><strong id="advisor-div-calc-annual-result">—</strong></div>
+        <div class="advisor-div-calc-result-item"><span>年化配息率</span><strong id="advisor-div-calc-yield-result">—</strong></div>
+      </div>
+    </div>`;
+}
+
 function renderDividendCenter(data,includeArchitecture){
   data=data||{};
   var pending=dividendPendingDisplayRows(data.pending||[]).filter(function(row){return !isDividendPendingHidden(row);});
   var pendingRows=pending.map(function(row){return renderDividendPendingRow(row,'center');}).join('')||'<div class="dividend-empty">目前沒有待入帳配息。</div>';
   var tradePending=dividendPendingDisplayRows(data.holdingTradePending||[]);
   var tradeRows=tradePending.map(renderHoldingTradePendingRow).join('')||'<div class="dividend-empty">目前沒有待入帳持股記錄。</div>';
+  var calculator=dividendCenterView==='calculator';
   return `
-    ${includeArchitecture?renderHoldingTradeEntryForm():''}
-    <div style="display:flex;gap:8px;margin-bottom:12px">
-      <button class="dividend-use-btn" style="width:auto;margin:0" onclick="loadDividendCenterPanel(true)">重新整理</button>
-      <span class="result-msg" id="dividend-center-msg"></span>
+    <div class="dividend-center-tabs" role="tablist" aria-label="持股與配息功能">
+      <button class="dividend-center-tab${calculator?'':' active'}" type="button" role="tab" aria-selected="${calculator?'false':'true'}" onclick="setDividendCenterView('pending')">待入帳持股記錄</button>
+      <button class="dividend-center-tab${calculator?' active':''}" type="button" role="tab" aria-selected="${calculator?'true':'false'}" onclick="setDividendCenterView('calculator')">🧮 配息試算</button>
     </div>
-    <div class="dividend-section-title">待入帳持股記錄</div>
-    ${tradeRows}
-    <div class="dividend-section-title">待入帳配息</div>
-    ${pendingRows}`;
+    ${calculator?renderDividendCalculatorPanel():`${includeArchitecture?renderHoldingTradeEntryForm():''}
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <button class="dividend-use-btn" style="width:auto;margin:0" onclick="loadDividendCenterPanel(true)">重新整理</button>
+        <span class="result-msg" id="dividend-center-msg"></span>
+      </div>
+      <div class="dividend-section-title">待入帳持股記錄</div>
+      ${tradeRows}
+      <div class="dividend-section-title">待入帳配息</div>
+      ${pendingRows}`}`;
 }
 
 function dividendPendingDisplayRows(rows){
@@ -12989,7 +13054,7 @@ async function deleteHoldingTradePending(rowId,btn){
     if(center){
       setDataFreshness('finance-dividend-freshness',dataFreshnessMeta(data,dividendCenterFetchedAt,dividendCenterLastLoadedFromCache));
       center.innerHTML=renderDividendCenter(data,true);
-      initDividendEntryForm(data);
+      initDividendCenterView(data);
     }
     refreshBookingDividendPendingView();
     showMsg('dividend-center-msg','已刪除待入帳持股記錄','ok');
@@ -13032,7 +13097,7 @@ async function deleteDividendPending(key,btn){
     var center=document.getElementById('dividend-center-content');
     if(center){
       center.innerHTML=renderDividendCenter(data,true);
-      initDividendEntryForm(data);
+      initDividendCenterView(data);
     }
     refreshBookingDividendPendingView();
     showMsg('dividend-center-msg','已刪除待入帳配息','ok');
@@ -13046,7 +13111,7 @@ async function deleteDividendPending(key,btn){
         var refreshedCenter=document.getElementById('dividend-center-content');
         if(refreshedCenter){
           refreshedCenter.innerHTML=renderDividendCenter(refreshed,true);
-          initDividendEntryForm(refreshed);
+          initDividendCenterView(refreshed);
         }
         refreshBookingDividendPendingView();
       }catch(refreshErr){
@@ -17421,44 +17486,7 @@ var advisorDividendCalcMarket='tw';
 var advisorDividendCalcFrequency='monthly';
 
 function advisorAIOpenDividendCalculator(){
-  var panel=advisorAIActivePanel();
-  if(!panel)return;
-  advisorShortcutOpenKind='dividend-calculator';
-  panel.innerHTML=`${advisorAIHeaderHtml()}
-    <div class="advisor-div-calc-card">
-      <div class="advisor-shortcut-title">🧮 配息試算</div>
-      <div class="advisor-shortcut-hint">只在本頁計算，不會儲存、不會寫入配息紀錄。</div>
-      <div class="advisor-div-calc-market" role="group" aria-label="市場">
-        <button class="advisor-div-calc-btn active" id="advisor-div-calc-tw" type="button" onclick="advisorDividendCalcSetMarket('tw')">🇹🇼 台股</button>
-        <button class="advisor-div-calc-btn" id="advisor-div-calc-us" type="button" onclick="advisorDividendCalcSetMarket('us')">🇺🇸 美股</button>
-      </div>
-      <div class="advisor-div-calc-grid">
-        <div class="advisor-div-calc-field"><label for="advisor-div-calc-investment">投入金額（台幣，自動計算）</label><input id="advisor-div-calc-investment" type="number" min="0" step="0.01" placeholder="輸入股數與股價後自動帶入" inputmode="decimal" oninput="advisorDividendCalcUpdate()"></div>
-        <div class="advisor-div-calc-field"><label for="advisor-div-calc-price">股價（${advisorDividendCalcMarket==='us'?'USD':'TWD'}）</label><input id="advisor-div-calc-price" type="number" min="0" step="0.01" placeholder="例如 52.2" inputmode="decimal" oninput="advisorDividendCalcUpdate()"></div>
-        <div class="advisor-div-calc-field"><label for="advisor-div-calc-shares">持股股數（可選）</label><input id="advisor-div-calc-shares" type="number" min="0" step="1" placeholder="留白則由投入金額反推" inputmode="decimal" oninput="advisorDividendCalcUpdate()"></div>
-        <div class="advisor-div-calc-field"><label for="advisor-div-calc-rate">每股配息（${advisorDividendCalcMarket==='us'?'USD':'TWD'}）</label><input id="advisor-div-calc-rate" type="number" min="0" step="0.0001" placeholder="例如 0.82" inputmode="decimal" oninput="advisorDividendCalcUpdate()"></div>
-        <div class="advisor-div-calc-field" id="advisor-div-calc-fx-field"><label for="advisor-div-calc-fx">USD／TWD 匯率</label><input id="advisor-div-calc-fx" type="number" min="0" step="0.01" value="32.5" inputmode="decimal" oninput="advisorDividendCalcUpdate()"></div>
-        <div class="advisor-div-calc-field" id="advisor-div-calc-tax-field"><label for="advisor-div-calc-tax">美股預扣稅率（%）</label><input id="advisor-div-calc-tax" type="number" min="0" max="100" step="1" value="30" inputmode="decimal" oninput="advisorDividendCalcUpdate()"></div>
-      </div>
-      <div class="advisor-shortcut-hint" style="margin:9px 0 4px">配息頻率</div>
-      <div class="advisor-div-calc-frequency" role="group" aria-label="配息頻率">
-        <button class="advisor-div-calc-btn active" id="advisor-div-calc-monthly" type="button" onclick="advisorDividendCalcSetFrequency('monthly')">月配</button>
-        <button class="advisor-div-calc-btn" id="advisor-div-calc-quarterly" type="button" onclick="advisorDividendCalcSetFrequency('quarterly')">季配</button>
-        <button class="advisor-div-calc-btn" id="advisor-div-calc-semiannual" type="button" onclick="advisorDividendCalcSetFrequency('semiannual')">半年配</button>
-        <button class="advisor-div-calc-btn" id="advisor-div-calc-annual" type="button" onclick="advisorDividendCalcSetFrequency('annual')">年配</button>
-      </div>
-      <div class="advisor-div-calc-note" id="advisor-div-calc-note">填入投入金額、股價與每股配息後即時估算；持股股數有填寫時會優先採用。</div>
-      <div class="advisor-div-calc-result" aria-live="polite">
-        <div class="advisor-div-calc-result-item primary"><span>月均配息（台幣）</span><strong id="advisor-div-calc-monthly-result">—</strong></div>
-        <div class="advisor-div-calc-result-item"><span>可計算股數</span><strong id="advisor-div-calc-shares-result">—</strong></div>
-        <div class="advisor-div-calc-result-item"><span>單次配息</span><strong id="advisor-div-calc-once-result">—</strong></div>
-        <div class="advisor-div-calc-result-item"><span>年配息估算</span><strong id="advisor-div-calc-annual-result">—</strong></div>
-        <div class="advisor-div-calc-result-item"><span>年化配息率</span><strong id="advisor-div-calc-yield-result">—</strong></div>
-      </div>
-      <button class="advisor-shortcut-secondary" type="button" onclick="openAdvisorAI()" style="margin-top:10px">返回龐統軍師</button>
-    </div>`;
-  advisorDividendCalcSetMarket(advisorDividendCalcMarket);
-  advisorDividendCalcSetFrequency(advisorDividendCalcFrequency);
+  openDividendCalculatorInFinanceCenter();
 }
 
 function advisorDividendCalcSetMarket(market){
@@ -17718,7 +17746,7 @@ function advisorAIRunQuickCommand(select){
   if(!command)return;
   if(command==='__dividend_calculator__'){
     if(select)select.value='';
-    advisorAIOpenDividendCalculator();
+    openDividendCalculatorInFinanceCenter();
     return;
   }
   if(command==='__dividend_record__'){

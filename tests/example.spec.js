@@ -46,6 +46,46 @@ test('Pangtong quick transfer entry and transfer commands are removed', async ({
   expect(result.transferCommand.intent).toBe('unknown');
 });
 
+test('dividend calculator is the second holdings center tab and Pangtong routes there', async ({ page }) => {
+  await page.goto(dashboardUrl);
+  const result = await page.evaluate(() => {
+    const content = document.createElement('div');
+    content.id = 'dividend-center-content';
+    document.body.appendChild(content);
+    dividendCenterCache = { pending: [], holdingTradePending: [] };
+    dividendCenterView = 'pending';
+    content.innerHTML = renderDividendCenter(dividendCenterCache, true);
+    const pendingView = {
+      tabs: Array.from(content.querySelectorAll('.dividend-center-tab')).map(button => button.textContent.trim()),
+      hasHoldingEntry: !!content.querySelector('form[onsubmit="submitHoldingTradeEntry(event)"]'),
+      hasCalculator: !!content.querySelector('#advisor-div-calc-investment')
+    };
+    content.querySelector('.dividend-center-tab:nth-child(2)').click();
+    const calculatorView = {
+      hasCalculator: !!content.querySelector('#advisor-div-calc-investment'),
+      hasHoldingEntry: !!content.querySelector('form[onsubmit="submitHoldingTradeEntry(event)"]'),
+      title: content.querySelector('.advisor-shortcut-title')?.textContent.trim()
+    };
+    let route;
+    const originalOpenEmpireCardShortcut = openEmpireCardShortcut;
+    openEmpireCardShortcut = (...args) => { route = args; };
+    advisorAIOpenDividendCalculator();
+    openEmpireCardShortcut = originalOpenEmpireCardShortcut;
+    return { pendingView, calculatorView, route };
+  });
+  expect(result.pendingView).toEqual({
+    tabs: ['待入帳持股記錄', '🧮 配息試算'],
+    hasHoldingEntry: true,
+    hasCalculator: false
+  });
+  expect(result.calculatorView).toEqual({
+    hasCalculator: true,
+    hasHoldingEntry: false,
+    title: '🧮 配息試算'
+  });
+  expect(result.route).toEqual([null, 'finance', 'dividend-center']);
+});
+
 test('Pangtong income dropdown builds a fixed Stock income command', async ({ page }) => {
   await page.goto(dashboardUrl);
   const result = await page.evaluate(() => {
