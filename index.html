@@ -4541,6 +4541,27 @@ html[data-theme="deep-blue"] .scene-task-details .home-agenda-global-refresh{bor
 </style>
 <script src="./characterAnimations.js?v=20260907-web19"></script>
 <script src="./AnimatedCharacter.js?v=20260907-web2"></script>
+<style>
+.council-review-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:16px 0 10px;font-family:var(--sans)}
+.council-review-toolbar .council-army-title{margin:0;width:100%}
+.council-review-toolbar .battle-report-refresh{width:auto;flex:1}
+.council-review-toolbar [aria-pressed="true"]{background:#74511d;color:#fff}
+.council-review-toolbar select{max-width:100%;padding:7px;border:1px solid #bda46e;border-radius:6px;background:#fff8e9;color:#513815}
+.council-review-note{font:12px/1.7 var(--sans);color:var(--muted);margin:8px 0}
+.council-review-scroll{max-width:100%;overflow-x:auto;border:1px solid rgba(150,110,40,.3);border-radius:8px}
+.council-review-table{width:100%;border-collapse:collapse;font:13px/1.5 var(--sans);font-variant-numeric:tabular-nums}
+.council-review-table th,.council-review-table td{padding:10px;text-align:right;white-space:nowrap;border-bottom:1px solid rgba(150,110,40,.18)}
+.council-review-table th:first-child{text-align:left}
+.council-review-table thead{background:var(--card-bg);color:var(--gold)}
+.council-review-table button{font:inherit;color:var(--gold);background:none;border:0;text-decoration:underline;cursor:pointer;min-height:36px}
+.council-review-table small{display:block;color:var(--muted);font-size:11px;font-weight:normal}
+#council-review-detail{max-width:420px;margin:12px auto}
+.battle-review-summary{margin:0 0 14px;padding:12px;border:1px solid rgba(150,110,40,.3);border-radius:8px;font-family:var(--sans)}
+.battle-review-summary strong{font-size:14px}.battle-review-summary ul{list-style:none;padding:0;margin:6px 0 0}
+.battle-review-summary button{display:block;width:100%;text-align:left;font:13px/1.6 var(--sans);background:none;border:0;color:var(--ink);padding:7px 0;cursor:pointer}
+.battle-review-summary small{display:block;color:var(--muted);font-size:11px}
+@media(max-width:600px){.council-review-toolbar label{width:100%;font-size:12px}.council-review-table th,.council-review-table td{padding:8px}.council-review-toolbar button{min-height:40px}}
+</style>
 </head>
 <body>
 
@@ -14213,6 +14234,27 @@ function battleEtfChangeHtml(data){
   </div>`;
 }
 
+function battleReviewJump(target){
+  var el=document.getElementById(target);if(!el)return;
+  el.setAttribute('tabindex','-1');el.focus();el.scrollIntoView({block:'start'});
+}
+function battleReviewSummaryHtml(data){
+  var entries=[];
+  [['funds','基金','battle-fund-snapshot-host'],['holdings','持股','battle-holdings-left-snapshot-host']].forEach(function(group){
+    var rows=(data[group[0]]||[]).filter(function(row){return councilReviewNumber(row.changePct)!==null;}).slice().sort(function(a,b){return Math.abs(Number(b.changePct))-Math.abs(Number(a.changePct));});
+    if(!rows.length||Number(rows[0].changePct)===0)return;
+    var row=rows[0];
+    var target=group[2];
+    if(group[0]==='holdings'&&['QQQI','MLPI','AIPI','PLTY','CHPY'].indexOf(String(row.code||row.name||''))<0)target='battle-holdings-right-snapshot-host';
+    entries.push({target:target,text:group[1]+'較前值變動最大：'+(row.name||row.code||'未命名')+' '+councilReviewSigned(row.changePct,'%'),date:row.dataDate||row.sourceDate||'資料日未提供'});
+  });
+  var latest=data.etfHoldingChange&&data.etfHoldingChange.hasData&&data.etfHoldingChange.latest;
+  if(latest&&latest.previousDate){
+    var changes=[latest.addedText,latest.removedText].filter(function(text){return text&&String(text).trim()&&!/^(無|無新增|無移除|無新增或移除|—|--)$/.test(String(text).trim());}).join('；');
+    if(changes)entries.push({target:'battle-review-etf',text:'00997A 新增／移除：'+changes,date:(latest.sourceDate||latest.date||'資料日未提供')+' · 比較 '+latest.previousDate});
+  }
+  return '<section class="battle-review-summary" aria-label="本次變化速覽"><strong>本次變化速覽</strong><small>依本次報表較前值比較；各標的資料日可能不同。</small>'+(entries.length?'<ul>'+entries.slice(0,3).map(function(entry){return '<li><button type="button" onclick="battleReviewJump(\''+entry.target+'\')">'+esc(entry.text)+'<small>'+esc(entry.date)+' · 查看明細 →</small></button></li>';}).join('')+'</ul>':'<div class="council-review-note">目前沒有可列示的非零變化；比較資料不足時不作判斷。</div>')+'</section>';
+}
 function renderBattleBrief(data,el){
   data=data||{};
   var summary=data.summary||{};
@@ -14232,8 +14274,9 @@ function renderBattleBrief(data,el){
       <button class="battle-report-refresh" type="button" onclick="loadBattleBrief(true)">重新整理</button>
     </div>
   </div>
+  ${battleReviewSummaryHtml(data)}
   <div class="battle-report-grid">
-    ${battleEtfChangeHtml(etfHoldingChange)}
+    ${battleEtfChangeHtml(etfHoldingChange).replace('class="battle-section wide"','id="battle-review-etf" class="battle-section wide"')}
     <div class="battle-section">
       <div class="battle-section-title">基金淨值</div>
       <div id="battle-fund-snapshot-host"></div>
@@ -14686,6 +14729,44 @@ function renderCouncilMonthlyDividendHtml(totalMonthly,projection){
   return '月總配息 '+fmtFull(totalMonthly)+(projectionText?`<span class="council-stat-trial">(~${esc(projectionText)})</span>`:'');
 }
 
+// Council review: comparable holdings, explicit missing values, no extra requests.
+var councilReviewMode='cards',councilReviewSort='marketValue',councilReviewContext=null;
+function councilReviewNumber(value){
+  if(value==null||typeof value==='boolean'||String(value).trim()==='')return null;
+  var number=Number(value);return Number.isFinite(number)?number:null;
+}
+function councilReviewSigned(value,suffix){
+  var number=councilReviewNumber(value);
+  return number===null?'—':(number>0?'+':'')+number.toFixed(2)+(suffix||'');
+}
+function setCouncilReview(mode,sort){
+  if(mode==='cards'||mode==='compare')councilReviewMode=mode;
+  if(['marketValue','weight','returnPct','monthlyDiv'].indexOf(sort)>=0)councilReviewSort=sort;
+  var ctx=councilReviewContext;
+  if(ctx&&ctx.el.isConnected)renderCouncilRoster(ctx.rows,ctx.el,ctx.snapshot,ctx.projection);
+}
+function councilReviewDetail(index){
+  var ctx=councilReviewContext,host=document.getElementById('council-review-detail');
+  if(!ctx||!host||!ctx.rows[index])return;
+  host.innerHTML='<button type="button" class="battle-report-refresh" onclick="this.parentElement.hidden=true">收合詳情</button>'+renderHeroCard(ctx.rows[index],ctx.totalCost);
+  host.hidden=false;host.focus();host.scrollIntoView({block:'nearest'});
+}
+function councilComparisonHtml(rows){
+  var items=rows.map(function(row,index){
+    var h=row.holding;if(!h)return null;
+    var cost=councilReviewNumber(h.cost),ret=councilReviewNumber(h.totalReturn);
+    return {row:row,index:index,marketValue:councilReviewNumber(h.marketValue),monthlyDiv:councilReviewNumber(h.monthlyDiv),returnPct:cost!==null&&cost>0&&ret!==null?ret/cost*100:null};
+  }).filter(Boolean);
+  var complete=items.every(function(item){return item.marketValue!==null&&item.marketValue>=0;});
+  var total=items.reduce(function(sum,item){return sum+(item.marketValue||0);},0);
+  items.forEach(function(item){item.weight=complete&&total>0?item.marketValue/total*100:null;});
+  items.sort(function(a,b){var x=a[councilReviewSort],y=b[councilReviewSort];return x===null?(y===null?a.index-b.index:1):y===null?-1:y-x||a.index-b.index;});
+  var money=function(value){return value===null?'—':esc(fmtFull(value));};
+  return '<div class="council-review-note">市值占比以本表持股市值合計計算；含息報酬率＝含息報酬 ÷ 投資成本。月配息為參考值，非實際入帳。'+(!complete?' 市值資料不全，暫不計算占比。':'')+'</div><div class="council-review-scroll" tabindex="0" aria-label="持股比較表，可左右捲動"><table class="council-review-table"><thead><tr><th scope="col">標的／資料日</th><th scope="col">市值</th><th scope="col">市值占比</th><th scope="col">含息報酬率</th><th scope="col">月配息參考</th></tr></thead><tbody>'+items.map(function(item){
+    var h=item.row.holding,symbol=h.symbol||h.name||item.row.symbol||'未命名';
+    return '<tr><th scope="row"><button type="button" onclick="councilReviewDetail('+item.index+')">'+esc(symbol)+'</button><small>'+esc(h.dataDate||'資料日未提供')+'</small></th><td>'+money(item.marketValue)+'</td><td>'+(item.weight===null?'—':item.weight.toFixed(1)+'%')+'</td><td>'+councilReviewSigned(item.returnPct,'%')+'</td><td>'+money(item.monthlyDiv)+'</td></tr>';
+  }).join('')+(items.length?'':'<tr><td colspan="5">目前沒有持股資料</td></tr>')+'</tbody></table></div><div id="council-review-detail" tabindex="-1" hidden></div>';
+}
 function renderCouncilRoster(rows,el,assetSnapshot,dividendProjection){
   var active=rows.filter(function(r){return r.holding||r.enabled;});
   var holdings=active.filter(function(r){return r.holding;}).map(function(r){return r.holding;});
@@ -14696,14 +14777,15 @@ function renderCouncilRoster(rows,el,assetSnapshot,dividendProjection){
   var snapshotDateBadge=snapshotDate?`<span class="council-snapshot-date">${esc(snapshotDate)}</span>`:'';
   var totalMonthly=holdings.reduce(function(s,r){return s+toNum(r.monthlyDiv);},0);
   var totalReturn=holdings.reduce(function(s,r){return s+toNum(r.totalReturn);},0);
+  councilReviewContext={rows:rows,el:el,snapshot:assetSnapshot,projection:dividendProjection,totalCost:totalCost};
   el.innerHTML=`
     <div class="council-summary">
       <div class="council-stat"><div class="council-stat-l">持有數</div><div class="council-stat-v">${holdings.length||active.length} 檔</div><div class="council-stat-sub">${renderCouncilMonthlyDividendHtml(totalMonthly,dividendProjection)}</div></div>
       <div class="council-stat"><div class="council-stat-l">總投資成本</div><div class="council-stat-v">${fmtFull(totalCost)}</div><div class="council-stat-sub ${totalReturn>=0?'up':'down'}">含息報酬 ${totalReturn>=0?'+':'-'}${fmtFull(Math.abs(totalReturn))}</div></div>
       <div class="council-stat"><div class="council-stat-l council-stat-label-row"><span>投資市值</span>${snapshotDateBadge}</div><div class="council-stat-v">${fmtFull(totalMarket)}</div>${renderCouncilMarketDelta(assetSnapshot)}</div>
     </div>
-    <div class="council-army-title">軍團檢閱</div>
-    ${renderCouncilRosterGroups(active,totalCost)}`;
+    <div class="council-review-toolbar"><span class="council-army-title">軍團檢閱</span><button type="button" class="battle-report-refresh" aria-pressed="${councilReviewMode==='cards'}" onclick="setCouncilReview('cards')">武將卡片</button><button type="button" class="battle-report-refresh" aria-pressed="${councilReviewMode==='compare'}" onclick="setCouncilReview('compare')">精簡比較</button>${councilReviewMode==='compare'?'<label>排序 <select aria-label="持股比較排序" onchange="setCouncilReview(undefined,this.value)">'+[['marketValue','市值高至低'],['weight','占比高至低'],['returnPct','報酬率高至低'],['monthlyDiv','月配息高至低']].map(function(option){return '<option value="'+option[0]+'"'+(councilReviewSort===option[0]?' selected':'')+'>'+option[1]+'</option>';}).join('')+'</select></label>':''}</div>
+    ${councilReviewMode==='compare'?councilComparisonHtml(rows):renderCouncilRosterGroups(active,totalCost)}`;
 }
 
 function councilRosterGroups(){
@@ -16168,27 +16250,27 @@ function renderMarketDashboard(data,el){
   var otherHtml=otherRows.length?`<div class="sec-title" style="margin-top:${twseRow?14:0}px">指標風向</div>`:'';
   if(otherRows.length)otherHtml+=`<div class="market-card-grid">${otherRows.map(function(r){
     var tone=marketTone(r.signal);
-    var change=parseFloat(r.change)||0;
-    var changePct=parseFloat(r.changePct)||0;
-    var maGap=parseFloat(r.maGapPct)||0;
-    var changeCls=change>=0?'up':'down';
-    var maArrow=maGap>=0?'↑':'↓';
+    var change=councilReviewNumber(r.change);
+    var changePct=councilReviewNumber(r.changePct);
+    var maGap=councilReviewNumber(r.maGapPct);
+    var changeCls=change===null?'':change>=0?'up':'down';
+    var maArrow=maGap===null?'':maGap>=0?'↑':'↓';
     return `<div class="market-row">
       <div class="market-row-head">
         <div>
           <div class="market-name">${esc(r.name)}</div>
-          <div class="market-code">${esc(r.code)}</div>
+          <div class="market-code">${esc(r.code)} · 資料日 ${esc(r.dataDate||r.sourceDate||'未提供')}</div>
         </div>
         <div class="market-signal ${tone}">${esc(marketSignalText(r.signal))}</div>
       </div>
       <div class="market-metrics">
         <div class="market-metric">
           <div class="market-metric-l">日變動</div>
-          <div class="market-metric-v ${changeCls}">${change>=0?'+':''}${change.toFixed(2)} / ${changePct>=0?'+':''}${changePct.toFixed(2)}%</div>
+          <div class="market-metric-v ${changeCls}">${councilReviewSigned(change)} / ${councilReviewSigned(changePct,'%')}</div>
         </div>
         <div class="market-metric">
           <div class="market-metric-l">目前數值</div>
-          <div class="market-metric-v">${Number(r.price||0).toFixed(2)} <span class="market-ma-inline ${maGap>=0?'up':'down'}">(${Number(r.ma20||0).toFixed(2)} ${maArrow})</span></div>
+          <div class="market-metric-v">${councilReviewNumber(r.price)===null?'—':Number(r.price).toFixed(2)} <span class="market-ma-inline ${maGap===null?'':maGap>=0?'up':'down'}">(${councilReviewNumber(r.ma20)===null?'—':Number(r.ma20).toFixed(2)} ${maArrow})</span></div>
         </div>
       </div>
       <div class="market-note">${esc(r.status)} · ${esc(r.maDirection)}${r.note?'｜'+esc(r.note):''}</div>
