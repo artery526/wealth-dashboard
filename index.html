@@ -16873,8 +16873,7 @@ initAdvisorDuoVideoPlayback();
     <img class="advisor-img" src="advisor-zhuge.png?v=20260906-advisor1" alt="諸葛亮軍師" onclick="closeAdvisorDialog()">
     <div class="advisor-dialog">
       <button class="advisor-close" onclick="closeAdvisorDialog()">✕</button>
-       <div class="advisor-dialog-top-actions" aria-label="諸葛軍師快捷工具">
-         <button class="advisor-dialog-tool" type="button" onclick="advisorAIOpenVideoDownload()" title="影片下載" aria-label="影片下載">📽️</button>
+       <div class="advisor-dialog-top-actions" aria-label="諸葛軍師工具">
          <button class="advisor-dialog-tool" type="button" onclick="advisorAIOpenDatabaseSheet()" title="進入資料庫" aria-label="進入資料庫">📂</button>
          <span class="advisor-dialog-tool-status" id="advisor-dialog-tool-status" aria-live="polite"></span>
        </div>
@@ -17493,6 +17492,7 @@ function advisorAIQuickCommands(){
   return [
     {label:'配息試算',command:'__dividend_calculator__'},
     {label:'配息記錄',command:'__dividend_record__'},
+    {label:'影片下載',command:'__video_download__'},
     {label:'載具超商',command:'__member_cards__'},
     {label:'退稅查詢',command:'__etf_tax_lookup__'},
     {label:'複製載具',command:'複製載具'}
@@ -17769,6 +17769,11 @@ function advisorAIRunQuickCommand(select){
   if(command==='__dividend_record__'){
     if(select)select.value='';
     advisorAIOpenDividendRecord();
+    return;
+  }
+  if(command==='__video_download__'){
+    if(select)select.value='';
+    advisorAIOpenVideoDownload();
     return;
   }
   if(command==='__member_cards__'){
