@@ -5395,8 +5395,9 @@ async function submitLedgerPending(body){
       if(status.recorded){
         localStorage.removeItem(key);
         invalidateFinanceDashboardCache();
-        if(pending.fingerprint!==fingerprint)throw new Error('上一筆交易已確認入帳；目前欄位已變更，請確認後再次送出新交易。');
-        return {message:'已確認入帳',duplicate:true,row:status.row};
+        if(pending.fingerprint===fingerprint)return {message:'已確認入帳',duplicate:true,row:status.row};
+        // 舊交易已確認且本次欄位不同，這是新的交易，沿用本次 requestId 重新送出。
+        pending={requestId:body.requestId,fingerprint:fingerprint};
       }
       if(pending.fingerprint!==fingerprint)throw new Error('結果待確認：上一筆尚未查到入帳，請還原原交易內容後重試，避免把修改內容當成新交易。');
     }else{

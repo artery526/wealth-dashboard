@@ -105,6 +105,27 @@ test('Pangtong income dropdown builds a fixed Stock income command', async ({ pa
   });
 });
 
+test('a new ledger entry is allowed after a different previous entry was confirmed', async ({ page }) => {
+  await page.goto(dashboardUrl);
+  const result = await page.evaluate(async () => {
+    window.API_URL = 'https://example.test/web-app';
+    window.ledgerPendingBusy = {};
+    const key = 'ledger-pending-v1:' + window.API_URL + ':expense';
+    localStorage.setItem(key, JSON.stringify({ requestId: 'old-request', fingerprint: 'old-entry' }));
+    window.apiGet = () => Promise.resolve({ requestId: 'old-request', recorded: true, row: {} });
+    let posted = null;
+    window.apiPostJson = body => { posted = body; return Promise.resolve({ ok: true }); };
+    await submitLedgerPending({
+      action: 'expense', date: '2026/09/09', cat: '🍽️外食餐飲', account: '🏔️玉山銀行', amount: 1019,
+      note: '龐統快速支出', requestId: 'new-request'
+    });
+    return posted;
+  });
+  expect(result.requestId).toBe('new-request');
+  expect(result.cat).toBe('🍽️外食餐飲');
+  expect(result.amount).toBe(1019);
+});
+
 test('battle brief panel renders with stable formatting', async ({ page }) => {
   const pageErrors = [];
   page.on('pageerror', error => pageErrors.push(error.message));
