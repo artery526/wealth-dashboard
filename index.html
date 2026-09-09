@@ -1018,6 +1018,10 @@ body::after{
 .store-contact-form{display:grid;gap:10px}
 .store-contact-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .store-contact-grid .form-control{min-width:0}
+.store-contact-service-control{display:flex;align-items:end;gap:7px;min-width:0}
+.store-contact-service-control .store-form-group{flex:1;min-width:0}
+.store-contact-work-toggle{display:grid;place-items:center;width:36px;height:38px;flex:0 0 36px;border:1px solid rgba(65,157,194,.52);border-radius:8px;background:rgba(6,27,43,.9);color:#fff3bf;font:900 21px/1 var(--sans);cursor:pointer}
+.store-contact-work-toggle:hover,.store-contact-work-toggle.is-open{border-color:#71d8f7;background:rgba(20,74,98,.9)}
 .store-contact-grid textarea.form-control{min-height:72px;resize:vertical}
 .store-contact-grid .store-form-group:nth-child(7){grid-column:1/-1}
 .store-contact-grid .store-form-group:nth-child(7) textarea{min-height:58px}
@@ -6767,8 +6771,11 @@ function renderStoreContactForm(){
         <div class="store-form-group"><label class="store-form-label" for="store-contact-name">聯絡人稱呼</label><input class="form-control" id="store-contact-name" type="text" maxlength="100" placeholder="例如：王師傅" required></div>
         <div class="store-form-group"><label class="store-form-label" for="store-contact-phone">聯絡電話</label><input class="form-control" id="store-contact-phone" type="tel" maxlength="40" placeholder="例如：0912-345-678"></div>
         <div class="store-form-group"><label class="store-form-label" for="store-contact-line">LINE顯示名稱</label><input class="form-control" id="store-contact-line" type="text" maxlength="100" placeholder="例如：王師傅（水電）"></div>
-        <div class="store-form-group"><label class="store-form-label" for="store-contact-area">服務地區</label><input class="form-control" id="store-contact-area" type="text" maxlength="120" placeholder="例如：台北市、新北市"></div>
-        <div class="store-form-group"><label class="store-form-label" for="store-contact-work">已施作項目</label><textarea class="form-control" id="store-contact-work" maxlength="500" placeholder="例如：廚房水管、冷氣保養"></textarea></div>
+        <div class="store-contact-service-control">
+          <div class="store-form-group"><label class="store-form-label" for="store-contact-area">服務地區</label><input class="form-control" id="store-contact-area" type="text" maxlength="120" placeholder="例如：台北市、新北市"></div>
+          <button class="store-contact-work-toggle" id="store-contact-work-toggle" type="button" title="展開已施作項目" aria-label="展開已施作項目" aria-expanded="false" onclick="toggleStoreContactWork(event)">＋</button>
+        </div>
+        <div class="store-form-group store-contact-work-group" id="store-contact-work-group" hidden><label class="store-form-label" for="store-contact-work">已施作項目</label><textarea class="form-control" id="store-contact-work" maxlength="500" placeholder="例如：廚房水管、冷氣保養"></textarea></div>
       </div>
       <div class="store-form-actions"><button class="store-add-button" id="store-contact-submit" type="submit">儲存聯絡人</button><button class="store-secondary-button" id="store-contact-cancel" type="button" hidden onclick="resetStoreContactForm()">清除</button><span class="store-form-status" id="store-contact-form-status" aria-live="polite"></span></div>
     </form>`;
@@ -6784,6 +6791,24 @@ function toggleStoreContactSearch(event){
   button.classList.toggle('is-open',open);
   button.setAttribute('aria-expanded',open?'true':'false');
   if(open)input.focus();
+}
+
+function setStoreContactWorkExpanded(expanded){
+  var group=document.getElementById('store-contact-work-group');
+  var button=document.getElementById('store-contact-work-toggle');
+  if(!group||!button)return;
+  group.hidden=!expanded;
+  button.classList.toggle('is-open',expanded);
+  button.textContent=expanded?'−':'＋';
+  button.title=expanded?'收起已施作項目':'展開已施作項目';
+  button.setAttribute('aria-label',expanded?'收起已施作項目':'展開已施作項目');
+  button.setAttribute('aria-expanded',expanded?'true':'false');
+}
+
+function toggleStoreContactWork(event){
+  if(event){event.preventDefault();event.stopPropagation();}
+  var group=document.getElementById('store-contact-work-group');
+  if(group)setStoreContactWorkExpanded(group.hidden);
 }
 
 function renderStoreContacts(){
@@ -6862,6 +6887,7 @@ function editStoreContact(row){
   if(button)button.textContent='更新聯絡人';
   if(cancel)cancel.hidden=false;
   if(status)status.textContent='正在編輯第 '+contact.row+' 筆聯絡人';
+  setStoreContactWorkExpanded(!!String(contact.completedWork||'').trim());
 }
 
 function resetStoreContactForm(){
@@ -6875,6 +6901,7 @@ function resetStoreContactForm(){
   if(button)button.textContent='儲存聯絡人';
   if(cancel)cancel.hidden=true;
   if(status)status.textContent='';
+  setStoreContactWorkExpanded(false);
 }
 
 async function removeStoreContact(row){
