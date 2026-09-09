@@ -2,8 +2,8 @@
 (function () {
   'use strict';
   var state = null;
-  var groups = { medical: '醫館', store: '太倉', wall: '王府', intelligence: '總體經濟' };
-  var sources = { medical: ['medical'], store: ['store','chronicle'], wall: ['wall'], intelligence: ['macro','intelligence'] };
+  var groups = { medical: '醫館', store: '太倉', wall: '王府', macro: '總體經濟' };
+  var sources = { medical: ['medical'], store: ['store','chronicle'], wall: ['wall'], macro: ['macro','market'] };
   function freshState() {
     return { month: currentYM(), date: today(), scope: API_URL + '|' + WRITE_TOKEN,
       data: {}, saved: {}, errors: {}, pending: {}, expanded: {}, masked: false, tab: 'overview' };
@@ -141,16 +141,31 @@
     if (key === 'store') return latestRows(data && data.records,function (r) { return r.recordDate; },1,'itemName');
     if (key === 'chronicle') return latestRows(data && data.rows,function (r) { return r.createdAt || r.date; },1,'name');
     if (key === 'wall') return latestRows(data && data.entries,function (r) { return r.updatedAt || r.createdAt || r.date; },2,'title');
-    if (!data) return '<p class="xy-empty">資料尚未取得</p>';
     if (key === 'macro') {
+      if (!data) return '<p class="xy-empty">總體經濟資料尚未取得</p>';
       var judgment = data.judgment || {};
-      return '<p class="xy-brief-text">' + esc(data.hasData === false ? '尚無總經資料' : judgment.summary || judgment.scenario || '尚無總經判斷') + '</p><p class="xy-note">資料日期 ' + esc(data.sourceDate || judgment.date || '未提供') + '</p>';
+      var indicatorCodes = ['yield10y','cpi','unemployment','vix'];
+      var indicators = (data.indicators || []).filter(function (row) { return indicatorCodes.indexOf(row.code) >= 0; });
+      var indicatorHtml = indicators.map(function (row) {
+        return '<div class="xy-macro-item"><span>' + esc(row.name) + '</span><strong>' + esc(row.displayValue || '--') + '</strong><small>' + esc(row.status || '無資料') + '</small></div>';
+      }).join('');
+      return '<p class="xy-brief-text">' + esc(data.hasData === false ? '尚無總體經濟資料' : judgment.summary || judgment.scenario || '尚無總體經濟判斷') + '</p><div class="xy-macro-grid">' + (indicatorHtml || '<p class="xy-empty">尚無可用總體經濟指標</p>') + '</div><p class="xy-note">資料日期 ' + esc(data.sourceDate || judgment.date || '未提供') + ' · ' + esc(judgment.signal || '無燈號') + '</p>';
     }
-    var status = data.status || {}, labels = { completed: '最近採集完成', 'completed-with-errors': '最近採集完成，部分來源失敗', running: '採集中' };
-    return '<p class="xy-brief-text">' + esc(labels[status.state] || '尚未執行採集') + '</p>' + latestRows(data.items,function (r) { return r.publishedAt; },1,'title');
+    if (key === 'market') {
+      if (!data || !Array.isArray(data.rows)) return '<p class="xy-empty">台股／美股資料尚未取得</p>';
+      var rows = data.rows, tw = rows.find(function (row) { return row && (row.isTWSE || row.code === '^TWII'); });
+      var us = rows.find(function (row) { return row && !row.isTWSE && row.code !== '^TWII' && /S&P|Nasdaq|NASDAQ|QQQ|SPY|VTI|美股/i.test(String(row.name || '') + ' ' + String(row.code || '')); }) || rows.find(function (row) { return row && !row.isTWSE && row.code !== '^TWII'; });
+      function marketItem(label, row) {
+        if (!row) return '<div class="xy-macro-item"><span>' + label + '</span><strong>--</strong><small>尚無資料</small></div>';
+        var price = number(row.price != null ? row.price : row.value), change = number(row.changePct);
+        return '<div class="xy-macro-item"><span>' + label + ' · ' + esc(row.name || row.code || '') + '</span><strong>' + (price === null ? '--' : esc(price.toLocaleString('zh-TW', { maximumFractionDigits: 2 }))) + '</strong><small>' + (change === null ? '漲跌未提供' : esc((change >= 0 ? '+' : '') + change.toFixed(2) + '%')) + ' · ' + esc(row.signal || '觀望') + '</small></div>';
+      }
+      return '<div class="xy-macro-grid">' + marketItem('台股', tw) + marketItem('美股', us) + '</div><p class="xy-note">市場更新 ' + esc((tw && tw.updatedAt) || (us && us.updatedAt) || '未提供') + '</p>';
+    }
+    return '<p class="xy-empty">資料尚未取得</p>';
   }
   function briefsHtml() {
-    var labels = { medical:'醫館記錄', store:'最新物品', chronicle:'最新事件', wall:'最近更新', macro:'美股總經', intelligence:'外部情報' };
+    var labels = { medical:'醫館記錄', store:'最新物品', chronicle:'最新事件', wall:'最近更新', macro:'總體經濟指標', market:'台股／美股' };
     return '<div class="xy-intro"><div><span class="xy-eyebrow">各部摘要</span><p>資料日期與取得時間分別標示。</p></div><button type="button" data-xy-refresh>更新摘要</button></div>' +
       '<div class="xy-brief-grid">' +
       Object.keys(groups).map(function (group) {
@@ -178,7 +193,7 @@
       if (key === 'chronicle') return eventChronicleApiRequest('GET','/api/event-chronicle',undefined,30000);
       if (key === 'wall') return arkWallFetch('/api/expeditions');
       if (key === 'macro') return apiGet({action:'macroOverview'});
-      if (key === 'intelligence') return arkWallFetch('/api/intelligence?limit=50');
+      if (key === 'market') return apiGet({action:'marketDashboard'});
       if (key === 'holdings') {
         if (councilDashboardPromise) return councilDashboardPromise.then(function (data) { if (!data.holdingsLoaded) throw new Error('持股讀取失敗'); return data.holdings; });
         return apiGet({ action: 'holdingsOverview' });
@@ -226,7 +241,7 @@
         if (medicalTab) switchTab(medicalTab,'medical-painmap');
       }
       else if (key === 'store' || key === 'chronicle') openEmpireCardShortcut(null,'store',key === 'store' ? 'store-list' : 'store-chronicle');
-      else openPanel('council',key === 'macro' ? 'macro-overview' : 'external-intelligence');
+      else openPanel('council',key === 'macro' ? 'macro-overview' : 'market-watch');
     }
     else if (button.hasAttribute('data-xy-refresh')) refreshXunyuPanel();
     else if (button.dataset.xyRetry) refreshXunyuPanel(button.dataset.xyRetry);

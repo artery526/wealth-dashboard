@@ -2,6 +2,7 @@
 .xy-tabs{display:flex;gap:8px;margin-bottom:18px}.xy-tabs [aria-pressed=true]{box-shadow:inset 0 -3px var(--gold)}
 .xy-options{display:flex;flex-wrap:wrap;gap:14px;border:1px solid var(--card-border);padding:12px;margin:0 0 14px;border-radius:8px;font-size:13px}.xy-options legend{color:var(--ink2)}
 .xy-brief-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.xy-brief-source{margin-top:14px}.xy-brief-source h4{font-size:13px;margin:0}.xy-brief-text{font-size:14px;line-height:1.7;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.xy-macro-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}.xy-macro-item{display:flex;flex-direction:column;gap:3px;border:1px solid var(--card-border);border-radius:7px;padding:8px;min-width:0}.xy-macro-item span{font-size:11px;color:var(--ink2);overflow-wrap:anywhere}.xy-macro-item strong{font-size:16px;color:var(--ink);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}.xy-macro-item small{font-size:11px;color:var(--ink2);overflow-wrap:anywhere}
 @media(max-width:700px){.xy-brief-grid{grid-template-columns:1fr}}
 #xunyu-dashboard button{font:inherit;cursor:pointer;color:var(--gold);border:1px solid var(--card-border);background:var(--card-bg);border-radius:7px;padding:8px 11px}
 #xunyu-dashboard button:disabled{cursor:wait;opacity:.65}

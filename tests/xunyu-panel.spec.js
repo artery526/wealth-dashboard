@@ -9,7 +9,16 @@ async function openBriefs(page) {
       {recordTime:currentYM().replace('/','-')+'-02 10:00'}, {recordTime:currentYM().replace('/','-')+'-02 21:00'},
       {recordTime:currentYM().replace('/','-')+'-03 08:00'}, {recordTime:'2020-01-01 09:00'}]});
     xyFixtures.storeRecords = {records:[{itemName:'舊物品',recordDate:'2020/01/01'},{itemName:'新物品',recordDate:today()}]};
-    xyFixtures.macroOverview = {hasData:true,sourceDate:'2026-09-01',judgment:{summary:'總經觀察中'}};
+    xyFixtures.macroOverview = {hasData:true,sourceDate:'2026-09-01',judgment:{summary:'總經觀察中',signal:'黃燈'},indicators:[
+      {code:'yield10y',name:'美國10年債殖利率',displayValue:'4.20%',status:'綠燈'},
+      {code:'cpi',name:'CPI年增率',displayValue:'2.80%',status:'綠燈'},
+      {code:'unemployment',name:'失業率',displayValue:'4.10%',status:'綠燈'},
+      {code:'vix',name:'VIX恐慌指數',displayValue:'16.20',status:'綠燈'}
+    ]};
+    xyFixtures.marketDashboard = {rows:[
+      {code:'^TWII',name:'台灣股市加權指數 TAIEX',price:22000,changePct:0.86,signal:'進攻',isTWSE:true,updatedAt:'10:00'},
+      {code:'^GSPC',name:'S&P 500',price:6500,changePct:-0.24,signal:'觀望',updatedAt:'08:00'}
+    ]};
     eventChronicleApiRequest = () => Promise.resolve({rows:[{name:'新事件',date:today()}]});
     arkWallFetch = route => { xyNasCalls.push(route); return Promise.resolve(route.includes('expeditions') ? {entries:[
       {title:'舊紀錄',updatedAt:'2020-01-01'}, {title:'最近更新',updatedAt:'2026-09-08'}, {title:'次近更新',updatedAt:'2026-09-07'}
@@ -28,7 +37,10 @@ test('briefs show every department without display checkboxes and include dated 
   await expect(page.locator('[data-xy-source="wall"] li')).toHaveCount(2);
   await expect(page.locator('[data-xy-source="wall"] li').first()).toContainText('最近更新');
   await expect(page.locator('[data-xy-source="macro"]')).toContainText('2026-09-01');
-  await expect(page.locator('[data-xy-source="intelligence"]')).toContainText('部分來源失敗');
+  await expect(page.locator('[data-xy-source="macro"]')).toContainText('美國10年債殖利率');
+  await expect(page.locator('[data-xy-source="market"]')).toContainText('台灣股市加權指數');
+  await expect(page.locator('[data-xy-source="market"]')).toContainText('S&P 500');
+  await expect(page.locator('[data-xy-source="intelligence"]')).toHaveCount(0);
   await expect(page.locator('.xy-options')).toHaveCount(0);
   await expect(page.locator('.xy-card').filter({hasText:'王府'})).toHaveCount(1);
   await expect(page.locator('.xy-card').filter({hasText:'總體經濟'})).toHaveCount(1);
