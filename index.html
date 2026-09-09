@@ -1012,6 +1012,27 @@ body::after{
 .store-search-toggle:hover,.store-search-toggle.is-open{border-color:#71d8f7;background:rgba(20,74,98,.9)}
 .store-search-inline{flex:0 1 180px;width:180px;height:30px;box-sizing:border-box;border:1px solid rgba(65,157,194,.52);border-radius:7px;background:#061b2b;color:#dff7ff;padding:0 8px;font:850 12px var(--sans);outline:none}
 .store-search-inline:focus{border-color:#71d8f7;box-shadow:0 0 0 2px rgba(53,184,228,.14)}
+.store-contact-toolbar{display:flex;align-items:center;gap:8px;min-width:0;margin-bottom:9px}
+.store-contact-count{flex:1;min-width:0;min-height:18px;color:#8aa7b6;font:800 12px var(--sans)}
+.store-contact-form-wrap{margin-bottom:13px;padding:12px;border:1px solid rgba(65,157,194,.36);border-radius:9px;background:rgba(6,27,43,.48)}
+.store-contact-form{display:grid;gap:10px}
+.store-contact-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.store-contact-grid .form-control{min-width:0}
+.store-contact-grid textarea.form-control{min-height:72px;resize:vertical}
+.store-contact-grid .store-form-group:nth-child(6){grid-column:1/-1}
+.store-contact-grid .store-form-group:nth-child(6) textarea{min-height:58px}
+.store-contact-grid-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.store-contact-card{display:grid;gap:10px;min-width:0;padding:12px;border:1px solid rgba(65,157,194,.3);border-radius:9px;background:linear-gradient(160deg,rgba(8,35,51,.78),rgba(4,14,23,.78))}
+.store-contact-card-head{display:flex;align-items:center;gap:8px;min-width:0}
+.store-contact-title{min-width:0;color:#dff7ff;font:900 18px/1.35 var(--font);overflow-wrap:anywhere}
+.store-contact-category{flex:0 0 auto;max-width:42%;padding:4px 7px;border:1px solid rgba(232,192,80,.42);border-radius:7px;background:rgba(232,192,80,.1);color:#fff3bf;font:800 11px var(--sans);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.store-contact-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.store-contact-field{display:grid;gap:3px;min-width:0;padding:7px 8px;border:1px solid rgba(65,157,194,.24);border-radius:7px;background:rgba(6,27,43,.5)}
+.store-contact-field-wide{grid-column:1/-1}
+.store-contact-field span{color:#6ea4b7;font:800 11px var(--sans)}
+.store-contact-field b,.store-contact-field a{color:#bcefff;font:800 13px/1.5 var(--sans);overflow-wrap:anywhere;text-decoration:none}
+.store-contact-field a:hover{text-decoration:underline;color:#fff3bf}
+.store-contact-actions{display:flex;justify-content:flex-end;gap:7px}
 .store-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .store-item-card{position:relative;display:grid;gap:7px;border:1px solid rgba(65,157,194,.3);border-radius:9px;background:linear-gradient(160deg,rgba(8,35,51,.78),rgba(4,14,23,.78));padding:12px;min-width:0}
 .store-item-card-head{display:flex;align-items:flex-start;gap:8px;min-width:0;padding-right:82px}
@@ -1054,7 +1075,7 @@ body::after{
 .store-header-date-button{border:1px solid rgba(232,192,80,.55);border-radius:7px;background:rgba(232,192,80,.1);color:#fff3bf;font:900 12px var(--sans);padding:5px 7px;cursor:pointer;white-space:nowrap}
 .store-header-date-button:hover{border-color:#fff3bf;background:rgba(232,192,80,.2)}
 .store-header-date-input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
-@media(max-width:650px){.store-grid{grid-template-columns:1fr}.store-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.store-form-group.full{grid-column:1/-1}.store-toolbar,.store-date-filters{grid-template-columns:1fr}.store-add-button{width:100%}.store-count-row{flex-wrap:wrap}.store-search-inline{order:3;flex:1 1 100%;width:100%}.store-item-card{padding:10px}.store-item-card-head{align-items:center;padding-right:84px}.store-item-heading{gap:6px}.store-item-name{min-width:0;flex:1;font-size:16px}.store-item-date-button{top:10px;right:43px;font-size:11px}.store-item-menu{top:8px;right:8px}.store-header-date-button{font-size:11px;padding:4px 5px}}
+@media(max-width:650px){.store-grid{grid-template-columns:1fr}.store-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.store-form-group.full{grid-column:1/-1}.store-toolbar,.store-date-filters{grid-template-columns:1fr}.store-add-button{width:100%}.store-count-row{flex-wrap:wrap}.store-search-inline{order:3;flex:1 1 100%;width:100%}.store-item-card{padding:10px}.store-item-card-head{align-items:center;padding-right:84px}.store-item-heading{gap:6px}.store-item-name{min-width:0;flex:1;font-size:16px}.store-item-date-button{top:10px;right:43px;font-size:11px}.store-item-menu{top:8px;right:8px}.store-header-date-button{font-size:11px;padding:4px 5px}.store-contact-toolbar{flex-wrap:wrap}.store-contact-grid{grid-template-columns:1fr}.store-contact-grid .store-form-group:nth-child(6){grid-column:auto}.store-contact-grid-list{grid-template-columns:1fr}.store-contact-card{padding:10px}.store-contact-title{font-size:16px}.store-contact-fields{grid-template-columns:1fr}.store-contact-field-wide{grid-column:auto}.store-contact-form-wrap{padding:10px}}
 .market-lord{
   position:absolute;
   top:-65px;
@@ -6288,6 +6309,7 @@ function switchTab(btn,key){
   else if(key==='medical-stats')initMedicalCardStats();
   else if(key==='medical-painmap')initMedicalPainMap();
   else if(key==='store-chronicle')loadEventChronicle();
+  else if(key==='store-contacts')loadStoreContacts();
   else if(key==='stars-home')loadZiweiCharts();
   else if(key==='store-list')loadStoreRecords();
 }
@@ -6313,7 +6335,7 @@ function renderStorePanel(initialTab){
   setPanelHead('庫','Store · Warehouse','太倉');
   var panelExtra=document.getElementById('p-extra');
   if(panelExtra)panelExtra.innerHTML='<button class="store-header-date-button" id="store-header-date-button" type="button" title="修改記錄日期" onclick="chooseStoreFormDate(event)">'+formatStoreShortDate(getStoreTodayInputValue())+'</button><input class="store-header-date-input" id="store-record-date" type="date" value="'+getStoreTodayInputValue()+'" required onchange="syncStoreHeaderDate()"><span class="empire-panel-status-dot err" id="store-panel-status-dot" title="太倉連線失敗" aria-label="太倉連線失敗"></span>';
-  setPanelMenuTabs([{key:'store-list',label:'物品總覽'},{key:'store-chronicle',label:'事件編年'},{key:'stars-home',label:'命盤總覽'}]);
+  setPanelMenuTabs([{key:'store-list',label:'物品總覽'},{key:'store-chronicle',label:'事件編年'},{key:'store-contacts',label:'聯絡人'},{key:'stars-home',label:'命盤總覽'}]);
   document.getElementById('p-body').innerHTML=`
     <div class="pane active" id="pane-store-list">
       <div class="store-panel-intro"><div class="store-panel-title">Store｜太倉物品</div><div class="store-panel-sub">搜尋物品名稱、所在地點或編號，快速找到收納位置。</div></div>
@@ -6327,11 +6349,19 @@ function renderStorePanel(initialTab){
       <div id="chronicle-freshness">${dataFreshnessHtml()}</div>
       <div id="chronicle-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:72%"></div></div>
     </div>
+    <div class="pane" id="pane-store-contacts">
+      <div class="store-panel-intro"><div class="store-panel-title">Store｜聯絡人</div><div class="store-panel-sub">直接記錄師傅、廠商或服務聯絡資訊，手機端會以卡片方式顯示。</div></div>
+      <div class="store-contact-form-wrap" id="store-contact-form-wrap"></div>
+      <div class="store-contact-toolbar"><div class="store-contact-count" id="store-contact-count"></div><button class="store-search-toggle" id="store-contact-search-toggle" type="button" title="搜尋聯絡人" aria-label="搜尋聯絡人" aria-expanded="false" onclick="toggleStoreContactSearch(event)">🔍</button><input class="store-search-inline" id="store-contact-search" type="search" placeholder="搜尋稱呼、電話、地區或項目" aria-label="搜尋聯絡人" hidden oninput="storeContactSearchTerm=this.value;renderStoreContacts()"></div>
+      <div id="store-contacts-freshness">${dataFreshnessHtml()}</div>
+      <div id="store-contacts-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:78%"></div></div>
+    </div>
     <div class="pane" id="pane-stars-home">
       <div id="stars-freshness">${dataFreshnessHtml()}</div>
       <div id="ziwei-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:78%"></div></div>
     </div>`;
   renderStoreForm('store-inline-form');
+  renderStoreContactForm();
   setEmpireCardApiPendingStatus('store');
   if(storeRecordsCache.length || storeRecordsCacheFetchedAt){
     renderStoreDateFilters();
@@ -6339,6 +6369,8 @@ function renderStorePanel(initialTab){
   }
   if(API_URL)loadStoreRecords(false);
   else document.getElementById('store-list-content').innerHTML=setupNotice();
+  if(API_URL)loadStoreContacts(false);
+  else document.getElementById('store-contacts-content').innerHTML=setupNotice();
   if(initialTab)setTimeout(function(){
     var btn=document.querySelector('.panel-menu-item[data-panel-tab="'+initialTab+'"]');
     if(btn)switchTab(btn,initialTab);
@@ -6354,6 +6386,11 @@ var storeRecordsPromise=null;
 var storeRecordsCacheFetchedAt=0;
 var STORE_RECORDS_CACHE_TTL=30000;
 var storeRecordMediaCache={};
+var storeContactsCache=[];
+var storeContactSearchTerm='';
+var storeContactsPromise=null;
+var storeContactsCacheFetchedAt=0;
+var STORE_CONTACTS_CACHE_TTL=30000;
 
 function renderStoreForm(targetId){
   var el=document.getElementById(targetId||'store-form-content');
@@ -6715,6 +6752,172 @@ async function uploadStoreRecordMedia(row,files){
   var formData=new FormData();
   files.forEach(function(file){formData.append('media',file,file.name);});
   return eventChronicleApiRequest('POST','/api/store-records/'+encodeURIComponent(String(row))+'/media',formData,180000);
+}
+
+function renderStoreContactForm(){
+  var el=document.getElementById('store-contact-form-wrap');
+  if(!el)return;
+  el.innerHTML=`
+    <form class="store-contact-form" onsubmit="submitStoreContact(event)">
+      <input type="hidden" id="store-contact-edit-row" value="">
+      <div class="store-contact-grid">
+        <div class="store-form-group"><label class="store-form-label" for="store-contact-category">類別</label><input class="form-control" id="store-contact-category" type="text" maxlength="60" placeholder="例如：水電、電腦、廠商"></div>
+        <div class="store-form-group"><label class="store-form-label" for="store-contact-name">聯絡人稱呼</label><input class="form-control" id="store-contact-name" type="text" maxlength="100" placeholder="例如：王師傅" required></div>
+        <div class="store-form-group"><label class="store-form-label" for="store-contact-phone">聯絡電話</label><input class="form-control" id="store-contact-phone" type="tel" maxlength="40" placeholder="例如：0912-345-678"></div>
+        <div class="store-form-group"><label class="store-form-label" for="store-contact-line">LINE顯示名稱</label><input class="form-control" id="store-contact-line" type="text" maxlength="100" placeholder="例如：王師傅（水電）"></div>
+        <div class="store-form-group"><label class="store-form-label" for="store-contact-area">服務地區</label><input class="form-control" id="store-contact-area" type="text" maxlength="120" placeholder="例如：台北市、新北市"></div>
+        <div class="store-form-group"><label class="store-form-label" for="store-contact-work">已施作項目</label><textarea class="form-control" id="store-contact-work" maxlength="500" placeholder="例如：廚房水管、冷氣保養"></textarea></div>
+      </div>
+      <div class="store-form-actions"><button class="store-add-button" id="store-contact-submit" type="submit">儲存聯絡人</button><button class="store-secondary-button" id="store-contact-cancel" type="button" hidden onclick="resetStoreContactForm()">清除</button><span class="store-form-status" id="store-contact-form-status" aria-live="polite"></span></div>
+    </form>`;
+}
+
+function toggleStoreContactSearch(event){
+  if(event){event.preventDefault();event.stopPropagation();}
+  var input=document.getElementById('store-contact-search');
+  var button=document.getElementById('store-contact-search-toggle');
+  if(!input||!button)return;
+  var open=input.hidden;
+  input.hidden=!open;
+  button.classList.toggle('is-open',open);
+  button.setAttribute('aria-expanded',open?'true':'false');
+  if(open)input.focus();
+}
+
+function renderStoreContacts(){
+  var el=document.getElementById('store-contacts-content');
+  var countEl=document.getElementById('store-contact-count');
+  if(!el)return;
+  var term=String(storeContactSearchTerm||'').trim().toLowerCase();
+  var rows=storeContactsCache.filter(function(contact){
+    if(!term)return true;
+    return [contact.category,contact.contactName,contact.phone,contact.lineName,contact.serviceArea,contact.completedWork].join(' ').toLowerCase().indexOf(term)>=0;
+  });
+  if(countEl)countEl.textContent=term?'顯示 '+rows.length+' / '+storeContactsCache.length+' 位聯絡人':'共 '+rows.length+' 位聯絡人';
+  if(!rows.length){
+    el.innerHTML='<div class="store-empty">'+(storeContactsCache.length?'找不到符合的聯絡人。':'目前尚無聯絡人，請先在上方新增。')+'</div>';
+    return;
+  }
+  el.innerHTML='<div class="store-contact-grid-list">'+rows.map(function(contact){
+    var row=Number(contact.row);
+    var phone=String(contact.phone||'').trim();
+    return '<article class="store-contact-card">'+
+      '<div class="store-contact-card-head"><div class="store-contact-title">'+esc(contact.contactName||'未命名聯絡人')+'</div>'+(contact.category?'<span class="store-contact-category">'+esc(contact.category)+'</span>':'')+'</div>'+
+      '<div class="store-contact-fields">'+
+        '<div class="store-contact-field"><span>電話</span>'+(phone?'<a href="tel:'+esc(phone.replace(/[^0-9+*#-]/g,''))+'">'+esc(phone)+'</a>':'<b>—</b>')+'</div>'+
+        '<div class="store-contact-field"><span>LINE</span><b>'+esc(contact.lineName||'—')+'</b></div>'+
+        '<div class="store-contact-field"><span>服務地區</span><b>'+esc(contact.serviceArea||'—')+'</b></div>'+
+        '<div class="store-contact-field store-contact-field-wide"><span>已施作項目</span><b>'+esc(contact.completedWork||'—')+'</b></div>'+
+      '</div><div class="store-contact-actions"><button class="store-item-action" type="button" onclick="editStoreContact('+row+')">編輯</button><button class="store-item-action danger" type="button" onclick="removeStoreContact('+row+')">移除</button></div></article>';
+  }).join('')+'</div>';
+}
+
+function loadStoreContacts(force){
+  if(storeContactsPromise)return storeContactsPromise;
+  if(!API_URL){setEmpireCardStatus('store','err','尚未設定 API');return Promise.reject(new Error('尚未設定 API'));}
+  if(!force&&storeContactsCacheFetchedAt&&Date.now()-storeContactsCacheFetchedAt<STORE_CONTACTS_CACHE_TTL){
+    setDataFreshness('store-contacts-freshness',dataFreshnessMeta(storeContactsCache,storeContactsCacheFetchedAt,true));
+    renderStoreContacts();
+    return Promise.resolve(storeContactsCache);
+  }
+  setEmpireCardStatus('store','pending');
+  storeContactsPromise=apiGet({action:'storeContacts'}).then(function(data){
+    storeContactsCache=(data&&data.contacts)||[];
+    storeContactsCacheFetchedAt=Date.now();
+    setDataFreshness('store-contacts-freshness',dataFreshnessMeta(storeContactsCache,storeContactsCacheFetchedAt,false));
+    renderStoreContacts();
+    setEmpireCardStatus('store','ok','聯絡人資料已載入');
+    return storeContactsCache;
+  }).catch(function(e){
+    console.error(e);
+    setEmpireCardStatus('store','err',e.message||'聯絡人資料載入失敗');
+    var el=document.getElementById('store-contacts-content');
+    if(el)el.innerHTML='<div class="store-empty">'+esc(e.message||'聯絡人資料載入失敗')+'</div>';
+    throw e;
+  }).finally(function(){storeContactsPromise=null;});
+  return storeContactsPromise;
+}
+
+function editStoreContact(row){
+  var contact=storeContactsCache.find(function(item){return Number(item.row)===Number(row);});
+  if(!contact)return;
+  var form=document.getElementById('store-contact-form-wrap');
+  if(form)form.scrollIntoView({behavior:'smooth',block:'start'});
+  var fields={
+    'store-contact-edit-row':contact.row,
+    'store-contact-category':contact.category||'',
+    'store-contact-name':contact.contactName||'',
+    'store-contact-phone':contact.phone||'',
+    'store-contact-line':contact.lineName||'',
+    'store-contact-area':contact.serviceArea||'',
+    'store-contact-work':contact.completedWork||''
+  };
+  Object.keys(fields).forEach(function(id){var el=document.getElementById(id);if(el)el.value=fields[id];});
+  var button=document.getElementById('store-contact-submit');
+  var cancel=document.getElementById('store-contact-cancel');
+  var status=document.getElementById('store-contact-form-status');
+  if(button)button.textContent='更新聯絡人';
+  if(cancel)cancel.hidden=false;
+  if(status)status.textContent='正在編輯第 '+contact.row+' 筆聯絡人';
+}
+
+function resetStoreContactForm(){
+  var form=document.querySelector('#store-contact-form-wrap form');
+  if(form)form.reset();
+  var row=document.getElementById('store-contact-edit-row');
+  var button=document.getElementById('store-contact-submit');
+  var cancel=document.getElementById('store-contact-cancel');
+  var status=document.getElementById('store-contact-form-status');
+  if(row)row.value='';
+  if(button)button.textContent='儲存聯絡人';
+  if(cancel)cancel.hidden=true;
+  if(status)status.textContent='';
+}
+
+async function removeStoreContact(row){
+  var contact=storeContactsCache.find(function(item){return Number(item.row)===Number(row);});
+  if(!contact)return;
+  if(!window.confirm('確定要移除「'+contact.contactName+'」嗎？'))return;
+  try{
+    setEmpireCardStatus('store','pending','正在移除聯絡人');
+    await apiPost({action:'storeContactDelete',row:contact.row});
+    await loadStoreContacts(true);
+    setEmpireCardStatus('store','ok','聯絡人資料已更新');
+  }catch(e){
+    console.error(e);
+    setEmpireCardStatus('store','err',e.message||'移除失敗');
+  }
+}
+
+async function submitStoreContact(event){
+  if(event)event.preventDefault();
+  var status=document.getElementById('store-contact-form-status');
+  var button=document.getElementById('store-contact-submit');
+  var row=Number((document.getElementById('store-contact-edit-row')||{}).value||0);
+  var contactName=(document.getElementById('store-contact-name')||{}).value||'';
+  if(!String(contactName).trim()){if(status)status.textContent='請輸入聯絡人稱呼';return;}
+  if(!API_URL){if(status)status.textContent='尚未設定 API';return;}
+  if(button)button.disabled=true;
+  if(status)status.textContent='正在儲存…';
+  var payload={
+    action:row?'storeContactUpdate':'storeContactCreate',
+    row:row||undefined,
+    category:(document.getElementById('store-contact-category')||{}).value||'',
+    contactName:contactName,
+    phone:(document.getElementById('store-contact-phone')||{}).value||'',
+    lineName:(document.getElementById('store-contact-line')||{}).value||'',
+    serviceArea:(document.getElementById('store-contact-area')||{}).value||'',
+    completedWork:(document.getElementById('store-contact-work')||{}).value||''
+  };
+  try{
+    await apiPost(payload);
+    if(status)status.textContent=row?'已更新聯絡人':'已新增聯絡人';
+    resetStoreContactForm();
+    await loadStoreContacts(true);
+  }catch(e){
+    console.error(e);
+    if(status)status.textContent=e.message||'儲存失敗';
+  }finally{if(button)button.disabled=false;}
 }
 
 function pruneFinanceTreasuryCacheVersions(){
