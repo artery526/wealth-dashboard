@@ -79,7 +79,7 @@ test.beforeEach(async ({ page }) => {
       accounts: [{name:'總資產/總計',value:900000}],
       monthly: {ym:currentYM(),income:60000,expense:20000}, transactions: [], bills: {bills:[]},
       assetSnapshot: {latestTotalAssetValue:1000000,latest:{date:today(),totalAssetValue:1000000}},
-      holdingsOverview: Array.from({length:12}, (_,i) => ({symbol:'A'+String(i+1).padStart(2,'0'),cost:100000+i*1000,totalReturn:20000-i*100,marketValue:120000-i*1000})),
+      holdingsOverview: Array.from({length:12}, (_,i) => ({symbol:'A'+String(i+1).padStart(2,'0'),cost:100000+i*1000,totalReturn:20000-i*100,marketValue:120000-i*1000,monthlyDiv:i===0?1800:0})),
       todayCalendar: {events:[{title:'今日會議',timeText:'10:00'}]},
       todayTasks: {tasks:[1,2,3,4].map(i => ({title:'任務'+i,dueText:'9/10'}))}
     };
@@ -94,6 +94,8 @@ test('Xunyu scene entry renders reconciled first-version overview and working dr
   await expect(kpis).toHaveText(['$1,000,000','$40,000','$1,374,000','+18.4%']);
   await expect(page.locator('.xy-table tbody tr')).toHaveCount(12);
   await expect(page.locator('.xy-table')).toContainText('A01');
+  await expect(page.locator('.xy-table thead')).toContainText('預估月配息');
+  await expect(page.locator('.xy-table tbody tr').first()).toContainText('$1,800');
   await expect(page.locator('.xy-agenda-grid > .xy-card')).toHaveCount(3);
   await expect(page.locator('.xy-calendar-card')).toContainText('月曆');
   await expect(page.locator('.xy-calendar-grid .xy-calendar-day')).toHaveCount(42);
