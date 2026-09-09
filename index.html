@@ -4590,31 +4590,6 @@ html[data-theme="deep-blue"] .scene-task-details .home-agenda-global-refresh{bor
       </span>
     </div>
   </div>
-  <section class="today-agenda court-agenda" id="today-agenda" aria-label="朝中政務">
-    <button class="today-agenda-tab" id="today-agenda-toggle" type="button" onclick="toggleTodayAgenda()" aria-expanded="false" aria-controls="today-agenda-sheet">
-      <span>📜 朝中政務</span>
-      <small>點卷展開</small>
-    </button>
-    <div class="today-agenda-sheet" id="today-agenda-sheet" aria-hidden="true">
-      <button class="today-agenda-close" type="button" onclick="toggleTodayAgenda(false)" aria-label="收合朝中政務">x</button>
-      <div class="agenda-mode-row">
-        <button class="agenda-mode-btn active" id="agenda-mode-today" type="button" onclick="setAgendaMode('today')">今日</button>
-        <button class="agenda-mode-btn" id="agenda-mode-tomorrow" type="button" onclick="setAgendaMode('tomorrow')">明日</button>
-        <button class="agenda-mode-btn" id="agenda-mode-week" type="button" onclick="setAgendaMode('week')">七日</button>
-      </div>
-      <div class="today-agenda-list" id="today-calendar-list">
-        <section class="agenda-section">
-          <div class="agenda-section-title">今日行程</div>
-          <div class="today-agenda-loading">軍師正在調閱今日行程…</div>
-        </section>
-        <section class="agenda-section">
-          <div class="agenda-section-title">待辦事項</div>
-          <div class="today-agenda-loading">軍師正在調閱待辦事項…</div>
-        </section>
-      </div>
-      <button class="today-agenda-refresh" id="today-agenda-refresh" type="button" onclick="loadTodayCalendar(currentAgendaMode)">更新</button>
-    </div>
-  </section>
 </div>
 
 <div class="advisor-ai-standalone" id="advisor-ai-standalone" aria-live="polite"></div>
@@ -4626,19 +4601,6 @@ html[data-theme="deep-blue"] .scene-task-details .home-agenda-global-refresh{bor
       <img class="npc-web-scene-map" src="./junshifu-map.png?v=20260908-bg3" alt="帝國指揮所場景：財政、醫館、王府、軍機處、太倉與指揮所">
     </picture>
     <div class="scene-widget-dock" id="scene-widget-dock">
-      <div class="mobile-calendar-slot" id="mobile-calendar-slot"></div>
-      <div class="scene-agenda-slot" id="scene-agenda-slot">
-        <div class="scene-agenda-card">
-          <button class="scene-agenda-toggle" id="scene-agenda-toggle" type="button" aria-expanded="false" aria-controls="scene-agenda-details" aria-label="展開完整行事曆" onclick="toggleSceneAgenda(event)">
-            <span class="scene-agenda-preview" id="scene-agenda-preview"><span class="scene-agenda-preview-status">調閱今日行程中…</span></span>
-            <span class="scene-agenda-caret" aria-hidden="true">▾</span>
-          </button>
-          <div class="scene-agenda-details" id="scene-agenda-details">
-            <div class="scene-agenda-detail-toolbar"><span>完整行事曆</span><button class="home-agenda-global-refresh" id="home-agenda-refresh" type="button" onclick="refreshHomeAgenda()">更新</button></div>
-            <div id="scene-agenda-details-content"></div>
-          </div>
-        </div>
-      </div>
     </div>
     <div class="scene-task-slot" id="scene-task-slot">
       <div class="scene-task-card">
@@ -16601,8 +16563,6 @@ function setupNotice(){
   }
   updateDateDisplay();
   restoreRememberedWebAccess();
-  initTodayAgenda();
-  initHomeAgenda();
   initEmpireCardStatuses();
   setTimeout(function(){
     if(webVerifyIsAuthorized())prefetchFinanceDashboard();

@@ -241,119 +241,20 @@ test('legacy advisor video cards are removed while scene NPC controls remain', a
   expect(await page.evaluate(() => window.xunyuAnimations.events.specialAction.sequence.map(step => step.frame))).toEqual(['07', '08', '09', '10', '11', '12', '01']);
 });
 
-test('mobile calendar defaults to a compact palace badge and expands the weekly view', async ({ page }) => {
+test('standalone calendar interfaces are removed and agenda data is not prefetched', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
+  const calendarCalls = [];
+  page.on('request', request => {
+    if (request.url().includes('action=todayCalendar')) calendarCalls.push(request.url());
+  });
   await page.goto(dashboardUrl);
-
-  const slot = page.locator('#mobile-calendar-slot');
-  const toggle = page.locator('#home-calendar-mobile-toggle');
-  const details = page.locator('#home-calendar-details');
-  const agendaSlot = page.locator('#scene-agenda-slot');
-  const agendaToggle = page.locator('#scene-agenda-toggle');
-  const agendaDetails = page.locator('#scene-agenda-details');
-  const taskSlot = page.locator('#scene-task-slot');
-  const taskToggle = page.locator('#scene-task-toggle');
-  const taskDetails = page.locator('#scene-task-details');
-  await expect(toggle).toBeVisible();
-  await expect(agendaToggle).toBeVisible();
-  await expect(taskToggle).toBeHidden();
-  await expect(toggle).toHaveAttribute('aria-expanded', 'false');
-  await expect(page.locator('#home-calendar-mobile-lunar')).toHaveText(/^農曆M\d{2}/);
-  await expect(page.locator('#home-calendar-mobile-date')).toHaveText(/^\d{4}\/\d{2}\/\d{2}（[日一二三四五六]）$/);
-  await expect(details).toBeHidden();
-  await expect(agendaDetails).toBeHidden();
-  await expect(taskDetails).toBeHidden();
-  await expect(slot).not.toHaveClass(/is-expanded/);
-  expect(await page.locator('#home-agenda-calendar').evaluate(element => element.parentElement.id)).toBe('mobile-calendar-slot');
-  const compactSizes = await page.evaluate(() => {
-    const calendar = document.querySelector('#home-agenda-calendar').getBoundingClientRect();
-    const agenda = document.querySelector('.scene-agenda-card').getBoundingClientRect();
-    return { calendarWidth: calendar.width, calendarHeight: calendar.height, agendaWidth: agenda.width, agendaHeight: agenda.height };
-  });
-  expect(Math.abs(compactSizes.calendarWidth - compactSizes.agendaWidth)).toBeLessThanOrEqual(1);
-  expect(Math.abs(compactSizes.calendarHeight - compactSizes.agendaHeight)).toBeLessThanOrEqual(1);
-  expect(compactSizes.calendarWidth).toBeLessThan(180);
-  expect(compactSizes.calendarHeight).toBeLessThanOrEqual(80);
-
-  await toggle.click();
-  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
-  await expect(slot).toHaveClass(/is-expanded/);
-  await expect(details).toBeVisible();
-  await expect(page.locator('.mobile-calendar-slot .home-calendar-week-controls')).toBeVisible();
-  await expect(page.locator('#home-calendar-grid .home-calendar-day')).toHaveCount(7);
-
-  await toggle.click();
-  await expect(toggle).toHaveAttribute('aria-expanded', 'false');
-  await expect(details).toBeHidden();
-
-  await page.evaluate(() => updateSceneAgendaPreview([
-    { timeText: '18:30 - 23:30', title: '💳富邦.永豐.中信' },
-    { timeText: '整日', title: '第二筆行程' },
-    { timeText: '20:00 - 21:00', title: '不應顯示的第三筆行程' }
-  ]));
-  await expect(page.locator('#scene-agenda-preview .scene-agenda-preview-item')).toHaveCount(2);
-  await expect(page.locator('#scene-agenda-preview')).toContainText('18：30 - 23：30');
-  await expect(page.locator('#scene-agenda-preview')).toContainText('💳富邦.永豐.中信');
-  await expect(page.locator('#scene-agenda-preview')).not.toContainText('不應顯示的第三筆行程');
-  await agendaToggle.click();
-  await expect(agendaSlot).toHaveClass(/is-expanded/);
-  await expect(agendaDetails).toBeVisible();
-  await expect(slot).toBeHidden();
-
-  await agendaToggle.click();
-  await page.evaluate(() => {
-    const tasks = [
-      { id: '1', taskListId: 'list', title: '➡️CoCo飲料兌換' },
-      { id: '2', taskListId: 'list', title: '📋拖鞋換大號' },
-      { id: '3', taskListId: 'list', title: '🛒買筆電' },
-      { id: '4', taskListId: 'list', title: '不應顯示的第四筆待辦' }
-    ];
-    updateSceneTaskPreview(tasks);
-    setHomeAgendaSections('今日行程', '<div>今日無行程</div>', renderGoogleTasks(tasks));
-  });
-  await expect(page.locator('#scene-task-preview .scene-task-preview-item')).toHaveCount(3);
-  await expect(page.locator('#scene-task-preview')).toContainText('➡️CoCo飲料兌換');
-  await expect(page.locator('#scene-task-preview')).toContainText('📋拖鞋換大號');
-  await expect(page.locator('#scene-task-preview')).not.toContainText('不應顯示的第四筆待辦');
-  await expect(taskSlot).toBeHidden();
-  await expect(taskDetails).toBeHidden();
-  await expect(page.locator('#scene-task-details .task-create-form')).toHaveCount(1);
-  expect(await page.evaluate(() => typeof window.toggleSceneTask === 'function' && typeof window.updateSceneTaskPreview === 'function')).toBeTruthy();
+  await expect(page.locator('#today-agenda')).toHaveCount(0);
+  await expect(page.locator('#mobile-calendar-slot')).toHaveCount(0);
+  await expect(page.locator('#scene-agenda-slot')).toHaveCount(0);
+  await expect(page.locator('#home-agenda-calendar')).toBeHidden();
   await expect(page.locator('.home-agenda-wrap')).toBeHidden();
-});
-
-test('desktop calendar uses the same compact palace badge and weekly view', async ({ page }) => {
-  await page.setViewportSize({ width: 1280, height: 720 });
-  await page.goto(dashboardUrl);
-
-  const sceneLayout = await page.evaluate(() => {
-    const stage = document.getElementById('npc-web-scene-stage').getBoundingClientRect();
-    const calendar = document.getElementById('mobile-calendar-slot').getBoundingClientRect();
-    const agenda = document.getElementById('scene-agenda-slot').getBoundingClientRect();
-    return { calendarLeft: calendar.left - stage.left, agendaRight: stage.right - agenda.right };
-  });
-  expect(sceneLayout.calendarLeft).toBeGreaterThanOrEqual(17);
-  expect(sceneLayout.calendarLeft).toBeLessThanOrEqual(19);
-  expect(sceneLayout.agendaRight).toBeGreaterThanOrEqual(17);
-  expect(sceneLayout.agendaRight).toBeLessThanOrEqual(19);
-
-  const slot = page.locator('#mobile-calendar-slot');
-  const toggle = page.locator('#home-calendar-mobile-toggle');
-  const details = page.locator('#home-calendar-details');
-  await expect(toggle).toBeVisible();
-  await expect(toggle).toHaveAttribute('aria-expanded', 'false');
-  await expect(details).toBeHidden();
-  expect(await page.locator('#home-agenda-calendar').evaluate(element => element.parentElement.id)).toBe('mobile-calendar-slot');
-
-  await toggle.click();
-  await expect(slot).toHaveClass(/is-expanded/);
-  await expect(details).toBeVisible();
-  expect((await slot.boundingBox()).width).toBeLessThanOrEqual(440);
-  await expect(page.locator('.mobile-calendar-slot .home-calendar-week-controls')).toBeVisible();
-  await expect(page.locator('#home-calendar-grid .home-calendar-day')).toHaveCount(7);
-  await expect(page.locator('#scene-agenda-details .agenda-section')).toHaveCount(1);
-  await expect(page.locator('#scene-task-details .agenda-section')).toHaveCount(1);
-  await expect(page.locator('#home-agenda-court .agenda-section')).toHaveCount(0);
+  await expect(page.locator('#xunyu-dashboard')).toHaveCount(0);
+  expect(calendarCalls).toHaveLength(0);
 });
 
 test('remembered Pangtong verification restores the empire without blocking re-verification', async ({ page }) => {
