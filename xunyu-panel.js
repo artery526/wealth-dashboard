@@ -42,9 +42,15 @@
     var holdings = state.data.holdings;
     var cost = holdings ? sum(holdings, 'cost') : null;
     var returns = holdings ? sum(holdings, 'totalReturn') : null;
+    var assetDeltaAmount = number(snapshot && snapshot.totalAssetChangeAmount);
+    var assetDeltaPct = number(snapshot && snapshot.totalAssetChangePct);
+    var marketDeltaAmount = number(snapshot && snapshot.dailyChangeAmount);
+    var marketDeltaPct = number(snapshot && snapshot.dailyChangePct);
     return { income: income, expense: expense, net: net, assets: assets, assetDate: assetDate,
       savings: income > 0 && net !== null ? net / income * 100 : null,
       market: holdings ? sum(holdings, 'marketValue') : null,
+      assetDeltaAmount: assetDeltaAmount, assetDeltaPct: assetDeltaPct,
+      marketDeltaAmount: marketDeltaAmount, marketDeltaPct: marketDeltaPct,
       roi: cost > 0 && returns !== null ? returns / cost * 100 : null, holdings: holdings };
   }
   function statusHtml(key) {
@@ -53,8 +59,18 @@
     if (state.errors[key]) text += ' · 更新失敗' + (state.data[key] ? '，保留上次資料' : '');
     return '<div class="xy-status" role="status">' + esc(text) + (state.errors[key] ? ' <button type="button" data-xy-retry="' + key + '">重試</button><span class="xy-error">' + esc(state.errors[key]) + '</span>' : '') + '</div>';
   }
-  function tile(label, value, note, destination) {
-    return '<button type="button" class="xy-kpi" data-xy-go="' + destination + '"><span>' + label + '</span><strong>' + value + '</strong><small>' + esc(note) + '</small></button>';
+  function signedMoney(value) {
+    var n = number(value); if (n === null) return '—';
+    return (n >= 0 ? '+' : '-') + money(Math.abs(n));
+  }
+  function deltaHtml(amount, changePct) {
+    var amountNumber = number(amount), pctNumber = number(changePct);
+    if (amountNumber === null && pctNumber === null) return '<small class="xy-kpi-delta">較昨日 —</small>';
+    var tone = (pctNumber !== null ? pctNumber : amountNumber) < 0 ? 'down' : 'up';
+    return '<small class="xy-kpi-delta ' + tone + '">較昨日 ' + signedMoney(amountNumber) + ' (' + pct(pctNumber) + ')</small>';
+  }
+  function tile(label, value, note, destination, delta) {
+    return '<button type="button" class="xy-kpi" data-xy-go="' + destination + '"><span>' + label + '</span><strong>' + value + '</strong><small>' + esc(note) + '</small>' + (delta || '') + '</button>';
   }
   function holdingHtml(m) {
     var rows = m.holdings;
@@ -105,7 +121,7 @@
     if (state.tab === 'briefs') { root.innerHTML = tabsHtml() + briefsHtml(); return; }
     var m = model(), loading = Object.keys(state.pending).length > 0;
     root.innerHTML = tabsHtml() + '<div class="xy-intro"><div><span class="xy-eyebrow">荀彧 · 內政總覽</span><p>' + esc(state.month) + ' 本月收支 · 資產與持股採最新可用資料</p></div><div class="xy-actions"><button type="button" data-xy-mask aria-pressed="' + state.masked + '">' + (state.masked ? '顯示數字' : '隱藏數字') + '</button><button type="button" data-xy-refresh' + (loading ? ' disabled' : '') + '>' + (loading ? '更新中…' : '更新總覽') + '</button></div></div>' +
-      '<div class="xy-kpis">' + tile('國庫總資產', money(m.assets), m.assetDate || '資產資料尚未取得', 'finance') + tile('本月結餘', money(m.net), '本月收入 − 本月支出', 'finance') + tile('投資市值', money(m.market), '本表持股市值合計', 'holdings') + tile('投資組合含息 ROI', pct(m.roi), '累計含息報酬 ÷ 成本', 'holdings') + '</div>' +
+      '<div class="xy-kpis">' + tile('國庫總資產', money(m.assets), m.assetDate || '資產資料尚未取得', 'finance', deltaHtml(m.assetDeltaAmount, m.assetDeltaPct)) + tile('本月結餘', money(m.net), '本月收入 − 本月支出', 'finance') + tile('投資市值', money(m.market), '本表持股市值合計', 'holdings', deltaHtml(m.marketDeltaAmount, m.marketDeltaPct)) + tile('投資組合含息 ROI', pct(m.roi), '累計含息報酬 ÷ 成本', 'holdings') + '</div>' +
       '<div class="xy-grid"><section class="xy-card"><header><h3>本月內政</h3><button class="xy-link" data-xy-go="finance">國庫明細 →</button></header>' + statusHtml('finance') +
       '<dl class="xy-month"><div><dt>收入</dt><dd>' + money(m.income) + '</dd></div><div><dt>支出</dt><dd>' + money(m.expense) + '</dd></div><div><dt>儲蓄率</dt><dd>' + pct(m.savings) + '</dd></div></dl>' +
       (state.data.finance && state.data.finance.sourceStatus && Object.values(state.data.finance.sourceStatus).some(function (value) { return value !== 'fulfilled'; }) ? '<p class="xy-error">部分國庫來源未完成，缺少的指標暫不顯示。<button data-xy-retry="finance">重試國庫</button></p>' : '') +

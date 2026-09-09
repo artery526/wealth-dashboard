@@ -78,7 +78,7 @@ test.beforeEach(async ({ page }) => {
     window.xyFixtures = {
       accounts: [{name:'總資產/總計',value:900000}],
       monthly: {ym:currentYM(),income:60000,expense:20000}, transactions: [], bills: {bills:[]},
-      assetSnapshot: {latestTotalAssetValue:1000000,latest:{date:today(),totalAssetValue:1000000}},
+      assetSnapshot: {latestTotalAssetValue:1000000,totalAssetChangeAmount:25000,totalAssetChangePct:2.56,dailyChangeAmount:-12000,dailyChangePct:-0.87,latest:{date:today(),totalAssetValue:1000000}},
       holdingsOverview: Array.from({length:12}, (_,i) => ({symbol:'A'+String(i+1).padStart(2,'0'),cost:100000+i*1000,totalReturn:20000-i*100,marketValue:120000-i*1000,monthlyDiv:i===0?1800:0})),
       todayCalendar: {events:[{title:'今日會議',timeText:'10:00'}]},
       todayTasks: {tasks:[1,2,3,4].map(i => ({title:'任務'+i,dueText:'9/10'}))}
@@ -92,6 +92,8 @@ test('Xunyu scene entry renders reconciled first-version overview and working dr
   await expect(page.locator('#p-zh')).toHaveText('尚書臺');
   const kpis = page.locator('.xy-kpi strong');
   await expect(kpis).toHaveText(['$1,000,000','$40,000','$1,374,000','+18.4%']);
+  await expect(page.locator('.xy-kpi').nth(0).locator('.xy-kpi-delta')).toHaveText('較昨日 +$25,000 (+2.6%)');
+  await expect(page.locator('.xy-kpi').nth(2).locator('.xy-kpi-delta')).toHaveText('較昨日 -$12,000 (-0.9%)');
   await expect(page.locator('.xy-table tbody tr')).toHaveCount(12);
   await expect(page.locator('.xy-table')).toContainText('A01');
   await expect(page.locator('.xy-table thead')).toContainText('預估月配息');
