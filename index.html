@@ -6336,9 +6336,9 @@ function renderStorePanel(initialTab){
   setPanelHead('庫','Store · Warehouse','太倉');
   var panelExtra=document.getElementById('p-extra');
   if(panelExtra)panelExtra.innerHTML='<button class="store-header-date-button" id="store-header-date-button" type="button" title="修改記錄日期" onclick="chooseStoreFormDate(event)">'+formatStoreShortDate(getStoreTodayInputValue())+'</button><input class="store-header-date-input" id="store-record-date" type="date" value="'+getStoreTodayInputValue()+'" required onchange="syncStoreHeaderDate()"><span class="empire-panel-status-dot err" id="store-panel-status-dot" title="太倉連線失敗" aria-label="太倉連線失敗"></span>';
-  setPanelMenuTabs([{key:'store-list',label:'物品總覽'},{key:'store-chronicle',label:'事件編年'},{key:'store-contacts',label:'聯絡人'},{key:'stars-home',label:'命盤總覽'}]);
+  setPanelMenuTabs([{key:'store-contacts',label:'聯絡人'},{key:'store-chronicle',label:'事件編年'},{key:'store-list',label:'物品總覽'},{key:'stars-home',label:'命盤總覽'}]);
   document.getElementById('p-body').innerHTML=`
-    <div class="pane active" id="pane-store-list">
+    <div class="pane" id="pane-store-list">
       <div class="store-panel-intro"><div class="store-panel-title">Store｜太倉物品</div><div class="store-panel-sub">搜尋物品名稱、所在地點或編號，快速找到收納位置。</div></div>
       <div class="store-inline-form" id="store-inline-form"></div>
       <div class="store-date-filters" id="store-date-filters" aria-label="記錄年月篩選"></div>
@@ -6350,7 +6350,7 @@ function renderStorePanel(initialTab){
       <div id="chronicle-freshness">${dataFreshnessHtml()}</div>
       <div id="chronicle-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:72%"></div></div>
     </div>
-    <div class="pane" id="pane-store-contacts">
+    <div class="pane active" id="pane-store-contacts">
       <div class="store-panel-intro"><div class="store-panel-title">Store｜聯絡人</div><div class="store-panel-sub">直接記錄師傅、廠商或服務聯絡資訊，手機端會以卡片方式顯示。</div></div>
       <div class="store-contact-form-wrap" id="store-contact-form-wrap"></div>
       <div class="store-contact-toolbar"><div class="store-contact-count" id="store-contact-count"></div><button class="store-search-toggle" id="store-contact-search-toggle" type="button" title="搜尋聯絡人" aria-label="搜尋聯絡人" aria-expanded="false" onclick="toggleStoreContactSearch(event)">🔍</button><input class="store-search-inline" id="store-contact-search" type="search" placeholder="搜尋稱呼、電話、地區或項目" aria-label="搜尋聯絡人" hidden oninput="storeContactSearchTerm=this.value;renderStoreContacts()"></div>
