@@ -1019,12 +1019,13 @@ body::after{
 .store-contact-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .store-contact-grid .form-control{min-width:0}
 .store-contact-grid textarea.form-control{min-height:72px;resize:vertical}
-.store-contact-grid .store-form-group:nth-child(6){grid-column:1/-1}
-.store-contact-grid .store-form-group:nth-child(6) textarea{min-height:58px}
+.store-contact-grid .store-form-group:nth-child(7){grid-column:1/-1}
+.store-contact-grid .store-form-group:nth-child(7) textarea{min-height:58px}
 .store-contact-grid-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .store-contact-card{display:grid;gap:10px;min-width:0;padding:12px;border:1px solid rgba(65,157,194,.3);border-radius:9px;background:linear-gradient(160deg,rgba(8,35,51,.78),rgba(4,14,23,.78))}
 .store-contact-card-head{display:flex;align-items:center;gap:8px;min-width:0}
 .store-contact-title{min-width:0;color:#dff7ff;font:900 18px/1.35 var(--font);overflow-wrap:anywhere}
+.store-contact-company{flex:0 1 auto;max-width:48%;padding:4px 7px;border:1px solid rgba(65,157,194,.42);border-radius:7px;background:rgba(6,27,43,.58);color:#bcefff;font:800 11px var(--sans);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .store-contact-category{flex:0 0 auto;max-width:42%;padding:4px 7px;border:1px solid rgba(232,192,80,.42);border-radius:7px;background:rgba(232,192,80,.1);color:#fff3bf;font:800 11px var(--sans);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .store-contact-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
 .store-contact-field{display:grid;gap:3px;min-width:0;padding:7px 8px;border:1px solid rgba(65,157,194,.24);border-radius:7px;background:rgba(6,27,43,.5)}
@@ -1075,7 +1076,7 @@ body::after{
 .store-header-date-button{border:1px solid rgba(232,192,80,.55);border-radius:7px;background:rgba(232,192,80,.1);color:#fff3bf;font:900 12px var(--sans);padding:5px 7px;cursor:pointer;white-space:nowrap}
 .store-header-date-button:hover{border-color:#fff3bf;background:rgba(232,192,80,.2)}
 .store-header-date-input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
-@media(max-width:650px){.store-grid{grid-template-columns:1fr}.store-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.store-form-group.full{grid-column:1/-1}.store-toolbar,.store-date-filters{grid-template-columns:1fr}.store-add-button{width:100%}.store-count-row{flex-wrap:wrap}.store-search-inline{order:3;flex:1 1 100%;width:100%}.store-item-card{padding:10px}.store-item-card-head{align-items:center;padding-right:84px}.store-item-heading{gap:6px}.store-item-name{min-width:0;flex:1;font-size:16px}.store-item-date-button{top:10px;right:43px;font-size:11px}.store-item-menu{top:8px;right:8px}.store-header-date-button{font-size:11px;padding:4px 5px}.store-contact-toolbar{flex-wrap:wrap}.store-contact-grid{grid-template-columns:1fr}.store-contact-grid .store-form-group:nth-child(6){grid-column:auto}.store-contact-grid-list{grid-template-columns:1fr}.store-contact-card{padding:10px}.store-contact-title{font-size:16px}.store-contact-fields{grid-template-columns:1fr}.store-contact-field-wide{grid-column:auto}.store-contact-form-wrap{padding:10px}}
+@media(max-width:650px){.store-grid{grid-template-columns:1fr}.store-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.store-form-group.full{grid-column:1/-1}.store-toolbar,.store-date-filters{grid-template-columns:1fr}.store-add-button{width:100%}.store-count-row{flex-wrap:wrap}.store-search-inline{order:3;flex:1 1 100%;width:100%}.store-item-card{padding:10px}.store-item-card-head{align-items:center;padding-right:84px}.store-item-heading{gap:6px}.store-item-name{min-width:0;flex:1;font-size:16px}.store-item-date-button{top:10px;right:43px;font-size:11px}.store-item-menu{top:8px;right:8px}.store-header-date-button{font-size:11px;padding:4px 5px}.store-contact-toolbar{flex-wrap:wrap}.store-contact-grid{grid-template-columns:1fr}.store-contact-grid .store-form-group:nth-child(7){grid-column:auto}.store-contact-grid-list{grid-template-columns:1fr}.store-contact-card{padding:10px}.store-contact-title{font-size:16px}.store-contact-fields{grid-template-columns:1fr}.store-contact-field-wide{grid-column:auto}.store-contact-form-wrap{padding:10px}}
 .market-lord{
   position:absolute;
   top:-65px;
@@ -6762,6 +6763,7 @@ function renderStoreContactForm(){
       <input type="hidden" id="store-contact-edit-row" value="">
       <div class="store-contact-grid">
         <div class="store-form-group"><label class="store-form-label" for="store-contact-category">類別</label><input class="form-control" id="store-contact-category" type="text" maxlength="60" placeholder="例如：水電、電腦、廠商"></div>
+        <div class="store-form-group"><label class="store-form-label" for="store-contact-company">公司名稱</label><input class="form-control" id="store-contact-company" type="text" maxlength="120" placeholder="例如：小白熊清潔"></div>
         <div class="store-form-group"><label class="store-form-label" for="store-contact-name">聯絡人稱呼</label><input class="form-control" id="store-contact-name" type="text" maxlength="100" placeholder="例如：王師傅" required></div>
         <div class="store-form-group"><label class="store-form-label" for="store-contact-phone">聯絡電話</label><input class="form-control" id="store-contact-phone" type="tel" maxlength="40" placeholder="例如：0912-345-678"></div>
         <div class="store-form-group"><label class="store-form-label" for="store-contact-line">LINE顯示名稱</label><input class="form-control" id="store-contact-line" type="text" maxlength="100" placeholder="例如：王師傅（水電）"></div>
@@ -6791,7 +6793,7 @@ function renderStoreContacts(){
   var term=String(storeContactSearchTerm||'').trim().toLowerCase();
   var rows=storeContactsCache.filter(function(contact){
     if(!term)return true;
-    return [contact.category,contact.contactName,contact.phone,contact.lineName,contact.serviceArea,contact.completedWork].join(' ').toLowerCase().indexOf(term)>=0;
+    return [contact.category,contact.companyName,contact.contactName,contact.phone,contact.lineName,contact.serviceArea,contact.completedWork].join(' ').toLowerCase().indexOf(term)>=0;
   });
   if(countEl)countEl.textContent=term?'顯示 '+rows.length+' / '+storeContactsCache.length+' 位聯絡人':'共 '+rows.length+' 位聯絡人';
   if(!rows.length){
@@ -6802,7 +6804,7 @@ function renderStoreContacts(){
     var row=Number(contact.row);
     var phone=String(contact.phone||'').trim();
     return '<article class="store-contact-card">'+
-      '<div class="store-contact-card-head"><div class="store-contact-title">'+esc(contact.contactName||'未命名聯絡人')+'</div>'+(contact.category?'<span class="store-contact-category">'+esc(contact.category)+'</span>':'')+'</div>'+
+      '<div class="store-contact-card-head"><div class="store-contact-title">'+esc(contact.contactName||'未命名聯絡人')+'</div>'+(contact.companyName?'<span class="store-contact-company">'+esc(contact.companyName)+'</span>':'')+(contact.category?'<span class="store-contact-category">'+esc(contact.category)+'</span>':'')+'</div>'+
       '<div class="store-contact-fields">'+
         '<div class="store-contact-field"><span>電話</span>'+(phone?'<a href="tel:'+esc(phone.replace(/[^0-9+*#-]/g,''))+'">'+esc(phone)+'</a>':'<b>—</b>')+'</div>'+
         '<div class="store-contact-field"><span>LINE</span><b>'+esc(contact.lineName||'—')+'</b></div>'+
@@ -6846,6 +6848,7 @@ function editStoreContact(row){
   var fields={
     'store-contact-edit-row':contact.row,
     'store-contact-category':contact.category||'',
+    'store-contact-company':contact.companyName||'',
     'store-contact-name':contact.contactName||'',
     'store-contact-phone':contact.phone||'',
     'store-contact-line':contact.lineName||'',
@@ -6903,6 +6906,7 @@ async function submitStoreContact(event){
     action:row?'storeContactUpdate':'storeContactCreate',
     row:row||undefined,
     category:(document.getElementById('store-contact-category')||{}).value||'',
+    companyName:(document.getElementById('store-contact-company')||{}).value||'',
     contactName:contactName,
     phone:(document.getElementById('store-contact-phone')||{}).value||'',
     lineName:(document.getElementById('store-contact-line')||{}).value||'',
