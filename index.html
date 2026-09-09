@@ -1018,13 +1018,14 @@ body::after{
 .store-contact-form{display:grid;gap:10px}
 .store-contact-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .store-contact-grid .form-control{min-width:0}
-.store-contact-service-control{display:flex;align-items:end;gap:7px;min-width:0}
-.store-contact-service-control .store-form-group{flex:1;min-width:0}
-.store-contact-work-toggle{display:grid;place-items:center;width:36px;height:38px;flex:0 0 36px;border:1px solid rgba(65,157,194,.52);border-radius:8px;background:rgba(6,27,43,.9);color:#fff3bf;font:900 21px/1 var(--sans);cursor:pointer}
-.store-contact-work-toggle:hover,.store-contact-work-toggle.is-open{border-color:#71d8f7;background:rgba(20,74,98,.9)}
+.store-contact-extra-toggle-row{grid-column:1/-1;display:flex;align-items:center;gap:8px;min-height:38px}
+.store-contact-extra-toggle{display:grid;place-items:center;width:36px;height:36px;flex:0 0 36px;border:1px solid rgba(65,157,194,.52);border-radius:8px;background:rgba(6,27,43,.9);color:#fff3bf;font:900 21px/1 var(--sans);cursor:pointer}
+.store-contact-extra-toggle:hover,.store-contact-extra-toggle.is-open{border-color:#71d8f7;background:rgba(20,74,98,.9)}
+.store-contact-extra-hint{color:#8aa7b6;font:800 12px var(--sans)}
+.store-contact-extra-group{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.store-contact-extra-group .store-contact-work-group{grid-column:1/-1}
 .store-contact-grid textarea.form-control{min-height:72px;resize:vertical}
-.store-contact-grid .store-form-group:nth-child(7){grid-column:1/-1}
-.store-contact-grid .store-form-group:nth-child(7) textarea{min-height:58px}
+.store-contact-extra-group textarea.form-control{min-height:58px}
 .store-contact-grid-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .store-contact-card{display:grid;gap:10px;min-width:0;padding:12px;border:1px solid rgba(65,157,194,.3);border-radius:9px;background:linear-gradient(160deg,rgba(8,35,51,.78),rgba(4,14,23,.78))}
 .store-contact-card-head{display:flex;align-items:center;gap:8px;min-width:0}
@@ -1080,7 +1081,7 @@ body::after{
 .store-header-date-button{border:1px solid rgba(232,192,80,.55);border-radius:7px;background:rgba(232,192,80,.1);color:#fff3bf;font:900 12px var(--sans);padding:5px 7px;cursor:pointer;white-space:nowrap}
 .store-header-date-button:hover{border-color:#fff3bf;background:rgba(232,192,80,.2)}
 .store-header-date-input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
-@media(max-width:650px){.store-grid{grid-template-columns:1fr}.store-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.store-form-group.full{grid-column:1/-1}.store-toolbar,.store-date-filters{grid-template-columns:1fr}.store-add-button{width:100%}.store-count-row{flex-wrap:wrap}.store-search-inline{order:3;flex:1 1 100%;width:100%}.store-item-card{padding:10px}.store-item-card-head{align-items:center;padding-right:84px}.store-item-heading{gap:6px}.store-item-name{min-width:0;flex:1;font-size:16px}.store-item-date-button{top:10px;right:43px;font-size:11px}.store-item-menu{top:8px;right:8px}.store-header-date-button{font-size:11px;padding:4px 5px}.store-contact-toolbar{flex-wrap:wrap}.store-contact-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.store-contact-grid .store-form-group:nth-child(7){grid-column:1/-1}.store-contact-service-control{gap:4px}.store-contact-work-toggle{width:30px;height:36px;flex-basis:30px;font-size:18px}.store-contact-grid-list{grid-template-columns:1fr}.store-contact-card{padding:10px}.store-contact-title{font-size:16px}.store-contact-fields{grid-template-columns:1fr}.store-contact-field-wide{grid-column:auto}.store-contact-form-wrap{padding:10px}}
+@media(max-width:650px){.store-grid{grid-template-columns:1fr}.store-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.store-form-group.full{grid-column:1/-1}.store-toolbar,.store-date-filters{grid-template-columns:1fr}.store-add-button{width:100%}.store-count-row{flex-wrap:wrap}.store-search-inline{order:3;flex:1 1 100%;width:100%}.store-item-card{padding:10px}.store-item-card-head{align-items:center;padding-right:84px}.store-item-heading{gap:6px}.store-item-name{min-width:0;flex:1;font-size:16px}.store-item-date-button{top:10px;right:43px;font-size:11px}.store-item-menu{top:8px;right:8px}.store-header-date-button{font-size:11px;padding:4px 5px}.store-contact-toolbar{flex-wrap:wrap}.store-contact-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.store-contact-extra-group{gap:7px}.store-contact-extra-toggle{width:30px;height:34px;flex-basis:30px;font-size:18px}.store-contact-grid-list{grid-template-columns:1fr}.store-contact-card{padding:10px}.store-contact-title{font-size:16px}.store-contact-fields{grid-template-columns:1fr}.store-contact-field-wide{grid-column:auto}.store-contact-form-wrap{padding:10px}}
 .market-lord{
   position:absolute;
   top:-65px;
@@ -6770,12 +6771,15 @@ function renderStoreContactForm(){
         <div class="store-form-group"><label class="store-form-label" for="store-contact-company">公司名稱</label><input class="form-control" id="store-contact-company" type="text" maxlength="120" placeholder="例如：小白熊清潔"></div>
         <div class="store-form-group"><label class="store-form-label" for="store-contact-name">聯絡人稱呼</label><input class="form-control" id="store-contact-name" type="text" maxlength="100" placeholder="例如：王師傅" required></div>
         <div class="store-form-group"><label class="store-form-label" for="store-contact-phone">聯絡電話</label><input class="form-control" id="store-contact-phone" type="tel" maxlength="40" placeholder="例如：0912-345-678"></div>
-        <div class="store-form-group"><label class="store-form-label" for="store-contact-line">LINE顯示名稱</label><input class="form-control" id="store-contact-line" type="text" maxlength="100" placeholder="例如：王師傅（水電）"></div>
-        <div class="store-contact-service-control">
-          <div class="store-form-group"><label class="store-form-label" for="store-contact-area">服務地區</label><input class="form-control" id="store-contact-area" type="text" maxlength="120" placeholder="例如：台北市、新北市"></div>
-          <button class="store-contact-work-toggle" id="store-contact-work-toggle" type="button" title="展開已施作項目" aria-label="展開已施作項目" aria-expanded="false" onclick="toggleStoreContactWork(event)">＋</button>
+        <div class="store-contact-extra-toggle-row">
+          <button class="store-contact-extra-toggle" id="store-contact-extra-toggle" type="button" title="展開其他聯絡資訊" aria-label="展開其他聯絡資訊" aria-expanded="false" onclick="toggleStoreContactExtras(event)">＋</button>
+          <span class="store-contact-extra-hint">其他聯絡資訊</span>
         </div>
-        <div class="store-form-group store-contact-work-group" id="store-contact-work-group" hidden><label class="store-form-label" for="store-contact-work">已施作項目</label><textarea class="form-control" id="store-contact-work" maxlength="500" placeholder="例如：廚房水管、冷氣保養"></textarea></div>
+        <div class="store-contact-extra-group" id="store-contact-extra-group" hidden>
+          <div class="store-form-group"><label class="store-form-label" for="store-contact-line">LINE顯示名稱</label><input class="form-control" id="store-contact-line" type="text" maxlength="100" placeholder="例如：王師傅（水電）"></div>
+          <div class="store-form-group"><label class="store-form-label" for="store-contact-area">服務地區</label><input class="form-control" id="store-contact-area" type="text" maxlength="120" placeholder="例如：台北市、新北市"></div>
+          <div class="store-form-group store-contact-work-group"><label class="store-form-label" for="store-contact-work">已施作項目</label><textarea class="form-control" id="store-contact-work" maxlength="500" placeholder="例如：廚房水管、冷氣保養"></textarea></div>
+        </div>
       </div>
       <div class="store-form-actions"><button class="store-add-button" id="store-contact-submit" type="submit">儲存聯絡人</button><button class="store-secondary-button" id="store-contact-cancel" type="button" hidden onclick="resetStoreContactForm()">清除</button><span class="store-form-status" id="store-contact-form-status" aria-live="polite"></span></div>
     </form>`;
@@ -6793,22 +6797,22 @@ function toggleStoreContactSearch(event){
   if(open)input.focus();
 }
 
-function setStoreContactWorkExpanded(expanded){
-  var group=document.getElementById('store-contact-work-group');
-  var button=document.getElementById('store-contact-work-toggle');
+function setStoreContactExtrasExpanded(expanded){
+  var group=document.getElementById('store-contact-extra-group');
+  var button=document.getElementById('store-contact-extra-toggle');
   if(!group||!button)return;
   group.hidden=!expanded;
   button.classList.toggle('is-open',expanded);
   button.textContent=expanded?'−':'＋';
-  button.title=expanded?'收起已施作項目':'展開已施作項目';
-  button.setAttribute('aria-label',expanded?'收起已施作項目':'展開已施作項目');
+  button.title=expanded?'收起其他聯絡資訊':'展開其他聯絡資訊';
+  button.setAttribute('aria-label',expanded?'收起其他聯絡資訊':'展開其他聯絡資訊');
   button.setAttribute('aria-expanded',expanded?'true':'false');
 }
 
-function toggleStoreContactWork(event){
+function toggleStoreContactExtras(event){
   if(event){event.preventDefault();event.stopPropagation();}
-  var group=document.getElementById('store-contact-work-group');
-  if(group)setStoreContactWorkExpanded(group.hidden);
+  var group=document.getElementById('store-contact-extra-group');
+  if(group)setStoreContactExtrasExpanded(group.hidden);
 }
 
 function renderStoreContacts(){
@@ -6887,7 +6891,7 @@ function editStoreContact(row){
   if(button)button.textContent='更新聯絡人';
   if(cancel)cancel.hidden=false;
   if(status)status.textContent='正在編輯第 '+contact.row+' 筆聯絡人';
-  setStoreContactWorkExpanded(!!String(contact.completedWork||'').trim());
+  setStoreContactExtrasExpanded(!!String(contact.lineName||'').trim()||!!String(contact.serviceArea||'').trim()||!!String(contact.completedWork||'').trim());
 }
 
 function resetStoreContactForm(){
@@ -6901,7 +6905,7 @@ function resetStoreContactForm(){
   if(button)button.textContent='儲存聯絡人';
   if(cancel)cancel.hidden=true;
   if(status)status.textContent='';
-  setStoreContactWorkExpanded(false);
+  setStoreContactExtrasExpanded(false);
 }
 
 async function removeStoreContact(row){
