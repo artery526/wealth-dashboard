@@ -79,6 +79,26 @@
       return '<li><span>' + esc(item.title || item.summary || '未命名') + '</span>' + (when ? '<small>' + esc(when) + '</small>' : '') + '</li>';
     }).join('') + '</ul>' : '<p class="xy-empty">' + (key === 'calendar' ? '今日沒有行程' : '目前沒有未完成待辦') + '</p>') + (items.length > 3 ? '<button class="xy-link" type="button" data-xy-expand="' + key + '" aria-expanded="' + !!state.expanded[key] + '">' + (state.expanded[key] ? '收合' : '查看全部 ' + items.length + ' 項') + '</button>' : '');
   }
+  function monthCalendarHtml() {
+    var match = String(state.month || '').match(/^(\d{4})[-\/](\d{2})$/);
+    if (!match) return '<p class="xy-empty">月份資料尚未取得</p>';
+    var year = Number(match[1]), month = Number(match[2]) - 1;
+    var first = new Date(year, month, 1), days = new Date(year, month + 1, 0).getDate();
+    var cells = ['日','一','二','三','四','五','六'].map(function (label) {
+      return '<div class="xy-calendar-weekday" role="columnheader">' + label + '</div>';
+    });
+    for (var index = 0; index < 42; index++) {
+      var day = index - first.getDay() + 1;
+      if (day < 1 || day > days) {
+        cells.push('<div class="xy-calendar-day muted" aria-hidden="true"></div>');
+        continue;
+      }
+      var date = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+      var todayClass = date === state.date ? ' today' : '';
+      cells.push('<div class="xy-calendar-day' + todayClass + '" role="gridcell"' + (todayClass ? ' aria-current="date"' : '') + '>' + day + '</div>');
+    }
+    return '<div class="xy-calendar-title"><strong>' + year + ' 年 ' + (month + 1) + ' 月</strong><span>今日 ' + esc(state.date) + '</span></div><div class="xy-calendar-grid" role="grid" aria-label="' + year + ' 年 ' + (month + 1) + ' 月月曆">' + cells.join('') + '</div>';
+  }
   function paint() {
     var root = document.getElementById('xunyu-dashboard');
     if (!root || !state || !authorized()) return;
@@ -90,6 +110,7 @@
       '<dl class="xy-month"><div><dt>收入</dt><dd>' + money(m.income) + '</dd></div><div><dt>支出</dt><dd>' + money(m.expense) + '</dd></div><div><dt>儲蓄率</dt><dd>' + pct(m.savings) + '</dd></div></dl>' +
       (state.data.finance && state.data.finance.sourceStatus && Object.values(state.data.finance.sourceStatus).some(function (value) { return value !== 'fulfilled'; }) ? '<p class="xy-error">部分國庫來源未完成，缺少的指標暫不顯示。<button data-xy-retry="finance">重試國庫</button></p>' : '') +
       '</section><section class="xy-card"><header><h3>部隊簡報</h3><button class="xy-link" data-xy-go="holdings">全部部隊 →</button></header>' + statusHtml('holdings') + holdingHtml(m) +
+      '</section></div><div class="xy-agenda-grid"><section class="xy-card xy-calendar-card"><header><h3>月曆</h3><span>尚書臺</span></header>' + monthCalendarHtml() +
       '</section><section class="xy-card"><header><h3>今日行程</h3><span>' + esc(state.date) + '</span></header>' + statusHtml('calendar') + agendaHtml('calendar') +
       '</section><section class="xy-card"><header><h3>近期要務</h3></header>' + statusHtml('tasks') + agendaHtml('tasks') + '</section></div>' +
       '<details class="xy-definitions"><summary>指標口徑與資料來源</summary><p>國庫總資產沿用財政的資產快照；無快照時使用帳戶總資產。本月收支沿用月度資料與流水校正，轉帳不算收入支出。儲蓄率＝結餘 ÷ 收入，無收入時不計算。</p><p>投資市值、市值占比與含息 ROI 使用同一批持股資料。整體 ROI 以含息報酬合計除以成本合計，不平均各檔 ROI，也不是本月投資報酬。來源未提供交易日期時，以取得時間標示。</p><p>今日行程與未完成待辦來自既有 Google 行事曆及 Tasks 介面；此處為唯讀總覽。</p></details>';

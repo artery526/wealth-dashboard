@@ -80,6 +80,9 @@ test('Xunyu scene entry renders reconciled first-version overview and working dr
   await expect(kpis).toHaveText(['$1,000,000','$40,000','$1,374,000','+18.4%']);
   await expect(page.locator('.xy-table tbody tr')).toHaveCount(12);
   await expect(page.locator('.xy-table')).toContainText('A01');
+  await expect(page.locator('.xy-agenda-grid > .xy-card')).toHaveCount(3);
+  await expect(page.locator('.xy-calendar-card')).toContainText('月曆');
+  await expect(page.locator('.xy-calendar-grid .xy-calendar-day')).toHaveCount(42);
   await expect(page.locator('#xunyu-dashboard')).toContainText('今日會議');
   await expect(page.locator('.xy-list').last().locator('li')).toHaveCount(3);
   await page.getByRole('button',{name:'查看全部 4 項'}).click();
