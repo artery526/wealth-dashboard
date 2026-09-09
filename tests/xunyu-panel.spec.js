@@ -94,6 +94,9 @@ test('Xunyu scene entry renders reconciled first-version overview and working dr
   await expect(kpis).toHaveText(['$1,000,000','$40,000','$1,374,000','+18.4%']);
   await expect(page.locator('.xy-kpi').nth(0).locator('.xy-kpi-delta')).toHaveText('較昨日 +$25,000 (+2.6%)');
   await expect(page.locator('.xy-kpi').nth(2).locator('.xy-kpi-delta')).toHaveText('較昨日 -$12,000 (-0.9%)');
+  await expect(page.locator('.xy-kpi').nth(0)).not.toContainText('2026/');
+  await expect(page.locator('.xy-kpi').nth(2)).not.toContainText('本表持股市值合計');
+  await expect(page.locator('.xy-definitions')).toHaveCount(0);
   await expect(page.locator('.xy-table tbody tr')).toHaveCount(12);
   await expect(page.locator('.xy-table')).toContainText('A01');
   await expect(page.locator('.xy-table thead')).toContainText('預估月配息');
