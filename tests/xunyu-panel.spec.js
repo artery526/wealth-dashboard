@@ -17,10 +17,10 @@ async function openBriefs(page) {
     openXunyuPanel();
   });
   expect(await page.evaluate(() => xyNasCalls)).toEqual([]);
-  await page.getByRole('button',{name:'各署摘要',exact:true}).click();
+  await page.getByRole('button',{name:'各部摘要',exact:true}).click();
 }
 
-test('optional briefs load lazily, count unique medical days and show recent records with dates', async ({page}) => {
+test('briefs show every department without display checkboxes and include dated summaries', async ({page}) => {
   await openBriefs(page);
   await expect(page.locator('[data-xy-source="medical"]')).toContainText('本月記錄 2 天');
   await expect(page.locator('[data-xy-source="medical"]')).toContainText('-03 08:00');
@@ -29,12 +29,13 @@ test('optional briefs load lazily, count unique medical days and show recent rec
   await expect(page.locator('[data-xy-source="wall"] li').first()).toContainText('最近更新');
   await expect(page.locator('[data-xy-source="macro"]')).toContainText('2026-09-01');
   await expect(page.locator('[data-xy-source="intelligence"]')).toContainText('部分來源失敗');
-  await page.getByLabel('醫館', {exact:true}).uncheck();
-  await expect(page.locator('[data-xy-source="medical"]')).toHaveCount(0);
+  await expect(page.locator('.xy-options')).toHaveCount(0);
+  await expect(page.locator('.xy-card').filter({hasText:'王府'})).toHaveCount(1);
+  await expect(page.locator('.xy-card').filter({hasText:'總體經濟'})).toHaveCount(1);
   await page.getByRole('button',{name:'內政總覽',exact:true}).click();
   await expect(page.locator('.xy-table tbody tr')).toHaveCount(12);
-  await page.getByRole('button',{name:'各署摘要',exact:true}).click();
-  await expect(page.getByLabel('醫館',{exact:true})).not.toBeChecked();
+  await page.getByRole('button',{name:'各部摘要',exact:true}).click();
+  await expect(page.locator('[data-xy-source="medical"]')).toHaveCount(1);
 });
 
 test('brief source failure retains previous data, retries independently and supports mobile layout', async ({page}) => {

@@ -2,10 +2,8 @@
 (function () {
   'use strict';
   var state = null;
-  var groups = { medical: '醫館', store: '太倉', wall: '王府／城牆', intelligence: '總經／外部情報' };
+  var groups = { medical: '醫館', store: '太倉', wall: '王府', intelligence: '總體經濟' };
   var sources = { medical: ['medical'], store: ['store','chronicle'], wall: ['wall'], intelligence: ['macro','intelligence'] };
-  var selected = {};
-  try { selected = JSON.parse(localStorage.getItem('xunyu-summary-selection') || '{}') || {}; } catch (e) {}
   function freshState() {
     return { month: currentYM(), date: today(), scope: API_URL + '|' + WRITE_TOKEN,
       data: {}, saved: {}, errors: {}, pending: {}, expanded: {}, masked: false, tab: 'overview' };
@@ -116,12 +114,12 @@
       '<details class="xy-definitions"><summary>指標口徑與資料來源</summary><p>國庫總資產沿用財政的資產快照；無快照時使用帳戶總資產。本月收支沿用月度資料與流水校正，轉帳不算收入支出。儲蓄率＝結餘 ÷ 收入，無收入時不計算。</p><p>投資市值、市值占比與含息 ROI 使用同一批持股資料。整體 ROI 以含息報酬合計除以成本合計，不平均各檔 ROI，也不是本月投資報酬。來源未提供交易日期時，以取得時間標示。</p><p>今日行程與未完成待辦來自既有 Google 行事曆及 Tasks 介面；此處為唯讀總覽。</p></details>';
   }
   function tabsHtml() {
-    return '<nav class="xy-tabs" aria-label="尚書臺分頁">' + [['overview','內政總覽'],['briefs','各署摘要']].map(function (tab) {
+    return '<nav class="xy-tabs" aria-label="尚書臺分頁">' + [['overview','內政總覽'],['briefs','各部摘要']].map(function (tab) {
       return '<button type="button" data-xy-tab="' + tab[0] + '" aria-pressed="' + (state.tab === tab[0]) + '">' + tab[1] + '</button>';
     }).join('') + '</nav>';
   }
   function activeSources() {
-    return Object.keys(groups).filter(function (key) { return selected[key] !== false; }).reduce(function (all,key) { return all.concat(sources[key]); },[]);
+    return Object.keys(groups).reduce(function (all,key) { return all.concat(sources[key]); },[]);
   }
   function stamp(value) { var n = Date.parse(String(value || '').replace(/\//g,'-')); return Number.isFinite(n) ? n : 0; }
   function latestRows(rows, dateKey, count, titleKey) {
@@ -153,13 +151,13 @@
   }
   function briefsHtml() {
     var labels = { medical:'醫館記錄', store:'最新物品', chronicle:'最新事件', wall:'最近更新', macro:'美股總經', intelligence:'外部情報' };
-    return '<div class="xy-intro"><div><span class="xy-eyebrow">各署摘要</span><p>勾選想看的摘要；資料日期與取得時間分別標示。</p></div><button type="button" data-xy-refresh>更新摘要</button></div>' +
-      '<fieldset class="xy-options"><legend>顯示區塊</legend>' + Object.keys(groups).map(function (key) { return '<label><input type="checkbox" data-xy-option="' + key + '"' + (selected[key] !== false ? ' checked' : '') + '> ' + groups[key] + '</label>'; }).join('') + '</fieldset><div class="xy-brief-grid">' +
-      Object.keys(groups).filter(function (key) { return selected[key] !== false; }).map(function (group) {
+    return '<div class="xy-intro"><div><span class="xy-eyebrow">各部摘要</span><p>資料日期與取得時間分別標示。</p></div><button type="button" data-xy-refresh>更新摘要</button></div>' +
+      '<div class="xy-brief-grid">' +
+      Object.keys(groups).map(function (group) {
         return '<section class="xy-card"><header><h3>' + groups[group] + '</h3></header>' + sources[group].map(function (key) {
           return '<div class="xy-brief-source" data-xy-source="' + key + '"><header><h4>' + labels[key] + '</h4><button type="button" class="xy-link" data-xy-detail="' + key + '">查看全文 →</button></header>' + statusHtml(key) + briefBody(key) + '</div>';
         }).join('') + '</section>';
-      }).join('') + '</div>' + (!activeSources().length ? '<p class="xy-empty">尚未選擇摘要，請勾選上方區塊。</p>' : '') + '<p class="xy-note">太倉按記錄日期排列，未提供新增時間時不推定新增順序；王府優先採更新時間，缺少時採建立時間或記錄日期。此頁只讀取既有情報，不觸發採集。</p>';
+      }).join('') + '</div><p class="xy-note">太倉按記錄日期排列，未提供新增時間時不推定新增順序；王府優先採更新時間，缺少時採建立時間或記錄日期。此頁只讀取既有情報，不觸發採集。</p>';
   }
   function loadFinance() {
     if (financeTreasuryPromise) return financeTreasuryPromise.then(function (data) { if (!data) throw new Error('國庫讀取失敗'); return data; });
@@ -236,11 +234,5 @@
     else if (button.dataset.xyExpand) { state.expanded[button.dataset.xyExpand] = !state.expanded[button.dataset.xyExpand]; paint(); }
     else if (button.dataset.xyGo === 'finance') openPanel('finance','finance-accs');
     else if (button.dataset.xyGo === 'holdings') { councilReviewMode = 'compare'; openPanel('council','council-roster'); }
-  });
-  document.addEventListener('change', function (event) {
-    var input = event.target.closest('#xunyu-dashboard [data-xy-option]'); if (!input) return;
-    selected[input.dataset.xyOption] = input.checked;
-    try { localStorage.setItem('xunyu-summary-selection',JSON.stringify(selected)); } catch (e) {}
-    paint(); if (input.checked) sources[input.dataset.xyOption].forEach(load);
   });
 })();
