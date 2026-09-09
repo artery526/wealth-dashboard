@@ -6,8 +6,8 @@ async function openBriefs(page) {
   await page.evaluate(() => {
     window.xyNasCalls = [];
     medicalPost = () => Promise.resolve({status:'success',records:[
-      {recordTime:currentYM().replace('/','-')+'-02 10:00'}, {recordTime:currentYM().replace('/','-')+'-02 21:00'},
-      {recordTime:currentYM().replace('/','-')+'-03 08:00'}, {recordTime:'2020-01-01 09:00'}]});
+      {recordTime:currentYM().replace('/','-')+'-02 10:00',painLevel:'🔵中度',painAreas:'左額頭',meds:'EVE'}, {recordTime:currentYM().replace('/','-')+'-02 21:00',painLevel:'🟡重度',painAreas:'左額頭、太陽穴'},
+      {recordTime:currentYM().replace('/','-')+'-03 08:00',painLevel:'⚪輕度',painAreas:'太陽穴',meds:'未用藥'}, {recordTime:'2020-01-01 09:00',painLevel:'🔴嚴重',painAreas:'右眼窩'}]});
     xyFixtures.storeRecords = {records:[{itemName:'舊物品',recordDate:'2020/01/01'},{itemName:'新物品',recordDate:today()}]};
     xyFixtures.macroOverview = {hasData:true,sourceDate:'2026-09-01',judgment:{summary:'總經觀察中',signal:'黃燈'},indicators:[
       {code:'yield10y',name:'美國10年債殖利率',displayValue:'4.20%',status:'綠燈'},
@@ -31,8 +31,9 @@ async function openBriefs(page) {
 
 test('briefs show every department without display checkboxes and include dated summaries', async ({page}) => {
   await openBriefs(page);
-  await expect(page.locator('[data-xy-source="medical"]')).toContainText('本月記錄 2 天');
-  await expect(page.locator('[data-xy-source="medical"]')).toContainText('-03 08:00');
+  await expect(page.locator('[data-xy-source="medical"] .xy-medical-month')).toContainText('年');
+  await expect(page.locator('[data-xy-source="medical"] .xy-medical-stat-grid')).toContainText('3');
+  await expect(page.locator('[data-xy-source="medical"] .xy-medical-areas')).toContainText('左額頭');
   await expect(page.locator('[data-xy-source="store"]')).toContainText('新物品');
   await expect(page.locator('[data-xy-source="wall"] li')).toHaveCount(2);
   await expect(page.locator('[data-xy-source="wall"] li').first()).toContainText('最近更新');
@@ -56,7 +57,7 @@ test('brief source failure retains previous data, retries independently and supp
   await expect(page.locator('[data-xy-source="wall"]')).toContainText('最近更新');
   await page.evaluate(async () => { arkWallFetch = () => Promise.reject(new Error('NAS 離線')); await refreshXunyuPanel('wall'); });
   await expect(page.locator('[data-xy-source="wall"]')).toContainText('保留上次資料');
-  await expect(page.locator('[data-xy-source="medical"]')).toContainText('本月記錄 2 天');
+  await expect(page.locator('[data-xy-source="medical"] .xy-medical-summary')).toBeVisible();
   await page.evaluate(() => { arkWallFetch = () => Promise.resolve({entries:[]}); });
   await page.locator('[data-xy-retry="wall"]').click();
   await expect(page.locator('[data-xy-source="wall"]')).toContainText('目前沒有記錄');

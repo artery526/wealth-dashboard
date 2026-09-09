@@ -129,14 +129,29 @@
       return '<li>' + esc(row[titleKey] || '未命名') + '<small>資料日期 ' + esc(dateKey(row) || '未提供') + '</small></li>';
     }).join('') + '</ul>';
   }
+  function medicalSummaryHtml(data) {
+    var records = (data && Array.isArray(data.records) ? data.records : []).map(mpmNormalizeRecord);
+    var months = Array.from(new Set(records.map(mpmMonthKey).filter(Boolean))).sort();
+    if (!months.length) return '<div class="xy-medical-empty" title="尚無疼痛記錄">🩺<strong>—</strong></div>';
+    var month = months[months.length - 1], monthRecords = records.filter(function (row) { return mpmMonthKey(row) === month; });
+    var levels = { mild: 0, moderate: 0, severe: 0, critical: 0 }, areas = {}, days = {}, meds = 0;
+    monthRecords.forEach(function (row) {
+      if (row.date) days[row.date] = true;
+      var level = medicalPainLevelInfo(row.painLevel); if (level) levels[level.key]++;
+      if (String(row.meds || '').trim() && !String(row.meds).includes('未用藥')) meds++;
+      String(row.painAreas || '').split(/[、,，]/).map(function (area) { return area.trim(); }).filter(function (area) { return area && area !== '無痛'; }).forEach(function (area) { areas[area] = (areas[area] || 0) + 1; });
+    });
+    var topAreas = Object.keys(areas).sort(function (a,b) { return areas[b] - areas[a]; }).slice(0,3);
+    var monthLabel = month.slice(0,4) + '年' + Number(month.slice(5)) + '月';
+    var severity = [['mild','⚪'],['moderate','🔵'],['severe','🟡'],['critical','🔴']].map(function (item) { return '<span title="疼痛程度 ' + item[0] + '">' + item[1] + '<b>' + levels[item[0]] + '</b></span>'; }).join('');
+    var areaHtml = topAreas.length ? topAreas.map(function (area) { return '<span title="疼痛部位 ' + esc(area) + '">📍' + esc(area) + ' <b>' + areas[area] + '</b></span>'; }).join('') : '<span title="尚無疼痛部位">📍—</span>';
+    return '<div class="xy-medical-summary" aria-label="醫館 ' + monthLabel + ' 疼痛統計"><div class="xy-medical-month" title="統計月份">🗓️ <strong>' + monthLabel + '</strong></div><div class="xy-medical-stat-grid"><span title="疼痛記錄次數">🩹<b>' + monthRecords.length + '</b></span><span title="記錄天數">📆<b>' + Object.keys(days).length + '</b></span><span title="用藥次數">💊<b>' + meds + '</b></span></div><div class="xy-medical-severity" title="疼痛程度分布">' + severity + '</div><div class="xy-medical-areas" title="主要疼痛部位">' + areaHtml + '</div></div>';
+  }
   function briefBody(key) {
     var data = state.data[key];
     if (key === 'medical') {
       if (!data) return '<p class="xy-empty">醫館資料尚未取得</p>';
-      var rows = data.records.map(mpmNormalizeRecord);
-      var days = new Set(rows.map(function (r) { return String(r.date || '').replace(/\//g,'-'); }).filter(function (date) { return /^\d{4}-\d{2}-\d{2}$/.test(date) && date.slice(0,7) === state.month.replace(/\//g,'-'); }));
-      var recent = rows.slice().sort(function (a,b) { return stamp(b.recordTime) - stamp(a.recordTime); })[0];
-      return '<p class="xy-count">本月記錄 ' + days.size + ' 天</p><p class="xy-note">最近一次記錄：' + esc(recent && recent.recordTime || '尚無記錄') + '</p><p class="xy-note">同一天多筆僅計一天；統計醫館日誌。</p>';
+      return medicalSummaryHtml(data);
     }
     if (key === 'store') return latestRows(data && data.records,function (r) { return r.recordDate; },1,'itemName');
     if (key === 'chronicle') return latestRows(data && data.rows,function (r) { return r.createdAt || r.date; },1,'name');
@@ -170,7 +185,7 @@
       '<div class="xy-brief-grid">' +
       Object.keys(groups).map(function (group) {
         return '<section class="xy-card"><header><h3>' + groups[group] + '</h3></header>' + sources[group].map(function (key) {
-          return '<div class="xy-brief-source" data-xy-source="' + key + '"><header><h4>' + labels[key] + '</h4><button type="button" class="xy-link" data-xy-detail="' + key + '">查看全文 →</button></header>' + statusHtml(key) + briefBody(key) + '</div>';
+          return '<div class="xy-brief-source" data-xy-source="' + key + '"><header><h4>' + labels[key] + '</h4><button type="button" class="xy-link" data-xy-detail="' + key + '">查看全文 →</button></header>' + (key === 'medical' && !state.errors[key] && !state.pending[key] ? '' : statusHtml(key)) + briefBody(key) + '</div>';
         }).join('') + '</section>';
       }).join('') + '</div><p class="xy-note">太倉按記錄日期排列，未提供新增時間時不推定新增順序；王府優先採更新時間，缺少時採建立時間或記錄日期。此頁只讀取既有情報，不觸發採集。</p>';
   }
