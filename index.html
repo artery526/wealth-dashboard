@@ -1018,11 +1018,12 @@ body::after{
 .store-contact-form{display:grid;gap:10px}
 .store-contact-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .store-contact-grid .form-control{min-width:0}
-.store-contact-extra-toggle-row{grid-column:1/-1;display:flex;align-items:center;gap:8px;min-height:38px}
+.store-contact-phone-control{display:flex;align-items:end;gap:7px;min-width:0}
+.store-contact-phone-control .store-form-group{flex:1;min-width:0}
 .store-contact-extra-toggle{display:grid;place-items:center;width:36px;height:36px;flex:0 0 36px;border:1px solid rgba(65,157,194,.52);border-radius:8px;background:rgba(6,27,43,.9);color:#fff3bf;font:900 21px/1 var(--sans);cursor:pointer}
 .store-contact-extra-toggle:hover,.store-contact-extra-toggle.is-open{border-color:#71d8f7;background:rgba(20,74,98,.9)}
-.store-contact-extra-hint{color:#8aa7b6;font:800 12px var(--sans)}
 .store-contact-extra-group{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.store-contact-extra-group[hidden]{display:none!important}
 .store-contact-extra-group .store-contact-work-group{grid-column:1/-1}
 .store-contact-grid textarea.form-control{min-height:72px;resize:vertical}
 .store-contact-extra-group textarea.form-control{min-height:58px}
@@ -1081,7 +1082,7 @@ body::after{
 .store-header-date-button{border:1px solid rgba(232,192,80,.55);border-radius:7px;background:rgba(232,192,80,.1);color:#fff3bf;font:900 12px var(--sans);padding:5px 7px;cursor:pointer;white-space:nowrap}
 .store-header-date-button:hover{border-color:#fff3bf;background:rgba(232,192,80,.2)}
 .store-header-date-input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
-@media(max-width:650px){.store-grid{grid-template-columns:1fr}.store-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.store-form-group.full{grid-column:1/-1}.store-toolbar,.store-date-filters{grid-template-columns:1fr}.store-add-button{width:100%}.store-count-row{flex-wrap:wrap}.store-search-inline{order:3;flex:1 1 100%;width:100%}.store-item-card{padding:10px}.store-item-card-head{align-items:center;padding-right:84px}.store-item-heading{gap:6px}.store-item-name{min-width:0;flex:1;font-size:16px}.store-item-date-button{top:10px;right:43px;font-size:11px}.store-item-menu{top:8px;right:8px}.store-header-date-button{font-size:11px;padding:4px 5px}.store-contact-toolbar{flex-wrap:wrap}.store-contact-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.store-contact-extra-group{gap:7px}.store-contact-extra-toggle{width:30px;height:34px;flex-basis:30px;font-size:18px}.store-contact-grid-list{grid-template-columns:1fr}.store-contact-card{padding:10px}.store-contact-title{font-size:16px}.store-contact-fields{grid-template-columns:1fr}.store-contact-field-wide{grid-column:auto}.store-contact-form-wrap{padding:10px}}
+@media(max-width:650px){.store-grid{grid-template-columns:1fr}.store-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.store-form-group.full{grid-column:1/-1}.store-toolbar,.store-date-filters{grid-template-columns:1fr}.store-add-button{width:100%}.store-count-row{flex-wrap:wrap}.store-search-inline{order:3;flex:1 1 100%;width:100%}.store-item-card{padding:10px}.store-item-card-head{align-items:center;padding-right:84px}.store-item-heading{gap:6px}.store-item-name{min-width:0;flex:1;font-size:16px}.store-item-date-button{top:10px;right:43px;font-size:11px}.store-item-menu{top:8px;right:8px}.store-header-date-button{font-size:11px;padding:4px 5px}.store-contact-toolbar{flex-wrap:wrap}.store-contact-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.store-contact-phone-control{gap:4px}.store-contact-extra-group{gap:7px}.store-contact-extra-toggle{width:30px;height:34px;flex-basis:30px;font-size:18px}.store-contact-grid-list{grid-template-columns:1fr}.store-contact-card{padding:10px}.store-contact-title{font-size:16px}.store-contact-fields{grid-template-columns:1fr}.store-contact-field-wide{grid-column:auto}.store-contact-form-wrap{padding:10px}}
 .market-lord{
   position:absolute;
   top:-65px;
@@ -6770,10 +6771,9 @@ function renderStoreContactForm(){
         <div class="store-form-group"><label class="store-form-label" for="store-contact-category">類別</label><input class="form-control" id="store-contact-category" type="text" maxlength="60" placeholder="例如：水電、電腦、廠商"></div>
         <div class="store-form-group"><label class="store-form-label" for="store-contact-company">公司名稱</label><input class="form-control" id="store-contact-company" type="text" maxlength="120" placeholder="例如：小白熊清潔"></div>
         <div class="store-form-group"><label class="store-form-label" for="store-contact-name">聯絡人稱呼</label><input class="form-control" id="store-contact-name" type="text" maxlength="100" placeholder="例如：王師傅" required></div>
-        <div class="store-form-group"><label class="store-form-label" for="store-contact-phone">聯絡電話</label><input class="form-control" id="store-contact-phone" type="tel" maxlength="40" placeholder="例如：0912-345-678"></div>
-        <div class="store-contact-extra-toggle-row">
+        <div class="store-contact-phone-control">
+          <div class="store-form-group"><label class="store-form-label" for="store-contact-phone">聯絡電話</label><input class="form-control" id="store-contact-phone" type="tel" maxlength="40" placeholder="例如：0912-345-678"></div>
           <button class="store-contact-extra-toggle" id="store-contact-extra-toggle" type="button" title="展開其他聯絡資訊" aria-label="展開其他聯絡資訊" aria-expanded="false" onclick="toggleStoreContactExtras(event)">＋</button>
-          <span class="store-contact-extra-hint">其他聯絡資訊</span>
         </div>
         <div class="store-contact-extra-group" id="store-contact-extra-group" hidden>
           <div class="store-form-group"><label class="store-form-label" for="store-contact-line">LINE顯示名稱</label><input class="form-control" id="store-contact-line" type="text" maxlength="100" placeholder="例如：王師傅（水電）"></div>
