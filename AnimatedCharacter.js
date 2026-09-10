@@ -33,19 +33,36 @@ window.AnimatedCharacter = class AnimatedCharacter {
     this.loaded = this.preload();
   }
   async preload() {
-    const entries = await Promise.all(Object.entries(this.config.frames).map(async ([key, src]) => {
+    const entries = Object.entries(this.config.frames).map(([key, src]) => {
       const img = new Image();
       img.src = src;
       img.alt = '';
+      return [key, img];
+    });
+    const idleKey = this.config.idleFrame || '01';
+    const idleEntry = entries.find(([key]) => key === idleKey) || entries[0];
+    if (!idleEntry) throw new Error(`${this.config.name} 沒有可用影格`);
+    await idleEntry[1].decode();
+    if (this.destroyed) return;
+    this.images = Object.fromEntries([idleEntry]);
+    idleEntry[1].hidden = false;
+    this.art.append(idleEntry[1]);
+    this.ready = true;
+    this.button.hidden = false;
+    this.resume();
+
+    // 先讓場景與待機人物出現，再在背景完成其餘影格的解碼。
+    const remaining = entries.filter(([key]) => key !== idleEntry[0]);
+    const decoded = await Promise.all(remaining.map(async ([key, img]) => {
       await img.decode();
       return [key, img];
     }));
     if (this.destroyed) return;
-    this.images = Object.fromEntries(entries);
-    for (const img of Object.values(this.images)) { img.hidden = true; this.art.append(img); }
-    this.ready = true;
-    this.button.hidden = false;
-    this.resume();
+    for (const [key, img] of decoded) {
+      img.hidden = key !== this.button.dataset.frame;
+      this.images[key] = img;
+      this.art.append(img);
+    }
   }
   resetDeadlines() {
     const now = Date.now();

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'empire-shell-v6';
+const CACHE_NAME = 'empire-shell-v7';
 
 // Keep the first offline-capable version deliberately small. The dashboard
 // already owns API caching in index.html; this cache is for the page shell.
@@ -6,6 +6,10 @@ const PRECACHE_URLS = [
   './',
   './index.html',
   './manifest.json',
+  './junshifu-map.png?v=20260910-bg4',
+  './mobileBG.png?v=20260906-mobile1',
+  './characterAnimations.js?v=20260908-web22',
+  './AnimatedCharacter.js?v=20260908-web3',
   './advisor-zhuge.png',
   './pangtong.png',
   './bg-inkwash.png'
@@ -45,18 +49,18 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Navigation must prefer the deployed HTML. A stale cached index can hide a
-  // newly published layout on phones until the service worker refreshes it.
+  // Show the cached shell immediately on slow mobile networks, then refresh it
+  // in the background so the next visit receives the latest published layout.
   if (request.mode === 'navigate') {
-    event.respondWith(
-      fetch(request).then(networkResponse => {
-        if (networkResponse && networkResponse.ok) {
-          const responseCopy = networkResponse.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put('./index.html', responseCopy));
-        }
-        return networkResponse;
-      }).catch(() => caches.match(request))
-    );
+    const refresh = fetch(request).then(networkResponse => {
+      if (networkResponse && networkResponse.ok) {
+        const responseCopy = networkResponse.clone();
+        return caches.open(CACHE_NAME).then(cache => cache.put('./index.html', responseCopy)).then(() => networkResponse);
+      }
+      return networkResponse;
+    }).catch(() => null);
+    event.respondWith(caches.match(request).then(cached => cached || caches.match('./index.html').then(shell => shell || refresh)));
+    event.waitUntil(refresh);
     return;
   }
 
