@@ -72,6 +72,11 @@
   function tile(label, value, note, destination, delta) {
     return '<button type="button" class="xy-kpi" data-xy-go="' + destination + '"><span>' + label + '</span><strong>' + value + '</strong>' + (note ? '<small>' + esc(note) + '</small>' : '') + (delta || '') + '</button>';
   }
+  function announcementHtml() {
+    var data = window.advisorAIDailyUpdatesData;
+    var body = data && typeof window.advisorAIDailyUpdatesHtml === 'function' ? window.advisorAIDailyUpdatesHtml(data, '', Number(window.advisorAIDailyUpdatesIndex) || 0) : '<div class="advisor-ai-daily-updates-error">龐統正在整理今日公告…</div>';
+    return '<section class="xy-card xy-announcement-card"><header><h3>龐統軍師公告</h3><span>' + esc(state.date) + '</span></header><div id="xunyu-pangtong-announcement" class="advisor-ai-daily-updates">' + body + '</div></section>';
+  }
   function holdingHtml(m) {
     var rows = m.holdings;
     if (!rows) return '<p class="xy-empty">部隊資料尚未取得</p>';
@@ -121,7 +126,7 @@
     if (state.tab === 'briefs') { root.innerHTML = tabsHtml() + briefsHtml(); return; }
     var m = model(), loading = Object.keys(state.pending).length > 0;
     root.innerHTML = tabsHtml() + '<div class="xy-intro"><div><span class="xy-eyebrow">荀彧 · 內政總覽</span><p>' + esc(state.month) + ' 本月收支 · 資產與持股採最新可用資料</p></div><div class="xy-actions"><button type="button" data-xy-mask aria-pressed="' + state.masked + '">' + (state.masked ? '顯示數字' : '隱藏數字') + '</button><button type="button" data-xy-refresh' + (loading ? ' disabled' : '') + '>' + (loading ? '更新中…' : '更新總覽') + '</button></div></div>' +
-      '<div class="xy-kpis">' + tile('國庫總資產', money(m.assets), '', 'finance', deltaHtml(m.assetDeltaAmount, m.assetDeltaPct)) + tile('本月結餘', money(m.net), '本月收入 − 本月支出', 'finance') + tile('投資市值', money(m.market), '', 'holdings', deltaHtml(m.marketDeltaAmount, m.marketDeltaPct)) + tile('投資組合含息 ROI', pct(m.roi), '累計含息報酬 ÷ 成本', 'holdings') + '</div>' +
+      '<div class="xy-command-grid"><section class="xy-card xy-treasury-card"><header><h3>國庫總覽</h3><button class="xy-link" data-xy-go="finance">國庫明細 →</button></header><div class="xy-kpis">' + tile('國庫總資產', money(m.assets), '', 'finance', deltaHtml(m.assetDeltaAmount, m.assetDeltaPct)) + tile('本月結餘', money(m.net), '本月收入 − 本月支出', 'finance') + tile('投資市值', money(m.market), '', 'holdings', deltaHtml(m.marketDeltaAmount, m.marketDeltaPct)) + tile('投資組合含息 ROI', pct(m.roi), '累計含息報酬 ÷ 成本', 'holdings') + '</div></section>' + announcementHtml() + '</div>' +
       '<div class="xy-grid"><section class="xy-card"><header><h3>本月內政</h3><button class="xy-link" data-xy-go="finance">國庫明細 →</button></header>' + statusHtml('finance') +
       '<dl class="xy-month"><div><dt>收入</dt><dd>' + money(m.income) + '</dd></div><div><dt>支出</dt><dd>' + money(m.expense) + '</dd></div><div><dt>儲蓄率</dt><dd>' + pct(m.savings) + '</dd></div></dl>' +
       (state.data.finance && state.data.finance.sourceStatus && Object.values(state.data.finance.sourceStatus).some(function (value) { return value !== 'fulfilled'; }) ? '<p class="xy-error">部分國庫來源未完成，缺少的指標暫不顯示。<button data-xy-retry="finance">重試國庫</button></p>' : '') +
@@ -244,8 +249,16 @@
     });
     paint(); return active.pending[key];
   }
+  function loadOverviewAnnouncement() {
+    if (!state || state.tab !== 'overview' || typeof window.loadAdvisorAIDailyUpdates !== 'function') return Promise.resolve();
+    return window.loadAdvisorAIDailyUpdates('xunyu-pangtong-announcement', { minimal: true });
+  }
   window.refreshXunyuPanel = function (key) {
-    ensureState(); return key ? load(key) : Promise.all((state.tab === 'briefs' ? activeSources() : ['finance','holdings','calendar','tasks']).map(load));
+    ensureState();
+    if (key) return load(key);
+    var requests = (state.tab === 'briefs' ? activeSources() : ['finance','holdings','calendar','tasks']).map(load);
+    if (state.tab === 'overview') requests.push(loadOverviewAnnouncement());
+    return Promise.all(requests);
   };
   window.openXunyuPanel = function () { openPanel('xunyu'); };
   window.renderXunyuPanel = function () {
@@ -263,7 +276,7 @@
   };
   document.addEventListener('click', function (event) {
     var button = event.target.closest('#xunyu-dashboard button'); if (!button) return;
-    if (button.dataset.xyTab) { state.tab = button.dataset.xyTab; currentTab = 'xunyu-' + state.tab; paint(); if (state.tab === 'briefs') activeSources().filter(function (key) { return !state.saved[key]; }).forEach(load); }
+    if (button.dataset.xyTab) { state.tab = button.dataset.xyTab; currentTab = 'xunyu-' + state.tab; paint(); if (state.tab === 'briefs') activeSources().filter(function (key) { return !state.saved[key]; }).forEach(load); else loadOverviewAnnouncement(); }
     else if (button.dataset.xyDetail) {
       var key = button.dataset.xyDetail;
       if (key === 'wall') { closePanel(); openArkWall(); }

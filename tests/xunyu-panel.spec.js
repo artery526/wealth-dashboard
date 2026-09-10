@@ -81,7 +81,8 @@ test.beforeEach(async ({ page }) => {
       assetSnapshot: {latestTotalAssetValue:1000000,totalAssetChangeAmount:25000,totalAssetChangePct:2.56,dailyChangeAmount:-12000,dailyChangePct:-0.87,latest:{date:today(),totalAssetValue:1000000}},
       holdingsOverview: Array.from({length:12}, (_,i) => ({symbol:'A'+String(i+1).padStart(2,'0'),cost:100000+i*1000,totalReturn:20000-i*100,marketValue:120000-i*1000,monthlyDiv:i===0?1800:0})),
       todayCalendar: {events:[{title:'今日會議',timeText:'10:00'}]},
-      todayTasks: {tasks:[1,2,3,4].map(i => ({title:'任務'+i,dueText:'9/10'}))}
+      todayTasks: {tasks:[1,2,3,4].map(i => ({title:'任務'+i,dueText:'9/10'}))},
+      dailyUpdates: {date:today(),brief:'今日軍師公告摘要',items:[{module:'finance',icon:'💰',title:'國庫',message:'國庫資料已更新。',updated:true,target:'finance',tab:'finance-accs'}]}
     };
     apiGet = params => { xyCalls.push(params.action); return Promise.resolve(xyFixtures[params.action]); };
   });
@@ -97,6 +98,11 @@ test('Xunyu scene entry renders reconciled first-version overview and working dr
   await expect(page.locator('.xy-kpi').nth(0)).not.toContainText('2026/');
   await expect(page.locator('.xy-kpi').nth(2)).not.toContainText('本表持股市值合計');
   await expect(page.locator('.xy-definitions')).toHaveCount(0);
+  await expect(page.locator('.xy-command-grid')).toHaveCount(1);
+  await expect(page.locator('.xy-treasury-card .xy-kpi')).toHaveCount(4);
+  await expect(page.locator('.xy-announcement-card')).toContainText('龐統軍師公告');
+  await expect(page.locator('#xunyu-pangtong-announcement')).toContainText('今日軍師公告摘要');
+  await expect(page.locator('#advisor-ai-daily-updates')).toHaveCount(0);
   await expect(page.locator('.xy-table tbody tr')).toHaveCount(12);
   await expect(page.locator('.xy-table')).toContainText('A01');
   await expect(page.locator('.xy-table thead')).toContainText('預估月配息');

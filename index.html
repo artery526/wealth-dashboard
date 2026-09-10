@@ -18097,7 +18097,6 @@ function openAdvisorAI(targetPanel){
   advisorAIScheduleOpen=false;
   panel.innerHTML=`${advisorAIHeaderHtml('🗡️主公，請下令')}
      <div class="advisor-ai-portrait"><img class="advisor-ai-portrait-img" src="pangtong.png?v=20260906-advisor1" alt="龐統軍師"></div>
-    <div class="advisor-ai-daily-updates loading" id="advisor-ai-daily-updates"><div class="advisor-ai-daily-updates-error">龐統正在整理今日更新…</div></div>
     <div class="advisor-ai-row">
       ${advisorAIIncomeQuickSelectHtml()}
       <input class="advisor-ai-input" id="advisor-ai-input" type="text" placeholder="輸入指令…" onkeydown="advisorAIKey(event)">
@@ -18109,7 +18108,6 @@ function openAdvisorAI(targetPanel){
     var input=document.getElementById('advisor-ai-input');
     if(input)input.focus();
   },0);
-  loadAdvisorAIDailyUpdates();
 }
 
 function advisorAIDatabaseSheetUrl(range){
@@ -18882,6 +18880,9 @@ function advisorAIDailyUpdatesHtml(data, state, activeIndex){
     return '<div class="advisor-ai-daily-updates-empty">'+esc(empty)+'</div>';
   }
   var items=advisorAIDailyUpdateItems(data);
+  if(!items.length){
+    return '<div class="advisor-ai-daily-updates-empty">今日尚無新的帝國公告。</div>';
+  }
   var index=Math.max(0,Math.min(Number(activeIndex)||0,items.length-1));
   var item=items[index];
   var brief=data.brief?'<div class="advisor-ai-granary-brief"><span>'+esc(data.brief)+'</span></div>':'';
@@ -18893,8 +18894,10 @@ function advisorAIDailyUpdatesHtml(data, state, activeIndex){
   var warning=errors.length?'<div class="advisor-ai-daily-updates-error" style="margin-top:7px">部分情報暫時無法取得</div>':'';
   return brief+'<div class="advisor-ai-daily-update-list">'+rows+'</div>'+warning;
 }
-function renderAdvisorAIDailyUpdates(data,state,activeIndex){
-  var el=document.getElementById('advisor-ai-daily-updates');
+var advisorAIDailyUpdatesTargetId='advisor-ai-daily-updates';
+function renderAdvisorAIDailyUpdates(data,state,activeIndex,targetId){
+  if(targetId)advisorAIDailyUpdatesTargetId=targetId;
+  var el=document.getElementById(advisorAIDailyUpdatesTargetId);
   if(!el)return;
   el.className='advisor-ai-daily-updates '+(state||'');
   el.innerHTML=advisorAIDailyUpdatesHtml(data,state,activeIndex);
@@ -18902,11 +18905,11 @@ function renderAdvisorAIDailyUpdates(data,state,activeIndex){
 function stopAdvisorAIDailyUpdatesPatrol(){
   if(advisorAIDailyUpdatesTimer){clearInterval(advisorAIDailyUpdatesTimer);advisorAIDailyUpdatesTimer=null;}
 }
-function startAdvisorAIDailyUpdatesPatrol(data){
+function startAdvisorAIDailyUpdatesPatrol(data,targetId){
   stopAdvisorAIDailyUpdatesPatrol();
   advisorAIDailyUpdatesData=data||{};
   advisorAIDailyUpdatesIndex=0;
-  renderAdvisorAIDailyUpdates(advisorAIDailyUpdatesData,'',advisorAIDailyUpdatesIndex);
+  renderAdvisorAIDailyUpdates(advisorAIDailyUpdatesData,'',advisorAIDailyUpdatesIndex,targetId);
 }
 function advisorAIDailyUpdateStep(step){
   var data=advisorAIDailyUpdatesData;
@@ -18916,8 +18919,9 @@ function advisorAIDailyUpdateStep(step){
   advisorAIDailyUpdatesIndex=(advisorAIDailyUpdatesIndex+Number(step||0)+items.length)%items.length;
   renderAdvisorAIDailyUpdates(data,'',advisorAIDailyUpdatesIndex);
 }
-async function loadAdvisorAIDailyUpdates(){
-  var el=document.getElementById('advisor-ai-daily-updates');
+async function loadAdvisorAIDailyUpdates(targetId,options){
+  if(targetId)advisorAIDailyUpdatesTargetId=targetId;
+  var el=document.getElementById(advisorAIDailyUpdatesTargetId);
   if(!el)return;
   if(!hasMainApiCredentials()){
     renderAdvisorAIDailyUpdates({date:today(),items:[],errors:[{message:'尚未設定 API'}]},'error');
@@ -18928,6 +18932,14 @@ async function loadAdvisorAIDailyUpdates(){
     advisorAIDailyUpdatesPromise=apiGet({action:'dailyUpdates'},45000).finally(function(){
       advisorAIDailyUpdatesPromise=null;
     });
+  }
+  if(options&&options.minimal){
+    try{
+      startAdvisorAIDailyUpdatesPatrol(await advisorAIDailyUpdatesPromise,advisorAIDailyUpdatesTargetId);
+    }catch(e){
+      renderAdvisorAIDailyUpdates({date:today(),items:[],errors:[{message:e&&e.message?e.message:'今日更新讀取失敗'}]},'error');
+    }
+    return;
   }
   try{
     var results=await Promise.allSettled([advisorAIDailyUpdatesPromise,apiGet({action:'accounts'}),apiGet({action:'monthly',ym:currentYM()}),apiGet({action:'marketDashboard'}),apiGet({action:'macroOverview'}),loadArkWallEntries(false),apiGet({action:'todayCalendar',mode:'today'},30000),apiGet({action:'foodhouseDashboard',ym:currentYM()}),loadDividendCenter(false),apiGet({action:'assetSnapshot'})]);
@@ -20447,7 +20459,7 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
-<link rel="stylesheet" href="./xunyu-panel.css?v=20260910-v1">
-<script src="./xunyu-panel.js?v=20260910-v1"></script>
+<link rel="stylesheet" href="./xunyu-panel.css?v=20260910-v2">
+<script src="./xunyu-panel.js?v=20260910-v2"></script>
 </body>
 </html>
