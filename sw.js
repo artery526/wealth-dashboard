@@ -49,18 +49,17 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Show the cached shell immediately on slow mobile networks, then refresh it
-  // in the background so the next visit receives the latest published layout.
+  // Always request the deployed HTML first. A cached shell must not hide a
+  // newly published dashboard on mobile browsers.
   if (request.mode === 'navigate') {
-    const refresh = fetch(request).then(networkResponse => {
+    const refresh = fetch(new Request(request, {cache: 'no-store'})).then(networkResponse => {
       if (networkResponse && networkResponse.ok) {
         const responseCopy = networkResponse.clone();
         return caches.open(CACHE_NAME).then(cache => cache.put('./index.html', responseCopy)).then(() => networkResponse);
       }
       return networkResponse;
     }).catch(() => null);
-    event.respondWith(caches.match(request).then(cached => cached || caches.match('./index.html').then(shell => shell || refresh)));
-    event.waitUntil(refresh);
+    event.respondWith(refresh.then(networkResponse => networkResponse || caches.match(request).then(cached => cached || caches.match('./index.html'))));
     return;
   }
 

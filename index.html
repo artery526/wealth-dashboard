@@ -20455,13 +20455,15 @@ function mpmRender(records){
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('./sw.js?v=20260910-cache1', {updateViaCache:'none'}).catch(function (error) {
+    navigator.serviceWorker.register('./sw.js?v=20260910-cache2', {updateViaCache:'none'}).then(function (registration) {
+      return registration.update();
+    }).catch(function (error) {
       console.warn('Empire Service Worker registration failed', error);
     });
   });
 }
 </script>
-<link rel="stylesheet" href="./xunyu-panel.css?v=20260910-v4">
-<script src="./xunyu-panel.js?v=20260910-v3"></script>
+<link rel="stylesheet" href="./xunyu-panel.css?v=20260910-v5">
+<script src="./xunyu-panel.js?v=20260910-v4"></script>
 </body>
 </html>
