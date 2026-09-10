@@ -18820,7 +18820,6 @@ function advisorAIDailyUpdateItems(data){
   var murmurs=(data&&data.murmurs)||{};
   (Array.isArray(data&&data.items)?data.items:[]).forEach(function(item){source[item.module]=item;});
   return [
-    {module:'agenda',icon:'📅',title:'今日行程',tab:'',message:'今日尚無安排。'},
     {module:'finance',icon:'💰',title:'財政部',tab:'booking-form',message:'主公今日尚未記帳。'},
     {module:'council',icon:'⚔️',title:'軍機處',tab:'battle-brief',message:'今日尚無新的軍師報告。'},
     {module:'medical',icon:'🏥',title:'醫館',tab:'medical-painmap',message:'主公今日尚未記錄。'},
