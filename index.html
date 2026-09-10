@@ -18871,11 +18871,11 @@ function advisorAIDailyMurmurData(data){
     store:'軍師巡視太倉，物品有進有出，庫存才不會失去方向。'
   };
 }
-function advisorAIDailyUpdatesHtml(data, state, activeIndex){
+function advisorAIDailyUpdatesHtml(data, state, activeIndex, loadingText){
   data=data||{};
   var date=String(data.date||today()).replace(/-/g,'/');
   var errors=Array.isArray(data.errors)?data.errors:[];
-  if(state==='loading')return '<div class="advisor-ai-daily-updates-error">龐統正在整理今日情報…</div>';
+  if(state==='loading')return '<div class="advisor-ai-daily-updates-error">'+esc(loadingText||'龐統正在整理今日情報…')+'</div>';
   if(!Array.isArray(data.items)&&errors.length){
     var empty=errors.length?'今日部分情報暫時無法取得，請稍後再試。':'今日尚無新的帝國紀錄。';
     return '<div class="advisor-ai-daily-updates-empty">'+esc(empty)+'</div>';
@@ -18897,12 +18897,12 @@ function advisorAIDailyUpdatesHtml(data, state, activeIndex){
   return brief+'<div class="advisor-ai-daily-update-list">'+rows+'</div>'+warning;
 }
 var advisorAIDailyUpdatesTargetId='advisor-ai-daily-updates';
-function renderAdvisorAIDailyUpdates(data,state,activeIndex,targetId){
+function renderAdvisorAIDailyUpdates(data,state,activeIndex,targetId,loadingText){
   if(targetId)advisorAIDailyUpdatesTargetId=targetId;
   var el=document.getElementById(advisorAIDailyUpdatesTargetId);
   if(!el)return;
   el.className='advisor-ai-daily-updates '+(state||'');
-  el.innerHTML=advisorAIDailyUpdatesHtml(data,state,activeIndex);
+  el.innerHTML=advisorAIDailyUpdatesHtml(data,state,activeIndex,loadingText);
 }
 function stopAdvisorAIDailyUpdatesPatrol(){
   if(advisorAIDailyUpdatesTimer){clearInterval(advisorAIDailyUpdatesTimer);advisorAIDailyUpdatesTimer=null;}
@@ -18929,7 +18929,7 @@ async function loadAdvisorAIDailyUpdates(targetId,options){
     renderAdvisorAIDailyUpdates({date:today(),items:[],errors:[{message:'尚未設定 API'}]},'error');
     return;
   }
-  renderAdvisorAIDailyUpdates({date:today()},'loading');
+  renderAdvisorAIDailyUpdates({date:today()},'loading',0,advisorAIDailyUpdatesTargetId,options&&options.loadingText);
   if(!advisorAIDailyUpdatesPromise){
     advisorAIDailyUpdatesPromise=apiGet({action:'dailyUpdates'},45000).finally(function(){
       advisorAIDailyUpdatesPromise=null;
@@ -20464,6 +20464,6 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 <link rel="stylesheet" href="./xunyu-panel.css?v=20260910-v5">
-<script src="./xunyu-panel.js?v=20260910-v4"></script>
+<script src="./xunyu-panel.js?v=20260910-v5"></script>
 </body>
 </html>

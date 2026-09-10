@@ -75,7 +75,7 @@
   }
   function announcementHtml() {
     var data = window.advisorAIDailyUpdatesData;
-    var body = data && typeof window.advisorAIDailyUpdatesHtml === 'function' ? window.advisorAIDailyUpdatesHtml(data, '', Number(window.advisorAIDailyUpdatesIndex) || 0) : '<div class="advisor-ai-daily-updates-error">龐統正在整理今日公告…</div>';
+    var body = data && typeof window.advisorAIDailyUpdatesHtml === 'function' ? window.advisorAIDailyUpdatesHtml(data, '', Number(window.advisorAIDailyUpdatesIndex) || 0) : '<div class="advisor-ai-daily-updates-error">荀彧正在整理桌面...</div>';
     return '<section class="xy-card xy-announcement-card"><div id="xunyu-pangtong-announcement" class="advisor-ai-daily-updates">' + body + '</div></section>';
   }
   function holdingHtml(m) {
@@ -252,7 +252,7 @@
   }
   function loadOverviewAnnouncement() {
     if (!state || state.tab !== 'overview' || typeof window.loadAdvisorAIDailyUpdates !== 'function') return Promise.resolve();
-    return window.loadAdvisorAIDailyUpdates('xunyu-pangtong-announcement', { minimal: true });
+    return window.loadAdvisorAIDailyUpdates('xunyu-pangtong-announcement', { minimal: true, loadingText: '荀彧正在整理桌面...' });
   }
   window.refreshXunyuPanel = function (key) {
     ensureState();
