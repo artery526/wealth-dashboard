@@ -1,4 +1,4 @@
-const CACHE_NAME = 'empire-shell-v5';
+const CACHE_NAME = 'empire-shell-v6';
 
 // Keep the first offline-capable version deliberately small. The dashboard
 // already owns API caching in index.html; this cache is for the page shell.
@@ -53,6 +53,22 @@ self.addEventListener('fetch', event => {
         if (networkResponse && networkResponse.ok) {
           const responseCopy = networkResponse.clone();
           caches.open(CACHE_NAME).then(cache => cache.put('./index.html', responseCopy));
+        }
+        return networkResponse;
+      }).catch(() => caches.match(request))
+    );
+    return;
+  }
+
+  // JavaScript and CSS define the rendered dashboard. Prefer the deployed
+  // asset on every load so a same-URL release cannot remain stale in the
+  // service-worker cache; use the cached copy only when offline.
+  if (/\.(js|css)(\?|$)/i.test(url.pathname)) {
+    event.respondWith(
+      fetch(request).then(networkResponse => {
+        if (networkResponse && networkResponse.ok) {
+          const responseCopy = networkResponse.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(request, responseCopy));
         }
         return networkResponse;
       }).catch(() => caches.match(request))

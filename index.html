@@ -20441,13 +20441,13 @@ function mpmRender(records){
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('./sw.js?v=20260907-advisor-cache2').catch(function (error) {
+    navigator.serviceWorker.register('./sw.js?v=20260910-cache1', {updateViaCache:'none'}).catch(function (error) {
       console.warn('Empire Service Worker registration failed', error);
     });
   });
 }
 </script>
-<link rel="stylesheet" href="./xunyu-panel.css?v=20260909-v3">
-<script src="./xunyu-panel.js?v=20260909-v3"></script>
+<link rel="stylesheet" href="./xunyu-panel.css?v=20260910-v1">
+<script src="./xunyu-panel.js?v=20260910-v1"></script>
 </body>
 </html>
