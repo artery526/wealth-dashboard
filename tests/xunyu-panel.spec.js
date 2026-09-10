@@ -175,7 +175,9 @@ test('desktop layout displays four core metrics and rejects malformed tasks', as
   await expect(page.locator('#xunyu-dashboard')).toContainText('資料格式不完整');
   await expect(page.locator('#xunyu-dashboard')).not.toContainText('目前沒有未完成待辦');
   const tops=await page.locator('.xy-kpi').evaluateAll(items=>items.map(el=>el.getBoundingClientRect().top));
-  expect(new Set(tops).size).toBe(1);
+  expect(new Set(tops).size).toBe(4);
+  const treasuryColumns=await page.locator('.xy-treasury-card>.xy-kpis').evaluate(el=>getComputedStyle(el).gridTemplateColumns.trim().split(/\s+/).length);
+  expect(treasuryColumns).toBe(1);
   await page.screenshot({path:'output/xunyu-desktop.png',animations:'disabled'});
 });
 

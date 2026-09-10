@@ -70,7 +70,8 @@
     return '<small class="xy-kpi-delta ' + tone + '">較昨日 ' + signedMoney(amountNumber) + ' (' + pct(pctNumber) + ')</small>';
   }
   function tile(label, value, note, destination, delta) {
-    return '<button type="button" class="xy-kpi" data-xy-go="' + destination + '"><span>' + label + '</span><strong>' + value + '</strong>' + (note ? '<small>' + esc(note) + '</small>' : '') + (delta || '') + '</button>';
+    var details = (note ? '<small>' + esc(note) + '</small>' : '') + (delta || '');
+    return '<button type="button" class="xy-kpi" data-xy-go="' + destination + '"><span>' + label + '</span><strong>' + value + '</strong>' + (details ? '<span class="xy-kpi-details">' + details + '</span>' : '') + '</button>';
   }
   function announcementHtml() {
     var data = window.advisorAIDailyUpdatesData;
