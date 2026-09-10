@@ -76,7 +76,7 @@
   function announcementHtml() {
     var data = window.advisorAIDailyUpdatesData;
     var body = data && typeof window.advisorAIDailyUpdatesHtml === 'function' ? window.advisorAIDailyUpdatesHtml(data, '', Number(window.advisorAIDailyUpdatesIndex) || 0) : '<div class="advisor-ai-daily-updates-error">龐統正在整理今日公告…</div>';
-    return '<section class="xy-card xy-announcement-card"><header><h3>龐統軍師公告</h3><span>' + esc(state.date) + '</span></header><div id="xunyu-pangtong-announcement" class="advisor-ai-daily-updates">' + body + '</div></section>';
+    return '<section class="xy-card xy-announcement-card"><div id="xunyu-pangtong-announcement" class="advisor-ai-daily-updates">' + body + '</div></section>';
   }
   function holdingHtml(m) {
     var rows = m.holdings;

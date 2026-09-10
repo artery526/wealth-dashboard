@@ -100,8 +100,10 @@ test('Xunyu scene entry renders reconciled first-version overview and working dr
   await expect(page.locator('.xy-definitions')).toHaveCount(0);
   await expect(page.locator('.xy-command-grid')).toHaveCount(1);
   await expect(page.locator('.xy-treasury-card .xy-kpi')).toHaveCount(4);
-  await expect(page.locator('.xy-announcement-card')).toContainText('龐統軍師公告');
+  await expect(page.locator('.xy-announcement-card')).not.toContainText('龐統軍師公告');
+  await expect(page.locator('.xy-announcement-card')).not.toContainText('2026-09-10');
   await expect(page.locator('#xunyu-pangtong-announcement')).toContainText('今日軍師公告摘要');
+  await expect(page.locator('#xunyu-pangtong-announcement')).toContainText('尚書臺正在巡視 今日行程');
   await expect(page.locator('#advisor-ai-daily-updates')).toHaveCount(0);
   await expect(page.locator('.xy-table tbody tr')).toHaveCount(12);
   await expect(page.locator('.xy-table')).toContainText('A01');

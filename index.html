@@ -18892,7 +18892,7 @@ function advisorAIDailyUpdatesHtml(data, state, activeIndex){
   var patrolMessage=item.updated===false?item.message:(item.message||'已有新資料');
   var murmur=item.murmur?'<div class="advisor-ai-daily-patrol-murmur">'+esc(item.murmur)+'</div>':'';
   var viewAction=item.module==='agenda'?'advisorAIShowSchedule(this)':'openEmpireCardShortcut(event,\''+target+'\',\''+item.tab+'\')';
-  var rows='<div class="advisor-ai-daily-patrol"><div class="advisor-ai-daily-patrol-kicker">'+esc(item.icon)+' 龐統軍師正在巡視 '+esc(item.title)+'…</div><div class="advisor-ai-daily-patrol-result '+(item.updated===false?'pending':'')+'">'+esc(patrolMessage)+'</div>'+murmur+'<div class="advisor-ai-daily-patrol-nav"><button class="advisor-ai-daily-update-link" type="button" onclick="advisorAIDailyUpdateStep(-1)">‹ 上一則</button><button class="advisor-ai-daily-update-link" type="button" onclick="'+viewAction+'">查看</button><button class="advisor-ai-daily-update-link" type="button" onclick="advisorAIDailyUpdateStep(1)">下一則 ›</button></div></div><div class="advisor-ai-daily-patrol-dots">'+items.map(function(_,dotIndex){return '<span class="advisor-ai-daily-patrol-dot '+(dotIndex===index?'active':'')+'" aria-hidden="true"></span>';}).join('')+'</div>';
+  var rows='<div class="advisor-ai-daily-patrol"><div class="advisor-ai-daily-patrol-kicker">尚書臺正在巡視 '+esc(item.title)+'</div><div class="advisor-ai-daily-patrol-result '+(item.updated===false?'pending':'')+'">'+esc(patrolMessage)+'</div>'+murmur+'<div class="advisor-ai-daily-patrol-nav"><button class="advisor-ai-daily-update-link" type="button" onclick="advisorAIDailyUpdateStep(-1)">‹ 上一則</button><button class="advisor-ai-daily-update-link" type="button" onclick="'+viewAction+'">查看</button><button class="advisor-ai-daily-update-link" type="button" onclick="advisorAIDailyUpdateStep(1)">下一則 ›</button></div></div><div class="advisor-ai-daily-patrol-dots">'+items.map(function(_,dotIndex){return '<span class="advisor-ai-daily-patrol-dot '+(dotIndex===index?'active':'')+'" aria-hidden="true"></span>';}).join('')+'</div>';
   var warning=errors.length?'<div class="advisor-ai-daily-updates-error" style="margin-top:7px">部分情報暫時無法取得</div>':'';
   return brief+'<div class="advisor-ai-daily-update-list">'+rows+'</div>'+warning;
 }
@@ -20461,7 +20461,7 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
-<link rel="stylesheet" href="./xunyu-panel.css?v=20260910-v3">
-<script src="./xunyu-panel.js?v=20260910-v2"></script>
+<link rel="stylesheet" href="./xunyu-panel.css?v=20260910-v4">
+<script src="./xunyu-panel.js?v=20260910-v3"></script>
 </body>
 </html>
