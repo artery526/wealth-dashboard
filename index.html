@@ -14217,6 +14217,15 @@ function battleHoldingChartLinkHtml(name){
   return ` <a class="battle-holding-chart-link" href="${url}" target="_blank" rel="noopener noreferrer" aria-label="${code} ${source} 技術分析" title="開啟 ${code} ${source} 技術分析">📈</a>`;
 }
 
+function battleFundDetailLinkHtml(name){
+  var key=normalizeKey(name),url='';
+  if(key==='路博邁台灣5G')url='https://wealth.esunbank.com.tw/w/wr/wr02.djhtm?a=ACNB02-7004';
+  else if(key==='國泰高股息B')url='https://wealth.esunbank.com.tw/W/WR/WR02.DJHTM?A=ACCY151-2054';
+  else if(key==='施羅德收益成長A2')url='https://www.fundrich.com.tw/fundCenter/fundOverview/fundContent/052133';
+  if(!url)return '';
+  return ` <a class="battle-holding-chart-link" href="${url}" target="_blank" rel="noopener noreferrer" aria-label="${esc(key)} 基金資料" title="開啟 ${esc(key)} 基金資料">📈</a>`;
+}
+
 function battleFinanceSnapshotHtml(snapshotType,holdingColumn){
   var state=battleFinanceSnapshotState,data=state.data||{};
   var records=(data.records||[]).filter(function(record){return record.snapshotType===snapshotType;});
@@ -14225,7 +14234,7 @@ function battleFinanceSnapshotHtml(snapshotType,holdingColumn){
   var rowParts=Object.keys(grouped).map(function(key){
     var points=grouped[key].sort(function(a,b){return String(a.capturedAt).localeCompare(String(b.capturedAt));});
     var latest=points[points.length-1],baseline=battleFinanceSnapshotBaseline(points,latest,state.range);
-    return `<div class="battle-snapshot-row"><span>${esc(latest.name)}${battleHoldingChartLinkHtml(latest.name)}<small class="battle-snapshot-yesterday">${esc(battleFinanceSnapshotPeriodText(latest,baseline,state.range))}</small></span><strong>${esc(battleFinanceSnapshotValueText(latest))}</strong><em>${esc(battleFinanceSnapshotDeltaText(latest,baseline))}</em><small>${esc(battleUpdatedAtText(latest.capturedAt||latest.recordSourceDate))}</small></div>`;
+    return `<div class="battle-snapshot-row"><span>${esc(latest.name)}${snapshotType==='fund-nav'?battleFundDetailLinkHtml(latest.name):battleHoldingChartLinkHtml(latest.name)}<small class="battle-snapshot-yesterday">${esc(battleFinanceSnapshotPeriodText(latest,baseline,state.range))}</small></span><strong>${esc(battleFinanceSnapshotValueText(latest))}</strong><em>${esc(battleFinanceSnapshotDeltaText(latest,baseline))}</em><small>${esc(battleUpdatedAtText(latest.capturedAt||latest.recordSourceDate))}</small></div>`;
   });
   var rows=rowParts.join('');
   if(snapshotType==='holdings'){
@@ -14255,7 +14264,7 @@ function battleLiveFundSnapshotHtml(funds){
     var change=item.change===''||item.change==null?(previous==null?null:current-previous):Number(item.change);
     var pct=item.changePct===''||item.changePct==null?null:Number(item.changePct);
     var changeText=pct==null||!isFinite(pct)?'--':(pct>0?'+':'')+pct.toFixed(2)+'%';
-    return `<div class="battle-snapshot-row"><span>${esc(item.name)}<small class="battle-snapshot-yesterday">${esc(battleFinanceSnapshotRangeLabel(battleFinanceSnapshotState.range))} ${previous==null?'--':battleFinanceSnapshotValueText({value:previous})}</small></span><strong>${esc(battleFinanceSnapshotValueText({value:current}))}</strong><em>${esc(changeText)}</em><small>${esc(battleUpdatedAtText(item.updatedAt||item.dataTime||item.fetchedAt))}</small></div>`;
+    return `<div class="battle-snapshot-row"><span>${esc(item.name)}${battleFundDetailLinkHtml(item.name)}<small class="battle-snapshot-yesterday">${esc(battleFinanceSnapshotRangeLabel(battleFinanceSnapshotState.range))} ${previous==null?'--':battleFinanceSnapshotValueText({value:previous})}</small></span><strong>${esc(battleFinanceSnapshotValueText({value:current}))}</strong><em>${esc(changeText)}</em><small>${esc(battleUpdatedAtText(item.updatedAt||item.dataTime||item.fetchedAt))}</small></div>`;
   }).join('');
   var title='期間數值對比';
   var body=rows||'<div class="battle-price-loading">尚未取得基金淨值</div>';
