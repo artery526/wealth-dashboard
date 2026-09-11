@@ -16330,7 +16330,7 @@ function advisorWorldBuild(market,macro){
 }
 function advisorWorldHtml(view){
   return `<div class="advisor-world-card">
-    <div class="advisor-world-title-row"><div class="advisor-world-title">🏛 帝國晨報</div><div class="advisor-world-tabs"><button class="advisor-world-tab-btn" type="button" onclick="openAdvisorTaiwanStockReview(event)">📈 台股</button><button class="advisor-world-tab-btn" type="button" onclick="openAdvisorSectorRotation(event)">📊 產業</button></div></div>
+    <div class="advisor-world-title-row"><div class="advisor-world-title">🏛 帝國晨報</div><div class="advisor-world-tabs"><button class="home-agenda-refresh advisor-world-refresh" type="button" onclick="refreshAdvisorWorldData(event)" title="清除快取並重新取得晨報資料" aria-label="重整帝國晨報資料">重整資料</button><button class="advisor-world-tab-btn" type="button" onclick="openAdvisorTaiwanStockReview(event)">📈 台股</button><button class="advisor-world-tab-btn" type="button" onclick="openAdvisorSectorRotation(event)">📊 產業</button></div></div>
     <div class="advisor-brief-date">${esc(view.date)}</div>
     <div class="advisor-brief-divider"></div>
     <div class="advisor-world-stance ${esc(view.empireTone)}"><span>⚔ 帝國狀態</span><strong>${esc(advisorWorldBriefStatus(view.empireTone,view.empireStatus))}</strong></div>
@@ -17358,6 +17358,16 @@ function advisorWorldLoadLongReport(){
   });
 }
 
+async function refreshAdvisorWorldData(event){
+  if(event&&event.stopPropagation)event.stopPropagation();
+  var button=event&&event.currentTarget;
+  if(button){button.disabled=true;button.textContent='更新中…';}
+  [MARKET_DASHBOARD_CACHE_KEY,MARKET_MACRO_CACHE_KEY,MARKET_LONG_REPORT_CACHE_KEY].forEach(function(key){
+    try{localStorage.removeItem(key);}catch(e){}
+  });
+  await openAdvisorWorldSituation(null,false,true);
+}
+
 async function advisorWorldGenerateLongReport(event){
   if(event&&event.stopPropagation)event.stopPropagation();
   advisorWorldFillLongReport({latest:{summary:'正在產出30日戰略報告，第一次可能需要 1 到 2 分鐘...',keyTrends:[],watchlist:[],strategy:'請稍候，不要重複點擊；軍師正在整理長期資料並產出結論。',conclusion:'觀望',signal:'黃燈',dataPoints:0}});
@@ -17386,7 +17396,7 @@ async function advisorWorldInstallLongReportTrigger(event){
   }
 }
 
-async function openAdvisorWorldSituation(event,auto){
+async function openAdvisorWorldSituation(event,auto,force){
   if(event&&event.stopPropagation)event.stopPropagation();
   var panel=document.getElementById('advisor-world-slot')||document.getElementById('advisor-shortcut-panel');
   if(!panel)return;
@@ -17394,8 +17404,11 @@ async function openAdvisorWorldSituation(event,auto){
   advisorDividendMemoPending=null;
   advisorDividendIncomeDraftPending=null;
   advisorAIScheduleOpen=false;
-  var cachedMarket=readTimedMarketCache(MARKET_DASHBOARD_CACHE_KEY);
-  var cachedMacro=readTimedMarketCache(MARKET_MACRO_CACHE_KEY);
+  if(force){
+    try{localStorage.removeItem(MARKET_DASHBOARD_CACHE_KEY);localStorage.removeItem(MARKET_MACRO_CACHE_KEY);localStorage.removeItem(MARKET_LONG_REPORT_CACHE_KEY);}catch(e){}
+  }
+  var cachedMarket=force?null:readTimedMarketCache(MARKET_DASHBOARD_CACHE_KEY);
+  var cachedMacro=force?null:readTimedMarketCache(MARKET_MACRO_CACHE_KEY);
   var hasCachedWorld=!!(cachedMarket||cachedMacro);
   if(hasCachedWorld){
     panel.innerHTML=advisorWorldHtml(advisorWorldBuild(cachedMarket||{},cachedMacro||{}));
