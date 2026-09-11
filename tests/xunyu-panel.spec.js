@@ -112,6 +112,9 @@ test('Xunyu scene entry renders reconciled first-version overview and working dr
   await expect(page.locator('.xy-table tbody tr').first()).toContainText('$1,800');
   await expect(page.locator('.xy-agenda-grid > .xy-card')).toHaveCount(3);
   await expect(page.locator('.xy-calendar-card')).toContainText('月曆');
+  const lunarToday=await page.evaluate(() => lunarDateLabel(new Date()).replace(/^農曆/,''));
+  await expect(page.locator('.xy-calendar-title span')).toHaveText(lunarToday);
+  await expect(page.locator('.xy-calendar-title span')).not.toContainText('今日');
   await expect(page.locator('.xy-calendar-grid .xy-calendar-day')).toHaveCount(42);
   await expect(page.locator('#xunyu-dashboard')).toContainText('今日會議');
   await expect(page.locator('.xy-list').last().locator('li')).toHaveCount(3);

@@ -105,6 +105,11 @@
     var match = String(state.month || '').match(/^(\d{4})[-\/](\d{2})$/);
     if (!match) return '<p class="xy-empty">月份資料尚未取得</p>';
     var year = Number(match[1]), month = Number(match[2]) - 1;
+    var lunar = '';
+    var dateMatch = String(state.date || '').match(/^(\d{4})[-\/](\d{2})[-\/](\d{2})$/);
+    if (dateMatch && typeof lunarDateLabel === 'function') {
+      lunar = String(lunarDateLabel(new Date(Number(dateMatch[1]), Number(dateMatch[2]) - 1, Number(dateMatch[3])))).replace(/^農曆/, '');
+    }
     var first = new Date(year, month, 1), days = new Date(year, month + 1, 0).getDate();
     var cells = ['日','一','二','三','四','五','六'].map(function (label) {
       return '<div class="xy-calendar-weekday" role="columnheader">' + label + '</div>';
@@ -119,7 +124,7 @@
       var todayClass = date === state.date ? ' today' : '';
       cells.push('<div class="xy-calendar-day' + todayClass + '" role="gridcell"' + (todayClass ? ' aria-current="date"' : '') + '>' + day + '</div>');
     }
-    return '<div class="xy-calendar-title"><strong>' + year + ' 年 ' + (month + 1) + ' 月</strong><span>今日 ' + esc(state.date) + '</span></div><div class="xy-calendar-grid" role="grid" aria-label="' + year + ' 年 ' + (month + 1) + ' 月月曆">' + cells.join('') + '</div>';
+    return '<div class="xy-calendar-title"><strong>' + year + ' 年 ' + (month + 1) + ' 月</strong><span>' + esc(lunar || '農曆未提供') + '</span></div><div class="xy-calendar-grid" role="grid" aria-label="' + year + ' 年 ' + (month + 1) + ' 月月曆">' + cells.join('') + '</div>';
   }
   function paint() {
     var root = document.getElementById('xunyu-dashboard');
