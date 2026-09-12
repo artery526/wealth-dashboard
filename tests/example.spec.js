@@ -126,6 +126,23 @@ test('a new ledger entry is allowed after a different previous entry was confirm
   expect(result.amount).toBe(1019);
 });
 
+test('Pangtong quick expense shares the finance booking queue', async ({ page }) => {
+  await page.goto(dashboardUrl);
+  const result = await page.evaluate(() => {
+    const panel = document.getElementById('advisor-shortcut-panel');
+    bookingWriteQueue.length = 0;
+    openAdvisorAI(panel);
+    const queue = panel.querySelector('[data-booking-queue-content]');
+    const id = bookingQueueAdd({ action: 'expense', date: '2026/09/12', cat: '🍽️外食餐飲', account: '🏔️玉山銀行', amount: 1019 });
+    const pending = queue.textContent;
+    bookingQueueUpdate(id, 'success', '');
+    return { pending, recorded: queue.textContent };
+  });
+  expect(result.pending).toContain('待同步');
+  expect(result.pending).toContain('🍽️外食餐飲');
+  expect(result.recorded).toContain('已記錄');
+});
+
 test('battle brief panel renders with stable formatting', async ({ page }) => {
   const pageErrors = [];
   page.on('pageerror', error => pageErrors.push(error.message));

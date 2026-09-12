@@ -5337,14 +5337,19 @@ function bookingQueueTimeText(value){
 }
 
 function renderBookingWriteQueue(){
-  var el=document.getElementById('booking-queue-content');
-  if(!el)return;
+  var els=document.querySelectorAll('[data-booking-queue-content]');
+  if(!els.length){
+    var legacy=document.getElementById('booking-queue-content');
+    if(legacy)els=[legacy];
+  }
+  if(!els.length)return;
+  var emptyHtml='<div class="booking-queue-empty">目前沒有待同步的記帳項目</div>';
   if(!bookingWriteQueue.length){
-    el.innerHTML='<div class="booking-queue-empty">目前沒有支出寫入中的項目</div>';
+    Array.prototype.forEach.call(els,function(el){el.innerHTML=emptyHtml;});
     return;
   }
-  var labels={processing:'記錄中',success:'已成功記錄',confirm:'結果待確認',failed:'記錄失敗'};
-  el.innerHTML=bookingWriteQueue.slice().reverse().map(function(item){
+  var labels={processing:'待同步',success:'已記錄',confirm:'待確認',failed:'記錄失敗'};
+  var html=bookingWriteQueue.slice().reverse().map(function(item){
     var label=labels[item.status]||'處理中';
     var detail=[item.cat,item.account,fmtFull(item.amount)].filter(Boolean).join(' · ');
     var message=item.message&&item.status!=='success'?' · '+item.message:'';
@@ -5354,6 +5359,7 @@ function renderBookingWriteQueue(){
       '<span class="booking-queue-time">'+esc(item.timeText||'--:--:--')+'</span>'+
     '</div>';
   }).join('');
+  Array.prototype.forEach.call(els,function(el){el.innerHTML=html;});
 }
 
 function bookingQueueAdd(body){
@@ -17630,6 +17636,10 @@ function advisorAIHeaderHtml(title){
       <button class="advisor-ai-expense-quick-btn" id="advisor-ai-expense-quick-btn" type="button" onclick="advisorAIRecordQuickExpense(this)" title="記錄支出" aria-label="記錄支出">📝</button>
     </div>
     <div class="advisor-ai-expense-quick-status" id="advisor-ai-expense-quick-status"></div>
+    <section class="booking-write-queue advisor-ai-expense-quick-queue" aria-label="龐統快速支出記帳佇列">
+      <div class="booking-queue-head"><span class="booking-queue-title">記帳佇列</span><span class="booking-queue-hint">待同步／已記錄</span></div>
+      <div data-booking-queue-content><div class="booking-queue-empty">目前沒有待同步的記帳項目</div></div>
+    </section>
     `;
 }
 
@@ -17669,11 +17679,17 @@ async function advisorAIRecordQuickExpense(btn){
   if(!advisorAIRequireWrite())return;
   if(btn&&btn.disabled)return;
   if(btn){btn.disabled=true;btn.textContent='⏳';}
+  var queueId=bookingQueueAdd({action:'expense',date:today().replace(/-/g,'/'),cat:category,account:account,amount:amount});
   try{
     await apiPost({action:'expense',date:today().replace(/-/g,'/'),cat:category,account:account,amount:amount,note:'龐統快速支出'});
+    bookingQueueUpdate(queueId,'success','');
     show('✓ 已記錄支出 '+fmtFull(amount),'ok');
     if(amountEl)amountEl.value='';
-  }catch(err){show('✗ '+(err&&err.message?err.message:'寫入失敗'),'err');}
+  }catch(err){
+    var queueStatus=String(err&&err.message||'').indexOf('結果待確認')>=0?'confirm':'failed';
+    bookingQueueUpdate(queueId,queueStatus,err&&err.message||'寫入失敗');
+    show('✗ '+(err&&err.message?err.message:'寫入失敗'),'err');
+  }
   finally{if(btn){btn.disabled=false;btn.textContent='📝';}}
 }
 
