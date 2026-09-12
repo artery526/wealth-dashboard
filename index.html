@@ -4900,6 +4900,7 @@ var DEFAULT_MEDICAL_OPTIONS = {
 var DIVIDEND_SYMBOLS = [
   {value:'國泰高股息B',label:'🌐國泰高股息B'},
   {value:'00985B',label:'🎟️00985B'},{value:'00997A',label:'🪄00997A'},{value:'MLPI',label:'🛢️MLPI'},
+  {value:'00998A',label:'🪙00998A'},
   {value:'施羅德收益成長A2',label:'🌳施羅德收益成長A2'},{value:'路博邁台灣5G',label:'🪐路博邁台灣5G'},
   {value:'QQQI',label:'📡QQQI'},
   {value:'AIPI',label:'🤖AIPI'},{value:'PLTY',label:'🪖PLTY'},{value:'CHPY',label:'🐦‍🔥CHPY'} ,
@@ -4910,6 +4911,7 @@ var STOCK_SYMBOLS = [
   {value:'📡QQQI',label:'📡QQQI'},{value:'🛢️MLPI',label:'🛢️MLPI'},
   {value:'🪐路博邁台灣5G',label:'🪐路博邁台灣5G'},{value:'🌳施羅德收益成長A2',label:'🌳施羅德收益成長A2'},
   {value:'🎟️00985B',label:'🎟️00985B'},{value:'🪄00997A',label:'🪄00997A'},{value:'🤖AIPI',label:'🤖AIPI'},
+  {value:'🪙00998A',label:'🪙00998A'},
   {value:'🪖PLTY',label:'🪖PLTY'},{value:'🐦‍🔥CHPY',label:'🐦‍🔥CHPY'},
   {value:'\u2692\uFE0FGDXW',label:'\u2692\uFE0FGDXW'},{value:'💛GLDW',label:'💛GLDW'}
 ];
@@ -4917,7 +4919,7 @@ var HOLDING_META = {
   '國泰高股息B':{emoji:'🌐',name:'國泰高股息B'},
   'IAU':{emoji:'👑',name:'IAU'},'QQQI':{emoji:'📡',name:'QQQI'},'MLPI':{emoji:'🛢️',name:'MLPI'},
   '路博邁台灣5G':{emoji:'🪐',name:'路博邁台灣5G'},'施羅德收益成長A2':{emoji:'🌳',name:'施羅德收益成長A2'},
-  '00985B':{emoji:'🎟️',name:'00985B'},'00997A':{emoji:'🪄',name:'00997A'},'AIPI':{emoji:'🤖',name:'AIPI'},
+  '00985B':{emoji:'🎟️',name:'00985B'},'00997A':{emoji:'🪄',name:'00997A'},'00998A':{emoji:'🪙',name:'00998A'},'AIPI':{emoji:'🤖',name:'AIPI'},
   'SPYI':{emoji:'💎',name:'SPYI'},'PLTY':{emoji:'🪖',name:'PLTY'},'CHPY':{emoji:'🐦‍🔥',name:'CHPY'},
   'GDXW':{emoji:'\u2692\uFE0F',name:'GDXW'},'GLDW':{emoji:'💛',name:'GLDW'}
 };
@@ -4984,6 +4986,7 @@ function normalizeKey(s){
   if(s.indexOf('00988A')>=0)return 'GDXW';
   if(s.indexOf('00985B')>=0)return '00985B';
   if(s.indexOf('00997A')>=0)return '00997A';
+  if(s.indexOf('00998A')>=0)return '00998A';
   if(s.indexOf('MLPI')>=0)return 'MLPI';
   if(s.indexOf('SPYI')>=0)return 'SPYI';
   if(s.indexOf('QQQI')>=0)return 'QQQI';
@@ -5000,6 +5003,7 @@ function normalizeBookingOption(v){
   if(!s)return '';
   if(s.indexOf('00988A')>=0)return '\u2692\uFE0FGDXW';
   if(s.indexOf('GDXW')>=0)return '\u2692\uFE0FGDXW';
+  if(s.indexOf('00998A')>=0)return '🪙00998A';
   return s;
 }
 function uniqueBookingOptions(values){
@@ -9838,8 +9842,16 @@ async function initBookingForm(){
   var accs=filterHiddenBookingAccounts(uniqueBookingOptions((cfg.accounts&&cfg.accounts.length)?cfg.accounts:BOOKING_FALLBACK_ACCOUNTS));
   var apiHoldings=(cfg.holdings&&cfg.holdings.length)?cfg.holdings:[];
   var apiDividendSymbols=(cfg.dividendSymbols&&cfg.dividendSymbols.length)?cfg.dividendSymbols:apiHoldings;
-  var stockSymbols=normalizeBookingSymbolList(apiHoldings.length?apiHoldings:STOCK_SYMBOLS);
-  var dividendSymbols=normalizeBookingSymbolList(apiDividendSymbols.length?apiDividendSymbols:DIVIDEND_SYMBOLS);
+  var stockSource=apiHoldings.length?apiHoldings.slice():STOCK_SYMBOLS.slice();
+  if(!stockSource.some(function(item){return normalizeKey(typeof item==='string'?item:(item&&item.value))==='00998A';})){
+    stockSource.push({value:'🪙00998A',label:'🪙00998A'});
+  }
+  var dividendSource=apiDividendSymbols.length?apiDividendSymbols.slice():DIVIDEND_SYMBOLS.slice();
+  if(!dividendSource.some(function(item){return normalizeKey(typeof item==='string'?item:(item&&item.value))==='00998A';})){
+    dividendSource.push({value:'🪙00998A',label:'🪙00998A'});
+  }
+  var stockSymbols=normalizeBookingSymbolList(stockSource);
+  var dividendSymbols=normalizeBookingSymbolList(dividendSource);
 
   var catOpts=cats.map(v=>bookingOptionHtml(v)).join('');
   var srcOpts=sources.map(v=>bookingOptionHtml(v)).join('');

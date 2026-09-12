@@ -105,6 +105,18 @@ test('Pangtong income dropdown builds a fixed Stock income command', async ({ pa
   });
 });
 
+test('00998A is available in finance stock booking options', async ({ page }) => {
+  await page.goto(dashboardUrl);
+  const result = await page.evaluate(() => ({
+    stockDefault: STOCK_SYMBOLS.some(item => normalizeKey(item.value) === '00998A'),
+    dividendDefault: DIVIDEND_SYMBOLS.some(item => normalizeKey(item.value) === '00998A'),
+    apiList: normalizeBookingSymbolList([{ value: '00998A', label: '00998A' }])
+  }));
+  expect(result.stockDefault).toBe(true);
+  expect(result.dividendDefault).toBe(true);
+  expect(result.apiList).toEqual([{ value: '🪙00998A', label: '🪙00998A' }]);
+});
+
 test('a new ledger entry is allowed after a different previous entry was confirmed', async ({ page }) => {
   await page.goto(dashboardUrl);
   const result = await page.evaluate(async () => {
