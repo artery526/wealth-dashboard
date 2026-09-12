@@ -6389,13 +6389,18 @@ function renderStorePanel(initialTab){
     renderStoreDateFilters();
     renderStoreList();
   }
-  if(API_URL)loadStoreRecords(false);
-  else document.getElementById('store-list-content').innerHTML=setupNotice();
-  if(API_URL)loadStoreContacts(false);
-  else document.getElementById('store-contacts-content').innerHTML=setupNotice();
+  var initialStoreTab=initialTab==='store-add'?'store-list':(initialTab||'store-contacts');
+  if(API_URL){
+    if(initialStoreTab==='store-list')loadStoreRecords(false);
+    else if(initialStoreTab==='store-contacts')loadStoreContacts(false);
+  }else{
+    document.getElementById('store-list-content').innerHTML=setupNotice();
+    document.getElementById('store-contacts-content').innerHTML=setupNotice();
+  }
   if(initialTab)setTimeout(function(){
-    var btn=document.querySelector('.panel-menu-item[data-panel-tab="'+initialTab+'"]');
-    if(btn)switchTab(btn,initialTab);
+    var tabToOpen=initialTab==='store-add'?'store-list':initialTab;
+    var btn=document.querySelector('.panel-menu-item[data-panel-tab="'+tabToOpen+'"]');
+    if(btn)switchTab(btn,tabToOpen);
     if(initialTab==='store-add')focusStoreInlineForm();
   },0);
 }
@@ -6662,7 +6667,7 @@ function loadStoreRecords(force){
     return Promise.resolve(storeRecordsCache);
   }
   setEmpireCardStatus('store','pending');
-  storeRecordsPromise=apiGet({action:'storeRecords'}).then(function(data){
+  storeRecordsPromise=apiGet({action:'storeRecords'},30000).then(function(data){
     storeRecordsCache=(data&&data.records)||[];
     storeRecordsCacheFetchedAt=Date.now();
     setDataFreshness('store-freshness',dataFreshnessMeta(storeRecordsCache,storeRecordsCacheFetchedAt,false));
@@ -6867,7 +6872,7 @@ function loadStoreContacts(force){
     return Promise.resolve(storeContactsCache);
   }
   setEmpireCardStatus('store','pending');
-  storeContactsPromise=apiGet({action:'storeContacts'}).then(function(data){
+  storeContactsPromise=apiGet({action:'storeContacts'},30000).then(function(data){
     storeContactsCache=(data&&data.contacts)||[];
     storeContactsCacheFetchedAt=Date.now();
     setDataFreshness('store-contacts-freshness',dataFreshnessMeta(storeContactsCache,storeContactsCacheFetchedAt,false));
