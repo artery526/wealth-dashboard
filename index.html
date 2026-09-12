@@ -17833,14 +17833,22 @@ function advisorDividendCalcUpdate(){
   var investmentInput=document.getElementById('advisor-div-calc-investment');
   var investment=get('advisor-div-calc-investment');
   var price=get('advisor-div-calc-price');
+  var sharesInput=document.getElementById('advisor-div-calc-shares');
+  if(sharesInput&&document.activeElement===sharesInput)sharesInput.dataset.autoCalculated='';
   var enteredShares=get('advisor-div-calc-shares');
   var rate=get('advisor-div-calc-rate');
   var fx=advisorDividendCalcMarket==='us'?get('advisor-div-calc-fx')||32.5:1;
   var taxInput=document.getElementById('advisor-div-calc-tax');
   var taxRate=taxInput&&taxInput.value!==''?parseFloat(taxInput.value):30;
   var taxFactor=advisorDividendCalcMarket==='us'?Math.max(0,1-(isNaN(taxRate)?30:taxRate)/100):1;
-  var shares=enteredShares>0?Math.floor(enteredShares):(investment>0&&price>0?Math.floor(investment/(price*fx)):0);
-  var calculatedCapital=enteredShares>0&&price>0?shares*price*fx:0;
+  var autoShares=investment>0&&price>0?Math.floor(investment/(price*fx)):0;
+  var useAutoShares=sharesInput&&!sharesInput.value&&autoShares>0||sharesInput&&sharesInput.dataset.autoCalculated==='1';
+  var shares=useAutoShares?autoShares:(enteredShares>0?Math.floor(enteredShares):autoShares);
+  if(sharesInput&&useAutoShares){
+    sharesInput.value=shares>0?String(shares):'';
+    sharesInput.dataset.autoCalculated=shares>0?'1':'';
+  }
+  var calculatedCapital=!useAutoShares&&enteredShares>0&&price>0?shares*price*fx:0;
   if(investmentInput&&calculatedCapital>0)investmentInput.value=String(Math.round(calculatedCapital*100)/100);
   var set=function(id,value){var el=document.getElementById(id);if(el)el.textContent=value;};
   set('advisor-div-calc-shares-result',shares?shares.toLocaleString('zh-TW')+' 股':'—');
@@ -17852,7 +17860,7 @@ function advisorDividendCalcUpdate(){
   var annualCount={monthly:12,quarterly:4,semiannual:2,annual:1}[advisorDividendCalcFrequency]||12;
   var annual=once*annualCount;
   var monthly=annual/12;
-  var capital=enteredShares>0?calculatedCapital:investment;
+  var capital=!useAutoShares&&enteredShares>0?calculatedCapital:investment;
   set('advisor-div-calc-monthly-result',fmtFull(monthly));
   set('advisor-div-calc-once-result',fmtFull(once));
   set('advisor-div-calc-annual-result',fmtFull(annual));

@@ -117,6 +117,25 @@ test('00998A is available in finance stock booking options', async ({ page }) =>
   expect(result.apiList).toEqual([{ value: '🪙00998A', label: '🪙00998A' }]);
 });
 
+test('dividend calculator fills shares from investment and price', async ({ page }) => {
+  await page.goto(dashboardUrl);
+  const result = await page.evaluate(() => {
+    const content = document.createElement('div');
+    content.innerHTML = renderDividendCalculatorPanel();
+    document.body.appendChild(content);
+    document.getElementById('advisor-div-calc-investment').value = '400000';
+    document.getElementById('advisor-div-calc-price').value = '56.02';
+    document.getElementById('advisor-div-calc-rate').value = '0.48';
+    advisorDividendCalcUpdate();
+    return {
+      inputShares: document.getElementById('advisor-div-calc-shares').value,
+      resultShares: document.getElementById('advisor-div-calc-shares-result').textContent
+    };
+  });
+  expect(result.inputShares).toBe('7140');
+  expect(result.resultShares).toBe('7,140 股');
+});
+
 test('a new ledger entry is allowed after a different previous entry was confirmed', async ({ page }) => {
   await page.goto(dashboardUrl);
   const result = await page.evaluate(async () => {
