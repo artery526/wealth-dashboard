@@ -7458,11 +7458,17 @@ function getChronicleEntryPreview(){
   return {mode:mode,price:price,days:days,months:days?Math.round(days/30.6*100)/100:0,dailyCost:days&&price?Math.round(price/days*100)/100:0};
 }
 
+function formatChronicleDailyCost(value){
+  var text=String(value==null?'':value).trim().replace(/,/g,'');
+  var number=Number(text);
+  return text&&isFinite(number)?Math.round(number).toLocaleString('zh-TW'):'--';
+}
+
 function updateChroniclePreview(){
   var preview=document.getElementById('chronicle-entry-preview');
   if(!preview)return;
   var v=getChronicleEntryPreview();
-  preview.textContent=v.price>0&&v.days>0?'自動換算：'+v.days+' 日／'+v.months+' 月／每日成本 '+v.dailyCost.toLocaleString('zh-TW',{maximumFractionDigits:2}):v.price>0&&v.days<=0?'尚未開始：日期在今天之後，日／月／每日成本暫不計算':'請填入價格以預覽日、月與每日成本';
+  preview.textContent=v.price>0&&v.days>0?'自動換算：'+v.days+' 日／'+v.months+' 月／每日成本 '+formatChronicleDailyCost(v.dailyCost):v.price>0&&v.days<=0?'尚未開始：日期在今天之後，日／月／每日成本暫不計算':'請填入價格以預覽日、月與每日成本';
 }
 
 async function submitEventChronicle(e){
@@ -7657,14 +7663,14 @@ function renderChronicleCard(row){
       <div class="chronicle-cell chronicle-name" data-label="事件名稱">${esc(row.name||'未命名')}<span class="chronicle-date">${esc(date)}</span></div>
       <div class="chronicle-cell" data-label="經歷月">${esc(String(row.months||'').trim()||'--')}</div>
       <div class="chronicle-cell" data-label="經歷日">${esc(String(row.days||'').trim()||'--')}</div>
-      <div class="chronicle-cell chronicle-cost-value" data-label="每日成本">${esc(String(row.dailyCost||'').trim()||'--')}</div>
+      <div class="chronicle-cell chronicle-cost-value" data-label="每日成本">${esc(formatChronicleDailyCost(row.dailyCost))}</div>
       <div class="chronicle-cell chronicle-note-detail" data-label="備註">${esc(tail)}</div>
       ${chronicleCardActions(row)}
     </div>`;
   }
   var months=String(row.months||'').trim()||'--';
   var days=String(row.days||'').trim()||'--';
-  var dailyCost=String(row.dailyCost||'').trim()||'--';
+  var dailyCost=formatChronicleDailyCost(row.dailyCost);
   return `<div class="chronicle-row">
     <div class="chronicle-cell chronicle-name" data-label="項目名稱">${esc(row.name||'未命名')}<span class="chronicle-date">${esc(date)}</span></div>
     <div class="chronicle-cell" data-label="經歷月">${esc(months)}</div>
