@@ -11269,11 +11269,10 @@ function renderArkWallList(){
     ? renderArkWallLibraryBlock()
     : '<section class="ark-wall-library" id="ark-wall-library"><div class="ark-wall-library-status" id="ark-wall-library-status">時光長廊索引讀取中...</div></section>';
   if(!arkWallEntries.length){
-    body.innerHTML=(arkWallView==='wall'?renderArkWallMomentsBlock():'')+renderArkWallViewTabs()
+    body.innerHTML=renderArkWallViewTabs()
       +arkWallSectionHtml(arkWallView==='memo'?renderArkWallMemoList():(arkWallView==='market'?renderArkWallMarketList():'<div class="travel-status">王府尚無紀錄。可由右上角「新增紀錄」寫入 NAS。</div>'),'main')
       +(arkWallView==='wall'?arkWallSectionHtml(libraryHtml,'timeline'):'');
     if(arkWallView==='wall'){
-      loadArkWallMoments().catch(function(err){var status=document.querySelector('.ark-wall-moments .ark-wall-moments-sub');if(status)status.textContent='今日拾光讀取失敗：'+(err.message||err);});
       if(!arkWallLibrarySummary)loadArkWallLibrarySummary().then(renderArkWallList).catch(function(err){arkWallLibraryStatus('時光長廊讀取失敗：'+(err&&err.message?err.message:err));});
       else{
         if(arkWallLibraryOpen)loadArkWallLibraryMonth();
@@ -11305,10 +11304,9 @@ function renderArkWallList(){
   +(query?'<div class="ark-wall-count">關鍵字「'+esc(query)+'」 · '+entries.length+' 篇</div>':'')
   +(entries.length?'<div class="ark-wall-index">'+entries.map(arkWallIndexRow).join('')+'</div>':'<div class="travel-status">'+esc(query?'沒有符合關鍵字的文章。':(arkWallJournalSelectedDate?'這一天尚無日記。':'這個月份尚無紀錄。'))+'</div>');
   }
-  body.innerHTML=(arkWallView==='wall'?renderArkWallJournalCalendar()+renderArkWallMomentsBlock():'')+renderArkWallViewTabs()+arkWallSectionHtml(content,'main')+(arkWallView==='wall'?arkWallSectionHtml(filterHtml+libraryHtml,'timeline'):'');
+  body.innerHTML=(arkWallView==='wall'?renderArkWallJournalCalendar():'')+renderArkWallViewTabs()+arkWallSectionHtml(content,'main')+(arkWallView==='wall'?arkWallSectionHtml(filterHtml+libraryHtml,'timeline'):'');
   syncArkWallSearchButton();
   if(arkWallView==='wall'){
-    loadArkWallMoments().catch(function(err){var status=document.querySelector('.ark-wall-moments .ark-wall-moments-sub');if(status)status.textContent='今日拾光讀取失敗：'+(err.message||err);});
     if(!arkWallLibrarySummary)loadArkWallLibrarySummary().then(renderArkWallList).catch(function(err){arkWallLibraryStatus('時光長廊讀取失敗：'+(err&&err.message?err.message:err));});
     else{
       if(arkWallLibraryOpen)loadArkWallLibraryMonth();
