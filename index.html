@@ -3397,6 +3397,19 @@ body::after{
 .ark-wall-calendar-day.empty{border-color:transparent;background:transparent;cursor:default}
 .ark-wall-calendar-day-number{display:block;font:900 13px var(--mono);color:#f0dfa0}
 .ark-wall-calendar-icons{display:block;margin-top:5px;min-height:16px;font-size:13px;line-height:1.2;overflow:hidden;white-space:nowrap}
+.ark-wall-journal-calendar{display:grid;gap:10px;margin-bottom:15px;padding:13px;border:1px solid rgba(78,217,255,.28);border-radius:10px;background:linear-gradient(145deg,rgba(5,22,31,.86),rgba(5,9,12,.78))}
+.ark-wall-journal-calendar-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.ark-wall-journal-calendar-title{font:900 21px var(--font);color:#d9fbff;letter-spacing:1px}
+.ark-wall-journal-calendar-sub{margin-top:2px;color:#8aa7a9;font:12px/1.5 var(--sans)}
+.ark-wall-journal-calendar-nav{display:flex;align-items:center;gap:6px}
+.ark-wall-journal-calendar-nav button{width:32px;height:30px;border:1px solid rgba(78,217,255,.34);border-radius:6px;background:rgba(4,14,20,.78);color:#aeefff;cursor:pointer}
+.ark-wall-journal-calendar-label{min-width:105px;text-align:center;font:900 15px var(--font);color:#aeefff}
+.ark-wall-journal-calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.ark-wall-journal-day{min-height:58px;border:1px solid rgba(78,217,255,.18);border-radius:6px;background:rgba(4,14,20,.68);color:#dff7ff;text-align:left;padding:5px;cursor:pointer}
+.ark-wall-journal-day:hover,.ark-wall-journal-day.selected{border-color:#71d8f7;background:rgba(54,174,218,.18)}
+.ark-wall-journal-day.empty{border-color:transparent;background:transparent;cursor:default}
+.ark-wall-journal-day-number{display:block;font:900 13px var(--mono);color:#d9fbff}
+.ark-wall-journal-day-count{display:block;margin-top:7px;color:#71d8f7;font:900 12px var(--sans)}
 .ark-wall-moment-detail{border:1px solid rgba(78,217,255,.24);border-radius:8px;background:rgba(3,8,10,.52);padding:12px;min-height:230px}
 .ark-wall-moment-detail-head{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:9px}
 .ark-wall-moment-detail-title{font:900 18px var(--font);color:#aeefff}
@@ -10351,6 +10364,7 @@ var arkWallMemoTag='全部';
 var arkWallMemoSearch='';
 var arkWallMemoYear='';
 var arkWallMemoMonth='';
+var arkWallJournalSelectedDate='';
 var arkWallSearchOpen=false;
 var arkWallLibrarySummary=null;
 var arkWallLibrarySelectedYear='';
@@ -11071,6 +11085,40 @@ function renderArkWallMarketList(){
   });
 }
 
+function changeArkWallJournalMonth(delta){
+  var date=new Date(Number(arkWallSelectedYear),Number(arkWallSelectedMonth)-1+delta,1);
+  arkWallSelectedYear=String(date.getFullYear());
+  arkWallSelectedMonth=String(date.getMonth()+1).padStart(2,'0');
+  arkWallJournalSelectedDate='';
+  renderArkWallList();
+}
+
+function selectArkWallJournalDate(date){
+  arkWallJournalSelectedDate=String(date||'');
+  renderArkWallList();
+}
+
+function renderArkWallJournalCalendar(){
+  var year=arkWallSelectedYear;
+  var month=arkWallSelectedMonth;
+  if(!/^\d{4}$/.test(year)||!/^\d{2}$/.test(month))return '';
+  var counts={};
+  arkWallEntries.forEach(function(entry){
+    var date=String(entry&&entry.date||'').slice(0,10);
+    if(date.slice(0,7)===year+'-'+month)counts[date]=(counts[date]||0)+1;
+  });
+  var first=new Date(Number(year),Number(month)-1,1);
+  var days=new Date(Number(year),Number(month),0).getDate();
+  var cells=['日','一','二','三','四','五','六'].map(function(day){return '<div class="ark-wall-calendar-weekday">'+day+'</div>';}).join('');
+  for(var i=0;i<first.getDay();i++)cells+='<div class="ark-wall-journal-day empty"></div>';
+  for(var day=1;day<=days;day++){
+    var date=year+'-'+month+'-'+String(day).padStart(2,'0');
+    var count=counts[date]||0;
+    cells+='<button class="ark-wall-journal-day'+(arkWallJournalSelectedDate===date?' selected':'')+'" type="button" onclick="selectArkWallJournalDate(\''+date+'\')" aria-label="'+esc(date+(count?' '+count+' 篇日記':''))+'"><span class="ark-wall-journal-day-number">'+day+'</span>'+(count?'<span class="ark-wall-journal-day-count">+'+count+'</span>':'')+'</button>';
+  }
+  return '<section class="ark-wall-journal-calendar" aria-label="王府日記月曆"><div class="ark-wall-journal-calendar-head"><div><div class="ark-wall-journal-calendar-title">王府日記</div><div class="ark-wall-journal-calendar-sub">點選日期查看當天文章；數字代表當天日記篇數。</div></div><div class="ark-wall-journal-calendar-nav"><button type="button" onclick="changeArkWallJournalMonth(-1)" aria-label="上個月">‹</button><div class="ark-wall-journal-calendar-label">'+year+' 年 '+Number(month)+' 月</div><button type="button" onclick="changeArkWallJournalMonth(1)" aria-label="下個月">›</button></div></div><div class="ark-wall-journal-calendar-grid">'+cells+'</div></section>';
+}
+
 function arkWallIndexRow(entry){
   var id=entry.id||entry.slug||'';
   return '<button class="ark-wall-index-row" type="button" onclick="openArkWallEntry(\''+esc(id)+'\')">'
@@ -11247,16 +11295,17 @@ function renderArkWallList(){
     content=renderArkWallMarketList();
   }else{
     var query=String(arkWallMemoSearch||'').trim();
+    if(arkWallJournalSelectedDate&&!query){entries=arkWallSortEntries(arkWallEntries.filter(function(entry){return String(entry&&entry.date||'').slice(0,10)===arkWallJournalSelectedDate;}));}
     filterHtml='<div class="ark-wall-filter" data-wall-index="year-month">'
     +'<label class="ark-wall-select-wrap"><span class="ark-wall-select-label">年份</span><select class="ark-wall-select" onchange="changeArkWallYear(this.value)">'+arkWallSelectOptions(years,arkWallSelectedYear,function(year){return /^\d{4}$/.test(year)?year+'年':year;})+'</select></label>'
     +'<label class="ark-wall-select-wrap"><span class="ark-wall-select-label">月份</span><select class="ark-wall-select" onchange="changeArkWallMonth(this.value)">'+arkWallSelectOptions(months,arkWallSelectedMonth,function(month){return /^\d{2}$/.test(month)?Number(month)+'月':month;})+'</select></label>'
   +'</div>';
     content=renderArkWallSearchBox()
-  +'<div class="ark-wall-month-title">'+esc(query?'搜尋結果':arkWallMonthLabel(arkWallSelectedYear,arkWallSelectedMonth))+'</div>'
+  +'<div class="ark-wall-month-title">'+esc(query?'搜尋結果':(arkWallJournalSelectedDate?arkWallJournalSelectedDate:arkWallMonthLabel(arkWallSelectedYear,arkWallSelectedMonth)))+'</div>'
   +(query?'<div class="ark-wall-count">關鍵字「'+esc(query)+'」 · '+entries.length+' 篇</div>':'')
-  +(entries.length?'<div class="ark-wall-index">'+entries.map(arkWallIndexRow).join('')+'</div>':'<div class="travel-status">'+esc(query?'沒有符合關鍵字的文章。':'這個月份尚無紀錄。')+'</div>');
+  +(entries.length?'<div class="ark-wall-index">'+entries.map(arkWallIndexRow).join('')+'</div>':'<div class="travel-status">'+esc(query?'沒有符合關鍵字的文章。':(arkWallJournalSelectedDate?'這一天尚無日記。':'這個月份尚無紀錄。'))+'</div>');
   }
-  body.innerHTML=(arkWallView==='wall'?renderArkWallMomentsBlock():'')+renderArkWallViewTabs()+arkWallSectionHtml(content,'main')+(arkWallView==='wall'?arkWallSectionHtml(filterHtml+libraryHtml,'timeline'):'');
+  body.innerHTML=(arkWallView==='wall'?renderArkWallJournalCalendar()+renderArkWallMomentsBlock():'')+renderArkWallViewTabs()+arkWallSectionHtml(content,'main')+(arkWallView==='wall'?arkWallSectionHtml(filterHtml+libraryHtml,'timeline'):'');
   syncArkWallSearchButton();
   if(arkWallView==='wall'){
     loadArkWallMoments().catch(function(err){var status=document.querySelector('.ark-wall-moments .ark-wall-moments-sub');if(status)status.textContent='今日拾光讀取失敗：'+(err.message||err);});
