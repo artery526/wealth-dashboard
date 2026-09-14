@@ -4827,6 +4827,8 @@ var WRITE_TOKEN = localStorage.getItem('wealth_write_token') || '';
 var WEB_VERIFY_STATUS_KEY='wealth_web_verify_status';
 var WEB_VERIFY_MESSAGE_KEY='wealth_web_verify_message';
 var WEB_VERIFY_CHECKED_AT_KEY='wealth_web_verify_checked_at';
+var WEB_VERIFY_TTL_MS=10*60*1000;
+var webVerifyPromise=null;
 var EMPIRE_UNLOCK_KEY='wealth_empire_unlocked_v1';
 var cfg = (function(){
   try{
@@ -5918,7 +5920,11 @@ function webVerifyStoredMessage(){
   try{return localStorage.getItem(WEB_VERIFY_MESSAGE_KEY)||'';}catch(e){return '';}
 }
 function webVerifyIsAuthorized(){
-  try{return webVerifyStoredStatus()==='ok'&&hasMainApiCredentials();}
+  try{
+    if(webVerifyStoredStatus()!=='ok'||!hasMainApiCredentials())return false;
+    var checkedAt=Number(localStorage.getItem(WEB_VERIFY_CHECKED_AT_KEY)||0);
+    return !checkedAt||Date.now()-checkedAt<WEB_VERIFY_TTL_MS;
+  }
   catch(e){return false;}
 }
 function restoreRememberedWebAccess(){
@@ -6009,6 +6015,22 @@ async function verifyWebAccess(){
   }
   throw lastErr||new Error('網頁驗證失敗');
 }
+function ensureWebAccess(force){
+  if(!hasMainApiCredentials())return Promise.resolve(false);
+  if(!force&&webVerifyIsAuthorized())return Promise.resolve(true);
+  if(webVerifyPromise)return webVerifyPromise;
+  setWebVerifyStatus('pending','正在驗證城門密碼');
+  webVerifyPromise=verifyWebAccess().then(function(){
+    setWebVerifyStatus('ok','城門驗證成功');
+    return true;
+  }).catch(function(e){
+    setWebVerifyStatus('err',e&&e.message||'驗證失敗');
+    return false;
+  }).finally(function(){
+    webVerifyPromise=null;
+  });
+  return webVerifyPromise;
+}
 function cfgWebVerifyStatusText(){
   var status=webVerifyStoredStatus();
   var msg=webVerifyStoredMessage();
@@ -6098,7 +6120,12 @@ async function saveCfg(){
 //  Panel open/close
 // ══════════════════════════════════════════
 function openPanel(key,initialTab){
-  if(!webVerifyIsAuthorized()){empireUnlockNotice();return;}
+  if(!webVerifyIsAuthorized()){
+    if(hasMainApiCredentials()){
+      ensureWebAccess().then(function(ok){if(ok)openPanel(key,initialTab);});
+    }else empireUnlockNotice();
+    return;
+  }
   if(key==='domestic'){
     key='finance';
     initialTab=initialTab||'booking-form';
@@ -6174,7 +6201,12 @@ function openArkWallAdminShortcut(event){
 }
 
 function openEmpireCardShortcut(event,panel,tab){
-  if(!webVerifyIsAuthorized()){if(event){event.preventDefault();event.stopPropagation();}empireUnlockNotice();return;}
+  if(!webVerifyIsAuthorized()){
+    if(event){event.preventDefault();event.stopPropagation();}
+    if(hasMainApiCredentials())ensureWebAccess().then(function(ok){if(ok)openEmpireCardShortcut(null,panel,tab);});
+    else empireUnlockNotice();
+    return;
+  }
   if(event&&event.stopPropagation)event.stopPropagation();
   closeAdvisorAIStandalone();
   closeAdvisorDialog();
@@ -15004,9 +15036,11 @@ async function loadCouncilDashboard(){
     var armySettings={};
     var assetSnapshot=results.assetSnapshot;
     var dividendProjection=results.dividendProjection;
-    cacheCouncilDashboardResults(results);
+    if(results.holdingsLoaded)cacheCouncilDashboardResults(results);
     setDataFreshness('council-roster-freshness',dataFreshnessMeta(results,councilDashboardFetchedAt,false));
-    renderCouncilRoster(mergeCouncilRows(holdings,heroes,armySettings),el,assetSnapshot,dividendProjection);
+    var hasRosterData=results.holdingsLoaded&&holdings.length;
+    var fallbackCache=!hasRosterData&&councilDashboardCache&&councilDashboardCache.holdings&&councilDashboardCache.holdings.length;
+    renderCouncilRoster(mergeCouncilRows(fallbackCache?councilDashboardCache.holdings:holdings,fallbackCache?councilDashboardCache.heroes:heroes,armySettings),el,fallbackCache?councilDashboardCache.assetSnapshot:assetSnapshot,fallbackCache?councilDashboardCache.dividendProjection:dividendProjection);
     var dot=document.getElementById('council-dot');
     var lbl=document.getElementById('council-label');
     if(dot)dot.className='api-dot '+(results.holdingsLoaded&&API_URL?'ok':'err');
@@ -15020,12 +15054,29 @@ async function loadCouncilDashboard(){
 
 function loadCouncilDashboardData(){
   if(councilDashboardPromise)return councilDashboardPromise;
-  councilDashboardPromise=Promise.allSettled([
-      loadHeroSheet(),
-      loadCouncilHoldingsOverview(),
-      loadAssetSnapshot(),
-      loadMonthlyDividendProjection()
-    ]).then(function(results){
+  councilDashboardPromise=ensureWebAccess().then(function(verified){
+    if(!verified)throw new Error('城門驗證失敗，請重新驗證記帳密鑰');
+    return Promise.allSettled([
+        loadHeroSheet(),
+        loadCouncilHoldingsOverview(),
+        loadAssetSnapshot(),
+        loadMonthlyDividendProjection()
+      ]);
+  }).then(function(results){
+      var holdingsFailed=results[1].status==='rejected';
+      var heroFailed=results[0].status==='rejected';
+      var authFailure=(holdingsFailed&&webVerifyIsAuthFailure(results[1].reason))||(heroFailed&&webVerifyIsAuthFailure(results[0].reason));
+      if(!authFailure)return results;
+      return ensureWebAccess(true).then(function(verified){
+        if(!verified)return results;
+        return Promise.allSettled([
+          loadHeroSheet(true),
+          loadCouncilHoldingsOverview(),
+          loadAssetSnapshot(),
+          loadMonthlyDividendProjection()
+        ]);
+      });
+  }).then(function(results){
       return {
         heroes:results[0].status==='fulfilled'?results[0].value:[],
         holdings:results[1].status==='fulfilled'?(results[1].value||[]):[],
