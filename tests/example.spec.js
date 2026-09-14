@@ -174,6 +174,23 @@ test('Pangtong quick expense shares the finance booking queue', async ({ page })
   expect(result.recorded).toContain('已記錄');
 });
 
+test('stock transactions use distinct queue fingerprints and recorded guard', async ({ page }) => {
+  await page.goto(dashboardUrl);
+  const result = await page.evaluate(() => {
+    bookingWriteQueue.length = 0;
+    const body = {
+      action: 'transfer', date: '2026/09/14', cat: '股票買入', account: '💵國泰Stock → 🪙00998A · 40000股',
+      amount: 711483, from: '💵國泰Stock', to: '🪙00998A', stockMode: '1', stockType: 'buy',
+      stockSymbol: '🪙00998A', stockShares: 40000, stockAmount: 711483
+    };
+    const id = bookingQueueAdd(body);
+    bookingQueueUpdate(id, 'success', '');
+    const other = Object.assign({}, body, { stockShares: 40001 });
+    return { recorded: bookingQueueHasRecorded(body), otherRecorded: bookingQueueHasRecorded(other) };
+  });
+  expect(result).toEqual({ recorded: true, otherRecorded: false });
+});
+
 test('battle brief panel renders with stable formatting', async ({ page }) => {
   const pageErrors = [];
   page.on('pageerror', error => pageErrors.push(error.message));

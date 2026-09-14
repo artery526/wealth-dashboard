@@ -5344,7 +5344,16 @@ var BOOKING_WRITE_QUEUE_MAX=5;
 
 function bookingQueueSignature(body){
   body=body||{};
-  return [body.action,body.date,body.cat||'',body.account||'',body.amount||''].join('|');
+  return JSON.stringify({
+    action:body.action||'',date:body.date||'',cat:body.cat||'',account:body.account||'',amount:body.amount||'',
+    from:body.from||'',to:body.to||'',stockMode:body.stockMode||'',stockType:body.stockType||'',
+    stockSymbol:body.stockSymbol||'',stockShares:body.stockShares||'',stockAmount:body.stockAmount||''
+  });
+}
+
+function bookingQueueHasRecorded(body){
+  var signature=bookingQueueSignature(body);
+  return bookingWriteQueue.some(function(item){return item.signature===signature&&item.status==='success';});
 }
 
 function bookingQueueTimeText(value){
@@ -5407,10 +5416,21 @@ function bookingQueueUpdate(id,status,message){
 
 async function submitLedgerPending(body){
   var key='ledger-pending-v1:'+API_URL+':'+body.action;
+  var recordedKey='ledger-recorded-v1:'+API_URL+':'+body.action;
   if(ledgerPendingBusy[key])throw new Error('這筆交易正在確認，請稍候');
   ledgerPendingBusy[key]=true;
   try{
     var fingerprint=JSON.stringify(Object.keys(body).filter(k=>k!=='requestId').sort().map(k=>[k,body[k]]));
+    var recorded=JSON.parse(localStorage.getItem(recordedKey)||'null');
+    if(recorded&&recorded.fingerprint===fingerprint&&(Date.now()-Number(recorded.time||0))<10*60*1000){
+      var recordedStatus;
+      try{recordedStatus=await apiGet({action:'ledgerRequestStatus',requestId:recorded.requestId});}
+      catch(e){throw new Error('這筆交易可能已記錄，查詢入帳狀態失敗，請稍後再確認，避免重複送出。');}
+      if(recordedStatus.requestId===recorded.requestId&&recordedStatus.recorded){
+        return {message:'已確認入帳',duplicate:true,row:recordedStatus.row};
+      }
+      localStorage.removeItem(recordedKey);
+    }
     var pending=JSON.parse(localStorage.getItem(key)||'null');
     if(pending){
       var status;
@@ -5432,6 +5452,7 @@ async function submitLedgerPending(body){
     try{
       var result=await apiPostJson(Object.assign({},body,{requestId:pending.requestId}),45000);
       localStorage.removeItem(key);
+      localStorage.setItem(recordedKey,JSON.stringify({requestId:pending.requestId,fingerprint:fingerprint,time:Date.now()}));
       return result;
     }catch(e){throw new Error('結果待確認：'+e.message+' 再次送出會先查入帳狀態，並沿用原編號。');}
   }finally{delete ledgerPendingBusy[key];}
@@ -12500,11 +12521,19 @@ async function submitStockTransfer(e){
   if(from===to){showMsg('msg-transfer','轉出和轉入帳戶不能相同','err');return}
   if(stockShares<=0){showMsg('msg-transfer','請填寫交易股數','err');return}
   if(!confirmRecentBooking({action:'transfer',date:date,from:from,to:to,amount:stockAmt,stockMode:'1',stockType:stockType,stockSymbol:stockSym}))return;
+  var queueBody={action:'transfer',date:date.replace(/-/g,'/'),cat:'股票'+(stockType==='sell'?'賣出':'買入'),account:from+' → '+to+' · '+stockSym+' · '+stockShares+'股',amount:stockAmt,
+    from,to,stockMode:'1',stockType,stockSymbol:stockSym,stockShares:signedStockShares,stockAmount:stockAmt};
+  if(bookingQueueHasRecorded(queueBody)){
+    showMsg('msg-transfer','這筆股票交易已記錄，請勿重複送出','err');
+    return;
+  }
+  var queueId=bookingQueueAdd(queueBody);
   btn.disabled=true;btn.textContent='記錄中…';
   try{
-    await apiPost({action:'transfer',date:date.replace(/-/g,'/'),from,to,amount:stockAmt,label:stockSym,note,
+    var result=await apiPost({action:'transfer',date:date.replace(/-/g,'/'),from,to,amount:stockAmt,label:stockSym,note,
       stockMode:'1',stockType,stockSymbol:stockSym,stockShares:signedStockShares,
       stockAmount:stockAmt,dividendRowId,holdingTradeRowId});
+    bookingQueueUpdate(queueId,'success',result&&result.duplicate?'已確認入帳，未重複寫入':'');
     if(dividendRowId||holdingTradeRowId)invalidateDividendCenter();
     showMsg('msg-transfer','✓ 已記錄股票交易！','ok');
     invalidateBookingAccountBalances();
@@ -12514,7 +12543,10 @@ async function submitStockTransfer(e){
     clearTransferDividendAutofill();
     loadRecentBooking();
     focusBookingField('t-stock-shares');
-  }catch(e){showMsg('msg-transfer','✗ '+e.message,'err')}
+  }catch(e){
+    bookingQueueUpdate(queueId,/結果待確認|可能已記錄|查詢入帳/.test(String(e&&e.message||''))?'confirm':'failed',e.message);
+    showMsg('msg-transfer','✗ '+e.message,'err');
+  }
   btn.disabled=false;btn.textContent=isMergedStockTrade()?'記錄交易':'記錄轉帳';
 }
 
