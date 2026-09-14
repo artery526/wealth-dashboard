@@ -9998,7 +9998,7 @@ async function initBookingForm(){
               <input type="hidden" id="t-stock-type" value="buy">
             </div>
           </div>
-          <div class="form-group transfer-shares-field hidden"><label class="form-label">交易股數</label><input class="form-control" type="number" id="t-stock-shares" placeholder="0" step="0.01" min="0"></div>
+          <div class="form-group transfer-shares-field hidden"><label class="form-label" id="t-stock-shares-label">交易股數（填正數）</label><input class="form-control" type="number" id="t-stock-shares" placeholder="買入或賣出都填正數" step="0.01" min="0"></div>
           <div class="form-group full booking-optional-note hidden" id="a-note-wrap"><label class="form-label" for="a-note">備註（選填）</label><input class="form-control" type="text" id="a-note" placeholder="備註..."></div>
           <div class="dividend-autofill-note hidden" id="t-dividend-autofill"></div>
         </div>
@@ -10236,8 +10236,12 @@ function setTransferModeButtons(mode){
 function setTransferLabels(mode){
   var fromLabel=document.getElementById('a-from-label');
   var toLabel=document.getElementById('a-to-label');
+  var sharesLabel=document.getElementById('t-stock-shares-label');
+  var sharesInput=document.getElementById('t-stock-shares');
   if(fromLabel)fromLabel.textContent=mode==='buy'?'資金來源':(mode==='sell'?'賣出標的':'轉出帳戶');
   if(toLabel)toLabel.textContent=mode==='buy'?'買入標的':(mode==='sell'?'入帳帳戶':'轉入帳戶');
+  if(sharesLabel)sharesLabel.textContent=mode==='sell'?'交易股數（填正數，系統自動記為賣出）':'交易股數（填正數）';
+  if(sharesInput)sharesInput.placeholder=mode==='sell'?'例如 25000（不用輸入負號）':'例如 25000';
 }
 function setTransferEntryMode(key){
   var mode=key==='sell'?'sell':(key==='buy'||key==='stock'?'buy':'account');
@@ -10297,6 +10301,18 @@ function setMergedStockType(type){
   document.querySelectorAll('.booking-trade-type').forEach(function(btn){
     btn.classList.toggle('active',btn.dataset.stockType===value);
   });
+  setTransferLabels(value);
+  if(isMergedStockTrade()){
+    if(value==='sell'){
+      ensureBookingHoldingSide('a-from');
+      selectBookingOptionByText('a-to','國泰Stock');
+    }else{
+      selectBookingOptionByText('a-from','國泰Stock');
+      ensureBookingHoldingSide('a-to');
+    }
+    syncBookingQuickChip('a-from');
+    syncBookingQuickChip('a-to');
+  }
   if(isMergedStockTrade())setTransferModeButtons(value);
 }
 

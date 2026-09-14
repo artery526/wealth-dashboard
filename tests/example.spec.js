@@ -210,6 +210,31 @@ test('recent booking timeout does not mark an authorized finance panel as verifi
   expect(result).toEqual({ key: 'domestic', state: 'ok', message: '財政主連線正常，最近記錄暫時無法更新' });
 });
 
+test('stock sell mode explains positive share input and reverses account direction', async ({ page }) => {
+  await page.goto(dashboardUrl);
+  const result = await page.evaluate(() => {
+    document.body.insertAdjacentHTML('beforeend', `<div id="merged-stock-fields"></div>
+      <span id="a-from-label"></span><span id="a-to-label"></span>
+      <label id="t-stock-shares-label"></label><input id="t-stock-shares">
+      <input id="t-stock-type"><select id="a-from"><option value="💵國泰Stock">💵國泰Stock</option><option value="📡QQQI">📡QQQI</option></select>
+      <select id="a-to"><option value="💵國泰Stock">💵國泰Stock</option><option value="📡QQQI">📡QQQI</option></select>`);
+    cfg = { accounts: ['💵Cash', '💵國泰Stock'] };
+    setMergedStockType('sell');
+    return {
+      fromLabel: document.getElementById('a-from-label').textContent,
+      toLabel: document.getElementById('a-to-label').textContent,
+      sharesLabel: document.getElementById('t-stock-shares-label').textContent,
+      placeholder: document.getElementById('t-stock-shares').placeholder,
+      from: document.getElementById('a-from').value,
+      to: document.getElementById('a-to').value
+    };
+  });
+  expect(result).toEqual({
+    fromLabel: '賣出標的', toLabel: '入帳帳戶', sharesLabel: '交易股數（填正數，系統自動記為賣出）',
+    placeholder: '例如 25000（不用輸入負號）', from: '📡QQQI', to: '💵國泰Stock'
+  });
+});
+
 test('battle brief panel renders with stable formatting', async ({ page }) => {
   const pageErrors = [];
   page.on('pageerror', error => pageErrors.push(error.message));
