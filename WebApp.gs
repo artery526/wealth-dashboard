@@ -235,6 +235,15 @@ function doGet(e) {
   try {
     var p      = e.parameter;
     var action = (p.action || '').trim();
+
+    // 驗證連線只需要比對 Script Properties 中的密鑰，不必先開啟試算表。
+    // Apps Script 冷啟動時，開表可能是整個驗證流程最慢的一段；先驗證
+    // 可讓龐統立即取得成功／失敗結果，也避免未授權請求觸碰試算表。
+    if (action === 'verifyWriteToken') {
+      verifyWriteToken(p);
+      return handleAuthorizedAction_(null, action, p, p.callback);
+    }
+
     var ss     = SpreadsheetApp.getActiveSpreadsheet();
 
     // ── 讀取路由：敏感資料同樣需要通過 WRITE_TOKEN ──
