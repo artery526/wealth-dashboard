@@ -5266,7 +5266,7 @@ async function apiGet(params,timeoutMs){
   if(String(baseParams.action||'')!=='config'&&!webVerifyIsAuthorized())throw new Error('城門尚未開啟，請先完成龐統軍師驗證');
   if(String(baseParams.action||'')!=='config'&&cleanToken(WRITE_TOKEN))baseParams.token=cleanToken(WRITE_TOKEN);
   // Apps Script 讀取偶爾會在冷啟動或轉址時短暫回傳 404；讀取可安全重試，寫入仍維持單次請求。
-  var attempts=3;
+  var attempts=String(baseParams.action||'')==='transactions'?2:3;
   var lastErr=null;
   for(var attempt=0;attempt<attempts;attempt++){
     var requestParams=Object.assign({},baseParams,{_ts:Date.now(),_try:attempt+1});
@@ -12560,7 +12560,7 @@ async function loadRecentBooking(){
   if(!API_URL){setEmpireCardStatus(bookingPanelStatusKey(),'err','尚未設定 API');el.innerHTML=setupNotice();return}
   setEmpireCardStatus(bookingPanelStatusKey(),'pending');
   try{
-    var txns=await apiGet({action:'transactions',ym:currentYM(),recentDays:14});
+      var txns=await apiGet({action:'transactions',ym:currentYM(),recentDays:14},15000);
     txns=Array.isArray(txns)?txns.slice(0,15):[];
     bookingRecentRows=txns;
     setEmpireCardStatus(bookingPanelStatusKey(),'ok','最近記錄已載入');
@@ -12591,7 +12591,8 @@ async function loadRecentBooking(){
     }
     el.innerHTML='<div style="color:#5a4018;font-family:var(--sans);font-size:12px;padding:20px 0;text-align:center">本月沒有最近紀錄</div>';
   }catch(e){
-    setEmpireCardStatus(bookingPanelStatusKey(),'err',e.message||'最近記錄讀取失敗');
+    if(webVerifyIsAuthFailure(e))setEmpireCardStatus(bookingPanelStatusKey(),'err',e.message||'驗證失敗');
+    else if(webVerifyIsAuthorized())setEmpireCardStatus(bookingPanelStatusKey(),'ok','財政主連線正常，最近記錄暫時無法更新');
     el.innerHTML='<div style="color:var(--coral);font-family:var(--sans);font-size:12px;padding:12px 0">'+esc(e.message)+'</div>';
   }
 }

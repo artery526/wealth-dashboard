@@ -191,6 +191,25 @@ test('stock transactions use distinct queue fingerprints and recorded guard', as
   expect(result).toEqual({ recorded: true, otherRecorded: false });
 });
 
+test('recent booking timeout does not mark an authorized finance panel as verification failure', async ({ page }) => {
+  await page.goto(dashboardUrl);
+  const result = await page.evaluate(async () => {
+    const recent = document.createElement('div');
+    recent.id = 'recent-content';
+    document.body.appendChild(recent);
+    window.API_URL = 'https://example.test/web-app';
+    window.WRITE_TOKEN = 'test-token';
+    localStorage.setItem('wealth_web_verify_status', 'ok');
+    localStorage.setItem('wealth_write_token', 'test-token');
+    let status = null;
+    window.setEmpireCardStatus = (key, state, message) => { status = { key, state, message }; };
+    window.apiGet = () => Promise.reject(new Error('連線逾時，請再按一次更新'));
+    await loadRecentBooking();
+    return status;
+  });
+  expect(result).toEqual({ key: 'domestic', state: 'ok', message: '財政主連線正常，最近記錄暫時無法更新' });
+});
+
 test('battle brief panel renders with stable formatting', async ({ page }) => {
   const pageErrors = [];
   page.on('pageerror', error => pageErrors.push(error.message));
