@@ -395,6 +395,7 @@ test('remembered Pangtong verification restores the empire without blocking re-v
     localStorage.setItem('wealth_api_url', 'https://example.test/exec');
     localStorage.setItem('wealth_write_token', 'remembered-token');
     localStorage.setItem('wealth_web_verify_status', 'ok');
+    localStorage.setItem('wealth_web_verify_checked_at', String(Date.now() - (6 * 24 * 60 * 60 * 1000 + 23 * 60 * 60 * 1000)));
     sessionStorage.removeItem('wealth_empire_unlocked_v1');
     window.API_URL = 'https://example.test/exec';
     window.WRITE_TOKEN = 'remembered-token';

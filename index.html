@@ -4827,7 +4827,8 @@ var WRITE_TOKEN = localStorage.getItem('wealth_write_token') || '';
 var WEB_VERIFY_STATUS_KEY='wealth_web_verify_status';
 var WEB_VERIFY_MESSAGE_KEY='wealth_web_verify_message';
 var WEB_VERIFY_CHECKED_AT_KEY='wealth_web_verify_checked_at';
-var WEB_VERIFY_TTL_MS=10*60*1000;
+// 第一道人城門記住 7 天；財務寫入時仍由後端逐筆驗證 WRITE_TOKEN。
+var WEB_VERIFY_TTL_MS=7*24*60*60*1000;
 var webVerifyPromise=null;
 var EMPIRE_UNLOCK_KEY='wealth_empire_unlocked_v1';
 var cfg = (function(){
