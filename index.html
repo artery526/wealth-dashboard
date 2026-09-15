@@ -2400,6 +2400,7 @@ body::after{
 .txn-repeat{border:1px solid rgba(232,192,80,.4);border-radius:6px;background:rgba(232,192,80,.08);color:var(--gold);font-family:var(--sans);font-size:10px;font-weight:900;padding:4px 7px;cursor:pointer;flex-shrink:0;white-space:nowrap}
 .txn-repeat:hover{background:rgba(232,192,80,.16);box-shadow:0 0 10px rgba(232,192,80,.14)}
 .txn-balance{min-width:190px;max-width:38%;font-family:var(--sans);font-size:10px;color:#7a5c28;line-height:1.35;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0}
+.txn-list-cache-note{font-family:var(--sans);font-size:10px;letter-spacing:0;color:#8f7439;margin-left:8px}
 .txn-balance-path{display:block;overflow:hidden;text-overflow:ellipsis}
 .txn-balance strong{display:block;font-family:var(--mono);font-size:10px;color:var(--gold);font-weight:800;overflow:hidden;text-overflow:ellipsis}
 .booking-write-queue{margin-top:14px;padding:10px 11px;border:1px solid rgba(184,137,46,.24);border-radius:8px;background:rgba(10,8,4,.34)}
@@ -12657,46 +12658,81 @@ async function submitTransfer(e){
   return submitAccountTransfer(e);
 }
 
+var BOOKING_RECENT_CACHE_PREFIX='wealth_booking_recent_v2_';
+
+function bookingRecentCacheKey(){
+  return BOOKING_RECENT_CACHE_PREFIX+String(currentYM()||'unknown');
+}
+
+function readBookingRecentCache(){
+  try{
+    var cached=JSON.parse(localStorage.getItem(bookingRecentCacheKey())||'null');
+    return cached&&Array.isArray(cached.rows)?cached.rows:[];
+  }catch(e){return []}
+}
+
+function writeBookingRecentCache(rows){
+  try{localStorage.setItem(bookingRecentCacheKey(),JSON.stringify({savedAt:Date.now(),rows:rows.slice(0,10)}));}catch(e){}
+}
+
+function renderRecentBooking(rows,isCached){
+  var el=document.getElementById('recent-content');
+  var txns=Array.isArray(rows)?rows.slice(0,10):[];
+  bookingRecentRows=txns;
+  if(txns.length){
+    el.innerHTML='<div class="txn-list-title" id="booking-recent-title">最近紀錄｜近 10 筆'+(isCached?'<span class="txn-list-cache-note">（快取，背景同步中）</span>':'')+'</div>'+
+      txns.map(function(t,idx){
+        var type=String(t.type||'');
+        var isIn=type==='收入';
+        var isT=type==='轉帳'||type.indexOf('股票')>=0||type==='配息收入';
+        var tone=isT?'transfer':(isIn?'in':'out');
+        var sign=isT?'':(isIn?'+':'-');
+        var repeat=canRepeatRecentTxn(t)?'<button class="txn-repeat" type="button" title="帶回快速記帳表單" onclick="repeatRecentBooking('+idx+',this)">再記一筆</button>':'';
+        var undo=t.undoable?
+          '<button class="txn-undo" type="button" title="撤銷這筆紀錄" onclick="undoRecentTxn(\''+encodeURIComponent(t.source||'')+'\','+(Number(t.rowId)||0)+',\''+encodeURIComponent(type)+'\',this)">撤銷</button>':'';
+        var balance=renderTxnAccountChange(t.accountChange);
+        var createdAt=formatRecentCreatedAt(t.createdAt);
+        return '<div class="txn-item">'+
+          '<span class="txn-badge '+tone+'">'+esc(type)+'</span>'+
+          '<span class="txn-date">'+esc(t.date)+(createdAt?'<span class="txn-created-at">'+esc(createdAt)+'</span>':'')+'</span>'+
+          '<span class="txn-cat">'+esc(t.cat)+'</span>'+
+          '<span class="txn-amt '+tone+'">'+sign+fmtFull(t.amount)+'</span>'+
+          balance+
+          repeat+
+          undo+
+        '</div>';
+      }).join('');
+    return;
+  }
+  el.innerHTML='<div style="color:#5a4018;font-family:var(--sans);font-size:12px;padding:20px 0;text-align:center">本月沒有最近紀錄</div>';
+}
+
 async function loadRecentBooking(){
   var el=document.getElementById('recent-content');
   if(!el)return;
   if(!API_URL){setEmpireCardStatus(bookingPanelStatusKey(),'err','尚未設定 API');el.innerHTML=setupNotice();return}
-  setEmpireCardStatus(bookingPanelStatusKey(),'pending');
+  var cachedRows=readBookingRecentCache();
+  if(cachedRows.length){
+    renderRecentBooking(cachedRows,true);
+    setEmpireCardStatus(bookingPanelStatusKey(),'ok','顯示快取資料，背景同步中');
+  }else{
+    setEmpireCardStatus(bookingPanelStatusKey(),'pending');
+  }
   try{
-      var txns=await apiGet({action:'transactions',ym:currentYM(),recentDays:14},15000);
-    txns=Array.isArray(txns)?txns.slice(0,15):[];
-    bookingRecentRows=txns;
+    var txns=await apiGet({action:'transactions',ym:currentYM(),recentDays:14,recentLimit:10},15000);
+    txns=Array.isArray(txns)?txns.slice(0,10):[];
+    writeBookingRecentCache(txns);
+    renderRecentBooking(txns,false);
     setEmpireCardStatus(bookingPanelStatusKey(),'ok','最近記錄已載入');
-    if(txns&&txns.length){
-      el.innerHTML='<div class="txn-list-title" id="booking-recent-title">最近紀錄｜近 15 筆</div>'+
-        txns.map(function(t,idx){
-          var type=String(t.type||'');
-          var isIn=type==='收入';
-          var isT=type==='轉帳'||type.indexOf('股票')>=0||type==='配息收入';
-          var tone=isT?'transfer':(isIn?'in':'out');
-          var sign=isT?'':(isIn?'+':'-');
-          var repeat=canRepeatRecentTxn(t)?'<button class="txn-repeat" type="button" title="帶回快速記帳表單" onclick="repeatRecentBooking('+idx+',this)">再記一筆</button>':'';
-          var undo=t.undoable?
-            '<button class="txn-undo" type="button" title="撤銷這筆紀錄" onclick="undoRecentTxn(\''+encodeURIComponent(t.source||'')+'\','+(Number(t.rowId)||0)+',\''+encodeURIComponent(type)+'\',this)">撤銷</button>':'';
-          var balance=renderTxnAccountChange(t.accountChange);
-          var createdAt=formatRecentCreatedAt(t.createdAt);
-          return '<div class="txn-item">'+
-            '<span class="txn-badge '+tone+'">'+esc(type)+'</span>'+
-            '<span class="txn-date">'+esc(t.date)+(createdAt?'<span class="txn-created-at">'+esc(createdAt)+'</span>':'')+'</span>'+
-            '<span class="txn-cat">'+esc(t.cat)+'</span>'+
-            '<span class="txn-amt '+tone+'">'+sign+fmtFull(t.amount)+'</span>'+
-            balance+
-            repeat+
-            undo+
-          '</div>';
-        }).join('');
-      return;
-    }
-    el.innerHTML='<div style="color:#5a4018;font-family:var(--sans);font-size:12px;padding:20px 0;text-align:center">本月沒有最近紀錄</div>';
   }catch(e){
-    if(webVerifyIsAuthFailure(e))setEmpireCardStatus(bookingPanelStatusKey(),'err',e.message||'驗證失敗');
+    if(webVerifyIsAuthFailure(e)){
+      bookingRecentRows=[];
+      setEmpireCardStatus(bookingPanelStatusKey(),'err',e.message||'驗證失敗');
+      el.innerHTML=setupNotice();
+    }
+    else if(cachedRows.length)setEmpireCardStatus(bookingPanelStatusKey(),'ok','快取資料可用，最新資料同步失敗');
     else if(webVerifyIsAuthorized())setEmpireCardStatus(bookingPanelStatusKey(),'ok','財政主連線正常，最近記錄暫時無法更新');
-    el.innerHTML='<div style="color:var(--coral);font-family:var(--sans);font-size:12px;padding:12px 0">'+esc(e.message)+'</div>';
+    if(!cachedRows.length)el.innerHTML='<div style="color:var(--coral);font-family:var(--sans);font-size:12px;padding:12px 0">'+esc(e.message)+'</div>';
   }
 }
 
