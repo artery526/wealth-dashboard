@@ -10472,6 +10472,7 @@ var ARK_WALL_API_BASE=(function(){
   }catch(e){}
   return base;
 })();
+var ARK_WALL_FETCH_TIMEOUT_MS=10000;
 var ARK_WALL_ADMIN_URL='https://wall-admin.ark-os26.cc/admin';
 var ARK_WALL_READ_TOKEN_KEY='arkos26.wall.readToken';
 var arkWallEntries=[];
@@ -10555,15 +10556,30 @@ function arkWallFetch(path,options){
   var authTokens=base.wallWrite?[arkWallWriteToken(),arkWallReadToken()].filter(function(token,index,tokens){return token&&tokens.indexOf(token)===index;}):[arkWallReadToken()];
   if(!authTokens.length)authTokens=[''];
   function request(index){
-    return fetch(ARK_WALL_API_BASE+path,arkWallAuthOptions(Object.assign({},base,{wallAuthToken:authTokens[index]}))).then(function(res){
+    var controller=typeof AbortController==='function'?new AbortController():null;
+    var timer=controller?setTimeout(function(){controller.abort();},ARK_WALL_FETCH_TIMEOUT_MS):null;
+    var requestOptions=arkWallAuthOptions(Object.assign({},base,{wallAuthToken:authTokens[index]}));
+    if(controller)requestOptions.signal=controller.signal;
+    return fetch(ARK_WALL_API_BASE+path,requestOptions).then(function(res){
       if(res.status===401&&base.wallWrite&&index+1<authTokens.length)return request(index+1);
-    if(res.status===401){
-      var error=new Error('王府需要通行令。');
-      error.status=401;
+      if(res.status===401){
+        var error=new Error('王府需要通行令。');
+        error.status=401;
+        throw error;
+      }
+      if(!res.ok)throw new Error('王府讀取失敗 '+res.status);
+      return res.json();
+    }).then(function(result){
+      if(timer)clearTimeout(timer);
+      return result;
+    },function(error){
+      if(timer)clearTimeout(timer);
+      if(error&&error.name==='AbortError'){
+        var timeoutError=new Error('王府連線逾時，請稍後再試。');
+        timeoutError.code='TIMEOUT';
+        throw timeoutError;
+      }
       throw error;
-    }
-    if(!res.ok)throw new Error('王府讀取失敗 '+res.status);
-    return res.json();
     });
   }
   return request(0);
