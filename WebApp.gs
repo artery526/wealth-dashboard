@@ -303,7 +303,7 @@ var READ_ACTION_HANDLERS_ = {
   etfHoldingChange: function() { return get00997AHoldingChange(); },
   pledgeLoans: function() { return getPledgeLoans(getExternalDbSpreadsheet_()); },
   assetSnapshot: function() { return getDailyAssetSnapshot(getExternalDbSpreadsheet_()); },
-  transactions: function(ss, p) { return getTransactions(ss, p.ym, p.recentDays); },
+  transactions: function(ss, p) { return getTransactions(ss, p.ym, p.recentDays, p.recentLimit); },
   ledgerRequestStatus: function(ss, p) {
     var key = String(p.requestId || '').trim();
     if (!key || key.length > 160) throw new Error('無效的記帳編號');
@@ -8818,7 +8818,7 @@ function isWithinRecentTxnWindow_(value, cutoffStamp) {
   return stamp != null && stamp >= cutoffStamp && stamp <= recentTxnTodayStamp_();
 }
 
-function getTransactions(ss, ym, recentDays) {
+function getTransactions(ss, ym, recentDays, recentLimit) {
   var cutoffStamp = recentTxnCutoffStamp_(recentDays);
   if (!ym && cutoffStamp == null) return [];
   var db = ss.getSheetByName('資料庫');
@@ -8956,7 +8956,10 @@ function getTransactions(ss, ym, recentDays) {
     return b._order - a._order;
   });
 
-  return txns.slice(0, 50).map(function(t) {
+  var limit = Number(recentLimit);
+  if (!isFinite(limit) || limit < 1) limit = 50;
+  limit = Math.min(Math.floor(limit), 50);
+  return txns.slice(0, limit).map(function(t) {
     delete t._sortKey;
     delete t._order;
     return t;
