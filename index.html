@@ -5266,7 +5266,6 @@ function normalizeImageUrl(url){
 async function apiGet(params,timeoutMs){
   if(!API_URL)throw new Error('未設定 API 網址');
   var baseParams=Object.assign({},params||{});
-  if(String(baseParams.action||'')!=='config'&&!webVerifyIsAuthorized())throw new Error('城門尚未開啟，請先完成龐統軍師驗證');
   if(String(baseParams.action||'')!=='config'&&cleanToken(WRITE_TOKEN))baseParams.token=cleanToken(WRITE_TOKEN);
   // Apps Script 讀取偶爾會在冷啟動或轉址時短暫回傳 404；讀取可安全重試，寫入仍維持單次請求。
   var attempts=String(baseParams.action||'')==='transactions'?2:3;
@@ -5288,6 +5287,10 @@ async function apiGet(params,timeoutMs){
       return d.data;
     }catch(err){
       lastErr=err;
+      if(webVerifyIsAuthFailure(err)){
+        setWebVerifyStatus('err',err&&err.message||'驗證失敗');
+        break;
+      }
       if(attempt>=attempts-1||!isTransientApiError(err))break;
       await delay(650*(attempt+1));
     }
@@ -5473,7 +5476,6 @@ async function apiPost(body){
   }
   WRITE_TOKEN=cleanToken(WRITE_TOKEN);
   if(!WRITE_TOKEN)throw new Error('未設定記帳密鑰');
-  if(String(body&&body.action||'')!=='verifyWriteToken'&&!webVerifyIsAuthorized())throw new Error('城門尚未開啟，請先完成龐統軍師驗證');
   if(/^(expense|income|transfer)$/.test(body.action||''))return submitLedgerPending(body);
   if(body&&/^(advisorAiParse|advisorDividendMemo|expense|income|transfer|ziweiInterpretationSave|ziweiChartUpload|ziweiChartDelete)$/.test(body.action||'')){
     var jsonTimeout=((isApiWriteAction(body.action||'')||body.action==='advisorDividendMemo')?45000:undefined);
@@ -5495,9 +5497,17 @@ async function apiPostGetFallback(params,timeoutMs){
   if(!r.ok){
     var httpErr=new Error('讀取失敗：HTTP '+r.status);
     httpErr.status=r.status;
+    if(webVerifyIsAuthFailure(httpErr))setWebVerifyStatus('err',httpErr.message);
     throw httpErr;
   }
-  try{return parseApiJsonText(text)}catch(e){throw new Error(apiNonJsonMessage(text))}
+  var parsed;
+  try{parsed=parseApiJsonText(text)}catch(e){throw new Error(apiNonJsonMessage(text))}
+  if(!parsed.ok){
+    var apiErr=new Error(parsed.error||'寫入失敗');
+    if(webVerifyIsAuthFailure(apiErr))setWebVerifyStatus('err',apiErr.message);
+    throw apiErr;
+  }
+  return parsed;
 }
 async function apiPostJson(body,timeoutMs){
   WRITE_TOKEN=cleanToken(WRITE_TOKEN);
@@ -5521,13 +5531,22 @@ async function apiPostJson(body,timeoutMs){
   var text=await r.text();var d;
   if(!r.ok&&shouldRetryPostAsGet(body&&body.action,r.status,text)){
     d=await apiPostGetFallback(payload,timeoutMs||15000);
+  }else if(!r.ok){
+    var httpErr=new Error('讀取失敗：HTTP '+r.status);
+    httpErr.status=r.status;
+    if(webVerifyIsAuthFailure(httpErr))setWebVerifyStatus('err',httpErr.message);
+    throw httpErr;
   }else{
     try{d=parseApiJsonText(text)}catch(e){
       if(shouldRetryPostAsGet(body&&body.action,r&&r.status,text))d=await apiPostGetFallback(payload,timeoutMs||15000);
       else throw new Error(apiNonJsonMessage(text));
     }
   }
-  if(!d.ok)throw new Error(d.error||'寫入失敗');
+  if(!d.ok){
+    var apiErr=new Error(d.error||'寫入失敗');
+    if(webVerifyIsAuthFailure(apiErr))setWebVerifyStatus('err',apiErr.message);
+    throw apiErr;
+  }
   if(isApiWriteAction(body.action||'')){
     invalidateFinanceDashboardCache();
   }
@@ -5947,6 +5966,9 @@ function setEmpireUnlockState(unlocked){
   var cards=document.getElementById('empire-cards');
   if(cards){cards.classList.toggle('empire-unlocked',!!unlocked);cards.classList.toggle('empire-locked',!unlocked);}
 }
+function isEmpireSessionUnlocked(){
+  try{return sessionStorage.getItem(EMPIRE_UNLOCK_KEY)==='ok';}catch(e){return false;}
+}
 function applyEmpireUnlockState(){setEmpireUnlockState(webVerifyIsAuthorized());}
 function empireUnlockNotice(){
   openCfg();
@@ -6121,7 +6143,7 @@ async function saveCfg(){
 //  Panel open/close
 // ══════════════════════════════════════════
 function openPanel(key,initialTab){
-  if(!webVerifyIsAuthorized()){
+  if(!isEmpireSessionUnlocked()){
     if(hasMainApiCredentials()){
       ensureWebAccess().then(function(ok){if(ok)openPanel(key,initialTab);});
     }else empireUnlockNotice();
@@ -6202,7 +6224,7 @@ function openArkWallAdminShortcut(event){
 }
 
 function openEmpireCardShortcut(event,panel,tab){
-  if(!webVerifyIsAuthorized()){
+  if(!isEmpireSessionUnlocked()){
     if(event){event.preventDefault();event.stopPropagation();}
     if(hasMainApiCredentials())ensureWebAccess().then(function(ok){if(ok)openEmpireCardShortcut(null,panel,tab);});
     else empireUnlockNotice();
