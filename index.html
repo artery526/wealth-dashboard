@@ -6400,10 +6400,12 @@ function switchTab(btn,key){
   closeFinanceTabMenu();
   if(currentPanel==='domestic'||currentPanel==='finance'){
     if(key==='booking-form')renderBookingHeaderDate();
-    else{
+    else if(currentPanel==='domestic'){
       var extra=document.getElementById('p-extra');
-      if(extra)extra.innerHTML=domesticPanelStatusDotHtml();
-      setEmpireCardApiPendingStatus(bookingPanelStatusKey());
+      if(extra&&!document.getElementById('domestic-panel-status-dot')){
+        extra.innerHTML=domesticPanelStatusDotHtml();
+        setEmpireCardApiPendingStatus(bookingPanelStatusKey());
+      }
     }
   }
   if(key==='finance-accs'){
@@ -9550,11 +9552,16 @@ async function loadAccounts(){
   if(!API_URL){
     el.innerHTML=setupNotice();return;
   }
-  var cachedEntry=readFinanceCacheEntry(FINANCE_TREASURY_CACHE_KEY,false)||readFinanceCacheEntry(FINANCE_TREASURY_CACHE_KEY,true);
+  var freshEntry=readFinanceCacheEntry(FINANCE_TREASURY_CACHE_KEY,false);
+  var cachedEntry=freshEntry||readFinanceCacheEntry(FINANCE_TREASURY_CACHE_KEY,true);
   var cached=cachedEntry?cachedEntry.data:null;
   if(cached){
     setDataFreshness('finance-treasury-freshness',dataFreshnessMeta(cached,cachedEntry.savedAt,true));
     renderAccounts(cached.accs,cached.monthly,el,cached.assetSnapshot,cached.bills,true);
+  }
+  if(freshEntry&&cached){
+    setFinanceCardStatus('ok','國庫現況已載入');
+    return Promise.resolve(cached);
   }
   setFinanceCardStatus('pending');
   if(financeTreasuryPromise){
@@ -12832,9 +12839,10 @@ async function loadDividendCenterPanel(force){
   var el=document.getElementById('dividend-center-content');
   if(!el)return;
   if(!API_URL){setEmpireCardStatus(bookingPanelStatusKey(),'err','尚未設定 API');el.innerHTML=setupNotice();return}
-  setEmpireCardStatus(bookingPanelStatusKey(),'pending');
+  var hasFreshCache=!force&&dividendCenterCache&&(Date.now()-dividendCenterFetchedAt)<DIVIDEND_CACHE_TTL;
+  if(!hasFreshCache)setEmpireCardStatus(bookingPanelStatusKey(),'pending');
   try{
-    el.innerHTML='<div class="skel-line skel"></div><div class="skel-line skel" style="width:80%"></div><div class="skel-line skel" style="width:60%"></div>';
+    if(!hasFreshCache)el.innerHTML='<div class="skel-line skel"></div><div class="skel-line skel" style="width:80%"></div><div class="skel-line skel" style="width:60%"></div>';
     var data=await loadDividendCenter(!!force);
     setDataFreshness('finance-dividend-freshness',dataFreshnessMeta(data,dividendCenterFetchedAt,dividendCenterLastLoadedFromCache));
     el.innerHTML=renderDividendCenter(data,true);
@@ -13723,6 +13731,9 @@ async function loadDomesticYearly(forceRefresh){
     renderDomesticYearly(cached.data,cached.history,cached.years,selected,true);
   }
   else el.innerHTML='<div class="skel-line skel"></div><div class="skel-line skel" style="width:80%"></div><div class="skel-line skel" style="width:65%"></div>';
+  if(cached&&!forceRefresh){
+    return Promise.resolve(cached);
+  }
   if(financeYearlyPromises[selected]){
     return financeYearlyPromises[selected].then(function(packed){
       if(packed&&isCurrentRequest()){
@@ -14785,7 +14796,8 @@ function renderBattleBrief(data,el){
       <div id="battle-holdings-right-snapshot-host"></div>
     </div>
   </div>`;
-  setTimeout(function(){loadBattleFinanceSnapshots(false);},0);
+  // 戰情首屏先完成；NAS 快照屬於補充資訊，延後載入避免和首屏 API 搶冷啟動資源。
+  setTimeout(function(){loadBattleFinanceSnapshots(false);},250);
 }
 
 async function loadBattleBrief(force){
@@ -14801,6 +14813,10 @@ async function loadBattleBrief(force){
   if(cached&&!el.querySelector('.battle-report-head')){
     setDataFreshness('battle-freshness',dataFreshnessMeta(cached,cachedEntry.savedAt,true));
     renderBattleBrief(cached,el);
+  }
+  if(cached&&!force){
+    setCouncilPanelStatusIfActive('ok','戰情總匯報快取已載入');
+    return Promise.resolve(cached);
   }
   setCouncilPanelStatusIfActive('pending',cached&&!force?'戰情快取更新中':'戰情總匯報讀取中');
   if(!battleBriefPromise)battleBriefPromise=apiGet({action:'battleBrief'},45000).finally(function(){battleBriefPromise=null;});
@@ -15014,7 +15030,8 @@ function renderCouncilPanel(initialTab){
     else if(targetTab==='taiwan-macro')loadTaiwanMacro();
     else if(targetTab==='external-intelligence')loadExternalIntelligence();
   }
-  if(API_URL&&targetTab!=='council-roster')setTimeout(prefetchMarketDashboard,300);
+  // 戰情總匯報後端本身已組合市場資料；避免開啟戰情時再重複預抓市場儀表板。
+  if(API_URL&&targetTab!=='council-roster'&&targetTab!=='battle-brief')setTimeout(prefetchMarketDashboard,300);
 }
 
 function cacheCouncilDashboardResults(results){
@@ -15044,7 +15061,6 @@ async function loadCouncilDashboard(){
     setEmpireCardStatus('council','err','尚未設定 API');
     return;
   }
-  setEmpireCardStatus('council','pending');
   var cached=councilDashboardCache||readCouncilRosterStorageCache();
   if(!councilDashboardCache&&cached)councilDashboardCache=cached;
   var cachedFetchedAt=councilDashboardFetchedAt||(cached&&cached.cachedAt)||0;
@@ -15058,6 +15074,7 @@ async function loadCouncilDashboard(){
   }else{
     el.innerHTML='<div class="skel-line skel"></div><div class="skel-line skel" style="width:82%"></div><div class="skel-line skel" style="width:70%"></div>';
   }
+  if(!cacheFresh)setEmpireCardStatus('council','pending',cached?'已顯示上次資料 · 背景更新中':'部隊陣容讀取中');
   try{
     var results=await loadCouncilDashboardData();
     var heroes=results.heroes;
@@ -15083,8 +15100,7 @@ async function loadCouncilDashboard(){
 
 function loadCouncilDashboardData(){
   if(councilDashboardPromise)return councilDashboardPromise;
-  councilDashboardPromise=ensureWebAccess().then(function(verified){
-    if(!verified)throw new Error('城門驗證失敗，請重新驗證記帳密鑰');
+  councilDashboardPromise=Promise.resolve().then(function(){
     return Promise.allSettled([
         loadHeroSheet(),
         loadCouncilHoldingsOverview(),
@@ -15909,6 +15925,14 @@ async function loadMarketDashboard(){
     setDataFreshness('market-freshness',dataFreshnessMeta(cached,cachedEntry.savedAt,true));
     renderMarketDashboard(cached,el);
   }
+  if(cached){
+    var cachedDot=document.getElementById('market-dot');
+    var cachedLabel=document.getElementById('market-label');
+    if(cachedDot)cachedDot.className='api-dot ok';
+    if(cachedLabel)cachedLabel.textContent='快取資料 · 台美股大盤';
+    setCouncilPanelStatusIfActive('ok','台美股大盤快取已載入');
+    return Promise.resolve(cached);
+  }
   setCouncilPanelStatusIfActive('pending',cached?'快取資料更新中':'台美股大盤讀取中');
   var dot=document.getElementById('market-dot');
   var lbl=document.getElementById('market-label');
@@ -16091,6 +16115,14 @@ async function loadMacroOverview(){
     renderMacroOverview(cached,el);
   }
   else el.innerHTML='<div class="skel-line skel"></div><div class="skel-line skel" style="width:82%"></div><div class="skel-line skel" style="width:68%"></div>';
+  if(cached){
+    var cachedDot=document.getElementById('macro-dot');
+    var cachedLabel=document.getElementById('macro-label');
+    if(cachedDot)cachedDot.className='api-dot ok';
+    if(cachedLabel)cachedLabel.textContent='快取資料 · 美股總經';
+    setCouncilPanelStatusIfActive('ok','美股總經快取已載入');
+    return Promise.resolve(cached);
+  }
   setCouncilPanelStatusIfActive('pending',cached?'快取資料更新中':'美股總經讀取中');
   var lbl=document.getElementById('macro-label');
   if(cached&&lbl)lbl.textContent='快取資料 · 更新中…';
@@ -16177,6 +16209,10 @@ async function loadPledgePanel(){
   if(cached){
     setDataFreshness('finance-pledge-freshness',dataFreshnessMeta(cached,cachedEntry.savedAt,true));
     renderPledgePanel(cached,el);
+  }
+  if(cached){
+    setFinanceCardStatus('ok','質押信貸已載入');
+    return Promise.resolve(cached);
   }
   setFinanceCardStatus('pending',cached?'質押信貸快取更新中':'質押信貸讀取中');
   if(financePledgePromise){
