@@ -4612,10 +4612,29 @@ html[data-theme="deep-blue"] .scene-task-details .home-agenda-global-refresh{bor
 <div class="particles" id="particles"></div>
 
 <!-- 宮廷背景 -->
-<video id="bg-video" autoplay muted loop playsinline
+<video id="bg-video" autoplay muted loop playsinline preload="none"
+  data-src="background.mp4"
   style="position:fixed;inset:0;z-index:0;width:100%;height:100%;object-fit:cover;pointer-events:none;">
-  <source src="background.mp4" type="video/mp4">
 </video>
+<script>
+  // 影片不是首屏必要內容：先讓城牆與場景完成，再於瀏覽器空閒時載入。
+  (function deferBackgroundVideo(){
+    var video=document.getElementById('bg-video');
+    if(!video)return;
+    var load=function(){
+      var src=video.getAttribute('data-src');
+      if(!src||video.getAttribute('src'))return;
+      video.src=src;
+      video.load();
+      video.play().catch(function(){});
+    };
+    if('requestIdleCallback' in window){
+      requestIdleCallback(load,{timeout:5000});
+    }else{
+      window.setTimeout(load,2500);
+    }
+  })();
+</script>
 <div class="top-nav">
 
   <div class="nav-bottom-row">
