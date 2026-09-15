@@ -10881,6 +10881,10 @@ function arkWallMonthsForYear(year){
   return Object.keys(seen).sort(function(a,b){return String(b).localeCompare(String(a));});
 }
 
+function arkWallAllMonths(){
+  return ['12','11','10','09','08','07','06','05','04','03','02','01'];
+}
+
 function arkWallEntriesForSelection(){
   var query=String(arkWallMemoSearch||'').trim().toLowerCase();
   return arkWallSortEntries(arkWallEntries.filter(function(entry){
@@ -11206,11 +11210,13 @@ function changeArkWallYear(value){
   arkWallSelectedYear=String(value||'');
   var months=arkWallMonthsForYear(arkWallSelectedYear);
   arkWallSelectedMonth=months.indexOf(arkWallSelectedMonth)>=0?arkWallSelectedMonth:(months[0]||'');
+  arkWallJournalSelectedDate='';
   renderArkWallList();
 }
 
 function changeArkWallMonth(value){
   arkWallSelectedMonth=String(value||'');
+  arkWallJournalSelectedDate='';
   renderArkWallList();
 }
 
@@ -11353,7 +11359,7 @@ function renderArkWallList(){
   var years=arkWallYears();
   if(!arkWallSelectedYear||years.indexOf(arkWallSelectedYear)<0)arkWallSelectedYear=years[0]||'';
   var months=arkWallMonthsForYear(arkWallSelectedYear);
-  if(!arkWallSelectedMonth||months.indexOf(arkWallSelectedMonth)<0)arkWallSelectedMonth=months[0]||'';
+  if(!/^\d{2}$/.test(arkWallSelectedMonth))arkWallSelectedMonth=months[0]||'';
   var entries=arkWallEntriesForSelection();
   var content='';
   var filterHtml='';
@@ -11366,7 +11372,7 @@ function renderArkWallList(){
     if(arkWallJournalSelectedDate&&!query){entries=arkWallSortEntries(arkWallEntries.filter(function(entry){return String(entry&&entry.date||'').slice(0,10)===arkWallJournalSelectedDate;}));}
     filterHtml='<div class="ark-wall-filter" data-wall-index="year-month">'
     +'<label class="ark-wall-select-wrap"><span class="ark-wall-select-label">年份</span><select class="ark-wall-select" onchange="changeArkWallYear(this.value)">'+arkWallSelectOptions(years,arkWallSelectedYear,function(year){return /^\d{4}$/.test(year)?year+'年':year;})+'</select></label>'
-    +'<label class="ark-wall-select-wrap"><span class="ark-wall-select-label">月份</span><select class="ark-wall-select" onchange="changeArkWallMonth(this.value)">'+arkWallSelectOptions(months,arkWallSelectedMonth,function(month){return /^\d{2}$/.test(month)?Number(month)+'月':month;})+'</select></label>'
+    +'<label class="ark-wall-select-wrap"><span class="ark-wall-select-label">月份</span><select class="ark-wall-select" onchange="changeArkWallMonth(this.value)">'+arkWallSelectOptions(arkWallAllMonths(),arkWallSelectedMonth,function(month){return Number(month)+'月';})+'</select></label>'
   +'</div>';
     content=renderArkWallSearchBox()
   +'<div class="ark-wall-month-title">'+esc(query?'搜尋結果':(arkWallJournalSelectedDate?arkWallJournalSelectedDate:arkWallMonthLabel(arkWallSelectedYear,arkWallSelectedMonth)))+'</div>'
