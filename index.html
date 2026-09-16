@@ -4907,6 +4907,7 @@ var dividendCenterCache=dividendCenterStorageCache&&dividendCenterStorageCache.d
 var dividendCenterFetchedAt=dividendCenterStorageCache&&dividendCenterStorageCache.savedAt||0;
 var dividendCenterLastLoadedFromCache=!!dividendCenterStorageCache;
 var DIVIDEND_CENTER_TIMEOUT_MS = 45000;
+var dividendBySymbolPromise=null;
 var bookingDividendHiddenRows = {};
 var bookingDividendExpanded = false;
 var bookingDividendPickerOpen = false;
@@ -12299,6 +12300,21 @@ async function loadDividendCenter(force){
   return dividendCenterCache;
 }
 
+async function loadDividendBySymbol(symbol){
+  var key=normalizeKey(symbol);
+  if(!key)return null;
+  // 財政「持股與配息」已載入且仍新鮮時，直接使用同一份資料，不再重讀整個配息中心。
+  if(dividendCenterCache&&(Date.now()-dividendCenterFetchedAt)<DIVIDEND_CACHE_TTL){
+    var cachedRow=findAdvisorDividendIncomeRow(key,dividendCenterCache);
+    if(cachedRow)return cachedRow;
+  }
+  if(dividendBySymbolPromise)return dividendBySymbolPromise;
+  dividendBySymbolPromise=apiGet({action:'dividendBySymbol',symbol:key},15000).then(function(row){
+    return row||null;
+  }).finally(function(){dividendBySymbolPromise=null;});
+  return dividendBySymbolPromise;
+}
+
 function invalidateDividendCenter(){
   dividendCenterCache=null;
   dividendCenterFetchedAt=0;
@@ -12382,8 +12398,7 @@ function findAdvisorDividendIncomeRow(symbol,data){
 async function advisorAIShowDividendIncomeDraft(cmd){
   if(!advisorAIRequireWrite())return;
   var panel=advisorAIActivePanel();
-  var data=await loadDividendCenter(false);
-  var row=findAdvisorDividendIncomeRow(cmd.symbol,data);
+  var row=await loadDividendBySymbol(cmd.symbol);
   if(!row)throw new Error('找不到 '+cmd.symbol+' 的持股備忘錄配息紀錄。');
   var displaySymbol=row.displaySymbol||advisorAIResolveStockTradeLabel(row.symbol||cmd.symbol)||row.symbol||cmd.symbol;
   var rate=formatDividendUsdForInput(row.dividendUsd);
@@ -19692,10 +19707,8 @@ async function runAdvisorAICommand(btn){
 
 async function advisorAIRecordDividend(symbol,amount){
   var panel=advisorAIActivePanel();
-  var data=await loadDividendCenter(false);
   var key=normalizeKey(symbol);
-  var rows=advisorDividendRows(data);
-  var row=rows.find(function(item){return normalizeKey(item.symbol||item.displaySymbol)===key;});
+  var row=await loadDividendBySymbol(key);
   var displaySymbol=(row&&(row.displaySymbol||row.symbol))||advisorAIResolveStockTradeLabel(symbol)||symbol;
   advisorAIShowWriteConfirmation({
     intent:'dividend',
