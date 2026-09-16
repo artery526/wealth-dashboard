@@ -136,6 +136,37 @@ test('dividend calculator fills shares from investment and price', async ({ page
   expect(result.resultShares).toBe('7,140 股');
 });
 
+test('mobile dividend picker stays inside the viewport and scrolls internally', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 740 });
+  await page.goto(dashboardUrl);
+  const result = await page.evaluate(() => {
+    const panel = document.createElement('div');
+    panel.className = 'booking-dividend-panel is-floating';
+    panel.innerHTML = '<div class="booking-dividend-head"><div>待入帳配息</div><button>×</button></div>' + '<div style="height:1200px">內容</div>';
+    document.body.appendChild(panel);
+    const style = getComputedStyle(panel);
+    const rect = panel.getBoundingClientRect();
+    return {
+      position: style.position,
+      left: rect.left,
+      right: window.innerWidth - rect.right,
+      top: rect.top,
+      bottom: window.innerHeight - rect.bottom,
+      overflowX: style.overflowX,
+      overflowY: style.overflowY,
+      maxHeight: style.maxHeight
+    };
+  });
+  expect(result.position).toBe('fixed');
+  expect(result.left).toBeGreaterThanOrEqual(12);
+  expect(result.right).toBeGreaterThanOrEqual(12);
+  expect(result.top).toBeGreaterThanOrEqual(12);
+  expect(result.bottom).toBeGreaterThanOrEqual(12);
+  expect(result.overflowX).toBe('hidden');
+  expect(result.overflowY).toBe('auto');
+  expect(result.maxHeight).toBe('none');
+});
+
 test('a new ledger entry is allowed after a different previous entry was confirmed', async ({ page }) => {
   await page.goto(dashboardUrl);
   const result = await page.evaluate(async () => {
