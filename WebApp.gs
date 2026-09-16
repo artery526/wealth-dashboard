@@ -244,6 +244,13 @@ function doGet(e) {
       return handleAuthorizedAction_(null, action, p, p.callback);
     }
 
+    // 龐統配息入帳只需要指定標的的一筆資料；不要為了顯示確認卡而
+    // 重新整理整個配息中心與持股交易佇列。
+    if (action === 'dividendBySymbol') {
+      verifyWriteToken(p);
+      return ok(getDividendBySymbol_(p.symbol), p.callback);
+    }
+
     var ss     = SpreadsheetApp.getActiveSpreadsheet();
 
     // ── 讀取路由：敏感資料同樣需要通過 WRITE_TOKEN ──
@@ -9629,6 +9636,46 @@ function getDividendCenter(ss) {
     settingFx: settingFx,
     dividendHoldings: dividendHoldings
   };
+}
+
+function getDividendBySymbol_(requestedSymbol) {
+  var target = normalizeInvestmentSymbol_(requestedSymbol) || String(requestedSymbol || '').trim();
+  if (!target) return null;
+  var source = getExternalDbSpreadsheet_();
+  var sheet = ensureDividendDbSheet_(source);
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) return null;
+  var tz = source.getSpreadsheetTimeZone ? source.getSpreadsheetTimeZone() : 'Asia/Taipei';
+  var values = sheet.getRange(2, 1, lastRow - 1, DIVIDEND_DB_HEADERS.length).getValues();
+  var matches = [];
+  values.forEach(function(row, idx) {
+    var symbol = normalizeInvestmentSymbol_(row[0]) || String(row[0] || '').trim();
+    if (symbol !== target) return;
+    var announceDate = formatSheetDate_(row[2], tz);
+    var payDate = formatSheetDate_(row[3], tz);
+    var paid = String(row[7] || '').trim() === '是';
+    matches.push({
+      rowId: idx + 2,
+      symbol: symbol,
+      displaySymbol: getDividendDisplayLabel_(symbol) || symbol,
+      dividendUsd: parseSheetNumber_(row[1]),
+      announceDate: announceDate,
+      estimatedPayDate: payDate,
+      fx: parseSheetNumber_(row[4]),
+      shares: parseSheetNumber_(row[5]),
+      estimatedTwd: parseSheetNumber_(row[6]),
+      paid: paid,
+      paidText: paid ? '是' : '否',
+      note: String(row[8] || '').trim(),
+      actualTwd: parseSheetNumber_(row[9])
+    });
+  });
+  if (!matches.length) return null;
+  matches.sort(function(a, b) {
+    if (a.paid !== b.paid) return a.paid ? 1 : -1;
+    return dateSortValue_(a.estimatedPayDate || a.announceDate) - dateSortValue_(b.estimatedPayDate || b.announceDate);
+  });
+  return matches[0];
 }
 
 function getDividendSettingFx_(ss) {
