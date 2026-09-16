@@ -12318,7 +12318,6 @@ async function loadDividendBySymbol(symbol){
   }).finally(function(){dividendBySymbolPromise=null;});
   return dividendBySymbolPromise;
 }
-
 function invalidateDividendCenter(){
   dividendCenterCache=null;
   dividendCenterFetchedAt=0;
