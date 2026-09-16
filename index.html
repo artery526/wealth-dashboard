@@ -14462,7 +14462,11 @@ function battleFinanceSnapshotValueText(item){
 
 function battleFinanceSnapshotDeltaText(latest,first){
   var a=Number(latest&&latest.value),b=Number(first&&first.value);
-  if(!isFinite(a)||!isFinite(b))return '--';
+  if(!latest||latest.value==null||!isFinite(a))return '--';
+  if(!first||first.value==null||!isFinite(b)){
+    if(latest.change!=null&&isFinite(Number(latest.change)))b=a-Number(latest.change);
+    else return '--';
+  }
   var delta=a-b;
   if(String(latest&&latest.name||'').indexOf('融資')>=0)return (delta>=0?'+':'')+(delta/100000000).toFixed(2)+' 億';
   if(String(latest&&latest.name||'').indexOf('維持率')>=0)return (delta>=0?'+':'')+delta.toFixed(2)+' pt';
@@ -14517,6 +14521,9 @@ function battleFinanceSnapshotBaseline(points,latest,range){
 }
 
 function battleFinanceSnapshotPeriodText(latest,baseline,range){
+  if(!baseline&&latest&&latest.value!=null&&latest.change!=null&&isFinite(Number(latest.change))){
+    return battleFinanceSnapshotRangeLabel(range)+' '+battleFinanceSnapshotValueText({value:Number(latest.value)-Number(latest.change)});
+  }
   if(!baseline)return battleFinanceSnapshotRangeLabel(range)+' --';
   return battleFinanceSnapshotRangeLabel(range)+' '+battleFinanceSnapshotValueText(baseline);
 }
@@ -14579,6 +14586,7 @@ function battleLiveFundSnapshotHtml(funds){
     return item&&item.name&&item.current!==''&&item.current!=null&&isFinite(Number(item.current));
   }).map(function(item){
     var current=Number(item.current), previous=item.previous===''||item.previous==null?null:Number(item.previous);
+    if(previous==null&&item.change!==''&&item.change!=null&&isFinite(Number(item.change)))previous=current-Number(item.change);
     var change=item.change===''||item.change==null?(previous==null?null:current-previous):Number(item.change);
     var pct=item.changePct===''||item.changePct==null?null:Number(item.changePct);
     var changeText=pct==null||!isFinite(pct)?'--':(pct>0?'+':'')+pct.toFixed(2)+'%';
