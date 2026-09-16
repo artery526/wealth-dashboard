@@ -4907,6 +4907,7 @@ var dividendCenterCache=dividendCenterStorageCache&&dividendCenterStorageCache.d
 var dividendCenterFetchedAt=dividendCenterStorageCache&&dividendCenterStorageCache.savedAt||0;
 var dividendCenterLastLoadedFromCache=!!dividendCenterStorageCache;
 var DIVIDEND_CENTER_TIMEOUT_MS = 45000;
+var dividendBySymbolPromise=null;
 var bookingDividendHiddenRows = {};
 var bookingDividendExpanded = false;
 var bookingDividendPickerOpen = false;
@@ -5627,6 +5628,8 @@ var FINANCE_YEARLY_ARCHIVE_PATH='/api/finance/yearly-archive';
 var FINANCE_YEARLY_ARCHIVE_CACHE_KEY='wealth_finance_yearly_archive_v1';
 var FINANCE_CACHE_TTL=6*60*60*1000;
 var financeTreasuryPromise=null;
+var financeTreasuryLastFetchAt=0;
+var FINANCE_TREASURY_REVALIDATE_GAP=30*1000;
 var financePledgePromise=null;
 var financeYearlyPromises={};
 var financeYearlyArchiveManifest=null;
@@ -9608,11 +9611,12 @@ async function loadAccounts(){
     setDataFreshness('finance-treasury-freshness',dataFreshnessMeta(cached,cachedEntry.savedAt,true));
     renderAccounts(cached.accs,cached.monthly,el,cached.assetSnapshot,cached.bills,true);
   }
-  if(freshEntry&&cached){
+  var shouldRevalidate=!financeTreasuryPromise&&(!freshEntry||(Date.now()-financeTreasuryLastFetchAt)>=FINANCE_TREASURY_REVALIDATE_GAP);
+  if(freshEntry&&cached&&!shouldRevalidate){
     setFinanceCardStatus('ok','國庫現況已載入');
     return Promise.resolve(cached);
   }
-  setFinanceCardStatus('pending');
+  setFinanceCardStatus('pending',cached?'背景更新中':'讀取中');
   if(financeTreasuryPromise){
     return financeTreasuryPromise.then(function(data){
       if(data&&data.accs){
@@ -9623,6 +9627,7 @@ async function loadAccounts(){
       return data;
     });
   }
+  financeTreasuryLastFetchAt=Date.now();
   financeTreasuryPromise=fetchFinanceTreasuryData(cached).then(function(data){
     writeTimedFinanceCache(FINANCE_TREASURY_CACHE_KEY,data);
     setDataFreshness('finance-treasury-freshness',dataFreshnessMeta(data,false,false));
@@ -12299,6 +12304,21 @@ async function loadDividendCenter(force){
   return dividendCenterCache;
 }
 
+async function loadDividendBySymbol(symbol){
+  var key=normalizeKey(symbol);
+  if(!key)return null;
+  // 財政「持股與配息」已載入且仍新鮮時，直接使用同一份資料，不再重讀整個配息中心。
+  if(dividendCenterCache&&(Date.now()-dividendCenterFetchedAt)<DIVIDEND_CACHE_TTL){
+    var cachedRow=findAdvisorDividendIncomeRow(key,dividendCenterCache);
+    if(cachedRow)return cachedRow;
+  }
+  if(dividendBySymbolPromise)return dividendBySymbolPromise;
+  dividendBySymbolPromise=apiGet({action:'dividendBySymbol',symbol:key},15000).then(function(row){
+    return row||null;
+  }).finally(function(){dividendBySymbolPromise=null;});
+  return dividendBySymbolPromise;
+}
+
 function invalidateDividendCenter(){
   dividendCenterCache=null;
   dividendCenterFetchedAt=0;
@@ -12382,8 +12402,7 @@ function findAdvisorDividendIncomeRow(symbol,data){
 async function advisorAIShowDividendIncomeDraft(cmd){
   if(!advisorAIRequireWrite())return;
   var panel=advisorAIActivePanel();
-  var data=await loadDividendCenter(false);
-  var row=findAdvisorDividendIncomeRow(cmd.symbol,data);
+  var row=await loadDividendBySymbol(cmd.symbol);
   if(!row)throw new Error('找不到 '+cmd.symbol+' 的持股備忘錄配息紀錄。');
   var displaySymbol=row.displaySymbol||advisorAIResolveStockTradeLabel(row.symbol||cmd.symbol)||row.symbol||cmd.symbol;
   var rate=formatDividendUsdForInput(row.dividendUsd);
@@ -14238,11 +14257,14 @@ function formatAnnualPct(v){
 
 function prefetchFinanceDashboard(){
   if(!API_URL){setFinanceCardStatus('err','尚未設定 API');return;}
-  var cachedTreasury=readTimedFinanceCache(FINANCE_TREASURY_CACHE_KEY);
-  if(cachedTreasury)setFinanceCardStatus('ok');
-  if(!cachedTreasury&&!financeTreasuryPromise){
-    setFinanceCardStatus('pending');
+  var cachedTreasuryEntry=readFinanceCacheEntry(FINANCE_TREASURY_CACHE_KEY,false);
+  var cachedTreasury=cachedTreasuryEntry?cachedTreasuryEntry.data:null;
+  var shouldRevalidate=!financeTreasuryPromise&&(!cachedTreasuryEntry||(Date.now()-financeTreasuryLastFetchAt)>=FINANCE_TREASURY_REVALIDATE_GAP);
+  if(cachedTreasury&&!shouldRevalidate)setFinanceCardStatus('ok','國庫現況已載入');
+  if(shouldRevalidate){
+    setFinanceCardStatus('pending',cachedTreasury?'背景更新中':'讀取中');
     var cached=readStaleFinanceCache(FINANCE_TREASURY_CACHE_KEY);
+    financeTreasuryLastFetchAt=Date.now();
     financeTreasuryPromise=fetchFinanceTreasuryData(cached).then(function(data){
       writeTimedFinanceCache(FINANCE_TREASURY_CACHE_KEY,data);
       setFinanceCardStatus('ok');
@@ -19692,10 +19714,8 @@ async function runAdvisorAICommand(btn){
 
 async function advisorAIRecordDividend(symbol,amount){
   var panel=advisorAIActivePanel();
-  var data=await loadDividendCenter(false);
   var key=normalizeKey(symbol);
-  var rows=advisorDividendRows(data);
-  var row=rows.find(function(item){return normalizeKey(item.symbol||item.displaySymbol)===key;});
+  var row=await loadDividendBySymbol(key);
   var displaySymbol=(row&&(row.displaySymbol||row.symbol))||advisorAIResolveStockTradeLabel(symbol)||symbol;
   advisorAIShowWriteConfirmation({
     intent:'dividend',

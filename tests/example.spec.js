@@ -167,6 +167,43 @@ test('mobile dividend picker stays inside the viewport and scrolls internally', 
   expect(result.maxHeight).toBe('none');
 });
 
+test('treasury renders fresh cache immediately and revalidates in the background', async ({ page }) => {
+  await page.goto(dashboardUrl);
+  const result = await page.evaluate(async () => {
+    window.API_URL = 'https://example.test/web-app';
+    window.financeTreasuryPromise = null;
+    window.financeTreasuryLastFetchAt = 0;
+    localStorage.setItem(FINANCE_TREASURY_CACHE_KEY, JSON.stringify({
+      savedAt: Date.now(),
+      data: { accs: [{ name: '💵國泰Stock', value: 1234 }], monthly: {}, assetSnapshot: null, bills: [] }
+    }));
+    const calls = [];
+    const oldApiGet = apiGet;
+    apiGet = params => {
+      calls.push(params.action);
+      if (params.action === 'accounts') return Promise.resolve([{ name: '💵國泰Stock', value: 5678 }]);
+      if (params.action === 'monthly') return Promise.resolve({});
+      if (params.action === 'transactions') return Promise.resolve([]);
+      if (params.action === 'assetSnapshot') return Promise.resolve(null);
+      return Promise.resolve([]);
+    };
+    const freshness = document.createElement('div');
+    freshness.id = 'finance-treasury-freshness';
+    document.body.appendChild(freshness);
+    const content = document.createElement('div');
+    content.id = 'acc-content';
+    document.body.appendChild(content);
+    const request = loadAccounts();
+    const cacheVisibleBeforeRefresh = content.textContent.includes('1,234');
+    await request;
+    apiGet = oldApiGet;
+    return { cacheVisibleBeforeRefresh, freshVisibleAfterRefresh: content.textContent.includes('5,678'), calls };
+  });
+  expect(result.cacheVisibleBeforeRefresh).toBe(true);
+  expect(result.freshVisibleAfterRefresh).toBe(true);
+  expect(result.calls.sort()).toEqual(['accounts', 'assetSnapshot', 'bills', 'monthly', 'transactions']);
+});
+
 test('a new ledger entry is allowed after a different previous entry was confirmed', async ({ page }) => {
   await page.goto(dashboardUrl);
   const result = await page.evaluate(async () => {
