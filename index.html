@@ -5658,7 +5658,8 @@ var advisorAIDailyUpdatesPromise=null;
 var advisorAIDailyUpdatesTimer=null;
 var advisorAIDailyUpdatesData=null;
 var advisorAIDailyUpdatesIndex=0;
-var FINANCE_TREASURY_CACHE_KEY='wealth_finance_treasury_v6';
+// v7: 丟棄可能把月收支保存成 0 的舊版快取，避免 API 暫時失敗時一直顯示零值。
+var FINANCE_TREASURY_CACHE_KEY='wealth_finance_treasury_v7';
 var FINANCE_TREASURY_CACHE_PREFIX='wealth_finance_treasury_v';
 var FINANCE_PLEDGE_CACHE_KEY='wealth_finance_pledge_v2';
 var FINANCE_YEARLY_CACHE_PREFIX='wealth_finance_yearly_v3_';
@@ -9704,8 +9705,13 @@ function fetchFinanceTreasuryData(cached){
     if(results[0].status!=='fulfilled'){
       throw (results[0].reason||new Error('finance load failed'));
     }
-    var monthly=results[1].status==='fulfilled'?(results[1].value||{}):{};
+    // 月收支與帳戶資料分開請求；月度／交易其中一條線暫時失敗時，保留最近一次有效月收支，
+    // 不得用 {} 或全 0 覆蓋快取，否則畫面會誤顯示「收入 0／支出 0／儲蓄率 0%」。
+    var cachedMonthly=cached&&cached.monthly&&typeof cached.monthly==='object'?cached.monthly:null;
+    var monthly=results[1].status==='fulfilled'?(results[1].value||{}):null;
+    if(!monthly)monthly=cachedMonthly||{};
     if(results[2].status==='fulfilled')monthly=financeMonthlyFromTransactions(results[2].value||[],monthly);
+    monthly=preferFinanceMonthlyData(monthly,cachedMonthly);
     var data={
       accs:results[0].value||[],
       monthly:monthly,
@@ -9715,6 +9721,16 @@ function fetchFinanceTreasuryData(cached){
     };
     return data;
   });
+}
+
+function financeMonthlyHasValues(monthly){
+  monthly=monthly||{};
+  return Number(monthly.income||0)>0||Number(monthly.expense||0)>0||Number(monthly.net||0)!==0;
+}
+
+function preferFinanceMonthlyData(primary,fallback){
+  if(!financeMonthlyHasValues(primary)&&financeMonthlyHasValues(fallback))return fallback;
+  return primary||fallback||{};
 }
 
 function financeMonthlyFromTransactions(txns,baseMonthly){

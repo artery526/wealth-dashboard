@@ -204,6 +204,26 @@ test('treasury renders fresh cache immediately and revalidates in the background
   expect(result.calls.sort()).toEqual(['accounts', 'assetSnapshot', 'bills', 'monthly', 'transactions']);
 });
 
+test('treasury keeps the last valid monthly totals when monthly API refresh fails', async ({ page }) => {
+  await page.goto(dashboardUrl);
+  const result = await page.evaluate(async () => {
+    const oldApiGet = apiGet;
+    apiGet = params => {
+      if (params.action === 'accounts') return Promise.resolve([]);
+      if (params.action === 'monthly') return Promise.reject(new Error('temporary API failure'));
+      if (params.action === 'transactions') return Promise.resolve([]);
+      if (params.action === 'assetSnapshot') return Promise.resolve(null);
+      return Promise.resolve([]);
+    };
+    const data = await fetchFinanceTreasuryData({
+      monthly: { income: 73337, expense: 48297, net: 25040, savingRate: '34.1%' }
+    });
+    apiGet = oldApiGet;
+    return data.monthly;
+  });
+  expect(result).toEqual({ income: 73337, expense: 48297, net: 25040, savingRate: '34.1%' });
+});
+
 test('a new ledger entry is allowed after a different previous entry was confirmed', async ({ page }) => {
   await page.goto(dashboardUrl);
   const result = await page.evaluate(async () => {
