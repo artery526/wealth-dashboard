@@ -4897,6 +4897,11 @@ var bookingAccountBalances = [];
 var bookingAccountBalancesPromise = null;
 var bookingAccountBalancesLoaded = false;
 var DIVIDEND_CENTER_STORAGE_KEY='wealth_dividend_center_v1';
+var RETIRED_HOLDING_SYMBOLS = ['PLTY'];
+function isRetiredHoldingSymbol(value){
+  var key=normalizeKey(value);
+  return RETIRED_HOLDING_SYMBOLS.indexOf(key)>=0;
+}
 function readDividendCenterStorageCache(){
   try{
     var packed=JSON.parse(localStorage.getItem(DIVIDEND_CENTER_STORAGE_KEY)||'null');
@@ -4916,7 +4921,7 @@ var bookingDividendPickerOpen = false;
 var bookingHoldingTradePickerOpen = false;
 var dividendCenterView = 'pending';
 var DIVIDEND_CACHE_TTL = 5 * 60 * 1000;
-var DIVIDEND_AUTOFILL_SYMBOLS = ['CHPY','AIPI','QQQI','MLPI','PLTY','00997A'];
+var DIVIDEND_AUTOFILL_SYMBOLS = ['CHPY','AIPI','QQQI','MLPI','00997A'];
 var heroCache = [];
 var councilDashboardCache = null;
 var councilDashboardFetchedAt = 0;
@@ -4972,7 +4977,7 @@ var DIVIDEND_SYMBOLS = [
   {value:'00998A',label:'🪙00998A'},
   {value:'施羅德收益成長A2',label:'🌳施羅德收益成長A2'},{value:'路博邁台灣5G',label:'🪐路博邁台灣5G'},
   {value:'QQQI',label:'📡QQQI'},
-  {value:'AIPI',label:'🤖AIPI'},{value:'PLTY',label:'🪖PLTY'},{value:'CHPY',label:'🐦‍🔥CHPY'} ,
+  {value:'AIPI',label:'🤖AIPI'},{value:'CHPY',label:'🐦‍🔥CHPY'} ,
   {value:'GDXW',label:'\u2692\uFE0FGDXW'},{value:'💛GLDW',label:'💛GLDW'}
 ];
 var STOCK_SYMBOLS = [
@@ -4981,7 +4986,7 @@ var STOCK_SYMBOLS = [
   {value:'🪐路博邁台灣5G',label:'🪐路博邁台灣5G'},{value:'🌳施羅德收益成長A2',label:'🌳施羅德收益成長A2'},
   {value:'🎟️00985B',label:'🎟️00985B'},{value:'🪄00997A',label:'🪄00997A'},{value:'🤖AIPI',label:'🤖AIPI'},
   {value:'🪙00998A',label:'🪙00998A'},
-  {value:'🪖PLTY',label:'🪖PLTY'},{value:'🐦‍🔥CHPY',label:'🐦‍🔥CHPY'},
+  {value:'🐦‍🔥CHPY',label:'🐦‍🔥CHPY'},
   {value:'\u2692\uFE0FGDXW',label:'\u2692\uFE0FGDXW'},{value:'💛GLDW',label:'💛GLDW'}
 ];
 var HOLDING_META = {
@@ -10036,11 +10041,15 @@ async function initBookingForm(){
   var accs=filterHiddenBookingAccounts(uniqueBookingOptions((cfg.accounts&&cfg.accounts.length)?cfg.accounts:BOOKING_FALLBACK_ACCOUNTS));
   var apiHoldings=(cfg.holdings&&cfg.holdings.length)?cfg.holdings:[];
   var apiDividendSymbols=(cfg.dividendSymbols&&cfg.dividendSymbols.length)?cfg.dividendSymbols:apiHoldings;
-  var stockSource=apiHoldings.length?apiHoldings.slice():STOCK_SYMBOLS.slice();
+  var stockSource=(apiHoldings.length?apiHoldings.slice():STOCK_SYMBOLS.slice()).filter(function(item){
+    return !isRetiredHoldingSymbol(typeof item==='string'?item:(item&&item.value));
+  });
   if(!stockSource.some(function(item){return normalizeKey(typeof item==='string'?item:(item&&item.value))==='00998A';})){
     stockSource.push({value:'🪙00998A',label:'🪙00998A'});
   }
-  var dividendSource=apiDividendSymbols.length?apiDividendSymbols.slice():DIVIDEND_SYMBOLS.slice();
+  var dividendSource=(apiDividendSymbols.length?apiDividendSymbols.slice():DIVIDEND_SYMBOLS.slice()).filter(function(item){
+    return !isRetiredHoldingSymbol(typeof item==='string'?item:(item&&item.value));
+  });
   if(!dividendSource.some(function(item){return normalizeKey(typeof item==='string'?item:(item&&item.value))==='00998A';})){
     dividendSource.push({value:'🪙00998A',label:'🪙00998A'});
   }
@@ -13317,7 +13326,7 @@ function refreshDividendEntrySymbols(holdings){
   }
   options=options.filter(function(row){
     var k=normalizeKey(row.symbol||row.displaySymbol);
-    if(!k||seen[k])return false;
+    if(!k||isRetiredHoldingSymbol(k)||seen[k])return false;
     seen[k]=true;
     row.symbol=k;
     return true;
@@ -13342,7 +13351,7 @@ function buildDividendHoldingOptions(holdings){
   }
   return options.filter(function(row){
     var k=normalizeKey(row.symbol||row.displaySymbol);
-    if(!k||seen[k])return false;
+    if(!k||isRetiredHoldingSymbol(k)||seen[k])return false;
     seen[k]=true;
     row.symbol=k;
     if(!Number(row.price)){
