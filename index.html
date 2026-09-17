@@ -6327,13 +6327,13 @@ function openArkWallAdminShortcut(event){
 }
 
 function openEmpireCardShortcut(event,panel,tab){
+  if(event&&event.stopPropagation)event.stopPropagation();
+  // 所有卡片共用龐統城門；快捷入口不再另外啟動第二次驗證。
   if(!isEmpireSessionUnlocked()){
-    if(event){event.preventDefault();event.stopPropagation();}
-    if(hasMainApiCredentials())ensureWebAccess().then(function(ok){if(ok)openEmpireCardShortcut(null,panel,tab);});
-    else empireUnlockNotice();
+    if(event&&event.preventDefault)event.preventDefault();
+    openPanel(panel,tab);
     return;
   }
-  if(event&&event.stopPropagation)event.stopPropagation();
   closeAdvisorAIStandalone();
   closeAdvisorDialog();
   if(panel==='wall'){
@@ -6503,13 +6503,6 @@ function switchTab(btn,key){
   closeFinanceTabMenu();
   if(currentPanel==='domestic'||currentPanel==='finance'){
     if(key==='booking-form')renderBookingHeaderDate();
-    else if(currentPanel==='domestic'){
-      var extra=document.getElementById('p-extra');
-      if(extra&&!document.getElementById('domestic-panel-status-dot')){
-        extra.innerHTML=domesticPanelStatusDotHtml();
-        setEmpireCardApiPendingStatus(bookingPanelStatusKey());
-      }
-    }
   }
   if(key==='finance-accs'){
     loadAccounts();
@@ -6539,7 +6532,7 @@ function renderStarsPanel(){
   ziweiImageCacheBuster=String(Date.now());
   setPanelHead('★','Zi Wei · Star Chart','司天監');
   var panelExtra=document.getElementById('p-extra');
-  if(panelExtra)panelExtra.innerHTML='<span class="empire-panel-status-dot err" id="stars-panel-status-dot" title="司天監連線失敗" aria-label="司天監連線失敗"></span>';
+  if(panelExtra)panelExtra.innerHTML='';
   setEmpireCardApiPendingStatus('stars');
   setPanelMenuTabs([{key:'stars-home',label:'命盤總覽'}]);
   document.getElementById('p-body').innerHTML=`
@@ -6554,7 +6547,7 @@ function renderStarsPanel(){
 function renderStorePanel(initialTab){
   setPanelHead('庫','Store · Warehouse','太倉');
   var panelExtra=document.getElementById('p-extra');
-  if(panelExtra)panelExtra.innerHTML='<button class="store-header-date-button" id="store-header-date-button" type="button" title="修改記錄日期" onclick="chooseStoreFormDate(event)">'+formatStoreShortDate(getStoreTodayInputValue())+'</button><input class="store-header-date-input" id="store-record-date" type="date" value="'+getStoreTodayInputValue()+'" required onchange="syncStoreHeaderDate()"><span class="empire-panel-status-dot err" id="store-panel-status-dot" title="太倉連線失敗" aria-label="太倉連線失敗"></span>';
+  if(panelExtra)panelExtra.innerHTML='<button class="store-header-date-button" id="store-header-date-button" type="button" title="修改記錄日期" onclick="chooseStoreFormDate(event)">'+formatStoreShortDate(getStoreTodayInputValue())+'</button><input class="store-header-date-input" id="store-record-date" type="date" value="'+getStoreTodayInputValue()+'" required onchange="syncStoreHeaderDate()">';
   setPanelMenuTabs([{key:'store-contacts',label:'聯絡人'},{key:'store-chronicle',label:'事件編年'},{key:'store-list',label:'物品總覽'},{key:'stars-home',label:'命盤總覽'}]);
   document.getElementById('p-body').innerHTML=`
     <div class="pane" id="pane-store-list">
@@ -9600,7 +9593,7 @@ async function submitMedicalTarotRecord(e){
 function renderFinancePanel(initialTab){
   setPanelHead('⚱️','Finance · Treasury','財政');
   var panelExtra=document.getElementById('p-extra');
-  if(panelExtra)panelExtra.innerHTML='<span class="finance-panel-status-dot err" id="finance-panel-status-dot" title="財政連線失敗" aria-label="財政連線失敗"></span>';
+  if(panelExtra)panelExtra.innerHTML='';
   setEmpireCardApiPendingStatus('finance');
   var financeTabs=['booking-form','finance-accs','domestic-yearly','dividend-center'];
   var targetTab=financeTabs.indexOf(initialTab)>=0?initialTab:'booking-form';
@@ -10250,7 +10243,7 @@ function renderBookingHeaderDate(){
   var extra=document.getElementById('p-extra');
   if(!extra)return;
   var value=currentBookingDateValue();
-  extra.innerHTML=domesticPanelStatusDotHtml()+`<div class="booking-date-pill">
+  extra.innerHTML=`<div class="booking-date-pill">
     <button class="booking-date-btn" id="booking-date-btn" type="button" onclick="openBookingHeaderDatePicker()">${formatBookingHeaderDate(value)}</button>
     <input class="booking-date-native" type="date" id="booking-date-native" value="${esc(value)}" onchange="setBookingDateForAll(this.value)">
   </div>`;
@@ -15191,7 +15184,7 @@ function renderMarketPanel(){
 function renderCouncilPanel(initialTab){
   setPanelHead('📜','War Room · Command','軍機處');
   var panelExtra=document.getElementById('p-extra');
-  if(panelExtra)panelExtra.innerHTML='<span class="empire-panel-status-dot err" id="council-panel-status-dot" title="軍機處連線失敗" aria-label="軍機處連線失敗"></span>';
+  if(panelExtra)panelExtra.innerHTML='';
   setEmpireCardApiPendingStatus('council');
   setPanelMenuTabs([
     {key:'battle-brief',label:'戰情總匯報'},
@@ -15321,19 +15314,9 @@ function loadCouncilDashboardData(){
         loadMonthlyDividendProjection()
       ]);
   }).then(function(results){
-      var holdingsFailed=results[1].status==='rejected';
-      var heroFailed=results[0].status==='rejected';
-      var authFailure=(holdingsFailed&&webVerifyIsAuthFailure(results[1].reason))||(heroFailed&&webVerifyIsAuthFailure(results[0].reason));
-      if(!authFailure)return results;
-      return ensureWebAccess(true).then(function(verified){
-        if(!verified)return results;
-        return Promise.allSettled([
-          loadHeroSheet(true),
-          loadCouncilHoldingsOverview(),
-          loadAssetSnapshot(),
-          loadMonthlyDividendProjection()
-        ]);
-      });
+      // 龐統城門已在進入卡片前完成驗證；資料載入失敗時只顯示卡片錯誤，
+      // 不再由軍機處自行觸發第二次驗證，避免手機端長時間卡在驗證中。
+      return results;
   }).then(function(results){
       return {
         heroes:results[0].status==='fulfilled'?results[0].value:[],
