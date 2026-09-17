@@ -17594,7 +17594,6 @@ initAdvisorDuoVideoPlayback();
     <div class="advisor-dialog">
       <button class="advisor-close" onclick="closeAdvisorDialog()">✕</button>
        <div class="advisor-dialog-top-actions" aria-label="諸葛軍師工具">
-         <span class="empire-panel-status-dot advisor-panel-status-dot err" id="advisor-panel-status-dot" title="城門驗證不成功" aria-label="城門驗證不成功"></span>
          <button class="advisor-dialog-tool" type="button" onclick="advisorAIOpenDatabaseSheet()" title="進入資料庫" aria-label="進入資料庫">📂</button>
          <span class="advisor-dialog-tool-status" id="advisor-dialog-tool-status" aria-live="polite"></span>
        </div>
@@ -18096,7 +18095,6 @@ function advisorAIHeaderHtml(title){
       <div class="advisor-ai-quick-tools">
         ${advisorAIQuickCommandSelectHtml()}
         <span class="advisor-ai-header-date" aria-label="今日日期">${advisorAICompactDate()}</span>
-        <span class="advisor-ai-verify-status" aria-label="龐統城門驗證狀態">${advisorAIWebVerifyStatusHtml()}<span class="advisor-ai-verify-label">${advisorAIWebVerifyStatusLabel()}</span></span>
       </div>
       <div class="advisor-ai-title-wrap">
         <div class="advisor-ai-funds" id="advisor-ai-funds">${advisorAIHeaderFundsHtml(fundsCache&&fundsCache.cash,fundsCache&&fundsCache.stock)}</div>
