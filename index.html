@@ -5250,7 +5250,8 @@ function apiWriteTimeoutMs(action){
   action=String(action||'');
   if(action==='macroLongReportGenerate'||action==='taiwanStockReviewGenerate')return 150000;
   if(action==='macroLongReportTriggerInstall')return 45000;
-  if(action==='verifyWriteToken')return 45000;
+  // 手機端若遇到 Apps Script 轉址或網路暫時中斷，不要讓城門驗證卡住數分鐘。
+  if(action==='verifyWriteToken')return 15000;
   return isApiWriteAction(action)?45000:15000;
 }
 function apiNonJsonMessage(text,context){
@@ -6023,7 +6024,11 @@ function setEmpireUnlockState(unlocked){
   if(cards){cards.classList.toggle('empire-unlocked',!!unlocked);cards.classList.toggle('empire-locked',!unlocked);}
 }
 function isEmpireSessionUnlocked(){
-  try{return sessionStorage.getItem(EMPIRE_UNLOCK_KEY)==='ok';}catch(e){return false;}
+  try{
+    // sessionStorage 會因手機分頁／瀏覽器重啟而消失；仍在有效期限內的
+    // 本機驗證狀態可以安全恢復前端解鎖，實際寫入仍由後端逐次驗證 token。
+    return sessionStorage.getItem(EMPIRE_UNLOCK_KEY)==='ok'||webVerifyIsAuthorized();
+  }catch(e){return webVerifyIsAuthorized();}
 }
 function applyEmpireUnlockState(){setEmpireUnlockState(webVerifyIsAuthorized());}
 function empireUnlockNotice(){
@@ -6082,7 +6087,7 @@ async function verifyWebAccess(){
   if(!API_URL)throw new Error('尚未設定 Web App API URL');
   if(!cleanToken(WRITE_TOKEN))throw new Error('尚未設定 WRITE_TOKEN');
   var lastErr=null;
-  for(var attempt=0;attempt<3;attempt++){
+  for(var attempt=0;attempt<2;attempt++){
     try{
       await apiPost({action:'verifyWriteToken'});
       return true;
@@ -20947,7 +20952,7 @@ function mpmRender(records){
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('./sw.js?v=20260910-cache2', {updateViaCache:'none'}).then(function (registration) {
+    navigator.serviceWorker.register('./sw.js?v=20260918-mobile-auth1', {updateViaCache:'none'}).then(function (registration) {
       return registration.update();
     }).catch(function (error) {
       console.warn('Empire Service Worker registration failed', error);
