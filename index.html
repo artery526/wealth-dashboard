@@ -5317,6 +5317,29 @@ function normalizeImageUrl(url){
 // ══════════════════════════════════════════
 //  API
 // ══════════════════════════════════════════
+// Apps Script Web App 對短時間大量並行請求容易出現瀏覽器逾時；
+// 以小型優先佇列限制同時連線數，驗證請求優先處理。
+var WEALTH_API_MAX_CONCURRENT=2;
+var wealthApiQueue=[];
+var wealthApiActive=0;
+var wealthApiSequence=0;
+function enqueueWealthApi(task,priority){
+  return new Promise(function(resolve,reject){
+    wealthApiQueue.push({task:task,priority:Number(priority)||0,sequence:wealthApiSequence++,resolve:resolve,reject:reject});
+    drainWealthApiQueue();
+  });
+}
+function drainWealthApiQueue(){
+  while(wealthApiActive<WEALTH_API_MAX_CONCURRENT&&wealthApiQueue.length){
+    wealthApiQueue.sort(function(a,b){return b.priority-a.priority||a.sequence-b.sequence;});
+    var item=wealthApiQueue.shift();
+    wealthApiActive++;
+    Promise.resolve().then(item.task).then(item.resolve,item.reject).finally(function(){
+      wealthApiActive--;
+      drainWealthApiQueue();
+    });
+  }
+}
 async function apiGet(params,timeoutMs){
   if(!API_URL)throw new Error('未設定 API 網址');
   var baseParams=Object.assign({},params||{});
@@ -5328,7 +5351,10 @@ async function apiGet(params,timeoutMs){
     var requestParams=Object.assign({},baseParams,{_ts:Date.now(),_try:attempt+1});
     var url=API_URL+'?'+Object.entries(requestParams).map(([k,v])=>k+'='+encodeURIComponent(v)).join('&');
     try{
-      var r=await fetchWithTimeout(url,{cache:'no-store',redirect:'follow'},timeoutMs||15000);
+      var priority=String(baseParams.action||'')==='verifyWriteToken'?10:0;
+      var r=await enqueueWealthApi(function(){
+        return fetchWithTimeout(url,{cache:'no-store',redirect:'follow'},timeoutMs||15000);
+      },priority);
       var text=await r.text();
       if(!r.ok){
         var httpErr=new Error('讀取失敗：HTTP '+r.status);
@@ -5546,7 +5572,10 @@ async function apiPost(body){
 }
 async function apiPostGetFallback(params,timeoutMs){
   var qs=Object.entries(params||{}).filter(kv=>kv[1]!==undefined&&kv[1]!==null&&kv[1]!=='').map(kv=>encodeURIComponent(kv[0])+'='+encodeURIComponent(kv[1])).join('&');
-  var r=await fetchWithTimeout(API_URL+'?'+qs,{redirect:'follow'},timeoutMs||15000);
+  var priority=String(params&&params.action||'')==='verifyWriteToken'?10:0;
+  var r=await enqueueWealthApi(function(){
+    return fetchWithTimeout(API_URL+'?'+qs,{redirect:'follow'},timeoutMs||15000);
+  },priority);
   var text=await r.text();
   if(!r.ok){
     var httpErr=new Error('讀取失敗：HTTP '+r.status);
@@ -5568,12 +5597,14 @@ async function apiPostJson(body,timeoutMs){
   var payload=Object.assign({},body,{token:WRITE_TOKEN});
   var r;
   try{
-    r=await fetchWithTimeout(API_URL,{
-      method:'POST',
-      redirect:'follow',
-      headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body:JSON.stringify(payload)
-    },timeoutMs||15000);
+    r=await enqueueWealthApi(function(){
+      return fetchWithTimeout(API_URL,{
+        method:'POST',
+        redirect:'follow',
+        headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body:JSON.stringify(payload)
+      },timeoutMs||15000);
+    },body&&body.action==='verifyWriteToken'?10:0);
   }catch(e){
     var msg=String(e&&e.message||'').toLowerCase();
     var writeLike=isApiWriteAction(body&&body.action||'')||body&&body.action==='advisorDividendMemo';
