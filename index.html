@@ -8262,7 +8262,7 @@ function fitZiwei(){
 function renderMedicalPanel(){
   setPanelHead('✚','Clinic · Recovery','醫館');
   var panelExtra=document.getElementById('p-extra');
-  if(panelExtra)panelExtra.innerHTML='<span class="medical-header-time"><button class="medical-time-btn" id="medical-time-button" type="button" onclick="openMedicalTimePicker()" aria-label="選擇紀錄日期與時間">--/--/--</button><input class="medical-time-native" id="medical-time" type="datetime-local" aria-label="紀錄日期與時間"></span><span class="empire-panel-status-dot pending" id="medical-panel-status-dot" title="醫館載入中" aria-label="醫館載入中"></span><span class="medical-panel-status-text" id="medical-panel-status-text">載入中</span>';
+  if(panelExtra)panelExtra.innerHTML='<span class="medical-header-time"><button class="medical-time-btn" id="medical-time-button" type="button" onclick="openMedicalTimePicker()" aria-label="選擇紀錄日期與時間">--/--/--</button><input class="medical-time-native" id="medical-time" type="datetime-local" aria-label="紀錄日期與時間"></span>';
   setPanelMenuTabs([{key:'medical-quick',label:'快速記錄'},{key:'medical-tarot',label:'抽牌記錄'},{key:'medical-stats',label:'牌卡統計'},{key:'medical-painmap',label:'疼痛地圖'}]);
   var el=document.getElementById('p-body');
   if(!hasMainApiCredentials()){
