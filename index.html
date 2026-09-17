@@ -6124,7 +6124,18 @@ async function verifyWebAccess(){
       return true;
     }catch(err){
       lastErr=err;
-      if(attempt>=2||!isTransientApiError(err))throw err;
+      // Google Web App 轉址偶爾會讓 GET 在瀏覽器端落到 404；同一
+      // 個驗證端點支援簡單 text/plain POST，改用 POST 再試一次。
+      if(Number(err&&err.status)===404||Number(err&&err.status)===405){
+        try{
+          await apiPostJson({action:'verifyWriteToken'},15000);
+          return true;
+        }catch(postErr){
+          lastErr=postErr;
+          if(!isTransientApiError(postErr))throw postErr;
+        }
+      }
+      if(attempt>=1||!isTransientApiError(err))throw err;
       await delay(700*(attempt+1));
     }
   }
