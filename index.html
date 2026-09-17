@@ -15390,7 +15390,9 @@ function collectCouncilKeys(values){
 function mergeCouncilRows(holdings,heroes,armySettings){
   var holdingsByKey={};
   var aliasToKey={};
-  (holdings||[]).forEach(function(r,idx){
+  (holdings||[]).filter(function(r){
+    return !isRetiredHoldingSymbol(r&& (r.symbol||r.name||r.assetName||r.account));
+  }).forEach(function(r,idx){
     var keys=collectCouncilKeys([r.symbol,r.name,r.assetName,r.account]);
     var canonicalKey=keys[0]||('holding-'+idx);
     var extra=(armySettings&&armySettings[canonicalKey])||{};
@@ -15405,7 +15407,9 @@ function mergeCouncilRows(holdings,heroes,armySettings){
     });
   });
   var used={};
-  var rows=(heroes||[]).map(function(hero){
+  var rows=(heroes||[]).filter(function(hero){
+    return !isRetiredHoldingSymbol(hero&& (hero.symbol||hero.assetName||hero.heroName));
+  }).map(function(hero){
     var heroKeys=collectCouncilKeys([hero.symbol,hero.assetName,hero.heroName]);
     var canonicalKey='';
     for(var i=0;i<heroKeys.length;i++){
