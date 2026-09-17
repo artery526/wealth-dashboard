@@ -14585,16 +14585,43 @@ function battleLiveFundSnapshotHtml(funds){
   var rows=(funds||[]).filter(function(item){
     return item&&item.name&&item.current!==''&&item.current!=null&&isFinite(Number(item.current));
   }).map(function(item){
-    var current=Number(item.current), previous=item.previous===''||item.previous==null?null:Number(item.previous);
-    if(previous==null&&item.change!==''&&item.change!=null&&isFinite(Number(item.change)))previous=current-Number(item.change);
-    var change=item.change===''||item.change==null?(previous==null?null:current-previous):Number(item.change);
-    var pct=item.changePct===''||item.changePct==null?null:Number(item.changePct);
-    var changeText=pct==null||!isFinite(pct)?'--':(pct>0?'+':'')+pct.toFixed(2)+'%';
-    return `<div class="battle-snapshot-row"><span>${esc(item.name)}${battleFundDetailLinkHtml(item.name)}<small class="battle-snapshot-yesterday">${esc(battleFinanceSnapshotRangeLabel(battleFinanceSnapshotState.range))} ${previous==null?'--':battleFinanceSnapshotValueText({value:previous})}</small></span><strong>${esc(battleFinanceSnapshotValueText({value:current}))}</strong><em>${esc(changeText)}</em><small>${esc(battleUpdatedAtText(item.updatedAt||item.dataTime||item.fetchedAt))}</small></div>`;
+    var current=Number(item.current), reference=item.referenceValue===''||item.referenceValue==null?null:Number(item.referenceValue);
+    var delta=reference==null?null:current-reference;
+    var changeText=delta==null?'--':(delta>=0?'+':'')+delta.toFixed(2);
+    return `<div class="battle-snapshot-row"><span>${esc(item.name)}${battleFundDetailLinkHtml(item.name)}<small class="battle-snapshot-yesterday">均價 ${reference==null?'--':battleFinanceSnapshotValueText({value:reference})}</small></span><strong>${esc(battleFinanceSnapshotValueText({value:current}))}</strong><em>${esc(changeText)}</em><small>${esc(battleUpdatedAtText(item.updatedAt||item.dataTime||item.fetchedAt))}</small></div>`;
   }).join('');
   var title='期間數值對比';
   var body=rows||'<div class="battle-price-loading">尚未取得基金淨值</div>';
-  return `<div class="battle-snapshot-panel"><div class="battle-snapshot-toolbar"><span>${title}</span><div>${['1d','7d','1m','3m'].map(function(range){return `<button type="button" class="battle-snapshot-range ${battleFinanceSnapshotState.range===range?'is-active':''}" onclick="setBattleFinanceSnapshotRange('${range}')">${range==='1d'?'昨日':range==='7d'?'7天':range==='1m'?'1個月':'3個月'}</button>`;}).join('')}</div></div>${body}</div>`;
+  return `<div class="battle-snapshot-panel"><div class="battle-snapshot-toolbar"><span>${title}</span><small>固定時間更新，與持股均價比較</small></div>${body}</div>`;
+}
+
+function battleLiveHoldingSnapshotHtml(holdings,holdingColumn){
+  var preferred=['QQQI','MLPI','AIPI','PLTY','CHPY','00985B','00997A','GDXW','GLDW','00998A'];
+  var rowByName={};
+  (holdings||[]).filter(function(item){return item&&item.name&&item.current!==''&&item.current!=null&&isFinite(Number(item.current));}).forEach(function(item){
+    var current=Number(item.current),reference=item.referenceValue===''||item.referenceValue==null?null:Number(item.referenceValue),delta=reference==null?null:current-reference;
+    var changeText=delta==null?'--':(delta>=0?'+':'')+delta.toFixed(2);
+    rowByName[String(item.name)]=`<div class="battle-snapshot-row"><span>${esc(item.name)}${battleHoldingChartLinkHtml(item.name)}<small class="battle-snapshot-yesterday">均價 ${reference==null?'--':battleFinanceSnapshotValueText({value:reference,snapshotType:'holdings'})}</small></span><strong>${esc(battleFinanceSnapshotValueText({value:current,snapshotType:'holdings'}))}</strong><em>${esc(changeText)}</em><small>${esc(battleUpdatedAtText(item.updatedAt||item.dataTime||item.fetchedAt))}</small></div>`;
+  });
+  var ordered=preferred.filter(function(name){return rowByName[name];}).map(function(name){return rowByName[name];});
+  Object.keys(rowByName).forEach(function(name){if(preferred.indexOf(name)<0)ordered.push(rowByName[name]);});
+  var leftNames=['QQQI','MLPI','AIPI','PLTY','CHPY'];
+  var leftRows=leftNames.filter(function(name){return rowByName[name];}).map(function(name){return rowByName[name];});
+  var rightRows=ordered.filter(function(row){return leftRows.indexOf(row)<0;});
+  var rows=holdingColumn==='left'?leftRows.join(''):rightRows.join('');
+  return rows||'<div class="battle-price-loading">尚未取得持股價格</div>';
+}
+
+function battleLiveMarketSnapshotHtml(market){
+  var rows=(market||[]).filter(function(item){return item&&item.name&&item.current!==''&&item.current!=null&&isFinite(Number(item.current));}).map(function(item){
+    var current=Number(item.current),reference=item.previous===''||item.previous==null?null:Number(item.previous),delta=reference==null?null:current-reference;
+    var changeText=delta==null?'--':(delta>=0?'+':'')+delta.toFixed(2);
+    if(String(item.name).indexOf('融資')>=0){current=(current/100000000).toFixed(2)+' 億';reference=reference==null?'--':(reference/100000000).toFixed(2)+' 億';changeText=delta==null?'--':(delta>=0?'+':'')+(delta/100000000).toFixed(2)+' 億';}
+    else if(String(item.name).indexOf('維持率')>=0){current=current.toFixed(2)+'%';reference=reference==null?'--':reference.toFixed(2)+'%';changeText=delta==null?'--':(delta>=0?'+':'')+delta.toFixed(2)+' pt';}
+    else if(String(item.name).indexOf('淨空單')>=0){current=current.toLocaleString('zh-TW')+' 口';reference=reference==null?'--':reference.toLocaleString('zh-TW')+' 口';changeText=delta==null?'--':(delta>=0?'+':'')+delta.toLocaleString('zh-TW')+' 口';}
+    return `<div class="battle-snapshot-row"><span>${esc(item.name)}<small class="battle-snapshot-yesterday">前次 ${esc(String(reference))}</small></span><strong>${esc(String(current))}</strong><em>${esc(changeText)}</em><small>${esc(battleUpdatedAtText(item.updatedAt||item.dataTime||item.fetchedAt))}</small></div>`;
+  }).join('');
+  return `<div class="battle-snapshot-panel"><div class="battle-snapshot-toolbar"><span>最新／前次數值對比</span><small>不建立歷史快照</small></div>${rows||'<div class="battle-price-loading">尚未取得台股融資資料</div>'}</div>`;
 }
 
 function updateBattleFinanceSnapshotViews(){
@@ -14925,8 +14952,15 @@ function renderBattleBrief(data,el){
       <div id="battle-holdings-right-snapshot-host"></div>
     </div>
   </div>`;
-  // 戰情首屏先完成；NAS 快照屬於補充資訊，延後載入避免和首屏 API 搶冷啟動資源。
-  setTimeout(function(){loadBattleFinanceSnapshots(false);},250);
+  // 戰情只讀固定排程更新的最新值，不再於開啟頁面時讀取 NAS 歷史快照。
+  var fundHost=document.getElementById('battle-fund-snapshot-host');
+  var marginHost=document.getElementById('battle-margin-snapshot-host');
+  var holdingsLeftHost=document.getElementById('battle-holdings-left-snapshot-host');
+  var holdingsRightHost=document.getElementById('battle-holdings-right-snapshot-host');
+  if(fundHost)fundHost.innerHTML=battleLiveFundSnapshotHtml(data.funds);
+  if(marginHost)marginHost.innerHTML=battleLiveMarketSnapshotHtml(data.market);
+  if(holdingsLeftHost)holdingsLeftHost.innerHTML=battleLiveHoldingSnapshotHtml(data.holdings,'left');
+  if(holdingsRightHost)holdingsRightHost.innerHTML=battleLiveHoldingSnapshotHtml(data.holdings,'right');
 }
 
 async function loadBattleBrief(force){
