@@ -4921,7 +4921,8 @@ var heroCache = [];
 var councilDashboardCache = null;
 var councilDashboardFetchedAt = 0;
 var councilDashboardPromise = null;
-var COUNCIL_DASHBOARD_CACHE_TTL = 45 * 1000;
+// 部隊陣容先顯示最近成功資料；避免每次切換都重新等待四個 API。
+var COUNCIL_DASHBOARD_CACHE_TTL = 5 * 60 * 1000;
 var COUNCIL_ROSTER_STORAGE_KEY = 'wealth_council_roster_v1';
 var stockTradeMode = false;
 var bookingAutoDate = '';
@@ -15230,13 +15231,12 @@ async function loadCouncilDashboard(){
   var cached=councilDashboardCache||readCouncilRosterStorageCache();
   if(!councilDashboardCache&&cached)councilDashboardCache=cached;
   var cachedFetchedAt=councilDashboardFetchedAt||(cached&&cached.cachedAt)||0;
-  var cacheFresh=cached&&(Date.now()-councilDashboardFetchedAt<COUNCIL_DASHBOARD_CACHE_TTL);
+  var cacheFresh=cached&&(Date.now()-cachedFetchedAt<COUNCIL_DASHBOARD_CACHE_TTL);
   if(cached){
     holdingsCache=cached.holdings.length?cached.holdings:holdingsCache;
     setDataFreshness('council-roster-freshness',dataFreshnessMeta(cached,cachedFetchedAt,true));
     renderCouncilRoster(mergeCouncilRows(cached.holdings,cached.heroes,{}),el,cached.assetSnapshot,cached.dividendProjection);
-    setEmpireCardStatus('council',cacheFresh&&cached.holdingsLoaded&&API_URL?'ok':'pending',cacheFresh&&cached.holdingsLoaded&&API_URL?'武將與持股同步':'已顯示上次資料 · 背景更新中');
-    if(cacheFresh)return;
+    setEmpireCardStatus('council','pending',cacheFresh&&cached.holdingsLoaded&&API_URL?'已顯示快取 · 背景更新中':'已顯示上次資料 · 背景更新中');
   }else{
     el.innerHTML='<div class="skel-line skel"></div><div class="skel-line skel" style="width:82%"></div><div class="skel-line skel" style="width:70%"></div>';
   }
