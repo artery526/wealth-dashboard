@@ -1,5 +1,24 @@
 const random = ([min, max]) => min + Math.random() * (max - min);
 const DEBUG_CHARACTERS = window.DEBUG_CHARACTERS === true;
+const CHARACTER_IDLE_TIMEOUT_MS = 8000;
+
+function decodeCharacterImage(img, timeoutMs = CHARACTER_IDLE_TIMEOUT_MS) {
+  const decode = typeof img.decode === 'function'
+    ? img.decode()
+    : new Promise((resolve, reject) => {
+        if (img.complete && img.naturalWidth) {
+          resolve();
+          return;
+        }
+        img.addEventListener('load', resolve, { once: true });
+        img.addEventListener('error', () => reject(new Error('角色影格載入失敗')), { once: true });
+      });
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error('角色影格載入逾時')), timeoutMs);
+  });
+  return Promise.race([decode, timeout]).finally(() => clearTimeout(timer));
+}
 
 window.AnimatedCharacter = class AnimatedCharacter {
   constructor({ character, animationConfig, position, size, onClick, mount }) {
@@ -11,7 +30,7 @@ window.AnimatedCharacter = class AnimatedCharacter {
     this.button.type = 'button';
     this.button.setAttribute('aria-label', `${character}，開啟角色面板`);
     Object.assign(this.button.style, position, size ? { width: size } : {});
-    this.button.innerHTML = '<span class="character-art"></span><span class="character-debug"></span>';
+    this.button.innerHTML = `<span class="character-art"><span class="character-loading-fallback" aria-hidden="true">${character.slice(0, 1)}</span></span><span class="character-debug"></span>`;
     this.art = this.button.querySelector('.character-art');
     this.debug = this.button.querySelector('.character-debug');
     this.button.hidden = true;
@@ -27,6 +46,9 @@ window.AnimatedCharacter = class AnimatedCharacter {
     this.button.addEventListener('focus', this.activate);
     this.button.addEventListener('click', event => { this.activate(); event.stopPropagation(); onClick(event); });
     mount.append(this.button);
+    // 先提供可點擊的角色入口，影格在背景載入；避免大圖下載卡住整個場景。
+    this.button.hidden = false;
+    this.button.dataset.characterLoading = 'true';
     this.motion = matchMedia('(prefers-reduced-motion: reduce)');
     this.resume = () => {
       clearTimeout(this.timer);
@@ -48,14 +70,26 @@ window.AnimatedCharacter = class AnimatedCharacter {
     const idleImg = new Image();
     idleImg.src = idleSrc;
     idleImg.alt = '';
-    await idleImg.decode();
-    if (this.destroyed) return;
-    this.images = { [idleKey]: idleImg };
-    idleImg.hidden = false;
-    this.art.append(idleImg);
-    this.ready = true;
-    this.button.hidden = false;
-    this.resume();
+    try {
+      await decodeCharacterImage(idleImg);
+      if (this.destroyed) return;
+      this.images = { [idleKey]: idleImg };
+      idleImg.hidden = false;
+      this.art.append(idleImg);
+      this.ready = true;
+      this.button.dataset.characterLoading = 'false';
+      this.button.dataset.characterFallback = 'false';
+      const fallback = this.art.querySelector('.character-loading-fallback');
+      if (fallback) fallback.hidden = true;
+      this.resume();
+    } catch (error) {
+      // 影格失敗時保留可點擊的文字入口，不阻塞其他人物或整個首頁。
+      this.ready = true;
+      this.button.dataset.characterLoading = 'false';
+      this.button.dataset.characterFallback = 'true';
+      this.button.setAttribute('title', `${this.config.name}影像載入較慢，仍可點擊開啟面板`);
+      this.resume();
+    }
   }
   loadFrame(key) {
     if (this.images[key]) return Promise.resolve(this.images[key]);

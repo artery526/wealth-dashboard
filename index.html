@@ -4529,6 +4529,8 @@ html[data-theme="deep-blue"] .advisor-ai-standalone .advisor-ai-quick-select:foc
 .npc-web-scene-map{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:cover;filter:brightness(.68) saturate(.82) contrast(.96)}
 .npc-web-scene .animated-character{position:absolute;z-index:2;aspect-ratio:2/3;border:0;padding:0;background:transparent;cursor:pointer}
 .npc-web-scene .character-art{position:absolute;inset:0;display:block;transform:scale(var(--frame-scale,1));transform-origin:50% 95%;transition:transform .2s ease,filter .2s ease}
+.npc-web-scene .character-loading-fallback{position:absolute;left:50%;bottom:12%;display:grid;place-items:center;width:44%;aspect-ratio:1;border:1px solid rgba(232,192,80,.72);border-radius:50%;background:rgba(7,18,30,.86);box-shadow:0 0 16px rgba(232,192,80,.24);color:#ffe9a6;font:900 clamp(16px,2.2vw,30px)/1 var(--serif);transform:translateX(-50%);}
+.npc-web-scene .character-loading-fallback[hidden]{display:none}
 .npc-web-scene .character-art img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:center bottom}
 .npc-web-scene .character-art img[hidden],.npc-web-scene .animated-character[hidden]{display:none}
 .npc-web-scene .animated-character:hover .character-art,.npc-web-scene .animated-character:focus-visible .character-art{transform:scale(calc(var(--frame-scale,1) * 1.04));filter:drop-shadow(0 0 7px rgba(255,224,165,.76))}
