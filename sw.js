@@ -9,7 +9,7 @@ const PRECACHE_URLS = [
   './junshifu-map.png?v=20260910-bg4',
   './mobileBG.png?v=20260906-mobile1',
   './characterAnimations.js?v=20260908-web22',
-  './AnimatedCharacter.js?v=20260908-web3',
+  './AnimatedCharacter.js?v=20260918-web4',
   './advisor-zhuge.png',
   './pangtong.png',
   './bg-inkwash.png'

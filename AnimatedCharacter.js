@@ -36,6 +36,9 @@ window.AnimatedCharacter = class AnimatedCharacter {
     this.button.hidden = true;
     this.interactive = false;
     this.loadingFrames = {};
+    // 首張影格可能因手機網路或快取失效而載入失敗；仍要讓後續
+    // loadAllFrames/show() 能安全檢查並保留可點擊的文字入口。
+    this.images = {};
     this.button.classList.toggle('debug-enabled', DEBUG_CHARACTERS);
     this.activate = () => {
       if (this.interactive || this.destroyed) return;
