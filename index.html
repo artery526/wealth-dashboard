@@ -5442,7 +5442,7 @@ function eventChronicleRowKey(row){
 }
 var ledgerPendingBusy={};
 var bookingWriteQueue=[];
-var BOOKING_WRITE_QUEUE_MAX=5;
+var BOOKING_WRITE_QUEUE_MAX=20;
 
 function bookingQueueSignature(body){
   body=body||{};
@@ -5476,7 +5476,7 @@ function renderBookingWriteQueue(){
     Array.prototype.forEach.call(els,function(el){el.innerHTML=emptyHtml;});
     return;
   }
-  var labels={processing:'待同步',success:'已記錄',confirm:'待確認',failed:'記錄失敗'};
+  var labels={processing:'待同步／送出中',success:'已記錄',confirm:'待確認',failed:'記錄失敗'};
   var html=bookingWriteQueue.slice().reverse().map(function(item){
     var label=labels[item.status]||'處理中';
     var detail=[item.cat,item.account,fmtFull(item.amount)].filter(Boolean).join(' · ');
@@ -5490,9 +5490,9 @@ function renderBookingWriteQueue(){
   Array.prototype.forEach.call(els,function(el){el.innerHTML=html;});
 }
 
-function bookingQueueAdd(body){
+function bookingQueueAdd(body,forceNew){
   var signature=bookingQueueSignature(body);
-  var existing=bookingWriteQueue.find(function(item){return item.signature===signature&&(item.status==='processing'||item.status==='confirm');});
+  var existing=!forceNew&&bookingWriteQueue.find(function(item){return item.signature===signature&&(item.status==='processing'||item.status==='confirm');});
   if(existing){
     existing.status='processing';
     existing.message='再次確認中';
@@ -18202,7 +18202,7 @@ function advisorAIHeaderHtml(title){
     </div>
     <div class="advisor-ai-expense-quick-status" id="advisor-ai-expense-quick-status"></div>
     <section class="booking-write-queue advisor-ai-expense-quick-queue" aria-label="龐統快速支出記帳佇列">
-      <div class="booking-queue-head"><span class="booking-queue-title">記帳佇列</span><span class="booking-queue-hint">待同步／已記錄</span></div>
+      <div class="booking-queue-head"><span class="booking-queue-title">記帳佇列</span><span class="booking-queue-hint">每筆獨立顯示狀態</span></div>
       <div data-booking-queue-content><div class="booking-queue-empty">目前沒有待同步的記帳項目</div></div>
     </section>
     `;
@@ -18242,20 +18242,20 @@ async function advisorAIRecordQuickExpense(btn){
   if(!category||!account){show('請選擇消費項目與支出帳戶','err');return;}
   if(amount<=0){show('請輸入大於 0 的金額','err');return;}
   if(!advisorAIRequireWrite())return;
-  if(btn&&btn.disabled)return;
-  if(btn){btn.disabled=true;btn.textContent='⏳';}
-  var queueId=bookingQueueAdd({action:'expense',date:today().replace(/-/g,'/'),cat:category,account:account,amount:amount});
+  // 快速支出允許連續送出；每一筆建立獨立佇列項目，不合併相同條件的記帳。
+  var body={action:'expense',date:today().replace(/-/g,'/'),cat:category,account:account,amount:amount};
+  var queueId=bookingQueueAdd(body,true);
+  if(amountEl)amountEl.value='';
+  show('⏳ 已加入記帳佇列：'+fmtFull(amount),'');
   try{
-    await apiPost({action:'expense',date:today().replace(/-/g,'/'),cat:category,account:account,amount:amount,note:'龐統快速支出'});
+    await apiPost(Object.assign({},body,{note:'龐統快速支出'}));
     bookingQueueUpdate(queueId,'success','');
     show('✓ 已記錄支出 '+fmtFull(amount),'ok');
-    if(amountEl)amountEl.value='';
   }catch(err){
     var queueStatus=String(err&&err.message||'').indexOf('結果待確認')>=0?'confirm':'failed';
     bookingQueueUpdate(queueId,queueStatus,err&&err.message||'寫入失敗');
     show('✗ '+(err&&err.message?err.message:'寫入失敗'),'err');
   }
-  finally{if(btn){btn.disabled=false;btn.textContent='📝';}}
 }
 
 function advisorAIDividendQuickRowHtml(){
