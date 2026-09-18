@@ -5669,8 +5669,8 @@ var advisorAIDailyUpdatesPromise=null;
 var advisorAIDailyUpdatesTimer=null;
 var advisorAIDailyUpdatesData=null;
 var advisorAIDailyUpdatesIndex=0;
-// v7: 丟棄可能把月收支保存成 0 的舊版快取，避免 API 暫時失敗時一直顯示零值。
-var FINANCE_TREASURY_CACHE_KEY='wealth_finance_treasury_v7';
+// v8: 重新取得含「史記」基準欄位的國庫資料，避免舊快取把 null 顯示成 0。
+var FINANCE_TREASURY_CACHE_KEY='wealth_finance_treasury_v8';
 var FINANCE_TREASURY_CACHE_PREFIX='wealth_finance_treasury_v';
 var FINANCE_PLEDGE_CACHE_KEY='wealth_finance_pledge_v2';
 var FINANCE_YEARLY_CACHE_PREFIX='wealth_finance_yearly_v3_';
@@ -9967,9 +9967,11 @@ function renderTreasuryAccountTotalAssetCard(assetSnapshot,totalAssetAccount,mon
   var deltaOk=delta!==null&&delta!==undefined&&!isNaN(Number(delta))&&isFinite(Number(delta));
   var deltaClass=deltaOk?(Number(delta)<0?'down':'up'):'';
   var deltaText=deltaOk?advisorSignedCurrency(Number(delta)):'--';
-  var initialChange=Number(assetSnapshot&&assetSnapshot.initialAssetChangeAmount);
-  var initialPct=Number(assetSnapshot&&assetSnapshot.initialAssetChangePct);
-  var initialOk=isFinite(initialChange)&&isFinite(initialPct);
+  var initialChangeRaw=assetSnapshot&&assetSnapshot.initialAssetChangeAmount;
+  var initialPctRaw=assetSnapshot&&assetSnapshot.initialAssetChangePct;
+  var initialOk=initialChangeRaw!==null&&initialChangeRaw!==undefined&&initialPctRaw!==null&&initialPctRaw!==undefined&&isFinite(Number(initialChangeRaw))&&isFinite(Number(initialPctRaw));
+  var initialChange=initialOk?Number(initialChangeRaw):null;
+  var initialPct=initialOk?Number(initialPctRaw):null;
   var trendClass=initialOk?(initialChange<0?'down':'up'):'';
   var trendText=initialOk?'史記 '+advisorSignedCurrency(initialChange)+' ('+(initialPct>=0?'+':'')+initialPct.toFixed(1)+'%)':'史記資料不足';
   return `<div class="acc-item treasury-total-card">
