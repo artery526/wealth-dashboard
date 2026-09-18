@@ -7423,6 +7423,9 @@ function writeCouncilRosterStorageCache(cache){
     localStorage.setItem(COUNCIL_ROSTER_STORAGE_KEY,JSON.stringify({
       heroes:cache.heroes||[],
       holdings:cache.holdings||[],
+      assetSnapshot:cache.assetSnapshot||null,
+      dividendProjection:cache.dividendProjection||null,
+      holdingsLoaded:cache.holdingsLoaded,
       cachedAt:Date.now()
     }));
   }catch(e){console.warn('Council roster cache unavailable',e);}
@@ -15385,12 +15388,13 @@ function loadCouncilDashboardData(){
 function loadCouncilDashboardSummaryData(){
   if(councilDashboardSummaryPromise)return councilDashboardSummaryPromise;
   councilDashboardSummaryPromise=Promise.allSettled([
-    loadAssetSnapshot(),
-    loadMonthlyDividendProjection()
+    loadAssetSnapshot()
   ]).then(function(results){
     return {
       assetSnapshot:results[0].status==='fulfilled'?results[0].value:null,
-      dividendProjection:results[1].status==='fulfilled'?results[1].value:null
+      // 月總配息主值已由 holdingsOverview 的月配息欄位加總；
+      // NAS 資產快照中的 latest.monthlyDiv 作為摘要備援，不再額外阻塞一支 Google Sheet 請求。
+      dividendProjection:null
     };
   }).finally(function(){
     councilDashboardSummaryPromise=null;
