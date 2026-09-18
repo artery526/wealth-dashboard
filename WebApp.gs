@@ -290,7 +290,7 @@ var READ_ACTION_HANDLERS_ = {
   monthlyBattleValue: function(ss) { return getMonthlyBattleValue_(ss); },
   holdingsOverview: function(ss) { return getHoldingsOverview(ss); },
   heroes: function(ss) { return getHeroes_(ss); },
-  monthlyDividendProjection: function(ss) { return getMonthlyDividendProjection_(ss); },
+  monthlyDividendProjection: function(ss) { return getMonthlyDividendProjectionWithNasFallback_(ss); },
   councilPantry: function(ss) { return getCouncilPantry(ss); },
   topStatusBar: function(ss) { return getTopStatusBar(ss); },
   financeStatus: function(ss) { return getFinanceStatus(ss); },
@@ -2045,6 +2045,27 @@ function getMonthlyDividendProjection_(ss) {
   };
 }
 
+function getMonthlyDividendProjectionWithNasFallback_(ss) {
+  try {
+    var snapshot = getDailyAssetSnapshotWithNasFallback_();
+    var latest = snapshot && snapshot.latest;
+    var value = latest && latest.monthlyDiv != null ? Number(latest.monthlyDiv) : NaN;
+    if (snapshot && snapshot.source === 'NAS' && isFinite(value) && value > 0) {
+      return {
+        value: value,
+        displayValue: Utilities.formatString('%,d', Math.round(value)),
+        source: 'NAS',
+        sourceDate: latest.date || ''
+      };
+    }
+  } catch (error) {
+    Logger.log('NAS 月總配息讀取失敗，回退 Google Sheet：' + error.message);
+  }
+  var fallback = getMonthlyDividendProjection_(ss);
+  fallback.source = 'Google Sheet fallback';
+  return fallback;
+}
+
 function battleBriefDateText_(date) {
   var tz = Session.getScriptTimeZone() || 'Asia/Taipei';
   return Utilities.formatDate(date || new Date(), tz, 'yyyy/MM/dd');
@@ -2759,7 +2780,8 @@ function dailyAssetSnapshotNasMetadata_(snapshot) {
     totalAssetTrend30d: snapshot ? snapshot.totalAssetTrend30d : null,
     initialAssetValue: snapshot ? snapshot.initialAssetValue : null,
     initialAssetChangeAmount: snapshot ? snapshot.initialAssetChangeAmount : null,
-    initialAssetChangePct: snapshot ? snapshot.initialAssetChangePct : null
+    initialAssetChangePct: snapshot ? snapshot.initialAssetChangePct : null,
+    monthlyDividend: snapshot && snapshot.latest ? snapshot.latest.monthlyDiv : null
   };
 }
 
