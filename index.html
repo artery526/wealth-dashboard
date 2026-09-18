@@ -9276,7 +9276,12 @@ function loadMedicalNasCache_(){
   if(medicalNasCachePromise)return medicalNasCachePromise;
   if(!arkWallReadToken())return Promise.resolve(null);
   medicalNasCachePromise=arkWallFetch('/api/medical-cache').then(function(data){
-    if(!data||!data.options)return null;
+    var tarots=data&&data.options&&Array.isArray(data.options.tarots)?data.options.tarots:[];
+    var hasLastTarot=tarots.some(function(label){return String(label||'').indexOf('77.錢幣國王')===0;});
+    if(!data||!data.options||tarots.length<78||!hasLastTarot){
+      console.warn('medical NAS cache is incomplete; falling back to Google Sheet');
+      return null;
+    }
     medicalNasCache=data;
     return data;
   }).catch(function(error){
