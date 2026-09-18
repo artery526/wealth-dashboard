@@ -413,7 +413,7 @@ test('battle brief panel renders with stable formatting', async ({ page }) => {
   expect(pageErrors).toEqual([]);
 });
 
-test('legacy advisor video cards are removed while scene NPC controls remain', async ({ page }) => {
+test('legacy advisor video cards are removed while scene NPC controls remain and hover does not preload all frames', async ({ page }) => {
   await page.goto(dashboardUrl);
 
   await expect(page.locator('.advisor-duo-role')).toHaveCount(0);
@@ -442,7 +442,7 @@ test('legacy advisor video cards are removed while scene NPC controls remain', a
   await expect(liubei).toHaveCSS('--mobile-width', '14%');
   await expect(liubei.locator('img')).toHaveCount(1);
   await liubei.hover();
-  await expect(liubei.locator('img')).toHaveCount(17);
+  await expect(liubei.locator('img')).toHaveCount(1);
   expect(await page.evaluate(() => Object.keys(window.liubeiAnimations.frames).length)).toBe(17);
   expect(await page.evaluate(() => window.liubeiAnimations.frames['17'])).toBe('./劉備/王府前站立17.png?v=20260908-liubei-battle1');
   expect(await page.evaluate(() => window.liubeiAnimations.frameScale['12'])).toBe(1.65);
@@ -452,7 +452,7 @@ test('legacy advisor video cards are removed while scene NPC controls remain', a
   expect(await page.evaluate(() => window.chenqunAnimations.frames['17'])).toBe('./陳群/chenqun_idle_17.png');
   await expect(manchong.locator('img')).toHaveCount(1);
   await manchong.hover();
-  await expect(manchong.locator('img')).toHaveCount(9);
+  await expect(manchong.locator('img')).toHaveCount(1);
   expect(await page.evaluate(() => Object.keys(window.manchongAnimations.frames).length)).toBe(9);
   expect(await page.evaluate(() => window.manchongAnimations.idleFrame)).toBe('05');
   expect(await page.evaluate(() => Object.values(window.manchongAnimations.frames).every(src => src.includes('?v=20260907-manchong-weapons1')))).toBeTruthy();
@@ -460,7 +460,7 @@ test('legacy advisor video cards are removed while scene NPC controls remain', a
   expect(await page.evaluate(() => window.characterPositions.liubei.top)).toBe('calc(30% + 40px)');
   await expect(xunyu.locator('img')).toHaveCount(1);
   await xunyu.hover();
-  await expect(xunyu.locator('img')).toHaveCount(12);
+  await expect(xunyu.locator('img')).toHaveCount(1);
   expect(await page.evaluate(() => Object.keys(window.xunyuAnimations.frames).length)).toBe(12);
   expect(await page.evaluate(() => window.xunyuAnimations.frames['12'])).toBe('./荀彧/文雅報告完畢12.png?v=20260908-xunyu-shangshutai1');
   expect(await page.evaluate(() => window.xunyuAnimations.events.specialAction.sequence.map(step => step.frame))).toEqual(['07', '08', '09', '10', '11', '12', '01']);

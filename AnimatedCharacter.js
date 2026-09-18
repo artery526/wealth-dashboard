@@ -43,9 +43,9 @@ window.AnimatedCharacter = class AnimatedCharacter {
     this.activate = () => {
       if (this.interactive || this.destroyed) return;
       this.interactive = true;
-      this.loadAllFrames();
     };
-    this.button.addEventListener('pointerenter', this.activate);
+    // 滑鼠掠過場景時不要預先下載整名角色的所有影格；
+    // 只有真正聚焦或點擊人物時才啟用後續動作，其他影格由 show() 按需載入。
     this.button.addEventListener('focus', this.activate);
     this.button.addEventListener('click', event => { this.activate(); event.stopPropagation(); onClick(event); });
     mount.append(this.button);
@@ -102,6 +102,7 @@ window.AnimatedCharacter = class AnimatedCharacter {
     const img = new Image();
     img.alt = '';
     img.decoding = 'async';
+    img.fetchPriority = 'low';
     img.src = src;
     this.loadingFrames[key] = img.decode().then(() => {
       delete this.loadingFrames[key];
