@@ -15334,7 +15334,7 @@ function cacheCouncilDashboardResults(results){
 async function loadCouncilDashboard(){
   var el=document.getElementById('council-content');
   if(!el)return;
-  if(!hasMainApiCredentials()){
+  if(!hasMainApiCredentials()&&!arkWallReadToken()){
     el.innerHTML=setupNotice();
     var dot=document.getElementById('council-dot');
     var lbl=document.getElementById('council-label');
@@ -15371,9 +15371,10 @@ async function loadCouncilDashboard(){
     renderCouncilRoster(mergeCouncilRows(fallbackCache?councilDashboardCache.holdings:holdings,fallbackCache?councilDashboardCache.heroes:heroes,armySettings),el,fallbackCache?councilDashboardCache.assetSnapshot:assetSnapshot,fallbackCache?councilDashboardCache.dividendProjection:dividendProjection);
     var dot=document.getElementById('council-dot');
     var lbl=document.getElementById('council-label');
-    if(dot)dot.className='api-dot '+(results.holdingsLoaded&&API_URL?'ok':'err');
-    if(lbl)lbl.textContent=(results.holdingsLoaded&&API_URL)?'已連線 · 武將與持股同步':'已載入武將資料 · 尚未連接持股 API';
-    setEmpireCardStatus('council',results.holdingsLoaded&&API_URL?'ok':'err',results.holdingsLoaded&&API_URL?'武將與持股同步':'持股 API 未連接');
+    var rosterConnected=results.holdingsLoaded&&(API_URL||results.source==='NAS');
+    if(dot)dot.className='api-dot '+(rosterConnected?'ok':'err');
+    if(lbl)lbl.textContent=rosterConnected?(results.source==='NAS'?'NAS 快取 · 武將與持股同步':'已連線 · 武將與持股同步'):'已載入武將資料 · 尚未連接資料來源';
+    setEmpireCardStatus('council',rosterConnected?'ok':'err',rosterConnected?(results.source==='NAS'?'NAS 快取已載入':'武將與持股同步'):'尚未連接資料來源');
     // 月總配息與日漲跌不再阻塞首屏；完成後只重繪摘要區與更新摘要快取。
     loadCouncilDashboardSummaryData().then(function(summary){
       if(!summary)return;
@@ -15406,11 +15407,12 @@ async function loadCouncilDashboard(){
 function loadCouncilDashboardData(){
   if(councilDashboardPromise)return councilDashboardPromise;
   councilDashboardPromise=Promise.resolve().then(function(){
-    return Promise.allSettled([
-        loadHeroSheet(),
-        loadCouncilHoldingsOverview()
-      ]);
+    return loadCouncilRosterFromNas_().then(function(nas){
+      if(nas)return {nas:nas};
+      return Promise.allSettled([loadHeroSheet(),loadCouncilHoldingsOverview()]);
+    });
   }).then(function(results){
+      if(results&&results.nas)return results.nas;
       // 龐統城門已在進入卡片前完成驗證；資料載入失敗時只顯示卡片錯誤，
       // 不再由軍機處自行觸發第二次驗證，避免手機端長時間卡在驗證中。
       return results;
@@ -15429,7 +15431,7 @@ function loadCouncilDashboardData(){
 function loadCouncilDashboardSummaryData(){
   if(councilDashboardSummaryPromise)return councilDashboardSummaryPromise;
   councilDashboardSummaryPromise=Promise.allSettled([
-    loadAssetSnapshot()
+    loadAssetSnapshotFromNas_().then(function(nas){return nas||loadAssetSnapshot();})
   ]).then(function(results){
     return {
       assetSnapshot:results[0].status==='fulfilled'?results[0].value:null,
@@ -15916,6 +15918,60 @@ async function loadAssetSnapshot(){
     return await apiGet({action:'assetSnapshot'});
   }catch(e){
     console.warn('asset snapshot api fallback:',e);
+    return null;
+  }
+}
+
+function councilRosterNasUrl(){
+  return '/api/finance/battle-brief-snapshots?range=1m&snapshotType=council-roster';
+}
+
+async function loadCouncilRosterFromNas_(){
+  if(!arkWallReadToken())return null;
+  try{
+    var data=await arkWallFetch(councilRosterNasUrl());
+    var records=Array.isArray(data&&data.records)?data.records.slice():[];
+    records.sort(function(a,b){return new Date(a&&a.capturedAt||0).getTime()-new Date(b&&b.capturedAt||0).getTime();});
+    var latest=records.length?records[records.length-1]:null;
+    var metadata=latest&&latest.metadata&&typeof latest.metadata==='object'?latest.metadata:{};
+    if(!Array.isArray(metadata.heroes)||!Array.isArray(metadata.holdings))return null;
+    return {
+      heroes:metadata.heroes,
+      holdings:metadata.holdings.map(normalizeHoldingOverviewRow),
+      holdingsLoaded:true,
+      assetSnapshot:null,
+      dividendProjection:null,
+      source:'NAS',
+      sourceDate:String(metadata.sourceDate||latest.sourceDate||''),
+      cachedAt:Date.parse(latest.capturedAt)||Date.now()
+    };
+  }catch(error){
+    console.warn('council NAS cache unavailable; falling back to Google Sheet:',error);
+    return null;
+  }
+}
+
+async function loadAssetSnapshotFromNas_(){
+  if(!arkWallReadToken())return null;
+  try{
+    var data=await arkWallFetch('/api/finance/battle-brief-snapshots?range=3m&snapshotType=asset-summary');
+    var records=Array.isArray(data&&data.records)?data.records.slice():[];
+    records.sort(function(a,b){return new Date(a&&a.capturedAt||0).getTime()-new Date(b&&b.capturedAt||0).getTime();});
+    var latest=records.length?records[records.length-1]:null;
+    var metadata=latest&&latest.metadata&&typeof latest.metadata==='object'?latest.metadata:{};
+    if(!metadata.latest)return null;
+    return {
+      sheetName:'每日資產快照', latest:metadata.latest, previous:metadata.previous||null,
+      latestMarketValue:metadata.latestMarketValue, previousMarketValue:metadata.previousMarketValue,
+      dailyChangeAmount:metadata.dailyChangeAmount, dailyChangePct:metadata.dailyChangePct,
+      latestTotalAssetValue:metadata.latestTotalAssetValue, previousTotalAssetValue:metadata.previousTotalAssetValue,
+      totalAssetChangeAmount:metadata.totalAssetChangeAmount, totalAssetChangePct:metadata.totalAssetChangePct,
+      totalAssetTrend30d:metadata.totalAssetTrend30d||null, initialAssetValue:metadata.initialAssetValue,
+      initialAssetChangeAmount:metadata.initialAssetChangeAmount, initialAssetChangePct:metadata.initialAssetChangePct,
+      source:'NAS'
+    };
+  }catch(error){
+    console.warn('asset snapshot NAS cache unavailable; falling back to Google Sheet:',error);
     return null;
   }
 }
