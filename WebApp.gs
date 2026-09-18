@@ -20,6 +20,10 @@ var STORE_SHEET_NAME = 'Store';
 var STORE_HEADERS = ['物品名稱', '所在地點', '編號', '說明', '記錄時間'];
 var STORE_RECORDS_CACHE_KEY = 'store_records_v1';
 var STORE_RECORDS_CACHE_SECONDS = 300;
+var STORE_CONTACTS_SHEET_NAME = '聯絡人';
+var STORE_CONTACT_HEADERS = ['類別', '公司名稱', '聯絡人稱呼', '聯絡電話', 'LINE顯示名稱', '服務地區', '已施作項目'];
+var STORE_CONTACTS_CACHE_KEY = 'store_contacts_v2';
+var STORE_CONTACTS_CACHE_SECONDS = 300;
 var ZIWEI_SHEET_NAME = '紫微星盤';
 var ZIWEI_HEADERS = ['啟用', '名稱', '出生年月日', '出生時辰', '性別', '雲端硬碟檔案ID', '圖片連結', '備註', '更新時間'];
 var ARKOS_ASTROLOGY_API_BASE = 'https://api.ark-os26.cc';
@@ -59,6 +63,7 @@ var DAILY_ASSET_SNAPSHOT_MARKET_CELL = 'I2';
 var DAILY_ASSET_SNAPSHOT_TOTAL_ASSET_CELL = 'H2';
 var DAILY_ASSET_SNAPSHOT_EXPOSURE_CELL = 'H2';
 var DAILY_ASSET_SNAPSHOT_CASH_CELL = 'H5';
+var INITIAL_ASSET_BASELINE_CELL = 'H5';
 var DAILY_ASSET_SNAPSHOT_DEBT_DASHBOARD_CELL = 'J19';
 var DAILY_ADVISOR_REMINDER_SHEET = '每日軍師提醒';
 var DAILY_ADVISOR_REMINDER_HEADERS = ['日期', '提醒內容', '字數', '產生方式', '建立時間'];
@@ -103,6 +108,7 @@ var BATTLE_BRIEF_HEADERS = ['日期', '類別', '代號', '名稱', '今日值',
 var BATTLE_BRIEF_SNAPSHOT_EXCLUDED_CATEGORIES = ['持股股價'];
 // 戰情總匯報不再累積 Google Sheet 快照；基金只保留最新一筆比較基準。
 var BATTLE_BRIEF_LATEST_STATE_PROPERTY = 'BATTLE_BRIEF_LATEST_STATE_V1';
+var BATTLE_BRIEF_SCHEDULED_STATE_PROPERTY = 'BATTLE_BRIEF_SCHEDULED_STATE_V1';
 var BATTLE_BRIEF_RETENTION_DAYS = 0;
   var TWSE_MARGIN_LIVE_CACHE_KEY = 'twse_margin_live_v2';
   var TWSE_MARGIN_LIVE_CACHE_SECONDS = 300;
@@ -309,7 +315,7 @@ var READ_ACTION_HANDLERS_ = {
   holdingPriceHistory: function(ss, p) { return getBattleBriefPriceHistory_(ss, p); },
   etfHoldingChange: function() { return get00997AHoldingChange(); },
   pledgeLoans: function() { return getPledgeLoans(getExternalDbSpreadsheet_()); },
-  assetSnapshot: function() { return getDailyAssetSnapshot(getExternalDbSpreadsheet_()); },
+  assetSnapshot: function() { return getDailyAssetSnapshotWithNasFallback_(); },
   transactions: function(ss, p) { return getTransactions(ss, p.ym, p.recentDays, p.recentLimit); },
   ledgerRequestStatus: function(ss, p) {
     var key = String(p.requestId || '').trim();
@@ -336,7 +342,8 @@ var READ_ACTION_HANDLERS_ = {
   eventChronicle: function(ss) { return getEventChronicle(ss); },
   dailyUpdates: function(ss) { return getDailyUpdates_(ss); },
   todayAdvisorReminder: function() { return getTodayAdvisorReminder(getExternalDbSpreadsheet_()); },
-  storeRecords: function() { return getStoreRecords_(); }
+  storeRecords: function() { return getStoreRecords_(); },
+  storeContacts: function() { return getStoreContacts_(); }
 };
 
 // ── POST 路由（保留相容，同樣支援 token 驗證）────────────────
@@ -410,6 +417,7 @@ var GET_WRITE_ACTIONS_ = {
   assetSnapshotTriggerStatus: true,
   assetSnapshotTriggerInstall: true,
   assetSnapshotRecord: true,
+  assetSnapshotNasSync: true,
   calendarCreate: true,
   calendarDelete: true,
   taskCreate: true,
@@ -420,6 +428,9 @@ var GET_WRITE_ACTIONS_ = {
   storeRecordCreate: true,
   storeRecordUpdate: true,
   storeRecordDelete: true,
+  storeContactCreate: true,
+  storeContactUpdate: true,
+  storeContactDelete: true,
   verifyWriteToken: true,
   ziweiInterpretationSave: true,
   ziweiChartUpload: true,
@@ -451,6 +462,9 @@ var AUTHORIZED_ACTION_HANDLERS_ = {
   assetSnapshotRecord: function() {
     return recordDailyAssetSnapshot();
   },
+  assetSnapshotNasSync: function() {
+    return syncDailyAssetSnapshotToNas_();
+  },
   calendarCreate: function(ss, p) {
     return createGoogleCalendarEvent_(p);
   },
@@ -480,6 +494,15 @@ var AUTHORIZED_ACTION_HANDLERS_ = {
   },
   storeRecordDelete: function(ss, p) {
     return deleteStoreRecord_(p);
+  },
+  storeContactCreate: function(ss, p) {
+    return writeStoreContact_(p);
+  },
+  storeContactUpdate: function(ss, p) {
+    return updateStoreContact_(p);
+  },
+  storeContactDelete: function(ss, p) {
+    return deleteStoreContact_(p);
   },
   marketDashboardRefresh: function() {
     return refreshMarketDashboard();
@@ -1909,6 +1932,7 @@ function getHoldingsOverview(ss, includeFundDataDate) {
 
   return rows.map(function(row, index) {
     var symbol = String(row[0] || '').trim();
+    var normalizedSymbol = normalizeInvestmentSymbol_(symbol) || symbol;
     if (!symbol || symbol === '總資產/總計') return null;
     var displayRow = displayRows[index] || [];
     var formulaRow = formulas[index] || [];
@@ -1917,33 +1941,53 @@ function getHoldingsOverview(ss, includeFundDataDate) {
     var monthlyDivDisplay = String(displayRow[3] || '').trim();
     var yuanPerDay = monthlyDivDisplay || String(displayRow[13] || '').trim();
     var formula = String(formulaRow[5] || '').trim();
-    var fundNav = includeFundDataDate && isBattleBriefFund_(normalizeInvestmentSymbol_(symbol) || symbol)
+    var fundNav = includeFundDataDate && isBattleBriefFund_(normalizedSymbol)
       ? fetchFreshFundNavFromFormula_(formula)
       : null;
     var price = parseFloat(row[5]) || 0;
+    var fallbackPriceApplied = false;
+    // GoogleFinance 對 00998A 會回傳 #N/A；部隊陣容仍需顯示可用的現值，
+    // 因此改以 Yahoo Finance 的台股代碼作為該標的的資料備援。
+    if ((!price || !isFinite(price)) && normalizedSymbol === '00998A') {
+      price = fetchTaiwanHoldingPriceFallback_('00998A');
+      fallbackPriceApplied = price > 0;
+    }
     var fundNavFetched = !!(fundNav && typeof fundNav.value === 'number' && isFinite(fundNav.value) && fundNav.value > 0);
     if (fundNavFetched) {
       price = fundNav.value;
+    }
+    var cost = Math.round(parseFloat(row[1]) || 0);
+    var shares = parseFloat(row[4]) || 0;
+    var marketValue = Math.round(parseFloat(row[2]) || 0);
+    var totalDiv = Math.round(parseFloat(row[6]) || 0);
+    var unrealized = Math.round(parseFloat(row[7]) || 0);
+    var totalReturn = Math.round(parseFloat(row[8]) || 0);
+    var roi = parseFloat(row[10]) || 0;
+    if (fallbackPriceApplied && shares > 0) {
+      marketValue = Math.round(shares * price);
+      unrealized = marketValue - cost;
+      totalReturn = unrealized + totalDiv;
+      roi = cost > 0 ? totalReturn / cost : 0;
     }
 
     return {
       symbol: symbol,
       name: symbol,
-      cost: Math.round(parseFloat(row[1]) || 0),
-      marketValue: Math.round(parseFloat(row[2]) || 0),
+      cost: cost,
+      marketValue: marketValue,
       monthlyDiv: Math.round(parseFloat(row[3]) || 0),
       monthlyDivDisplay: monthlyDivDisplay,
-      shares: parseFloat(row[4]) || 0,
+      shares: shares,
       price: price,
-      totalDiv: Math.round(parseFloat(row[6]) || 0),
-      unrealized: Math.round(parseFloat(row[7]) || 0),
-      totalReturn: Math.round(parseFloat(row[8]) || 0),
+      totalDiv: totalDiv,
+      unrealized: unrealized,
+      totalReturn: totalReturn,
       avgCost: parseFloat(row[9]) || 0,
       roi: (function(value) {
         var num = parseFloat(value);
         if (isNaN(num)) return 0;
         return Math.abs(num) <= 1 ? num * 100 : num;
-      })(row[10]),
+      })(roi),
       formationDate: formationDate,
       elapsedDays: elapsedDays,
       yuanPerDay: yuanPerDay,
@@ -1954,6 +1998,19 @@ function getHoldingsOverview(ss, includeFundDataDate) {
   }).filter(function(row) {
     return row !== null;
   });
+}
+
+function fetchTaiwanHoldingPriceFallback_(symbol) {
+  var candidates = [String(symbol || '').toUpperCase() + '.TW', String(symbol || '').toUpperCase() + '.TWO'];
+  for (var i = 0; i < candidates.length; i++) {
+    try {
+      var price = fetchYahooLastPrice_(candidates[i]);
+      if (price > 0) return price;
+    } catch (err) {
+      Logger.log('Taiwan holding price fallback failed: ' + candidates[i] + ' ' + err.message);
+    }
+  }
+  return 0;
 }
 
 function getHeroes_(ss) {
@@ -2167,8 +2224,9 @@ function readBattleBriefLatestState_() {
 
 function writeBattleBriefLatestState_(todayText, items) {
   try {
+    var stateCategories = ['基金淨值', '台股融資', '台股維持率', '外資台指期'];
     var stateItems = (items || []).filter(function(item) {
-      return item && item.category === '基金淨值' && item.name && item.current !== '' && item.current != null && isFinite(Number(item.current));
+      return item && stateCategories.indexOf(item.category) >= 0 && item.name && item.current !== '' && item.current != null && isFinite(Number(item.current));
     }).map(function(item) {
       return {
         category: item.category,
@@ -2495,6 +2553,8 @@ function buildBattleBriefRows_(ss, previousMap, legacySheet, todayText) {
       code: symbol,
       name: name,
       current: current,
+      referenceValue: parseFloat(row.avgCost) > 0 ? Number(row.avgCost) : '',
+      referenceLabel: '均價',
       previous: previous,
       change: delta.change,
       changePct: delta.changePct,
@@ -2671,6 +2731,116 @@ function postBattleBriefFinanceSnapshotToNas_(snapshotType, items, sourceDate, m
   return JSON.parse(text);
 }
 
+function dailyAssetSnapshotNasItem_(row) {
+  return {
+    code: 'asset-summary',
+    name: '每日資產快照',
+    value: row && row.investmentMarketValue != null ? row.investmentMarketValue : null,
+    change: null,
+    changePct: null,
+    sourceDate: row && row.date ? row.date : '',
+    source: '每日資產快照'
+  };
+}
+
+function dailyAssetSnapshotNasMetadata_(snapshot) {
+  return {
+    sourceSheet: DAILY_ASSET_SNAPSHOT_SHEET,
+    latest: snapshot && snapshot.latest ? snapshot.latest : null,
+    previous: snapshot && snapshot.previous ? snapshot.previous : null,
+    latestMarketValue: snapshot ? snapshot.latestMarketValue : null,
+    previousMarketValue: snapshot ? snapshot.previousMarketValue : null,
+    dailyChangeAmount: snapshot ? snapshot.dailyChangeAmount : null,
+    dailyChangePct: snapshot ? snapshot.dailyChangePct : null,
+    latestTotalAssetValue: snapshot ? snapshot.latestTotalAssetValue : null,
+    previousTotalAssetValue: snapshot ? snapshot.previousTotalAssetValue : null,
+    totalAssetChangeAmount: snapshot ? snapshot.totalAssetChangeAmount : null,
+    totalAssetChangePct: snapshot ? snapshot.totalAssetChangePct : null,
+    totalAssetTrend30d: snapshot ? snapshot.totalAssetTrend30d : null,
+    initialAssetValue: snapshot ? snapshot.initialAssetValue : null,
+    initialAssetChangeAmount: snapshot ? snapshot.initialAssetChangeAmount : null,
+    initialAssetChangePct: snapshot ? snapshot.initialAssetChangePct : null
+  };
+}
+
+function postDailyAssetSnapshotToNas_(snapshot) {
+  if (!snapshot || !snapshot.latest) throw new Error('沒有可寫入 NAS 的資產快照');
+  var latest = snapshot.latest;
+  var items = [dailyAssetSnapshotNasItem_(latest)];
+  if (snapshot.previous) items.push(dailyAssetSnapshotNasItem_(snapshot.previous));
+  return postBattleBriefFinanceSnapshotToNas_(
+    'asset-summary',
+    items,
+    latest.date,
+    dailyAssetSnapshotNasMetadata_(snapshot)
+  );
+}
+
+function syncDailyAssetSnapshotToNas_() {
+  var snapshot = getDailyAssetSnapshot(getExternalDbSpreadsheet_());
+  var response = postDailyAssetSnapshotToNas_(snapshot);
+  return {
+    ok: true,
+    source: 'Google Sheet -> NAS',
+    snapshotType: 'asset-summary',
+    latest: snapshot.latest,
+    previous: snapshot.previous,
+    nas: response
+  };
+}
+
+function getDailyAssetSnapshotFromNas_() {
+  try {
+    var config = battleBriefFinanceSnapshotConfig_();
+    var response = UrlFetchApp.fetch(config.url + '?range=3m&snapshotType=asset-summary', {
+      muteHttpExceptions: true,
+      headers: {
+        Authorization: 'Bearer ' + config.token,
+        'x-arkos-token': config.token
+      }
+    });
+    var status = response.getResponseCode();
+    if (status < 200 || status >= 300) return null;
+    var body = JSON.parse(response.getContentText() || '{}');
+    var records = Array.isArray(body.records) ? body.records : [];
+    if (!records.length) return null;
+    records.sort(function(a, b) {
+      return new Date(a.capturedAt || 0).getTime() - new Date(b.capturedAt || 0).getTime();
+    });
+    var record = records[records.length - 1];
+    var metadata = record && record.metadata && typeof record.metadata === 'object' ? record.metadata : {};
+    if (!metadata.latest) return null;
+    return {
+      sheetName: DAILY_ASSET_SNAPSHOT_SHEET,
+      latest: metadata.latest,
+      previous: metadata.previous || null,
+      latestMarketValue: metadata.latestMarketValue,
+      previousMarketValue: metadata.previousMarketValue,
+      dailyChangeAmount: metadata.dailyChangeAmount,
+      dailyChangePct: metadata.dailyChangePct,
+      latestTotalAssetValue: metadata.latestTotalAssetValue,
+      previousTotalAssetValue: metadata.previousTotalAssetValue,
+      totalAssetChangeAmount: metadata.totalAssetChangeAmount,
+      totalAssetChangePct: metadata.totalAssetChangePct,
+      totalAssetTrend30d: metadata.totalAssetTrend30d || null,
+      initialAssetValue: metadata.initialAssetValue,
+      initialAssetChangeAmount: metadata.initialAssetChangeAmount,
+      initialAssetChangePct: metadata.initialAssetChangePct,
+      source: 'NAS'
+    };
+  } catch (error) {
+    return null;
+  }
+}
+
+function getDailyAssetSnapshotWithNasFallback_() {
+  var nasSnapshot = getDailyAssetSnapshotFromNas_();
+  if (nasSnapshot && nasSnapshot.latest) return nasSnapshot;
+  var sheetSnapshot = getDailyAssetSnapshot(getExternalDbSpreadsheet_());
+  sheetSnapshot.source = 'Google Sheet fallback';
+  return sheetSnapshot;
+}
+
 function marketSectorFmpKey_(value) {
   return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 }
@@ -2823,24 +2993,62 @@ function battleBriefSnapshotSourceDate_(value) {
   return match ? match[1] + '-' + String(match[2]).padStart(2, '0') + '-' + String(match[3]).padStart(2, '0') : '';
 }
 
+function readBattleBriefScheduledState_() {
+  try {
+    var raw = PropertiesService.getScriptProperties().getProperty(BATTLE_BRIEF_SCHEDULED_STATE_PROPERTY);
+    if (!raw) return {};
+    var state = JSON.parse(raw);
+    return state && typeof state === 'object' ? state : {};
+  } catch (error) {
+    Logger.log('scheduled battle brief state read failed: ' + error.message);
+    return {};
+  }
+}
+
+function writeBattleBriefScheduledState_(key, items, capturedAt) {
+  var state = readBattleBriefScheduledState_();
+  state[key] = (items || []).filter(function(item) {
+    return item && item.name && item.current !== '' && item.current != null && isFinite(Number(item.current));
+  });
+  state[key + 'CapturedAt'] = capturedAt || new Date().toISOString();
+  PropertiesService.getScriptProperties().setProperty(BATTLE_BRIEF_SCHEDULED_STATE_PROPERTY, JSON.stringify(state));
+  return state;
+}
+
+function applyBattleBriefScheduledState_(grouped, marketRows) {
+  var state = readBattleBriefScheduledState_();
+  function withReferenceValues_(items, liveItems) {
+    var references = {};
+    (liveItems || []).forEach(function(item) {
+      if (!item || !item.name) return;
+      references[String(item.name)] = {
+        value: item.referenceValue,
+        label: item.referenceLabel || '均價'
+      };
+    });
+    return (items || []).map(function(item) {
+      var reference = references[String(item.name)] || {};
+      if (item.referenceValue === '' || item.referenceValue == null) item.referenceValue = reference.value == null ? '' : reference.value;
+      if (!item.referenceLabel) item.referenceLabel = reference.label || '均價';
+      return item;
+    });
+  }
+  if (Array.isArray(state.funds) && state.funds.length) grouped.funds = withReferenceValues_(state.funds, grouped.funds);
+  if (Array.isArray(state.holdings) && state.holdings.length) grouped.holdings = withReferenceValues_(state.holdings, grouped.holdings);
+  if (Array.isArray(state.market) && state.market.length) marketRows = state.market;
+  return { grouped: grouped, marketRows: marketRows };
+}
+
 function recordFundNavNasSnapshotScheduled() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var battle = getBattleBrief(ss);
+  var battle = getBattleBrief(ss, true);
   var items = (battle.funds || []).filter(function(item) {
     return item && item.name && item.current !== '' && item.current != null && isFinite(Number(item.current));
-  }).map(function(item) {
-    return {
-      code: item.code || item.name,
-      name: item.name,
-      value: Number(item.current),
-      change: item.change,
-      changePct: item.changePct,
-      sourceDate: battleBriefSnapshotSourceDate_(item.updatedAt),
-      source: item.source || '基金淨值來源'
-    };
   });
   if (!items.length) throw new Error('基金淨值沒有可保存的有效資料。');
-  return postBattleBriefFinanceSnapshotToNas_('fund-nav', items, items.map(function(item) { return item.sourceDate; }).filter(Boolean).sort().pop() || '');
+  var capturedAt = new Date().toISOString();
+  writeBattleBriefScheduledState_('funds', items, capturedAt);
+  return { ok: true, status: 'latest-only', capturedAt: capturedAt, count: items.length };
 }
 
 function recordTwseMarginNasSnapshotScheduled() {
@@ -2849,32 +3057,28 @@ function recordTwseMarginNasSnapshotScheduled() {
   if (!margin || margin.value == null) throw new Error('台股融資資料沒有可保存的有效資料。');
   var sourceDate = battleBriefSnapshotSourceDate_(margin.snapshotDate || margin.updatedAt);
   var items = [
-    { code: '^TWII', name: '台股融資餘額', value: Number(margin.value), change: margin.balanceChange, changePct: '', sourceDate: sourceDate, source: margin.source || 'TWSE' },
-    { code: '^TWII', name: '台股維持率', value: Number(margin.maintenanceRatio), change: margin.maintenanceChange, changePct: '', sourceDate: sourceDate, source: margin.source || 'TWSE' },
-    { code: '^TX', name: '外資台指期淨空單', value: Number(margin.foreignTxNetShort), change: margin.foreignTxNetShortChange, changePct: '', sourceDate: battleBriefSnapshotSourceDate_(margin.foreignTxNetShortUpdatedAt || margin.updatedAt), source: margin.foreignTxNetShortSource || 'TAIFEX' }
-  ].filter(function(item) { return isFinite(item.value); });
-  return postBattleBriefFinanceSnapshotToNas_('twse-margin', items, sourceDate);
+    { category: '台股融資', code: '^TWII', name: '台股融資餘額', current: Number(margin.value), previous: Number(margin.value) - Number(margin.balanceChange || 0), change: margin.balanceChange, changePct: '', updatedAt: margin.updatedAt, source: margin.source || 'TWSE' },
+    { category: '台股維持率', code: '^TWII', name: '台股維持率', current: Number(margin.maintenanceRatio), previous: Number(margin.maintenanceRatio) - Number(margin.maintenanceChange || 0), change: margin.maintenanceChange, changePct: '', updatedAt: margin.updatedAt, source: margin.source || 'TWSE' },
+    { category: '外資台指期', code: '^TX', name: '外資台指期淨空單', current: Number(margin.foreignTxNetShort), previous: Number(margin.foreignTxNetShort) - Number(margin.foreignTxNetShortChange || 0), change: margin.foreignTxNetShortChange, changePct: '', updatedAt: margin.foreignTxNetShortUpdatedAt || margin.updatedAt, source: margin.foreignTxNetShortSource || 'TAIFEX' }
+  ].filter(function(item) { return isFinite(Number(item.current)); });
+  if (!items.length) throw new Error('台股融資資料沒有可保存的有效資料。');
+  var capturedAt = new Date().toISOString();
+  writeBattleBriefScheduledState_('market', items, capturedAt);
+  return { ok: true, status: 'latest-only', capturedAt: capturedAt, count: items.length };
 }
 
 function recordBattleHoldingsNasSnapshotScheduled() {
+  var currentHour = Number(Utilities.formatDate(new Date(), Session.getScriptTimeZone() || 'Asia/Taipei', 'H'));
+  if (currentHour < 12) return { ok: true, status: 'disabled-before-13:30', message: '持股最新值只在每日 13:30 更新。' };
   var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var battle = getBattleBrief(ss);
+  var battle = getBattleBrief(ss, true);
   var items = (battle.holdings || []).filter(function(item) {
     return item && item.name && item.current !== '' && item.current != null && isFinite(Number(item.current));
-  }).map(function(item) {
-    return {
-      code: item.code || item.name,
-      name: item.name,
-      value: Number(item.current),
-      change: item.change,
-      changePct: item.changePct,
-      sourceDate: battleBriefSnapshotSourceDate_(item.updatedAt),
-      source: item.source || '持股價格來源',
-      note: item.note || ''
-    };
   });
   if (!items.length) throw new Error('持股標的沒有可保存的有效價格資料。');
-  return postBattleBriefFinanceSnapshotToNas_('holdings', items, items.map(function(item) { return item.sourceDate; }).filter(Boolean).sort().pop() || '');
+  var capturedAt = new Date().toISOString();
+  writeBattleBriefScheduledState_('holdings', items, capturedAt);
+  return { ok: true, status: 'latest-only', capturedAt: capturedAt, count: items.length };
 }
 
 function deleteBattleBriefFinanceSnapshotTriggers_() {
@@ -2893,10 +3097,9 @@ function installBattleBriefFinanceSnapshotTriggers_() {
   var deleted = deleteBattleBriefFinanceSnapshotTriggers_();
   ScriptApp.newTrigger('recordFundNavNasSnapshotScheduled').timeBased().everyDays(1).atHour(19).nearMinute(0).create();
   ScriptApp.newTrigger('recordTwseMarginNasSnapshotScheduled').timeBased().everyDays(1).atHour(21).nearMinute(30).create();
-  ScriptApp.newTrigger('recordBattleHoldingsNasSnapshotScheduled').timeBased().everyDays(1).atHour(5).nearMinute(30).create();
   ScriptApp.newTrigger('recordBattleHoldingsNasSnapshotScheduled').timeBased().everyDays(1).atHour(13).nearMinute(30).create();
   ScriptApp.newTrigger('recordMarketSectorSnapshotScheduled').timeBased().everyDays(1).atHour(7).nearMinute(30).create();
-  return { message: '已建立基金 19:00、台股融資與維持率 21:30、持股 05:30／13:30、產業輪動 07:30 左右 NAS 快照觸發器', deleted: deleted, status: getBattleBriefFinanceSnapshotTriggerStatus_() };
+  return { message: '已建立基金 19:00、台股融資與維持率 21:30、持股 13:30、產業輪動 07:30 最新值更新觸發器，不再建立歷史股價快照', deleted: deleted, status: getBattleBriefFinanceSnapshotTriggerStatus_() };
 }
 
 // Apps Script 介面與 clasp 可直接執行的公開入口；正式排程仍由上方私有 helper 建立。
@@ -2913,10 +3116,10 @@ function getBattleBriefFinanceSnapshotTriggerStatus_() {
   var triggers = ScriptApp.getProjectTriggers().filter(function(trigger) { return handlers.indexOf(trigger.getHandlerFunction()) >= 0; }).map(function(trigger) {
     return { handler: trigger.getHandlerFunction(), eventType: String(trigger.getEventType()), source: String(trigger.getTriggerSource()), uid: trigger.getUniqueId ? trigger.getUniqueId() : '' };
   });
-  return { installed: triggers.length === 5, count: triggers.length, triggers: triggers };
+  return { installed: triggers.length === 4, count: triggers.length, triggers: triggers };
 }
 
-function getBattleBrief(ss) {
+function getBattleBrief(ss, skipScheduledState) {
   var legacySheet = ss.getSheetByName(BATTLE_BRIEF_SHEET);
   var todayText = battleBriefDateText_(new Date());
   var previousMap = readBattleBriefLatestState_();
@@ -2936,12 +3139,18 @@ function getBattleBrief(ss) {
       });
     }
   }
-  var marketDashboard = getMarketDashboard(getExternalDbSpreadsheet_());
+  // 戰情使用排程保存的市場最新值；即時外部查詢由「台美股大盤」頁單獨負責。
+  var marketDashboard = getMarketDashboard(getExternalDbSpreadsheet_(), true);
   var grouped = buildBattleBriefRows_(ss, previousMap, legacySheet, todayText);
   var marketRows = buildBattleBriefMarketRows_(marketDashboard, previousMap);
+  if (!skipScheduledState) {
+    var scheduledState = applyBattleBriefScheduledState_(grouped, marketRows);
+    grouped = scheduledState.grouped;
+    marketRows = scheduledState.marketRows;
+  }
   var etfHoldingChange = get00997AHoldingChange();
   var allRows = grouped.rows.concat(marketRows);
-  writeBattleBriefLatestState_(todayText, grouped.funds);
+  writeBattleBriefLatestState_(todayText, grouped.funds.concat(marketRows));
 
   return {
     date: todayText,
@@ -3274,8 +3483,11 @@ function build00997AChangeSummary_(payload, previous) {
 }
 
 function askOpenAI00997ACommentary_(summary) {
-  if (!summary.previousDate || !summary.changes.length) {
+  if (!summary.previousDate) {
     return '首筆或同資料日快照已建立，待下一個資料日後再判讀持股異動。';
+  }
+  if (!summary.changes.length) {
+    return '已完成與 ' + summary.previousDate + ' 快照比較，本次未偵測到達異動門檻的持股變化。';
   }
   // Apps Script 沒有 process.env；以 Script Properties 作為部署環境變數保存設定。
   var properties = PropertiesService.getScriptProperties();
@@ -3449,6 +3661,9 @@ function get00997AHoldingChange() {
   var ss = getEtfHoldingsSpreadsheet_();
   var changeSheet = ensure00997AHoldingSheet_(ss, ETF_HOLDING_CHANGE_SHEET, ETF_HOLDING_CHANGE_HEADERS);
   var latest = latest00997AChangeFromSheet_(changeSheet);
+  if (latest && latest.previousDate && !latest.addedText && !latest.removedText && !latest.topAddsText && !latest.topReducesText && /首筆或同資料日快照已建立/.test(latest.commentary)) {
+    latest.commentary = '已完成與 ' + latest.previousDate + ' 快照比較，本次未偵測到達異動門檻的持股變化。';
+  }
   var status = get00997AHoldingSnapshotTriggerStatus();
   return {
     hasData: !!latest,
@@ -3761,6 +3976,15 @@ function recordDailyAssetSnapshot() {
   sheet.getRange(targetRow, 9, 1, 1).setNumberFormat('#,##0');
   SpreadsheetApp.flush();
 
+  // Google Sheet 是正式紀錄；NAS 只保存最新與前一筆，寫入失敗不得阻斷每日快照。
+  var nasSync = { ok: false, error: '' };
+  try {
+    nasSync = { ok: true, result: postDailyAssetSnapshotToNas_(getDailyAssetSnapshot(db)) };
+  } catch (nasError) {
+    nasSync = { ok: false, error: nasError && nasError.message ? nasError.message : String(nasError) };
+    Logger.log('每日資產快照 NAS 同步失敗：' + nasSync.error);
+  }
+
   return {
     sheetName: DAILY_ASSET_SNAPSHOT_SHEET,
     row: targetRow,
@@ -3775,7 +3999,8 @@ function recordDailyAssetSnapshot() {
     exposureAsset: summary.exposureAsset,
     cashValue: summary.cashValue,
     borrowings: summary.borrowings,
-    netAsset: summary.netAsset
+    netAsset: summary.netAsset,
+    nasSync: nasSync
   };
 }
 
@@ -3791,7 +4016,10 @@ function getDailyAssetSnapshot(ss) {
       previousMarketValue: null,
       dailyChangeAmount: null,
       dailyChangePct: null,
-      totalAssetTrend30d: null
+      totalAssetTrend30d: null,
+      initialAssetValue: null,
+      initialAssetChangeAmount: null,
+      initialAssetChangePct: null
     };
   }
 
@@ -3869,6 +4097,16 @@ function getDailyAssetSnapshot(ss) {
     }
   }
 
+  var initialAssetValue = getInitialAssetBaseline_();
+  var initialAssetChangeAmount = null;
+  var initialAssetChangePct = null;
+  if (latest && latest.totalAssetValue !== null && initialAssetValue !== null) {
+    initialAssetChangeAmount = latest.totalAssetValue - initialAssetValue;
+    if (initialAssetValue) {
+      initialAssetChangePct = initialAssetChangeAmount / initialAssetValue * 100;
+    }
+  }
+
   return {
     sheetName: DAILY_ASSET_SNAPSHOT_SHEET,
     latest: latest,
@@ -3881,8 +4119,23 @@ function getDailyAssetSnapshot(ss) {
     previousTotalAssetValue: previous ? previous.totalAssetValue : null,
     totalAssetChangeAmount: totalAssetChangeAmount,
     totalAssetChangePct: totalAssetChangePct,
-    totalAssetTrend30d: totalAssetTrend30d
+    totalAssetTrend30d: totalAssetTrend30d,
+    initialAssetValue: initialAssetValue,
+    initialAssetChangeAmount: initialAssetChangeAmount,
+    initialAssetChangePct: initialAssetChangePct
   };
+}
+
+function getInitialAssetBaseline_() {
+  try {
+    var commandSs = getCommandSpreadsheet_();
+    var moon = commandSs.getSheetByName('月度戰情室');
+    if (!moon) return null;
+    var value = parseSheetNumber_(moon.getRange(INITIAL_ASSET_BASELINE_CELL).getValue());
+    return value > 0 ? Math.round(value) : null;
+  } catch (error) {
+    return null;
+  }
 }
 
 function getEventChronicle(ss) {
@@ -4270,21 +4523,33 @@ function getTodayCalendar(options) {
   var today = new Date();
   var mode = String(options.mode || options.range || '').trim().toLowerCase();
   var requestedDate = String(options.date || '').trim();
+  var requestedMonth = String(options.month || '').trim();
   var includeAllCalendars = String(options.allCalendars || '').trim() === '1';
   var dayOffset = 0;
   var dayCount = 1;
   var start;
-  if (requestedDate) {
+  if (requestedMonth) {
+    start = parseCalendarMonth_(requestedMonth);
+    mode = 'month';
+    dayCount = new Date(start.getFullYear(), start.getMonth() + 1, 0).getDate();
+  } else if (requestedDate) {
     start = parseCalendarDate_(requestedDate);
     mode = 'date';
   } else {
-    if (mode !== 'tomorrow' && mode !== 'week') mode = 'today';
-    dayOffset = mode === 'today' ? 0 : 1;
-    dayCount = mode === 'week' ? 7 : 1;
-    start = new Date(today.getFullYear(), today.getMonth(), today.getDate() + dayOffset);
+    if (mode === 'month') {
+      start = new Date(today.getFullYear(), today.getMonth(), 1);
+      dayCount = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+    } else {
+      if (mode !== 'tomorrow' && mode !== 'week') mode = 'today';
+      dayOffset = mode === 'today' ? 0 : 1;
+      dayCount = mode === 'week' ? 7 : 1;
+      start = new Date(today.getFullYear(), today.getMonth(), today.getDate() + dayOffset);
+    }
   }
-  var end = new Date(today.getFullYear(), today.getMonth(), today.getDate() + dayOffset + dayCount);
-  if (requestedDate) {
+  var end = mode === 'month'
+    ? new Date(start.getFullYear(), start.getMonth() + 1, 1)
+    : new Date(today.getFullYear(), today.getMonth(), today.getDate() + dayOffset + dayCount);
+  if (requestedDate && mode === 'date') {
     end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1);
   }
   var calendars = includeAllCalendars ? CalendarApp.getAllCalendars() : [CalendarApp.getDefaultCalendar()];
@@ -4372,6 +4637,15 @@ function parseCalendarDate_(dateText) {
     throw new Error('行程日期格式不正確');
   }
   return date;
+}
+
+function parseCalendarMonth_(monthText) {
+  var match = String(monthText || '').trim().match(/^(\d{4})-(\d{2})$/);
+  if (!match) throw new Error('行事曆月份格式不正確');
+  var year = Number(match[1]);
+  var month = Number(match[2]);
+  if (month < 1 || month > 12) throw new Error('行事曆月份格式不正確');
+  return new Date(year, month - 1, 1);
 }
 
 function parseCalendarDateTime_(dateText, timeText) {
@@ -5284,11 +5558,12 @@ function refreshMarketDashboard() {
   return { updated: updated, errors: errors, refreshedAt: Utilities.formatDate(new Date(), tz, 'yyyy/MM/dd HH:mm') };
 }
 
-function getMarketDashboard(ss) {
+function getMarketDashboard(ss, skipLiveMargin) {
   var sheet = ss.getSheetByName(MARKET_DASHBOARD_SHEET);
   // 戰情讀取優先使用短時間快取的即時官方來源；每日快照只作歷史與備援，
   // 避免「總經資料庫」尚未寫入今日快照時，畫面長時間沿用舊數值。
-  var marginInfo = getCurrentTWSEMarginSnapshot_(ss);
+  // 戰情總匯報另有排程最新值，避免開啟戰情時同步等待 TWSE／TAIFEX 外部來源。
+  var marginInfo = skipLiveMargin ? null : getCurrentTWSEMarginSnapshot_(ss);
   if (!marginInfo && sheet) marginInfo = getMarketMarginBalance_(sheet);
   if (!sheet || sheet.getLastRow() < 2) {
     return {
@@ -8835,7 +9110,8 @@ function getTransactions(ss, ym, recentDays, recentLimit) {
   var usedAccountChanges = {};
 
   if (db && db.getLastRow() >= 2) {
-    var data = db.getRange(2, 1, db.getLastRow() - 1, 16).getValues();
+    var lastDataRow = getLastLedgerDataRow_(db);
+    var data = lastDataRow >= 2 ? db.getRange(2, 1, lastDataRow - 1, 16).getValues() : [];
     data.forEach(function(row, i) {
       var rowYM = ledgerYm_(row);
       if (cutoffStamp == null && rowYM !== ym) return;
@@ -8971,6 +9247,16 @@ function getTransactions(ss, ym, recentDays, recentLimit) {
     delete t._order;
     return t;
   });
+}
+
+function getLastLedgerDataRow_(sheet) {
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) return 1;
+  var dates = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+  for (var i = dates.length - 1; i >= 0; i--) {
+    if (dates[i][0] !== '' && dates[i][0] != null) return i + 2;
+  }
+  return 1;
 }
 
 function getStockTrades(ss, ym) {
@@ -9366,7 +9652,7 @@ function normalizeInvestmentSymbol_(value) {
   if (s.indexOf('00988A') >= 0) return 'GDXW';
   if (s.indexOf('985B') >= 0) return '00985B';
   if (s.indexOf('997A') >= 0) return '00997A';
-  var symbols = ['AIPI', 'CHPY', 'PLTY', 'QQQI', 'SPYI', 'MLPI', 'IAU', 'GDXW', 'GLDW', '00985B', '00997A'];
+  var symbols = ['AIPI', 'CHPY', 'PLTY', 'QQQI', 'SPYI', 'MLPI', 'IAU', 'GDXW', 'GLDW', '00985B', '00997A', '00998A'];
   for (var i = 0; i < symbols.length; i++) {
     if (s.indexOf(symbols[i]) >= 0) return symbols[i];
   }
@@ -9383,6 +9669,7 @@ function getDividendDisplayLabel_(symbol) {
   var displayMap = {
     '國泰高股息B': '🌐國泰高股息B',
     '00985B': '🎟️00985B',
+    '00998A': '🪙00998A',
     '00997A': '🪄00997A',
     'MLPI': '🛢️MLPI',
     '施羅德收益成長A2': '🌳施羅德收益成長A2',
@@ -10379,6 +10666,154 @@ function deleteStoreRecord_(body) {
   sheet.deleteRow(row);
   clearStoreRecordsCache_();
   return { status: 'success', message: '倉庫記錄已移除', row: row };
+}
+
+// ── Store 聯絡人資料（同一份 Store 試算表的獨立工作表）──────────
+function ensureStoreContactsSheet_() {
+  var ss = getStoreSpreadsheet_();
+  var sheet = ss.getSheetByName(STORE_CONTACTS_SHEET_NAME);
+  if (!sheet) sheet = ss.insertSheet(STORE_CONTACTS_SHEET_NAME);
+
+  var current = sheet.getRange(1, 1, 1, STORE_CONTACT_HEADERS.length).getValues()[0];
+  var needsHeader = current.join('') === '';
+  if (!needsHeader) {
+    for (var i = 0; i < STORE_CONTACT_HEADERS.length; i++) {
+      if (String(current[i] || '').trim() !== STORE_CONTACT_HEADERS[i]) {
+        needsHeader = true;
+        break;
+      }
+    }
+  }
+  if (needsHeader) {
+    sheet.getRange(1, 1, 1, STORE_CONTACT_HEADERS.length).setValues([STORE_CONTACT_HEADERS]);
+  }
+  sheet.setFrozenRows(1);
+  return sheet;
+}
+
+function clearStoreContactsCache_() {
+  CacheService.getScriptCache().remove(STORE_CONTACTS_CACHE_KEY);
+}
+
+function putStoreContactsCache_(value) {
+  try {
+    CacheService.getScriptCache().put(
+      STORE_CONTACTS_CACHE_KEY,
+      JSON.stringify(value),
+      STORE_CONTACTS_CACHE_SECONDS
+    );
+  } catch (ignore) {
+    // Cache is only an optimization; an oversized or unavailable cache must not break reads.
+  }
+}
+
+function getStoreContacts_() {
+  var cache = CacheService.getScriptCache();
+  var cached = cache.get(STORE_CONTACTS_CACHE_KEY);
+  if (cached) {
+    try {
+      return JSON.parse(cached);
+    } catch (ignore) {
+      cache.remove(STORE_CONTACTS_CACHE_KEY);
+    }
+  }
+
+  var sheet = getStoreSpreadsheet_().getSheetByName(STORE_CONTACTS_SHEET_NAME);
+  if (!sheet) {
+    var emptyResult = { status: 'success', contacts: [] };
+    putStoreContactsCache_(emptyResult);
+    return emptyResult;
+  }
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) {
+    var noContactsResult = { status: 'success', contacts: [] };
+    putStoreContactsCache_(noContactsResult);
+    return noContactsResult;
+  }
+
+  var rows = sheet.getRange(2, 1, lastRow - 1, STORE_CONTACT_HEADERS.length).getDisplayValues();
+  var contacts = rows.map(function(row, index) {
+    return {
+      row: index + 2,
+      category: String(row[0] || '').trim(),
+      companyName: String(row[1] || '').trim(),
+      contactName: String(row[2] || '').trim(),
+      phone: String(row[3] || '').trim(),
+      lineName: String(row[4] || '').trim(),
+      serviceArea: String(row[5] || '').trim(),
+      completedWork: String(row[6] || '').trim()
+    };
+  }).filter(function(contact) {
+    return contact.category || contact.companyName || contact.contactName || contact.phone || contact.lineName || contact.serviceArea || contact.completedWork;
+  });
+
+  var result = { status: 'success', contacts: contacts };
+  putStoreContactsCache_(result);
+  return result;
+}
+
+function normalizeStoreContact_(body) {
+  body = body || {};
+  return [
+    String(body.category || '').trim(),
+    String(body.companyName || '').trim(),
+    String(body.contactName || '').trim(),
+    String(body.phone || '').trim(),
+    String(body.lineName || '').trim(),
+    String(body.serviceArea || '').trim(),
+    String(body.completedWork || '').trim()
+  ];
+}
+
+function storeContactObject_(row, record) {
+  return {
+    row: row,
+    category: record[0],
+    companyName: record[1],
+    contactName: record[2],
+    phone: record[3],
+    lineName: record[4],
+    serviceArea: record[5],
+    completedWork: record[6]
+  };
+}
+
+function getStoreContactRow_(body, sheet) {
+  var row = Number(body && body.row);
+  if (!Number.isInteger(row) || row < 2 || row > sheet.getLastRow()) {
+    throw new Error('找不到要操作的聯絡人資料');
+  }
+  return row;
+}
+
+function writeStoreContact_(body) {
+  var record = normalizeStoreContact_(body);
+  if (!record[1]) throw new Error('請輸入聯絡人稱呼');
+  var sheet = ensureStoreContactsSheet_();
+  var row = sheet.getLastRow() + 1;
+  sheet.getRange(row, 1, 1, STORE_CONTACT_HEADERS.length).setValues([record]);
+  sheet.getRange(row, 1, 1, STORE_CONTACT_HEADERS.length).setNumberFormat('@');
+  clearStoreContactsCache_();
+  return { status: 'success', message: '聯絡人已新增', row: row, contact: storeContactObject_(row, record) };
+}
+
+function updateStoreContact_(body) {
+  var record = normalizeStoreContact_(body);
+  if (!record[1]) throw new Error('請輸入聯絡人稱呼');
+  var sheet = ensureStoreContactsSheet_();
+  var row = getStoreContactRow_(body, sheet);
+  sheet.getRange(row, 1, 1, STORE_CONTACT_HEADERS.length).setValues([record]);
+  sheet.getRange(row, 1, 1, STORE_CONTACT_HEADERS.length).setNumberFormat('@');
+  clearStoreContactsCache_();
+  return { status: 'success', message: '聯絡人已更新', row: row };
+}
+
+function deleteStoreContact_(body) {
+  var sheet = ensureStoreContactsSheet_();
+  var row = getStoreContactRow_(body, sheet);
+  sheet.deleteRow(row);
+  clearStoreContactsCache_();
+  return { status: 'success', message: '聯絡人已移除', row: row };
 }
 
 // ── 醫館資料（合併進主 Web App API）───────────────────────────
