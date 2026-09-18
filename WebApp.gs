@@ -28,6 +28,7 @@ var ZIWEI_SHEET_NAME = '紫微星盤';
 var ZIWEI_HEADERS = ['啟用', '名稱', '出生年月日', '出生時辰', '性別', '雲端硬碟檔案ID', '圖片連結', '備註', '更新時間'];
 var ARKOS_ASTROLOGY_API_BASE = 'https://api.ark-os26.cc';
 var ARKOS_FINANCE_SNAPSHOT_PATH = '/api/finance/battle-brief-snapshots';
+var ARKOS_MEDICAL_CACHE_PATH = '/api/medical-cache';
 var EVENT_CHRONICLE_SHEET_NAME = '事件編年史';
 
 // ── 月度戰情室座標（核心區已由 E18:O41 搬到 A1:K24）──
@@ -396,6 +397,7 @@ var GET_WRITE_ACTIONS_ = {
   emilyJournalPasswordSave: true,
   macroWebhook: true,
   medicalCardStatsUpdate: true,
+  syncMedicalCache: true,
   macroLongReportGenerate: true,
   macroLongReportTriggerInstall: true,
   macroLongReportTriggerStatus: true,
@@ -611,6 +613,9 @@ var AUTHORIZED_ACTION_HANDLERS_ = {
   },
   medicalCardStatsUpdate: function(ss, p) {
     return updateMedicalCardStats_(p);
+  },
+  syncMedicalCache: function() {
+    return syncMedicalCacheToNas_();
   },
   emilyCardDecks: function(ss, p) {
     return getEmilyCardDecks_();
@@ -10925,6 +10930,43 @@ function getMedicalCardStats_(p) {
   };
 }
 
+function medicalCacheConfig_() {
+  var props = PropertiesService.getScriptProperties();
+  var baseUrl = String(props.getProperty('ARKOS_MEDICAL_CACHE_URL') || ARKOS_ASTROLOGY_API_BASE).replace(/\/$/, '');
+  var token = String(props.getProperty('ARKOS_MEDICAL_CACHE_TOKEN') || props.getProperty('ARKOS_UPLOAD_TOKEN') || props.getProperty('ARKOS_ASTROLOGY_TOKEN') || '').trim();
+  if (!token) throw new Error('尚未設定 ARKOS_MEDICAL_CACHE_TOKEN（或 ARKOS_UPLOAD_TOKEN），無法同步醫館快取。');
+  return { url: baseUrl + ARKOS_MEDICAL_CACHE_PATH, token: token };
+}
+
+function buildMedicalCachePayload_() {
+  return {
+    version: 1,
+    updatedAt: new Date().toISOString(),
+    options: getMedicalOptions_().options || {},
+    records: getMedicalRecords_().records || [],
+    cardStats: getMedicalCardStats_({ monthsLimit: 12 }).cardStats || { tarot: [], osho: [] }
+  };
+}
+
+function syncMedicalCacheToNas_() {
+  var config = medicalCacheConfig_();
+  var payload = buildMedicalCachePayload_();
+  var response = UrlFetchApp.fetch(config.url, {
+    method: 'post',
+    contentType: 'application/json',
+    payload: JSON.stringify(payload),
+    muteHttpExceptions: true,
+    headers: {
+      Authorization: 'Bearer ' + config.token,
+      'x-arkos-token': config.token
+    }
+  });
+  var status = response.getResponseCode();
+  var text = response.getContentText() || '';
+  if (status < 200 || status >= 300) throw new Error('醫館 NAS 快取同步失敗：HTTP ' + status + ' ' + text.slice(0, 300));
+  return { ok: true, source: 'Google Sheet -> NAS', updatedAt: payload.updatedAt, response: JSON.parse(text || '{}') };
+}
+
 function readMedicalStatsSheetCached_(sheet, columns, monthsLimit, kind) {
   var cache = CacheService.getScriptCache();
   var key = MEDICAL_CARD_STATS_CACHE_KEY + kind + '_' + monthsLimit;
@@ -11490,7 +11532,7 @@ function syncMedicalRecordHeader_(sheet) {
 }
 
 function getMedicalSettingOptions_(ss) {
-  var empty = { emotions: [], causes: [], meds: [], painAreas: [], tarots: [], positions: [], oracles: [], keywords: [], cardImages: {}, oracleImages: {} };
+  var empty = { emotions: [], causes: [], meds: [], painAreas: [], tarots: [], positions: [], oracles: [], keywords: [], cardImages: {}, cardImagesReversed: {}, oracleImages: {} };
   var sheet = ss.getSheetByName(MEDICAL_SETTING_SHEET_NAME);
   if (!sheet || sheet.getLastRow() < 2) return empty;
 
@@ -11508,15 +11550,19 @@ function getMedicalSettingOptions_(ss) {
   });
 
   var cardImages = {};
+  var cardImagesReversed = {};
   var oracleImages = {};
   var imgSheet = ss.getSheetByName('卡片圖案連結');
   if (imgSheet && imgSheet.getLastRow() >= 2) {
-    imgSheet.getRange(2, 1, imgSheet.getLastRow() - 1, 4).getDisplayValues().forEach(function(row) {
+    imgSheet.getRange(2, 1, imgSheet.getLastRow() - 1, 6).getDisplayValues().forEach(function(row) {
       var tarotName = cleanMedicalOption_(row[0]);
       var tarotUrl = String(row[1] || '').trim();
       var oracleName = cleanMedicalOption_(row[2]);
       var oracleUrl = String(row[3] || '').trim();
+      var tarotReversedName = cleanMedicalOption_(row[4]);
+      var tarotReversedUrl = String(row[5] || '').trim();
       if (tarotName && tarotUrl) cardImages[tarotName] = tarotUrl;
+      if (tarotReversedName && tarotReversedUrl) cardImagesReversed[tarotReversedName] = tarotReversedUrl;
       if (oracleName && oracleUrl) oracleImages[oracleName] = oracleUrl;
     });
   }
@@ -11531,6 +11577,7 @@ function getMedicalSettingOptions_(ss) {
     oracles: values[6],
     keywords: values[7],
     cardImages: cardImages,
+    cardImagesReversed: cardImagesReversed,
     oracleImages: oracleImages
   };
 }
