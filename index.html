@@ -4939,6 +4939,8 @@ var currentPanel = null;
 var currentTab = null;
 var medicalOptionsCache = null;
 var medicalOptionsLastError = '';
+var medicalNasCache = null;
+var medicalNasCachePromise = null;
 var ziweiChartsCache = [];
 var ziweiChartsPromise = null;
 var ziweiSelectedId = '';
@@ -8582,6 +8584,7 @@ async function medicalPost(body,timeoutMs){
     getOptions:'medicalOptions',
     getRecords:'medicalRecords',
     getCardStats:'medicalCardStats',
+    syncMedicalCache:'syncMedicalCache',
     quickRecord:'medicalQuickRecord',
     tarotRecord:'medicalTarotRecord',
     updateCardStats:'medicalCardStatsUpdate'
@@ -9268,6 +9271,27 @@ async function deleteGoogleTask(btn,taskId,taskListId){
   }
 }
 
+function loadMedicalNasCache_(){
+  if(medicalNasCache)return Promise.resolve(medicalNasCache);
+  if(medicalNasCachePromise)return medicalNasCachePromise;
+  if(!arkWallReadToken())return Promise.resolve(null);
+  medicalNasCachePromise=arkWallFetch('/api/medical-cache').then(function(data){
+    if(!data||!data.options)return null;
+    medicalNasCache=data;
+    return data;
+  }).catch(function(error){
+    console.warn('medical NAS cache unavailable:',error);
+    return null;
+  }).finally(function(){medicalNasCachePromise=null;});
+  return medicalNasCachePromise;
+}
+
+function scheduleMedicalNasCacheSync_(){
+  medicalPost({_action:'syncMedicalCache'}).catch(function(error){
+    console.warn('medical NAS cache sync failed:',error);
+  });
+}
+
 async function loadMedicalOptions(){
   if(medicalOptionsCache){
     var cachedFallback=medicalOptionsCache===DEFAULT_MEDICAL_OPTIONS;
@@ -9277,7 +9301,8 @@ async function loadMedicalOptions(){
   medicalOptionsLastError='';
   setEmpireCardApiPendingStatus('medical');
   try{
-    var data=await medicalPost({_action:'getOptions'});
+    var cached=await loadMedicalNasCache_();
+    var data=cached?{options:cached.options}:await medicalPost({_action:'getOptions'});
     var options=data.options||{};
     var removedPainAreas=['風池穴','枕下肌','上斜方肌','腸胃','胸大肌'];
     var configuredPainAreas=options.painAreas&&options.painAreas.length?options.painAreas:DEFAULT_MEDICAL_OPTIONS.painAreas;
@@ -9296,7 +9321,8 @@ async function loadMedicalOptions(){
     _mcsCardImages=medicalOptionsCache.cardImages;
     _mcsOracleImages=medicalOptionsCache.oracleImages;
     medicalOptionsLastError='';
-    setEmpireCardStatus('medical','ok','設定選項已載入');
+    setEmpireCardStatus('medical','ok',cached?'NAS 快取已載入':'設定選項已載入');
+    if(!cached)scheduleMedicalNasCacheSync_();
   }catch(e){
     console.warn(e);
     medicalOptionsCache=DEFAULT_MEDICAL_OPTIONS;
@@ -9366,6 +9392,7 @@ async function submitMedicalQuickRecord(e){
     setMedicalStatus('已同步到情緒倉庫，第 '+(data.row||'新')+' 列','ok');
     setMedicalPanelHeaderStatus('成功','ok');
     setEmpireCardStatus('medical','ok','同步完成');
+    scheduleMedicalNasCacheSync_();
     if(btn)btn.disabled=false;
   }catch(err){
     if(btn)btn.disabled=false;
@@ -9599,6 +9626,7 @@ async function submitMedicalTarotRecord(e){
     _mcsCache=null;
     _mcsPromise=null;
     setTarotStatus('已同步抽牌記錄：牌卡統計 +'+(data.cardRows||0)+' 列；奧修禪卡統計 +'+(data.oshoRows||0)+' 列','ok');
+    scheduleMedicalNasCacheSync_();
     if(btn)btn.disabled=false;
   }catch(err){
     if(btn)btn.disabled=false;
@@ -20715,6 +20743,8 @@ function mcsRenderTarotList(containerId,rows,emptyText){
 }
 
 async function mcsFetchStatsWithRetry_(){
+  var nasCache=await loadMedicalNasCache_();
+  if(nasCache&&nasCache.cardStats)return {status:'success',cardStats:nasCache.cardStats};
   var lastError;
   for(var attempt=0;attempt<2;attempt++){
     try{return await medicalPost({_action:'getCardStats',monthsLimit:MCS_MONTHS_LIMIT},30000);}
@@ -20779,6 +20809,7 @@ function mcsOpenEdit(kind,index){
         return next;
       });
       await medicalPost({_action:'updateCardStats',sheet:isOsho?'奧修禪卡統計':'牌卡統計',rows:payload});
+      scheduleMedicalNasCacheSync_();
       _mcsCache=null; mcsCloseEdit(); await initMedicalCardStats();
     }catch(err){save.disabled=false;save.textContent='儲存修正';alert('牌卡記錄更新失敗：'+(err.message||err));}
   };
@@ -20864,6 +20895,13 @@ async function initMedicalPainMap(){
 
   // 若已有快取直接渲染
   if(_mpmCache){ mpmRender(_mpmCache); return; }
+
+  var nasCache=await loadMedicalNasCache_();
+  if(nasCache&&Array.isArray(nasCache.records)){
+    _mpmCache=nasCache.records.map(mpmNormalizeRecord);
+    mpmRender(_mpmCache);
+    return;
+  }
 
   areaEl.innerHTML = '<div class="mpm-empty">⏳ 載入中…</div>';
   recEl.innerHTML  = '<div class="mpm-empty">⏳ 載入中…</div>';
