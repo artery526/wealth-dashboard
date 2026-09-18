@@ -15521,15 +15521,10 @@ function renderCouncilMarketDelta(snapshot){
 }
 
 function renderCouncilMonthlyDividendHtml(totalMonthly,projection){
-  var projectionValue=projection&&Number(projection.value);
-  var projectionText='';
-  if(!isNaN(projectionValue)&&isFinite(projectionValue)&&projectionValue>0){
-    projectionText=fmtFull(projectionValue);
-  }else if(projection&&projection.displayValue){
-    projectionText=String(projection.displayValue||'').trim();
-    if(projectionText&&!/^\$/.test(projectionText))projectionText='$'+projectionText;
-  }
-  return '月總配息 '+fmtFull(totalMonthly)+(projectionText?`<span class="council-stat-trial">(~${esc(projectionText)})</span>`:'');
+  var base=Number(totalMonthly);
+  if(!isFinite(base))base=0;
+  var roughEstimate=base+6500;
+  return '月總配息 '+fmtFull(base)+'<span class="council-stat-trial">（粗估 '+fmtFull(roughEstimate)+'）</span>';
 }
 
 // Council review: comparable holdings, explicit missing values, no extra requests.
