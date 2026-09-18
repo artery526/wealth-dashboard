@@ -9278,7 +9278,8 @@ function loadMedicalNasCache_(){
   medicalNasCachePromise=arkWallFetch('/api/medical-cache').then(function(data){
     var tarots=data&&data.options&&Array.isArray(data.options.tarots)?data.options.tarots:[];
     var hasLastTarot=tarots.some(function(label){return String(label||'').indexOf('77.錢幣國王')===0;});
-    if(!data||!data.options||tarots.length<78||!hasLastTarot){
+    var reversedImages=data&&data.options&&data.options.cardImagesReversed&&typeof data.options.cardImagesReversed==='object'?data.options.cardImagesReversed:{};
+    if(!data||!data.options||tarots.length<78||!hasLastTarot||Object.keys(reversedImages).length<78){
       console.warn('medical NAS cache is incomplete; falling back to Google Sheet');
       return null;
     }
@@ -9321,9 +9322,11 @@ async function loadMedicalOptions(){
       oracles: options.oracles&&options.oracles.length?options.oracles:DEFAULT_MEDICAL_OPTIONS.oracles,
       keywords: options.keywords&&options.keywords.length?options.keywords:DEFAULT_MEDICAL_OPTIONS.keywords,
       cardImages: options.cardImages&&typeof options.cardImages==='object'?options.cardImages:{},
+      cardImagesReversed: options.cardImagesReversed&&typeof options.cardImagesReversed==='object'?options.cardImagesReversed:{},
       oracleImages: options.oracleImages&&typeof options.oracleImages==='object'?options.oracleImages:{}
     };
     _mcsCardImages=medicalOptionsCache.cardImages;
+    _mcsCardImagesReversed=medicalOptionsCache.cardImagesReversed;
     _mcsOracleImages=medicalOptionsCache.oracleImages;
     medicalOptionsLastError='';
     setEmpireCardStatus('medical','ok',cached?'NAS 快取已載入':'設定選項已載入');
@@ -9443,10 +9446,12 @@ function setMedicalCardPreview(imgId,phId,nameId,label,imagesMap,emptyName,empty
 function updateMedicalTarotPreviews(){
   var options=medicalOptionsCache||{};
   var cardImages=options.cardImages||_mcsCardImages||{};
+  var cardImagesReversed=options.cardImagesReversed||_mcsCardImagesReversed||{};
   var oracleImages=options.oracleImages||_mcsOracleImages||{};
-  setMedicalCardPreview('tarot-card-img','tarot-card-ph','tarot-card-name',(document.getElementById('tarot-card')||{}).value,cardImages,'單張','🃏');
+  var getTarotMap=function(posEl){return posEl&&posEl.value==='逆位'&&Object.keys(cardImagesReversed).length?cardImagesReversed:cardImages;};
+  setMedicalCardPreview('tarot-card-img','tarot-card-ph','tarot-card-name',(document.getElementById('tarot-card')||{}).value,getTarotMap(document.getElementById('tarot-pos')),'單張','🃏');
   [1,2,3].forEach(function(i){
-    setMedicalCardPreview('tarot-card-img-'+i,'tarot-card-ph-'+i,'tarot-card-name-'+i,(document.getElementById('tarot-card-'+i)||{}).value,cardImages,'第 '+i+' 張','🃏');
+    setMedicalCardPreview('tarot-card-img-'+i,'tarot-card-ph-'+i,'tarot-card-name-'+i,(document.getElementById('tarot-card-'+i)||{}).value,getTarotMap(document.getElementById('tarot-pos-'+i)),'第 '+i+' 張','🃏');
   });
   setMedicalCardPreview('tarot-oracle-img','tarot-oracle-ph','tarot-oracle-name',(document.getElementById('tarot-oracle')||{}).value,oracleImages,'奧修牌','✨');
 }
@@ -20494,6 +20499,7 @@ function renderLordPanel(d){
 var _mcsCache=null; // 全域快取，避免重複 fetch
 var _mcsPromise=null;
 var _mcsCardImages={};
+var _mcsCardImagesReversed={};
 var _mcsOracleImages={};
 var MCS_MONTHS_LIMIT=12;
 
@@ -20533,6 +20539,7 @@ function mcsHasImageMaps(){
 function mcsApplyImageOptions(options){
   options=options||{};
   if(options.cardImages&&typeof options.cardImages==='object')_mcsCardImages=options.cardImages;
+  if(options.cardImagesReversed&&typeof options.cardImagesReversed==='object')_mcsCardImagesReversed=options.cardImagesReversed;
   if(options.oracleImages&&typeof options.oracleImages==='object')_mcsOracleImages=options.oracleImages;
 }
 
