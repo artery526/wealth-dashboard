@@ -4926,6 +4926,7 @@ var heroCache = [];
 var councilDashboardCache = null;
 var councilDashboardFetchedAt = 0;
 var councilDashboardPromise = null;
+var councilDashboardSummaryPromise = null;
 // 部隊陣容先顯示最近成功資料；避免每次切換都重新等待四個 API。
 var COUNCIL_DASHBOARD_CACHE_TTL = 5 * 60 * 1000;
 var COUNCIL_ROSTER_STORAGE_KEY = 'wealth_council_roster_v1';
@@ -15316,9 +15317,10 @@ async function loadCouncilDashboard(){
     var heroes=results.heroes;
     var holdings=results.holdings;
     var armySettings={};
-    var assetSnapshot=results.assetSnapshot;
-    var dividendProjection=results.dividendProjection;
-    if(results.holdingsLoaded)cacheCouncilDashboardResults(results);
+    // 持股與武將是首屏必要資料；摘要資料沿用快取，稍後獨立背景更新。
+    var assetSnapshot=(councilDashboardCache&&councilDashboardCache.assetSnapshot)||results.assetSnapshot||null;
+    var dividendProjection=(councilDashboardCache&&councilDashboardCache.dividendProjection)||results.dividendProjection||null;
+    if(results.holdingsLoaded)cacheCouncilDashboardResults(Object.assign({},results,{assetSnapshot:assetSnapshot,dividendProjection:dividendProjection}));
     setDataFreshness('council-roster-freshness',dataFreshnessMeta(results,councilDashboardFetchedAt,false));
     var hasRosterData=results.holdingsLoaded&&holdings.length;
     var fallbackCache=!hasRosterData&&councilDashboardCache&&councilDashboardCache.holdings&&councilDashboardCache.holdings.length;
@@ -15328,6 +15330,29 @@ async function loadCouncilDashboard(){
     if(dot)dot.className='api-dot '+(results.holdingsLoaded&&API_URL?'ok':'err');
     if(lbl)lbl.textContent=(results.holdingsLoaded&&API_URL)?'已連線 · 武將與持股同步':'已載入武將資料 · 尚未連接持股 API';
     setEmpireCardStatus('council',results.holdingsLoaded&&API_URL?'ok':'err',results.holdingsLoaded&&API_URL?'武將與持股同步':'持股 API 未連接');
+    // 月總配息與日漲跌不再阻塞首屏；完成後只重繪摘要區與更新摘要快取。
+    loadCouncilDashboardSummaryData().then(function(summary){
+      if(!summary)return;
+      var currentCache=councilDashboardCache||{};
+      var summarySnapshot=summary.assetSnapshot||currentCache.assetSnapshot||null;
+      var summaryProjection=summary.dividendProjection||currentCache.dividendProjection||null;
+      if(results.holdingsLoaded){
+        cacheCouncilDashboardResults({
+          heroes:currentCache.heroes||heroes,
+          holdings:currentCache.holdings||holdings,
+          assetSnapshot:summarySnapshot,
+          dividendProjection:summaryProjection,
+          holdingsLoaded:true
+        });
+      }
+      if(el.isConnected){
+        var latestRows=mergeCouncilRows((currentCache.holdings&&currentCache.holdings.length?currentCache.holdings:holdings),(currentCache.heroes&&currentCache.heroes.length?currentCache.heroes:heroes),armySettings);
+        renderCouncilRoster(latestRows,el,summarySnapshot,summaryProjection);
+      }
+    }).catch(function(error){
+      console.warn('council summary background refresh failed:',error);
+      // 首屏持股已可用時，摘要失敗不覆蓋部隊陣容，也不把狀態改成整體失敗。
+    });
   }catch(e){
     setEmpireCardStatus('council','err',e.message||'讀取失敗');
     el.innerHTML=`<div style="color:var(--coral);font-family:var(--sans);font-size:12px;padding:12px 0">${esc(e.message)}</div>`;
@@ -15339,9 +15364,7 @@ function loadCouncilDashboardData(){
   councilDashboardPromise=Promise.resolve().then(function(){
     return Promise.allSettled([
         loadHeroSheet(),
-        loadCouncilHoldingsOverview(),
-        loadAssetSnapshot(),
-        loadMonthlyDividendProjection()
+        loadCouncilHoldingsOverview()
       ]);
   }).then(function(results){
       // 龐統城門已在進入卡片前完成驗證；資料載入失敗時只顯示卡片錯誤，
@@ -15351,14 +15374,28 @@ function loadCouncilDashboardData(){
       return {
         heroes:results[0].status==='fulfilled'?results[0].value:[],
         holdings:results[1].status==='fulfilled'?(results[1].value||[]):[],
-        assetSnapshot:results[2].status==='fulfilled'?results[2].value:null,
-        dividendProjection:results[3].status==='fulfilled'?results[3].value:null,
         holdingsLoaded:results[1].status==='fulfilled'
       };
     }).finally(function(){
       councilDashboardPromise=null;
     });
   return councilDashboardPromise;
+}
+
+function loadCouncilDashboardSummaryData(){
+  if(councilDashboardSummaryPromise)return councilDashboardSummaryPromise;
+  councilDashboardSummaryPromise=Promise.allSettled([
+    loadAssetSnapshot(),
+    loadMonthlyDividendProjection()
+  ]).then(function(results){
+    return {
+      assetSnapshot:results[0].status==='fulfilled'?results[0].value:null,
+      dividendProjection:results[1].status==='fulfilled'?results[1].value:null
+    };
+  }).finally(function(){
+    councilDashboardSummaryPromise=null;
+  });
+  return councilDashboardSummaryPromise;
 }
 
 function renderRetiredTaskNotice(){
