@@ -1708,6 +1708,9 @@ body::after{
 .mcs-tarot-spread{font-family:var(--sans);font-size:12px;font-weight:900;color:var(--gold);border:1px solid rgba(232,192,80,.28);border-radius:999px;padding:3px 9px;white-space:nowrap}
 .mcs-tarot-cards{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
 .mcs-tarot-chip{font-family:var(--sans);font-size:13px;font-weight:800;color:#f0dfa0;background:rgba(184,137,46,.12);border:1px solid rgba(184,137,46,.2);border-radius:999px;padding:4px 9px;line-height:1.45}
+.mcs-tarot-card{display:inline-flex;align-items:center;gap:6px;min-height:64px;padding:3px 7px 3px 3px;border:1px solid rgba(184,137,46,.24);border-radius:7px;background:rgba(184,137,46,.08)}
+.mcs-tarot-card-thumb,.mcs-tarot-card-thumb-ph{width:40px;height:60px;border-radius:4px;object-fit:cover;border:1px solid rgba(184,137,46,.38);background:rgba(10,8,4,.8);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.mcs-tarot-card-label{font-family:var(--sans);font-size:13px;font-weight:800;color:#f0dfa0;line-height:1.35;white-space:nowrap}
 .mcs-tarot-question{font-family:var(--sans);font-size:13px;color:#c09a50;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere}
 .mcs-empty{font-family:var(--sans);font-size:14px;color:#5a4028;text-align:center;padding:14px 6px}
 .mcs-edit-btn{border:1px solid rgba(232,192,80,.42);border-radius:5px;background:rgba(232,192,80,.08);color:var(--gold);padding:5px 9px;font:800 12px var(--sans);cursor:pointer;white-space:nowrap}
@@ -8419,8 +8422,6 @@ function renderMedicalPanel(){
       <div id="mcs-osho-chart"><div class="mcs-empty">⏳ 載入中…</div></div>
       <div class="council-army-title" style="font-size:13px;margin:16px 0 8px">記｜奧修抽牌記錄</div>
       <div id="mcs-osho-records"><div class="mcs-empty">⏳ 載入中…</div></div>
-      <div class="council-army-title" style="font-size:13px;margin:16px 0 8px">塔｜塔羅卡牌統計</div>
-      <div id="mcs-tarot-chart"><div class="mcs-empty">⏳ 載入中…</div></div>
       <div class="council-army-title" style="font-size:13px;margin:16px 0 8px">塔｜塔羅抽牌明細</div>
       <div id="mcs-tarot-records"><div class="mcs-empty">⏳ 載入中…</div></div>
     </div>
@@ -20633,9 +20634,8 @@ function mcRenderByMonth(month){
   setText('mcs-tarot-lbl',lbl+' 塔羅牌數');
   setText('mcs-days-lbl',lbl+' 抽牌天數');
 
-  // 渲染圖表
+  // 奧修仍保留統計；塔羅改在每筆抽牌明細直接顯示小卡圖
   mcsRenderChart('mcs-osho-chart',oshoRows,lbl+'尚無奧修禪卡紀錄',_mcsOracleImages,'time');
-  mcsRenderChart('mcs-tarot-chart',tarotRows,lbl+'尚無塔羅牌卡紀錄',_mcsCardImages,'count');
   mcsRenderOshoList('mcs-osho-records',oshoRows,lbl+'尚無奧修抽牌記錄');
   mcsRenderTarotList('mcs-tarot-records',tarotRows,lbl+'尚無塔羅抽牌明細');
 }
@@ -20715,6 +20715,15 @@ function mcsCardWithPosition(row){
   return card;
 }
 
+function mcsTarotCardImage_(row){
+  var card=mcsFirstValue(row,['顯示牌名','牌卡名稱','塔羅牌','牌名','cardName']);
+  var position=mcsFirstValue(row,['正逆位','牌卡正反','牌卡正逆','塔羅正逆位','位置','tarotPosition','position']);
+  var reversed=position==='逆位'||/逆位$/.test(card);
+  var map=reversed&&Object.keys(_mcsCardImagesReversed).length?_mcsCardImagesReversed:_mcsCardImages;
+  var rawUrl=mcsLookupImage(card,mcsStripPosition(card),map||{});
+  return rawUrl?mcsConvertDriveUrl(rawUrl):'';
+}
+
 function mcsRenderTarotList(containerId,rows,emptyText){
   var el=document.getElementById(containerId);
   if(!el)return;
@@ -20744,7 +20753,13 @@ function mcsRenderTarotList(containerId,rows,emptyText){
   el.innerHTML='<div class="mcs-tarot-list">'+list.map(function(g,index){
     var spread=g.spread||((g.cards||[]).length>=3?'三張':'單張');
     var cards=(g.cards&&g.cards.length?g.cards:[{label:'未抽取'}]).map(function(card){
-      return '<span class="mcs-tarot-chip">'+mcsEsc(card.label)+'</span>';
+      if(card.label==='未抽取')return '<span class="mcs-tarot-chip">未抽取</span>';
+      var url=mcsTarotCardImage_(card.row);
+      var image=url
+        ?'<img class="mcs-tarot-card-thumb" src="'+mcsEsc(url)+'" alt="'+mcsEsc(card.label)+'" loading="lazy" decoding="async" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">'
+          +'<span class="mcs-tarot-card-thumb-ph" style="display:none">🃏</span>'
+        :'<span class="mcs-tarot-card-thumb-ph">🃏</span>';
+      return '<span class="mcs-tarot-card">'+image+'<span class="mcs-tarot-card-label">'+mcsEsc(card.label)+'</span></span>';
     }).join('');
     return '<div class="mcs-tarot-item">'
       +'<div class="mcs-tarot-head"><div class="mcs-tarot-time">'+mcsEsc(g.time||'未記錄時間')+'</div><div><span class="mcs-tarot-spread">'+mcsEsc(spread)+'</span> <button type="button" class="mcs-edit-btn" onclick="mcsOpenEdit(\'tarot\','+index+')">✏️ 編輯</button></div></div>'
