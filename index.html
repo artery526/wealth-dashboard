@@ -4612,10 +4612,6 @@ html[data-theme="deep-blue"] .scene-task-details .home-agenda-global-refresh{bor
 }
 @media(prefers-reduced-motion:reduce){.npc-web-scene .character-art{transition:none}.npc-web-scene .animated-character:hover .character-art{transform:none}}
 </style>
-<link rel="preload" as="image" href="./junshifu-map.png?v=20260910-bg4" fetchpriority="high">
-<link rel="preload" as="image" href="./mobileBG.png?v=20260906-mobile1" media="(max-width:768px)" fetchpriority="high">
-<script src="./characterAnimations.js?v=20260908-web22"></script>
-<script src="./AnimatedCharacter.js?v=20260918-web4"></script>
 <style>
 .council-review-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:16px 0 10px;font-family:var(--sans)}
 .council-review-toolbar .council-army-title{margin:0;width:100%}
@@ -4693,7 +4689,7 @@ html[data-theme="deep-blue"] .scene-task-details .home-agenda-global-refresh{bor
   <div class="npc-web-scene-stage" id="npc-web-scene-stage">
     <picture>
       <source media="(max-width:768px)" srcset="./mobileBG.png?v=20260906-mobile1">
-      <img class="npc-web-scene-map" src="./junshifu-map.png?v=20260910-bg4" alt="帝國指揮所場景：財政、醫館、王府、軍機處、太倉與指揮所">
+      <img class="npc-web-scene-map" src="./junshifu-map.png?v=20260910-bg4" alt="帝國指揮所場景：財政、醫館、王府、軍機處、太倉與指揮所" decoding="async" fetchpriority="high">
     </picture>
     <div class="scene-widget-dock" id="scene-widget-dock">
     </div>
@@ -4813,9 +4809,9 @@ html[data-theme="deep-blue"] .scene-task-details .home-agenda-global-refresh{bor
     <div class="member-card-members-section" id="member-card-members-section">
       <div class="member-card-section-title">超商會員</div>
       <div class="member-card-grid" id="member-card-grid">
-        <div class="member-card-item">7-11會員<img class="carrier-img" src="小7會員.jpg" alt="7-11會員條碼"></div>
-        <div class="member-card-item">全家會員<img class="carrier-img" src="全家會員.jpg" alt="全家會員條碼"></div>
-        <div class="member-card-item">萊爾富會員<img class="carrier-img" src="HILIFE.jpg" alt="萊爾富會員條碼"></div>
+        <div class="member-card-item">7-11會員<img class="carrier-img" src="小7會員.jpg" alt="7-11會員條碼" loading="lazy" decoding="async"></div>
+        <div class="member-card-item">全家會員<img class="carrier-img" src="全家會員.jpg" alt="全家會員條碼" loading="lazy" decoding="async"></div>
+        <div class="member-card-item">萊爾富會員<img class="carrier-img" src="HILIFE.jpg" alt="萊爾富會員條碼" loading="lazy" decoding="async"></div>
       </div>
     </div>
   </div>
@@ -17643,7 +17639,7 @@ initAdvisorDuoVideoPlayback();
 <!-- ── 軍師問候對話框 ────────────────────────────────────────── -->
 <div class="advisor-overlay" id="advisor-overlay" onclick="advisorOverlayClick(event)">
   <div class="advisor-wrap" id="advisor-wrap">
-    <img class="advisor-img" src="advisor-zhuge.png?v=20260906-advisor1" alt="諸葛亮軍師" onclick="closeAdvisorDialog()">
+    <img class="advisor-img" src="advisor-zhuge.png?v=20260906-advisor1" alt="諸葛亮軍師" loading="lazy" decoding="async" onclick="closeAdvisorDialog()">
     <div class="advisor-dialog">
       <button class="advisor-close" onclick="closeAdvisorDialog()">✕</button>
        <div class="advisor-dialog-top-actions" aria-label="諸葛軍師工具">
@@ -20996,50 +20992,80 @@ function mpmRender(records){
 (function initWebNpcScene(){
   var mount=document.getElementById('npc-web-scene-stage');
   var status=document.getElementById('npc-web-scene-status');
-  if(!mount||!window.AnimatedCharacter||!window.characterPositions)return;
-  var configs={
-    pangtong:window.pangtongAnimations,
-    zhuge:window.zhugeAnimations,
-    chenqun:window.chenqunAnimations,
-    huatuo:window.huatuoAnimations,
-    liubei:window.liubeiAnimations,
-    simayi:window.simayiAnimations,
-    manchong:window.manchongAnimations,
-    xunyu:window.xunyuAnimations
-  };
-  var routes={
-    pangtong:function(event){openAdvisorAIFromOrb(event);},
-    zhuge:function(event){openAdvisorDialog(event);},
-    chenqun:function(){openPanel('finance');},
-    huatuo:function(){openPanel('medical');},
-    liubei:function(){openArkWall('wall');},
-    simayi:function(){openPanel('council');},
-    manchong:function(){openPanel('store');},
-    xunyu:function(){if(typeof window.openXunyuPanel==='function')window.openXunyuPanel();}
-  };
-  var npcs={};
-  Object.keys(configs).forEach(function(id){
-    if(!configs[id]||!window.characterPositions[id]||!routes[id])return;
-    npcs[id]=new window.AnimatedCharacter({
-      character:configs[id].name,
-      animationConfig:configs[id],
-      position:window.characterPositions[id],
-      mount:mount,
-      onClick:routes[id]
+  if(!mount)return;
+  var scriptPromises=window.__empireNpcScriptPromises||(window.__empireNpcScriptPromises={});
+  function loadScript(src){
+    if(scriptPromises[src])return scriptPromises[src];
+    scriptPromises[src]=new Promise(function(resolve,reject){
+      var script=document.createElement('script');
+      script.src=src;
+      script.async=true;
+      script.onload=resolve;
+      script.onerror=function(){reject(new Error('NPC script failed: '+src));};
+      document.head.appendChild(script);
     });
-    var mobilePosition=window.characterMobilePositions&&window.characterMobilePositions[id];
-    if(mobilePosition){
-      npcs[id].button.style.setProperty('--mobile-top',mobilePosition.top);
-      npcs[id].button.style.setProperty('--mobile-left',mobilePosition.left);
-      npcs[id].button.style.setProperty('--mobile-width',mobilePosition.width);
+    return scriptPromises[src];
+  }
+  function initCharacters(){
+    if(!window.AnimatedCharacter||!window.characterPositions){
+      throw new Error('NPC runtime is unavailable');
     }
-  });
-  Promise.all(Object.values(npcs).map(function(npc){return npc.loaded;})).then(function(){
-    if(status)status.textContent='龐統、諸葛亮、陳群、華佗、劉備、司馬懿、滿寵與荀彧已入駐 · 點擊人物開啟正式面板';
-  }).catch(function(){
-    if(status)status.textContent='部分角色影格載入失敗，請重新整理。';
-  });
-  window.addEventListener('pagehide',function(){Object.values(npcs).forEach(function(npc){npc.destroy();});},{once:true});
+    var configs={
+      pangtong:window.pangtongAnimations,
+      zhuge:window.zhugeAnimations,
+      chenqun:window.chenqunAnimations,
+      huatuo:window.huatuoAnimations,
+      liubei:window.liubeiAnimations,
+      simayi:window.simayiAnimations,
+      manchong:window.manchongAnimations,
+      xunyu:window.xunyuAnimations
+    };
+    var routes={
+      pangtong:function(event){openAdvisorAIFromOrb(event);},
+      zhuge:function(event){openAdvisorDialog(event);},
+      chenqun:function(){openPanel('finance');},
+      huatuo:function(){openPanel('medical');},
+      liubei:function(){openArkWall('wall');},
+      simayi:function(){openPanel('council');},
+      manchong:function(){openPanel('store');},
+      xunyu:function(){if(typeof window.openXunyuPanel==='function')window.openXunyuPanel();}
+    };
+    var npcs={};
+    Object.keys(configs).forEach(function(id){
+      if(!configs[id]||!window.characterPositions[id]||!routes[id])return;
+      npcs[id]=new window.AnimatedCharacter({
+        character:configs[id].name,
+        animationConfig:configs[id],
+        position:window.characterPositions[id],
+        mount:mount,
+        onClick:routes[id]
+      });
+      var mobilePosition=window.characterMobilePositions&&window.characterMobilePositions[id];
+      if(mobilePosition){
+        npcs[id].button.style.setProperty('--mobile-top',mobilePosition.top);
+        npcs[id].button.style.setProperty('--mobile-left',mobilePosition.left);
+        npcs[id].button.style.setProperty('--mobile-width',mobilePosition.width);
+      }
+    });
+    Promise.all(Object.values(npcs).map(function(npc){return npc.loaded;})).then(function(){
+      if(status)status.textContent='龐統、諸葛亮、陳群、華佗、劉備、司馬懿、滿寵與荀彧已入駐 · 點擊人物開啟正式面板';
+    }).catch(function(){
+      if(status)status.textContent='部分角色影格載入失敗，請重新整理。';
+    });
+    window.addEventListener('pagehide',function(){Object.values(npcs).forEach(function(npc){npc.destroy();});},{once:true});
+  }
+  function start(){
+    if(status)status.textContent='角色資料載入中…';
+    Promise.resolve(window.AnimatedCharacter?null:loadScript('./characterAnimations.js?v=20260908-web22'))
+      .then(function(){return window.AnimatedCharacter?null:loadScript('./AnimatedCharacter.js?v=20260918-web4');})
+      .then(initCharacters)
+      .catch(function(){if(status)status.textContent='角色資料載入失敗，請重新整理。';});
+  }
+  if(window.requestIdleCallback){
+    window.requestIdleCallback(start,{timeout:1200});
+  }else{
+    window.setTimeout(start,250);
+  }
 })();
 </script>
 <script>
@@ -21053,7 +21079,8 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
-<link rel="stylesheet" href="./xunyu-panel.css?v=20260910-v5">
+<link rel="preload" href="./xunyu-panel.css?v=20260910-v5" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="./xunyu-panel.css?v=20260910-v5"></noscript>
 <script src="./xunyu-panel.js?v=20260911-v1"></script>
 </body>
 </html>
