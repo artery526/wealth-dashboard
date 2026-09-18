@@ -282,6 +282,9 @@ function handleReadAction_(ss, action, p) {
 
 var READ_ACTION_HANDLERS_ = {
   config: function(ss) { return getConfig(ss); },
+  medicalOptions: function() { return getMedicalOptions_(); },
+  medicalRecords: function() { return getMedicalRecords_(); },
+  medicalCardStats: function(ss, p) { return getMedicalCardStats_(p); },
   foodhouseDashboard: function(ss, p) { return getFoodhouseDashboard(ss, p.ym); },
   monthly: function(ss, p) { return getMonthly(ss, p.ym); },
   yearly: function(ss, p) { return getYearly(ss, p.year); },
@@ -2836,7 +2839,10 @@ function getDailyAssetSnapshotFromNas_() {
     });
     var record = records[records.length - 1];
     var metadata = record && record.metadata && typeof record.metadata === 'object' ? record.metadata : {};
-    if (!metadata.latest) return null;
+    // 舊版 NAS 快照沒有史記基準欄位；不能只因為有 latest 就直接回傳，
+    // 否則前端會拿到 null，無法顯示月度戰情室 H5 的初始資產變化。
+    if (!metadata.latest || metadata.initialAssetChangeAmount === null || metadata.initialAssetChangeAmount === undefined ||
+      metadata.initialAssetChangePct === null || metadata.initialAssetChangePct === undefined) return null;
     return {
       sheetName: DAILY_ASSET_SNAPSHOT_SHEET,
       latest: metadata.latest,
