@@ -5404,9 +5404,24 @@ var WEALTH_API_MAX_CONCURRENT=2;
 var wealthApiQueue=[];
 var wealthApiActive=0;
 var wealthApiSequence=0;
-function enqueueWealthApi(task,priority){
+var WEALTH_API_QUEUE_WAIT_TIMEOUT_MS=20000;
+function wealthApiRequestPriority(action){
+  action=String(action||'');
+  if(action==='verifyWriteToken'||action==='createWebSession')return 10;
+  if(/^(expense|income|transfer|ledgerRequestStatus)$/.test(action))return 8;
+  return 0;
+}
+function enqueueWealthApi(task,priority,waitTimeoutMs){
   return new Promise(function(resolve,reject){
-    wealthApiQueue.push({task:task,priority:Number(priority)||0,sequence:wealthApiSequence++,resolve:resolve,reject:reject});
+    var item={task:task,priority:Number(priority)||0,sequence:wealthApiSequence++,resolve:resolve,reject:reject,started:false,expired:false,timer:null};
+    item.timer=setTimeout(function(){
+      if(item.started)return;
+      item.expired=true;
+      wealthApiQueue=wealthApiQueue.filter(function(row){return row!==item;});
+      reject(new Error('API 排隊逾時，已保留原記帳編號，請稍後確認。'));
+      drainWealthApiQueue();
+    },waitTimeoutMs||WEALTH_API_QUEUE_WAIT_TIMEOUT_MS);
+    wealthApiQueue.push(item);
     drainWealthApiQueue();
   });
 }
@@ -5414,6 +5429,9 @@ function drainWealthApiQueue(){
   while(wealthApiActive<WEALTH_API_MAX_CONCURRENT&&wealthApiQueue.length){
     wealthApiQueue.sort(function(a,b){return b.priority-a.priority||a.sequence-b.sequence;});
     var item=wealthApiQueue.shift();
+    if(item.expired)continue;
+    item.started=true;
+    if(item.timer)clearTimeout(item.timer);
     wealthApiActive++;
     Promise.resolve().then(item.task).then(item.resolve,item.reject).finally(function(){
       wealthApiActive--;
@@ -5442,7 +5460,7 @@ async function apiGet(params,timeoutMs){
     var requestParams=Object.assign({},baseParams,{_ts:Date.now(),_try:attempt+1});
     var url=API_URL+'?'+Object.entries(requestParams).map(([k,v])=>k+'='+encodeURIComponent(v)).join('&');
     try{
-      var priority=String(baseParams.action||'')==='verifyWriteToken'?10:0;
+      var priority=wealthApiRequestPriority(baseParams.action);
       var r=await runWealthApiRequest(function(){
         return fetchWithTimeout(url,{cache:'no-store',redirect:'follow'},timeoutMs||15000);
       },priority);
@@ -5664,7 +5682,7 @@ async function apiPost(body){
 }
 async function apiPostGetFallback(params,timeoutMs){
   var qs=Object.entries(params||{}).filter(kv=>kv[1]!==undefined&&kv[1]!==null&&kv[1]!=='').map(kv=>encodeURIComponent(kv[0])+'='+encodeURIComponent(kv[1])).join('&');
-  var priority=String(params&&params.action||'')==='verifyWriteToken'?10:0;
+  var priority=wealthApiRequestPriority(params&&params.action);
   var r=await runWealthApiRequest(function(){
     return fetchWithTimeout(API_URL+'?'+qs,{redirect:'follow'},timeoutMs||15000);
   },priority);
@@ -5697,7 +5715,7 @@ async function apiPostJson(body,timeoutMs){
         headers:{'Content-Type':'text/plain;charset=utf-8'},
         body:JSON.stringify(payload)
       },timeoutMs||15000);
-    },body&&body.action==='verifyWriteToken'?10:0);
+    },wealthApiRequestPriority(body&&body.action));
   }catch(e){
     var msg=String(e&&e.message||'').toLowerCase();
     var writeLike=isApiWriteAction(body&&body.action||'')||body&&body.action==='advisorDividendMemo';
