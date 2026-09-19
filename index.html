@@ -5721,9 +5721,17 @@ async function apiPostJson(body,timeoutMs){
     }
   }
   if(!d.ok){
+    var apiErrorText=String(d.error||'');
+    // 部分舊版 Apps Script 會以 HTTP 200 回傳「未知的 action」，
+    // 但同一個 doGet 路由仍支援記帳寫入；此時可安全改走既有 GET 備援。
+    if(/^(expense|income|transfer)$/.test(String(body.action||''))&&/未知的 action/i.test(apiErrorText)){
+      d=await apiPostGetFallback(payload,timeoutMs||15000);
+    }
+    if(!d.ok){
     var apiErr=new Error(d.error||'寫入失敗');
     if(webVerifyIsAuthFailure(apiErr))setWebVerifyStatus('err',apiErr.message);
     throw apiErr;
+    }
   }
   if(isApiWriteAction(body.action||'')){
     invalidateFinanceDashboardCache();

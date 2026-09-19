@@ -262,6 +262,29 @@ test('Pangtong quick expense shares the finance booking queue', async ({ page })
   expect(result.recorded).toContain('已記錄');
 });
 
+test('ledger write falls back to GET when legacy POST returns unknown action', async ({ page }) => {
+  await page.goto(dashboardUrl);
+  const result = await page.evaluate(async () => {
+    window.API_URL = 'https://example.test/web-app';
+    window.WRITE_TOKEN = 'test-token';
+    const calls = [];
+    const originalFetch = window.fetch;
+    window.fetch = async (url, options) => {
+      calls.push({ url: String(url), method: options && options.method || 'GET' });
+      const isPost = options && options.method === 'POST';
+      return { ok: true, status: 200, text: async () => JSON.stringify(isPost
+        ? { ok: false, error: '未知的 action: expense' }
+        : { ok: true, data: { row: 42 } }) };
+    };
+    const result = await apiPostJson({ action: 'expense', date: '2026/09/20', cat: '🍽️外食餐飲', account: '🏔️玉山銀行', amount: 1019 }, 5000);
+    window.fetch = originalFetch;
+    return { result, calls };
+  });
+  expect(result.result).toEqual({ row: 42 });
+  expect(result.calls.map(call => call.method)).toEqual(['POST', 'GET']);
+  expect(result.calls[1].url).toContain('action=expense');
+});
+
 test('stock transactions use distinct queue fingerprints and recorded guard', async ({ page }) => {
   await page.goto(dashboardUrl);
   const result = await page.evaluate(() => {
