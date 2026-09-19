@@ -629,7 +629,7 @@ test('council holding avatars use the labeled static images and never render vid
 
   expect(result.before.image).toBeTruthy();
   expect(result.before.video).toBeFalsy();
-  expect(result.before.source).toContain('武將資料/MLPI.jpg');
+  expect(result.before.source).toContain('武將資料/MLPI.jpg?v=20260919-roster-static2');
   expect(result.after).toEqual({ image: true, video: false });
 });
 
@@ -652,9 +652,9 @@ test('council holding static portraits follow the filenames in 武將資料', as
   });
 
   expect(result).toEqual([
-    { hasStatic: true, staticSource: './武將資料/QQQI.jpg' },
-    { hasStatic: true, staticSource: './武將資料/%E5%9C%8B%E6%B3%B0%E9%AB%98%E8%82%A1%E6%81%AFB.jpg' },
-    { hasStatic: true, staticSource: './武將資料/00997A.jpg' }
+    { hasStatic: true, staticSource: './武將資料/QQQI.jpg?v=20260919-roster-static2' },
+    { hasStatic: true, staticSource: './武將資料/%E5%9C%8B%E6%B3%B0%E9%AB%98%E8%82%A1%E6%81%AFB.jpg?v=20260919-roster-static2' },
+    { hasStatic: true, staticSource: './武將資料/00997A.jpg?v=20260919-roster-static2' }
   ]);
 });
 

@@ -15933,7 +15933,7 @@ function staticHoldingAvatarUrl(symbol,name){
   var key=normalizeKey(symbol||name);
   var file=STATIC_HOLDING_AVATAR_FILES[key];
   if(!file)file=STATIC_HERO_AVATAR_FILES[String(name||'').trim()];
-  return file?'./武將資料/'+encodeURIComponent(file):'';
+  return file?'./武將資料/'+encodeURIComponent(file)+'?v=20260919-roster-static2':'';
 }
 
 async function loadAssetSnapshot(){
@@ -16072,7 +16072,7 @@ function renderHeroCard(row,totalCost){
   var forceHoldingAccent=normalizeKey(row&&row.symbol)==='國泰高股息B'||councilRowText(row).indexOf('國泰高股息')>=0;
   var effectColor=color;
   var name=row.heroName||h.heroName||displaySymbol||'未編制';
-  var staticImg=staticHeroAvatarUrl(name)||staticHoldingAvatarUrl(displaySymbol,name);
+  var staticImg=staticHoldingAvatarUrl(displaySymbol,name)||staticHeroAvatarUrl(name);
   var img=staticImg||normalizeImageUrl(row.avatarUrl);
   var holdingKey=normalizeKey(displaySymbol);
   var showHeroName=String(name||'').trim()&&String(name||'').trim()!==displaySymbol&&String(name||'').trim()!=='未編制';
