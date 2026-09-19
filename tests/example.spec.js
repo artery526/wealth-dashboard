@@ -467,12 +467,12 @@ test('legacy advisor video cards are removed while scene NPC controls remain and
   await liubei.hover();
   await expect(liubei.locator('img')).toHaveCount(1);
   expect(await page.evaluate(() => Object.keys(window.liubeiAnimations.frames).length)).toBe(17);
-  expect(await page.evaluate(() => window.liubeiAnimations.frames['17'])).toBe('./劉備/王府前站立17.png?v=20260908-liubei-battle1');
+  expect(await page.evaluate(() => window.liubeiAnimations.frames['17'])).toBe('./劉備/王府前站立17.webp?v=20260920-liubei-webp1');
   expect(await page.evaluate(() => window.liubeiAnimations.frameScale['12'])).toBe(1.65);
   expect(await page.evaluate(() => window.liubeiAnimations.frameScale['17'])).toBe(1.2);
   expect(await page.evaluate(() => window.liubeiAnimations.events.specialAction.sequence.map(step => step.frame))).toEqual(['07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '01']);
   expect(await page.evaluate(() => Object.keys(window.chenqunAnimations.frames).length)).toBe(17);
-  expect(await page.evaluate(() => window.chenqunAnimations.frames['17'])).toBe('./陳群/chenqun_idle_17.png');
+  expect(await page.evaluate(() => window.chenqunAnimations.frames['17'])).toBe('./陳群/chenqun_idle_17.webp');
   await expect(manchong.locator('img')).toHaveCount(1);
   await manchong.hover();
   await expect(manchong.locator('img')).toHaveCount(1);
@@ -485,7 +485,7 @@ test('legacy advisor video cards are removed while scene NPC controls remain and
   await xunyu.hover();
   await expect(xunyu.locator('img')).toHaveCount(1);
   expect(await page.evaluate(() => Object.keys(window.xunyuAnimations.frames).length)).toBe(12);
-  expect(await page.evaluate(() => window.xunyuAnimations.frames['12'])).toBe('./荀彧/文雅報告完畢12.png?v=20260908-xunyu-shangshutai1');
+  expect(await page.evaluate(() => window.xunyuAnimations.frames['12'])).toBe('./荀彧/文雅報告完畢12.webp?v=20260920-xunyu-webp1');
   expect(await page.evaluate(() => window.xunyuAnimations.events.specialAction.sequence.map(step => step.frame))).toEqual(['07', '08', '09', '10', '11', '12', '01']);
 });
 
@@ -652,7 +652,7 @@ test('council holding avatars use the labeled static images and never render vid
 
   expect(result.before.image).toBeTruthy();
   expect(result.before.video).toBeFalsy();
-  expect(result.before.source).toContain('武將資料/MLPI.jpg?v=20260919-roster-static2');
+  expect(result.before.source).toContain('武將資料/MLPI.webp?v=20260919-roster-webp1');
   expect(result.after).toEqual({ image: true, video: false });
 });
 
@@ -675,9 +675,9 @@ test('council holding static portraits follow the filenames in 武將資料', as
   });
 
   expect(result).toEqual([
-    { hasStatic: true, staticSource: './武將資料/QQQI.jpg?v=20260919-roster-static2' },
-    { hasStatic: true, staticSource: './武將資料/%E5%9C%8B%E6%B3%B0%E9%AB%98%E8%82%A1%E6%81%AFB.jpg?v=20260919-roster-static2' },
-    { hasStatic: true, staticSource: './武將資料/00997A.jpg?v=20260919-roster-static2' }
+    { hasStatic: true, staticSource: './武將資料/QQQI.webp?v=20260919-roster-webp1' },
+    { hasStatic: true, staticSource: './武將資料/%E5%9C%8B%E6%B3%B0%E9%AB%98%E8%82%A1%E6%81%AFB.webp?v=20260919-roster-webp1' },
+    { hasStatic: true, staticSource: './武將資料/00997A.webp?v=20260919-roster-webp1' }
   ]);
 });
 

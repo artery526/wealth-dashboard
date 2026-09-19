@@ -23,14 +23,14 @@ const characterMobilePositions = {
 const pangtongAnimations = {
   name: '龐統',
   frames: {
-    '01': './龐統/站立握酒瓶01.png',
-    '02': './龐統/酒瓶喝酒02.png',
-    '03': './龐統/睡眠小憩03.png',
-    '04': './龐統/喝酒遠望04.png',
-    '05': './龐統/帶酒行走05.png',
-    '06': './龐統/帶酒行走放下酒瓶06.png',
-    '07': './龐統/行走放下酒瓶拿出卷軸07.png',
-    '08': './龐統/指點地圖08.png'
+    '01': './龐統/站立握酒瓶01.webp',
+    '02': './龐統/酒瓶喝酒02.webp',
+    '03': './龐統/睡眠小憩03.webp',
+    '04': './龐統/喝酒遠望04.webp',
+    '05': './龐統/帶酒行走05.webp',
+    '06': './龐統/帶酒行走放下酒瓶06.webp',
+    '07': './龐統/行走放下酒瓶拿出卷軸07.webp',
+    '08': './龐統/指點地圖08.webp'
   },
   breathing: [
     { frame: '01', state: 'idle', duration: [900, 1800] }
@@ -56,14 +56,14 @@ const pangtongAnimations = {
 const zhugeAnimations = {
   name: '諸葛亮',
   frames: {
-    '01': './諸葛亮/待機站立01.png',
-    '02': './諸葛亮/輕搖羽扇02.png',
-    '03': './諸葛亮/輕搖羽扇03.png',
-    '04': './諸葛亮/輕搖羽扇04.png',
-    '05': './諸葛亮/揮扇指揮05.png',
-    '06': './諸葛亮/提出計策06.png',
-    '07': './諸葛亮/提出計策電燈泡07.png',
-    '08': './諸葛亮/運籌帷幄08.png'
+    '01': './諸葛亮/待機站立01.webp',
+    '02': './諸葛亮/輕搖羽扇02.webp',
+    '03': './諸葛亮/輕搖羽扇03.webp',
+    '04': './諸葛亮/輕搖羽扇04.webp',
+    '05': './諸葛亮/揮扇指揮05.webp',
+    '06': './諸葛亮/提出計策06.webp',
+    '07': './諸葛亮/提出計策電燈泡07.webp',
+    '08': './諸葛亮/運籌帷幄08.webp'
   },
   breathing: [
     { frame: '02', duration: [250, 400] },
@@ -92,7 +92,7 @@ const chenqunAnimations = {
   name: '陳群',
   frames: Object.fromEntries(Array.from({ length: 17 }, (_, i) => {
     const key = String(i + 1).padStart(2, '0');
-    return [key, `./陳群/chenqun_idle_${key}.png`];
+    return [key, `./陳群/chenqun_idle_${key}.webp`];
   })),
   breathing: [
     { frame: '02', duration: [250, 400] },
@@ -126,17 +126,17 @@ const chenqunAnimations = {
 const huatuoAnimations = {
   name: '華佗',
   frames: {
-    '01': './華佗/站立01.png',
-    '02': './華佗/呼吸下沉02.png',
-    '03': './華佗/鬍鬚微動03.png',
-    '04': './華佗/眨眼04.png',
-    '05': './華佗/呼吸上升05.png',
-    '06': './華佗/站立左手背到後面06.png',
-    '07': './華佗/拿起藥瓶07.png',
-    '08': './華佗/打開藥瓶08.png',
-    '09': './華佗/打開藥瓶喝一口09.png',
-    '10': './華佗/放下藥瓶10.png',
-    '11': './華佗/回復站立11.png'
+    '01': './華佗/站立01.webp',
+    '02': './華佗/呼吸下沉02.webp',
+    '03': './華佗/鬍鬚微動03.webp',
+    '04': './華佗/眨眼04.webp',
+    '05': './華佗/呼吸上升05.webp',
+    '06': './華佗/站立左手背到後面06.webp',
+    '07': './華佗/拿起藥瓶07.webp',
+    '08': './華佗/打開藥瓶08.webp',
+    '09': './華佗/打開藥瓶喝一口09.webp',
+    '10': './華佗/放下藥瓶10.webp',
+    '11': './華佗/回復站立11.webp'
   },
   breathing: [
     { frame: '02', duration: [250, 400] },
@@ -160,7 +160,7 @@ const huatuoAnimations = {
     idle: [800, 1800]
   }
 };
-const liubeiAssetVersion = '20260908-liubei-battle1';
+const liubeiAssetVersion = '20260920-liubei-webp1';
 const liubeiAsset = file => `./劉備/${file}?v=${liubeiAssetVersion}`;
 const liubeiAnimations = {
   name: '劉備',
@@ -173,23 +173,23 @@ const liubeiAnimations = {
     '17': 1.2
   },
   frames: {
-    '01': liubeiAsset('站立01.png'),
-    '02': liubeiAsset('大笑02.png'),
-    '03': liubeiAsset('眨眼03.png'),
-    '04': liubeiAsset('呼吸上升04.png'),
-    '05': liubeiAsset('呼吸下沉05.png'),
-    '06': liubeiAsset('思考06.png'),
-    '07': liubeiAsset('翻開書卷07.png'),
-    '08': liubeiAsset('放下書卷08.png'),
-    '09': liubeiAsset('撰寫回憶09.png'),
-    '10': liubeiAsset('放下卷軸苦思10.png'),
-    '11': liubeiAsset('放下卷軸揮劍出擊11.png'),
-    '12': liubeiAsset('放下卷軸揮劍出擊出兵12.png'),
-    '13': liubeiAsset('放下卷軸揮劍出擊出兵13.png'),
-    '14': liubeiAsset('放下卷軸揮劍出擊出兵廝殺14.png'),
-    '15': liubeiAsset('放下卷軸揮劍出擊出兵廝殺15.png'),
-    '16': liubeiAsset('放下卷軸揮劍出擊出兵廝殺16.png'),
-    '17': liubeiAsset('王府前站立17.png')
+    '01': liubeiAsset('站立01.webp'),
+    '02': liubeiAsset('大笑02.webp'),
+    '03': liubeiAsset('眨眼03.webp'),
+    '04': liubeiAsset('呼吸上升04.webp'),
+    '05': liubeiAsset('呼吸下沉05.webp'),
+    '06': liubeiAsset('思考06.webp'),
+    '07': liubeiAsset('翻開書卷07.webp'),
+    '08': liubeiAsset('放下書卷08.webp'),
+    '09': liubeiAsset('撰寫回憶09.webp'),
+    '10': liubeiAsset('放下卷軸苦思10.webp'),
+    '11': liubeiAsset('放下卷軸揮劍出擊11.webp'),
+    '12': liubeiAsset('放下卷軸揮劍出擊出兵12.webp'),
+    '13': liubeiAsset('放下卷軸揮劍出擊出兵13.webp'),
+    '14': liubeiAsset('放下卷軸揮劍出擊出兵廝殺14.webp'),
+    '15': liubeiAsset('放下卷軸揮劍出擊出兵廝殺15.webp'),
+    '16': liubeiAsset('放下卷軸揮劍出擊出兵廝殺16.webp'),
+    '17': liubeiAsset('王府前站立17.webp')
   },
   breathing: [
     { frame: '05', duration: [250, 400] },
@@ -225,14 +225,14 @@ const liubeiAnimations = {
 const simayiAnimations = {
   name: '司馬懿',
   frames: {
-    '01': './司馬懿/思考01.png',
-    '02': './司馬懿/書寫計畫02.png',
-    '03': './司馬懿/坐在桌子前分析情報03.png',
-    '04': './司馬懿/坐在桌子前繪製地圖04.png',
-    '05': './司馬懿/偵查出行05.png',
-    '06': './司馬懿/打開地圖06.png',
-    '07': './司馬懿/靜觀等待07.png',
-    '08': './司馬懿/站立08.png'
+    '01': './司馬懿/思考01.webp',
+    '02': './司馬懿/書寫計畫02.webp',
+    '03': './司馬懿/坐在桌子前分析情報03.webp',
+    '04': './司馬懿/坐在桌子前繪製地圖04.webp',
+    '05': './司馬懿/偵查出行05.webp',
+    '06': './司馬懿/打開地圖06.webp',
+    '07': './司馬懿/靜觀等待07.webp',
+    '08': './司馬懿/站立08.webp'
   },
   breathing: [
     { frame: '01', duration: [800, 1600] },
@@ -257,21 +257,21 @@ const simayiAnimations = {
     idle: [800, 1800]
   }
 };
-const manchongAssetVersion = '20260907-manchong-weapons1';
+const manchongAssetVersion = '20260920-manchong-webp1';
 const manchongAsset = file => `./滿寵/${file}?v=${manchongAssetVersion}`;
 const manchongAnimations = {
   name: '滿寵',
   idleFrame: '05',
   frames: {
-    '01': manchongAsset('站立待命01.png'),
-    '02': manchongAsset('查看帳冊02.png'),
-    '03': manchongAsset('提筆登記03.png'),
-    '04': manchongAsset('核對貨單04.png'),
-    '05': manchongAsset('驗收貨物05.png'),
-    '06': manchongAsset('蓋章確認06.png'),
-    '07': manchongAsset('指揮入庫07.png'),
-    '08': manchongAsset('指揮入庫工人08.png'),
-    '09': manchongAsset('指揮入庫工人09.png')
+    '01': manchongAsset('站立待命01.webp'),
+    '02': manchongAsset('查看帳冊02.webp'),
+    '03': manchongAsset('提筆登記03.webp'),
+    '04': manchongAsset('核對貨單04.webp'),
+    '05': manchongAsset('驗收貨物05.webp'),
+    '06': manchongAsset('蓋章確認06.webp'),
+    '07': manchongAsset('指揮入庫07.webp'),
+    '08': manchongAsset('指揮入庫工人08.webp'),
+    '09': manchongAsset('指揮入庫工人09.webp')
   },
   breathing: [
     { frame: '05', state: 'inspect-armor', duration: [700, 1200] },
@@ -300,23 +300,23 @@ const manchongAnimations = {
     idle: [800, 1800]
   }
 };
-const xunyuAssetVersion = '20260908-xunyu-shangshutai1';
+const xunyuAssetVersion = '20260920-xunyu-webp1';
 const xunyuAsset = file => `./荀彧/${file}?v=${xunyuAssetVersion}`;
 const xunyuAnimations = {
   name: '荀彧',
   frames: {
-    '01': xunyuAsset('文雅待命01.png'),
-    '02': xunyuAsset('文雅呼吸上揚02.png'),
-    '03': xunyuAsset('文雅呼吸下沉02.png'),
-    '04': xunyuAsset('文雅接收情報04.png'),
-    '05': xunyuAsset('文雅翻閱情報05.png'),
-    '06': xunyuAsset('文雅繼續翻閱情報06.png'),
-    '07': xunyuAsset('文雅沉思07.png'),
-    '08': xunyuAsset('文雅發現重點08.png'),
-    '09': xunyuAsset('文雅展開總覽09.png'),
-    '10': xunyuAsset('文雅秀出統計表10.png'),
-    '11': xunyuAsset('文雅秀出統計表指出數據11.png'),
-    '12': xunyuAsset('文雅報告完畢12.png')
+    '01': xunyuAsset('文雅待命01.webp'),
+    '02': xunyuAsset('文雅呼吸上揚02.webp'),
+    '03': xunyuAsset('文雅呼吸下沉02.webp'),
+    '04': xunyuAsset('文雅接收情報04.webp'),
+    '05': xunyuAsset('文雅翻閱情報05.webp'),
+    '06': xunyuAsset('文雅繼續翻閱情報06.webp'),
+    '07': xunyuAsset('文雅沉思07.webp'),
+    '08': xunyuAsset('文雅發現重點08.webp'),
+    '09': xunyuAsset('文雅展開總覽09.webp'),
+    '10': xunyuAsset('文雅秀出統計表10.webp'),
+    '11': xunyuAsset('文雅秀出統計表指出數據11.webp'),
+    '12': xunyuAsset('文雅報告完畢12.webp')
   },
   breathing: [
     { frame: '02', duration: [300, 500] },
