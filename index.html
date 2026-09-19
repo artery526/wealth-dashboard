@@ -2982,6 +2982,21 @@ body::after{
 }
 .cfg-save:hover{box-shadow:0 0 12px rgba(200,150,62,.3)}
 
+/* ── 進站登入閘門 ── */
+.web-login-overlay{position:fixed;inset:0;z-index:6000;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(1,8,13,.9);backdrop-filter:blur(6px)}
+.web-login-overlay.hidden{display:none}
+.web-login-box{width:min(92vw,390px);padding:28px 24px;border:1px solid rgba(98,201,232,.72);border-radius:14px;background:linear-gradient(160deg,rgba(13,48,68,.98),rgba(4,18,28,.98));box-shadow:0 0 0 1px rgba(8,19,29,.8),0 16px 60px rgba(0,0,0,.62),0 0 30px rgba(43,145,181,.18);text-align:center}
+.web-login-scroll{font-size:34px;margin-bottom:8px}
+.web-login-title{font-size:22px;font-weight:900;letter-spacing:3px;color:#e8f9ff}
+.web-login-sub{margin:10px 0 20px;color:#9bb9c4;font:12px/1.8 var(--sans)}
+.web-login-input{width:100%;padding:12px 13px;border:1px solid rgba(98,201,232,.42);border-radius:8px;background:#06131d;color:var(--ink);font:14px var(--mono);outline:none}
+.web-login-input:focus{border-color:#8fe4ff;box-shadow:0 0 0 3px rgba(98,201,232,.12)}
+.web-login-button{width:100%;margin-top:13px;padding:11px 16px;border:1px solid #72d5f4;border-radius:8px;background:linear-gradient(180deg,#154c65,#0b2b3b);color:#e7f9ff;font:900 14px var(--sans);cursor:pointer}
+.web-login-button:disabled{opacity:.6;cursor:wait}
+.web-login-status{min-height:22px;margin-top:12px;color:#d4a820;font:12px/1.5 var(--sans)}
+.web-login-status.ok{color:#62c9e8}.web-login-status.err{color:#ff9a8d}
+.web-login-settings{margin-top:12px;border:0;background:transparent;color:#7fb4c6;font:11px var(--sans);cursor:pointer;text-decoration:underline}
+
 /* Loading skeleton */
 .skel{background:linear-gradient(90deg,#1a1208 25%,#2a1c08 50%,#1a1208 75%);background-size:200% 100%;animation:sk 1.4s infinite;border-radius:6px}
 @keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}
@@ -4823,6 +4838,20 @@ html[data-theme="deep-blue"] .scene-task-details .home-agenda-global-refresh{bor
   </div>
 </div>
 
+<div class="web-login-overlay" id="web-login-overlay" aria-modal="true" role="dialog" aria-labelledby="web-login-title">
+  <div class="web-login-box">
+    <div class="web-login-scroll" aria-hidden="true">📜</div>
+    <div class="web-login-title" id="web-login-title">帝國指揮所登入</div>
+    <div class="web-login-sub">請先通過城門驗證，成功後本次瀏覽期間各軍機處、財政與醫館共用同一個 Session。</div>
+    <form onsubmit="submitWebLogin(event)">
+      <input class="web-login-input" id="web-login-token" type="password" autocomplete="current-password" placeholder="輸入帝國通行密鑰" aria-label="帝國通行密鑰">
+      <button class="web-login-button" id="web-login-button" type="submit">登入帝國</button>
+    </form>
+    <div class="web-login-status" id="web-login-status" aria-live="polite">等待城門登入</div>
+    <button class="web-login-settings" type="button" onclick="openCfgFromLogin()">API 設定／更換密鑰</button>
+  </div>
+</div>
+
 <div class="cfg-overlay" id="cfg-overlay" onclick="cfgOverlayClick(event)">
   <div class="cfg-box" id="cfg-box">
     <div class="cfg-title">⚙ API 設定</div>
@@ -6016,6 +6045,39 @@ function openCfg(){
   renderCfgWebVerifyStatus();
   document.getElementById('cfg-overlay').classList.add('open');
 }
+function setWebLoginVisible(visible,message,status){
+  var overlay=document.getElementById('web-login-overlay');
+  if(!overlay)return;
+  overlay.classList.toggle('hidden',!visible);
+  var statusEl=document.getElementById('web-login-status');
+  if(statusEl){statusEl.className='web-login-status '+(status||'');if(message)statusEl.textContent=message;}
+  if(visible){
+    var input=document.getElementById('web-login-token');
+    if(input)window.setTimeout(function(){input.focus();},0);
+  }
+}
+function openCfgFromLogin(){openCfg();}
+async function submitWebLogin(event){
+  if(event&&event.preventDefault)event.preventDefault();
+  var input=document.getElementById('web-login-token');
+  var button=document.getElementById('web-login-button');
+  var token=cleanToken(input&&input.value);
+  if(!token){setWebLoginVisible(true,'請輸入帝國通行密鑰','err');return;}
+  WRITE_TOKEN=token;
+  try{localStorage.setItem('wealth_write_token',token);}catch(e){}
+  if(button)button.disabled=true;
+  setWebLoginVisible(true,'正在驗證城門密碼…','pending');
+  setWebVerifyStatus('pending','正在驗證城門密碼');
+  try{
+    var ok=await ensureWebAccess(true);
+    if(!ok)throw new Error(webVerifyStoredMessage()||'城門驗證失敗');
+    setWebLoginVisible(false,'城門驗證成功','ok');
+  }catch(error){
+    setWebLoginVisible(true,error&&error.message?error.message:'城門驗證失敗','err');
+  }finally{
+    if(button)button.disabled=false;
+  }
+}
 function closeCfg(){document.getElementById('cfg-overlay').classList.remove('open')}
 function cfgOverlayClick(e){if(e.target===document.getElementById('cfg-overlay'))closeCfg()}
 
@@ -6062,11 +6124,13 @@ function webVerifyIsAuthorized(){
 function restoreRememberedWebAccess(){
   if(webVerifyStoredStatus()!=='ok'||!hasMainApiCredentials()){
     applyEmpireUnlockState();
+    setWebLoginVisible(true,'請先登入帝國指揮所','');
     return Promise.resolve(false);
   }
   // 已完成過驗證時直接恢復城門狀態；避免每次開頁又因 API 冷啟動／延遲
   // 把綠燈切回「正在驗證」，導致點擊卡片時重複觸發驗證流程。
   setEmpireUnlockState(true);
+  setWebLoginVisible(false,'城門驗證成功','ok');
   advisorAIUpdateWebVerifyStatus();
   return Promise.resolve(true);
 }
@@ -6230,6 +6294,7 @@ async function verifyCfgWebAccess(){
     await verifyWebAccess();
     setWebVerifyStatus('ok','城門驗證成功');
     renderCfgWebVerifyStatus('ok','城門驗證成功');
+    setWebLoginVisible(false,'城門驗證成功','ok');
   }catch(e){
     console.error(e);
     var msg=e.message||'驗證失敗';
@@ -6262,6 +6327,7 @@ async function saveCfg(){
   try{
     await verifyWebAccess();
     setWebVerifyStatus('ok','城門驗證成功');
+    setWebLoginVisible(false,'城門驗證成功','ok');
   }catch(e){
     console.error(e);
     setWebVerifyStatus('err',e.message||'驗證失敗');
