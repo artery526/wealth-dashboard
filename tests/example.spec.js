@@ -608,7 +608,7 @@ test('council roster accepts the NAS cache object without reading an allSettled 
   expect(result).toEqual({ source: 'NAS', holdingsLoaded: true, symbol: 'QQQI' });
 });
 
-test('council holding avatars start as static images and create video only after clicking', async ({ page }) => {
+test('council holding avatars use the labeled static images and never render video', async ({ page }) => {
   await page.goto(dashboardUrl);
 
   const result = await page.evaluate(() => {
@@ -621,20 +621,19 @@ test('council holding avatars start as static images and create video only after
     };
     host.innerHTML = renderHeroCard(row, 100);
     const visual = host.querySelector('.hero-visual');
-    const before = { image: !!visual.querySelector('img'), video: !!visual.querySelector('video'), source: visual.dataset.videoSrc };
+    const before = { image: !!visual.querySelector('img'), video: !!visual.querySelector('video'), source: visual.querySelector('img')?.getAttribute('src') || '' };
     visual.click();
-    const after = { image: !!visual.querySelector('img'), video: !!visual.querySelector('video'), source: visual.querySelector('video')?.src || '' };
+    const after = { image: !!visual.querySelector('img'), video: !!visual.querySelector('video') };
     return { before, after };
   });
 
   expect(result.before.image).toBeTruthy();
   expect(result.before.video).toBeFalsy();
-  expect(result.before.source).toContain('MLPI.mp4');
-  expect(result.after.video).toBeTruthy();
-  expect(result.after.source).toContain('MLPI.mp4');
+  expect(result.before.source).toContain('武將資料/MLP.jpg');
+  expect(result.after).toEqual({ image: true, video: false });
 });
 
-test('council holding video sources use the deployed asset directories', async ({ page }) => {
+test('council holding static portraits follow the filenames in 武將資料', async ({ page }) => {
   await page.goto(dashboardUrl);
 
   const result = await page.evaluate(() => {
@@ -647,16 +646,15 @@ test('council holding video sources use the deployed asset directories', async (
     }));
     host.innerHTML = rows.map(row => renderHeroCard(row, 300)).join('');
     return [...host.querySelectorAll('.hero-visual')].map(el => ({
-      source: el.dataset.videoSrc,
       hasStatic: !!el.querySelector('img'),
       staticSource: el.querySelector('img')?.getAttribute('src') || ''
     }));
   });
 
   expect(result).toEqual([
-    { source: '深藍色版本/QQQI.mp4', hasStatic: true, staticSource: './武將資料/%E8%AB%B8%E8%91%9B%E4%BA%AE.jpg' },
-    { source: '深藍色版本/國泰高股息B.mp4', hasStatic: true, staticSource: './武將資料/%E5%BC%B5%E9%81%BC.jpg' },
-    { source: '部隊陣容/997A.mp4', hasStatic: true, staticSource: './武將資料/%E9%BE%90%E7%B5%B1.jpg' }
+    { hasStatic: true, staticSource: './武將資料/QQQI.jpg' },
+    { hasStatic: true, staticSource: './武將資料/%E5%9C%8B%E6%B3%B0%E9%AB%98%E8%82%A1%E6%81%AFB.jpg' },
+    { hasStatic: true, staticSource: './武將資料/00997A.jpg' }
   ]);
 });
 
