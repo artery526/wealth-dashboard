@@ -4912,7 +4912,9 @@ var WEB_VERIFY_CHECKED_AT_KEY='wealth_web_verify_checked_at';
 var WEB_SESSION_TOKEN_KEY='wealth_web_session_token';
 // 第一道人城門記住 7 天；財務寫入時仍由後端逐筆驗證 WRITE_TOKEN。
 var WEB_VERIFY_TTL_MS=7*24*60*60*1000;
+var WEB_SESSION_REFRESH_MS=4*60*60*1000;
 var webVerifyPromise=null;
+var webSessionRefreshTimer=null;
 var EMPIRE_UNLOCK_KEY='wealth_empire_unlocked_v1';
 var cfg = (function(){
   try{
@@ -6131,6 +6133,7 @@ function restoreRememberedWebAccess(){
   // 把綠燈切回「正在驗證」，導致點擊卡片時重複觸發驗證流程。
   setEmpireUnlockState(true);
   setWebLoginVisible(false,'城門驗證成功','ok');
+  startWebSessionAutoRefresh();
   advisorAIUpdateWebVerifyStatus();
   return Promise.resolve(true);
 }
@@ -6233,6 +6236,17 @@ async function verifyWebAccess(){
   }
   throw lastErr||new Error('網頁驗證失敗');
 }
+function refreshWebSessionSilently(){
+  if(!hasMainApiCredentials()||!webVerifyIsAuthorized())return;
+  verifyWebAccess().catch(function(){
+    // 背景續期失敗時保留既有畫面；一般資料請求仍可用 WRITE_TOKEN 備援。
+  });
+}
+function startWebSessionAutoRefresh(){
+  if(webSessionRefreshTimer)return;
+  refreshWebSessionSilently();
+  webSessionRefreshTimer=window.setInterval(refreshWebSessionSilently,WEB_SESSION_REFRESH_MS);
+}
 function ensureWebAccess(force){
   if(!hasMainApiCredentials())return Promise.resolve(false);
   if(!force&&webVerifyIsAuthorized())return Promise.resolve(true);
@@ -6240,6 +6254,7 @@ function ensureWebAccess(force){
   setWebVerifyStatus('pending','正在驗證城門密碼');
   webVerifyPromise=verifyWebAccess().then(function(){
     setWebVerifyStatus('ok','城門驗證成功');
+    startWebSessionAutoRefresh();
     return true;
   }).catch(function(e){
     setWebVerifyStatus('err',e&&e.message||'驗證失敗');
