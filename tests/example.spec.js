@@ -686,6 +686,32 @@ test('council cards move market value and cost into the former skill area', asyn
   expect(result.lowerMetrics).not.toContain('成本');
 });
 
+test('council card keeps symbol, yield and return on the first line without duplicate unassigned name', async ({ page }) => {
+  await page.goto(dashboardUrl);
+
+  const result = await page.evaluate(() => {
+    const host = document.createElement('div');
+    document.body.appendChild(host);
+    host.innerHTML = renderHeroCard({
+      symbol: 'QQQI',
+      heroName: 'QQQI',
+      holding: { symbol: 'QQQI', name: 'QQQI', cost: 100, marketValue: 120, price: 12, avgCost: 10, totalReturn: 20, monthlyDiv: 1 }
+    }, 100);
+    const card = host.querySelector('.hero-card');
+    return {
+      symbolLine: card.querySelector('.hero-symbol')?.textContent || '',
+      hasDuplicateNameLine: !!card.querySelector('.hero-name'),
+      hasUnassignedText: card.textContent.includes('未編制')
+    };
+  });
+
+  expect(result.symbolLine).toContain('QQQI');
+  expect(result.symbolLine).toContain('🟡');
+  expect(result.symbolLine).toContain('+$20');
+  expect(result.hasDuplicateNameLine).toBeFalsy();
+  expect(result.hasUnassignedText).toBeFalsy();
+});
+
 test('store panel shows cached records before a refresh and reuses fresh data', async ({ page }) => {
   await page.goto(dashboardUrl);
 
