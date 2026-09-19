@@ -629,7 +629,7 @@ test('council holding avatars use the labeled static images and never render vid
 
   expect(result.before.image).toBeTruthy();
   expect(result.before.video).toBeFalsy();
-  expect(result.before.source).toContain('武將資料/MLP.jpg');
+  expect(result.before.source).toContain('武將資料/MLPI.jpg');
   expect(result.after).toEqual({ image: true, video: false });
 });
 
