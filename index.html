@@ -2997,6 +2997,26 @@ body::after{
 .web-login-status.ok{color:#62c9e8}.web-login-status.err{color:#ff9a8d}
 .web-login-settings{margin-top:12px;border:0;background:transparent;color:#7fb4c6;font:11px var(--sans);cursor:pointer;text-decoration:underline}
 
+/* ── 進站政務提醒 ── */
+.daily-briefing-overlay{position:fixed;inset:0;z-index:5700;display:flex;align-items:flex-start;justify-content:flex-end;padding:78px 24px 24px;background:rgba(1,8,13,.22);pointer-events:none}
+.daily-briefing-overlay.hidden{display:none}
+.daily-briefing-card{position:relative;width:min(92vw,430px);padding:16px 18px 17px;border:1px solid rgba(98,201,232,.72);border-radius:14px;background:linear-gradient(145deg,rgba(9,39,55,.98),rgba(4,18,28,.98));box-shadow:0 14px 42px rgba(0,0,0,.55),0 0 24px rgba(43,145,181,.2);pointer-events:auto;animation:dailyBriefingIn .24s ease-out}
+@keyframes dailyBriefingIn{from{opacity:0;transform:translateY(-12px) scale(.98)}to{opacity:1;transform:none}}
+.daily-briefing-close{position:absolute;top:8px;right:10px;width:28px;height:28px;border:1px solid rgba(143,228,255,.34);border-radius:50%;background:rgba(4,18,28,.72);color:#aeeeff;font:700 18px/1 var(--sans);cursor:pointer}
+.daily-briefing-head{display:flex;align-items:center;gap:12px;padding-right:28px;margin-bottom:11px}
+.daily-briefing-avatar{width:64px;height:64px;flex:0 0 64px;border:1px solid rgba(232,192,80,.66);border-radius:10px;background:#06131d;object-fit:cover;object-position:center top}
+.daily-briefing-kicker{color:#8fe4ff;font:900 11px var(--sans);letter-spacing:2px}
+.daily-briefing-title{margin-top:3px;color:#e8f9ff;font:900 19px var(--font)}
+.daily-briefing-date{margin-top:3px;color:#9bb9c4;font:11px var(--mono)}
+.daily-briefing-body{display:grid;gap:9px}
+.daily-briefing-section{padding:9px 10px;border:1px solid rgba(98,201,232,.2);border-radius:8px;background:rgba(0,0,0,.18)}
+.daily-briefing-section-title{margin-bottom:5px;color:#f0dfa0;font:900 12px var(--sans);letter-spacing:1px}
+.daily-briefing-item{display:grid;grid-template-columns:auto minmax(0,1fr);gap:7px;padding:3px 0;color:#e5f7ff;font:12px/1.45 var(--sans)}
+.daily-briefing-item-time{color:#8fe4ff;font-family:var(--mono);white-space:nowrap}
+.daily-briefing-empty,.daily-briefing-loading,.daily-briefing-error{color:#9bb9c4;font:12px/1.5 var(--sans)}
+.daily-briefing-error{color:#ff9d91}
+@media(max-width:600px){.daily-briefing-overlay{padding:68px 10px 10px;justify-content:center}.daily-briefing-card{width:100%;max-width:430px}.daily-briefing-avatar{width:56px;height:56px;flex-basis:56px}}
+
 /* Loading skeleton */
 .skel{background:linear-gradient(90deg,#1a1208 25%,#2a1c08 50%,#1a1208 75%);background-size:200% 100%;animation:sk 1.4s infinite;border-radius:6px}
 @keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}
@@ -4852,6 +4872,17 @@ html[data-theme="deep-blue"] .scene-task-details .home-agenda-global-refresh{bor
   </div>
 </div>
 
+<div class="daily-briefing-overlay hidden" id="daily-briefing-overlay" aria-live="polite">
+  <section class="daily-briefing-card" role="dialog" aria-modal="false" aria-labelledby="daily-briefing-title">
+    <button class="daily-briefing-close" type="button" onclick="closeDailyBriefingPopup()" aria-label="關閉今日政務提醒">×</button>
+    <div class="daily-briefing-head">
+      <img class="daily-briefing-avatar" src="./荀彧/文雅報告完畢12.png?v=20260919" alt="荀彧">
+      <div><div class="daily-briefing-kicker">荀彧 · 今日政務</div><div class="daily-briefing-title" id="daily-briefing-title">今日行程與待辦</div><div class="daily-briefing-date" id="daily-briefing-date"></div></div>
+    </div>
+    <div class="daily-briefing-body" id="daily-briefing-body"><div class="daily-briefing-loading">荀彧正在調閱今日行程與待辦事項…</div></div>
+  </section>
+</div>
+
 <div class="cfg-overlay" id="cfg-overlay" onclick="cfgOverlayClick(event)">
   <div class="cfg-box" id="cfg-box">
     <div class="cfg-title">⚙ API 設定</div>
@@ -6059,6 +6090,43 @@ function setWebLoginVisible(visible,message,status){
   }
 }
 function openCfgFromLogin(){openCfg();}
+var dailyBriefingShown=false;
+var dailyBriefingCloseTimer=null;
+function closeDailyBriefingPopup(){
+  if(dailyBriefingCloseTimer){window.clearTimeout(dailyBriefingCloseTimer);dailyBriefingCloseTimer=null;}
+  var overlay=document.getElementById('daily-briefing-overlay');
+  if(overlay)overlay.classList.add('hidden');
+}
+function dailyBriefingItemsHtml(items,type){
+  if(!Array.isArray(items)||!items.length)return '<div class="daily-briefing-empty">'+(type==='event'?'今日暫無行程。':'目前沒有未完成待辦。')+'</div>';
+  return items.slice(0,6).map(function(item){
+    var time=type==='event'?(item.timeText||'整日'):'□';
+    var title=item.title||'未命名'+(type==='event'?'行程':'待辦');
+    var extra=type==='task'&&item.dueText?' · 期限 '+item.dueText:'';
+    return '<div class="daily-briefing-item"><span class="daily-briefing-item-time">'+esc(time)+'</span><span>'+esc(title+extra)+'</span></div>';
+  }).join('');
+}
+function openDailyBriefingPopup(){
+  if(dailyBriefingShown||!hasMainApiCredentials()||!webVerifyIsAuthorized())return;
+  dailyBriefingShown=true;
+  var overlay=document.getElementById('daily-briefing-overlay');
+  var body=document.getElementById('daily-briefing-body');
+  var date=document.getElementById('daily-briefing-date');
+  if(!overlay||!body)return;
+  if(date)date.textContent=today().replace(/-/g,'/');
+  overlay.classList.remove('hidden');
+  dailyBriefingCloseTimer=window.setTimeout(closeDailyBriefingPopup,5000);
+  Promise.allSettled([
+    apiGet({action:'todayCalendar',date:today()},30000),
+    apiGet({action:'todayTasks'},30000)
+  ]).then(function(results){
+    var events=results[0].status==='fulfilled'&&results[0].value?results[0].value.events||[]:[];
+    var tasks=results[1].status==='fulfilled'&&results[1].value?results[1].value.tasks||[]:[];
+    var eventHtml=results[0].status==='fulfilled'?dailyBriefingItemsHtml(events,'event'):'<div class="daily-briefing-error">今日行程讀取失敗</div>';
+    var taskHtml=results[1].status==='fulfilled'?dailyBriefingItemsHtml(tasks,'task'):'<div class="daily-briefing-error">待辦事項讀取失敗</div>';
+    body.innerHTML='<section class="daily-briefing-section"><div class="daily-briefing-section-title">📅 今日行程</div>'+eventHtml+'</section><section class="daily-briefing-section"><div class="daily-briefing-section-title">📜 待辦事項</div>'+taskHtml+'</section>';
+  });
+}
 async function submitWebLogin(event){
   if(event&&event.preventDefault)event.preventDefault();
   var input=document.getElementById('web-login-token');
@@ -6074,6 +6142,7 @@ async function submitWebLogin(event){
     var ok=await ensureWebAccess(true);
     if(!ok)throw new Error(webVerifyStoredMessage()||'城門驗證失敗');
     setWebLoginVisible(false,'城門驗證成功','ok');
+    window.setTimeout(openDailyBriefingPopup,250);
   }catch(error){
     setWebLoginVisible(true,error&&error.message?error.message:'城門驗證失敗','err');
   }finally{
@@ -6134,6 +6203,7 @@ function restoreRememberedWebAccess(){
   setEmpireUnlockState(true);
   setWebLoginVisible(false,'城門驗證成功','ok');
   startWebSessionAutoRefresh();
+  window.setTimeout(openDailyBriefingPopup,350);
   advisorAIUpdateWebVerifyStatus();
   return Promise.resolve(true);
 }
@@ -6310,6 +6380,7 @@ async function verifyCfgWebAccess(){
     setWebVerifyStatus('ok','城門驗證成功');
     renderCfgWebVerifyStatus('ok','城門驗證成功');
     setWebLoginVisible(false,'城門驗證成功','ok');
+    window.setTimeout(openDailyBriefingPopup,250);
   }catch(e){
     console.error(e);
     var msg=e.message||'驗證失敗';
@@ -6343,6 +6414,7 @@ async function saveCfg(){
     await verifyWebAccess();
     setWebVerifyStatus('ok','城門驗證成功');
     setWebLoginVisible(false,'城門驗證成功','ok');
+    window.setTimeout(openDailyBriefingPopup,250);
   }catch(e){
     console.error(e);
     setWebVerifyStatus('err',e.message||'驗證失敗');
