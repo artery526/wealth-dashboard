@@ -4880,6 +4880,7 @@ var WRITE_TOKEN = localStorage.getItem('wealth_write_token') || '';
 var WEB_VERIFY_STATUS_KEY='wealth_web_verify_status';
 var WEB_VERIFY_MESSAGE_KEY='wealth_web_verify_message';
 var WEB_VERIFY_CHECKED_AT_KEY='wealth_web_verify_checked_at';
+var WEB_SESSION_TOKEN_KEY='wealth_web_session_token';
 // 第一道人城門記住 7 天；財務寫入時仍由後端逐筆驗證 WRITE_TOKEN。
 var WEB_VERIFY_TTL_MS=7*24*60*60*1000;
 var webVerifyPromise=null;
@@ -5358,7 +5359,12 @@ function runWealthApiRequest(task,priority){
 async function apiGet(params,timeoutMs){
   if(!API_URL)throw new Error('未設定 API 網址');
   var baseParams=Object.assign({},params||{});
-  if(String(baseParams.action||'')!=='config'&&cleanToken(WRITE_TOKEN))baseParams.token=cleanToken(WRITE_TOKEN);
+  if(String(baseParams.action||'')!=='config'&&cleanToken(WRITE_TOKEN)){
+    baseParams.token=cleanToken(WRITE_TOKEN);
+    var webSessionToken='';
+    try{webSessionToken=sessionStorage.getItem(WEB_SESSION_TOKEN_KEY)||'';}catch(e){}
+    if(webSessionToken)baseParams.sessionToken=webSessionToken;
+  }
   // Apps Script 讀取偶爾會在冷啟動或轉址時短暫回傳 404；讀取可安全重試，寫入仍維持單次請求。
   var attempts=String(baseParams.action||'')==='transactions'?2:3;
   var lastErr=null;
@@ -5577,6 +5583,7 @@ async function apiPost(body){
     return apiPostJson(body,jsonTimeout);
   }
   var params=Object.assign({},body,{token:WRITE_TOKEN});
+  try{var webSessionToken=sessionStorage.getItem(WEB_SESSION_TOKEN_KEY)||'';if(webSessionToken)params.sessionToken=webSessionToken;}catch(e){}
   var d=await apiPostGetFallback(params,apiWriteTimeoutMs(body&&body.action||''));
   if(!d.ok)throw new Error(d.error||'寫入失敗');
   if(isApiWriteAction(body.action||'')){
@@ -5610,6 +5617,7 @@ async function apiPostGetFallback(params,timeoutMs){
 async function apiPostJson(body,timeoutMs){
   WRITE_TOKEN=cleanToken(WRITE_TOKEN);
   var payload=Object.assign({},body,{token:WRITE_TOKEN});
+  try{var webSessionToken=sessionStorage.getItem(WEB_SESSION_TOKEN_KEY)||'';if(webSessionToken)payload.sessionToken=webSessionToken;}catch(e){}
   var r;
   try{
     r=await runWealthApiRequest(function(){
@@ -6136,7 +6144,9 @@ async function verifyWebAccess(){
   var lastErr=null;
   for(var attempt=0;attempt<2;attempt++){
     try{
-      await apiPost({action:'verifyWriteToken'});
+      var session=await apiGet({action:'createWebSession'},15000);
+      if(!session||!session.sessionToken)throw new Error('城門未回傳登入 Session');
+      try{sessionStorage.setItem(WEB_SESSION_TOKEN_KEY,String(session.sessionToken));}catch(e){}
       return true;
     }catch(err){
       lastErr=err;
@@ -6144,7 +6154,9 @@ async function verifyWebAccess(){
       // 個驗證端點支援簡單 text/plain POST，改用 POST 再試一次。
       if(Number(err&&err.status)===404||Number(err&&err.status)===405){
         try{
-          await apiPostJson({action:'verifyWriteToken'},15000);
+          var postSession=await apiPostJson({action:'createWebSession'},15000);
+          if(!postSession||!postSession.sessionToken)throw new Error('城門未回傳登入 Session');
+          try{sessionStorage.setItem(WEB_SESSION_TOKEN_KEY,String(postSession.sessionToken));}catch(e){}
           return true;
         }catch(postErr){
           lastErr=postErr;
