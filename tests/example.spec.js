@@ -634,6 +634,31 @@ test('council holding avatars start as static images and create video only after
   expect(result.after.source).toContain('MLPI.mp4');
 });
 
+test('council holding video sources use the deployed asset directories', async ({ page }) => {
+  await page.goto(dashboardUrl);
+
+  const result = await page.evaluate(() => {
+    const host = document.createElement('div');
+    document.body.appendChild(host);
+    const rows = ['QQQI', '國泰高股息B', '00997A'].map(symbol => ({
+      symbol,
+      heroName: symbol,
+      holding: { symbol, name: symbol, cost: 100, marketValue: 110, price: 10, avgCost: 9, totalReturn: 10 }
+    }));
+    host.innerHTML = rows.map(row => renderHeroCard(row, 300)).join('');
+    return [...host.querySelectorAll('.hero-visual')].map(el => ({
+      source: el.dataset.videoSrc,
+      hasStatic: !!el.querySelector('img')
+    }));
+  });
+
+  expect(result).toEqual([
+    { source: '深藍色版本/QQQI.mp4', hasStatic: true },
+    { source: '深藍色版本/國泰高股息B.mp4', hasStatic: true },
+    { source: '部隊陣容/997A.mp4', hasStatic: true }
+  ]);
+});
+
 test('store panel shows cached records before a refresh and reuses fresh data', async ({ page }) => {
   await page.goto(dashboardUrl);
 

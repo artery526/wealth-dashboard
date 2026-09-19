@@ -15925,6 +15925,7 @@ var STATIC_HOLDING_AVATAR_FILES={
   'GLDW':'GLDW.jpg',
   'MLPI':'MLPI.jpg',
   'PLTY':'PLTY.jpg',
+  'QQQI':'QQQI.jpg',
   '國泰高股息B':'國泰高股息B.jpg',
   '施羅德收益成長A2':'施羅德收益成長A2.jpg',
   '路博邁台灣5G':'路博邁台灣5G.jpg'
@@ -16118,7 +16119,7 @@ function renderHeroCard(row,totalCost){
   var isGdxw=holdingKey==='GDXW'||councilRowText(row).indexOf('GDXW')>=0;
   var isGldw=holdingKey==='GLDW'||councilRowText(row).indexOf('GLDW')>=0;
   var animatedAvatar=holdingKey==='QQQI'||holdingKey==='00997A'||isCathayHighDividend||isTaiwan5G||isPlty||isAipi||isChpy||isSchroder||is985b||isMlpi||is998a||isGdxw||isGldw;
-  var animatedAvatarSource=isGldw?'GLDW.mp4':isGdxw?'GDXW.mp4':isMlpi?'MLPI.mp4':is998a?'部隊陣容/998A.mp4':is985b?'985B.mp4':isSchroder?'施羅德收益成長A2.mp4':isChpy?'CHPY.mp4':isAipi?'AIPI.mp4':isPlty?'PLTY.mp4':isTaiwan5G?'路博邁台灣5G.mp4':isCathayHighDividend?'國泰高股息B.mp4':holdingKey==='00997A'?'997A.mp4':'QQQI.mp4';
+  var animatedAvatarSource=isGldw?'部隊陣容/GLDW.mp4':isGdxw?'部隊陣容/GDXW.mp4':isMlpi?'部隊陣容/MLPI.mp4':is998a?'部隊陣容/998A.mp4':is985b?'部隊陣容/985B.mp4':isSchroder?'部隊陣容/施羅德收益成長A2.mp4':isChpy?'部隊陣容/CHPY.mp4':isAipi?'部隊陣容/AIPI.mp4':isPlty?'部隊陣容/PLTY.mp4':isTaiwan5G?'部隊陣容/路博邁台灣5G.mp4':isCathayHighDividend?'深藍色版本/國泰高股息B.mp4':holdingKey==='00997A'?'部隊陣容/997A.mp4':'深藍色版本/QQQI.mp4';
   var heroType=String(row.heroType||row.riskLevel||'策略型').replace(/型$/,'');
   var effectName=skill.skillName||row.skill1Name||'武將技能';
   var effectText=skill.uiEffect||skill.effectKeyword||row.skill2Desc||row.skill1Desc||'尚未設定 UI 特效';
