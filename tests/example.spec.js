@@ -578,6 +578,36 @@ test('council roster shows the cached roster before refreshing', async ({ page }
   expect(result).toEqual({ oldValue: '1 檔', newValue: '2 檔', hasSkeleton: false });
 });
 
+test('council roster accepts the NAS cache object without reading an allSettled status', async ({ page }) => {
+  await page.goto(dashboardUrl);
+
+  const result = await page.evaluate(async () => {
+    const originalNasLoader = loadCouncilRosterFromNas_;
+    const originalHeroLoader = loadHeroSheet;
+    const originalHoldingsLoader = loadCouncilHoldingsOverview;
+    loadCouncilRosterFromNas_ = async () => ({
+      heroes: [{ symbol: 'QQQI', assetName: 'QQQI', heroName: 'QQQI', enabled: true, sortOrder: 1 }],
+      holdings: [{ symbol: 'QQQI', name: 'QQQI', cost: 100, marketValue: 110, shares: 1 }],
+      holdingsLoaded: true,
+      source: 'NAS'
+    });
+    loadHeroSheet = async () => { throw new Error('Google fallback should not run'); };
+    loadCouncilHoldingsOverview = async () => { throw new Error('Google fallback should not run'); };
+    councilDashboardPromise = null;
+    try {
+      const data = await loadCouncilDashboardData();
+      return { source: data.source, holdingsLoaded: data.holdingsLoaded, symbol: data.holdings[0].symbol };
+    } finally {
+      loadCouncilRosterFromNas_ = originalNasLoader;
+      loadHeroSheet = originalHeroLoader;
+      loadCouncilHoldingsOverview = originalHoldingsLoader;
+      councilDashboardPromise = null;
+    }
+  });
+
+  expect(result).toEqual({ source: 'NAS', holdingsLoaded: true, symbol: 'QQQI' });
+});
+
 test('store panel shows cached records before a refresh and reuses fresh data', async ({ page }) => {
   await page.goto(dashboardUrl);
 

@@ -15416,7 +15416,10 @@ function loadCouncilDashboardData(){
       // 龐統城門已在進入卡片前完成驗證；資料載入失敗時只顯示卡片錯誤，
       // 不再由軍機處自行觸發第二次驗證，避免手機端長時間卡在驗證中。
       return results;
-  }).then(function(results){
+    }).then(function(results){
+      // NAS 優先路徑已經是整理好的資料物件；Google fallback 才是 allSettled 陣列。
+      // 兩者都要在這裡正規化，避免直接讀取不存在的 results[0].status。
+      if(results&&!Array.isArray(results))return results;
       return {
         heroes:results[0].status==='fulfilled'?results[0].value:[],
         holdings:results[1].status==='fulfilled'?(results[1].value||[]):[],
