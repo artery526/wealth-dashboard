@@ -16069,22 +16069,19 @@ function renderHeroCard(row,totalCost){
   var paybackShort=paybackDone?'已回本':(paybackMonths>0?paybackMonths+'M':'--');
   var tone=ret<0?'down':'up';
   var color=councilHeroAccentColor(row);
-  var skill=row.skillData||{};
   var forceHoldingAccent=normalizeKey(row&&row.symbol)==='國泰高股息B'||councilRowText(row).indexOf('國泰高股息')>=0;
-  var effectColor=forceHoldingAccent?color:(skill.effectColor||color);
+  var effectColor=color;
   var name=row.heroName||h.heroName||displaySymbol||'未編制';
   var staticImg=staticHeroAvatarUrl(name)||staticHoldingAvatarUrl(displaySymbol,name);
   var img=staticImg||normalizeImageUrl(row.avatarUrl);
   var holdingKey=normalizeKey(displaySymbol);
   var heroType=String(row.heroType||row.riskLevel||'策略型').replace(/型$/,'');
-  var effectName=skill.skillName||row.skill1Name||'武將技能';
-  var effectText=skill.uiEffect||skill.effectKeyword||row.skill2Desc||row.skill1Desc||'尚未設定 UI 特效';
-  var effectTrigger=skill.trigger?`觸發：${skill.trigger}`:'';
-  var effectBlock=effectText?`<div class="hero-effect" style="--effect-color:${esc(effectColor)};--effect-border:${hexToRgba(effectColor,.35)};--effect-bg:${hexToRgba(effectColor,.12)};--effect-shadow:${hexToRgba(effectColor,.10)}">
-      <div class="hero-effect-name">${esc(effectName)}</div>
-      <div class="hero-effect-text">${esc(effectText)}</div>
-      ${effectTrigger?`<div class="hero-effect-trigger">${esc(effectTrigger)}</div>`:''}
-    </div>`:'';
+  var capitalBlock=`<div class="hero-effect hero-capital-block" style="--effect-color:${esc(effectColor)};--effect-border:${hexToRgba(effectColor,.35)};--effect-bg:${hexToRgba(effectColor,.12)};--effect-shadow:${hexToRgba(effectColor,.10)}" aria-label="市值與成本">
+      <div class="hero-money-grid">
+        <div class="hero-money-item market"><span class="hero-money-label">📈 市值</span><strong class="hero-money-value">${fmtFull(marketValue)}</strong></div>
+        <div class="hero-money-item cost"><span class="hero-money-label">🌱 成本</span><strong class="hero-money-value">${fmtFull(cost)}</strong></div>
+      </div>
+    </div>`;
   return `<div class="hero-card ${tone}" style="--hero-color:${esc(color)};--hero-glow:${hexToRgba(color,.24)};--effect-glow:${hexToRgba(effectColor,.20)};border-color:${hexToRgba(color,.72)}">
     <div class="hero-visual-stack">
       <div class="hero-visual" role="button" tabindex="0" aria-label="展開持股數值" aria-expanded="false" onclick="toggleHeroMetrics(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleHeroMetrics(this)}">
@@ -16097,13 +16094,9 @@ function renderHeroCard(row,totalCost){
       <div class="hero-name">${esc(name)} <span class="hero-type-inline">${esc(heroType)} <span class="hero-type-yield">🟡${annualYield.toFixed(1)}%</span></span></div>
       <div class="hero-price-under-name">現 ${price?price.toFixed(2):'--'} / 均 ${avg?avg.toFixed(2):'--'}</div>
     </div>
-    ${effectBlock}
+    ${capitalBlock}
     <div class="hero-metrics-panel" role="button" tabindex="0" aria-label="點擊複製資訊框內容" aria-live="polite" onclick="copyHeroMetrics(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();copyHeroMetrics(this)}">
       <div>📦${shares?shares.toLocaleString('zh-TW'):'--'} 💧${esc(monthlyDivCompact)} 🚰佔總${costWeight.toFixed(1)}%</div>
-      <div class="hero-money-grid" aria-label="市值與成本">
-        <div class="hero-money-item market"><span class="hero-money-label">📈 市值</span><strong class="hero-money-value">${fmtFull(marketValue)}</strong></div>
-        <div class="hero-money-item cost"><span class="hero-money-label">🌱 成本</span><strong class="hero-money-value">${fmtFull(cost)}</strong></div>
-      </div>
       <div>ROI ${fmtPctSigned(roi)} / 🧩${paybackShort}➡️${cost>0?paybackPct.toFixed(1)+'%':'--'}</div>
     </div>
   </div>`;

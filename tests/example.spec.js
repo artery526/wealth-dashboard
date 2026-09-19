@@ -658,6 +658,34 @@ test('council holding static portraits follow the filenames in 武將資料', as
   ]);
 });
 
+test('council cards move market value and cost into the former skill area', async ({ page }) => {
+  await page.goto(dashboardUrl);
+
+  const result = await page.evaluate(() => {
+    const host = document.createElement('div');
+    document.body.appendChild(host);
+    host.innerHTML = renderHeroCard({
+      symbol: '00997A',
+      heroName: '00997A',
+      holding: { symbol: '00997A', name: '00997A', cost: 100, marketValue: 120, price: 12, avgCost: 10, totalReturn: 20 }
+    }, 100);
+    const card = host.querySelector('.hero-card');
+    const formerSkillArea = card.querySelector('.hero-effect');
+    const metrics = card.querySelector('.hero-metrics-panel');
+    return {
+      hasSkillText: card.textContent.includes('武將技能') || card.textContent.includes('尚未設定 UI 特效'),
+      capitalArea: formerSkillArea?.textContent || '',
+      lowerMetrics: metrics?.textContent || ''
+    };
+  });
+
+  expect(result.hasSkillText).toBeFalsy();
+  expect(result.capitalArea).toContain('市值');
+  expect(result.capitalArea).toContain('成本');
+  expect(result.lowerMetrics).not.toContain('市值');
+  expect(result.lowerMetrics).not.toContain('成本');
+});
+
 test('store panel shows cached records before a refresh and reuses fresh data', async ({ page }) => {
   await page.goto(dashboardUrl);
 
