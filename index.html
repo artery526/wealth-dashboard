@@ -3003,6 +3003,9 @@ body::after{
 .daily-briefing-card{position:relative;width:min(92vw,430px);padding:16px 18px 17px;border:1px solid rgba(98,201,232,.72);border-radius:14px;background:linear-gradient(145deg,rgba(9,39,55,.98),rgba(4,18,28,.98));box-shadow:0 14px 42px rgba(0,0,0,.55),0 0 24px rgba(43,145,181,.2);pointer-events:auto;animation:dailyBriefingIn .24s ease-out}
 @keyframes dailyBriefingIn{from{opacity:0;transform:translateY(-12px) scale(.98)}to{opacity:1;transform:none}}
 .daily-briefing-close{position:absolute;top:8px;right:10px;width:28px;height:28px;border:1px solid rgba(143,228,255,.34);border-radius:50%;background:rgba(4,18,28,.72);color:#aeeeff;font:700 18px/1 var(--sans);cursor:pointer}
+.daily-briefing-minimize,.daily-briefing-refresh{position:absolute;top:8px;width:28px;height:28px;border:1px solid rgba(143,228,255,.34);border-radius:50%;background:rgba(4,18,28,.72);color:#aeeeff;font:900 16px/1 var(--sans);cursor:pointer}
+.daily-briefing-minimize{right:76px}.daily-briefing-refresh{right:43px}
+.daily-briefing-close:hover,.daily-briefing-minimize:hover,.daily-briefing-refresh:hover{border-color:#8fe4ff;background:rgba(16,70,91,.86)}
 .daily-briefing-head{display:flex;align-items:center;gap:12px;padding-right:28px;margin-bottom:11px}
 .daily-briefing-avatar{width:64px;height:64px;flex:0 0 64px;border:1px solid rgba(232,192,80,.66);border-radius:10px;background:#06131d;object-fit:cover;object-position:center top}
 .daily-briefing-kicker{color:#8fe4ff;font:900 11px var(--sans);letter-spacing:2px}
@@ -3016,6 +3019,8 @@ body::after{
 .daily-briefing-empty,.daily-briefing-loading,.daily-briefing-error{color:#9bb9c4;font:12px/1.5 var(--sans)}
 .daily-briefing-error{color:#ff9d91}
 @media(max-width:600px){.daily-briefing-overlay{padding:68px 10px 10px;justify-content:center}.daily-briefing-card{width:100%;max-width:430px}.daily-briefing-avatar{width:56px;height:56px;flex-basis:56px}}
+.daily-briefing-mini{position:absolute;z-index:9;width:42px;height:30px;border:1px solid rgba(143,228,255,.78);border-radius:999px;background:rgba(5,28,41,.94);color:#bcefff;font:900 15px/1 var(--sans);cursor:pointer;box-shadow:0 0 14px rgba(43,145,181,.42);transform:translateY(-100%)}
+.daily-briefing-mini:hover{background:rgba(16,70,91,.96);color:#fff}
 
 /* Loading skeleton */
 .skel{background:linear-gradient(90deg,#1a1208 25%,#2a1c08 50%,#1a1208 75%);background-size:200% 100%;animation:sk 1.4s infinite;border-radius:6px}
@@ -4746,6 +4751,7 @@ html[data-theme="deep-blue"] .scene-task-details .home-agenda-global-refresh{bor
         </div>
       </div>
     </div>
+    <button class="daily-briefing-mini hidden" id="daily-briefing-mini" type="button" onclick="restoreDailyBriefingPopup()" aria-label="恢復荀彧今日政務提醒">....</button>
   </div>
 </section>
 
@@ -4874,7 +4880,9 @@ html[data-theme="deep-blue"] .scene-task-details .home-agenda-global-refresh{bor
 
 <div class="daily-briefing-overlay hidden" id="daily-briefing-overlay" aria-live="polite">
   <section class="daily-briefing-card" role="dialog" aria-modal="false" aria-labelledby="daily-briefing-title">
-    <button class="daily-briefing-close" type="button" onclick="closeDailyBriefingPopup()" aria-label="關閉今日政務提醒">×</button>
+    <button class="daily-briefing-minimize" type="button" onclick="minimizeDailyBriefingPopup()" aria-label="縮小今日政務提醒" title="縮小">−</button>
+    <button class="daily-briefing-refresh" type="button" onclick="refreshDailyBriefingPopup()" aria-label="更新今日政務提醒" title="更新">↻</button>
+    <button class="daily-briefing-close" type="button" onclick="closeDailyBriefingPopup()" aria-label="關閉今日政務提醒" title="關閉">×</button>
     <div class="daily-briefing-head">
       <img class="daily-briefing-avatar" src="./荀彧/文雅報告完畢12.png?v=20260919" alt="荀彧">
       <div><div class="daily-briefing-kicker">荀彧 · 今日政務</div><div class="daily-briefing-title" id="daily-briefing-title">今日行程與待辦</div><div class="daily-briefing-date" id="daily-briefing-date"></div></div>
@@ -6091,12 +6099,39 @@ function setWebLoginVisible(visible,message,status){
 }
 function openCfgFromLogin(){openCfg();}
 var dailyBriefingShown=false;
-var dailyBriefingCloseTimer=null;
 function closeDailyBriefingPopup(){
-  if(dailyBriefingCloseTimer){window.clearTimeout(dailyBriefingCloseTimer);dailyBriefingCloseTimer=null;}
   var overlay=document.getElementById('daily-briefing-overlay');
   if(overlay)overlay.classList.add('hidden');
+  var mini=document.getElementById('daily-briefing-mini');
+  if(mini)mini.classList.add('hidden');
 }
+function positionDailyBriefingMini(){
+  var mini=document.getElementById('daily-briefing-mini');
+  var stage=document.getElementById('npc-web-scene-stage');
+  if(!mini||!stage||mini.classList.contains('hidden'))return;
+  var character=stage.querySelector('.animated-character[aria-label^="荀彧"]');
+  if(!character)return;
+  var stageRect=stage.getBoundingClientRect(),characterRect=character.getBoundingClientRect();
+  var left=characterRect.left-stageRect.left+characterRect.width/2-21;
+  var top=characterRect.top-stageRect.top-8;
+  left=Math.max(6,Math.min(left,stageRect.width-48));
+  top=Math.max(6,top);
+  mini.style.left=Math.round(left)+'px';
+  mini.style.top=Math.round(top)+'px';
+}
+function minimizeDailyBriefingPopup(){
+  var overlay=document.getElementById('daily-briefing-overlay');
+  var mini=document.getElementById('daily-briefing-mini');
+  if(overlay)overlay.classList.add('hidden');
+  if(mini){mini.classList.remove('hidden');positionDailyBriefingMini();}
+}
+function restoreDailyBriefingPopup(){
+  var overlay=document.getElementById('daily-briefing-overlay');
+  var mini=document.getElementById('daily-briefing-mini');
+  if(mini)mini.classList.add('hidden');
+  if(overlay)overlay.classList.remove('hidden');
+}
+window.addEventListener('resize',positionDailyBriefingMini);
 function dailyBriefingItemsHtml(items,type){
   if(!Array.isArray(items)||!items.length)return '<div class="daily-briefing-empty">'+(type==='event'?'今日暫無行程。':'目前沒有未完成待辦。')+'</div>';
   return items.slice(0,6).map(function(item){
@@ -6106,15 +6141,10 @@ function dailyBriefingItemsHtml(items,type){
     return '<div class="daily-briefing-item"><span class="daily-briefing-item-time">'+esc(time)+'</span><span>'+esc(title+extra)+'</span></div>';
   }).join('');
 }
-function openDailyBriefingPopup(){
-  if(dailyBriefingShown||!hasMainApiCredentials()||!webVerifyIsAuthorized())return;
-  dailyBriefingShown=true;
-  var overlay=document.getElementById('daily-briefing-overlay');
+function refreshDailyBriefingPopup(){
   var body=document.getElementById('daily-briefing-body');
-  var date=document.getElementById('daily-briefing-date');
-  if(!overlay||!body)return;
-  if(date)date.textContent=today().replace(/-/g,'/');
-  overlay.classList.remove('hidden');
+  if(!body)return;
+  body.innerHTML='<div class="daily-briefing-loading">荀彧正在重新調閱今日行程與待辦事項…</div>';
   Promise.allSettled([
     apiGet({action:'todayCalendar',date:today()},30000),
     apiGet({action:'todayTasks'},30000)
@@ -6125,6 +6155,16 @@ function openDailyBriefingPopup(){
     var taskHtml=results[1].status==='fulfilled'?dailyBriefingItemsHtml(tasks,'task'):'<div class="daily-briefing-error">待辦事項讀取失敗</div>';
     body.innerHTML='<section class="daily-briefing-section"><div class="daily-briefing-section-title">📅 今日行程</div>'+eventHtml+'</section><section class="daily-briefing-section"><div class="daily-briefing-section-title">📜 待辦事項</div>'+taskHtml+'</section>';
   });
+}
+function openDailyBriefingPopup(){
+  if(dailyBriefingShown||!hasMainApiCredentials()||!webVerifyIsAuthorized())return;
+  dailyBriefingShown=true;
+  var overlay=document.getElementById('daily-briefing-overlay');
+  var date=document.getElementById('daily-briefing-date');
+  if(!overlay)return;
+  if(date)date.textContent=today().replace(/-/g,'/');
+  overlay.classList.remove('hidden');
+  refreshDailyBriefingPopup();
 }
 async function submitWebLogin(event){
   if(event&&event.preventDefault)event.preventDefault();
@@ -21344,6 +21384,7 @@ function mpmRender(records){
       }
     });
     Promise.all(Object.values(npcs).map(function(npc){return npc.loaded;})).then(function(){
+      positionDailyBriefingMini();
       if(status)status.textContent='龐統、諸葛亮、陳群、華佗、劉備、司馬懿、滿寵與荀彧已入駐 · 點擊人物開啟正式面板';
     }).catch(function(){
       if(status)status.textContent='部分角色影格載入失敗，請重新整理。';
