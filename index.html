@@ -6115,7 +6115,6 @@ function openDailyBriefingPopup(){
   if(!overlay||!body)return;
   if(date)date.textContent=today().replace(/-/g,'/');
   overlay.classList.remove('hidden');
-  dailyBriefingCloseTimer=window.setTimeout(closeDailyBriefingPopup,5000);
   Promise.allSettled([
     apiGet({action:'todayCalendar',date:today()},30000),
     apiGet({action:'todayTasks'},30000)
