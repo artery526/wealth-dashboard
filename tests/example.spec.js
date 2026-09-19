@@ -608,6 +608,32 @@ test('council roster accepts the NAS cache object without reading an allSettled 
   expect(result).toEqual({ source: 'NAS', holdingsLoaded: true, symbol: 'QQQI' });
 });
 
+test('council holding avatars start as static images and create video only after clicking', async ({ page }) => {
+  await page.goto(dashboardUrl);
+
+  const result = await page.evaluate(() => {
+    const host = document.createElement('div');
+    document.body.appendChild(host);
+    const row = {
+      symbol: 'MLPI',
+      heroName: 'MLPI',
+      holding: { symbol: 'MLPI', name: 'MLPI', cost: 100, marketValue: 110, price: 10, avgCost: 9, totalReturn: 10 }
+    };
+    host.innerHTML = renderHeroCard(row, 100);
+    const visual = host.querySelector('.hero-visual');
+    const before = { image: !!visual.querySelector('img'), video: !!visual.querySelector('video'), source: visual.dataset.videoSrc };
+    visual.click();
+    const after = { image: !!visual.querySelector('img'), video: !!visual.querySelector('video'), source: visual.querySelector('video')?.src || '' };
+    return { before, after };
+  });
+
+  expect(result.before.image).toBeTruthy();
+  expect(result.before.video).toBeFalsy();
+  expect(result.before.source).toContain('MLPI.mp4');
+  expect(result.after.video).toBeTruthy();
+  expect(result.after.source).toContain('MLPI.mp4');
+});
+
 test('store panel shows cached records before a refresh and reuses fresh data', async ({ page }) => {
   await page.goto(dashboardUrl);
 
