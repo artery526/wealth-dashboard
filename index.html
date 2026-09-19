@@ -15915,25 +15915,26 @@ function staticHeroAvatarUrl(name){
   return file?'./武將資料/'+encodeURIComponent(file):'';
 }
 
-var STATIC_HOLDING_AVATAR_FILES={
-  '00985B':'985B.jpg',
-  '00997A':'997A.jpg',
-  '00998A':'998A.jpg',
-  'AIPI':'AIPI.jpg',
-  'CHPY':'CHPY.jpg',
-  'GDXW':'GDXW.jpg',
-  'GLDW':'GLDW.jpg',
-  'MLPI':'MLPI.jpg',
-  'PLTY':'PLTY.jpg',
-  'QQQI':'QQQI.jpg',
-  '國泰高股息B':'國泰高股息B.jpg',
-  '施羅德收益成長A2':'施羅德收益成長A2.jpg',
-  '路博邁台灣5G':'路博邁台灣5G.jpg'
+var STATIC_HOLDING_HERO_NAMES={
+  'QQQI':'諸葛亮',
+  '00997A':'龐統',
+  '國泰高股息B':'張遼',
+  '路博邁台灣5G':'黃忠',
+  '施羅德收益成長A2':'陸遜',
+  '00985B':'陳群',
+  'PLTY':'呂布',
+  'AIPI':'張飛',
+  'CHPY':'趙雲',
+  'MLPI':'關羽',
+  'GDXW':'司馬懿',
+  'GLDW':'劉備',
+  '00998A':'荀彧'
 };
 function staticHoldingAvatarUrl(symbol,name){
   var key=normalizeKey(symbol||name);
-  var file=STATIC_HOLDING_AVATAR_FILES[key]||STATIC_HOLDING_AVATAR_FILES[String(name||'').trim()];
-  return file?'./部隊陣容/'+encodeURIComponent(file):'';
+  var heroName=STATIC_HOLDING_HERO_NAMES[key]||String(name||'').trim();
+  var file=STATIC_HERO_AVATAR_FILES[heroName];
+  return file?'./武將資料/'+encodeURIComponent(file):'';
 }
 
 function activateHeroVideo(visual,event){

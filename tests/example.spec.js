@@ -648,14 +648,15 @@ test('council holding video sources use the deployed asset directories', async (
     host.innerHTML = rows.map(row => renderHeroCard(row, 300)).join('');
     return [...host.querySelectorAll('.hero-visual')].map(el => ({
       source: el.dataset.videoSrc,
-      hasStatic: !!el.querySelector('img')
+      hasStatic: !!el.querySelector('img'),
+      staticSource: el.querySelector('img')?.getAttribute('src') || ''
     }));
   });
 
   expect(result).toEqual([
-    { source: '深藍色版本/QQQI.mp4', hasStatic: true },
-    { source: '深藍色版本/國泰高股息B.mp4', hasStatic: true },
-    { source: '部隊陣容/997A.mp4', hasStatic: true }
+    { source: '深藍色版本/QQQI.mp4', hasStatic: true, staticSource: './武將資料/%E8%AB%B8%E8%91%9B%E4%BA%AE.jpg' },
+    { source: '深藍色版本/國泰高股息B.mp4', hasStatic: true, staticSource: './武將資料/%E5%BC%B5%E9%81%BC.jpg' },
+    { source: '部隊陣容/997A.mp4', hasStatic: true, staticSource: './武將資料/%E9%BE%90%E7%B5%B1.jpg' }
   ]);
 });
 
