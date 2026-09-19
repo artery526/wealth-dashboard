@@ -15893,47 +15893,47 @@ function buildAssetSnapshotFromCommand(commandLatest,sheetSnapshot){
 
 // 部隊陣容使用輕量靜態頭像；完整立繪素材保留在素材庫，不讓卡片載入動畫影片。
 var STATIC_HERO_AVATAR_FILES={
-  '龐統':'龐統.jpg',
-  '張飛':'張飛.jpg',
-  '黃忠':'黃忠.jpg',
-  '陸遜':'陸遜.jpg',
-  '陳群':'陳群.jpg',
-  '關羽':'關羽.jpg',
-  '張遼':'張遼.jpg',
-  '趙雲':'趙雲.jpg',
-  '孫權':'孫權.jpg',
-  '諸葛亮':'諸葛亮.jpg',
-  '呂布':'呂布.jpg',
-  '荀彧':'荀彧.jpg',
-  '糜竺':'糜竺.jpg',
-  '司馬懿':'司馬懿.jpg',
-  '劉備':'劉備.jpg'
+  '龐統':'龐統.webp',
+  '張飛':'張飛.webp',
+  '黃忠':'黃忠.webp',
+  '陸遜':'陸遜.webp',
+  '陳群':'陳群.webp',
+  '關羽':'關羽.webp',
+  '張遼':'張遼.webp',
+  '趙雲':'趙雲.webp',
+  '孫權':'孫權.webp',
+  '諸葛亮':'諸葛亮.webp',
+  '呂布':'呂布.webp',
+  '荀彧':'荀彧.webp',
+  '糜竺':'糜竺.webp',
+  '司馬懿':'司馬懿.webp',
+  '劉備':'劉備.webp'
 };
 function staticHeroAvatarUrl(name){
   var file=STATIC_HERO_AVATAR_FILES[String(name||'').trim()];
-  return file?'./武將資料/'+encodeURIComponent(file):'';
+  return file?'./武將資料/'+encodeURIComponent(file)+'?v=20260919-roster-webp1':'';
 }
 
 var STATIC_HOLDING_AVATAR_FILES={
-  '00985B':'00985B.jpg',
-  '00997A':'00997A.jpg',
-  '00998A':'00998A.jpg',
-  'AIPI':'AIPI.jpg',
-  'CHPY':'CHPY.jpg',
-  'GDXW':'GDXW.jpg',
-  'GLDW':'GLDW.jpg',
-  'MLPI':'MLPI.jpg',
-  'PLTY':'呂布.jpg',
-  'QQQI':'QQQI.jpg',
-  '國泰高股息B':'國泰高股息B.jpg',
-  '施羅德收益成長A2':'施羅德收益成長.jpg',
-  '路博邁台灣5G':'路博邁台灣5G.jpg'
+  '00985B':'00985B.webp',
+  '00997A':'00997A.webp',
+  '00998A':'00998A.webp',
+  'AIPI':'AIPI.webp',
+  'CHPY':'CHPY.webp',
+  'GDXW':'GDXW.webp',
+  'GLDW':'GLDW.webp',
+  'MLPI':'MLPI.webp',
+  'PLTY':'呂布.webp',
+  'QQQI':'QQQI.webp',
+  '國泰高股息B':'國泰高股息B.webp',
+  '施羅德收益成長A2':'施羅德收益成長.webp',
+  '路博邁台灣5G':'路博邁台灣5G.webp'
 };
 function staticHoldingAvatarUrl(symbol,name){
   var key=normalizeKey(symbol||name);
   var file=STATIC_HOLDING_AVATAR_FILES[key];
   if(!file)file=STATIC_HERO_AVATAR_FILES[String(name||'').trim()];
-  return file?'./武將資料/'+encodeURIComponent(file)+'?v=20260919-roster-static2':'';
+  return file?'./武將資料/'+encodeURIComponent(file)+'?v=20260919-roster-webp1':'';
 }
 
 async function loadAssetSnapshot(){
