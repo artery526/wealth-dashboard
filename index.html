@@ -6815,7 +6815,7 @@ function renderStorePanel(initialTab){
     <div class="pane active" id="pane-store-contacts">
       <div class="store-panel-intro"><div class="store-panel-title">Store｜聯絡人</div><div class="store-panel-sub">直接記錄師傅、廠商或服務聯絡資訊，手機端會以卡片方式顯示。</div></div>
       <div class="store-contact-form-wrap" id="store-contact-form-wrap"></div>
-      <div class="store-contact-toolbar"><div class="store-contact-count" id="store-contact-count"></div><button class="store-search-toggle" id="store-contact-search-toggle" type="button" title="搜尋聯絡人" aria-label="搜尋聯絡人" aria-expanded="false" onclick="toggleStoreContactSearch(event)">🔍</button><input class="store-search-inline" id="store-contact-search" type="search" placeholder="搜尋稱呼、電話、地區或項目" aria-label="搜尋聯絡人" hidden oninput="storeContactSearchTerm=this.value;renderStoreContacts()"></div>
+      <div class="store-contact-toolbar"><div class="store-contact-count" id="store-contact-count"></div><button class="store-search-toggle" id="store-contact-search-toggle" type="button" title="搜尋聯絡人" aria-label="搜尋聯絡人" aria-expanded="false" onclick="toggleStoreContactSearch(event)">🔍</button><input class="store-search-inline" id="store-contact-search" type="search" placeholder="搜尋稱呼、電話或項目" aria-label="搜尋聯絡人" hidden oninput="storeContactSearchTerm=this.value;renderStoreContacts()"></div>
       <div id="store-contacts-freshness">${dataFreshnessHtml()}</div>
       <div id="store-contacts-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:78%"></div></div>
     </div>
@@ -7237,8 +7237,6 @@ function renderStoreContactForm(){
           <button class="store-contact-extra-toggle" id="store-contact-extra-toggle" type="button" title="展開其他聯絡資訊" aria-label="展開其他聯絡資訊" aria-expanded="false" onclick="toggleStoreContactExtras(event)">＋</button>
         </div>
         <div class="store-contact-extra-group" id="store-contact-extra-group" hidden>
-          <div class="store-form-group"><label class="store-form-label" for="store-contact-line">LINE顯示名稱</label><input class="form-control" id="store-contact-line" type="text" maxlength="100" placeholder="例如：王師傅（水電）"></div>
-          <div class="store-form-group"><label class="store-form-label" for="store-contact-area">服務地區</label><input class="form-control" id="store-contact-area" type="text" maxlength="120" placeholder="例如：台北市、新北市"></div>
           <div class="store-form-group store-contact-work-group"><label class="store-form-label" for="store-contact-work">已施作項目</label><textarea class="form-control" id="store-contact-work" maxlength="500" placeholder="例如：廚房水管、冷氣保養"></textarea></div>
         </div>
       </div>
@@ -7283,7 +7281,7 @@ function renderStoreContacts(){
   var term=String(storeContactSearchTerm||'').trim().toLowerCase();
   var rows=storeContactsCache.filter(function(contact){
     if(!term)return true;
-    return [contact.category,contact.companyName,contact.contactName,contact.phone,contact.lineName,contact.serviceArea,contact.completedWork].join(' ').toLowerCase().indexOf(term)>=0;
+    return [contact.category,contact.companyName,contact.contactName,contact.phone,contact.completedWork].join(' ').toLowerCase().indexOf(term)>=0;
   });
   if(countEl)countEl.textContent=term?'顯示 '+rows.length+' / '+storeContactsCache.length+' 位聯絡人':'共 '+rows.length+' 位聯絡人';
   if(!rows.length){
@@ -7297,8 +7295,6 @@ function renderStoreContacts(){
       '<div class="store-contact-card-head"><div class="store-contact-title">'+esc(contact.contactName||'未命名聯絡人')+'</div>'+(contact.companyName?'<span class="store-contact-company">'+esc(contact.companyName)+'</span>':'')+(contact.category?'<span class="store-contact-category">'+esc(contact.category)+'</span>':'')+'</div>'+
       '<div class="store-contact-fields">'+
         '<div class="store-contact-field"><span>電話</span>'+(phone?'<a href="tel:'+esc(phone.replace(/[^0-9+*#-]/g,''))+'">'+esc(phone)+'</a>':'<b>—</b>')+'</div>'+
-        '<div class="store-contact-field"><span>LINE</span><b>'+esc(contact.lineName||'—')+'</b></div>'+
-        '<div class="store-contact-field"><span>服務地區</span><b>'+esc(contact.serviceArea||'—')+'</b></div>'+
         '<div class="store-contact-field store-contact-field-wide"><span>已施作項目</span><b>'+esc(contact.completedWork||'—')+'</b></div>'+
       '</div><div class="store-contact-actions"><button class="store-item-action" type="button" onclick="editStoreContact('+row+')">編輯</button><button class="store-item-action danger" type="button" onclick="removeStoreContact('+row+')">移除</button></div></article>';
   }).join('')+'</div>';
@@ -7341,8 +7337,6 @@ function editStoreContact(row){
     'store-contact-company':contact.companyName||'',
     'store-contact-name':contact.contactName||'',
     'store-contact-phone':contact.phone||'',
-    'store-contact-line':contact.lineName||'',
-    'store-contact-area':contact.serviceArea||'',
     'store-contact-work':contact.completedWork||''
   };
   Object.keys(fields).forEach(function(id){var el=document.getElementById(id);if(el)el.value=fields[id];});
@@ -7352,7 +7346,7 @@ function editStoreContact(row){
   if(button)button.textContent='更新聯絡人';
   if(cancel)cancel.hidden=false;
   if(status)status.textContent='正在編輯第 '+contact.row+' 筆聯絡人';
-  setStoreContactExtrasExpanded(!!String(contact.lineName||'').trim()||!!String(contact.serviceArea||'').trim()||!!String(contact.completedWork||'').trim());
+  setStoreContactExtrasExpanded(!!String(contact.completedWork||'').trim());
 }
 
 function resetStoreContactForm(){
@@ -7400,9 +7394,6 @@ async function submitStoreContact(event){
     category:(document.getElementById('store-contact-category')||{}).value||'',
     companyName:(document.getElementById('store-contact-company')||{}).value||'',
     contactName:contactName,
-    phone:(document.getElementById('store-contact-phone')||{}).value||'',
-    lineName:(document.getElementById('store-contact-line')||{}).value||'',
-    serviceArea:(document.getElementById('store-contact-area')||{}).value||'',
     completedWork:(document.getElementById('store-contact-work')||{}).value||''
   };
   try{
