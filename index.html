@@ -1838,7 +1838,9 @@ body::after{
 .hero-card.up{border-color:rgba(29,158,117,.45)}.hero-card.down{border-color:rgba(216,90,48,.48)}
 .hero-visual-stack{position:relative;z-index:2;grid-row:1/3;display:flex;flex-direction:column;align-items:stretch;gap:7px;min-width:0}
 .hero-visual{position:relative;width:100%;aspect-ratio:1;z-index:2;overflow:hidden;border:1px solid rgba(232,192,80,.24);border-radius:6px;background:#090704;box-shadow:0 0 18px rgba(0,0,0,.45),inset 0 0 16px rgba(232,192,80,.06);cursor:pointer}
-.hero-visual img{width:100%;height:100%;object-fit:contain;object-position:center center;opacity:.96;filter:saturate(.96) contrast(1.04)}
+.hero-visual img,.hero-visual video{width:100%;height:100%;object-fit:contain;object-position:center center;opacity:.96;filter:saturate(.96) contrast(1.04)}
+.hero-visual video{display:none;background:#090704}
+.hero-visual.video-active img{display:none}.hero-visual.video-active video{display:block}
 .hero-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:54px;font-family:var(--serif);font-weight:900;color:rgba(232,192,80,.42);background:linear-gradient(160deg,rgba(232,192,80,.10),rgba(0,0,0,.24))}
 .hero-metrics-panel{display:none;grid-column:1/-1;width:100%;box-sizing:border-box;padding:10px 11px;border:1px solid rgba(184,137,46,.5);border-radius:7px;background:rgba(8,7,5,.92);box-shadow:0 10px 26px rgba(0,0,0,.58),inset 0 0 16px rgba(232,192,80,.05);font-family:var(--mono);font-size:13px;font-weight:800;line-height:1.55;color:#f0dfa0}
 .hero-metrics-panel{cursor:pointer}
@@ -16123,7 +16125,7 @@ function buildAssetSnapshotFromCommand(commandLatest,sheetSnapshot){
   };
 }
 
-// 部隊陣容使用輕量靜態頭像；完整立繪素材保留在素材庫，不讓卡片載入動畫影片。
+// 部隊陣容先使用輕量靜態頭像；點擊頭像後才延遲載入並播放對應 MP4。
 var STATIC_HERO_AVATAR_FILES={
   '龐統':'龐統.webp',
   '張飛':'張飛.webp',
@@ -16166,6 +16168,24 @@ function staticHoldingAvatarUrl(symbol,name){
   var file=STATIC_HOLDING_AVATAR_FILES[key];
   if(!file)file=STATIC_HERO_AVATAR_FILES[String(name||'').trim()];
   return file?'./武將資料/'+encodeURIComponent(file)+'?v=20260919-roster-webp1':'';
+}
+
+var HOLDING_VIDEO_FILES={
+  '00985B':'985B.mp4',
+  '00997A':'997A.mp4',
+  '00998A':'998A.mp4',
+  'AIPI':'AIPI.mp4',
+  'CHPY':'CHPY.mp4',
+  'GDXW':'GDXW.mp4',
+  'GLDW':'GLDW.mp4',
+  'MLPI':'MLPI.mp4',
+  'PLTY':'PLTY.mp4',
+  '施羅德收益成長A2':'施羅德收益成長A2.mp4',
+  '路博邁台灣5G':'路博邁台灣5G.mp4'
+};
+function holdingVideoUrl(symbol,name){
+  var key=normalizeKey(symbol||name),file=HOLDING_VIDEO_FILES[key];
+  return file?'./部隊陣容/'+encodeURIComponent(file)+'?v=20260920-roster-video1':'';
 }
 
 async function loadAssetSnapshot(){
@@ -16260,6 +16280,34 @@ function toggleHeroMetrics(visual){
   visual.setAttribute('aria-expanded',open?'true':'false');
 }
 
+function toggleHeroMedia(visual){
+  if(!visual)return;
+  var video=visual.querySelector('.hero-video'),img=visual.querySelector('img');
+  if(!video){toggleHeroMetrics(visual);return;}
+  var active=visual.classList.contains('video-active');
+  if(active){
+    try{video.pause();video.currentTime=0;}catch(e){}
+    visual.classList.remove('video-active');
+    video.removeAttribute('src');
+    video.load();
+    if(img)img.style.display='';
+    visual.setAttribute('aria-label','播放持股動態影片');
+    toggleHeroMetrics(visual);
+    return;
+  }
+  var source=String(video.dataset.src||'').trim();
+  if(!source){toggleHeroMetrics(visual);return;}
+  if(video.getAttribute('src')!==source){video.src=source;video.load();}
+  visual.classList.add('video-active');
+  if(img)img.style.display='none';
+  visual.setAttribute('aria-label','停止持股動態影片');
+  var play=video.play();
+  if(play&&typeof play.catch==='function')play.catch(function(){
+    visual.classList.remove('video-active');
+    if(img)img.style.display='';
+  });
+}
+
 function copyHeroMetrics(panel){
   if(!panel)return;
   var text=String(panel.innerText||'').trim();
@@ -16306,6 +16354,7 @@ function renderHeroCard(row,totalCost){
   var name=row.heroName||h.heroName||displaySymbol||'未編制';
   var staticImg=staticHoldingAvatarUrl(displaySymbol,name)||staticHeroAvatarUrl(name);
   var img=staticImg||normalizeImageUrl(row.avatarUrl);
+  var videoUrl=holdingVideoUrl(displaySymbol,name);
   var holdingKey=normalizeKey(displaySymbol);
   var showHeroName=String(name||'').trim()&&String(name||'').trim()!==displaySymbol&&String(name||'').trim()!=='未編制';
   var heroNameBlock=showHeroName?`<div class="hero-name">${esc(name)}</div>`:'';
@@ -16317,9 +16366,10 @@ function renderHeroCard(row,totalCost){
     </div>`;
   return `<div class="hero-card ${tone}" style="--hero-color:${esc(color)};--hero-glow:${hexToRgba(color,.24)};--effect-glow:${hexToRgba(effectColor,.20)};border-color:${hexToRgba(color,.72)}">
     <div class="hero-visual-stack">
-      <div class="hero-visual" role="button" tabindex="0" aria-label="展開持股數值" aria-expanded="false" onclick="toggleHeroMetrics(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleHeroMetrics(this)}">
-        ${staticImg?`<img src="${esc(staticImg)}" alt="${esc(name)} 靜態頭像" loading="eager" decoding="async" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`:(img?`<img src="${esc(img)}" alt="${esc(name)} 頭像" loading="eager" decoding="async" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`:'' )}
-        <div class="hero-fallback" style="${staticImg||img?'display:none':''}">${esc((row.icon||name.slice(0,1)||'軍'))}</div>
+       <div class="hero-visual" role="button" tabindex="0" aria-label="播放持股動態影片" aria-expanded="false" onclick="toggleHeroMedia(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleHeroMedia(this)}">
+         ${staticImg?`<img src="${esc(staticImg)}" alt="${esc(name)} 靜態頭像" loading="eager" decoding="async" onerror="this.style.display='none';this.parentElement.querySelector('.hero-fallback').style.display='flex'">`:(img?`<img src="${esc(img)}" alt="${esc(name)} 頭像" loading="eager" decoding="async" onerror="this.style.display='none';this.parentElement.querySelector('.hero-fallback').style.display='flex'">`:'' )}
+         ${videoUrl?`<video class="hero-video" data-src="${esc(videoUrl)}" muted playsinline loop preload="none" aria-label="${esc(name)} 動態影片"></video>`:''}
+         <div class="hero-fallback" style="${staticImg||img?'display:none':''}">${esc((row.icon||name.slice(0,1)||'軍'))}</div>
       </div>
     </div>
     <div class="hero-info">

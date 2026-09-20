@@ -631,7 +631,7 @@ test('council roster accepts the NAS cache object without reading an allSettled 
   expect(result).toEqual({ source: 'NAS', holdingsLoaded: true, symbol: 'QQQI' });
 });
 
-test('council holding avatars use the labeled static images and never render video', async ({ page }) => {
+test('council holding avatars render static first and lazy-load video on click', async ({ page }) => {
   await page.goto(dashboardUrl);
 
   const result = await page.evaluate(() => {
@@ -644,16 +644,19 @@ test('council holding avatars use the labeled static images and never render vid
     };
     host.innerHTML = renderHeroCard(row, 100);
     const visual = host.querySelector('.hero-visual');
-    const before = { image: !!visual.querySelector('img'), video: !!visual.querySelector('video'), source: visual.querySelector('img')?.getAttribute('src') || '' };
+    const before = { image: !!visual.querySelector('img'), video: !!visual.querySelector('video'), videoSrc: visual.querySelector('video')?.getAttribute('src') || '', source: visual.querySelector('img')?.getAttribute('src') || '' };
     visual.click();
-    const after = { image: !!visual.querySelector('img'), video: !!visual.querySelector('video') };
+    const after = { image: !!visual.querySelector('img'), video: !!visual.querySelector('video'), videoSrc: visual.querySelector('video')?.getAttribute('src') || '', active: visual.classList.contains('video-active') };
     return { before, after };
   });
 
   expect(result.before.image).toBeTruthy();
-  expect(result.before.video).toBeFalsy();
+  expect(result.before.video).toBeTruthy();
+  expect(result.before.videoSrc).toBe('');
   expect(result.before.source).toContain('武將資料/MLPI.webp?v=20260919-roster-webp1');
-  expect(result.after).toEqual({ image: true, video: false });
+  expect(result.after.video).toBeTruthy();
+  expect(result.after.videoSrc).toContain('部隊陣容/MLPI.mp4?v=20260920-roster-video1');
+  expect(result.after.active).toBeTruthy();
 });
 
 test('council holding static portraits follow the filenames in 武將資料', async ({ page }) => {
