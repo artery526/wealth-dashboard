@@ -644,7 +644,7 @@ test('council holding avatars render static first and lazy-load video on click',
     };
     host.innerHTML = renderHeroCard(row, 100);
     const visual = host.querySelector('.hero-visual');
-    const before = { image: !!visual.querySelector('img'), video: !!visual.querySelector('video'), videoSrc: visual.querySelector('video')?.getAttribute('src') || '', source: visual.querySelector('img')?.getAttribute('src') || '' };
+    const before = { image: !!visual.querySelector('img'), video: !!visual.querySelector('video'), loop: visual.querySelector('video')?.loop || false, videoSrc: visual.querySelector('video')?.getAttribute('src') || '', source: visual.querySelector('img')?.getAttribute('src') || '' };
     visual.click();
     const after = { image: !!visual.querySelector('img'), video: !!visual.querySelector('video'), videoSrc: visual.querySelector('video')?.getAttribute('src') || '', active: visual.classList.contains('video-active') };
     return { before, after };
@@ -652,6 +652,7 @@ test('council holding avatars render static first and lazy-load video on click',
 
   expect(result.before.image).toBeTruthy();
   expect(result.before.video).toBeTruthy();
+  expect(result.before.loop).toBeFalsy();
   expect(result.before.videoSrc).toBe('');
   expect(result.before.source).toContain('武將資料/MLPI.webp?v=20260919-roster-webp1');
   expect(result.after.video).toBeTruthy();

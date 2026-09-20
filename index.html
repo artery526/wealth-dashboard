@@ -16288,18 +16288,14 @@ function toggleHeroMedia(visual){
   if(!video){toggleHeroMetrics(visual);return;}
   var active=visual.classList.contains('video-active');
   if(active){
-    try{video.pause();video.currentTime=0;}catch(e){}
-    visual.classList.remove('video-active');
-    video.removeAttribute('src');
-    video.load();
-    if(img)img.style.display='';
-    visual.setAttribute('aria-label','播放持股動態影片');
+    resetHeroMedia(visual);
     toggleHeroMetrics(visual);
     return;
   }
   var source=String(video.dataset.src||'').trim();
   if(!source){toggleHeroMetrics(visual);return;}
   if(video.getAttribute('src')!==source){video.src=source;video.load();}
+  video.loop=false;
   visual.classList.add('video-active');
   if(img)img.style.display='none';
   visual.setAttribute('aria-label','停止持股動態影片');
@@ -16308,6 +16304,20 @@ function toggleHeroMedia(visual){
     visual.classList.remove('video-active');
     if(img)img.style.display='';
   });
+}
+
+function resetHeroMedia(visual){
+  if(!visual)return;
+  var video=visual.querySelector('.hero-video'),img=visual.querySelector('img');
+  if(video){try{video.pause();video.currentTime=0;}catch(e){} video.removeAttribute('src');video.load();}
+  visual.classList.remove('video-active');
+  if(img)img.style.display='';
+  visual.setAttribute('aria-label','播放持股動態影片');
+}
+
+function finishHeroMedia(video){
+  var visual=video&&video.closest('.hero-visual');
+  if(visual)resetHeroMedia(visual);
 }
 
 function copyHeroMetrics(panel){
@@ -16370,7 +16380,7 @@ function renderHeroCard(row,totalCost){
     <div class="hero-visual-stack">
        <div class="hero-visual" role="button" tabindex="0" aria-label="播放持股動態影片" aria-expanded="false" onclick="toggleHeroMedia(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleHeroMedia(this)}">
          ${staticImg?`<img src="${esc(staticImg)}" alt="${esc(name)} 靜態頭像" loading="eager" decoding="async" onerror="this.style.display='none';this.parentElement.querySelector('.hero-fallback').style.display='flex'">`:(img?`<img src="${esc(img)}" alt="${esc(name)} 頭像" loading="eager" decoding="async" onerror="this.style.display='none';this.parentElement.querySelector('.hero-fallback').style.display='flex'">`:'' )}
-         ${videoUrl?`<video class="hero-video" data-src="${esc(videoUrl)}" muted playsinline loop preload="none" aria-label="${esc(name)} 動態影片"></video>`:''}
+         ${videoUrl?`<video class="hero-video" data-src="${esc(videoUrl)}" muted playsinline preload="none" aria-label="${esc(name)} 動態影片" onended="finishHeroMedia(this)"></video>`:''}
          <div class="hero-fallback" style="${staticImg||img?'display:none':''}">${esc((row.icon||name.slice(0,1)||'軍'))}</div>
       </div>
     </div>
