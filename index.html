@@ -5412,6 +5412,7 @@ var WEALTH_API_QUEUE_WAIT_TIMEOUT_MS=20000;
 function wealthApiRequestPriority(action){
   action=String(action||'');
   if(action==='verifyWriteToken'||action==='createWebSession')return 10;
+  if(action==='storeContacts'||action==='storeRecords')return 9;
   if(/^(expense|income|transfer|ledgerRequestStatus)$/.test(action))return 8;
   return 0;
 }
@@ -5444,9 +5445,9 @@ function drainWealthApiQueue(){
   }
 }
 function runWealthApiRequest(task,priority){
-  // 城門驗證不能排在其他頁面讀取後面；手機端初次載入時若有兩條慢請求佔滿佇列，
-  // 驗證按鈕會長時間停在「正在驗證」。驗證請求直接執行，其餘資料仍受併發限制。
-  return Number(priority)>=10?Promise.resolve().then(task):enqueueWealthApi(task,priority);
+  // 城門驗證與太倉資料不能排在其他頁面讀取後面；初次載入時若有兩條慢請求佔滿佇列，
+  // 驗證或太倉面板就會長時間停住。這些短小、獨立的請求直接執行，其餘資料仍受併發限制。
+  return Number(priority)>=9?Promise.resolve().then(task):enqueueWealthApi(task,priority);
 }
 async function apiGet(params,timeoutMs){
   if(!API_URL)throw new Error('未設定 API 網址');
