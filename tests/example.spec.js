@@ -673,14 +673,15 @@ test('council holding static portraits follow the filenames in 武將資料', as
     host.innerHTML = rows.map(row => renderHeroCard(row, 300)).join('');
     return [...host.querySelectorAll('.hero-visual')].map(el => ({
       hasStatic: !!el.querySelector('img'),
-      staticSource: el.querySelector('img')?.getAttribute('src') || ''
+      staticSource: el.querySelector('img')?.getAttribute('src') || '',
+      videoSource: el.querySelector('video')?.dataset.src || ''
     }));
   });
 
   expect(result).toEqual([
-    { hasStatic: true, staticSource: './武將資料/QQQI.webp?v=20260919-roster-webp1' },
-    { hasStatic: true, staticSource: './武將資料/%E5%9C%8B%E6%B3%B0%E9%AB%98%E8%82%A1%E6%81%AFB.webp?v=20260919-roster-webp1' },
-    { hasStatic: true, staticSource: './武將資料/00997A.webp?v=20260919-roster-webp1' }
+    { hasStatic: true, staticSource: './武將資料/QQQI.webp?v=20260919-roster-webp1', videoSource: './部隊陣容/QQQI.mp4?v=20260920-roster-video1' },
+    { hasStatic: true, staticSource: './武將資料/%E5%9C%8B%E6%B3%B0%E9%AB%98%E8%82%A1%E6%81%AFB.webp?v=20260919-roster-webp1', videoSource: './部隊陣容/%E5%9C%8B%E6%B3%B0%E9%AB%98%E8%82%A1%E6%81%AFB.mp4?v=20260920-roster-video1' },
+    { hasStatic: true, staticSource: './武將資料/00997A.webp?v=20260919-roster-webp1', videoSource: './部隊陣容/997A.mp4?v=20260920-roster-video1' }
   ]);
 });
 
