@@ -1032,6 +1032,7 @@ body::after{
 .store-contact-grid-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .store-contact-card{display:grid;gap:10px;min-width:0;padding:12px;border:1px solid rgba(65,157,194,.3);border-radius:9px;background:linear-gradient(160deg,rgba(8,35,51,.78),rgba(4,14,23,.78))}
 .store-contact-card-head{display:flex;align-items:center;gap:8px;min-width:0}
+.store-contact-card{position:relative}
 .store-contact-title{min-width:0;color:#dff7ff;font:900 18px/1.35 var(--font);overflow-wrap:anywhere}
 .store-contact-company{flex:0 1 auto;max-width:48%;padding:4px 7px;border:1px solid rgba(65,157,194,.42);border-radius:7px;background:rgba(6,27,43,.58);color:#bcefff;font:800 11px var(--sans);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .store-contact-category{flex:0 0 auto;max-width:42%;padding:4px 7px;border:1px solid rgba(232,192,80,.42);border-radius:7px;background:rgba(232,192,80,.1);color:#fff3bf;font:800 11px var(--sans);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -1039,6 +1040,7 @@ body::after{
 .store-contact-field{display:grid;gap:3px;min-width:0;padding:7px 8px;border:1px solid rgba(65,157,194,.24);border-radius:7px;background:rgba(6,27,43,.5)}
 .store-contact-field-wide{grid-column:1/-1}
 .store-contact-phone-row{display:flex;align-items:center;gap:6px;min-width:0}
+.store-contact-phone-icon{flex:0 0 auto!important;color:#fff3bf!important;font-size:16px!important;line-height:1!important}
 .store-contact-phone-row>a,.store-contact-phone-row>b{min-width:0;flex:1}
 .store-contact-work-toggle{display:grid;place-items:center;width:24px;height:24px;flex:0 0 24px;padding:0;border:1px solid rgba(232,192,80,.52);border-radius:6px;background:rgba(232,192,80,.1);color:#fff3bf;font:900 17px/1 var(--sans);cursor:pointer}
 .store-contact-work-toggle:hover,.store-contact-work-toggle.is-open{border-color:#71d8f7;background:rgba(20,74,98,.9);color:#dff7ff}
@@ -1049,7 +1051,14 @@ body::after{
 .store-contact-field span{color:#6ea4b7;font:800 11px var(--sans)}
 .store-contact-field b,.store-contact-field a{color:#bcefff;font:800 13px/1.5 var(--sans);overflow-wrap:anywhere;text-decoration:none}
 .store-contact-field a:hover{text-decoration:underline;color:#fff3bf}
-.store-contact-actions{display:flex;justify-content:flex-end;gap:7px}
+.store-contact-menu{position:relative;display:flex;align-items:center;margin-left:auto;flex:0 0 auto}
+.store-contact-menu-toggle{display:grid;place-items:center;width:30px;height:30px;padding:0;border:1px solid rgba(65,157,194,.52);border-radius:7px;background:rgba(6,27,43,.9);color:#fff3bf;font:900 17px/1 var(--sans);cursor:pointer}
+.store-contact-menu-toggle:hover,.store-contact-menu-toggle.is-open{border-color:#71d8f7;background:rgba(20,74,98,.9)}
+.store-contact-menu-panel{position:absolute;z-index:4;top:calc(100% + 5px);right:0;display:grid;gap:5px;min-width:76px;padding:6px;border:1px solid rgba(65,157,194,.52);border-radius:8px;background:rgba(4,18,29,.98);box-shadow:0 8px 18px rgba(0,0,0,.35)}
+.store-contact-menu-panel[hidden]{display:none!important}
+.store-contact-menu-item{display:flex;align-items:center;gap:5px;width:100%;padding:6px 7px;border:1px solid transparent;border-radius:6px;background:transparent;color:#dff7ff;font:800 12px var(--sans);cursor:pointer;white-space:nowrap}
+.store-contact-menu-item:hover{border-color:rgba(65,157,194,.52);background:rgba(20,74,98,.75)}
+.store-contact-menu-item.danger{color:#ffb3a8}
 .store-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .store-item-card{position:relative;display:grid;gap:7px;border:1px solid rgba(65,157,194,.3);border-radius:9px;background:linear-gradient(160deg,rgba(8,35,51,.78),rgba(4,14,23,.78));padding:12px;min-width:0}
 .store-item-card-head{display:flex;align-items:flex-start;gap:8px;min-width:0;padding-right:82px}
@@ -1092,7 +1101,7 @@ body::after{
 .store-header-date-button{border:1px solid rgba(232,192,80,.55);border-radius:7px;background:rgba(232,192,80,.1);color:#fff3bf;font:900 12px var(--sans);padding:5px 7px;cursor:pointer;white-space:nowrap}
 .store-header-date-button:hover{border-color:#fff3bf;background:rgba(232,192,80,.2)}
 .store-header-date-input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
-@media(max-width:650px){.store-grid{grid-template-columns:1fr}.store-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.store-form-group.full{grid-column:1/-1}.store-toolbar,.store-date-filters{grid-template-columns:1fr}.store-add-button{width:100%}.store-count-row{flex-wrap:wrap}.store-search-inline{order:3;flex:1 1 100%;width:100%}.store-item-card{padding:10px}.store-item-card-head{align-items:center;padding-right:84px}.store-item-heading{gap:6px}.store-item-name{min-width:0;flex:1;font-size:16px}.store-item-date-button{top:10px;right:43px;font-size:11px}.store-item-menu{top:8px;right:8px}.store-header-date-button{font-size:11px;padding:4px 5px}.store-contact-toolbar{flex-wrap:wrap}.store-contact-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.store-contact-phone-control{gap:4px}.store-contact-extra-group{gap:7px}.store-contact-extra-toggle{width:30px;height:34px;flex-basis:30px;font-size:18px}.store-contact-grid-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.store-contact-card{padding:8px}.store-contact-card-head{display:grid;grid-template-columns:minmax(0,1fr);align-items:start;gap:6px}.store-contact-title{font-size:15px}.store-contact-company,.store-contact-category{max-width:100%;width:100%;box-sizing:border-box}.store-contact-fields{grid-template-columns:1fr}.store-contact-field-wide{grid-column:auto}.store-contact-form-wrap{padding:10px}}
+@media(max-width:650px){.store-grid{grid-template-columns:1fr}.store-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.store-form-group.full{grid-column:1/-1}.store-toolbar,.store-date-filters{grid-template-columns:1fr}.store-add-button{width:100%}.store-count-row{flex-wrap:wrap}.store-search-inline{order:3;flex:1 1 100%;width:100%}.store-item-card{padding:10px}.store-item-card-head{align-items:center;padding-right:84px}.store-item-heading{gap:6px}.store-item-name{min-width:0;flex:1;font-size:16px}.store-item-date-button{top:10px;right:43px;font-size:11px}.store-item-menu{top:8px;right:8px}.store-header-date-button{font-size:11px;padding:4px 5px}.store-contact-toolbar{flex-wrap:wrap}.store-contact-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.store-contact-phone-control{gap:4px}.store-contact-extra-group{gap:7px}.store-contact-extra-toggle{width:30px;height:34px;flex-basis:30px;font-size:18px}.store-contact-grid-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.store-contact-card{padding:8px}.store-contact-card-head{display:flex;flex-wrap:wrap;align-items:center;gap:6px}.store-contact-title{font-size:15px}.store-contact-company,.store-contact-category{max-width:100%;width:auto;box-sizing:border-box;white-space:normal;overflow:visible;text-overflow:clip}.store-contact-menu{margin-left:auto}.store-contact-fields{grid-template-columns:1fr}.store-contact-field-wide{grid-column:auto}.store-contact-form-wrap{padding:10px}}
 .market-lord{
   position:absolute;
   top:-65px;
@@ -6868,6 +6877,7 @@ var storeContactSearchTerm='';
 var storeContactsPromise=null;
 var storeContactsCacheFetchedAt=0;
 var STORE_CONTACTS_CACHE_TTL=30000;
+var STORE_CONTACTS_STORAGE_KEY='store-contacts-cache-v1';
 
 function renderStoreForm(targetId){
   var el=document.getElementById(targetId||'store-form-content');
@@ -7297,6 +7307,29 @@ function toggleStoreContactWork(event,row){
   button.setAttribute('aria-expanded',opening?'true':'false');
 }
 
+function toggleStoreContactActions(event,row){
+  if(event){event.preventDefault();event.stopPropagation();}
+  var panel=document.getElementById('store-contact-menu-panel-'+String(row));
+  var button=document.getElementById('store-contact-menu-toggle-'+String(row));
+  if(!panel||!button)return;
+  var opening=panel.hidden;
+  panel.hidden=!opening;
+  button.classList.toggle('is-open',opening);
+  button.setAttribute('aria-expanded',opening?'true':'false');
+}
+
+function readStoreContactsStorageCache(){
+  try{
+    var cached=JSON.parse(localStorage.getItem(STORE_CONTACTS_STORAGE_KEY)||'null');
+    if(cached&&Array.isArray(cached.data))return cached;
+  }catch(e){}
+  return null;
+}
+
+function writeStoreContactsStorageCache(data){
+  try{localStorage.setItem(STORE_CONTACTS_STORAGE_KEY,JSON.stringify({savedAt:Date.now(),data:Array.isArray(data)?data:[]}));}catch(e){console.warn('Store contacts cache unavailable',e);}
+}
+
 function renderStoreContacts(){
   var el=document.getElementById('store-contacts-content');
   var countEl=document.getElementById('store-contact-count');
@@ -7316,34 +7349,48 @@ function renderStoreContacts(){
     var phone=String(contact.phone||'').trim();
     var completedWork=String(contact.completedWork||'').trim();
     return '<article class="store-contact-card">'+
-      '<div class="store-contact-card-head"><div class="store-contact-title">'+esc(contact.contactName||'未命名聯絡人')+'</div>'+(contact.companyName?'<span class="store-contact-company">'+esc(contact.companyName)+'</span>':'')+(contact.category?'<span class="store-contact-category">'+esc(contact.category)+'</span>':'')+'</div>'+
+      '<div class="store-contact-card-head"><div class="store-contact-title">'+esc(contact.contactName||'未命名聯絡人')+'</div>'+(contact.companyName?'<span class="store-contact-company">'+esc(contact.companyName)+'</span>':'')+(contact.category?'<span class="store-contact-category">'+esc(contact.category)+'</span>':'')+'<div class="store-contact-menu"><button class="store-contact-menu-toggle" id="store-contact-menu-toggle-'+row+'" type="button" title="聯絡人操作" aria-label="聯絡人操作" aria-expanded="false" onclick="toggleStoreContactActions(event,'+row+')">⚙️</button><div class="store-contact-menu-panel" id="store-contact-menu-panel-'+row+'" hidden><button class="store-contact-menu-item" type="button" onclick="editStoreContact('+row+');toggleStoreContactActions(event,'+row+')">📝 編輯</button><button class="store-contact-menu-item danger" type="button" onclick="removeStoreContact('+row+');toggleStoreContactActions(event,'+row+')">⛔ 移除</button></div></div></div>'+
       '<div class="store-contact-fields">'+
-        '<div class="store-contact-field"><span>電話</span><div class="store-contact-phone-row">'+(phone?'<a href="tel:'+esc(phone.replace(/[^0-9+*#-]/g,''))+'">'+esc(phone)+'</a>':'<b>—</b>')+(completedWork?'<button class="store-contact-work-toggle" id="store-contact-work-toggle-'+row+'" type="button" title="查看已施作項目" aria-label="查看已施作項目" aria-expanded="false" onclick="toggleStoreContactWork(event,'+row+')">＋</button>':'')+'</div>'+(completedWork?'<div class="store-contact-work-popover" id="store-contact-work-'+row+'" hidden><span>已施作項目</span><b>'+esc(completedWork)+'</b></div>':'')+'</div>'+
-      '</div><div class="store-contact-actions"><button class="store-item-action" type="button" onclick="editStoreContact('+row+')">編輯</button><button class="store-item-action danger" type="button" onclick="removeStoreContact('+row+')">移除</button></div></article>';
+        '<div class="store-contact-field"><div class="store-contact-phone-row"><span class="store-contact-phone-icon" aria-label="電話">☎️</span>'+(phone?'<a href="tel:'+esc(phone.replace(/[^0-9+*#-]/g,''))+'">'+esc(phone)+'</a>':'<b>—</b>')+(completedWork?'<button class="store-contact-work-toggle" id="store-contact-work-toggle-'+row+'" type="button" title="查看已施作項目" aria-label="查看已施作項目" aria-expanded="false" onclick="toggleStoreContactWork(event,'+row+')">＋</button>':'')+'</div>'+(completedWork?'<div class="store-contact-work-popover" id="store-contact-work-'+row+'" hidden><span>已施作項目</span><b>'+esc(completedWork)+'</b></div>':'')+'</div>'+
+      '</div></article>';
   }).join('')+'</div>';
 }
 
 function loadStoreContacts(force){
   if(storeContactsPromise)return storeContactsPromise;
   if(!API_URL){setEmpireCardStatus('store','err','尚未設定 API');return Promise.reject(new Error('尚未設定 API'));}
-  if(!force&&storeContactsCacheFetchedAt&&Date.now()-storeContactsCacheFetchedAt<STORE_CONTACTS_CACHE_TTL){
+  var stored=readStoreContactsStorageCache();
+  if(!storeContactsCacheFetchedAt&&stored){
+    storeContactsCache=stored.data;
+    storeContactsCacheFetchedAt=Number(stored.savedAt||Date.now());
+  }
+  var hasDisplayedCache=!!storeContactsCacheFetchedAt;
+  if(hasDisplayedCache){
     setDataFreshness('store-contacts-freshness',dataFreshnessMeta(storeContactsCache,storeContactsCacheFetchedAt,true));
     renderStoreContacts();
-    return Promise.resolve(storeContactsCache);
+    if(!force&&Date.now()-storeContactsCacheFetchedAt<STORE_CONTACTS_CACHE_TTL){
+      setEmpireCardStatus('store','pending','聯絡人快取先顯示，背景更新中');
+    }
   }
   setEmpireCardStatus('store','pending');
   storeContactsPromise=apiGet({action:'storeContacts'},30000).then(function(data){
     storeContactsCache=(data&&data.contacts)||[];
     storeContactsCacheFetchedAt=Date.now();
+    writeStoreContactsStorageCache(storeContactsCache);
     setDataFreshness('store-contacts-freshness',dataFreshnessMeta(storeContactsCache,storeContactsCacheFetchedAt,false));
     renderStoreContacts();
     setEmpireCardStatus('store','ok','聯絡人資料已載入');
     return storeContactsCache;
   }).catch(function(e){
     console.error(e);
-    setEmpireCardStatus('store','err',e.message||'聯絡人資料載入失敗');
-    var el=document.getElementById('store-contacts-content');
-    if(el)el.innerHTML='<div class="store-empty">'+esc(e.message||'聯絡人資料載入失敗')+'</div>';
+    if(hasDisplayedCache){
+      setEmpireCardStatus('store','ok','聯絡人快取可用，背景更新失敗');
+      setDataFreshness('store-contacts-freshness',dataFreshnessMeta(storeContactsCache,storeContactsCacheFetchedAt,true));
+    }else{
+      setEmpireCardStatus('store','err',e.message||'聯絡人資料載入失敗');
+      var el=document.getElementById('store-contacts-content');
+      if(el)el.innerHTML='<div class="store-empty">'+esc(e.message||'聯絡人資料載入失敗')+'</div>';
+    }
     throw e;
   }).finally(function(){storeContactsPromise=null;});
   return storeContactsPromise;
