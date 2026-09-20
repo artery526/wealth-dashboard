@@ -1038,6 +1038,14 @@ body::after{
 .store-contact-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
 .store-contact-field{display:grid;gap:3px;min-width:0;padding:7px 8px;border:1px solid rgba(65,157,194,.24);border-radius:7px;background:rgba(6,27,43,.5)}
 .store-contact-field-wide{grid-column:1/-1}
+.store-contact-phone-row{display:flex;align-items:center;gap:6px;min-width:0}
+.store-contact-phone-row>a,.store-contact-phone-row>b{min-width:0;flex:1}
+.store-contact-work-toggle{display:grid;place-items:center;width:24px;height:24px;flex:0 0 24px;padding:0;border:1px solid rgba(232,192,80,.52);border-radius:6px;background:rgba(232,192,80,.1);color:#fff3bf;font:900 17px/1 var(--sans);cursor:pointer}
+.store-contact-work-toggle:hover,.store-contact-work-toggle.is-open{border-color:#71d8f7;background:rgba(20,74,98,.9);color:#dff7ff}
+.store-contact-work-popover{margin-top:6px;padding:7px 8px;border:1px solid rgba(232,192,80,.34);border-radius:6px;background:rgba(24,18,7,.72)}
+.store-contact-work-popover[hidden]{display:none!important}
+.store-contact-work-popover span{display:block;color:#b99445;font:800 10px var(--sans)}
+.store-contact-work-popover b{display:block;margin-top:2px;color:#fff3bf;font:800 12px/1.5 var(--sans);overflow-wrap:anywhere}
 .store-contact-field span{color:#6ea4b7;font:800 11px var(--sans)}
 .store-contact-field b,.store-contact-field a{color:#bcefff;font:800 13px/1.5 var(--sans);overflow-wrap:anywhere;text-decoration:none}
 .store-contact-field a:hover{text-decoration:underline;color:#fff3bf}
@@ -7275,6 +7283,20 @@ function toggleStoreContactExtras(event){
   if(group)setStoreContactExtrasExpanded(group.hidden);
 }
 
+function toggleStoreContactWork(event,row){
+  if(event){event.preventDefault();event.stopPropagation();}
+  var panel=document.getElementById('store-contact-work-'+String(row));
+  var button=document.getElementById('store-contact-work-toggle-'+String(row));
+  if(!panel||!button)return;
+  var opening=panel.hidden;
+  panel.hidden=!opening;
+  button.classList.toggle('is-open',opening);
+  button.textContent=opening?'−':'＋';
+  button.title=opening?'收起已施作項目':'查看已施作項目';
+  button.setAttribute('aria-label',opening?'收起已施作項目':'查看已施作項目');
+  button.setAttribute('aria-expanded',opening?'true':'false');
+}
+
 function renderStoreContacts(){
   var el=document.getElementById('store-contacts-content');
   var countEl=document.getElementById('store-contact-count');
@@ -7292,11 +7314,11 @@ function renderStoreContacts(){
   el.innerHTML='<div class="store-contact-grid-list">'+rows.map(function(contact){
     var row=Number(contact.row);
     var phone=String(contact.phone||'').trim();
+    var completedWork=String(contact.completedWork||'').trim();
     return '<article class="store-contact-card">'+
       '<div class="store-contact-card-head"><div class="store-contact-title">'+esc(contact.contactName||'未命名聯絡人')+'</div>'+(contact.companyName?'<span class="store-contact-company">'+esc(contact.companyName)+'</span>':'')+(contact.category?'<span class="store-contact-category">'+esc(contact.category)+'</span>':'')+'</div>'+
       '<div class="store-contact-fields">'+
-        '<div class="store-contact-field"><span>電話</span>'+(phone?'<a href="tel:'+esc(phone.replace(/[^0-9+*#-]/g,''))+'">'+esc(phone)+'</a>':'<b>—</b>')+'</div>'+
-        '<div class="store-contact-field store-contact-field-wide"><span>已施作項目</span><b>'+esc(contact.completedWork||'—')+'</b></div>'+
+        '<div class="store-contact-field"><span>電話</span><div class="store-contact-phone-row">'+(phone?'<a href="tel:'+esc(phone.replace(/[^0-9+*#-]/g,''))+'">'+esc(phone)+'</a>':'<b>—</b>')+(completedWork?'<button class="store-contact-work-toggle" id="store-contact-work-toggle-'+row+'" type="button" title="查看已施作項目" aria-label="查看已施作項目" aria-expanded="false" onclick="toggleStoreContactWork(event,'+row+')">＋</button>':'')+'</div>'+(completedWork?'<div class="store-contact-work-popover" id="store-contact-work-'+row+'" hidden><span>已施作項目</span><b>'+esc(completedWork)+'</b></div>':'')+'</div>'+
       '</div><div class="store-contact-actions"><button class="store-item-action" type="button" onclick="editStoreContact('+row+')">編輯</button><button class="store-item-action danger" type="button" onclick="removeStoreContact('+row+')">移除</button></div></article>';
   }).join('')+'</div>';
 }
