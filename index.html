@@ -2043,7 +2043,7 @@ body::after{
 .finance-accounts-collapse.is-masked .acc-val{font-size:0!important;color:transparent!important}
 .finance-accounts-collapse.is-masked .acc-val::after{content:'***';font-family:var(--mono);font-size:17px;color:var(--gold)}
 .finance-accounts-collapse.is-masked .treasury-total-delta{font-size:0;color:transparent}
-.finance-accounts-collapse.is-masked .treasury-total-delta::after{content:'較昨日 ***';font-family:var(--mono);font-size:11px;color:#8d6a2a}
+.finance-accounts-collapse.is-masked .treasury-total-delta::after{content:'較舊值 ***';font-family:var(--mono);font-size:11px;color:#8d6a2a}
 .finance-accounts-collapse.is-masked .treasury-total-trend{font-size:0;color:transparent}
 .finance-accounts-collapse.is-masked .treasury-total-trend::after{content:'史記 ***';font-family:var(--mono);font-size:11px;color:#8d6a2a}
 .finance-accounts-collapse.is-masked .treasury-monthly-row strong{font-size:0;color:transparent}
@@ -10252,11 +10252,19 @@ function renderAccounts(accs,monthly,el,assetSnapshot,bills,stale){
 function renderTreasuryAccountTotalAssetCard(assetSnapshot,totalAssetAccount,monthly){
   monthly=monthly||{};
   var latest=assetSnapshot&&assetSnapshot.latest;
+  var previous=assetSnapshot&&assetSnapshot.previous;
   var total=Number(assetSnapshot&&assetSnapshot.latestTotalAssetValue);
   if(isNaN(total)||!isFinite(total)||total<=0)total=Number(latest&&latest.totalAssetValue);
   if(isNaN(total)||!isFinite(total)||total<=0)total=Number(totalAssetAccount&&totalAssetAccount.value);
   if(isNaN(total)||!isFinite(total)||total<=0)return '';
-  var delta=Number(assetSnapshot&&assetSnapshot.totalAssetChangeAmount);
+  // 比較最近一筆可用舊快照，不要求日期一定是前一天。
+  var latestCompareValue=Number(latest&&latest.totalAssetValue);
+  var previousCompareValue=Number(assetSnapshot&&assetSnapshot.previousTotalAssetValue);
+  if(isNaN(previousCompareValue)||!isFinite(previousCompareValue))previousCompareValue=Number(previous&&previous.totalAssetValue);
+  var historicalCompareOk=isFinite(latestCompareValue)&&isFinite(previousCompareValue);
+  var historicalDelta=historicalCompareOk?latestCompareValue-previousCompareValue:null;
+  var historicalPct=historicalCompareOk&&previousCompareValue!==0?historicalDelta/previousCompareValue*100:null;
+  var delta=historicalCompareOk?historicalDelta:Number(assetSnapshot&&assetSnapshot.totalAssetChangeAmount);
   if(isNaN(delta)||!isFinite(delta))delta=advisorSnapshotDelta(assetSnapshot,'totalAssetValue');
   var deltaOk=delta!==null&&delta!==undefined&&!isNaN(Number(delta))&&isFinite(Number(delta));
   var deltaClass=deltaOk?(Number(delta)<0?'down':'up'):'';
@@ -10266,12 +10274,19 @@ function renderTreasuryAccountTotalAssetCard(assetSnapshot,totalAssetAccount,mon
   var initialOk=initialChangeRaw!==null&&initialChangeRaw!==undefined&&initialPctRaw!==null&&initialPctRaw!==undefined&&isFinite(Number(initialChangeRaw))&&isFinite(Number(initialPctRaw));
   var initialChange=initialOk?Number(initialChangeRaw):null;
   var initialPct=initialOk?Number(initialPctRaw):null;
-  var trendClass=initialOk?(initialChange<0?'down':'up'):'';
-  var trendText=initialOk?'史記 '+advisorSignedCurrency(initialChange)+' ('+(initialPct>=0?'+':'')+initialPct.toFixed(1)+'%)':'史記資料不足';
+  var trendChange=initialOk?initialChange:historicalCompareOk?historicalDelta:null;
+  var trendPct=initialOk?initialPct:historicalPct;
+  var trendOk=trendChange!==null&&isFinite(Number(trendChange));
+  var trendClass=trendOk?(Number(trendChange)<0?'down':'up'):'';
+  var trendText='舊值資料不足';
+  if(trendOk){
+    trendText=(initialOk?'史記':'較舊值')+' '+advisorSignedCurrency(Number(trendChange));
+    if(trendPct!==null&&isFinite(Number(trendPct)))trendText+=' ('+(Number(trendPct)>=0?'+':'')+Number(trendPct).toFixed(1)+'%)';
+  }
   return `<div class="acc-item treasury-total-card">
     <div class="acc-name">帝國寶庫</div>
     <div class="acc-val">${fmtFull(total)}</div>
-    <div class="treasury-total-delta ${deltaClass}">較昨日 ${deltaText}</div>
+    <div class="treasury-total-delta ${deltaClass}">較舊值 ${deltaText}</div>
     <div class="treasury-total-trend ${trendClass}">${esc(trendText)}</div>
     <div class="treasury-monthly-title"><span>月收／支</span></div>
     <div class="treasury-monthly-row"><span>收入</span><strong class="treasury-monthly-income">${fmtFull(monthly.income)}</strong></div>
