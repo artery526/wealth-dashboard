@@ -5431,6 +5431,9 @@ function wealthApiRequestPriority(action){
   if(action==='verifyWriteToken'||action==='createWebSession')return 10;
   if(action==='storeContacts'||action==='storeRecords')return 9;
   if(/^(expense|income|transfer|ledgerRequestStatus)$/.test(action))return 8;
+  // 國庫現況是進入財政頁面的主資料；不可被戰情／行情／星象的背景預抓堵在佇列中。
+  if(/^(accounts|monthly|transactions|assetSnapshot|bills)$/.test(action))return 7;
+  if(action==='pledgeLoans')return 6;
   return 0;
 }
 function enqueueWealthApi(task,priority,waitTimeoutMs){
