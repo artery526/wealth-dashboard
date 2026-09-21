@@ -5794,8 +5794,8 @@ var advisorAIDailyUpdatesPromise=null;
 var advisorAIDailyUpdatesTimer=null;
 var advisorAIDailyUpdatesData=null;
 var advisorAIDailyUpdatesIndex=0;
-// v8: 重新取得含「史記」基準欄位的國庫資料，避免舊快取把 null 顯示成 0。
-var FINANCE_TREASURY_CACHE_KEY='wealth_finance_treasury_v8';
+// v9: 重新取得含「史記」基準欄位的國庫資料，避免舊快取把 null 顯示成 0。
+var FINANCE_TREASURY_CACHE_KEY='wealth_finance_treasury_v9';
 var FINANCE_TREASURY_CACHE_PREFIX='wealth_finance_treasury_v';
 var FINANCE_PLEDGE_CACHE_KEY='wealth_finance_pledge_v2';
 var FINANCE_YEARLY_CACHE_PREFIX='wealth_finance_yearly_v3_';
@@ -10260,18 +10260,21 @@ function renderTreasuryAccountTotalAssetCard(assetSnapshot,totalAssetAccount,mon
   // 比較最近一筆可用舊快照，不要求日期一定是前一天。
   var latestCompareValue=Number(latest&&latest.totalAssetValue);
   var previousCompareValue=Number(assetSnapshot&&assetSnapshot.previousTotalAssetValue);
-  if(isNaN(previousCompareValue)||!isFinite(previousCompareValue))previousCompareValue=Number(previous&&previous.totalAssetValue);
-  var historicalCompareOk=isFinite(latestCompareValue)&&isFinite(previousCompareValue);
+  if(!(previousCompareValue>0))previousCompareValue=Number(previous&&previous.totalAssetValue);
+  if(!(previousCompareValue>0)&&assetSnapshot&&assetSnapshot.totalAssetTrend30d){
+    previousCompareValue=Number(assetSnapshot.totalAssetTrend30d.baseValue);
+  }
+  var historicalCompareOk=isFinite(latestCompareValue)&&latestCompareValue>0&&isFinite(previousCompareValue)&&previousCompareValue>0;
   var historicalDelta=historicalCompareOk?latestCompareValue-previousCompareValue:null;
   var historicalPct=historicalCompareOk&&previousCompareValue!==0?historicalDelta/previousCompareValue*100:null;
-  var delta=historicalCompareOk?historicalDelta:Number(assetSnapshot&&assetSnapshot.totalAssetChangeAmount);
-  if(isNaN(delta)||!isFinite(delta))delta=advisorSnapshotDelta(assetSnapshot,'totalAssetValue');
+  var delta=historicalCompareOk?historicalDelta:null;
   var deltaOk=delta!==null&&delta!==undefined&&!isNaN(Number(delta))&&isFinite(Number(delta));
   var deltaClass=deltaOk?(Number(delta)<0?'down':'up'):'';
   var deltaText=deltaOk?advisorSignedCurrency(Number(delta)):'--';
   var initialChangeRaw=assetSnapshot&&assetSnapshot.initialAssetChangeAmount;
   var initialPctRaw=assetSnapshot&&assetSnapshot.initialAssetChangePct;
-  var initialOk=initialChangeRaw!==null&&initialChangeRaw!==undefined&&initialPctRaw!==null&&initialPctRaw!==undefined&&isFinite(Number(initialChangeRaw))&&isFinite(Number(initialPctRaw));
+  var initialBaseline=Number(assetSnapshot&&assetSnapshot.initialAssetValue);
+  var initialOk=initialBaseline>0&&initialChangeRaw!==null&&initialChangeRaw!==undefined&&initialPctRaw!==null&&initialPctRaw!==undefined&&isFinite(Number(initialChangeRaw))&&isFinite(Number(initialPctRaw));
   var initialChange=initialOk?Number(initialChangeRaw):null;
   var initialPct=initialOk?Number(initialPctRaw):null;
   var trendChange=initialOk?initialChange:historicalCompareOk?historicalDelta:null;
