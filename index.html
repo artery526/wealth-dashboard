@@ -17852,18 +17852,7 @@ function setupNotice(){
   updateDateDisplay();
   restoreRememberedWebAccess();
   initEmpireCardStatuses();
-  setTimeout(function(){
-    if(webVerifyIsAuthorized())prefetchFinanceDashboard();
-  },2200);
-  setTimeout(function(){
-    if(webVerifyIsAuthorized())prefetchBattleBrief();
-  },1200);
-  setTimeout(function(){
-    if(webVerifyIsAuthorized())prefetchMarketDashboard();
-  },3200);
-  setTimeout(function(){
-    if(webVerifyIsAuthorized())prefetchStarsPanelData();
-  },4200);
+  // 進站不再預抓各板塊 API；改由使用者點開板塊時按需讀取，避免背景請求塞滿全站佇列。
   // 彰化天氣（Open-Meteo，無需 API key）
   (function(){
     var WMO={
