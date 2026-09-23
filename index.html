@@ -5810,6 +5810,9 @@ var FINANCE_CACHE_TTL=6*60*60*1000;
 var financeTreasuryPromise=null;
 var financeTreasuryLastFetchAt=0;
 var FINANCE_TREASURY_REVALIDATE_GAP=30*1000;
+var financeTreasuryDetailsPromise=null;
+var financeTreasuryDetailsLastFetchAt=0;
+var FINANCE_TREASURY_DETAILS_REVALIDATE_GAP=30*1000;
 var financePledgePromise=null;
 var financeYearlyPromises={};
 var financeYearlyArchiveManifest=null;
@@ -10009,6 +10012,7 @@ async function loadAccounts(){
   var shouldRevalidate=!financeTreasuryPromise&&(!freshEntry||(Date.now()-financeTreasuryLastFetchAt)>=FINANCE_TREASURY_REVALIDATE_GAP);
   if(freshEntry&&cached&&!shouldRevalidate){
     setFinanceCardStatus('ok','國庫現況已載入');
+    refreshFinanceTreasuryDetails(cached);
     return Promise.resolve(cached);
   }
   setFinanceCardStatus('pending',cached?'背景更新中':'讀取中');
@@ -10028,6 +10032,7 @@ async function loadAccounts(){
     setDataFreshness('finance-treasury-freshness',dataFreshnessMeta(data,false,false));
     if(document.getElementById('acc-content'))renderAccounts(data.accs,data.monthly,document.getElementById('acc-content'),data.assetSnapshot,data.bills,false);
     setFinanceCardStatus('ok');
+    refreshFinanceTreasuryDetails(data);
     return data;
   }).catch(function(e){
     setFinanceCardStatus('err',e.message||'讀取失敗');
@@ -10042,10 +10047,7 @@ async function loadAccounts(){
 function fetchFinanceTreasuryData(cached){
   return Promise.allSettled([
     apiGet({action:'accounts'}),
-    apiGet({action:'monthly',ym:currentYM()}),
-    apiGet({action:'transactions',ym:currentYM()}),
-    apiGet({action:'assetSnapshot'}),
-    apiGet({action:'bills'})
+    apiGet({action:'monthly',ym:currentYM()})
   ]).then(function(results){
     if(results[0].status!=='fulfilled'){
       throw (results[0].reason||new Error('finance load failed'));
@@ -10055,17 +10057,55 @@ function fetchFinanceTreasuryData(cached){
     var cachedMonthly=cached&&cached.monthly&&typeof cached.monthly==='object'?cached.monthly:null;
     var monthly=results[1].status==='fulfilled'?(results[1].value||{}):null;
     if(!monthly)monthly=cachedMonthly||{};
-    if(results[2].status==='fulfilled')monthly=financeMonthlyFromTransactions(results[2].value||[],monthly);
     monthly=preferFinanceMonthlyData(monthly,cachedMonthly);
     var data={
       accs:results[0].value||[],
       monthly:monthly,
-      assetSnapshot:results[3].status==='fulfilled'?results[3].value:null,
-      bills:results[4].status==='fulfilled'?results[4].value:null,
-      sourceStatus:{monthly:results[1].status,transactions:results[2].status,assetSnapshot:results[3].status}
+      assetSnapshot:cached&&cached.assetSnapshot||null,
+      bills:cached&&cached.bills||null,
+      sourceStatus:{monthly:results[1].status,transactions:'pending',assetSnapshot:cached&&cached.assetSnapshot?'cached':'pending',bills:cached&&cached.bills?'cached':'pending'}
     };
     return data;
   });
+}
+
+function refreshFinanceTreasuryDetails(fallbackData){
+  if(!API_URL)return Promise.resolve(null);
+  if(financeTreasuryDetailsPromise)return financeTreasuryDetailsPromise;
+  if(Date.now()-financeTreasuryDetailsLastFetchAt<FINANCE_TREASURY_DETAILS_REVALIDATE_GAP)return Promise.resolve(null);
+  financeTreasuryDetailsLastFetchAt=Date.now();
+  var requestYm=currentYM();
+  financeTreasuryDetailsPromise=Promise.allSettled([
+    apiGet({action:'assetSnapshot'}),
+    apiGet({action:'bills'}),
+    apiGet({action:'transactions',ym:requestYm})
+  ]).then(function(results){
+    var latestEntry=readFinanceCacheEntry(FINANCE_TREASURY_CACHE_KEY,true);
+    var base=latestEntry&&latestEntry.data||fallbackData||{};
+    var next=Object.assign({},base);
+    var changed=false;
+    if(results[0].status==='fulfilled'){next.assetSnapshot=results[0].value||null;changed=true;}
+    if(results[1].status==='fulfilled'){next.bills=results[1].value||null;changed=true;}
+    if(results[2].status==='fulfilled'){
+      next.monthly=preferFinanceMonthlyData(financeMonthlyFromTransactions(results[2].value||[],next.monthly||{}),next.monthly||{});
+      changed=true;
+    }
+    next.sourceStatus=Object.assign({},next.sourceStatus||{}, {
+      assetSnapshot:results[0].status,
+      bills:results[1].status,
+      transactions:results[2].status
+    });
+    if(changed)writeTimedFinanceCache(FINANCE_TREASURY_CACHE_KEY,next);
+    if(changed&&currentPanel==='finance'&&currentTab==='finance-accs'&&document.getElementById('acc-content')){
+      setDataFreshness('finance-treasury-freshness',dataFreshnessMeta(next,false,false));
+      renderAccounts(next.accs,next.monthly,document.getElementById('acc-content'),next.assetSnapshot,next.bills,false);
+    }
+    return next;
+  }).catch(function(error){
+    console.warn('國庫背景資料更新失敗',error);
+    return null;
+  }).finally(function(){financeTreasuryDetailsPromise=null;});
+  return financeTreasuryDetailsPromise;
 }
 
 function financeMonthlyHasValues(monthly){
@@ -14701,6 +14741,7 @@ function prefetchFinanceDashboard(){
     financeTreasuryPromise=fetchFinanceTreasuryData(cached).then(function(data){
       writeTimedFinanceCache(FINANCE_TREASURY_CACHE_KEY,data);
       setFinanceCardStatus('ok');
+      refreshFinanceTreasuryDetails(data);
       return data;
     }).catch(function(e){setFinanceCardStatus('err',e.message||'讀取失敗');console.warn(e)}).finally(function(){financeTreasuryPromise=null;});
   }
