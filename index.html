@@ -5430,7 +5430,7 @@ function wealthApiRequestPriority(action){
   action=String(action||'');
   if(action==='verifyWriteToken'||action==='createWebSession')return 10;
   if(action==='storeContacts'||action==='storeRecords')return 9;
-  if(/^(expense|income|transfer|ledgerRequestStatus)$/.test(action))return 8;
+  if(/^(expense|income|transfer|ledgerRequestStatus|advisorDividendMemo)$/.test(action))return 8;
   // 國庫現況是進入財政頁面的主資料；不可被戰情／行情／星象的背景預抓堵在佇列中。
   if(/^(accounts|monthly|transactions|assetSnapshot|bills)$/.test(action))return 7;
   if(action==='pledgeLoans')return 6;
@@ -18906,7 +18906,7 @@ function advisorAIRefreshDividendQuickSelect(data){
   }
 }
 
-function advisorAILoadDividendQuickOptions(force){
+function advisorAILoadDividendQuickOptions(force,silentError){
   if(!webVerifyIsAuthorized())return Promise.resolve(null);
   var select=document.getElementById('advisor-ai-dividend-select');
   if(select&&!force)advisorAIRefreshDividendQuickSelect(dividendCenterCache||{});
@@ -18918,7 +18918,7 @@ function advisorAILoadDividendQuickOptions(force){
     advisorAIRefreshDividendQuickSelect(data);
     return data;
   }).catch(function(err){
-    advisorAISetQuickDividendStatus('配息資料讀取失敗，請稍後再試','err');
+    if(!silentError)advisorAISetQuickDividendStatus('配息資料讀取失敗，請稍後再試','err');
     return null;
   }).finally(function(){advisorDividendQuickPromise=null;});
   return advisorDividendQuickPromise;
@@ -19013,8 +19013,6 @@ async function advisorAIRecordQuickDividend(btn){
       note:holding.displaySymbol||holding.symbol
     });
     invalidateDividendCenter();
-    advisorAISetQuickDividendStatus('配息資料更新中…');
-    await advisorAILoadDividendQuickOptions(true);
     advisorDividendQuickSelection=null;
     advisorDividendQuickHolding=null;
     if(rateEl)rateEl.value='';
@@ -19022,6 +19020,8 @@ async function advisorAIRecordQuickDividend(btn){
     if(estimateEl)estimateEl.value='';
     advisorAISetQuickDividendStatus('✓ 已新增待入帳配息，預估 '+fmtFull(estimate),'ok');
     if(document.getElementById('advisor-ai-dividend-select'))document.getElementById('advisor-ai-dividend-select').value='';
+    // 寫入成功即刻回報；配息中心全量重讀放到背景，且不得覆蓋成功狀態。
+    advisorAILoadDividendQuickOptions(true,true);
   }catch(err){
     advisorAISetQuickDividendStatus('✗ '+(err&&err.message?err.message:'寫入失敗'),'err');
   }finally{
