@@ -10985,7 +10985,7 @@ var ARK_WALL_ADMIN_URL='https://wall-admin.ark-os26.cc/admin';
 var ARK_WALL_READ_TOKEN_KEY='arkos26.wall.readToken';
 var arkWallEntries=[];
 var arkWallLoaded=false;
-var arkWallView='wall';
+var arkWallView='memo';
 var arkWallSelectedYear='';
 var arkWallSelectedMonth='';
 var arkWallMemoTag='全部';
@@ -11639,8 +11639,8 @@ function setupArkWallViewMenu(){
     menu.className='ark-wall-title-menu';
     menu.id='ark-wall-title-menu';
     menu.setAttribute('role','menu');
-    menu.innerHTML='<button class="ark-wall-menu-item" type="button" role="menuitem" data-wall-view="wall" onclick="setArkWallView(\'wall\')">生活日記</button>'
-      +'<button class="ark-wall-menu-item" type="button" role="menuitem" data-wall-view="memo" onclick="setArkWallView(\'memo\')">備忘隨筆</button>'
+    menu.innerHTML='<button class="ark-wall-menu-item" type="button" role="menuitem" data-wall-view="memo" onclick="setArkWallView(\'memo\')">備忘隨筆</button>'
+      +'<button class="ark-wall-menu-item" type="button" role="menuitem" data-wall-view="wall" onclick="setArkWallView(\'wall\')">生活日記</button>'
       +'<button class="ark-wall-menu-item" type="button" role="menuitem" data-wall-view="market" onclick="setArkWallView(\'market\')">股市教室</button>';
     wrap.appendChild(menu);
   }
@@ -12038,7 +12038,7 @@ function bindArkWallCopyText(body){
 }
 
 function openArkWall(view){
-  if(view==='memo'||view==='market'||view==='wall')arkWallView=view;
+  arkWallView=view==='wall'||view==='market'?view:'memo';
   updateArkWallTodayDate();
   setupArkWallViewMenu();
   var overlay=document.getElementById('ark-wall-overlay');
