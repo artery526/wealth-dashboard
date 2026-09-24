@@ -15607,7 +15607,6 @@ function renderMarketPanel(){
       <div id="macro-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:82%"></div><div class="skel-line skel" style="width:68%"></div></div>
     </div>`;
   if(API_URL)loadMarketDashboard();
-  if(API_URL)setTimeout(prefetchMarketDashboard,300);
 }
 
 // ══════════════════════════════════════════
@@ -15669,8 +15668,6 @@ function renderCouncilPanel(initialTab){
     else if(targetTab==='taiwan-macro')loadTaiwanMacro();
     else if(targetTab==='external-intelligence')loadExternalIntelligence();
   }
-  // 戰情總匯報後端本身已組合市場資料；避免開啟戰情時再重複預抓市場儀表板。
-  if(API_URL&&targetTab!=='council-roster'&&targetTab!=='battle-brief')setTimeout(prefetchMarketDashboard,300);
 }
 
 function cacheCouncilDashboardResults(results){
