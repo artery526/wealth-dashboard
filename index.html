@@ -4760,7 +4760,7 @@ html[data-theme="deep-blue"] .scene-task-details .home-agenda-global-refresh{bor
     </picture>
     <div class="scene-widget-dock" id="scene-widget-dock">
     </div>
-    <div class="scene-task-slot" id="scene-task-slot">
+    <div class="scene-task-slot" id="scene-task-slot" hidden aria-hidden="true">
       <div class="scene-task-card">
         <button class="scene-task-toggle" id="scene-task-toggle" type="button" aria-expanded="false" aria-controls="scene-task-details" aria-label="展開完整待辦事項" onclick="toggleSceneTask(event)">
           <span class="scene-task-preview" id="scene-task-preview"><span class="scene-task-preview-status">調閱待辦事項中…</span></span>
@@ -4779,7 +4779,7 @@ html[data-theme="deep-blue"] .scene-task-details .home-agenda-global-refresh{bor
 <!-- 保留既有解鎖狀態錨點；首頁舊影片卡片已移除。 -->
 <div id="empire-cards" class="cards empire-locked" hidden aria-hidden="true"></div>
 
-<div class="wrap home-agenda-wrap">
+<div class="wrap home-agenda-wrap" hidden aria-hidden="true">
   <section class="home-agenda-bottom" aria-label="月曆、行程與待辦事項">
     <div class="home-agenda-calendar" id="home-agenda-calendar">
       <button class="home-calendar-mobile-toggle" id="home-calendar-mobile-toggle" type="button" aria-expanded="false" aria-controls="home-calendar-details" aria-label="展開一週月曆" onclick="toggleMobileHomeCalendar(event)">
@@ -9205,6 +9205,7 @@ function toggleHomeAgendaMode(){
 }
 
 function refreshHomeAgenda(){
+  if(document.querySelector('.home-agenda-wrap[hidden]'))return Promise.resolve(null);
   return homeAgendaMode==='briefing'?loadHomeBriefing():loadHomeAgenda(homeAgendaSelectedDate);
 }
 
