@@ -5433,7 +5433,7 @@ function wealthApiRequestPriority(action){
   if(/^(expense|income|transfer|ledgerRequestStatus|advisorDividendMemo)$/.test(action))return 8;
   // 國庫現況是進入財政頁面的主資料；不可被戰情／行情／星象的背景預抓堵在佇列中。
   if(/^(accounts|monthly|transactions|assetSnapshot|bills)$/.test(action))return 7;
-  if(action==='pledgeLoans')return 6;
+  if(action==='pledgeLoans')return 7;
   return 0;
 }
 function enqueueWealthApi(task,priority,waitTimeoutMs){
@@ -5814,6 +5814,8 @@ var financeTreasuryDetailsPromise=null;
 var financeTreasuryDetailsLastFetchAt=0;
 var FINANCE_TREASURY_DETAILS_REVALIDATE_GAP=30*1000;
 var financePledgePromise=null;
+var financePledgeLastFetchAt=0;
+var FINANCE_PLEDGE_REVALIDATE_GAP=30*1000;
 var financeYearlyPromises={};
 var financeYearlyArchiveManifest=null;
 var financeYearlyArchivePromise=null;
@@ -14737,7 +14739,10 @@ function prefetchFinanceDashboard(){
       return data;
     }).catch(function(e){setFinanceCardStatus('err',e.message||'讀取失敗');console.warn(e)}).finally(function(){financeTreasuryPromise=null;});
   }
-  if(!readTimedFinanceCache(FINANCE_PLEDGE_CACHE_KEY)&&!financePledgePromise){
+  var pledgeCacheEntry=readFinanceCacheEntry(FINANCE_PLEDGE_CACHE_KEY,true);
+  var pledgeShouldRevalidate=!financePledgePromise&&(!pledgeCacheEntry||(Date.now()-financePledgeLastFetchAt)>=FINANCE_PLEDGE_REVALIDATE_GAP);
+  if(pledgeShouldRevalidate){
+    financePledgeLastFetchAt=Date.now();
     financePledgePromise=apiGet({action:'pledgeLoans'}).then(function(data){
       data=data||{pledges:[],loans:[]};
       writeTimedFinanceCache(FINANCE_PLEDGE_CACHE_KEY,data);
@@ -17002,17 +17007,19 @@ async function loadPledgePanel(){
     el.innerHTML=setupNotice();
     return;
   }
-  var cachedEntry=readFinanceCacheEntry(FINANCE_PLEDGE_CACHE_KEY,false);
+  var freshEntry=readFinanceCacheEntry(FINANCE_PLEDGE_CACHE_KEY,false);
+  var cachedEntry=freshEntry||readFinanceCacheEntry(FINANCE_PLEDGE_CACHE_KEY,true);
   var cached=cachedEntry?cachedEntry.data:null;
   if(cached){
     setDataFreshness('finance-pledge-freshness',dataFreshnessMeta(cached,cachedEntry.savedAt,true));
     renderPledgePanel(cached,el);
   }
-  if(cached){
-    setFinanceCardStatus('ok','質押信貸已載入');
+  var shouldRevalidate=!financePledgePromise&&(!freshEntry||(Date.now()-financePledgeLastFetchAt)>=FINANCE_PLEDGE_REVALIDATE_GAP);
+  if(!shouldRevalidate&&cached){
+    setFinanceCardStatus('ok','質押信貸已載入快取');
     return Promise.resolve(cached);
   }
-  setFinanceCardStatus('pending',cached?'質押信貸快取更新中':'質押信貸讀取中');
+  setFinanceCardStatus('pending',cached?'質押信貸快照背景更新中':'質押信貸讀取中');
   if(financePledgePromise){
     return financePledgePromise.then(function(data){
       if(data){
@@ -17023,6 +17030,7 @@ async function loadPledgePanel(){
       return data;
     });
   }
+  financePledgeLastFetchAt=Date.now();
   financePledgePromise=apiGet({action:'pledgeLoans'}).then(function(data){
     data=data||{pledges:[],loans:[]};
     writeTimedFinanceCache(FINANCE_PLEDGE_CACHE_KEY,data);
@@ -17032,7 +17040,7 @@ async function loadPledgePanel(){
     return data;
   }).catch(function(e){
     if(!cached)el.innerHTML=`<div style="color:var(--coral);font-family:var(--sans);font-size:12px;padding:12px 0">${esc(e.message)}</div>`;
-    setFinanceCardStatus(cached?'pending':'err',cached?'質押信貸快取可用':'質押信貸讀取失敗');
+    setFinanceCardStatus(cached?'pending':'err',cached?'質押信貸快照可用 · 背景更新失敗':'質押信貸讀取失敗');
     return null;
   }).finally(function(){
     financePledgePromise=null;
