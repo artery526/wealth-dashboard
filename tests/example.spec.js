@@ -175,15 +175,14 @@ test('treasury renders fresh cache immediately and revalidates in the background
     window.financeTreasuryLastFetchAt = 0;
     localStorage.setItem(FINANCE_TREASURY_CACHE_KEY, JSON.stringify({
       savedAt: Date.now(),
-      data: { accs: [{ name: '💵國泰Stock', value: 1234 }], monthly: {}, assetSnapshot: null, bills: [] }
+      data: { accs: [{ name: '💵國泰Stock', value: 1234 }, { name: '總資產', value: 1234 }], monthly: { ym: currentYM(), income: 45390, expense: 26950, net: 18440, savingRate: '40.6%' }, assetSnapshot: null, bills: [] }
     }));
     const calls = [];
     const oldApiGet = apiGet;
     apiGet = params => {
       calls.push(params.action);
-      if (params.action === 'accounts') return Promise.resolve([{ name: '💵國泰Stock', value: 5678 }]);
-      if (params.action === 'monthly') return Promise.resolve({});
-      if (params.action === 'transactions') return Promise.resolve([]);
+      if (params.action === 'accounts') return Promise.resolve([{ name: '💵國泰Stock', value: 5678 }, { name: '總資產', value: 5678 }]);
+      if (params.action === 'monthly') return Promise.resolve({ ym: currentYM(), income: 114860, expense: 62906, net: 51954, savingRate: '45.2%' });
       if (params.action === 'assetSnapshot') return Promise.resolve(null);
       return Promise.resolve([]);
     };
@@ -197,11 +196,12 @@ test('treasury renders fresh cache immediately and revalidates in the background
     const cacheVisibleBeforeRefresh = content.textContent.includes('1,234');
     await request;
     apiGet = oldApiGet;
-    return { cacheVisibleBeforeRefresh, freshVisibleAfterRefresh: content.textContent.includes('5,678'), calls };
+    return { cacheVisibleBeforeRefresh, freshVisibleAfterRefresh: content.textContent.includes('5,678'), fullMonthVisible: content.textContent.includes('114,860'), calls };
   });
   expect(result.cacheVisibleBeforeRefresh).toBe(true);
   expect(result.freshVisibleAfterRefresh).toBe(true);
-  expect(result.calls.sort()).toEqual(['accounts', 'assetSnapshot', 'bills', 'monthly', 'transactions']);
+  expect(result.fullMonthVisible).toBe(true);
+  expect(result.calls.sort()).toEqual(['accounts', 'assetSnapshot', 'bills', 'monthly']);
 });
 
 test('treasury keeps the last valid monthly totals when monthly API refresh fails', async ({ page }) => {
@@ -216,12 +216,38 @@ test('treasury keeps the last valid monthly totals when monthly API refresh fail
       return Promise.resolve([]);
     };
     const data = await fetchFinanceTreasuryData({
-      monthly: { income: 73337, expense: 48297, net: 25040, savingRate: '34.1%' }
+      monthly: { ym: currentYM(), income: 73337, expense: 48297, net: 25040, savingRate: '34.1%' }
     });
     apiGet = oldApiGet;
     return data.monthly;
   });
-  expect(result).toEqual({ income: 73337, expense: 48297, net: 25040, savingRate: '34.1%' });
+  expect(result).toEqual({ ym: expect.any(String), income: 73337, expense: 48297, net: 25040, savingRate: '34.1%' });
+});
+
+test('treasury does not show zero totals when monthly summary is unavailable', async ({ page }) => {
+  await page.goto(dashboardUrl);
+  const result = await page.evaluate(async () => {
+    const oldApiGet = apiGet;
+    apiGet = params => params.action === 'accounts'
+      ? Promise.resolve([{ name: '💵國泰Stock', value: 1234 }, { name: '總資產', value: 1234 }])
+      : Promise.reject(new Error('monthly unavailable'));
+    const data = await fetchFinanceTreasuryData(null);
+    const content = document.createElement('div');
+    renderAccounts(data.accs, data.monthly, content, null, [], false);
+    apiGet = oldApiGet;
+    return {
+      unavailable: data.monthly.unavailable,
+      income: content.querySelector('.treasury-monthly-income').textContent,
+      expense: content.querySelector('.treasury-monthly-expense').textContent,
+      savingRate: content.querySelector('.treasury-saving-rate strong').textContent,
+      classEquivalent: content.querySelector('.treasury-class-equivalent')
+    };
+  });
+  expect(result.unavailable).toBe(true);
+  expect(result.income).toBe('—');
+  expect(result.expense).toBe('—');
+  expect(result.savingRate).toBe('—');
+  expect(result.classEquivalent).toBeNull();
 });
 
 test('a new ledger entry is allowed after a different previous entry was confirmed', async ({ page }) => {

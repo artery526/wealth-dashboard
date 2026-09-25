@@ -5797,8 +5797,8 @@ var advisorAIDailyUpdatesPromise=null;
 var advisorAIDailyUpdatesTimer=null;
 var advisorAIDailyUpdatesData=null;
 var advisorAIDailyUpdatesIndex=0;
-// v9: 重新取得含「史記」基準欄位的國庫資料，避免舊快取把 null 顯示成 0。
-var FINANCE_TREASURY_CACHE_KEY='wealth_finance_treasury_v9';
+// v10: 月收支只採用完整月摘要；捨棄曾由最近 50 筆交易拼成的錯誤快取。
+var FINANCE_TREASURY_CACHE_KEY='wealth_finance_treasury_v10';
 var FINANCE_TREASURY_CACHE_PREFIX='wealth_finance_treasury_v';
 var FINANCE_PLEDGE_CACHE_KEY='wealth_finance_pledge_v2';
 var FINANCE_YEARLY_CACHE_PREFIX='wealth_finance_yearly_v3_';
@@ -10024,7 +10024,7 @@ async function loadAccounts(){
         setDataFreshness('finance-treasury-freshness',dataFreshnessMeta(data,false,false));
         if(document.getElementById('acc-content'))renderAccounts(data.accs,data.monthly,document.getElementById('acc-content'),data.assetSnapshot,data.bills,false);
       }
-      if(data&&data.accs)setFinanceCardStatus('ok');
+      if(data&&data.accs)setFinanceCardStatus('ok',financeTreasuryLoadedMessage(data));
       return data;
     });
   }
@@ -10033,7 +10033,7 @@ async function loadAccounts(){
     writeTimedFinanceCache(FINANCE_TREASURY_CACHE_KEY,data);
     setDataFreshness('finance-treasury-freshness',dataFreshnessMeta(data,false,false));
     if(document.getElementById('acc-content'))renderAccounts(data.accs,data.monthly,document.getElementById('acc-content'),data.assetSnapshot,data.bills,false);
-    setFinanceCardStatus('ok');
+    setFinanceCardStatus('ok',financeTreasuryLoadedMessage(data));
     refreshFinanceTreasuryDetails(data);
     return data;
   }).catch(function(e){
@@ -10047,28 +10047,49 @@ async function loadAccounts(){
 }
 
 function fetchFinanceTreasuryData(cached){
+  var requestedYm=currentYM();
   return Promise.allSettled([
     apiGet({action:'accounts'}),
-    apiGet({action:'monthly',ym:currentYM()})
+    apiGet({action:'monthly',ym:requestedYm})
   ]).then(function(results){
     if(results[0].status!=='fulfilled'){
       throw (results[0].reason||new Error('finance load failed'));
     }
-    // 月收支與帳戶資料分開請求；月度／交易其中一條線暫時失敗時，保留最近一次有效月收支，
-    // 不得用 {} 或全 0 覆蓋快取，否則畫面會誤顯示「收入 0／支出 0／儲蓄率 0%」。
+    // 月收支必須來自完整月摘要；最近交易清單有筆數上限，不可拿來拼成月合計。
     var cachedMonthly=cached&&cached.monthly&&typeof cached.monthly==='object'?cached.monthly:null;
-    var monthly=results[1].status==='fulfilled'?(results[1].value||{}):null;
-    if(!monthly)monthly=cachedMonthly||{};
-    monthly=preferFinanceMonthlyData(monthly,cachedMonthly);
+    var apiMonthly=results[1].status==='fulfilled'?results[1].value:null;
+    var monthlyStatus=results[1].status;
+    var monthly;
+    if(financeMonthlySummaryAvailable(apiMonthly,requestedYm)){
+      if(!financeMonthlyHasValues(apiMonthly)&&financeMonthlySummaryAvailable(cachedMonthly,requestedYm)&&financeMonthlyHasValues(cachedMonthly)){
+        monthly=cachedMonthly;
+        monthlyStatus='cached';
+      }else{
+        monthly=apiMonthly;
+      }
+    }else if(financeMonthlySummaryAvailable(cachedMonthly,requestedYm)){
+      monthly=cachedMonthly;
+      monthlyStatus='cached';
+    }else{
+      monthly={income:null,expense:null,net:null,savingRate:'—',categories:[],unavailable:true};
+      monthlyStatus=results[1].status==='rejected'?'rejected':'invalid';
+    }
     var data={
       accs:results[0].value||[],
       monthly:monthly,
       assetSnapshot:cached&&cached.assetSnapshot||null,
       bills:cached&&cached.bills||null,
-      sourceStatus:{monthly:results[1].status,transactions:'pending',assetSnapshot:cached&&cached.assetSnapshot?'cached':'pending',bills:cached&&cached.bills?'cached':'pending'}
+      sourceStatus:{monthly:monthlyStatus,assetSnapshot:cached&&cached.assetSnapshot?'cached':'pending',bills:cached&&cached.bills?'cached':'pending'}
     };
     return data;
   });
+}
+
+function financeTreasuryLoadedMessage(data){
+  var monthly=data&&data.monthly;
+  if(monthly&&monthly.unavailable)return '國庫已載入，月收支摘要暫不可用';
+  if(data&&data.sourceStatus&&data.sourceStatus.monthly==='cached')return '國庫已載入，月收支暫顯示快取';
+  return '國庫現況已載入';
 }
 
 function refreshFinanceTreasuryDetails(fallbackData){
@@ -10076,11 +10097,9 @@ function refreshFinanceTreasuryDetails(fallbackData){
   if(financeTreasuryDetailsPromise)return financeTreasuryDetailsPromise;
   if(Date.now()-financeTreasuryDetailsLastFetchAt<FINANCE_TREASURY_DETAILS_REVALIDATE_GAP)return Promise.resolve(null);
   financeTreasuryDetailsLastFetchAt=Date.now();
-  var requestYm=currentYM();
   financeTreasuryDetailsPromise=Promise.allSettled([
     apiGet({action:'assetSnapshot'}),
-    apiGet({action:'bills'}),
-    apiGet({action:'transactions',ym:requestYm})
+    apiGet({action:'bills'})
   ]).then(function(results){
     var latestEntry=readFinanceCacheEntry(FINANCE_TREASURY_CACHE_KEY,true);
     var base=latestEntry&&latestEntry.data||fallbackData||{};
@@ -10088,14 +10107,9 @@ function refreshFinanceTreasuryDetails(fallbackData){
     var changed=false;
     if(results[0].status==='fulfilled'){next.assetSnapshot=results[0].value||null;changed=true;}
     if(results[1].status==='fulfilled'){next.bills=results[1].value||null;changed=true;}
-    if(results[2].status==='fulfilled'){
-      next.monthly=preferFinanceMonthlyData(financeMonthlyFromTransactions(results[2].value||[],next.monthly||{}),next.monthly||{});
-      changed=true;
-    }
     next.sourceStatus=Object.assign({},next.sourceStatus||{}, {
       assetSnapshot:results[0].status,
-      bills:results[1].status,
-      transactions:results[2].status
+      bills:results[1].status
     });
     if(changed)writeTimedFinanceCache(FINANCE_TREASURY_CACHE_KEY,next);
     if(changed&&currentPanel==='finance'&&currentTab==='finance-accs'&&document.getElementById('acc-content')){
@@ -10115,36 +10129,11 @@ function financeMonthlyHasValues(monthly){
   return Number(monthly.income||0)>0||Number(monthly.expense||0)>0||Number(monthly.net||0)!==0;
 }
 
-function preferFinanceMonthlyData(primary,fallback){
-  if(!financeMonthlyHasValues(primary)&&financeMonthlyHasValues(fallback))return fallback;
-  return primary||fallback||{};
-}
-
-function financeMonthlyFromTransactions(txns,baseMonthly){
-  baseMonthly=baseMonthly||{};
-  var income=0,expense=0;
-  var catMap={};
-  (txns||[]).forEach(function(t){
-    var type=String(t&&t.type||'').trim();
-    var amount=Math.abs(Number(t&&t.amount)||0);
-    if(type==='收入'){
-      income+=amount;
-    }else if(type==='支出'){
-      expense+=amount;
-      var cat=String(t&&t.cat||'').trim();
-      if(cat)catMap[cat]=(catMap[cat]||0)+amount;
-    }
-  });
-  if(income<=0&&expense<=0)return baseMonthly;
-  var monthly=Object.assign({},baseMonthly);
-  if(income>Number(monthly.income||0))monthly.income=Math.round(income);
-  if(expense>Number(monthly.expense||0))monthly.expense=Math.round(expense);
-  monthly.net=Math.round((Number(monthly.income)||0)-(Number(monthly.expense)||0));
-  monthly.savingRate=Number(monthly.income)>0?(monthly.net/Number(monthly.income)*100).toFixed(1)+'%':'0%';
-  var cats=Object.keys(catMap).map(function(name){return {name:name,amount:Math.round(catMap[name])};})
-    .sort(function(a,b){return b.amount-a.amount;});
-  if(cats.length)monthly.categories=cats;
-  return monthly;
+function financeMonthlySummaryAvailable(monthly,expectedYm){
+  return !!monthly&&typeof monthly==='object'&&!Array.isArray(monthly)
+    &&(!expectedYm||!monthly.ym||String(monthly.ym)===expectedYm)
+    &&monthly.income!==null&&monthly.income!==undefined&&String(monthly.income).trim()!==''&&isFinite(Number(monthly.income))
+    &&monthly.expense!==null&&monthly.expense!==undefined&&String(monthly.expense).trim()!==''&&isFinite(Number(monthly.expense));
 }
 
 function renderBillReservoirHtml(bills){
@@ -10191,9 +10180,10 @@ function renderTreasuryOverview(all,filtered,monthly,assetSnapshot,totalRow){
   var marketDelta=Number(assetSnapshot&&assetSnapshot.dailyChangeAmount);
   var totalDeltaOk=!isNaN(totalAssetDelta)&&isFinite(totalAssetDelta);
   var marketDeltaOk=!isNaN(marketDelta)&&isFinite(marketDelta);
-  var monthIncome=Number(monthly.income)||0;
-  var monthExpense=Number(monthly.expense)||0;
-  var monthNet=monthIncome-monthExpense;
+  var hasMonthly=financeMonthlySummaryAvailable(monthly);
+  var monthIncome=hasMonthly?Number(monthly.income):null;
+  var monthExpense=hasMonthly?Number(monthly.expense):null;
+  var monthNet=hasMonthly?monthIncome-monthExpense:null;
   var cashRatio=totalAsset>0?cashTotal/totalAsset*100:null;
   var stockRatio=totalAsset>0?marketTotal/totalAsset*100:null;
   var snapshotDate=latest&&latest.date?latest.date:'即時帳戶';
@@ -10221,8 +10211,8 @@ function renderTreasuryOverview(all,filtered,monthly,assetSnapshot,totalRow){
       </div>
       <div class="treasury-card">
         <div class="treasury-card-label">本月淨流</div>
-        <div class="treasury-card-value ${monthNet>=0?'up':'down'}">${monthNet>=0?'+':'-'}${fmtFull(Math.abs(monthNet))}</div>
-        <div class="treasury-card-note">收 ${fmtFull(monthIncome)} / 支 ${fmtFull(monthExpense)}</div>
+        <div class="treasury-card-value ${monthNet===null?'':(monthNet>=0?'up':'down')}">${monthNet===null?'—':(monthNet>=0?'+':'-')+fmtFull(Math.abs(monthNet))}</div>
+        <div class="treasury-card-note">收 ${hasMonthly?fmtFull(monthIncome):'—'} / 支 ${hasMonthly?fmtFull(monthExpense):'—'}</div>
       </div>
     </div>
   </div>`;
@@ -10337,8 +10327,8 @@ function renderTreasuryAccountTotalAssetCard(assetSnapshot,totalAssetAccount,mon
     <div class="treasury-total-delta ${deltaClass}">較舊值 ${deltaText}</div>
     <div class="treasury-total-trend ${trendClass}">${esc(trendText)}</div>
     <div class="treasury-monthly-title"><span>月收／支</span></div>
-    <div class="treasury-monthly-row"><span>收入</span><strong class="treasury-monthly-income">${fmtFull(monthly.income)}</strong></div>
-    <div class="treasury-monthly-row"><span>支出</span><strong class="treasury-monthly-expense">${fmtFull(monthly.expense)}</strong></div>
+    <div class="treasury-monthly-row"><span>收入</span><strong class="treasury-monthly-income">${financeMonthlySummaryAvailable(monthly)?fmtFull(monthly.income):'—'}</strong></div>
+    <div class="treasury-monthly-row"><span>支出</span><strong class="treasury-monthly-expense">${financeMonthlySummaryAvailable(monthly)?fmtFull(monthly.expense):'—'}</strong></div>
   </div>`;
 }
 
@@ -10354,7 +10344,7 @@ function renderTreasuryCashStockCard(cashAccount,cathayStockAccount,monthly){
     <div class="treasury-account-merge-grid">
       ${cell(cashAccount,'💰現金Cash')}
       ${cell(cathayStockAccount,stockLabel)}
-      ${cathayStockAccount?`<div class="treasury-saving-rate"><span>🪙月儲蓄率</span><strong>${esc(monthly&&monthly.savingRate||'—')}</strong></div>${(()=>{var income=Number(monthly&&monthly.income)||0;var expense=Number(monthly&&monthly.expense)||0;var classValue=(income-expense)/405;return isFinite(classValue)?`<div class="treasury-class-equivalent ${classValue>=0?'less':'more'}">${classValue>=0?'可少上 '+classValue.toFixed(2)+' 堂課':'需多上 '+Math.abs(classValue).toFixed(2)+' 堂課'}</div>`:''})()}`:''}
+      ${cathayStockAccount?`<div class="treasury-saving-rate"><span>🪙月儲蓄率</span><strong>${esc(financeMonthlySummaryAvailable(monthly)?(monthly.savingRate||'—'):'—')}</strong></div>${(()=>{if(!financeMonthlySummaryAvailable(monthly))return '';var income=Number(monthly.income)||0;var expense=Number(monthly.expense)||0;var classValue=(income-expense)/405;return isFinite(classValue)?`<div class="treasury-class-equivalent ${classValue>=0?'less':'more'}">${classValue>=0?'可少上 '+classValue.toFixed(2)+' 堂課':'需多上 '+Math.abs(classValue).toFixed(2)+' 堂課'}</div>`:''})()}`:''}
     </div>
   </div>`;
 }
@@ -14742,7 +14732,7 @@ function prefetchFinanceDashboard(){
     financeTreasuryLastFetchAt=Date.now();
     financeTreasuryPromise=fetchFinanceTreasuryData(cached).then(function(data){
       writeTimedFinanceCache(FINANCE_TREASURY_CACHE_KEY,data);
-      setFinanceCardStatus('ok');
+      setFinanceCardStatus('ok',financeTreasuryLoadedMessage(data));
       refreshFinanceTreasuryDetails(data);
       return data;
     }).catch(function(e){setFinanceCardStatus('err',e.message||'讀取失敗');console.warn(e)}).finally(function(){financeTreasuryPromise=null;});
