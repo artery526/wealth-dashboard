@@ -60,6 +60,35 @@ test('market missing values are distinct from genuine zeros', async ({ page }) =
   await expect(page.locator('.market-row').nth(1)).toContainText('0.00 / 0.00%');
 });
 
+test('QQQ dynamic valuation renders source-backed scenarios and labels missing data honestly', async ({ page }) => {
+  await page.evaluate(() => renderBattleBrief({
+    qqqValuation: {
+      hasData: true,
+      status: '已取得估值資料',
+      qqqPrice: 500,
+      forwardPE: 21,
+      forwardEarnings: 23.8095,
+      historicalMedian: { fiveYear: 20, tenYear: 19.5, twentyYear: 18.2 },
+      valuationZone: { label: '合理區' },
+      dataDate: '2026/09/26',
+      updatedAt: '2026/09/26 08:00',
+      qqqPriceSource: '市場儀表板／Yahoo Finance',
+      source: 'Nasdaq／Invesco',
+      sourceUrl: 'https://example.com/source',
+      scenarios: [
+        { multiple: 20, label: '合理偏低', tone: 'reasonable-low', price: 476.19, changePct: -4.76 },
+        { multiple: 22, label: '合理偏高', tone: 'reasonable', price: 523.81, changePct: 4.76 }
+      ]
+    }
+  }, document.getElementById('battle-brief-content')));
+  await expect(page.locator('.qqq-valuation')).toContainText('QQQ 動態估值');
+  await expect(page.locator('.qqq-valuation')).toContainText('合理價格帶約為 $476.19～$523.81');
+  await expect(page.locator('.qqq-valuation-source a')).toHaveAttribute('href', 'https://example.com/source');
+  await page.evaluate(() => renderBattleBrief({ qqqValuation: { status: '資料暫缺' } }, document.getElementById('battle-brief-content')));
+  await expect(page.locator('.qqq-valuation')).toContainText('資料暫缺');
+  await expect(page.locator('.qqq-valuation')).toContainText('暫不產生估值判讀');
+});
+
 test('mobile comparison stays inside panel with horizontal table scrolling', async ({ page }) => {
   await page.setViewportSize({width:390,height:844});
   await page.getByRole('button',{name:'精簡比較',exact:true}).click();

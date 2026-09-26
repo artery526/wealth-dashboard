@@ -4497,6 +4497,38 @@ html[data-theme="deep-blue"] .overlay .panel.council-wide .battle-cell.delta.fla
 html[data-theme="deep-blue"] .overlay .panel.council-wide .battle-table-row.head{border-color:rgba(65,157,194,.24);color:#8fc9dc;background:rgba(6,28,44,.42)}
 html[data-theme="deep-blue"] .overlay .panel.council-wide .battle-empty{color:#78aec0}
 
+/* 軍機處 > 戰情總匯報：QQQ 動態估值 */
+.qqq-valuation{grid-column:1/-1;border:1px solid rgba(232,192,80,.36);border-radius:12px;padding:14px 16px;background:linear-gradient(145deg,rgba(42,30,12,.82),rgba(9,18,27,.88));}
+.qqq-valuation-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px}
+.qqq-valuation-title{font:900 18px/1.35 var(--serif);color:#ffe3a0}
+.qqq-valuation-subtitle,.qqq-valuation-meta,.qqq-valuation-source{color:#c9ad72;font:700 11px/1.5 var(--sans)}
+.qqq-valuation-status{padding:4px 9px;border:1px solid rgba(232,192,80,.45);border-radius:999px;color:#ffe08a;font:900 11px/1 var(--sans);white-space:nowrap}
+.qqq-valuation-status.ready{color:#9ff0c7;border-color:rgba(75,208,151,.55);background:rgba(29,158,117,.12)}
+.qqq-valuation-kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-bottom:12px}
+.qqq-valuation-kpi{min-width:0;padding:9px 10px;border:1px solid rgba(232,192,80,.22);border-radius:8px;background:rgba(4,12,18,.72)}
+.qqq-valuation-kpi-label{color:#c9ad72;font:700 11px/1.3 var(--sans)}
+.qqq-valuation-kpi-value{margin-top:3px;color:#fff0bd;font:900 17px/1.2 var(--mono);overflow-wrap:anywhere}
+.qqq-valuation-kpi-value.accent{color:#8fe4ff}
+.qqq-valuation-gauge{position:relative;height:18px;margin:16px 4px 7px;border-radius:999px;background:linear-gradient(90deg,#35c98b 0 25%,#70d895 25% 42%,#e8c050 42% 58%,#e8994c 58% 75%,#d95c57 75% 100%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.18)}
+.qqq-valuation-gauge-scale{display:flex;justify-content:space-between;color:#c9ad72;font:700 10px var(--mono)}
+.qqq-valuation-gauge-marker{position:absolute;top:-8px;width:3px;height:34px;border-radius:2px;background:#fff;box-shadow:0 0 0 2px rgba(0,0,0,.35),0 0 9px rgba(255,255,255,.8);transform:translateX(-50%)}
+.qqq-valuation-gauge-marker[hidden]{display:none}
+.qqq-valuation-gauge-label{text-align:center;margin-top:7px;color:#fff0bd;font:900 12px/1.4 var(--sans)}
+.qqq-valuation-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:12px}
+.qqq-valuation-card{padding:9px 10px;border:1px solid rgba(232,192,80,.25);border-radius:8px;background:rgba(4,12,18,.68)}
+.qqq-valuation-card.cheap{border-color:rgba(53,201,139,.55)}.qqq-valuation-card.reasonable-low{border-color:rgba(112,216,149,.55)}.qqq-valuation-card.reasonable{border-color:rgba(232,192,80,.55)}.qqq-valuation-card.expensive{border-color:rgba(232,153,76,.6)}.qqq-valuation-card.high{border-color:rgba(217,92,87,.7)}
+.qqq-valuation-card-label{color:#d9c17e;font:700 11px/1.35 var(--sans)}
+.qqq-valuation-card-price{margin-top:3px;color:#fff0bd;font:900 16px/1.2 var(--mono)}
+.qqq-valuation-card-change{margin-top:3px;font:900 12px/1.2 var(--mono)}
+.qqq-valuation-card-change.up{color:#8ff0c1}.qqq-valuation-card-change.down{color:#ffad8f}.qqq-valuation-card-change.flat{color:#c9dce2}
+.qqq-valuation-note{margin-top:10px;padding-top:9px;border-top:1px solid rgba(232,192,80,.2);color:#ead59d;font:700 12px/1.6 var(--sans)}
+html[data-theme="deep-blue"] .overlay .panel.council-wide .qqq-valuation{border-color:rgba(79,181,220,.42);background:linear-gradient(145deg,rgba(13,52,73,.86),rgba(5,20,32,.8))}
+html[data-theme="deep-blue"] .overlay .panel.council-wide .qqq-valuation-title{color:#bcefff}.overlay .panel.council-wide .qqq-valuation-subtitle,.overlay .panel.council-wide .qqq-valuation-meta,.overlay .panel.council-wide .qqq-valuation-source{color:#78aec0}
+html[data-theme="deep-blue"] .overlay .panel.council-wide .qqq-valuation-kpi,.overlay .panel.council-wide .qqq-valuation-card{border-color:rgba(65,157,194,.3);background:rgba(3,18,29,.7)}
+html[data-theme="deep-blue"] .overlay .panel.council-wide .qqq-valuation-kpi-label,.overlay .panel.council-wide .qqq-valuation-card-label{color:#8bb9c8}.overlay .panel.council-wide .qqq-valuation-kpi-value,.overlay .panel.council-wide .qqq-valuation-card-price{color:#dff7ff}
+html[data-theme="deep-blue"] .overlay .panel.council-wide .qqq-valuation-kpi-value.accent{color:#8fe4ff}.overlay .panel.council-wide .qqq-valuation-note{color:#c5e5ee;border-top-color:rgba(65,157,194,.3)}
+@media(max-width:720px){.qqq-valuation-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.qqq-valuation-kpi:last-child{grid-column:1/-1}.qqq-valuation-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.qqq-valuation-head{display:block}.qqq-valuation-status{display:inline-block;margin-top:7px}}
+
 /* 軍機處：台美股大盤／美股總經／台灣總體經濟 */
 html[data-theme="deep-blue"] .overlay .panel.council-wide .market-command,
 html[data-theme="deep-blue"] .overlay .panel.council-wide .macro-hero,
@@ -15398,6 +15430,51 @@ function battleReviewSummaryHtml(data){
   }
   return '<section class="battle-review-summary" aria-label="本次變化速覽"><strong>本次變化速覽</strong><small>依本次報表較前值比較；各標的資料日可能不同。</small>'+(entries.length?'<ul>'+entries.slice(0,3).map(function(entry){return '<li><button type="button" onclick="battleReviewJump(\''+entry.target+'\')">'+esc(entry.text)+'<small>'+esc(entry.date)+' · 查看明細 →</small></button></li>';}).join('')+'</ul>':'<div class="council-review-note">目前沒有可列示的非零變化；比較資料不足時不作判斷。</div>')+'</section>';
 }
+function qqqValuationDisplayNumber(value,digits){
+  var number=Number(value);
+  return isFinite(number)?number.toLocaleString('en-US',{minimumFractionDigits:digits,maximumFractionDigits:digits}):'資料暫缺';
+}
+function qqqValuationSignedPct(value){
+  var number=Number(value);
+  if(!isFinite(number))return '資料暫缺';
+  return (number>0?'+':'')+number.toFixed(1)+'%';
+}
+function qqqValuationSummary(data){
+  data=data||{};
+  var pe=Number(data.forwardPE), median=Number(data.historicalMedian&&data.historicalMedian.tenYear);
+  var scenarios=Array.isArray(data.scenarios)?data.scenarios:[];
+  var low=scenarios.find(function(item){return Number(item.multiple)===20;});
+  var high=scenarios.find(function(item){return Number(item.multiple)===22;});
+  if(!isFinite(pe)||!isFinite(median)||!low||!high)return 'Forward P/E 或 10年歷史中位數資料暫缺，暫不產生估值判讀。';
+  return 'QQQ目前 Forward P/E 為 '+pe.toFixed(1)+' 倍，相較10年歷史中位數 '+median.toFixed(1)+' 倍，目前估值位於'+(data.valuationZone&&data.valuationZone.label||'資料暫缺')+'。若以20～22倍 Forward P/E 計算，目前合理價格帶約為 $'+qqqValuationDisplayNumber(low.price,2)+'～$'+qqqValuationDisplayNumber(high.price,2)+'。';
+}
+function renderQqqDynamicValuation(data){
+  data=data||{};
+  var median=data.historicalMedian||{};
+  var scenarios=Array.isArray(data.scenarios)?data.scenarios:[];
+  var pe=Number(data.forwardPE), gaugeMin=16, gaugeMax=28;
+  var gaugePosition=isFinite(pe)?Math.max(0,Math.min(100,(pe-gaugeMin)/(gaugeMax-gaugeMin)*100)):null;
+  var cards=scenarios.length?scenarios.map(function(item){
+    var change=Number(item.changePct);
+    var changeClass=!isFinite(change)?'flat':change>=0?'up':'down';
+    return '<div class="qqq-valuation-card '+esc(item.tone||'')+'"><div class="qqq-valuation-card-label">'+esc(item.multiple+'× · '+item.label)+'</div><div class="qqq-valuation-card-price">$'+qqqValuationDisplayNumber(item.price,2)+'</div><div class="qqq-valuation-card-change '+changeClass+'">'+esc(qqqValuationSignedPct(change))+' 對目前市價</div></div>';
+  }).join(''):'<div class="qqq-valuation-note">Forward Earnings 或 Forward P/E 尚未取得，估值價格帶暫不計算。</div>';
+  var ready=!!data.hasData&&isFinite(pe);
+  return '<section class="qqq-valuation" aria-label="QQQ 動態估值">'+
+    '<div class="qqq-valuation-head"><div><div class="qqq-valuation-title">QQQ 動態估值</div><div class="qqq-valuation-subtitle">依 Forward Earnings × 假設 Forward P/E 計算；不是單一目標價或年底預測。</div></div><div class="qqq-valuation-status '+(ready?'ready':'')+'">'+esc(data.status||'資料暫缺')+'</div></div>'+
+    '<div class="qqq-valuation-kpis">'+
+      '<div class="qqq-valuation-kpi"><div class="qqq-valuation-kpi-label">QQQ 現價</div><div class="qqq-valuation-kpi-value accent">$'+qqqValuationDisplayNumber(data.qqqPrice,2)+'</div></div>'+
+      '<div class="qqq-valuation-kpi"><div class="qqq-valuation-kpi-label">目前 Forward P/E</div><div class="qqq-valuation-kpi-value">'+(isFinite(pe)?pe.toFixed(1)+'×':'資料暫缺')+'</div></div>'+
+      '<div class="qqq-valuation-kpi"><div class="qqq-valuation-kpi-label">隱含 Forward Earnings</div><div class="qqq-valuation-kpi-value">'+(isFinite(Number(data.forwardEarnings))?'$'+qqqValuationDisplayNumber(data.forwardEarnings,2):'資料暫缺')+'</div></div>'+
+      '<div class="qqq-valuation-kpi"><div class="qqq-valuation-kpi-label">歷史 Forward P/E 中位數</div><div class="qqq-valuation-kpi-value">5Y '+(isFinite(Number(median.fiveYear))?Number(median.fiveYear).toFixed(1)+'×':'—')+' · 10Y '+(isFinite(Number(median.tenYear))?Number(median.tenYear).toFixed(1)+'×':'—')+' · 20Y '+(isFinite(Number(median.twentyYear))?Number(median.twentyYear).toFixed(1)+'×':'—')+'</div></div>'+
+      '<div class="qqq-valuation-kpi"><div class="qqq-valuation-kpi-label">目前估值區間</div><div class="qqq-valuation-kpi-value">'+esc(data.valuationZone&&data.valuationZone.label||'資料暫缺')+'</div></div>'+
+    '</div>'+
+    '<div class="qqq-valuation-gauge" aria-label="Forward P/E 估值尺"><div class="qqq-valuation-gauge-marker" '+(gaugePosition==null?'hidden':'style="left:'+gaugePosition.toFixed(2)+'%"')+'></div></div><div class="qqq-valuation-gauge-scale"><span>16× 極保守</span><span>20×</span><span>22×</span><span>25×</span><span>28× 高估值</span></div><div class="qqq-valuation-gauge-label">目前位置：'+esc(data.valuationZone&&data.valuationZone.label||'資料暫缺')+'</div>'+
+    '<div class="qqq-valuation-grid">'+cards+'</div>'+ '<div class="qqq-valuation-note">'+esc(qqqValuationSummary(data))+'</div>'+
+    '<div class="qqq-valuation-meta">資料日：'+esc(data.dataDate||data.qqqPriceDate||'資料暫缺')+' · 更新：'+esc(data.updatedAt||'資料暫缺')+' · 市價來源：'+esc(data.qqqPriceSource||'資料暫缺')+' · 估值來源：'+esc(data.source||'資料暫缺')+'</div>'+
+    (data.sourceUrl?'<div class="qqq-valuation-source">來源：<a href="'+esc(data.sourceUrl)+'" target="_blank" rel="noopener">'+esc(data.sourceUrl)+'</a></div>':'<div class="qqq-valuation-source">估值來源網址尚未填入；資料暫缺時不自行代填。</div>')+
+  '</section>';
+}
 function renderBattleBrief(data,el){
   data=data||{};
   var summary=data.summary||{};
@@ -15418,6 +15495,7 @@ function renderBattleBrief(data,el){
     </div>
   </div>
   ${battleReviewSummaryHtml(data)}
+  ${renderQqqDynamicValuation(data.qqqValuation)}
   <div class="battle-report-grid">
     ${battleEtfChangeHtml(etfHoldingChange).replace('class="battle-section wide"','id="battle-review-etf" class="battle-section wide"')}
     <div class="battle-section">
