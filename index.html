@@ -4529,6 +4529,17 @@ html[data-theme="deep-blue"] .overlay .panel.council-wide .qqq-valuation-kpi-lab
 html[data-theme="deep-blue"] .overlay .panel.council-wide .qqq-valuation-kpi-value.accent{color:#8fe4ff}.overlay .panel.council-wide .qqq-valuation-note{color:#c5e5ee;border-top-color:rgba(65,157,194,.3)}
 @media(max-width:720px){.qqq-valuation-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.qqq-valuation-kpi:last-child{grid-column:1/-1}.qqq-valuation-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.qqq-valuation-head{display:block}.qqq-valuation-status{display:inline-block;margin-top:7px}}
 
+/* 軍機處 > 戰情總匯報：台股加權動態估值 */
+.taiex-valuation{grid-column:1/-1;border:1px solid rgba(79,181,220,.46);border-radius:12px;padding:14px 16px;background:linear-gradient(145deg,rgba(10,45,65,.94),rgba(7,19,30,.9));}
+.taiex-valuation-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px}.taiex-valuation-title{font:900 18px/1.35 var(--serif);color:#bcefff}.taiex-valuation-subtitle,.taiex-valuation-meta,.taiex-valuation-source{color:#83bdce;font:700 11px/1.5 var(--sans)}
+.taiex-valuation-status{padding:4px 9px;border:1px solid rgba(79,181,220,.55);border-radius:999px;color:#bcefff;font:900 11px/1 var(--sans);white-space:nowrap}.taiex-valuation-status.ready{color:#9ff0c7;border-color:rgba(75,208,151,.55);background:rgba(29,158,117,.12)}
+.taiex-valuation-kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin-bottom:12px}.taiex-valuation-kpi{min-width:0;padding:9px 10px;border:1px solid rgba(65,157,194,.32);border-radius:8px;background:rgba(3,18,29,.72)}.taiex-valuation-kpi-label{color:#8bb9c8;font:700 11px/1.3 var(--sans)}.taiex-valuation-kpi-value{margin-top:3px;color:#dff7ff;font:900 16px/1.2 var(--mono);overflow-wrap:anywhere}.taiex-valuation-kpi-value.accent{color:#8fe4ff}
+.taiex-valuation-gauge{position:relative;height:18px;margin:16px 4px 7px;border-radius:999px;background:linear-gradient(90deg,#35c98b 0 22%,#70d895 22% 33%,#e8c050 33% 56%,#e8994c 56% 67%,#d95c57 67% 100%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.18)}.taiex-valuation-gauge-marker{position:absolute;top:-8px;width:3px;height:34px;border-radius:2px;background:#fff;box-shadow:0 0 0 2px rgba(0,0,0,.35),0 0 9px rgba(255,255,255,.8);transform:translateX(-50%)}.taiex-valuation-gauge-marker[hidden]{display:none}.taiex-valuation-gauge-scale{display:flex;justify-content:space-between;color:#83bdce;font:700 10px var(--mono)}.taiex-valuation-gauge-label{text-align:center;margin-top:7px;color:#dff7ff;font:900 12px/1.4 var(--sans)}
+.taiex-valuation-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-top:12px}.taiex-valuation-card{padding:9px 10px;border:1px solid rgba(65,157,194,.32);border-radius:8px;background:rgba(3,18,29,.68)}.taiex-valuation-card.cheap{border-color:rgba(53,201,139,.55)}.taiex-valuation-card.reasonable-low{border-color:rgba(112,216,149,.55)}.taiex-valuation-card.reasonable{border-color:rgba(232,192,80,.55)}.taiex-valuation-card.expensive{border-color:rgba(232,153,76,.6)}.taiex-valuation-card.high{border-color:rgba(217,92,87,.7)}.taiex-valuation-card-label{color:#9dc9d5;font:700 11px/1.35 var(--sans)}.taiex-valuation-card-price{margin-top:3px;color:#dff7ff;font:900 16px/1.2 var(--mono)}.taiex-valuation-card-change{margin-top:3px;font:900 12px/1.2 var(--mono)}.taiex-valuation-card-change.up{color:#8ff0c1}.taiex-valuation-card-change.down{color:#ffad8f}.taiex-valuation-card-change.flat{color:#c9dce2}
+.taiex-valuation-columns{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px}.taiex-valuation-box{padding:10px;border:1px solid rgba(65,157,194,.28);border-radius:8px;background:rgba(3,18,29,.55)}.taiex-valuation-box h4{margin:0 0 6px;color:#bcefff;font:900 13px/1.3 var(--sans)}.taiex-valuation-box p{margin:4px 0;color:#c5e5ee;font:700 12px/1.55 var(--sans)}.taiex-valuation-note{margin-top:10px;padding-top:9px;border-top:1px solid rgba(65,157,194,.3);color:#c5e5ee;font:700 12px/1.6 var(--sans)}
+@media(max-width:900px){.taiex-valuation-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.taiex-valuation-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.taiex-valuation-columns{grid-template-columns:1fr}}
+@media(max-width:720px){.taiex-valuation-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.taiex-valuation-kpi:last-child{grid-column:1/-1}.taiex-valuation-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.taiex-valuation-head{display:block}.taiex-valuation-status{display:inline-block;margin-top:7px}}
+
 /* 軍機處：台美股大盤／美股總經／台灣總體經濟 */
 html[data-theme="deep-blue"] .overlay .panel.council-wide .market-command,
 html[data-theme="deep-blue"] .overlay .panel.council-wide .macro-hero,
@@ -15475,6 +15486,48 @@ function renderQqqDynamicValuation(data){
     (data.sourceUrl?'<div class="qqq-valuation-source">來源：<a href="'+esc(data.sourceUrl)+'" target="_blank" rel="noopener">'+esc(data.sourceUrl)+'</a></div>':'<div class="qqq-valuation-source">估值來源網址尚未填入；資料暫缺時不自行代填。</div>')+
   '</section>';
 }
+function renderTaiexDynamicValuation(data){
+  data=data||{};
+  var pe=Number(data.trailingPE), indexValue=Number(data.indexValue), earningsBase=Number(data.earningsBase);
+  var zone=data.valuationZone||{};
+  var gaugeMin=14,gaugeMax=30;
+  var gaugePosition=isFinite(pe)?Math.max(0,Math.min(100,(pe-gaugeMin)/(gaugeMax-gaugeMin)*100)):null;
+  var signed=function(value){var n=Number(value);return isFinite(n)?(n>0?'+':'')+n.toFixed(1)+'%':'資料暫缺';};
+  var num=function(value,digits){var n=Number(value);return isFinite(n)?n.toLocaleString('en-US',{minimumFractionDigits:digits,maximumFractionDigits:digits}):'資料暫缺';};
+  var scenarioCards=(data.trailingScenarios||[]).map(function(item){var change=Number(item.changePct);return '<div class="taiex-valuation-card '+esc(item.tone||'')+'"><div class="taiex-valuation-card-label">'+esc(item.multiple+'× · '+item.label)+'</div><div class="taiex-valuation-card-price">'+num(item.indexLevel,0)+' 點</div><div class="taiex-valuation-card-change '+(isFinite(change)?change>=0?'up':'down':'flat')+'">'+esc(signed(change))+' 對目前指數</div></div>';}).join('');
+  var forwardReady=isFinite(Number(data.forwardEarnings2026));
+  var forwardCards=(data.forwardScenarios||[]).map(function(item){return '<p><b>'+esc(item.multiple+'×')+'</b> → '+num(item.indexLevel,0)+' 點（'+esc(signed(item.changePct))+'）</p>';}).join('');
+  var history=data.historicalPE||{}, concentration=data.concentration||{};
+  var pct=isFinite(Number(data.pePercentile))?Number(data.pePercentile).toFixed(1)+'%':'資料暫缺';
+  var summary='目前無可靠 Trailing P/E 或歷史估值資料，因此暫不產生估值判讀。';
+  if(isFinite(pe)&&isFinite(earningsBase)&&data.trailingScenarios&&data.trailingScenarios.length){
+    var s18=data.trailingScenarios.find(function(item){return Number(item.multiple)===18;});
+    var s20=data.trailingScenarios.find(function(item){return Number(item.multiple)===20;});
+    var s22=data.trailingScenarios.find(function(item){return Number(item.multiple)===22;});
+    summary='加權指數目前 '+num(indexValue,0)+' 點，Trailing P/E '+pe.toFixed(1)+' 倍，目前估值位於'+esc(zone.label||'資料暫缺')+'。Earnings Base 約 '+num(earningsBase,0)+' 點；18／20／22 倍情境分別約 '+num(s18&&s18.indexLevel,0)+'／'+num(s20&&s20.indexLevel,0)+'／'+num(s22&&s22.indexLevel,0)+' 點。這是估值情境比較，不是點位預測。';
+  }
+  return '<section class="taiex-valuation" aria-label="台股加權動態估值">'+
+    '<div class="taiex-valuation-head"><div><div class="taiex-valuation-title">🇹🇼 台股加權動態估值</div><div class="taiex-valuation-subtitle">以已實現近四季獲利與目前市場估值倍數判斷「現在貴不貴」；不是年底點位預測。</div></div><div class="taiex-valuation-status '+(data.hasData?'ready':'')+'">'+esc(data.status||'資料暫缺')+'</div></div>'+
+    '<div class="taiex-valuation-kpis">'+
+      '<div class="taiex-valuation-kpi"><div class="taiex-valuation-kpi-label">目前加權指數</div><div class="taiex-valuation-kpi-value accent">'+num(indexValue,0)+' 點</div></div>'+
+      '<div class="taiex-valuation-kpi"><div class="taiex-valuation-kpi-label">Trailing P/E</div><div class="taiex-valuation-kpi-value">'+(isFinite(pe)?pe.toFixed(1)+'×':'資料暫缺')+'</div></div>'+ 
+      '<div class="taiex-valuation-kpi"><div class="taiex-valuation-kpi-label">P/B</div><div class="taiex-valuation-kpi-value">'+(isFinite(Number(data.pb))?Number(data.pb).toFixed(2)+'×':'資料暫缺')+'</div></div>'+ 
+      '<div class="taiex-valuation-kpi"><div class="taiex-valuation-kpi-label">Earnings Base</div><div class="taiex-valuation-kpi-value">'+num(earningsBase,0)+' 點</div></div>'+ 
+      '<div class="taiex-valuation-kpi"><div class="taiex-valuation-kpi-label">Forward P/E</div><div class="taiex-valuation-kpi-value">'+(isFinite(Number(data.forwardPE))?Number(data.forwardPE).toFixed(1)+'×':'資料暫缺')+'</div></div>'+ 
+      '<div class="taiex-valuation-kpi"><div class="taiex-valuation-kpi-label">資料日期</div><div class="taiex-valuation-kpi-value">'+esc(data.indexDate||'資料暫缺')+'</div></div>'+ 
+    '</div>'+ 
+    '<div class="taiex-valuation-gauge" aria-label="Trailing P/E 估值尺"><div class="taiex-valuation-gauge-marker" '+(gaugePosition==null?'hidden':'style="left:'+gaugePosition.toFixed(2)+'%"')+'></div></div><div class="taiex-valuation-gauge-scale"><span>14× 低估</span><span>18×</span><span>22× 合理</span><span>24×</span><span>30× 高估</span></div><div class="taiex-valuation-gauge-label">目前位置：'+esc(zone.label||'資料暫缺')+'</div>'+ 
+    '<div class="taiex-valuation-grid">'+(scenarioCards||'<div class="taiex-valuation-note">Trailing P/E 或 Earnings Base 暫缺，估值情境暫不計算。</div>')+'</div>'+ 
+    '<div class="taiex-valuation-columns">'+
+      '<div class="taiex-valuation-box"><h4>歷史 P/E 比較</h4><p>目前：'+(isFinite(pe)?pe.toFixed(1)+'×':'資料暫缺')+'</p><p>5年中位數：'+(isFinite(Number(history.fiveYear))?Number(history.fiveYear).toFixed(1)+'×':'資料暫缺')+'</p><p>10年中位數：'+(isFinite(Number(history.tenYear))?Number(history.tenYear).toFixed(1)+'×':'資料暫缺')+'</p><p>20年中位數：'+(isFinite(Number(history.twentyYear))?Number(history.twentyYear).toFixed(1)+'×':'資料暫缺')+'</p><p>歷史百分位：'+pct+'</p></div>'+ 
+      '<div class="taiex-valuation-box"><h4>Forward 估值</h4>'+(forwardReady?'<p>2026 Forward Earnings：'+num(data.forwardEarnings2026,2)+'</p><p>Forward Earnings YoY：'+(isFinite(Number(data.forwardEarningsYoY))?Number(data.forwardEarningsYoY).toFixed(1)+'%':'資料暫缺')+'</p>'+forwardCards:'<p>Forward Earnings：資料暫缺</p><p>不以 Trailing Earnings 代替。</p>')+'</div>'+ 
+      '<div class="taiex-valuation-box"><h4>市場集中度</h4><p>台積電權重：'+(isFinite(Number(concentration.tsmc))?Number(concentration.tsmc).toFixed(2)+'%':'資料暫缺')+'</p><p>前5大：'+(isFinite(Number(concentration.top5))?Number(concentration.top5).toFixed(2)+'%':'資料暫缺')+'</p><p>前10大：'+(isFinite(Number(concentration.top10))?Number(concentration.top10).toFixed(2)+'%':'資料暫缺')+'</p><p>半導體：'+(isFinite(Number(concentration.semiconductor))?Number(concentration.semiconductor).toFixed(2)+'%':'資料暫缺')+'</p></div>'+ 
+    '</div>'+ 
+    '<div class="taiex-valuation-note">'+esc(summary)+'</div>'+ 
+    '<div class="taiex-valuation-meta">指數來源：'+esc(data.indexSource||'資料暫缺')+' · 估值來源：'+esc(data.source||'資料暫缺')+' · 更新：'+esc(data.updatedAt||'資料暫缺')+'</div>'+ 
+    (data.sourceUrl?'<div class="taiex-valuation-source">來源：<a href="'+esc(data.sourceUrl)+'" target="_blank" rel="noopener">'+esc(data.sourceUrl)+'</a></div>':'<div class="taiex-valuation-source">估值來源網址尚未填入；缺少可靠資料時不自行代填。</div>')+ 
+  '</section>';
+}
 function renderBattleBrief(data,el){
   data=data||{};
   var summary=data.summary||{};
@@ -15496,6 +15549,7 @@ function renderBattleBrief(data,el){
   </div>
   ${battleReviewSummaryHtml(data)}
   ${renderQqqDynamicValuation(data.qqqValuation)}
+  ${renderTaiexDynamicValuation(data.taiexValuation)}
   <div class="battle-report-grid">
     ${battleEtfChangeHtml(etfHoldingChange).replace('class="battle-section wide"','id="battle-review-etf" class="battle-section wide"')}
     <div class="battle-section">
