@@ -5420,7 +5420,7 @@ function normalizeImageUrl(url){
 // ══════════════════════════════════════════
 // Apps Script Web App 對短時間大量並行請求容易出現瀏覽器逾時；
 // 以小型優先佇列限制同時連線數，驗證請求優先處理。
-var WEALTH_API_MAX_CONCURRENT=2;
+var WEALTH_API_MAX_CONCURRENT=3;
 var wealthApiQueue=[];
 var wealthApiActive=0;
 var wealthApiSequence=0;
@@ -5428,21 +5428,28 @@ var WEALTH_API_QUEUE_WAIT_TIMEOUT_MS=20000;
 function wealthApiRequestPriority(action){
   action=String(action||'');
   if(action==='verifyWriteToken'||action==='createWebSession')return 10;
-  if(action==='storeContacts'||action==='storeRecords')return 9;
-  if(/^(expense|income|transfer|ledgerRequestStatus|advisorDividendMemo)$/.test(action))return 8;
+  if(/^(expense|income|transfer|transactionUndo|stockTradeVoid|dividendEntry|dividendDelete|holdingTradeEntry|holdingTradeDelete)$/.test(action))return 9;
+  if(action==='storeContacts'||action==='storeRecords')return 8;
+  if(/^(yearly|history)$/.test(action))return 8;
+  if(/^(ledgerRequestStatus|advisorDividendMemo)$/.test(action))return 7;
   // 國庫現況是進入財政頁面的主資料；不可被戰情／行情／星象的背景預抓堵在佇列中。
   if(/^(accounts|monthly|transactions|assetSnapshot|bills)$/.test(action))return 7;
   if(action==='pledgeLoans')return 7;
   return 0;
 }
-function enqueueWealthApi(task,priority,waitTimeoutMs){
+function wealthApiQueueTimeoutMessage(action){
+  action=String(action||'');
+  if(isApiWriteAction(action)||/^(expense|income|transfer|advisorDividendMemo)$/.test(action))return 'API 排隊逾時，已保留原記帳編號，請稍後確認。';
+  return '資料讀取排隊逾時，請稍後重新載入。';
+}
+function enqueueWealthApi(task,priority,waitTimeoutMs,action){
   return new Promise(function(resolve,reject){
     var item={task:task,priority:Number(priority)||0,sequence:wealthApiSequence++,resolve:resolve,reject:reject,started:false,expired:false,timer:null};
     item.timer=setTimeout(function(){
       if(item.started)return;
       item.expired=true;
       wealthApiQueue=wealthApiQueue.filter(function(row){return row!==item;});
-      reject(new Error('API 排隊逾時，已保留原記帳編號，請稍後確認。'));
+      reject(new Error(wealthApiQueueTimeoutMessage(action)));
       drainWealthApiQueue();
     },waitTimeoutMs||WEALTH_API_QUEUE_WAIT_TIMEOUT_MS);
     wealthApiQueue.push(item);
@@ -5463,10 +5470,10 @@ function drainWealthApiQueue(){
     });
   }
 }
-function runWealthApiRequest(task,priority){
+function runWealthApiRequest(task,priority,action){
   // 城門驗證與太倉資料不能排在其他頁面讀取後面；初次載入時若有兩條慢請求佔滿佇列，
   // 驗證或太倉面板就會長時間停住。這些短小、獨立的請求直接執行，其餘資料仍受併發限制。
-  return Number(priority)>=9?Promise.resolve().then(task):enqueueWealthApi(task,priority);
+  return Number(priority)>=10?Promise.resolve().then(task):enqueueWealthApi(task,priority,undefined,action);
 }
 async function apiGet(params,timeoutMs){
   if(!API_URL)throw new Error('未設定 API 網址');
@@ -5487,7 +5494,7 @@ async function apiGet(params,timeoutMs){
       var priority=wealthApiRequestPriority(baseParams.action);
       var r=await runWealthApiRequest(function(){
         return fetchWithTimeout(url,{cache:'no-store',redirect:'follow'},timeoutMs||15000);
-      },priority);
+      },priority,baseParams.action);
       var text=await r.text();
       if(!r.ok){
         var httpErr=new Error('讀取失敗：HTTP '+r.status);
@@ -5709,7 +5716,7 @@ async function apiPostGetFallback(params,timeoutMs){
   var priority=wealthApiRequestPriority(params&&params.action);
   var r=await runWealthApiRequest(function(){
     return fetchWithTimeout(API_URL+'?'+qs,{redirect:'follow'},timeoutMs||15000);
-  },priority);
+  },priority,params&&params.action);
   var text=await r.text();
   if(!r.ok){
     var httpErr=new Error('讀取失敗：HTTP '+r.status);
@@ -5739,7 +5746,7 @@ async function apiPostJson(body,timeoutMs){
         headers:{'Content-Type':'text/plain;charset=utf-8'},
         body:JSON.stringify(payload)
       },timeoutMs||15000);
-    },wealthApiRequestPriority(body&&body.action));
+    },wealthApiRequestPriority(body&&body.action),body&&body.action);
   }catch(e){
     var msg=String(e&&e.message||'').toLowerCase();
     var writeLike=isApiWriteAction(body&&body.action||'')||body&&body.action==='advisorDividendMemo';
@@ -5801,6 +5808,7 @@ var FINANCE_TREASURY_CACHE_KEY='wealth_finance_treasury_v10';
 var FINANCE_TREASURY_CACHE_PREFIX='wealth_finance_treasury_v';
 var FINANCE_PLEDGE_CACHE_KEY='wealth_finance_pledge_v2';
 var FINANCE_YEARLY_CACHE_PREFIX='wealth_finance_yearly_v3_';
+var FINANCE_YEARLY_REVALIDATE_GAP=60*1000;
 var FINANCE_MONTH_DETAIL_CACHE_PREFIX='wealth_finance_month_detail_v1_';
 var FINANCE_YEARLY_LEGACY_CACHE_PREFIXES=['wealth_finance_yearly_v1_'];
 var FINANCE_YEARLY_ARCHIVE_PATH='/api/finance/yearly-archive';
@@ -14309,14 +14317,14 @@ async function loadDomesticYearly(forceRefresh){
     return financeYearlyPromises[selected];
   }
   if(!API_URL){el.innerHTML=setupNotice();return}
-  var cachedEntry=forceRefresh?null:readFinanceCacheEntry(cacheKey,false);
+  var cachedEntry=forceRefresh?null:readFinanceCacheEntry(cacheKey,true);
   var cached=cachedEntry?cachedEntry.data:null;
   if(cached){
     setDataFreshness('finance-yearly-freshness',dataFreshnessMeta(cached,cachedEntry.savedAt,true));
     renderDomesticYearly(cached.data,cached.history,cached.years,selected,true);
   }
   else el.innerHTML='<div class="skel-line skel"></div><div class="skel-line skel" style="width:80%"></div><div class="skel-line skel" style="width:65%"></div>';
-  if(cached&&!forceRefresh){
+  if(cached&&!forceRefresh&&Date.now()-Number(cachedEntry.savedAt||0)<FINANCE_YEARLY_REVALIDATE_GAP){
     return Promise.resolve(cached);
   }
   if(financeYearlyPromises[selected]){
