@@ -15463,6 +15463,7 @@ function qqqValuationSummary(data){
 function renderQqqDynamicValuation(data){
   data=data||{};
   var median=data.historicalMedian||{};
+  var medianText=function(label,value){return '<span>'+label+' '+(isFinite(Number(value))?Number(value).toFixed(1)+'×':'—')+'</span>';};
   var scenarios=Array.isArray(data.scenarios)?data.scenarios:[];
   var pe=Number(data.forwardPE), gaugeMin=16, gaugeMax=28;
   var gaugePosition=pe!==null?Math.max(0,Math.min(100,(pe-gaugeMin)/(gaugeMax-gaugeMin)*100)):null;
@@ -15478,7 +15479,7 @@ function renderQqqDynamicValuation(data){
       '<div class="qqq-valuation-kpi"><div class="qqq-valuation-kpi-label">QQQ 現價</div><div class="qqq-valuation-kpi-value accent">$'+qqqValuationDisplayNumber(data.qqqPrice,2)+'</div></div>'+
       '<div class="qqq-valuation-kpi"><div class="qqq-valuation-kpi-label">目前 Forward P/E</div><div class="qqq-valuation-kpi-value">'+(isFinite(pe)?pe.toFixed(1)+'×':'資料暫缺')+'</div></div>'+
       '<div class="qqq-valuation-kpi"><div class="qqq-valuation-kpi-label">隱含 Forward Earnings</div><div class="qqq-valuation-kpi-value">'+(isFinite(Number(data.forwardEarnings))?'$'+qqqValuationDisplayNumber(data.forwardEarnings,2):'資料暫缺')+'</div></div>'+
-      '<div class="qqq-valuation-kpi"><div class="qqq-valuation-kpi-label">歷史 Forward P/E 中位數</div><div class="qqq-valuation-kpi-value">5Y '+(isFinite(Number(median.fiveYear))?Number(median.fiveYear).toFixed(1)+'×':'—')+' · 10Y '+(isFinite(Number(median.tenYear))?Number(median.tenYear).toFixed(1)+'×':'—')+' · 20Y '+(isFinite(Number(median.twentyYear))?Number(median.twentyYear).toFixed(1)+'×':'—')+'</div></div>'+
+      '<div class="qqq-valuation-kpi"><div class="qqq-valuation-kpi-label">歷史 Forward P/E 中位數</div><div class="qqq-valuation-kpi-value qqq-valuation-median-lines">'+medianText('05Y',median.fiveYear)+'<br>'+medianText('10Y',median.tenYear)+'<br>'+medianText('20Y',median.twentyYear)+'</div></div>'+ 
       '<div class="qqq-valuation-kpi"><div class="qqq-valuation-kpi-label">目前估值區間</div><div class="qqq-valuation-kpi-value">'+esc(data.valuationZone&&data.valuationZone.label||'資料暫缺')+'</div></div>'+
     '</div>'+
     '<div class="qqq-valuation-gauge" aria-label="Forward P/E 估值尺"><div class="qqq-valuation-gauge-marker" '+(gaugePosition==null?'hidden':'style="left:'+gaugePosition.toFixed(2)+'%"')+'></div></div><div class="qqq-valuation-gauge-scale"><span>16× 極保守</span><span>20×</span><span>22×</span><span>25×</span><span>28× 高估值</span></div><div class="qqq-valuation-gauge-label">目前位置：'+esc(data.valuationZone&&data.valuationZone.label||'資料暫缺')+'</div>'+
