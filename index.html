@@ -5554,7 +5554,9 @@ async function apiGet(params,timeoutMs){
         setWebVerifyStatus('err',err&&err.message||'驗證失敗');
         break;
       }
-      if(attempt>=attempts-1||!isTransientApiError(err))break;
+      // 已經等滿單次 timeout 的讀取再重送，通常只會把載入時間乘上重試次數；
+      // 保留快速 404／閘道錯誤重試，逾時則交由呼叫端顯示快取或錯誤狀態。
+      if(attempt>=attempts-1||!isTransientApiError(err)||/連線逾時/.test(String(err&&err.message||'')))break;
       await delay(650*(attempt+1));
     }
   }
