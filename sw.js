@@ -49,17 +49,32 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Always request the deployed HTML first. A cached shell must not hide a
-  // newly published dashboard on mobile browsers.
+  // Navigation should not wait for the full HTML body to be copied into Cache Storage.
+  // Prefer a fast network response, but fall back to the cached shell when the
+  // network is slow; successful responses refresh the cache in the background.
   if (request.mode === 'navigate') {
-    const refresh = fetch(new Request(request, {cache: 'no-store'})).then(networkResponse => {
-      if (networkResponse && networkResponse.ok) {
-        const responseCopy = networkResponse.clone();
-        return caches.open(CACHE_NAME).then(cache => cache.put('./index.html', responseCopy)).then(() => networkResponse);
+    const networkResponse = fetch(new Request(request, {cache: 'no-store'})).catch(() => null);
+    const cacheUpdate = networkResponse.then(response => {
+      if (response && response.ok) {
+        return caches.open(CACHE_NAME).then(cache => cache.put('./index.html', response.clone()));
       }
-      return networkResponse;
-    }).catch(() => null);
-    event.respondWith(refresh.then(networkResponse => networkResponse || caches.match(request).then(cached => cached || caches.match('./index.html'))));
+    }).catch(() => {});
+    event.waitUntil(cacheUpdate);
+
+    const cachedResponse = caches.match(request)
+      .then(cached => cached || caches.match('./index.html'))
+      .catch(() => null);
+    event.respondWith(cachedResponse.then(async cached => {
+      if (!cached) return (await networkResponse) || Response.error();
+
+      let timeoutId;
+      const networkBudget = new Promise(resolve => {
+        timeoutId = setTimeout(() => resolve(null), 1200);
+      });
+      const freshResponse = await Promise.race([networkResponse, networkBudget]);
+      clearTimeout(timeoutId);
+      return freshResponse && freshResponse.ok ? freshResponse : cached;
+    }));
     return;
   }
 
