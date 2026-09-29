@@ -5032,6 +5032,8 @@ var holdingsCache = [];
 var bookingAccountBalances = [];
 var bookingAccountBalancesPromise = null;
 var bookingAccountBalancesLoaded = false;
+var bookingConfigPromise = null;
+var bookingConfigFetchedAt = 0;
 var DIVIDEND_CENTER_STORAGE_KEY='wealth_dividend_center_v1';
 var RETIRED_HOLDING_SYMBOLS = ['PLTY'];
 function isRetiredHoldingSymbol(value){
@@ -6291,6 +6293,7 @@ async function submitWebLogin(event){
     var ok=await ensureWebAccess(true);
     if(!ok)throw new Error(webVerifyStoredMessage()||'城門驗證失敗');
     setWebLoginVisible(false,'城門驗證成功','ok');
+    preloadQuickBookingAndPangTong();
     window.setTimeout(openDailyBriefingPopup,250);
   }catch(error){
     setWebLoginVisible(true,error&&error.message?error.message:'城門驗證失敗','err');
@@ -10402,6 +10405,19 @@ function refreshBookingAccountBalances(){
   return bookingAccountBalancesPromise;
 }
 
+function loadBookingConfig(){
+  if(!API_URL)return Promise.reject(new Error('尚未設定 API'));
+  if(bookingConfigFetchedAt&&Date.now()-bookingConfigFetchedAt<10*60*1000)return Promise.resolve(cfg);
+  if(bookingConfigPromise)return bookingConfigPromise;
+  bookingConfigPromise=apiGet({action:'config'}).then(function(nextCfg){
+    cfg=nextCfg||{categories:[],sources:[],accounts:[],holdings:[],dividendSymbols:[]};
+    bookingConfigFetchedAt=Date.now();
+    try{localStorage.setItem('wealth_booking_config_v1',JSON.stringify(cfg));}catch(e){}
+    return cfg;
+  }).finally(function(){bookingConfigPromise=null;});
+  return bookingConfigPromise;
+}
+
 async function initBookingForm(){
   var el=document.getElementById('pane-booking-form');
   if(!el)return;
@@ -10412,11 +10428,9 @@ async function initBookingForm(){
   el.dataset.bookingLoading='1';
   setEmpireCardStatus(bookingPanelStatusKey(),'pending');
   bookingFormInitPromise=(async function(){
-  var configRefresh=apiGet({action:'config'}).then(function(nextCfg){
-    cfg=nextCfg||{categories:[],sources:[],accounts:[],holdings:[],dividendSymbols:[]};
-    try{localStorage.setItem('wealth_booking_config_v1',JSON.stringify(cfg));}catch(e){}
+  var configRefresh=loadBookingConfig().then(function(nextCfg){
     setEmpireCardStatus(bookingPanelStatusKey(),'ok','記帳設定已載入');
-    return cfg;
+    return nextCfg;
   }).catch(function(e){
     console.error(e);
     setEmpireCardStatus(bookingPanelStatusKey(),'err',e.message||'設定載入失敗');
@@ -16725,6 +16739,22 @@ function setupNotice(){
   </div>`;
 }
 
+function preloadQuickBookingAndPangTong(){
+  if(!API_URL||!webVerifyIsAuthorized())return Promise.resolve(false);
+  var run=function(){
+    return Promise.allSettled([
+      loadBookingConfig(),
+      loadDividendCenter(false)
+    ]).then(function(results){
+      if(results[0].status==='rejected')console.warn('快速記帳設定預載失敗',results[0].reason);
+      if(results[1].status==='rejected')console.warn('龐統配息資料預載失敗',results[1].reason);
+      return results;
+    });
+  };
+  if(window.requestIdleCallback)return new Promise(function(resolve){window.requestIdleCallback(function(){run().then(resolve);},{timeout:2500});});
+  return new Promise(function(resolve){window.setTimeout(function(){run().then(resolve);},800);});
+}
+
 //  Date display
 // ══════════════════════════════════════════
 (function(){
@@ -16753,7 +16783,8 @@ function setupNotice(){
   updateDateDisplay();
   restoreRememberedWebAccess();
   initEmpireCardStatuses();
-  // 進站不再預抓各板塊 API；改由使用者點開板塊時按需讀取，避免背景請求塞滿全站佇列。
+  preloadQuickBookingAndPangTong();
+  // 大型板塊仍按需讀取；快速記帳設定與龐統配息選單在授權後以閒置時段預載。
   // 彰化天氣（Open-Meteo，無需 API key）
   (function(){
     var WMO={
