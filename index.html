@@ -3361,8 +3361,8 @@ body::after{
 .ark-wall-memo-tag[data-memo-tag="生活隨筆"].active{border-color:rgba(232,192,80,.78);background:rgba(232,192,80,.2);color:#fff0b8}
 .ark-wall-memo-tag[data-memo-tag="待辦記錄"],.ark-wall-tag[data-wall-tag="待辦記錄"]{border-color:rgba(216,90,48,.42);background:rgba(216,90,48,.1);color:#ef9a77}
 .ark-wall-memo-tag[data-memo-tag="待辦記錄"].active{border-color:rgba(216,90,48,.78);background:rgba(216,90,48,.2);color:#ffd0c2}
-.ark-wall-memo-tag[data-memo-tag="父母相關"],.ark-wall-tag[data-wall-tag="父母相關"]{border-color:rgba(29,158,117,.46);background:rgba(29,158,117,.12);color:#a8f1d6}
-.ark-wall-memo-tag[data-memo-tag="父母相關"].active{border-color:rgba(29,158,117,.78);background:rgba(29,158,117,.22);color:#d6ffed}
+.ark-wall-memo-tag[data-memo-tag="爸媽相關"],.ark-wall-tag[data-wall-tag="爸媽相關"],.ark-wall-tag[data-wall-tag="父母相關"]{border-color:rgba(29,158,117,.46);background:rgba(29,158,117,.12);color:#a8f1d6}
+.ark-wall-memo-tag[data-memo-tag="爸媽相關"].active{border-color:rgba(29,158,117,.78);background:rgba(29,158,117,.22);color:#d6ffed}
 .ark-wall-search-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-bottom:12px}
 .ark-wall-search{width:100%;height:38px;border:1px solid rgba(184,137,46,.36);border-radius:8px;background:rgba(10,8,4,.82);color:#f0dfa0;font-family:var(--sans);font-size:14px;font-weight:850;padding:0 11px;outline:none}
 .ark-wall-search:focus{border-color:rgba(232,192,80,.72);box-shadow:0 0 0 2px rgba(232,192,80,.12)}
@@ -11398,7 +11398,7 @@ function arkWallEntriesForSelection(){
   }));
 }
 
-var ARK_WALL_MEMO_TAGS=['生活隨筆','待辦記錄','父母相關'];
+var ARK_WALL_MEMO_TAGS=['生活隨筆','待辦記錄','爸媽相關'];
 var ARK_WALL_MARKET_TAGS=['股市教室','市場觀察','持股紀錄','交易檢討','投資心得','台股','美股','個股','大盤'];
 
 function arkWallTagsForView(view){
@@ -11462,8 +11462,8 @@ function setArkWallMemoTag(tag){
 function arkWallMemoBaseEntries(){
   return arkWallEntries.filter(function(entry){
     var tags=Array.isArray(entry&&entry.tags)?entry.tags:[];
-    if(!tags.some(function(tag){return ARK_WALL_MEMO_TAGS.indexOf(tag)>=0;}))return false;
-    if(arkWallMemoTag&&arkWallMemoTag!=='全部'&&tags.indexOf(arkWallMemoTag)<0)return false;
+    if(!tags.some(function(tag){return ARK_WALL_MEMO_TAGS.indexOf(tag)>=0||tag==='父母相關'&&ARK_WALL_MEMO_TAGS.indexOf('爸媽相關')>=0;}))return false;
+    if(arkWallMemoTag&&arkWallMemoTag!=='全部'&&tags.indexOf(arkWallMemoTag)<0&&!(arkWallMemoTag==='爸媽相關'&&tags.indexOf('父母相關')>=0))return false;
     return true;
   });
 }
