@@ -6608,7 +6608,7 @@ function openPanel(key,initialTab){
   document.querySelectorAll('.card').forEach(c=>c.classList.remove('active'));
   var activeCard=document.getElementById('c-'+key);
   if(activeCard)activeCard.classList.add('active');
-  document.getElementById('panel').classList.toggle('council-wide',key==='council'||key==='xunyu');
+  document.getElementById('panel').classList.toggle('council-wide',key==='council');
   document.getElementById('panel').classList.toggle('domestic-wide',key==='domestic'||key==='finance');
   document.getElementById('panel').classList.toggle('finance-wide',key==='finance');
   document.getElementById('panel').classList.toggle('medical-wide',key==='medical');
@@ -6620,7 +6620,6 @@ function openPanel(key,initialTab){
   else if(key==='domestic'){setEmpireCardApiPendingStatus('domestic');renderDomesticPanel();}
   else if(key==='market')renderMarketPanel();
   else if(key==='council'){setEmpireCardApiPendingStatus('council');renderCouncilPanel(initialTab);}
-  else if(key==='xunyu')renderXunyuPanel();
   else if(key==='medical'){setEmpireCardApiPendingStatus('medical');renderMedicalPanel();}
   else if(key==='stars'){setEmpireCardApiPendingStatus('stars');renderStarsPanel();}
   else if(key==='store'){setEmpireCardApiPendingStatus('store');renderStorePanel(initialTab);}
@@ -20510,7 +20509,7 @@ function mpmRender(records){
       liubei:function(){openArkWall();},
       simayi:function(){openPanel('council');},
       manchong:function(){openPanel('store');},
-      xunyu:function(){window.openXunyuPanel();}
+      xunyu:function(){restoreDailyBriefingPopup();refreshDailyBriefingPopup();}
     };
     var npcs={};
     Object.keys(configs).forEach(function(id){
@@ -20531,41 +20530,12 @@ function mpmRender(records){
     });
     Promise.all(Object.values(npcs).map(function(npc){return npc.loaded;})).then(function(){
       positionDailyBriefingMini();
-      if(status)status.textContent='龐統、諸葛亮、陳群、華佗、劉備、司馬懿、滿寵與荀彧已入駐 · 點擊人物開啟正式面板';
+      if(status)status.textContent='龐統、諸葛亮、陳群、華佗、劉備、司馬懿、滿寵與荀彧已入駐 · 點擊荀彧查看今日政務';
     }).catch(function(){
       if(status)status.textContent='部分角色影格載入失敗，請重新整理。';
     });
     window.addEventListener('pagehide',function(){Object.values(npcs).forEach(function(npc){npc.destroy();});},{once:true});
   }
-  var xunyuPanelPromise=null;
-  function openXunyuPanelOnDemand(){
-    if(typeof window.renderXunyuPanel==='function'&&window.openXunyuPanel!==openXunyuPanelOnDemand){
-      return window.openXunyuPanel();
-    }
-    if(!xunyuPanelPromise){
-      xunyuPanelPromise=new Promise(function(resolve){
-        var script=document.createElement('script');
-        script.src='./xunyu-panel.js?v=20260911-v1';
-        script.async=true;
-        script.onload=function(){resolve(true);};
-        script.onerror=function(){script.remove();resolve(false);};
-        document.head.appendChild(script);
-      }).then(function(loaded){
-        if(!loaded)xunyuPanelPromise=null;
-        return loaded;
-      });
-    }
-    return xunyuPanelPromise.then(function(loaded){
-      if(!loaded){
-        if(status)status.textContent='荀彧面板載入失敗，請稍後再點擊。';
-        return;
-      }
-      if(typeof window.openXunyuPanel==='function'&&window.openXunyuPanel!==openXunyuPanelOnDemand){
-        return window.openXunyuPanel();
-      }
-    });
-  }
-  window.openXunyuPanel=openXunyuPanelOnDemand;
   function start(){
     if(status)status.textContent='角色資料載入中…';
     Promise.resolve(window.AnimatedCharacter?null:loadScript('./characterAnimations.js?v=20260908-web22'))
@@ -20583,7 +20553,7 @@ function mpmRender(records){
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('./sw.js?v=20260929-shell-v13', {updateViaCache:'none'}).then(function (registration) {
+    navigator.serviceWorker.register('./sw.js?v=20260929-shell-v14', {updateViaCache:'none'}).then(function (registration) {
       return registration.update();
     }).catch(function (error) {
       console.warn('Empire Service Worker registration failed', error);
@@ -20591,7 +20561,5 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
-<link rel="preload" href="./xunyu-panel.css?v=20260910-v5" as="style" onload="this.onload=null;this.rel='stylesheet'">
-<noscript><link rel="stylesheet" href="./xunyu-panel.css?v=20260910-v5"></noscript>
 </body>
 </html>
