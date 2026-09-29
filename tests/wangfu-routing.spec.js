@@ -30,11 +30,12 @@ test('Wangfu shortcuts always route to the standalone page, including before unl
   ]);
 });
 
-test('service worker cache version and registration URL force a fresh shell', () => {
+test('service worker returns successful navigation responses before waiting for cache writes', () => {
   const sw = fs.readFileSync(path.join(projectRoot, 'sw.js'), 'utf8');
   const html = fs.readFileSync(path.join(projectRoot, 'index.html'), 'utf8');
 
-  expect(sw).toContain("const CACHE_NAME = 'empire-shell-v11'");
-  expect(sw).toContain('const NAVIGATION_REFRESH_BUDGET_MS = 30000');
-  expect(html).toContain("./sw.js?v=20260929-shell-v11");
+  expect(sw).toContain("const CACHE_NAME = 'empire-shell-v12'");
+  expect(sw).toContain('event.respondWith(networkResponse.then(response => {');
+  expect(sw).toContain('return cachedResponse.then(cached => cached || Response.error());');
+  expect(html).toContain("./sw.js?v=20260929-shell-v12");
 });

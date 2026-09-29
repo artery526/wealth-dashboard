@@ -1,5 +1,4 @@
-const CACHE_NAME = 'empire-shell-v11';
-const NAVIGATION_REFRESH_BUDGET_MS = 30000;
+const CACHE_NAME = 'empire-shell-v12';
 
 // Keep the first offline-capable version deliberately small. The dashboard
 // already owns API caching in index.html; this cache is for the page shell.
@@ -50,8 +49,9 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Prefer a fresh shell only when the full response can be downloaded and
-  // cached quickly. Otherwise return the previous shell while refresh continues.
+  // Return the network response as soon as its headers arrive. Cache its body
+  // in parallel so a slow download never makes a successful navigation serve
+  // an older shell; use the cache only when the network request fails.
   if (request.mode === 'navigate') {
     const networkResponse = fetch(new Request(request, {cache: 'no-store'})).catch(() => null);
     const cacheUpdate = networkResponse.then(async response => {
@@ -69,16 +69,9 @@ self.addEventListener('fetch', event => {
     const cachedResponse = caches.match(request)
       .then(cached => cached || caches.match('./index.html'))
       .catch(() => null);
-    event.respondWith(cachedResponse.then(async cached => {
-      if (!cached) return (await networkResponse) || Response.error();
-
-      let timeoutId;
-      const refreshBudget = new Promise(resolve => {
-        timeoutId = setTimeout(() => resolve(false), NAVIGATION_REFRESH_BUDGET_MS);
-      });
-      const refreshCompleted = await Promise.race([cacheUpdate, refreshBudget]);
-      clearTimeout(timeoutId);
-      return refreshCompleted ? (await networkResponse) || cached : cached;
+    event.respondWith(networkResponse.then(response => {
+      if (response) return response;
+      return cachedResponse.then(cached => cached || Response.error());
     }));
     return;
   }
