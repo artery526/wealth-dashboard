@@ -39,6 +39,9 @@ test('keeps Xunyu calendar shortcut available on mobile without local API setup'
   await expect(page.getByRole('button', { name: '荀彧，開啟角色面板' })).toBeVisible({ timeout: 15000 });
   const mini = page.getByRole('button', { name: '開啟荀彧今日行事曆與待辦事項' });
   await expect(mini).toBeVisible({ timeout: 15000 });
+  const miniBox = await mini.boundingBox();
+  expect(miniBox.width).toBeLessThanOrEqual(34);
+  expect(miniBox.height).toBeLessThanOrEqual(25);
 
   await page.evaluate(() => {
     WRITE_TOKEN = '';
