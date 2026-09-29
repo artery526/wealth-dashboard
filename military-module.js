@@ -61,7 +61,6 @@ function renderBattleBrief(data,el){
     </div>
   </div>
   ${battleReviewSummaryHtml(data)}
-  ${renderQqqDynamicValuation(data.qqqValuation)}
   ${renderTaiexDynamicValuation(data.taiexValuation)}
   <div class="battle-report-grid">
     ${battleEtfChangeHtml(etfHoldingChange).replace('class="battle-section wide"','id="battle-review-etf" class="battle-section wide"')}
