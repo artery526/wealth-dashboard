@@ -1,5 +1,5 @@
-const CACHE_NAME = 'empire-shell-v9';
-const NAVIGATION_REFRESH_BUDGET_MS = 2000;
+const CACHE_NAME = 'empire-shell-v10';
+const NAVIGATION_REFRESH_BUDGET_MS = 10000;
 
 // Keep the first offline-capable version deliberately small. The dashboard
 // already owns API caching in index.html; this cache is for the page shell.

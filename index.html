@@ -6579,6 +6579,10 @@ async function saveCfg(){
 //  Panel open/close
 // ══════════════════════════════════════════
 function openPanel(key,initialTab){
+  if(key==='wall'){
+    openArkWall(initialTab);
+    return;
+  }
   if(!isEmpireSessionUnlocked()){
     if(hasMainApiCredentials()){
       ensureWebAccess().then(function(ok){if(ok)openPanel(key,initialTab);});
@@ -6661,6 +6665,10 @@ function openArkWallAdminShortcut(event){
 
 function openEmpireCardShortcut(event,panel,tab){
   if(event&&event.stopPropagation)event.stopPropagation();
+  if(panel==='wall'){
+    openArkWall(tab);
+    return;
+  }
   // 所有卡片共用龐統城門；快捷入口不再另外啟動第二次驗證。
   if(!isEmpireSessionUnlocked()){
     if(event&&event.preventDefault)event.preventDefault();
@@ -6669,10 +6677,6 @@ function openEmpireCardShortcut(event,panel,tab){
   }
   closeAdvisorAIStandalone();
   closeAdvisorDialog();
-  if(panel==='wall'){
-    openArkWall(tab);
-    return;
-  }
   if(panel==='domestic')panel='finance';
   var openedNewPanel=currentPanel!==panel;
   if(openedNewPanel){
@@ -20540,7 +20544,7 @@ function mpmRender(records){
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('./sw.js?v=20260918-mobile-auth1', {updateViaCache:'none'}).then(function (registration) {
+    navigator.serviceWorker.register('./sw.js?v=20260929-shell-v10', {updateViaCache:'none'}).then(function (registration) {
       return registration.update();
     }).catch(function (error) {
       console.warn('Empire Service Worker registration failed', error);
