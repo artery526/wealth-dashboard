@@ -32,3 +32,27 @@ test('hides the Xunyu dashboard while preserving its daily briefing popup', asyn
   await page.evaluate(() => { restoreDailyBriefingPopup(); });
   await expect(page.locator('.daily-briefing-avatar')).toHaveAttribute('src', './荀彧/文雅報告完畢12.webp?v=20260920-xunyu-webp1');
 });
+
+test('keeps Xunyu calendar shortcut available on mobile without local API setup', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(url);
+  await expect(page.getByRole('button', { name: '荀彧，開啟角色面板' })).toBeVisible({ timeout: 15000 });
+  const mini = page.getByRole('button', { name: '開啟荀彧今日行事曆與待辦事項' });
+  await expect(mini).toBeVisible({ timeout: 15000 });
+
+  await page.evaluate(() => {
+    WRITE_TOKEN = '';
+    localStorage.removeItem('wealth_write_token');
+    setWebVerifyStatus('err', '尚未設定');
+    setWebLoginVisible(false);
+  });
+  await mini.click({ force: true });
+  await expect(page.locator('#daily-briefing-overlay')).not.toHaveClass(/hidden/);
+  await expect(page.locator('#daily-briefing-body')).toContainText('各裝置的設定不會自動同步');
+  await page.getByRole('button', { name: '關閉今日政務提醒' }).click();
+  await expect(mini).toBeVisible();
+  await mini.click({ force: true });
+  await page.getByRole('button', {name:'設定 API 與驗證'}).click();
+  await expect(page.locator('#daily-briefing-overlay')).toHaveClass(/hidden/);
+  await expect(page.locator('#cfg-overlay')).toHaveClass(/open/);
+});

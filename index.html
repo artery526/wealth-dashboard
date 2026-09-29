@@ -3037,6 +3037,7 @@ body::after{
 .daily-briefing-item-time{color:#8fe4ff;font-family:var(--mono);white-space:nowrap}
 .daily-briefing-empty,.daily-briefing-loading,.daily-briefing-error{color:#9bb9c4;font:12px/1.5 var(--sans)}
 .daily-briefing-error{color:#ff9d91}
+.daily-briefing-access-button{margin-top:10px;padding:8px 11px;border:1px solid rgba(98,201,232,.5);border-radius:8px;background:rgba(54,174,218,.1);color:#aeefff;font:900 12px var(--sans);cursor:pointer}
 @media(max-width:600px){.daily-briefing-overlay{padding:68px 10px 10px;justify-content:center}.daily-briefing-card{width:100%;max-width:430px}.daily-briefing-avatar{width:56px;height:56px;flex-basis:56px}}
 .daily-briefing-mini{position:absolute;z-index:9;width:42px;height:30px;border:1px solid rgba(143,228,255,.78);border-radius:999px;background:rgba(5,28,41,.94);color:#bcefff;font:900 15px/1 var(--sans);cursor:pointer;box-shadow:0 0 14px rgba(43,145,181,.42);transform:translateY(-100%)}
 .daily-briefing-mini:hover{background:rgba(16,70,91,.96);color:#fff}
@@ -4814,7 +4815,7 @@ html[data-theme="deep-blue"] .scene-task-details .home-agenda-global-refresh{bor
         </div>
       </div>
     </div>
-    <button class="daily-briefing-mini hidden" id="daily-briefing-mini" type="button" onclick="restoreDailyBriefingPopup()" aria-label="恢復荀彧今日政務提醒">....</button>
+    <button class="daily-briefing-mini hidden" id="daily-briefing-mini" type="button" onclick="restoreDailyBriefingPopup()" aria-label="開啟荀彧今日行事曆與待辦事項" title="荀彧今日行事曆與待辦事項">•••</button>
   </div>
 </section>
 
@@ -6214,8 +6215,14 @@ var dailyBriefingShown=false;
 function closeDailyBriefingPopup(){
   var overlay=document.getElementById('daily-briefing-overlay');
   if(overlay)overlay.classList.add('hidden');
+  showDailyBriefingMini();
+}
+function showDailyBriefingMini(){
   var mini=document.getElementById('daily-briefing-mini');
-  if(mini)mini.classList.add('hidden');
+  var stage=document.getElementById('npc-web-scene-stage');
+  if(!mini||!stage||!stage.querySelector('.animated-character[aria-label^="荀彧"]'))return;
+  mini.classList.remove('hidden');
+  positionDailyBriefingMini();
 }
 function positionDailyBriefingMini(){
   var mini=document.getElementById('daily-briefing-mini');
@@ -6241,8 +6248,22 @@ function restoreDailyBriefingPopup(){
   var overlay=document.getElementById('daily-briefing-overlay');
   var mini=document.getElementById('daily-briefing-mini');
   if(mini)mini.classList.add('hidden');
+  if(!hasMainApiCredentials()){
+    var body=document.getElementById('daily-briefing-body');
+    if(body)body.innerHTML='<section class="daily-briefing-section"><div class="daily-briefing-section-title">需要完成手機端設定</div><div class="daily-briefing-loading">這台手機的瀏覽器尚未設定帝國 API／驗證資料；各裝置的設定不會自動同步。設定完成後即可載入今日行事曆與待辦。</div><button class="daily-briefing-access-button" type="button" onclick="openDailyBriefingSettings()">設定 API 與驗證</button></section>';
+  }else if(!webVerifyIsAuthorized()){
+    var body=document.getElementById('daily-briefing-body');
+    if(body)body.innerHTML='<section class="daily-briefing-section"><div class="daily-briefing-section-title">需要重新登入</div><div class="daily-briefing-loading">請在這台手機完成帝國城門驗證，才能載入行事曆與待辦。</div><button class="daily-briefing-access-button" type="button" onclick="setWebLoginVisible(true,\'請登入帝國指揮所以載入荀彧今日政務\',\'\')">登入帝國</button></section>';
+  }else{
+    refreshDailyBriefingPopup();
+  }
   loadDeferredImagesIn(overlay);
   if(overlay)overlay.classList.remove('hidden');
+}
+function openDailyBriefingSettings(){
+  var overlay=document.getElementById('daily-briefing-overlay');
+  if(overlay)overlay.classList.add('hidden');
+  openCfg();
 }
 window.addEventListener('resize',positionDailyBriefingMini);
 function dailyBriefingItemsHtml(items,type){
@@ -6272,6 +6293,8 @@ function refreshDailyBriefingPopup(){
 function openDailyBriefingPopup(){
   if(dailyBriefingShown||!hasMainApiCredentials()||!webVerifyIsAuthorized())return;
   dailyBriefingShown=true;
+  var mini=document.getElementById('daily-briefing-mini');
+  if(mini)mini.classList.add('hidden');
   var overlay=document.getElementById('daily-briefing-overlay');
   var date=document.getElementById('daily-briefing-date');
   if(!overlay)return;
@@ -16730,7 +16753,8 @@ function loadTaiwanMacro(){
 
 function setupNotice(){
   return `<div class="setup-notice">
-    <p>尚未設定 API，無法讀取資料。<br>請填入 Google Apps Script Web App URL 與記帳密鑰。</p>
+    <p>這台裝置的瀏覽器尚未完成 API／驗證設定，無法讀取資料。<br>設定需在每台裝置各自完成，不會與其他裝置自動同步。</p>
+    <button class="setup-btn" type="button" onclick="openCfg()">設定 API 與驗證</button>
     <div class="setup-hint">請至龐統軍師 > 齒輪 > 驗證連線</div>
   </div>`;
 }
@@ -20509,7 +20533,7 @@ function mpmRender(records){
       liubei:function(){openArkWall();},
       simayi:function(){openPanel('council');},
       manchong:function(){openPanel('store');},
-      xunyu:function(){restoreDailyBriefingPopup();refreshDailyBriefingPopup();}
+      xunyu:function(){restoreDailyBriefingPopup();}
     };
     var npcs={};
     Object.keys(configs).forEach(function(id){
@@ -20529,7 +20553,7 @@ function mpmRender(records){
       }
     });
     Promise.all(Object.values(npcs).map(function(npc){return npc.loaded;})).then(function(){
-      positionDailyBriefingMini();
+      if(!dailyBriefingShown||document.getElementById('daily-briefing-overlay').classList.contains('hidden'))showDailyBriefingMini();
       if(status)status.textContent='龐統、諸葛亮、陳群、華佗、劉備、司馬懿、滿寵與荀彧已入駐 · 點擊荀彧查看今日政務';
     }).catch(function(){
       if(status)status.textContent='部分角色影格載入失敗，請重新整理。';

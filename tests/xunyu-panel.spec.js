@@ -138,6 +138,18 @@ test('Xunyu overview renders reconciled metrics and working drilldowns', async (
   expect(await page.evaluate(() => councilReviewMode)).toBe('compare');
 });
 
+test('setup notice explains per-device authentication and opens settings', async ({ page }) => {
+  await page.evaluate(() => {
+    API_URL = '';
+    WRITE_TOKEN = '';
+    setWebVerifyStatus('err', '尚未完成設定');
+  });
+  await loadXunyuPanel(page);
+  await expect(page.locator('#xunyu-dashboard')).toContainText('不會與其他裝置自動同步');
+  await page.getByRole('button', {name:'設定 API 與驗證'}).click();
+  await expect(page.locator('#cfg-overlay')).toHaveClass(/open/);
+});
+
 test('repeated refresh deduplicates requests and failed section retains its data', async ({ page }) => {
   await loadXunyuPanel(page);
   await page.evaluate(async () => { await refreshXunyuPanel(); });
