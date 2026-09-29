@@ -4904,7 +4904,7 @@ html[data-theme="deep-blue"] .scene-task-details .home-agenda-global-refresh{bor
 <div class="carrier-overlay" id="carrier-overlay" onclick="carrierOverlayClick(event)">
   <div class="carrier-box" role="dialog" aria-modal="true" aria-label="電子發票載具條碼">
     <button class="carrier-close" type="button" onclick="hideInvoiceCarrier()" aria-label="關閉載具顯示">x</button>
-    <img class="carrier-img" src="+EGWGSR.png" alt="電子發票載具條碼 /+EGWGSR">
+    <img class="carrier-img" data-deferred-src="+EGWGSR.png" alt="電子發票載具條碼 /+EGWGSR">
   </div>
 </div>
 
@@ -4919,9 +4919,9 @@ html[data-theme="deep-blue"] .scene-task-details .home-agenda-global-refresh{bor
     <div class="member-card-members-section" id="member-card-members-section">
       <div class="member-card-section-title">超商會員</div>
       <div class="member-card-grid" id="member-card-grid">
-        <div class="member-card-item">7-11會員<img class="carrier-img" src="小7會員.jpg" alt="7-11會員條碼" loading="lazy" decoding="async"></div>
-        <div class="member-card-item">全家會員<img class="carrier-img" src="全家會員.jpg" alt="全家會員條碼" loading="lazy" decoding="async"></div>
-        <div class="member-card-item">萊爾富會員<img class="carrier-img" src="HILIFE.jpg" alt="萊爾富會員條碼" loading="lazy" decoding="async"></div>
+        <div class="member-card-item">7-11會員<img class="carrier-img" data-deferred-src="小7會員.jpg" alt="7-11會員條碼" loading="lazy" decoding="async"></div>
+        <div class="member-card-item">全家會員<img class="carrier-img" data-deferred-src="全家會員.jpg" alt="全家會員條碼" loading="lazy" decoding="async"></div>
+        <div class="member-card-item">萊爾富會員<img class="carrier-img" data-deferred-src="HILIFE.jpg" alt="萊爾富會員條碼" loading="lazy" decoding="async"></div>
       </div>
     </div>
   </div>
@@ -4947,7 +4947,7 @@ html[data-theme="deep-blue"] .scene-task-details .home-agenda-global-refresh{bor
     <button class="daily-briefing-refresh" type="button" onclick="refreshDailyBriefingPopup()" aria-label="更新今日政務提醒" title="更新">↻</button>
     <button class="daily-briefing-close" type="button" onclick="closeDailyBriefingPopup()" aria-label="關閉今日政務提醒" title="關閉">×</button>
     <div class="daily-briefing-head">
-      <img class="daily-briefing-avatar" src="./荀彧/文雅報告完畢12.webp?v=20260920-xunyu-webp1" alt="荀彧">
+      <img class="daily-briefing-avatar" data-deferred-src="./荀彧/文雅報告完畢12.webp?v=20260920-xunyu-webp1" alt="荀彧" decoding="async">
       <div><div class="daily-briefing-kicker">荀彧 · 今日政務</div><div class="daily-briefing-title" id="daily-briefing-title">今日行程與待辦</div><div class="daily-briefing-date" id="daily-briefing-date"></div></div>
     </div>
     <div class="daily-briefing-body" id="daily-briefing-body"><div class="daily-briefing-loading">荀彧正在調閱今日行程與待辦事項…</div></div>
@@ -6241,6 +6241,7 @@ function restoreDailyBriefingPopup(){
   var overlay=document.getElementById('daily-briefing-overlay');
   var mini=document.getElementById('daily-briefing-mini');
   if(mini)mini.classList.add('hidden');
+  loadDeferredImagesIn(overlay);
   if(overlay)overlay.classList.remove('hidden');
 }
 window.addEventListener('resize',positionDailyBriefingMini);
@@ -6275,6 +6276,7 @@ function openDailyBriefingPopup(){
   var date=document.getElementById('daily-briefing-date');
   if(!overlay)return;
   if(date)date.textContent=today().replace(/-/g,'/');
+  loadDeferredImagesIn(overlay);
   overlay.classList.remove('hidden');
   refreshDailyBriefingPopup();
 }
@@ -12542,6 +12544,13 @@ function copyInvoiceCarrier(btn){
 function showInvoiceCarrier(){
   showMemberCards();
 }
+function loadDeferredImagesIn(root){
+  if(!root||!root.querySelectorAll)return;
+  root.querySelectorAll('img[data-deferred-src]').forEach(function(img){
+    img.src=img.getAttribute('data-deferred-src');
+    img.removeAttribute('data-deferred-src');
+  });
+}
 function hideInvoiceCarrier(){
   var overlay=document.getElementById('carrier-overlay');
   if(overlay)overlay.classList.remove('open');
@@ -12587,6 +12596,7 @@ function showMemberCards(){
   if(carrierSection)carrierSection.style.marginBottom='24px';
   if(membersSection)membersSection.style.display='block';
   if(singleTitle)singleTitle.textContent='電子發票載具';
+  loadDeferredImagesIn(grid);
   grid.style.display='grid';
   overlay.classList.add('open');
 }
@@ -20500,7 +20510,7 @@ function mpmRender(records){
       liubei:function(){openArkWall();},
       simayi:function(){openPanel('council');},
       manchong:function(){openPanel('store');},
-      xunyu:function(){if(typeof window.openXunyuPanel==='function')window.openXunyuPanel();}
+      xunyu:function(){window.openXunyuPanel();}
     };
     var npcs={};
     Object.keys(configs).forEach(function(id){
@@ -20527,6 +20537,35 @@ function mpmRender(records){
     });
     window.addEventListener('pagehide',function(){Object.values(npcs).forEach(function(npc){npc.destroy();});},{once:true});
   }
+  var xunyuPanelPromise=null;
+  function openXunyuPanelOnDemand(){
+    if(typeof window.renderXunyuPanel==='function'&&window.openXunyuPanel!==openXunyuPanelOnDemand){
+      return window.openXunyuPanel();
+    }
+    if(!xunyuPanelPromise){
+      xunyuPanelPromise=new Promise(function(resolve){
+        var script=document.createElement('script');
+        script.src='./xunyu-panel.js?v=20260911-v1';
+        script.async=true;
+        script.onload=function(){resolve(true);};
+        script.onerror=function(){script.remove();resolve(false);};
+        document.head.appendChild(script);
+      }).then(function(loaded){
+        if(!loaded)xunyuPanelPromise=null;
+        return loaded;
+      });
+    }
+    return xunyuPanelPromise.then(function(loaded){
+      if(!loaded){
+        if(status)status.textContent='荀彧面板載入失敗，請稍後再點擊。';
+        return;
+      }
+      if(typeof window.openXunyuPanel==='function'&&window.openXunyuPanel!==openXunyuPanelOnDemand){
+        return window.openXunyuPanel();
+      }
+    });
+  }
+  window.openXunyuPanel=openXunyuPanelOnDemand;
   function start(){
     if(status)status.textContent='角色資料載入中…';
     Promise.resolve(window.AnimatedCharacter?null:loadScript('./characterAnimations.js?v=20260908-web22'))
@@ -20544,7 +20583,7 @@ function mpmRender(records){
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('./sw.js?v=20260929-shell-v12', {updateViaCache:'none'}).then(function (registration) {
+    navigator.serviceWorker.register('./sw.js?v=20260929-shell-v13', {updateViaCache:'none'}).then(function (registration) {
       return registration.update();
     }).catch(function (error) {
       console.warn('Empire Service Worker registration failed', error);
@@ -20554,6 +20593,5 @@ if ('serviceWorker' in navigator) {
 </script>
 <link rel="preload" href="./xunyu-panel.css?v=20260910-v5" as="style" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="./xunyu-panel.css?v=20260910-v5"></noscript>
-<script src="./xunyu-panel.js?v=20260911-v1"></script>
 </body>
 </html>

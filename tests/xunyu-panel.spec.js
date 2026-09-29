@@ -3,7 +3,7 @@ const path = require('node:path');
 const url = 'file:///' + path.resolve(__dirname, '..', 'index.html').replace(/\\/g, '/');
 
 async function openBriefs(page) {
-  await page.evaluate(() => {
+  await page.evaluate(async () => {
     window.xyNasCalls = [];
     medicalPost = () => Promise.resolve({status:'success',records:[
       {recordTime:currentYM().replace('/','-')+'-02 10:00',painLevel:'🔵中度',painAreas:'左額頭',meds:'EVE'}, {recordTime:currentYM().replace('/','-')+'-02 21:00',painLevel:'🟡重度',painAreas:'左額頭、太陽穴'},
@@ -23,7 +23,7 @@ async function openBriefs(page) {
     arkWallFetch = route => { xyNasCalls.push(route); return Promise.resolve(route.includes('expeditions') ? {entries:[
       {title:'舊紀錄',updatedAt:'2020-01-01'}, {title:'最近更新',updatedAt:'2026-09-08'}, {title:'次近更新',updatedAt:'2026-09-07'}
     ]} : {status:{state:'completed-with-errors'},items:[{title:'外部消息',publishedAt:'2026-09-06'}]}); };
-    openXunyuPanel();
+    await openXunyuPanel();
   });
   expect(await page.evaluate(() => xyNasCalls)).toEqual([]);
   await page.getByRole('button',{name:'各部摘要',exact:true}).click();
@@ -128,7 +128,7 @@ test('Xunyu scene entry renders reconciled first-version overview and working dr
 });
 
 test('repeated refresh deduplicates requests and failed section retains its data', async ({ page }) => {
-  await page.evaluate(async () => { openXunyuPanel(); await refreshXunyuPanel(); });
+  await page.evaluate(async () => { await openXunyuPanel(); await refreshXunyuPanel(); });
   const results = await page.evaluate(async () => {
     xyCalls = [];
     apiGet = params => { xyCalls.push(params.action); return params.action === 'todayTasks' ? Promise.reject(new Error('待辦離線')) : Promise.resolve(xyFixtures[params.action]); };
@@ -149,7 +149,7 @@ test('partial finance failure shows unknown monthly result and zero-cost ROI rem
   await page.evaluate(async () => {
     xyFixtures.holdingsOverview=[{symbol:'ZERO',cost:0,totalReturn:0,marketValue:0}];
     apiGet=params => params.action === 'monthly' ? Promise.reject(new Error('monthly failed')) : Promise.resolve(xyFixtures[params.action]);
-    openXunyuPanel();await refreshXunyuPanel();
+    await openXunyuPanel();await refreshXunyuPanel();
   });
   await expect(page.locator('.xy-kpi strong')).toHaveText(['$1,000,000','—','$0','—']);
   await expect(page.locator('#xunyu-dashboard')).toContainText('部分國庫來源未完成');
@@ -157,14 +157,14 @@ test('partial finance failure shows unknown monthly result and zero-cost ROI rem
 });
 
 test('locked entry never requests protected data', async ({ page }) => {
-  await page.evaluate(() => { WRITE_TOKEN='';setWebVerifyStatus('err','未驗證');xyCalls=[];openXunyuPanel(); });
+  await page.evaluate(async () => { WRITE_TOKEN='';setWebVerifyStatus('err','未驗證');xyCalls=[];await openXunyuPanel(); });
   await expect(page.locator('#xunyu-dashboard')).toHaveCount(0);
   expect(await page.evaluate(() => xyCalls)).toEqual([]);
 });
 
 test('mobile overview fits panel and calendar/task text is escaped', async ({ page }) => {
   await page.setViewportSize({width:390,height:844});
-  await page.evaluate(async () => {xyFixtures.todayTasks.tasks[0].title='<img src=x onerror=alert(1)>';openXunyuPanel();await refreshXunyuPanel();});
+  await page.evaluate(async () => {xyFixtures.todayTasks.tasks[0].title='<img src=x onerror=alert(1)>';await openXunyuPanel();await refreshXunyuPanel();});
   await expect(page.locator('.xy-list').last()).toContainText('<img src=x onerror=alert(1)>');
   await expect(page.locator('#xunyu-dashboard img')).toHaveCount(0);
   const geometry=await page.locator('#xunyu-dashboard').evaluate(el=>({width:el.getBoundingClientRect().width,scroll:el.scrollWidth,client:el.clientWidth}));
@@ -175,7 +175,7 @@ test('mobile overview fits panel and calendar/task text is escaped', async ({ pa
 
 test('desktop layout displays four core metrics and rejects malformed tasks', async ({ page }) => {
   await page.setViewportSize({width:1440,height:1050});
-  await page.evaluate(async () => {xyFixtures.todayTasks={};openXunyuPanel();await refreshXunyuPanel();});
+  await page.evaluate(async () => {xyFixtures.todayTasks={};await openXunyuPanel();await refreshXunyuPanel();});
   await expect(page.locator('#xunyu-dashboard')).toContainText('資料格式不完整');
   await expect(page.locator('#xunyu-dashboard')).not.toContainText('目前沒有未完成待辦');
   const tops=await page.locator('.xy-kpi').evaluateAll(items=>items.map(el=>el.getBoundingClientRect().top));
@@ -187,7 +187,7 @@ test('desktop layout displays four core metrics and rejects malformed tasks', as
 
 test('desktop layout gives the complete roster more width than monthly affairs', async ({ page }) => {
   await page.setViewportSize({width:1440,height:1050});
-  await page.evaluate(async () => { openXunyuPanel(); await refreshXunyuPanel(); });
+  await page.evaluate(async () => { await openXunyuPanel(); await refreshXunyuPanel(); });
   const widths = await page.locator('.xy-grid > .xy-card').evaluateAll(cards => cards.slice(0,2).map(el => el.getBoundingClientRect().width));
   expect(widths[1]).toBeGreaterThan(widths[0]);
   await expect(page.locator('.xy-table tbody tr')).toHaveCount(12);

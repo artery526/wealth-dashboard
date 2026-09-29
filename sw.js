@@ -1,4 +1,4 @@
-const CACHE_NAME = 'empire-shell-v12';
+const CACHE_NAME = 'empire-shell-v13';
 
 // Keep the first offline-capable version deliberately small. The dashboard
 // already owns API caching in index.html; this cache is for the page shell.
