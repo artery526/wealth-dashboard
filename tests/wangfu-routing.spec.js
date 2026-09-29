@@ -34,7 +34,7 @@ test('service worker cache version and registration URL force a fresh shell', ()
   const sw = fs.readFileSync(path.join(projectRoot, 'sw.js'), 'utf8');
   const html = fs.readFileSync(path.join(projectRoot, 'index.html'), 'utf8');
 
-  expect(sw).toContain("const CACHE_NAME = 'empire-shell-v10'");
-  expect(sw).toContain('const NAVIGATION_REFRESH_BUDGET_MS = 10000');
-  expect(html).toContain("./sw.js?v=20260929-shell-v10");
+  expect(sw).toContain("const CACHE_NAME = 'empire-shell-v11'");
+  expect(sw).toContain('const NAVIGATION_REFRESH_BUDGET_MS = 30000');
+  expect(html).toContain("./sw.js?v=20260929-shell-v11");
 });
