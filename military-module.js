@@ -96,7 +96,7 @@ function renderCouncilPanel(initialTab){
   setPanelMenuTabs([
     {key:'battle-brief',label:'戰情總匯報'},
     {key:'council-roster',label:'部隊陣容'},
-    {key:'market-watch',label:'台美股大盤'},
+    {key:'market-watch',label:'產業輪動'},
     {key:'macro-overview',label:'美股總經'},
     {key:'taiwan-macro',label:'台灣總體經濟'},
     {key:'external-intelligence',label:'外部情報'}
@@ -115,8 +115,7 @@ function renderCouncilPanel(initialTab){
       <div id="council-content">${apiReady?'':lockedNotice}</div>
     </div>
     <div class="pane ${targetTab==='market-watch'?'active':''}" id="pane-market-watch">
-      <div id="market-freshness">${dataFreshnessHtml()}</div>
-      <div id="market-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:82%"></div><div class="skel-line skel" style="width:68%"></div></div>
+      <div class="market-sector-rotation"><div class="sec-title">產業輪動</div><div id="market-sector-rotation-body"><div class="market-sector-meta">產業輪動快照讀取中…</div></div></div>
     </div>
     <div class="pane ${targetTab==='macro-overview'?'active':''}" id="pane-macro-overview">
       <div id="macro-freshness">${dataFreshnessHtml()}</div>
@@ -139,7 +138,7 @@ function renderCouncilPanel(initialTab){
   if(apiReady){
     if(targetTab==='battle-brief')loadBattleBrief();
     else if(targetTab==='council-roster')loadCouncilDashboard();
-    else if(targetTab==='market-watch')loadMarketDashboard();
+    else if(targetTab==='market-watch')loadMarketSectorRotation();
     else if(targetTab==='macro-overview')loadMacroOverview();
     else if(targetTab==='taiwan-macro')loadTaiwanMacro();
     else if(targetTab==='external-intelligence')loadExternalIntelligence();

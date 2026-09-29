@@ -6787,7 +6787,7 @@ function switchTab(btn,key){
   else if(key==='dividend-center')loadDividendCenterPanel();
   else if(key==='domestic-yearly')loadDomesticYearly();
   else if(key==='battle-brief')loadBattleBrief();
-  else if(key==='market-watch')loadMarketDashboard();
+  else if(key==='market-watch'){if(currentPanel==='council')loadMarketSectorRotation();else loadMarketDashboard();}
   else if(key==='macro-overview')loadMacroOverview();
   else if(key==='taiwan-macro')loadTaiwanMacro();
   else if(key==='council-roster')loadCouncilDashboard();
@@ -16346,17 +16346,21 @@ function renderMarketSectorRotation(data,el){
 
 function loadMarketSectorRotation(){
   var host=document.getElementById('market-sector-rotation-body');
-  if(!host||!API_URL)return Promise.resolve(null);
+  if(!host)return Promise.resolve(null);
+  if(!API_URL){host.innerHTML=setupNotice();setCouncilPanelStatusIfActive('err','尚未設定 API');return Promise.resolve(null);}
   var cached=readTimedMarketCache(MARKET_SECTOR_ROTATION_CACHE_KEY);
   if(cached)renderMarketSectorRotation(cached,host);
+  setCouncilPanelStatusIfActive('pending',cached?'產業輪動快取已載入，背景更新中':'產業輪動快照讀取中');
   if(marketSectorRotationPromise)return marketSectorRotationPromise;
   marketSectorRotationPromise=apiGet({action:'marketSectorRotation'},45000).then(function(data){
     writeTimedMarketCache(MARKET_SECTOR_ROTATION_CACHE_KEY,data);
     var current=document.getElementById('market-sector-rotation-body');
     if(current)renderMarketSectorRotation(data,current);
+    setCouncilPanelStatusIfActive('ok','產業輪動已更新');
     return data;
   }).catch(function(error){
     if(!cached)host.innerHTML='<div class="market-sector-meta">產業輪動快照讀取失敗：'+esc(error&&error.message?error.message:'請稍後再試')+'</div>';
+    setCouncilPanelStatusIfActive(cached?'pending':'err',cached?'產業輪動快取仍可使用':'產業輪動讀取失敗');
     return null;
   }).finally(function(){marketSectorRotationPromise=null;});
   return marketSectorRotationPromise;
@@ -18189,7 +18193,7 @@ function advisorAIResolveAccount(text){
 function advisorAIOpenTarget(text){
   var key=advisorAICompact(text);
   if(key==='foodhouse')return {intent:'open',panel:'finance',tab:'finance-accs',label:'國庫現況'};
-  if(key==='market')return {intent:'open',panel:'council',tab:'market-watch',label:'台美股大盤'};
+  if(key==='market')return {intent:'open',panel:'council',tab:'market-watch',label:'產業輪動'};
   if(key==='finance')return {intent:'open',panel:'finance',tab:'finance-accs',label:'財政'};
   if(key==='domestic')return {intent:'open',panel:'domestic',tab:'booking-form',label:'快速記帳'};
   if(key==='council')return {intent:'open',panel:'council',label:'軍機處'};
@@ -18202,7 +18206,7 @@ function advisorAIOpenTarget(text){
   if(key.indexOf('戰情總匯報')>=0||key.indexOf('總匯報')>=0)return {intent:'open',panel:'council',tab:'battle-brief',label:'戰情總匯報'};
   if(key.indexOf('台灣總體經濟')>=0||key.indexOf('台灣總經')>=0)return {intent:'open',panel:'council',tab:'taiwan-macro',label:'台灣總體經濟'};
   if(key.indexOf('總經')>=0)return {intent:'open',panel:'council',tab:'macro-overview',label:'美股總經'};
-  if(key.indexOf('市集')>=0||key.indexOf('市場')>=0)return {intent:'open',panel:'council',tab:'market-watch',label:'台美股大盤'};
+  if(key.indexOf('市集')>=0||key.indexOf('市場')>=0)return {intent:'open',panel:'council',tab:'market-watch',label:'產業輪動'};
   if(key.indexOf('內政')>=0||key.indexOf('記帳')>=0)return {intent:'open',panel:'domestic',tab:'booking-form',label:'快速記帳'};
   return null;
 }
