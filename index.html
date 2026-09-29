@@ -18205,7 +18205,6 @@ function advisorAIOpenTarget(text){
   if(key.indexOf('部隊陣容')>=0||key.indexOf('陣容')>=0)return {intent:'open',panel:'council',tab:'council-roster',label:'部隊陣容'};
   if(key.indexOf('戰情總匯報')>=0||key.indexOf('總匯報')>=0)return {intent:'open',panel:'council',tab:'battle-brief',label:'戰情總匯報'};
   if(key.indexOf('台灣總體經濟')>=0||key.indexOf('台灣總經')>=0)return {intent:'open',panel:'council',tab:'taiwan-macro',label:'台灣總體經濟'};
-  if(key.indexOf('總經')>=0)return {intent:'open',panel:'council',tab:'macro-overview',label:'美股總經'};
   if(key.indexOf('市集')>=0||key.indexOf('市場')>=0)return {intent:'open',panel:'council',tab:'market-watch',label:'產業輪動'};
   if(key.indexOf('內政')>=0||key.indexOf('記帳')>=0)return {intent:'open',panel:'domestic',tab:'booking-form',label:'快速記帳'};
   return null;
@@ -18412,7 +18411,6 @@ function advisorAICommand(raw){
   if(compact.indexOf('部隊陣容')>=0||compact.indexOf('陣容')>=0)return {intent:'open',panel:'council',tab:'council-roster',label:'部隊陣容'};
   if(compact.indexOf('戰情總匯報')>=0||compact.indexOf('總匯報')>=0)return {intent:'open',panel:'council',tab:'battle-brief',label:'戰情總匯報'};
   if(compact.indexOf('台灣總體經濟')>=0||compact.indexOf('台灣總經')>=0)return {intent:'open',panel:'council',tab:'taiwan-macro',label:'台灣總體經濟'};
-  if(compact.indexOf('總經')>=0)return {intent:'open',panel:'council',tab:'macro-overview',label:'美股總經'};
   if(compact.indexOf('維持率')>=0)return {intent:'maintenance'};
   if(compact.indexOf('複製載具')>=0)return {intent:'copyCarrier'};
   if(compact==='載具'||compact.indexOf('顯示載具')>=0)return {intent:'showCarrier'};

@@ -97,11 +97,10 @@ function renderCouncilPanel(initialTab){
     {key:'battle-brief',label:'戰情總匯報'},
     {key:'council-roster',label:'部隊陣容'},
     {key:'market-watch',label:'產業輪動'},
-    {key:'macro-overview',label:'美股總經'},
     {key:'taiwan-macro',label:'台灣總體經濟'},
     {key:'external-intelligence',label:'外部情報'}
   ]);
-  var targetTab=['battle-brief','council-roster','market-watch','macro-overview','taiwan-macro','external-intelligence'].indexOf(initialTab)>=0?initialTab:'battle-brief';
+  var targetTab=['battle-brief','council-roster','market-watch','taiwan-macro','external-intelligence'].indexOf(initialTab)>=0?initialTab:'battle-brief';
   currentTab=targetTab;
   var apiReady=hasMainApiCredentials();
   var lockedNotice=setupNotice();
@@ -116,10 +115,6 @@ function renderCouncilPanel(initialTab){
     </div>
     <div class="pane ${targetTab==='market-watch'?'active':''}" id="pane-market-watch">
       <div class="market-sector-rotation"><div class="sec-title">產業輪動</div><div id="market-sector-rotation-body"><div class="market-sector-meta">產業輪動快照讀取中…</div></div></div>
-    </div>
-    <div class="pane ${targetTab==='macro-overview'?'active':''}" id="pane-macro-overview">
-      <div id="macro-freshness">${dataFreshnessHtml()}</div>
-      <div id="macro-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:82%"></div><div class="skel-line skel" style="width:68%"></div></div>
     </div>
     <div class="pane ${targetTab==='taiwan-macro'?'active':''}" id="pane-taiwan-macro">
       <div id="taiwan-macro-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:82%"></div><div class="skel-line skel" style="width:68%"></div></div>
@@ -139,7 +134,6 @@ function renderCouncilPanel(initialTab){
     if(targetTab==='battle-brief')loadBattleBrief();
     else if(targetTab==='council-roster')loadCouncilDashboard();
     else if(targetTab==='market-watch')loadMarketSectorRotation();
-    else if(targetTab==='macro-overview')loadMacroOverview();
     else if(targetTab==='taiwan-macro')loadTaiwanMacro();
     else if(targetTab==='external-intelligence')loadExternalIntelligence();
   }
