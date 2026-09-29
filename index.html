@@ -15686,7 +15686,7 @@ function toggleHeroMedia(visual){
   var source=String(video.dataset.src||'').trim();
   if(!source){toggleHeroMetrics(visual);return;}
   if(video.getAttribute('src')!==source){video.src=source;video.load();}
-  video.loop=false;
+  video.loop=true;
   visual.classList.add('video-active');
   if(img)img.style.display='none';
   visual.setAttribute('aria-label','停止持股動態影片');
