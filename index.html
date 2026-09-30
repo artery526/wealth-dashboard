@@ -1199,12 +1199,12 @@ body::after{
 .advisor-brief-grid .advisor-brief-lines{gap:3px;margin:8px 0 11px}
 .advisor-brief-grid .advisor-brief-line{font-size:13px;gap:6px;line-height:1.5}
 .advisor-brief-grid .advisor-brief-one{font-size:14px;line-height:1.65}
-.advisor-brief-grid .advisor-brief-section.valuation{grid-column:1/-1;aspect-ratio:auto;overflow:visible}
-.advisor-brief-grid .advisor-brief-section.valuation + .advisor-brief-section.valuation{margin-top:0}
+.advisor-brief-grid .advisor-brief-section.valuation{grid-column:auto;aspect-ratio:auto;min-height:292px;overflow:visible}
 .advisor-brief-section.valuation .advisor-brief-line{align-items:flex-start}
 .advisor-brief-section.valuation .advisor-brief-line span{white-space:normal;flex:0 1 45%}
 .advisor-brief-section.valuation .advisor-brief-line strong{min-width:0;overflow-wrap:anywhere;flex:1}
 @media(max-width:540px){
+  .advisor-brief-grid{grid-template-columns:1fr}
   .advisor-brief-grid .advisor-brief-section{aspect-ratio:auto;min-height:265px;overflow:visible}
 }
 .advisor-long-report{position:relative;z-index:1;border:1px solid rgba(232,192,80,.26);border-radius:8px;background:rgba(10,8,4,.38);padding:10px 11px;margin-top:10px}
@@ -16030,7 +16030,7 @@ function advisorWorldTaiwanValuation(macro,now){
     oneLine='本益比'+comparison(pe,peMedian)+'；本淨比'+comparison(pb,pbMedian)+'。歷史比較不代表未來漲跌，也不是買賣訊號。';
   }else if(failed){status='來源待確認';oneLine='資料來源更新失敗，以下保留的舊值不參與今日估值判讀。';}
   else if((pe||pb)&&!fresh){status='資料日期待確認';oneLine='資料日期缺漏、異常或超過10日，保留舊值但暫停今日估值判讀。';}
-  var section={icon:'📊',title:'台股估值',tone:'watch',status:status,lines:[
+  var section={icon:'📊',title:'台股估值',valuation:'taiex',tone:'watch',status:status,lines:[
     advisorWorldLine('近四季本益比（Trailing P/E）',pe?pe.toFixed(2)+'×':'資料暫缺'),
     advisorWorldLine('股價淨值比（P/B）',pb?pb.toFixed(2)+'×':'資料暫缺'),
     advisorWorldLine('10Y'+(monthly?'月度':'')+'中位數 P/E',peMedian?peMedian.toFixed(2)+'×':'資料暫缺'),
@@ -16067,19 +16067,18 @@ function advisorWorldQqqValuation(macro,now){
     oneLine='目前 Forward P/E '+(premium>=0?'高於':'低於')+'10Y中位數 '+Math.abs(premium).toFixed(1)+'%。這是估值比較，不是目標價或買賣訊號。';
   }else if(failed){status='來源待確認';oneLine='資料來源更新失敗，以下保留的舊值不參與今日估值判讀。';}
   else if((price||forwardPE||earnings)&&!fresh){status='資料日期待確認';oneLine='資料日期缺漏、異常或超過10日，保留舊值但暫停今日估值判讀。';}
-  var section={icon:'📡',title:'QQQ估值',tone:'watch',status:status,lines:[
+  var section={icon:'📡',title:'QQQ估值',valuation:'qqq',tone:'watch',status:status,lines:[
     advisorWorldLine('QQQ現價',price?'$'+price.toFixed(2):'資料暫缺'),
     advisorWorldLine('Forward P/E',forwardPE?forwardPE.toFixed(2)+'×':'資料暫缺'),
     advisorWorldLine('隱含 Forward Earnings',earnings?earnings.toFixed(2):'資料暫缺'),
     advisorWorldLine('10Y Forward P/E中位數',median10?median10.toFixed(2)+'×':'資料暫缺'),
-    advisorWorldLine('估值資料日',validDate?advisorWorldBriefDate(data.dataDate||data.priceDate):'資料暫缺'),
-    advisorWorldLine('來源',source||'資料暫缺')
+    advisorWorldLine('估值資料日',validDate?advisorWorldBriefDate(data.dataDate||data.priceDate):'資料暫缺')
   ],oneLine:oneLine};
   return {section:section,comparable:comparable,premium:comparable&&forwardPE>median10,
     summary:comparable?'QQQ估值：'+status+'，'+oneLine:'QQQ估值：'+status+'，暫不納入今日判讀。'};
 }
 function advisorWorldSectionHtml(section){
-  return `<div class="advisor-brief-section${section.title==='台股估值'?' valuation':''}">
+  return `<div class="advisor-brief-section${section.valuation?' valuation '+section.valuation+'-valuation':''}">
     <div class="advisor-brief-head">
       <div class="advisor-brief-heading">${esc(section.icon)} ${esc(section.title)}</div>
       <div class="advisor-brief-status ${esc(section.tone)}">${esc(advisorWorldBriefStatus(section.tone,section.status))}</div>

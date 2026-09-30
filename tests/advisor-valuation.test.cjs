@@ -57,6 +57,7 @@ test('QQQ valuation compares Forward P/E with its 10Y median', () => {
   assert.equal(result.section.lines[0].value, '$744.10');
   assert.equal(result.section.lines[1].value, '22.37×');
   assert.equal(result.section.lines[2].value, '33.26');
+  assert.equal(result.section.lines.some(line => line.label === '來源'), false);
   assert.match(result.section.oneLine, /4\.4%/);
 });
 test('QQQ missing or stale values never become valuation signals', () => {
@@ -82,7 +83,7 @@ test('brief integrates valuation without making premium a systemic crisis', () =
 test('valuation is full width and source text is escaped', () => {
   const section = calculate({ ...baseline, source: '<img onerror=bad>' }).section;
   const rendered = context.advisorWorldSectionHtml(section);
-  assert.match(rendered, /advisor-brief-section valuation/);
+  assert.match(rendered, /advisor-brief-section valuation taiex-valuation/);
   assert.match(rendered, /&lt;img onerror=bad&gt;/);
   assert.doesNotMatch(rendered, /<img onerror/);
 });
