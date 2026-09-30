@@ -6706,8 +6706,10 @@ function getLatestMacroData_(ss) {
 
   var values = sheet.getRange(1, 1, sheet.getLastRow(), Math.max(1, sheet.getLastColumn())).getDisplayValues();
   var headers = values[0].map(function(h) { return String(h || '').trim(); });
-  var rows = values.slice(1).map(function(row) {
-    return macroObjectFromRow_(headers, row);
+  var rows = values.slice(1).map(function(row, index) {
+    var object = macroObjectFromRow_(headers, row);
+    object._macroSourceRow = index + 2;
+    return object;
   }).filter(function(obj) {
     return String(obj['日期'] || '').trim();
   });
@@ -6719,6 +6721,14 @@ function getLatestMacroData_(ss) {
   });
 
   var latest = rows[0];
+  // 估值依原始數值計算；顯示格式可能把中位數四捨五入為整數。
+  // 只補讀最新列的估值區塊，保留既有日期與其他總經欄位的解析方式。
+  if (headers.length > 33) {
+    var rawValuation = sheet.getRange(latest._macroSourceRow, 34, 1, Math.min(25, headers.length - 33)).getValues()[0];
+    rawValuation.forEach(function(value, index) {
+      if (typeof value === 'number' && isFinite(value)) latest[headers[index + 33]] = value;
+    });
+  }
   var values = normalizeMacroDataValues_(latest);
   return {
     date: latest['日期'] || '',
