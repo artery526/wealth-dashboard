@@ -1199,6 +1199,10 @@ body::after{
 .advisor-brief-grid .advisor-brief-lines{gap:3px;margin:8px 0 11px}
 .advisor-brief-grid .advisor-brief-line{font-size:13px;gap:6px;line-height:1.5}
 .advisor-brief-grid .advisor-brief-one{font-size:14px;line-height:1.65}
+.advisor-brief-grid .advisor-brief-section.valuation{grid-column:1/-1;aspect-ratio:auto;overflow:visible}
+.advisor-brief-section.valuation .advisor-brief-line{align-items:flex-start}
+.advisor-brief-section.valuation .advisor-brief-line span{white-space:normal;flex:0 1 45%}
+.advisor-brief-section.valuation .advisor-brief-line strong{min-width:0;overflow-wrap:anywhere;flex:1}
 @media(max-width:540px){
   .advisor-brief-grid .advisor-brief-section{aspect-ratio:auto;min-height:265px;overflow:visible}
 }
@@ -15993,8 +15997,51 @@ function advisorWorldSimpleStatus(row,fallback){
 function advisorWorldLine(label,value){
   return {label:label,value:value||'--'};
 }
+function advisorWorldTaiwanValuation(macro,now){
+  var data=macro&&macro.valuations&&macro.valuations.taiex||{};
+  function positive(value){
+    if(value==null||String(value).trim()==='')return null;
+    var number=Number(value);
+    return isFinite(number)&&number>0?number:null;
+  }
+  var pe=positive(data.trailingPE),pb=positive(data.pb);
+  var peMedian=positive(data.historicalPEMedian&&data.historicalPEMedian.tenYear);
+  var pbMedian=positive(data.historicalPBMedian&&data.historicalPBMedian.tenYear);
+  var source=String(data.source||'').trim();
+  var monthly=/月度|月份/.test(source);
+  var match=String(data.dataDate||'').match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})(?:$|[ T])/);
+  var dateMs=match?Date.UTC(Number(match[1]),Number(match[2])-1,Number(match[3])):NaN;
+  var validDate=match&&new Date(dateMs).getUTCFullYear()===Number(match[1])&&new Date(dateMs).getUTCMonth()===Number(match[2])-1&&new Date(dateMs).getUTCDate()===Number(match[3]);
+  var today=new Date((now==null?Date.now():now)+8*60*60*1000);
+  var age=validDate?(Date.UTC(today.getUTCFullYear(),today.getUTCMonth(),today.getUTCDate())-dateMs)/86400000:NaN;
+  var fresh=isFinite(age)&&age>=0&&age<=10;
+  var failed=/失敗|暫缺|逾時|錯誤/.test(String(data.status||''));
+  var comparable=!!(pe&&pb&&peMedian&&pbMedian&&source&&fresh&&!failed);
+  var status='資料不足',oneLine='估值或同來源歷史資料尚未齊全，暫不判讀。';
+  function comparison(value,median){
+    if(!value||!median||!source)return '資料暫缺';
+    var premium=(value/median-1)*100;
+    return (premium>0?'高於':premium<0?'低於':'等於')+'10Y中位數 '+Math.abs(premium).toFixed(1)+'%';
+  }
+  if(comparable){
+    var peAbove=pe>peMedian,pbAbove=pb>pbMedian;
+    status=peAbove&&pbAbove?'雙指標溢價':!peAbove&&!pbAbove?'雙指標未高於中位數':'估值指標分歧';
+    oneLine='本益比'+comparison(pe,peMedian)+'；本淨比'+comparison(pb,pbMedian)+'。歷史比較不代表未來漲跌，也不是買賣訊號。';
+  }else if(failed){status='來源待確認';oneLine='資料來源更新失敗，以下保留的舊值不參與今日估值判讀。';}
+  else if((pe||pb)&&!fresh){status='資料日期待確認';oneLine='資料日期缺漏、異常或超過10日，保留舊值但暫停今日估值判讀。';}
+  var section={icon:'📊',title:'台股估值',tone:'watch',status:status,lines:[
+    advisorWorldLine('近四季本益比（Trailing P/E）',pe?pe.toFixed(2)+'×':'資料暫缺'),
+    advisorWorldLine('股價淨值比（P/B）',pb?pb.toFixed(2)+'×':'資料暫缺'),
+    advisorWorldLine('10Y'+(monthly?'月度':'')+'中位數 P/E',peMedian?peMedian.toFixed(2)+'×':'資料暫缺'),
+    advisorWorldLine('10Y'+(monthly?'月度':'')+'中位數 P/B',pbMedian?pbMedian.toFixed(2)+'×':'資料暫缺'),
+    advisorWorldLine('估值資料日',validDate?advisorWorldBriefDate(data.dataDate):'資料暫缺'),
+    advisorWorldLine('來源',/MoneyDJ/.test(source)?'MoneyDJ PE/PB河流圖反算；TWSE僅核對同日指數':source||'資料暫缺')
+  ],oneLine:oneLine};
+  return {section:section,comparable:comparable,premium:comparable&&pe>peMedian&&pb>pbMedian,
+    summary:comparable?'台股估值：'+status+'，'+oneLine:'台股估值：'+status+'，暫不納入今日判讀。'};
+}
 function advisorWorldSectionHtml(section){
-  return `<div class="advisor-brief-section">
+  return `<div class="advisor-brief-section${section.title==='台股估值'?' valuation':''}">
     <div class="advisor-brief-head">
       <div class="advisor-brief-heading">${esc(section.icon)} ${esc(section.title)}</div>
       <div class="advisor-brief-status ${esc(section.tone)}">${esc(advisorWorldBriefStatus(section.tone,section.status))}</div>
@@ -16143,6 +16190,11 @@ function advisorWorldBuild(market,macro){
   var todayLine=defenseCount
     ? '出現需要警戒的總經訊號，先守住部位，暫緩加碼。'
     : '沒有新的系統性風險，\n維持原本投資策略即可。';
+  // 估值是獨立的歷史比較，不把估值溢價等同信用／系統性危機。
+  var valuation=advisorWorldTaiwanValuation(macro);
+  sections.push(valuation.section);
+  if(!defenseCount&&valuation.premium){empireTone='watch';empireStatus='總經平穩・估值留意';}
+  todayLine+='\n'+valuation.summary;
   return {
     date:advisorWorldBriefDate(sourceDate),
     updatedAt:(market.summary&&market.summary.updatedAt)||judgment.updatedAt||'--',
