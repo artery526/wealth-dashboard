@@ -19,6 +19,12 @@ const baseline = {
   dataDate: '2026/09/30', status: '已更新',
 };
 const calculate = data => context.advisorWorldTaiwanValuation({ valuations: { taiex: data } }, now);
+const qqq = {
+  price: 744.1, forwardPE: 22.37, forwardEarnings: 33.26329906124273,
+  historicalMedian: { tenYear: 23.39 }, source: 'History of Market',
+  dataDate: '2026/09/30', priceDate: '2026/09/30', status: '已更新',
+};
+const calculateQqq = data => context.advisorWorldQqqValuation({ valuations: { qqq: data } }, now);
 test('PE/PB comparison preserves ratios and monthly historical grain', () => {
   const result = calculate(baseline);
   assert.equal(result.section.status, '雙指標溢價');
@@ -45,12 +51,30 @@ test('divergent and discounted comparisons remain descriptive', () => {
   assert.equal(calculate({ ...baseline, trailingPE: 15, pb: 3 }).section.status, '估值指標分歧');
   assert.equal(calculate({ ...baseline, trailingPE: 15, pb: 1 }).section.status, '雙指標未高於中位數');
 });
+test('QQQ valuation compares Forward P/E with its 10Y median', () => {
+  const result = calculateQqq(qqq);
+  assert.equal(result.section.status, 'Forward P/E 低於10Y中位數');
+  assert.equal(result.section.lines[0].value, '$744.10');
+  assert.equal(result.section.lines[1].value, '22.37×');
+  assert.equal(result.section.lines[2].value, '33.26');
+  assert.match(result.section.oneLine, /4\.4%/);
+});
+test('QQQ missing or stale values never become valuation signals', () => {
+  for (const data of [ {}, { ...qqq, forwardPE: null }, { ...qqq, forwardEarnings: 0 },
+    { ...qqq, historicalMedian: {} }, { ...qqq, source: '' },
+    { ...qqq, dataDate: '2026/09/01' }, { ...qqq, dataDate: '2026/10/02' },
+    { ...qqq, status: '更新失敗' } ]) {
+    assert.equal(calculateQqq(data).comparable, false);
+    assert.equal(calculateQqq(data).premium, false);
+  }
+});
 test('brief integrates valuation without making premium a systemic crisis', () => {
   const current = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Taipei' });
   const indicators = [ ['liquidityScore', 4], ['nfpPayrollChange', 162], ['adpEmploymentChange', 38], ['joltsOpenings', 7079], ['vix', 16] ].map(([code, value]) => ({ code, value }));
   const view = context.advisorWorldBuild({}, { indicators, valuations: { taiex: { ...baseline, dataDate: current } } });
-  assert.equal(view.sections.length, 5);
+  assert.equal(view.sections.length, 6);
   assert.equal(view.empireTone, 'watch');
+  assert.match(view.todayLine, /QQQ估值/);
   assert.match(view.todayLine, /雙指標溢價/);
   const defense = context.advisorWorldBuild({}, { indicators: [...indicators.filter(row => row.code !== 'vix'), { code: 'vix', value: 35 }], valuations: { taiex: { ...baseline, dataDate: current } } });
   assert.equal(defense.empireTone, 'defense');

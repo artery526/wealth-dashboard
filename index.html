@@ -1200,6 +1200,7 @@ body::after{
 .advisor-brief-grid .advisor-brief-line{font-size:13px;gap:6px;line-height:1.5}
 .advisor-brief-grid .advisor-brief-one{font-size:14px;line-height:1.65}
 .advisor-brief-grid .advisor-brief-section.valuation{grid-column:1/-1;aspect-ratio:auto;overflow:visible}
+.advisor-brief-grid .advisor-brief-section.valuation + .advisor-brief-section.valuation{margin-top:0}
 .advisor-brief-section.valuation .advisor-brief-line{align-items:flex-start}
 .advisor-brief-section.valuation .advisor-brief-line span{white-space:normal;flex:0 1 45%}
 .advisor-brief-section.valuation .advisor-brief-line strong{min-width:0;overflow-wrap:anywhere;flex:1}
@@ -16040,6 +16041,43 @@ function advisorWorldTaiwanValuation(macro,now){
   return {section:section,comparable:comparable,premium:comparable&&pe>peMedian&&pb>pbMedian,
     summary:comparable?'台股估值：'+status+'，'+oneLine:'台股估值：'+status+'，暫不納入今日判讀。'};
 }
+function advisorWorldQqqValuation(macro,now){
+  var data=macro&&macro.valuations&&macro.valuations.qqq||{};
+  function positive(value){
+    if(value==null||String(value).trim()==='')return null;
+    var number=Number(value);
+    return isFinite(number)&&number>0?number:null;
+  }
+  var price=positive(data.price),forwardPE=positive(data.forwardPE),earnings=positive(data.forwardEarnings);
+  var median=data.historicalMedian||{};
+  var median10=positive(median.tenYear);
+  var source=String(data.source||'').trim();
+  var match=String(data.dataDate||data.priceDate||'').match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})(?:$|[ T])/);
+  var dateMs=match?Date.UTC(Number(match[1]),Number(match[2])-1,Number(match[3])):NaN;
+  var validDate=match&&new Date(dateMs).getUTCFullYear()===Number(match[1])&&new Date(dateMs).getUTCMonth()===Number(match[2])-1&&new Date(dateMs).getUTCDate()===Number(match[3]);
+  var today=new Date((now==null?Date.now():now)+8*60*60*1000);
+  var age=validDate?(Date.UTC(today.getUTCFullYear(),today.getUTCMonth(),today.getUTCDate())-dateMs)/86400000:NaN;
+  var fresh=isFinite(age)&&age>=0&&age<=10;
+  var failed=/失敗|暫缺|逾時|錯誤/.test(String(data.status||''));
+  var comparable=!!(price&&forwardPE&&earnings&&median10&&source&&fresh&&!failed);
+  var status='資料不足',oneLine='QQQ估值或同來源歷史資料尚未齊全，暫不判讀。';
+  if(comparable){
+    var premium=(forwardPE/median10-1)*100;
+    status=forwardPE>median10?'Forward P/E 高於10Y中位數':forwardPE<median10?'Forward P/E 低於10Y中位數':'Forward P/E 接近10Y中位數';
+    oneLine='目前 Forward P/E '+(premium>=0?'高於':'低於')+'10Y中位數 '+Math.abs(premium).toFixed(1)+'%。這是估值比較，不是目標價或買賣訊號。';
+  }else if(failed){status='來源待確認';oneLine='資料來源更新失敗，以下保留的舊值不參與今日估值判讀。';}
+  else if((price||forwardPE||earnings)&&!fresh){status='資料日期待確認';oneLine='資料日期缺漏、異常或超過10日，保留舊值但暫停今日估值判讀。';}
+  var section={icon:'📡',title:'QQQ估值',tone:'watch',status:status,lines:[
+    advisorWorldLine('QQQ現價',price?'$'+price.toFixed(2):'資料暫缺'),
+    advisorWorldLine('Forward P/E',forwardPE?forwardPE.toFixed(2)+'×':'資料暫缺'),
+    advisorWorldLine('隱含 Forward Earnings',earnings?earnings.toFixed(2):'資料暫缺'),
+    advisorWorldLine('10Y Forward P/E中位數',median10?median10.toFixed(2)+'×':'資料暫缺'),
+    advisorWorldLine('估值資料日',validDate?advisorWorldBriefDate(data.dataDate||data.priceDate):'資料暫缺'),
+    advisorWorldLine('來源',source||'資料暫缺')
+  ],oneLine:oneLine};
+  return {section:section,comparable:comparable,premium:comparable&&forwardPE>median10,
+    summary:comparable?'QQQ估值：'+status+'，'+oneLine:'QQQ估值：'+status+'，暫不納入今日判讀。'};
+}
 function advisorWorldSectionHtml(section){
   return `<div class="advisor-brief-section${section.title==='台股估值'?' valuation':''}">
     <div class="advisor-brief-head">
@@ -16192,9 +16230,10 @@ function advisorWorldBuild(market,macro){
     : '沒有新的系統性風險，\n維持原本投資策略即可。';
   // 估值是獨立的歷史比較，不把估值溢價等同信用／系統性危機。
   var valuation=advisorWorldTaiwanValuation(macro);
-  sections.push(valuation.section);
-  if(!defenseCount&&valuation.premium){empireTone='watch';empireStatus='總經平穩・估值留意';}
-  todayLine+='\n'+valuation.summary;
+  var qqqValuation=advisorWorldQqqValuation(macro);
+  sections.push(qqqValuation.section,valuation.section);
+  if(!defenseCount&&(valuation.premium||qqqValuation.premium)){empireTone='watch';empireStatus='總經平穩・估值留意';}
+  todayLine+='\n'+qqqValuation.summary+'\n'+valuation.summary;
   return {
     date:advisorWorldBriefDate(sourceDate),
     updatedAt:(market.summary&&market.summary.updatedAt)||judgment.updatedAt||'--',
