@@ -15585,7 +15585,7 @@ function renderHeroCard(row,totalCost){
   var symbol=String(row.symbol||h.symbol||h.assetName||h.name||'').trim();
   var name=row.heroName||h.heroName||symbol||'未編制';
   var cost=toNum(h.cost),marketValue=toNum(h.marketValue),shares=toNum(h.shares);
-  var monthlyDiv=toNum(h.monthlyDiv),received=toNum(h.totalDiv),unrealized=toNum(h.unrealized);
+  var monthlyDiv=toNum(h.monthlyDiv),received=toNum(h.totalDiv),unrealized=toNum(h.unrealized),totalReturn=toNum(h.totalReturn);
   var price=toNum(h.price),avg=toNum(h.avgCost),roi=toNum(h.roi);
   var costWeight=totalCost>0?cost/totalCost*100:0;
   var level=Math.max(1,Math.min(10,Math.ceil(costWeight)));
@@ -15597,7 +15597,7 @@ function renderHeroCard(row,totalCost){
   var paybackPct=cost>0?Math.min(100,received/cost*100):0;
   var paybackMonths=remaining>0&&monthlyDiv>0?Math.ceil(remaining/monthlyDiv):0;
   var payback=cost>0&&received>=cost?'已回本':(paybackMonths>0?paybackMonths+'M':'--');
-  var healthWidth=cost>0?Math.max(4,Math.min(100,Math.abs(unrealized)/cost*4)):(unrealized===0?0:100);
+  var healthWidth=cost>0?Math.max(4,Math.min(100,Math.abs(totalReturn)/cost*4)):(totalReturn===0?0:100);
   var color=councilHeroAccentColor(row);
   var staticImg=staticHoldingAvatarUrl(symbol,name)||staticHeroAvatarUrl(name);
   var img=staticImg||normalizeImageUrl(row.avatarUrl);
@@ -15614,8 +15614,8 @@ function renderHeroCard(row,totalCost){
     </div>
     <div class="troop-battle">
       <div class="troop-force">🏴 軍團兵力<strong>${shares?shares.toLocaleString('zh-TW'):'--'} 股</strong></div>
-      <div class="troop-health-head"><span>${unrealized<0?'💔 戰損':'❤️ 武將血量／浮盈'}</span><strong class="troop-health-value ${unrealized<0?'down':''}">${unrealized<0?'−':'+'}${fmtFull(Math.abs(unrealized))}</strong></div>
-      <div class="troop-health-track" role="img" aria-label="未實現損益 ${unrealized<0?'虧損':'獲利'} ${fmtFull(Math.abs(unrealized))}"><div class="troop-health-fill ${unrealized<0?'down':''}" style="width:${healthWidth.toFixed(1)}%"></div></div>
+      <div class="troop-health-head"><span>${totalReturn<0?'💔 戰損':'❤️ 武將血量／含息總報酬'}</span><strong class="troop-health-value ${totalReturn<0?'down':''}">${totalReturn<0?'−':'+'}${fmtFull(Math.abs(totalReturn))}</strong></div>
+      <div class="troop-health-track" role="img" aria-label="含息總報酬 ${totalReturn<0?'虧損':'獲利'} ${fmtFull(Math.abs(totalReturn))}"><div class="troop-health-fill ${totalReturn<0?'down':''}" style="width:${healthWidth.toFixed(1)}%"></div></div>
       <div class="troop-battle-meta"><span>🔥 戰力增幅 ${fmtPctSigned(roi)}</span><span>${unrealized<0?'戰損中':'盈餘中'}</span></div>
     </div>
     <div class="troop-resources">
