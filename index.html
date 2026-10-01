@@ -15624,7 +15624,7 @@ function renderHeroCard(row,totalCost){
       <div class="troop-resource market"><span class="troop-resource-label">⚔️ 軍團總戰力</span><strong class="troop-resource-value">${fmtFull(marketValue)}</strong></div>
       <div class="troop-resource"><span class="troop-resource-label">🌾 軍團總糧草</span><strong class="troop-resource-value">${fmtFull(cost)}</strong></div>
     </div>
-    <div class="troop-footer"><span class="troop-status">🛡️ 戰場狀態：${unrealized<0?'戰損':'優勢'}</span><span>💧 糧草產出率：${annualYield.toFixed(1)}%</span><span>回本：${payback} · ${cost>0?paybackPct.toFixed(1)+'%':'--'}</span></div>
+    <div class="troop-footer"><span class="troop-status">🛡️ 戰場狀態：${totalReturn<0?'戰損':'優勢'}</span><span>💧 糧草產出率：${annualYield.toFixed(1)}%</span><span>回本：${payback} · ${cost>0?paybackPct.toFixed(1)+'%':'--'}</span></div>
   </div>`;
 }
 
