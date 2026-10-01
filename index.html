@@ -17324,6 +17324,8 @@ var ADVISOR_AI_HEADER_FUNDS_CACHE_KEY='wealth_advisor_ai_header_funds_v1';
 var advisorDividendQuickSelection=null;
 var advisorDividendQuickHolding=null;
 var advisorDividendQuickPromise=null;
+var advisorHoldingTradeSelection=null;
+var advisorHoldingTradeRecordPending=null;
 
 function closeAdvisorShortcutPanel(){
   var panel=document.getElementById('advisor-shortcut-panel');
@@ -17334,6 +17336,8 @@ function closeAdvisorShortcutPanel(){
   advisorDividendIncomeDraftPending=null;
   advisorDividendQuickSelection=null;
   advisorDividendQuickHolding=null;
+  advisorHoldingTradeSelection=null;
+  advisorHoldingTradeRecordPending=null;
   advisorAIScheduleOpen=false;
 }
 
@@ -17693,11 +17697,17 @@ function advisorAIQuickCommandSelectHtml(){
 function advisorAIIncomeQuickSelectHtml(){
   return `<select class="advisor-ai-income-select" id="advisor-ai-income-select" onchange="advisorAISelectIncomeSource(this)" aria-label="快速收入來源">
     <option value="">收入來源</option>
+    <option value="__holding_trade__">📦持股入帳</option>
     ${advisorAIIncomeAliases().map(function(item){return `<option value="${esc(item.label)}">${esc(item.label)}</option>`;}).join('')}
   </select>`;
 }
 
 function advisorAISelectIncomeSource(select){
+  if(select&&select.value==='__holding_trade__'){
+    select.value='';
+    advisorAIOpenHoldingTradeRecord();
+    return;
+  }
   var input=document.getElementById('advisor-ai-input');
   if(!input)return;
   input.placeholder=select&&select.value?'輸入金額，例如 5000':'輸入指令…';
@@ -19399,6 +19409,113 @@ function advisorDividendKey(e){
   if(e&&e.key==='Enter'){
     e.preventDefault();
     submitAdvisorDividendIncome(document.getElementById('advisor-dividend-submit'));
+  }
+}
+
+function advisorHoldingTradeRows(data){
+  return dividendPendingDisplayRows((data&&data.holdingTradePending)||[]).filter(function(row){
+    return row&&row.paid!==true&&String(row.paid||'').toLowerCase()!=='true';
+  });
+}
+
+function advisorHoldingTradeDirection(row){
+  return Number(row&&row.shares)<0?'賣出':'買入';
+}
+
+function advisorHoldingTradeEstimate(row,shares){
+  var price=Number(row&&row.priceUsd)||0;
+  var fx=Number(row&&row.fx)||0;
+  var fee=Number(row&&row.feeUsd)||0;
+  var qty=Number(shares==null?row&&row.shares:shares)||0;
+  return Math.round(Math.abs(price*fx*qty)+fee*fx);
+}
+
+async function advisorAIOpenHoldingTradeRecord(force){
+  var panel=advisorAIActivePanel();
+  if(!panel)return;
+  advisorHoldingTradeSelection=null;
+  advisorHoldingTradeRecordPending=null;
+  panel.innerHTML=`${advisorAIHeaderHtml()}<div class="advisor-shortcut-title">持股入帳</div><div class="advisor-shortcut-hint">選擇待入帳持股，軍師會依股價 × 匯率 × 股數先算出金額；實際金額與股數都可以修改。</div><div class="advisor-shortcut-msg">讀取待入帳持股中…</div>`;
+  try{
+    var data=await loadDividendCenter(!!force);
+    var rows=advisorHoldingTradeRows(data);
+    panel.innerHTML=`${advisorAIHeaderHtml()}<div class="advisor-shortcut-title">持股入帳</div>
+      <div class="advisor-shortcut-hint">選取一筆待入帳紀錄後，可修改實際金額與實際股數，再進入確認卡。</div>
+      ${rows.length?`<div class="advisor-dividend-list">${rows.map(advisorHoldingTradeRowHtml).join('')}</div>`:'<div class="dividend-empty">目前沒有待入帳持股記錄。</div>'}
+      <button class="advisor-shortcut-secondary" type="button" onclick="advisorAIOpenHoldingTradeRecord(true)">重新整理</button>
+      <button class="advisor-shortcut-secondary" type="button" onclick="openAdvisorAI()">返回龐統軍師</button>
+      <div class="advisor-shortcut-msg" id="advisor-ai-msg"></div>`;
+  }catch(err){
+    panel.innerHTML=`${advisorAIHeaderHtml()}<div class="advisor-shortcut-title">持股入帳</div><div class="advisor-shortcut-msg err">讀取失敗：${esc(err&&err.message?err.message:'請稍後再試')}</div><button class="advisor-shortcut-secondary" type="button" onclick="advisorAIOpenHoldingTradeRecord(true)">重新整理</button>`;
+  }
+}
+
+function advisorHoldingTradeRowHtml(row){
+  var shares=Math.abs(Number(row.shares)||0);
+  var estimate=advisorHoldingTradeEstimate(row,shares);
+  return `<button class="advisor-dividend-row" type="button" onclick="selectAdvisorHoldingTradePending('${esc(row.rowId||'')}')">
+    <div class="advisor-dividend-name">${esc(row.displaySymbol||row.symbol||'未命名標的')} · ${advisorHoldingTradeDirection(row)} ${esc(shares)} 股</div>
+    <div class="advisor-dividend-meta">股價 ${esc(row.priceUsd||'--')} · 匯率 ${esc(row.fx||'--')} · 手續費 ${esc(row.feeUsd==null?'0':row.feeUsd)}</div>
+    <div class="advisor-dividend-amount">預估 NT${fmtFull(estimate)}</div>
+  </button>`;
+}
+
+function selectAdvisorHoldingTradePending(rowId){
+  var panel=advisorAIActivePanel();
+  var rows=advisorHoldingTradeRows(dividendCenterCache||{});
+  var row=rows.find(function(item){return String(item.rowId||'')===String(rowId||'');});
+  if(!panel||!row){if(panel)panel.innerHTML=`${advisorAIHeaderHtml()}<div class="advisor-shortcut-title">持股入帳</div><div class="advisor-shortcut-msg err">找不到這筆待入帳持股，請重新整理。</div><button class="advisor-shortcut-secondary" type="button" onclick="advisorAIOpenHoldingTradeRecord(true)">重新整理</button>`;return;}
+  advisorHoldingTradeSelection=row;
+  var shares=Math.abs(Number(row.shares)||0);
+  var estimate=advisorHoldingTradeEstimate(row,shares);
+  var direction=advisorHoldingTradeDirection(row);
+  panel.innerHTML=`${advisorAIHeaderHtml()}<div class="advisor-shortcut-title">持股入帳：${esc(row.displaySymbol||row.symbol)}</div>
+    <div class="advisor-dividend-lock">原待入帳資料：${direction} ${esc(shares)} 股<br>股價：${esc(row.priceUsd||'--')} · 匯率：${esc(row.fx||'--')} · 手續費：${esc(row.feeUsd==null?'0':row.feeUsd)}<br>預估金額：NT${fmtFull(estimate)}</div>
+    <div class="advisor-shortcut-field"><label>實際入帳金額</label><input class="advisor-shortcut-input" id="advisor-holding-trade-amount" type="number" min="1" step="1" value="${esc(estimate)}" inputmode="decimal"></div>
+    <div class="advisor-shortcut-field"><label>實際交易股數</label><input class="advisor-shortcut-input" id="advisor-holding-trade-shares" type="number" min="0.0001" step="0.01" value="${esc(shares)}" inputmode="decimal"></div>
+    <div class="advisor-shortcut-hint">原始股價、匯率與手續費會保留；下方數值是實際確認後要寫入持股與帳戶的金額／股數。</div>
+    <div class="advisor-dividend-actions"><button class="advisor-shortcut-secondary" type="button" onclick="advisorAIOpenHoldingTradeRecord(false)">返回清單</button><button class="advisor-shortcut-submit" type="button" onclick="advisorAIReviewHoldingTrade(this)">檢查並確認</button></div>
+    <div class="advisor-shortcut-msg" id="advisor-ai-msg"></div>`;
+}
+
+function advisorAIReviewHoldingTrade(btn){
+  var row=advisorHoldingTradeSelection;
+  var panel=advisorAIActivePanel();
+  var amount=parseFloat(document.getElementById('advisor-holding-trade-amount')&&document.getElementById('advisor-holding-trade-amount').value)||0;
+  var shares=parseFloat(document.getElementById('advisor-holding-trade-shares')&&document.getElementById('advisor-holding-trade-shares').value)||0;
+  if(!row||!panel){return;}
+  if(amount<=0||shares<=0){advisorAISetMessage('請輸入大於 0 的實際金額與股數','err');return;}
+  advisorHoldingTradeRecordPending={row:row,amount:amount,shares:shares,direction:advisorHoldingTradeDirection(row)};
+  var symbol=row.displaySymbol||row.symbol||'';
+  panel.innerHTML=`${advisorAIHeaderHtml()}${advisorAIResultHtml('請確認持股入帳',[
+    (advisorHoldingTradeRecordPending.direction==='買入'?'轉出帳戶：💵國泰Stock':'轉出標的：'+symbol),
+    (advisorHoldingTradeRecordPending.direction==='買入'?'轉入標的：'+symbol:'轉入帳戶：💵國泰Stock'),
+    '實際交易股數：'+shares,
+    '實際金額：NT'+fmtFull(amount),
+    '原始試算：股價 '+(row.priceUsd||'--')+' × 匯率 '+(row.fx||'--')+' × 原股數 '+Math.abs(Number(row.shares)||0)
+  ])}<div class="advisor-dividend-actions"><button class="advisor-shortcut-secondary" type="button" onclick="selectAdvisorHoldingTradePending('${esc(row.rowId||'')}')">返回修改</button><button class="advisor-shortcut-submit" type="button" onclick="advisorAIConfirmHoldingTrade(this)">確認記錄</button></div><div class="advisor-shortcut-msg" id="advisor-ai-msg"></div>`;
+}
+
+async function advisorAIConfirmHoldingTrade(btn){
+  var pending=advisorHoldingTradeRecordPending;
+  if(!pending)return;
+  if(!advisorAIRequireWrite())return;
+  if(btn&&btn.disabled)return;
+  if(btn){btn.disabled=true;btn.textContent='記錄中…';}
+  var row=pending.row;
+  var symbol=row.symbol||row.displaySymbol||'';
+  var isSell=pending.direction==='賣出';
+  try{
+    await apiPost({action:'transfer',date:today().replace(/-/g,'/'),from:isSell?symbol:'💵國泰Stock',to:isSell?'💵國泰Stock':symbol,amount:pending.amount,label:symbol,note:'龐統持股入帳',stockMode:'1',stockType:isSell?'sell':'buy',stockSymbol:symbol,stockShares:pending.shares,stockAmount:pending.amount,holdingTradeRowId:row.rowId||''});
+    invalidateDividendCenter();
+    advisorHoldingTradeSelection=null;
+    advisorHoldingTradeRecordPending=null;
+    var panel=advisorAIActivePanel();
+    if(panel)panel.innerHTML=`${advisorAIHeaderHtml()}${advisorAIResultHtml('已完成持股入帳',[(isSell?'賣出標的：':'買入標的：')+symbol,isSell?'轉入帳戶：💵國泰Stock':'轉出帳戶：💵國泰Stock','實際交易股數：'+pending.shares,'實際金額：NT'+fmtFull(pending.amount),'待入帳記錄：已同步標記'])}`;
+  }catch(err){
+    advisorAISetMessage('✗ '+(err&&err.message?err.message:'寫入失敗'),'err');
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='確認記錄';}
   }
 }
 

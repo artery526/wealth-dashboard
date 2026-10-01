@@ -98,7 +98,7 @@ test('Pangtong income dropdown builds a fixed Stock income command', async ({ pa
     };
   });
   expect(result.optionLabels).toEqual([
-    '收入來源', '💰投資理財', '👷工作所得', '🪙副業兼職', '💲交易所得', '🤶爸媽收入', '🪙機構退稅'
+    '收入來源', '📦持股入帳', '💰投資理財', '👷工作所得', '🪙副業兼職', '💲交易所得', '🤶爸媽收入', '🪙機構退稅'
   ]);
   expect(result.command).toEqual({
     intent: 'income', source: '👷工作所得', account: '💵國泰Stock', amount: 5000, note: '龐統下拉收入：👷工作所得'
