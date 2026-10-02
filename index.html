@@ -12679,6 +12679,10 @@ function findAdvisorDividendIncomeRow(symbol,data){
 async function advisorAIShowDividendIncomeDraft(cmd){
   if(!advisorAIRequireWrite())return;
   var panel=advisorAIActivePanel();
+  var quickSymbol=advisorAIResolveInvestmentSymbol(cmd.symbol)||cmd.symbol;
+  if(panel)panel.innerHTML=`${advisorAIHeaderHtml()}
+    ${advisorAIResultHtml('已辨識配息入帳',['標的：'+(advisorAIResolveStockTradeLabel(quickSymbol)||quickSymbol),'入帳金額：'+fmtFull(cmd.amount),'正在確認最新配息備忘資料…'])}
+    <div class="advisor-shortcut-msg" id="advisor-ai-msg">已辨識完成，正在查詢標的資料。</div>`;
   var row=await loadDividendBySymbol(cmd.symbol);
   if(!row)throw new Error('找不到 '+cmd.symbol+' 的持股備忘錄配息紀錄。');
   var displaySymbol=row.displaySymbol||advisorAIResolveStockTradeLabel(row.symbol||cmd.symbol)||row.symbol||cmd.symbol;
