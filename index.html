@@ -16092,6 +16092,11 @@ function advisorWorldTaiwanValuation(macro,now){
     var premium=(value/median-1)*100;
     return (premium>0?'高於':premium<0?'低於':'等於')+'10Y中位數 '+Math.abs(premium).toFixed(1)+'%';
   }
+  var sourceLabel=/Yahoo Finance \^TWII同日收盤核對通過/.test(source)
+    ?'MoneyDJ PE/PB河流圖反算；Yahoo Finance ^TWII核對同日收盤；TWSE暫不可用'
+    :/TWSE同日收盤指數核對通過/.test(source)
+      ?'MoneyDJ PE/PB河流圖反算；TWSE核對同日收盤'
+      :source||'資料暫缺';
   if(comparable){
     var peAbove=pe>peMedian,pbAbove=pb>pbMedian;
     status=peAbove&&pbAbove?'雙指標溢價':!peAbove&&!pbAbove?'雙指標未高於中位數':'估值指標分歧';
@@ -16104,7 +16109,7 @@ function advisorWorldTaiwanValuation(macro,now){
     advisorWorldLine('10Y'+(monthly?'月度':'')+'中位數 P/E',peMedian?peMedian.toFixed(2)+'×':'資料暫缺'),
     advisorWorldLine('10Y'+(monthly?'月度':'')+'中位數 P/B',pbMedian?pbMedian.toFixed(2)+'×':'資料暫缺'),
     advisorWorldLine('估值資料日',validDate?advisorWorldBriefDate(data.dataDate):'資料暫缺'),
-    advisorWorldLine('來源',/MoneyDJ/.test(source)?'MoneyDJ PE/PB河流圖反算；TWSE僅核對同日指數':source||'資料暫缺')
+    advisorWorldLine('來源',sourceLabel)
   ],oneLine:oneLine};
   return {section:section,comparable:comparable,premium:comparable&&pe>peMedian&&pb>pbMedian,
     summary:comparable?'台股估值：'+status+'，'+oneLine:'台股估值：'+status+'，暫不納入今日判讀。'};
