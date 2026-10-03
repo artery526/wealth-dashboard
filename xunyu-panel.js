@@ -13,12 +13,12 @@
     return state;
   }
   function statusHtml(key) {
-    var text = state.pending[key] ? '讀取中…' : state.errors[key] ? '讀取失敗：' + state.errors[key] : '已更新';
+    var text = state.pending[key] ? '讀取中…' : state.errors[key] ? '讀取失敗：' + state.errors[key] : state.data[key] ? '已更新' : '尚未載入';
     return '<div class="xy-status" role="status">' + esc(text) + (state.errors[key] ? ' <button type="button" data-xy-retry="' + key + '">重試</button>' : '') + '</div>';
   }
   function agendaHtml(key) {
     var payload = state.data[key];
-    if (!payload) return '<p class="xy-empty">' + (key === 'calendar' ? '今日行程' : '待辦事項') + '尚未取得</p>';
+    if (!payload) return '<p class="xy-empty">' + (key === 'calendar' ? '今日行程' : '待辦事項') + '尚未載入</p><button class="xy-link" type="button" data-xy-load="' + key + '">載入' + (key === 'calendar' ? '今日行程' : '待辦事項') + '</button>';
     var items = key === 'calendar' ? payload.events || [] : (payload.tasks || []).filter(function (task) { return task.status !== 'completed' && !task.completed; });
     var shown = state.expanded[key] ? items : items.slice(0, 3);
     return '<div class="xy-count">' + (key === 'calendar' ? '今日行程 ' : '未完成待辦 ') + items.length + ' 項</div>' + (items.length ? '<ul class="xy-list">' + shown.map(function (item) {
@@ -79,11 +79,12 @@
     document.getElementById('p-tabs').classList.add('panel-tabs-hidden');
     document.getElementById('p-body').innerHTML = '<div id="xunyu-dashboard"></div>';
     if (!authorized()) { document.getElementById('xunyu-dashboard').innerHTML = setupNotice(); return; }
-    paint(); refreshXunyuPanel();
+    paint();
   };
   document.addEventListener('click', function (event) {
     var button = event.target.closest('#xunyu-dashboard button'); if (!button) return;
     if (button.hasAttribute('data-xy-refresh')) refreshXunyuPanel();
+    else if (button.dataset.xyLoad) refreshXunyuPanel(button.dataset.xyLoad);
     else if (button.dataset.xyRetry) refreshXunyuPanel(button.dataset.xyRetry);
     else if (button.dataset.xyExpand) { state.expanded[button.dataset.xyExpand] = !state.expanded[button.dataset.xyExpand]; paint(); }
   });

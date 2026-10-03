@@ -29,9 +29,8 @@ test.beforeEach(async ({page}) => {
   });
 });
 
-test('尚書臺只顯示月曆、今日行程和待辦，且只讀取這兩項資料', async ({page}) => {
+test('尚書臺開啟時不預載行程與待辦，使用者點擊後才讀取', async ({page}) => {
   await loadPanel(page);
-  await page.evaluate(async () => { await refreshXunyuPanel(); });
   await expect(page.locator('.xy-agenda-grid > .xy-card')).toHaveCount(3);
   await expect(page.locator('#xunyu-dashboard')).toContainText('月曆');
   await expect(page.locator('#xunyu-dashboard')).toContainText('今日行程');
@@ -41,9 +40,15 @@ test('尚書臺只顯示月曆、今日行程和待辦，且只讀取這兩項�
   await expect(page.locator('#xunyu-dashboard')).not.toContainText('國庫');
   await expect(page.locator('#xunyu-dashboard')).not.toContainText('部隊簡報');
   await expect(page.locator('.xy-calendar-grid .xy-calendar-day')).toHaveCount(42);
+  await expect(page.locator('#xunyu-dashboard')).toContainText('今日行程尚未載入');
+  await expect(page.locator('#xunyu-dashboard')).toContainText('待辦事項尚未載入');
+  expect(await page.evaluate(() => xyCalls)).toEqual([]);
+  await page.locator('[data-xy-load="calendar"]').click();
   await expect(page.locator('#xunyu-dashboard')).toContainText('今日會議');
+  expect(await page.evaluate(() => xyCalls)).toEqual(['todayCalendar']);
+  await page.locator('[data-xy-load="tasks"]').click();
   await expect(page.locator('.xy-list').last().locator('li')).toHaveCount(3);
-  expect(await page.evaluate(() => Array.from(new Set(xyCalls)).sort())).toEqual(['todayCalendar','todayTasks']);
+  expect(await page.evaluate(() => xyCalls)).toEqual(['todayCalendar','todayTasks']);
   await page.getByRole('button',{name:'查看全部 4 項'}).click();
   await expect(page.locator('.xy-list').last().locator('li')).toHaveCount(4);
 });
