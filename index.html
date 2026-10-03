@@ -1803,6 +1803,9 @@ body::after{
 .council-army-title{display:flex;align-items:center;gap:10px;margin:4px 0 14px;font-family:var(--sans);font-size:15px;font-weight:900;color:var(--gold2);letter-spacing:1px}
 .council-army-title::after{content:"";height:1px;flex:1;background:linear-gradient(90deg,#5a4018,transparent)}
 .council-roster-groups{display:grid;gap:14px}
+.council-data-updating{opacity:.72;transition:opacity .22s ease}
+.council-refresh-note{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 10px;padding:8px 11px;border:1px solid rgba(93,196,222,.22);border-radius:8px;background:rgba(8,29,40,.72);color:#9bc4d1;font:12px var(--sans)}
+.council-refresh-note button{flex:none;border:1px solid rgba(93,196,222,.36);border-radius:6px;background:transparent;color:#75d4ee;padding:4px 9px;cursor:pointer;font:inherit}
 .council-roster-group{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;align-items:stretch;border:1px solid rgba(184,137,46,.28);border-radius:8px;background:rgba(10,8,4,.38);padding:12px}
 .council-roster-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
 .council-roster-label{display:flex;align-items:baseline;flex-wrap:wrap;gap:7px;font-family:var(--sans);font-size:13px;font-weight:900;color:var(--gold2);letter-spacing:1px}
@@ -14919,7 +14922,7 @@ function ensureMilitaryModule(){
   if(!militaryModulePromise){
     militaryModulePromise=new Promise(function(resolve,reject){
       var script=document.createElement('script');
-      script.src='./military-module.js?v=20261003-roster-preload1';
+      script.src='./military-module.js?v=20261004-roster-stale-refresh1';
       script.async=true;
       script.onload=function(){
         if(!window.MilitaryModuleLoaded){reject(new Error('軍機處模組載入後未完成初始化'));return;}

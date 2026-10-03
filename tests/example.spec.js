@@ -584,9 +584,11 @@ test('council roster shows the cached roster before refreshing', async ({ page }
   await page.goto(dashboardUrl);
 
   const result = await page.evaluate(async () => {
+    await ensureMilitaryModule();
     const cache = {
       heroes: [{ symbol: 'QQQI', assetName: 'QQQI', heroName: 'QQQI', enabled: true, sortOrder: 1 }],
       holdings: [{ symbol: 'QQQI', name: 'QQQI', cost: 100, marketValue: 110, shares: 1 }],
+      holdingsLoaded: true,
       cachedAt: Date.now()
     };
     localStorage.setItem('wealth_council_roster_v1', JSON.stringify(cache));
@@ -597,7 +599,8 @@ test('council roster shows the cached roster before refreshing', async ({ page }
     const roster = document.createElement('div');
     roster.id = 'council-content';
     document.body.appendChild(roster);
-    loadCouncilDashboardData = () => new Promise(resolve => setTimeout(() => resolve({
+    let refreshCalls = 0;
+    loadCouncilDashboardData = () => { refreshCalls++; return new Promise(resolve => setTimeout(() => resolve({
       heroes: [
         { symbol: 'QQQI', assetName: 'QQQI', heroName: 'QQQI', enabled: true, sortOrder: 1 },
         { symbol: 'AIPI', assetName: 'AIPI', heroName: 'AIPI', enabled: true, sortOrder: 2 }
@@ -609,23 +612,54 @@ test('council roster shows the cached roster before refreshing', async ({ page }
       assetSnapshot: null,
       dividendProjection: null,
       holdingsLoaded: true
-    }), 120));
-    const refreshPromise = loadCouncilDashboard();
+    }), 120)); };
+    const refreshPromise = window.loadCouncilDashboard();
     await new Promise(resolve => setTimeout(resolve, 20));
     const oldValue = roster.querySelector('.council-stat-v')?.textContent || '';
     const hasSkeleton = !!roster.querySelector('.skel');
     await refreshPromise;
     const newValue = roster.querySelector('.council-stat-v')?.textContent || '';
-    return { oldValue, newValue, hasSkeleton };
+    return { oldValue, newValue, hasSkeleton, refreshCalls };
   });
 
-  expect(result).toEqual({ oldValue: '1 檔', newValue: '2 檔', hasSkeleton: false });
+  expect(result).toEqual({ oldValue: '1 檔', newValue: '2 檔', hasSkeleton: false, refreshCalls: 1 });
+});
+
+test('council roster keeps cached cards visible when background refresh fails', async ({ page }) => {
+  await page.goto(dashboardUrl);
+
+  const result = await page.evaluate(async () => {
+    await ensureMilitaryModule();
+    localStorage.setItem('wealth_council_roster_v1', JSON.stringify({
+      heroes: [{ symbol: 'QQQI', assetName: 'QQQI', heroName: 'QQQI', enabled: true, sortOrder: 1 }],
+      holdings: [{ symbol: 'QQQI', name: 'QQQI', cost: 100, marketValue: 110, shares: 1 }],
+      holdingsLoaded: true,
+      cachedAt: Date.now()
+    }));
+    councilDashboardCache = null;
+    API_URL = 'https://example.test/exec';
+    WRITE_TOKEN = 'remembered-token';
+    setWebVerifyStatus('ok', '網頁驗證成功');
+    const roster = document.createElement('div');
+    roster.id = 'council-content';
+    document.body.appendChild(roster);
+    loadCouncilDashboardData = async () => { throw new Error('暫時無法連線'); };
+    await window.loadCouncilDashboard();
+    return {
+      hasCachedCard: !!roster.querySelector('.hero-card'),
+      hasRetry: !!roster.querySelector('.council-refresh-note button'),
+      hasFailureNotice: roster.textContent.includes('更新暫時失敗')
+    };
+  });
+
+  expect(result).toEqual({ hasCachedCard: true, hasRetry: true, hasFailureNotice: true });
 });
 
 test('council roster accepts the NAS cache object without reading an allSettled status', async ({ page }) => {
   await page.goto(dashboardUrl);
 
   const result = await page.evaluate(async () => {
+    await ensureMilitaryModule();
     const originalNasLoader = loadCouncilRosterFromNas_;
     const originalHeroLoader = loadHeroSheet;
     const originalHoldingsLoader = loadCouncilHoldingsOverview;

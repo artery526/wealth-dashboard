@@ -135,19 +135,18 @@ async function loadCouncilDashboard(){
   if(!councilDashboardCache&&cached)councilDashboardCache=cached;
   var cachedFetchedAt=councilDashboardFetchedAt||(cached&&cached.cachedAt)||0;
   var cacheFresh=cached&&(Date.now()-cachedFetchedAt<COUNCIL_DASHBOARD_CACHE_TTL);
+  var hasCachedRoster=!!(cached&&((cached.holdings&&cached.holdings.length)||(cached.heroes&&cached.heroes.length)));
   if(cached){
     holdingsCache=cached.holdings.length?cached.holdings:holdingsCache;
     setDataFreshness('council-roster-freshness',dataFreshnessMeta(cached,cachedFetchedAt,true));
     renderCouncilRoster(mergeCouncilRows(cached.holdings,cached.heroes,{}),el,cached.assetSnapshot,cached.dividendProjection);
-    setEmpireCardStatus('council','pending',cacheFresh&&cached.holdingsLoaded&&API_URL?'已顯示快取 · 背景更新中':'已顯示上次資料 · 背景更新中');
-    if(cacheFresh&&cached.holdingsLoaded){
-      setEmpireCardStatus('council','ok','部隊陣容已預先載入');
-      return;
-    }
+    el.classList.add('council-data-updating');
+    el.setAttribute('aria-busy','true');
+    setEmpireCardStatus('council','pending',cacheFresh&&cached.holdingsLoaded?'已顯示快取 · 背景同步最新資料中':'已顯示上次資料 · 背景同步最新資料中');
   }else{
     el.innerHTML='<div class="skel-line skel"></div><div class="skel-line skel" style="width:82%"></div><div class="skel-line skel" style="width:70%"></div>';
   }
-  if(!cacheFresh)setEmpireCardStatus('council','pending',cached?'已顯示上次資料 · 背景更新中':'部隊陣容讀取中');
+  if(!cached)setEmpireCardStatus('council','pending','部隊陣容讀取中');
   try{
     var results=await loadCouncilDashboardData();
     var heroes=results.heroes;
@@ -156,17 +155,21 @@ async function loadCouncilDashboard(){
     // 持股與武將是首屏必要資料；摘要資料沿用快取，稍後獨立背景更新。
     var assetSnapshot=(councilDashboardCache&&councilDashboardCache.assetSnapshot)||results.assetSnapshot||null;
     var dividendProjection=(councilDashboardCache&&councilDashboardCache.dividendProjection)||results.dividendProjection||null;
-    if(results.holdingsLoaded)cacheCouncilDashboardResults(Object.assign({},results,{assetSnapshot:assetSnapshot,dividendProjection:dividendProjection}));
-    setDataFreshness('council-roster-freshness',dataFreshnessMeta(results,councilDashboardFetchedAt,false));
     var hasRosterData=results.holdingsLoaded&&holdings.length;
     var fallbackCache=!hasRosterData&&councilDashboardCache&&councilDashboardCache.holdings&&councilDashboardCache.holdings.length;
+    if(hasRosterData)cacheCouncilDashboardResults(Object.assign({},results,{assetSnapshot:assetSnapshot,dividendProjection:dividendProjection}));
+    setDataFreshness('council-roster-freshness',fallbackCache?dataFreshnessMeta(councilDashboardCache,councilDashboardCache.cachedAt,true):dataFreshnessMeta(results,councilDashboardFetchedAt,false));
     renderCouncilRoster(mergeCouncilRows(fallbackCache?councilDashboardCache.holdings:holdings,fallbackCache?councilDashboardCache.heroes:heroes,armySettings),el,fallbackCache?councilDashboardCache.assetSnapshot:assetSnapshot,fallbackCache?councilDashboardCache.dividendProjection:dividendProjection);
+    el.classList.remove('council-data-updating');
+    el.setAttribute('aria-busy','false');
+    var oldRefreshNote=el.querySelector('.council-refresh-note');
+    if(oldRefreshNote)oldRefreshNote.remove();
     var dot=document.getElementById('council-dot');
     var lbl=document.getElementById('council-label');
-    var rosterConnected=results.holdingsLoaded&&(API_URL||results.source==='NAS');
+    var rosterConnected=fallbackCache?false:results.holdingsLoaded&&(API_URL||results.source==='NAS');
     if(dot)dot.className='api-dot '+(rosterConnected?'ok':'err');
-    if(lbl)lbl.textContent=rosterConnected?(results.source==='NAS'?'NAS 快取 · 武將與持股同步':'已連線 · 武將與持股同步'):'已載入武將資料 · 尚未連接資料來源';
-    setEmpireCardStatus('council',rosterConnected?'ok':'err',rosterConnected?(results.source==='NAS'?'NAS 快取已載入':'武將與持股同步'):'尚未連接資料來源');
+    if(lbl)lbl.textContent=fallbackCache?'最新持股資料暫缺 · 保留上次資料':(rosterConnected?(results.source==='NAS'?'NAS 快取 · 武將與持股同步':'已連線 · 武將與持股同步'):'已載入武將資料 · 尚未連接資料來源');
+    setEmpireCardStatus('council',fallbackCache?'pending':(rosterConnected?'ok':'err'),fallbackCache?'最新持股資料暫缺 · 保留上次資料':(rosterConnected?(results.source==='NAS'?'NAS 快取已載入':'武將與持股同步'):'尚未連接資料來源'));
     // 月總配息與日漲跌不再阻塞首屏；完成後只重繪摘要區與更新摘要快取。
     loadCouncilDashboardSummaryData().then(function(summary){
       if(!summary)return;
@@ -191,6 +194,16 @@ async function loadCouncilDashboard(){
       // 首屏持股已可用時，摘要失敗不覆蓋部隊陣容，也不把狀態改成整體失敗。
     });
   }catch(e){
+    el.classList.remove('council-data-updating');
+    el.setAttribute('aria-busy','false');
+    if(hasCachedRoster){
+      setEmpireCardStatus('council','pending','最新資料同步失敗 · 保留上次資料');
+      var previousNote=el.querySelector('.council-refresh-note');
+      if(previousNote)previousNote.remove();
+      el.insertAdjacentHTML('afterbegin','<div class="council-refresh-note" role="status">更新暫時失敗，仍顯示上次資料。<button type="button" onclick="loadCouncilDashboard()">重試</button></div>');
+      console.warn('council roster background refresh failed; keeping cached roster:',e);
+      return;
+    }
     setEmpireCardStatus('council','err',e.message||'讀取失敗');
     el.innerHTML=`<div style="color:var(--coral);font-family:var(--sans);font-size:12px;padding:12px 0">${esc(e.message)}</div>`;
   }
