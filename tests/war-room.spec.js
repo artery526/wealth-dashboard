@@ -96,3 +96,29 @@ test('standalone route keeps the same-origin session and opens the requested sec
   const dimensions = await app.locator('html').evaluate(el => ({ scrollWidth: el.scrollWidth, clientWidth: el.clientWidth }));
   expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
 });
+
+test('standalone route revalidates expired access then opens the requested section without the home scene', async ({ page }) => {
+  await page.evaluate(() => {
+    localStorage.setItem('wealth_api_url', 'https://example.test/exec');
+    localStorage.setItem('wealth_write_token', 'test-write-token');
+    localStorage.setItem('wealth_web_verify_status', 'ok');
+    localStorage.setItem('wealth_web_verify_checked_at', String(Date.now() - 8 * 24 * 60 * 60 * 1000));
+    sessionStorage.removeItem('wealth_web_session_token');
+    window.API_URL = 'https://example.test/exec';
+    window.WRITE_TOKEN = 'test-write-token';
+  });
+  await page.route('https://example.test/**', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    headers: { 'Access-Control-Allow-Origin': '*' },
+    body: JSON.stringify({ ok: true, data: { sessionToken: 'renewed-session' } })
+  }));
+
+  await page.goto(`${standaloneUrl}?tab=war-taiwan-macro`);
+  const app = page.frameLocator('#war-room-app');
+  await expect(app.locator('#p-zh')).toHaveText('戰情室');
+  await expect(app.locator('#p-tabs .ptab.active')).toHaveText('台灣總體經濟');
+  await expect(app.locator('#web-login-overlay')).toHaveClass(/hidden/);
+  await expect(app.locator('#npc-web-scene')).toBeHidden();
+  expect(await app.locator('body').evaluate(() => sessionStorage.getItem('wealth_web_session_token'))).toBe('renewed-session');
+});

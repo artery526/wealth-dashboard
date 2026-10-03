@@ -1965,6 +1965,7 @@ html.war-room-standalone,html.war-room-standalone body{width:100%;height:100%;mi
 html.war-room-standalone .particles,
 html.war-room-standalone #bg-video,
 html.war-room-standalone .wrap,
+html.war-room-standalone .npc-web-scene,
 html.war-room-standalone #advisor-overlay,
 html.war-room-standalone #advisor-ai-standalone,
 html.war-room-standalone #daily-briefing-overlay{display:none!important}
@@ -6343,6 +6344,31 @@ function webVerifyIsAuthorized(){
   catch(e){return false;}
 }
 function restoreRememberedWebAccess(){
+  if(isWarRoomStandalone()){
+    if(!hasMainApiCredentials()){
+      applyEmpireUnlockState();
+      setWebLoginVisible(true,'請先登入帝國指揮所','');
+      return Promise.resolve(false);
+    }
+    if(webVerifyIsAuthorized()){
+      setEmpireUnlockState(true);
+      setWebLoginVisible(false,'城門驗證成功','ok');
+      startWebSessionAutoRefresh();
+      advisorAIUpdateWebVerifyStatus();
+      window.setTimeout(openWarRoomFromStandaloneRoute,0);
+      return Promise.resolve(true);
+    }
+    setWebLoginVisible(true,'正在確認城門登入狀態…','pending');
+    return ensureWebAccess(true).then(function(ok){
+      if(ok){
+        setWebLoginVisible(false,'城門驗證成功','ok');
+        openWarRoomFromStandaloneRoute();
+      }else{
+        setWebLoginVisible(true,webVerifyStoredMessage()||'城門驗證失敗，請重新登入','err');
+      }
+      return ok;
+    });
+  }
   if(webVerifyStoredStatus()!=='ok'||!hasMainApiCredentials()){
     applyEmpireUnlockState();
     setWebLoginVisible(true,'請先登入帝國指揮所','');
@@ -6356,6 +6382,12 @@ function restoreRememberedWebAccess(){
   window.setTimeout(openDailyBriefingPopup,350);
   advisorAIUpdateWebVerifyStatus();
   return Promise.resolve(true);
+}
+function openWarRoomFromStandaloneRoute(){
+  if(!isWarRoomStandalone()||!webVerifyIsAuthorized())return;
+  var requestedTab='war-briefing';
+  try{requestedTab=new URLSearchParams(location.search).get('tab')||requestedTab;}catch(e){}
+  openPanel('war-room',requestedTab);
 }
 function setEmpireUnlockState(unlocked){
   try{
