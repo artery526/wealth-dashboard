@@ -35,11 +35,11 @@ test('service worker returns successful navigation responses before waiting for 
   const html = fs.readFileSync(path.join(projectRoot, 'index.html'), 'utf8');
   const warRoom = fs.readFileSync(path.join(projectRoot, 'war-room.html'), 'utf8');
 
-  expect(sw).toContain("const CACHE_NAME = 'empire-shell-v16'");
+  expect(sw).toContain("const CACHE_NAME = 'empire-shell-v17'");
   expect(sw).toContain("'./war-room.html'");
   expect(sw).toContain('await cache.put(cacheKey, response.clone())');
   expect(sw).toContain('event.respondWith(networkResponse.then(response => {');
-  expect(sw).toContain('return cachedResponse.then(cached => cached || Response.error());');
+  expect(sw).toContain("url.pathname.endsWith('/war-room.html') ? null : caches.match('./index.html')");
   expect(html).toContain("./sw.js?v=20261003-shell-v16");
-  expect(warRoom).toContain("'war-taiwan-macro'");
+  expect(warRoom).toContain('data-tab="war-taiwan-macro"');
 });

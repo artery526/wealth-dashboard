@@ -2,25 +2,27 @@
 <html lang="zh-TW" data-theme="deep-blue">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#06131d">
+  <meta name="description" content="帝國指揮所獨立戰情室">
   <title>戰情室｜帝國指揮所</title>
-  <style>
-    *{box-sizing:border-box}
-    html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#06131d}
-    .war-room-app{display:block;width:100%;height:100%;border:0;background:#06131d}
-  </style>
+  <link rel="stylesheet" href="./war-room.css?v=20261003.1">
+  <script defer src="./war-room-app.js?v=20261003.1"></script>
 </head>
 <body>
-  <iframe class="war-room-app" id="war-room-app" title="諸葛軍師戰情室" loading="eager"></iframe>
-  <script>
-    (function(){
-      var allowedTabs=['war-briefing','war-battle-brief','war-sector-rotation','war-taiwan-macro'];
-      var query=new URLSearchParams(location.search);
-      var tab=query.get('tab')||'war-briefing';
-      if(allowedTabs.indexOf(tab)<0)tab='war-briefing';
-      document.getElementById('war-room-app').src='./index.html?war-room=1&tab='+encodeURIComponent(tab);
-    })();
-  </script>
+  <main class="war-room" id="war-room">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark">諸</span><div><div class="eyebrow">EMPIRE · INTELLIGENCE</div><h1>諸葛軍師・戰情室</h1></div></div>
+      <div class="top-actions"><span id="connection-status" class="connection pending">連線準備中</span><a class="home-link" href="./">返回主城</a></div>
+    </header>
+    <nav class="tabs" aria-label="戰情室分頁">
+      <button type="button" data-tab="war-briefing">帝國晨報</button>
+      <button type="button" data-tab="war-battle-brief">戰情總匯報</button>
+      <button type="button" data-tab="war-sector-rotation">產業輪動</button>
+      <button type="button" data-tab="war-taiwan-macro">台灣總體經濟</button>
+    </nav>
+    <section class="toolbar"><div id="page-title">帝國晨報</div><div id="freshness">讀取中…</div><button id="refresh-button" type="button" aria-label="重新整理目前分頁" title="重新整理">↻</button></section>
+    <section id="content" class="content" aria-live="polite"><div class="loading"><span class="spinner"></span> 正在整備戰情資料…</div></section>
+  </main>
 </body>
 </html>

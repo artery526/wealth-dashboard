@@ -10,10 +10,7 @@ test.beforeEach(async ({ page }) => {
     window.isEmpireSessionUnlocked = () => true;
     window.API_URL = 'https://example.test/exec';
     const loginOverlay = document.getElementById('web-login-overlay');
-    if (loginOverlay) {
-      loginOverlay.classList.remove('open');
-      loginOverlay.style.display = 'none';
-    }
+    if (loginOverlay) { loginOverlay.classList.remove('open'); loginOverlay.style.display = 'none'; }
     window.warRoomLoads = [];
     const originalBriefingLoader = window.openAdvisorWorldSituation;
     window.openAdvisorWorldSituation = () => warRoomLoads.push('briefing');
@@ -25,14 +22,10 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('War Room opens on the briefing and fetches each other area only when selected', async ({ page }) => {
-  await page.evaluate(() => {
-    window.isWarRoomStandalone = () => true;
-    openPanel('war-room');
-  });
+  await page.evaluate(() => { window.isWarRoomStandalone = () => true; openPanel('war-room'); });
   await expect(page.locator('#p-zh')).toHaveText('戰情室');
   await expect(page.locator('#p-tabs .ptab')).toHaveText(['帝國晨報', '戰情總匯報', '產業輪動', '台灣總體經濟']);
   expect(await page.evaluate(() => warRoomLoads)).toEqual(['briefing']);
-
   await page.getByRole('button', { name: '戰情總匯報' }).click();
   await page.getByRole('button', { name: '產業輪動' }).click();
   await page.getByRole('button', { name: '台灣總體經濟' }).click();
@@ -52,7 +45,6 @@ test('Imperial Morning Brief renders stale saved data before refresh and keeps i
     localStorage.removeItem(MARKET_ADVISOR_WORLD_CACHE_KEY);
     openPanel('war-room');
   });
-
   const briefing = page.locator('#war-room-briefing-content');
   await expect(briefing.locator('.advisor-world-card')).toBeVisible();
   await expect(briefing).not.toContainText('諸葛亮正在整理戰報');
@@ -61,10 +53,7 @@ test('Imperial Morning Brief renders stale saved data before refresh and keeps i
 
 test('Military panel exposes only the Troop Roster tab', async ({ page }) => {
   await page.evaluate(async () => {
-    await ensureMilitaryModule();
-    window.hasMainApiCredentials = () => true;
-    window.loadCouncilDashboard = () => {};
-    window.renderCouncilPanel('battle-brief');
+    await ensureMilitaryModule(); window.hasMainApiCredentials = () => true; window.loadCouncilDashboard = () => {}; window.renderCouncilPanel('battle-brief');
   });
   await expect(page.locator('#p-zh')).toHaveText('軍機處');
   await expect(page.locator('#p-tabs')).toBeHidden();
@@ -73,119 +62,79 @@ test('Military panel exposes only the Troop Roster tab', async ({ page }) => {
   await expect(page.locator('#pane-battle-brief')).toHaveCount(0);
 });
 
-test('legacy military shortcuts and voice routing now open the matching War Room tab', async ({ page }) => {
+test('legacy military shortcuts and voice routing open the matching War Room tab', async ({ page }) => {
   const results = await page.evaluate(() => ({
-    shortcut: (() => {
-      let opened;
-      const original = window.openPanel;
-      const originalStandalone = window.isWarRoomStandalone;
-      window.openPanel = (panel, tab) => { opened = { panel, tab }; };
-      window.isWarRoomStandalone = () => true;
-      openEmpireCardShortcut({ stopPropagation() {} }, 'council', 'battle-brief');
-      window.openPanel = original;
-      window.isWarRoomStandalone = originalStandalone;
-      return opened;
-    })(),
+    shortcut: (() => { let opened; const original = window.openPanel, originalStandalone = window.isWarRoomStandalone; window.openPanel = (panel, tab) => { opened = { panel, tab }; }; window.isWarRoomStandalone = () => true; openEmpireCardShortcut({ stopPropagation() {} }, 'council', 'battle-brief'); window.openPanel = original; window.isWarRoomStandalone = originalStandalone; return opened; })(),
     parsed: advisorAIOpenTarget('戰情總匯報')
   }));
   expect(results.shortcut).toEqual({ panel: 'war-room', tab: 'war-battle-brief' });
   expect(results.parsed).toMatchObject({ panel: 'war-room', tab: 'war-battle-brief' });
 });
 
-test('standalone route keeps the same-origin session and opens the requested section', async ({ page }) => {
+test('standalone route is a direct page and reuses the same-origin session', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.evaluate(() => {
+  await page.addInitScript(() => {
     localStorage.setItem('wealth_api_url', 'https://example.test/exec');
     localStorage.setItem('wealth_write_token', 'test-write-token');
     localStorage.setItem('wealth_web_verify_status', 'ok');
     localStorage.setItem('wealth_web_verify_checked_at', String(Date.now()));
-    sessionStorage.setItem('wealth_empire_unlocked_v1', 'ok');
     sessionStorage.setItem('wealth_web_session_token', 'same-tab-session');
   });
   await page.route('https://example.test/**', route => route.fulfill({
-    status: 200,
-    contentType: 'application/json',
-    headers: { 'Access-Control-Allow-Origin': '*' },
-    body: '{}'
+    status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' },
+    body: JSON.stringify({ ok: true, data: { summary: { marketStance: '觀望', upCount: 1, downCount: 2 }, holdings: [], funds: [], market: [] } })
   }));
+  await page.route('https://api.ark-os26.cc/**', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ records: [] }) }));
+  const requests = [];
+  page.on('request', request => requests.push(new URL(request.url()).pathname));
   await page.goto(`${standaloneUrl}?tab=war-battle-brief`);
-
-  const app = page.frameLocator('#war-room-app');
-  await expect(app.locator('#p-zh')).toHaveText('戰情室');
-  await expect(app.locator('#p-tabs .ptab.active')).toHaveText('戰情總匯報');
-  const homeButton = app.getByRole('button', { name: '返回主城' });
-  await expect(homeButton).toBeVisible();
-  await app.locator('.war-room-home-btn').evaluate(button => {
-    window.closePanel = () => { document.documentElement.dataset.returnHomeClicked = 'true'; };
-    button.click();
-  });
-  await expect(app.locator('html')).toHaveAttribute('data-return-home-clicked', 'true');
-  expect(await app.locator('body').evaluate(() => sessionStorage.getItem('wealth_web_session_token'))).toBe('same-tab-session');
-  await expect(app.locator('.panel')).toHaveCSS('width', `${await page.evaluate(() => window.innerWidth)}px`);
-  expect(await app.locator('body').evaluate(el => getComputedStyle(el, '::after').display)).toBe('none');
-  await expect(app.locator('.bg-palace')).toBeHidden();
-  await expect(app.locator('#overlay')).toHaveCSS('z-index', '100');
-  const dimensions = await app.locator('html').evaluate(el => ({ scrollWidth: el.scrollWidth, clientWidth: el.clientWidth }));
+  await expect(page.locator('h1')).toHaveText('諸葛軍師・戰情室');
+  await expect(page.locator('.tabs button.active')).toHaveText('戰情總匯報');
+  await expect(page.locator('#content .hero h2')).toContainText('戰情總匯報');
+  expect(await page.evaluate(() => sessionStorage.getItem('wealth_web_session_token'))).toBe('same-tab-session');
+  await expect(page.locator('iframe')).toHaveCount(0);
+  expect(requests.some(path => path.endsWith('/index.html'))).toBe(false);
+  expect(requests.some(path => path.endsWith('/junshifu-map.webp') || path.endsWith('/mobileBG.png'))).toBe(false);
+  const dimensions = await page.locator('html').evaluate(el => ({ scrollWidth: el.scrollWidth, clientWidth: el.clientWidth }));
   expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
 });
 
-test('standalone route revalidates expired access then opens the requested section without the home scene', async ({ page }) => {
-  await page.evaluate(() => {
-    localStorage.setItem('wealth_api_url', 'https://example.test/exec');
-    localStorage.setItem('wealth_write_token', 'test-write-token');
-    localStorage.setItem('wealth_web_verify_status', 'ok');
-    localStorage.setItem('wealth_web_verify_checked_at', String(Date.now() - 8 * 24 * 60 * 60 * 1000));
+test('standalone route renews an expired shared session before loading its selected tab', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('wealth_api_url', 'https://example.test/exec'); localStorage.setItem('wealth_write_token', 'test-write-token');
+    localStorage.setItem('wealth_web_verify_status', 'ok'); localStorage.setItem('wealth_web_verify_checked_at', String(Date.now() - 8 * 86400000));
     sessionStorage.removeItem('wealth_web_session_token');
-    window.API_URL = 'https://example.test/exec';
-    window.WRITE_TOKEN = 'test-write-token';
   });
-  await page.route('https://example.test/**', route => route.fulfill({
-    status: 200,
-    contentType: 'application/json',
-    headers: { 'Access-Control-Allow-Origin': '*' },
-    body: JSON.stringify({ ok: true, data: { sessionToken: 'renewed-session' } })
-  }));
-
+  await page.route('https://example.test/**', route => {
+    const action = new URL(route.request().url()).searchParams.get('action');
+    let data = { sessionToken: 'renewed-session' };
+    if (action === 'taiwanMacroOverview') data = { hasData: true, latest: { month: '2026/09', overall_state: '穩定' } };
+    if (action === 'taiwanMacroHistory') data = { rows: [] };
+    return route.fulfill({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ ok: true, data }) });
+  });
+  await page.route('https://api.ark-os26.cc/**', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ records: [] }) }));
   await page.goto(`${standaloneUrl}?tab=war-taiwan-macro`);
-  const app = page.frameLocator('#war-room-app');
-  await expect(app.locator('#p-zh')).toHaveText('戰情室');
-  await expect(app.locator('#p-tabs .ptab.active')).toHaveText('台灣總體經濟');
-  await expect(app.locator('#web-login-overlay')).toHaveClass(/hidden/);
-  await expect(app.locator('#npc-web-scene')).toBeHidden();
-  expect(await app.locator('body').evaluate(() => sessionStorage.getItem('wealth_web_session_token'))).toBe('renewed-session');
+  await expect(page.locator('.tabs button.active')).toHaveText('台灣總體經濟');
+  await expect(page.locator('#content')).toContainText('2026/09');
+  expect(await page.evaluate(() => sessionStorage.getItem('wealth_web_session_token'))).toBe('renewed-session');
 });
 
-test('standalone War Room skips home-only weather, NPC, booking, dividend, and roster preloads', async ({ page }) => {
-  const requests = [];
-  page.on('request', request => requests.push(request.url()));
-  await page.evaluate(() => {
-    localStorage.setItem('wealth_api_url', 'https://example.test/exec');
-    localStorage.setItem('wealth_write_token', 'test-write-token');
-    localStorage.setItem('wealth_web_verify_status', 'ok');
-    localStorage.setItem('wealth_web_verify_checked_at', String(Date.now()));
-    sessionStorage.setItem('wealth_empire_unlocked_v1', 'ok');
+test('standalone page loads only its own package and does not request unrelated homepage data', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('wealth_api_url', 'https://example.test/exec'); localStorage.setItem('wealth_write_token', 'test-write-token');
+    localStorage.setItem('wealth_web_verify_status', 'ok'); localStorage.setItem('wealth_web_verify_checked_at', String(Date.now()));
     sessionStorage.setItem('wealth_web_session_token', 'same-tab-session');
   });
-  await page.route('https://example.test/**', route => route.fulfill({
-    status: 200,
-    contentType: 'application/json',
-    headers: { 'Access-Control-Allow-Origin': '*' },
-    body: JSON.stringify({ ok: true, data: {} })
-  }));
-  await page.route('https://api.ark-os26.cc/**', route => route.fulfill({
-    status: 200,
-    contentType: 'application/json',
-    headers: { 'Access-Control-Allow-Origin': '*' },
-    body: JSON.stringify({ records: [] })
-  }));
-
-  requests.length = 0;
-  await page.goto(`${url}?war-room=1&tab=war-briefing`);
-  await expect(page.locator('#p-zh')).toHaveText('戰情室');
-  await page.waitForTimeout(1600);
-
-  expect(requests.some(request => request.includes('api.open-meteo.com'))).toBe(false);
-  expect(requests.some(request => /(?:^|\/)characterAnimations\.js/.test(new URL(request).pathname))).toBe(false);
-  expect(requests.some(request => /(?:^|\/)AnimatedCharacter\.js/.test(new URL(request).pathname))).toBe(false);
+  await page.route('https://example.test/**', route => route.fulfill({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ ok: true, data: { snapshot: { market: { summary: {}, rows: [] }, macro: {}, capturedAt: '2026-10-03' } } }) }));
+  await page.route('https://api.ark-os26.cc/**', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ records: [] }) }));
+  const requests = [];
+  page.on('request', request => requests.push(request.url()));
+  await page.goto(`${standaloneUrl}?tab=war-briefing`);
+  await expect(page.locator('h1')).toHaveText('諸葛軍師・戰情室');
+  await page.waitForTimeout(300);
+  expect(requests.some(request => /(?:^|\/)index\.html(?:\?|$)/.test(request))).toBe(false);
+  expect(requests.some(request => /(?:^|\/)war-room-app\.js(?:\?|$)/.test(request))).toBe(true);
+  expect(requests.some(request => /(?:^|\/)war-room\.css(?:\?|$)/.test(request))).toBe(true);
+  expect(requests.some(request => /api\.open-meteo\.com|characterAnimations\.js|AnimatedCharacter\.js|junshifu-map|mobileBG/.test(request))).toBe(false);
   expect(requests.some(request => /[?&]action=(?:config|dividendCenter|holdingsOverview|assetSnapshot)(?:&|$)/.test(request))).toBe(false);
 });
