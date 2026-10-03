@@ -89,54 +89,21 @@ async function loadBattleBrief(force){
 }
 
 function renderCouncilPanel(initialTab){
-  setPanelHead('📜','War Room · Command','軍機處');
+  setPanelHead('📜','MILITARY · ROSTER','軍機處');
   var panelExtra=document.getElementById('p-extra');
   if(panelExtra)panelExtra.innerHTML='';
   setEmpireCardApiPendingStatus('council');
-  setPanelMenuTabs([
-    {key:'battle-brief',label:'戰情總匯報'},
-    {key:'council-roster',label:'部隊陣容'},
-    {key:'market-watch',label:'產業輪動'},
-    {key:'taiwan-macro',label:'台灣總體經濟'},
-    {key:'external-intelligence',label:'外部情報'}
-  ]);
-  var targetTab=['battle-brief','council-roster','market-watch','taiwan-macro','external-intelligence'].indexOf(initialTab)>=0?initialTab:'battle-brief';
+  setTabs([{key:'council-roster',label:'部隊陣容'}]);
+  var targetTab='council-roster';
   currentTab=targetTab;
   var apiReady=hasMainApiCredentials();
   var lockedNotice=setupNotice();
   document.getElementById('p-body').innerHTML=`
-    <div class="pane ${targetTab==='battle-brief'?'active':''}" id="pane-battle-brief">
-      <div id="battle-freshness">${dataFreshnessHtml()}</div>
-      <div id="battle-brief-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:82%"></div><div class="skel-line skel" style="width:68%"></div></div>
-    </div>
-    <div class="pane ${targetTab==='council-roster'?'active':''}" id="pane-council-roster">
+    <div class="pane active" id="pane-council-roster">
       <div id="council-roster-freshness">${dataFreshnessHtml()}</div>
       <div id="council-content">${apiReady?'':lockedNotice}</div>
-    </div>
-    <div class="pane ${targetTab==='market-watch'?'active':''}" id="pane-market-watch">
-      <div class="market-sector-rotation"><div class="sec-title">產業輪動</div><div id="market-sector-rotation-body"><div class="market-sector-meta">產業輪動快照讀取中…</div></div></div>
-    </div>
-    <div class="pane ${targetTab==='taiwan-macro'?'active':''}" id="pane-taiwan-macro">
-      <div id="taiwan-macro-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:82%"></div><div class="skel-line skel" style="width:68%"></div></div>
-    </div>
-    <div class="pane ${targetTab==='external-intelligence'?'active':''}" id="pane-external-intelligence">
-      <div class="api-bar"><div class="api-dot pending" id="intelligence-dot"></div><span class="api-label" id="intelligence-label">載入外部情報…</span></div>
-      <div id="intelligence-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:82%"></div><div class="skel-line skel" style="width:68%"></div></div>
-    </div>
-    <div class="pane" id="pane-council-task">
-      ${renderRetiredTaskNotice()}
     </div>`;
-  var initialButton=document.querySelector('.ptab[onclick*="'+targetTab+'"]');
-  if(initialButton)initialButton.classList.add('active');
-  var initialMenuItem=document.querySelector('.panel-menu-item[data-panel-tab="'+targetTab+'"]');
-  if(initialMenuItem)initialMenuItem.classList.add('active');
-  if(apiReady){
-    if(targetTab==='battle-brief')loadBattleBrief();
-    else if(targetTab==='council-roster')loadCouncilDashboard();
-    else if(targetTab==='market-watch')loadMarketSectorRotation();
-    else if(targetTab==='taiwan-macro')loadTaiwanMacro();
-    else if(targetTab==='external-intelligence')loadExternalIntelligence();
-  }
+  if(apiReady)loadCouncilDashboard();
 }
 
 function cacheCouncilDashboardResults(results){
@@ -1291,4 +1258,4 @@ async function loadTaiwanMacro(force,range,section){
   return pending.finally(function(){if(taiwanMacroPromise===pending)taiwanMacroPromise=null;});
 }
 
-window.MilitaryModuleLoaded={name:'military',version:'20260929-v1'};
+window.MilitaryModuleLoaded={name:'military',version:'20261003-war-room'};

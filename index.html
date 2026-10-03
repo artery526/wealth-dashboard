@@ -4519,6 +4519,14 @@ html[data-theme="deep-blue"] .overlay .panel.council-wide .battle-line-delta.fla
 html[data-theme="deep-blue"] .overlay .panel.council-wide .battle-cell.delta.flat{color:#8bb9c8}
 html[data-theme="deep-blue"] .overlay .panel.council-wide .battle-table-row.head{border-color:rgba(65,157,194,.24);color:#8fc9dc;background:rgba(6,28,44,.42)}
 html[data-theme="deep-blue"] .overlay .panel.council-wide .battle-empty{color:#78aec0}
+html[data-theme="deep-blue"] .overlay .panel.council-wide .war-room-briefing .advisor-world-card{
+  border-color:rgba(65,157,194,.38);background:linear-gradient(145deg,rgba(6,28,44,.94),rgba(3,18,29,.96));
+  box-shadow:inset 0 1px 0 rgba(220,250,255,.05),0 8px 24px rgba(0,0,0,.18);
+}
+html[data-theme="deep-blue"] .overlay .panel.council-wide .war-room-briefing .advisor-world-title,
+html[data-theme="deep-blue"] .overlay .panel.council-wide .war-room-briefing .advisor-world-label{color:#9fd5e5}
+html[data-theme="deep-blue"] .overlay .panel.council-wide .war-room-briefing .advisor-world-text,
+html[data-theme="deep-blue"] .overlay .panel.council-wide .war-room-briefing .advisor-world-quote{color:#dff7ff}
 
 /* 軍機處 > 戰情總匯報：QQQ 動態估值 */
 
@@ -6570,7 +6578,7 @@ function openPanel(key,initialTab){
   document.querySelectorAll('.card').forEach(c=>c.classList.remove('active'));
   var activeCard=document.getElementById('c-'+key);
   if(activeCard)activeCard.classList.add('active');
-  document.getElementById('panel').classList.toggle('council-wide',key==='council');
+  document.getElementById('panel').classList.toggle('council-wide',key==='council'||key==='war-room');
   document.getElementById('panel').classList.toggle('domestic-wide',key==='domestic'||key==='finance');
   document.getElementById('panel').classList.toggle('finance-wide',key==='finance');
   document.getElementById('panel').classList.toggle('medical-wide',key==='medical');
@@ -6582,6 +6590,7 @@ function openPanel(key,initialTab){
   else if(key==='domestic'){setEmpireCardApiPendingStatus('domestic');renderDomesticPanel();}
   else if(key==='market')renderMarketPanel();
   else if(key==='council'){setEmpireCardApiPendingStatus('council');renderCouncilPanel(initialTab);}
+  else if(key==='war-room')renderWarRoomPanel(initialTab);
   else if(key==='medical'){setEmpireCardApiPendingStatus('medical');renderMedicalPanel();}
   else if(key==='stars'){setEmpireCardApiPendingStatus('stars');renderStarsPanel();}
   else if(key==='store'){setEmpireCardApiPendingStatus('store');renderStorePanel(initialTab);}
@@ -6602,6 +6611,13 @@ function closePanel(){
   currentPanel=null;
 }
 function overlayClick(e){if(e.target===document.getElementById('overlay'))closePanel()}
+
+function openWarRoomPanel(event,tab){
+  if(event&&event.stopPropagation)event.stopPropagation();
+  closeAdvisorAIStandalone();
+  closeAdvisorDialog();
+  openPanel('war-room',tab||'war-briefing');
+}
 
 function openFinanceCard(event){
   if(event&&event.target&&event.target.closest&&event.target.closest('.card-scroll-toggle,.card-shortcuts'))return;
@@ -6628,6 +6644,9 @@ function openArkWallAdminShortcut(event){
 
 function openEmpireCardShortcut(event,panel,tab){
   if(event&&event.stopPropagation)event.stopPropagation();
+  if(panel==='council'&&tab==='battle-brief'){panel='war-room';tab='war-battle-brief';}
+  else if(panel==='council'&&tab==='market-watch'){panel='war-room';tab='war-sector-rotation';}
+  else if(panel==='council'&&tab==='taiwan-macro'){panel='war-room';tab='war-taiwan-macro';}
   if(panel==='wall'){
     openArkWall(tab);
     return;
@@ -6812,6 +6831,10 @@ function switchTab(btn,key){
   else if(key==='dividend-center')loadDividendCenterPanel();
   else if(key==='domestic-yearly')loadDomesticYearly();
   else if(key==='battle-brief')loadBattleBrief();
+  else if(key==='war-briefing')openAdvisorWorldSituation(null,true);
+  else if(key==='war-battle-brief')loadBattleBrief();
+  else if(key==='war-sector-rotation')loadMarketSectorRotation();
+  else if(key==='war-taiwan-macro')loadTaiwanMacro();
   else if(key==='market-watch'){if(currentPanel==='council')loadMarketSectorRotation();else loadMarketDashboard();}
   else if(key==='macro-overview')loadMacroOverview();
   else if(key==='taiwan-macro')loadTaiwanMacro();
@@ -15212,7 +15235,7 @@ function ensureMilitaryModule(){
   if(!militaryModulePromise){
     militaryModulePromise=new Promise(function(resolve,reject){
       var script=document.createElement('script');
-      script.src='./military-module.js?v=20260929-v1';
+      script.src='./military-module.js?v=20261003-war-room';
       script.async=true;
       script.onload=function(){
         if(!window.MilitaryModuleLoaded){reject(new Error('軍機處模組載入後未完成初始化'));return;}
@@ -15371,6 +15394,45 @@ function renderCouncilPanel(initialTab){
     console.warn(e);
     return null;
   });
+}
+
+function renderWarRoomPanel(initialTab){
+  setPanelHead('📜','STRATEGY · WAR ROOM','戰情室');
+  var panelExtra=document.getElementById('p-extra');
+  if(panelExtra)panelExtra.innerHTML='';
+  var tabs=[
+    {key:'war-briefing',label:'帝國晨報'},
+    {key:'war-battle-brief',label:'戰情總匯報'},
+    {key:'war-sector-rotation',label:'產業輪動'},
+    {key:'war-taiwan-macro',label:'台灣總體經濟'}
+  ];
+  setTabs(tabs);
+  var targetTab=tabs.some(function(tab){return tab.key===initialTab;})?initialTab:'war-briefing';
+  currentTab=targetTab;
+  document.querySelectorAll('.ptab').forEach(function(button){button.classList.toggle('active',button.getAttribute('onclick').indexOf(targetTab)>=0);});
+  document.getElementById('p-body').innerHTML=`
+    <div class="pane ${targetTab==='war-briefing'?'active':''}" id="pane-war-briefing">
+      <div class="advisor-world-slot war-room-briefing" id="war-room-briefing-content"><div class="advisor-world-card"><div class="advisor-world-title">🏛 帝國晨報</div><div class="advisor-world-text" style="position:relative;z-index:1;text-align:center">諸葛亮正在整理戰報…</div></div></div>
+    </div>
+    <div class="pane ${targetTab==='war-battle-brief'?'active':''}" id="pane-war-battle-brief">
+      <div id="battle-freshness">${dataFreshnessHtml()}</div>
+      <div id="battle-brief-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:82%"></div><div class="skel-line skel" style="width:68%"></div></div>
+    </div>
+    <div class="pane ${targetTab==='war-sector-rotation'?'active':''}" id="pane-war-sector-rotation">
+      <div class="market-sector-rotation"><div class="sec-title">產業輪動</div><div id="market-sector-rotation-body"><div class="market-sector-meta">選擇此分頁後讀取產業輪動快照。</div></div></div>
+    </div>
+    <div class="pane ${targetTab==='war-taiwan-macro'?'active':''}" id="pane-war-taiwan-macro">
+      <div id="taiwan-macro-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:82%"></div><div class="skel-line skel" style="width:68%"></div></div>
+    </div>`;
+  if(targetTab==='war-briefing')openAdvisorWorldSituation(null,true);
+  else if(targetTab==='war-battle-brief')loadBattleBrief();
+  else if(targetTab==='war-sector-rotation')loadMarketSectorRotation();
+  else if(targetTab==='war-taiwan-macro')loadTaiwanMacro();
+}
+
+function advisorWorldContentTarget(){
+  if(currentPanel==='war-room')return document.getElementById('war-room-briefing-content');
+  return document.getElementById('advisor-world-slot')||document.getElementById('advisor-shortcut-panel');
 }
 function loadCouncilDashboard(){
   var args=arguments;
@@ -16381,7 +16443,7 @@ function advisorWorldTaiwanStockReviewHtml(data){
 }
 async function openAdvisorTaiwanStockReview(event){
   if(event&&event.stopPropagation)event.stopPropagation();
-  var panel=document.getElementById('advisor-world-slot')||document.getElementById('advisor-shortcut-panel');
+  var panel=advisorWorldContentTarget();
   if(!panel)return;
   panel.innerHTML='<div class="advisor-world-card advisor-tw-review"><div class="advisor-world-title-row"><div class="advisor-world-title">📈 台股</div><div class="advisor-world-tabs"><button class="advisor-world-tab-btn" type="button" onclick="openAdvisorWorldSituation(event,false)">🏛 帝國晨報</button><button class="advisor-world-tab-btn" type="button" onclick="openAdvisorSectorRotation(event)">📊 產業</button></div></div><div class="advisor-tw-review-text" style="margin-top:12px;text-align:center">正在調閱台股月評…</div></div>';
   if(!API_URL){panel.innerHTML=advisorWorldTaiwanStockReviewHtml({latest:null,message:'尚未設定 API URL'});return;}
@@ -16419,7 +16481,7 @@ function advisorWorldSectorHtml(data){
 var advisorSectorRotationPromise=null;
 async function openAdvisorSectorRotation(event){
   if(event&&event.stopPropagation)event.stopPropagation();
-  var panel=document.getElementById('advisor-world-slot')||document.getElementById('advisor-shortcut-panel');
+  var panel=advisorWorldContentTarget();
   if(!panel)return;
   panel.innerHTML='<div class="advisor-world-card advisor-sector-card"><div class="advisor-world-title-row"><div class="advisor-world-title">📊 產業</div><div class="advisor-world-tabs"><button class="advisor-world-tab-btn" type="button" onclick="openAdvisorWorldSituation(event,false)">🏛 帝國晨報</button><button class="advisor-world-tab-btn" type="button" onclick="openAdvisorTaiwanStockReview(event)">📈 台股</button></div></div><div class="advisor-tw-review-text" style="margin-top:12px;text-align:center">正在調閱產業輪動短評…</div></div>';
   if(!API_URL){panel.innerHTML=advisorWorldSectorHtml({status:'尚未設定 API URL，無法調閱產業輪動'});return;}
@@ -16429,7 +16491,7 @@ async function openAdvisorSectorRotation(event){
 }
 async function advisorWorldGenerateTaiwanStockReview(event){
   if(event&&event.stopPropagation)event.stopPropagation();
-  var panel=document.getElementById('advisor-world-slot')||document.getElementById('advisor-shortcut-panel');
+  var panel=advisorWorldContentTarget();
   if(!panel||taiwanStockReviewGeneratePromise)return;
   panel.innerHTML='<div class="advisor-world-card advisor-tw-review"><div class="advisor-world-title-row"><div class="advisor-world-title">📈 台股</div><button class="advisor-world-tab-btn" type="button" onclick="openAdvisorWorldSituation(event,false)">🏛 帝國晨報</button></div><div class="advisor-tw-review-text" style="margin-top:12px;text-align:center">軍師正在根據最新月資料撰寫，請稍候…</div></div>';
   taiwanStockReviewGeneratePromise=apiPost({action:'taiwanStockReviewGenerate'},90000).then(function(){return advisorWorldTaiwanStockReviewRequest();}).then(function(data){panel.innerHTML=advisorWorldTaiwanStockReviewHtml(data);return data;}).catch(function(err){panel.innerHTML='<div class="advisor-world-card advisor-tw-review"><div class="advisor-world-title-row"><div class="advisor-world-title">📈 台股</div><button class="advisor-world-tab-btn" type="button" onclick="openAdvisorWorldSituation(event,false)">🏛 帝國晨報</button></div><div class="advisor-tw-review-missing">月評產生失敗：'+esc(err&&err.message?err.message:'請稍後再試')+'<br>若訊息涉及密鑰，請確認 API 設定中的 WRITE_TOKEN 與後端設定一致。</div></div>';}).finally(function(){taiwanStockReviewGeneratePromise=null;});
@@ -16997,7 +17059,12 @@ initAdvisorDuoVideoPlayback();
           <button class="advisor-menu-toggle" type="button" onclick="toggleAdvisorMenuGroup(this)" aria-expanded="false"><span class="advisor-menu-mark">軍</span>軍機處<span class="advisor-menu-caret">▼</span></button>
           <div class="advisor-btn-group">
             <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'council','council-roster')"><span class="advisor-btn-tag">隊</span>部隊陣容</button>
-            <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'council','battle-brief')"><span class="advisor-btn-tag">戰</span>戰情總匯報</button>
+          </div>
+        </section>
+        <section class="advisor-menu-section">
+          <button class="advisor-menu-toggle" type="button" onclick="toggleAdvisorMenuGroup(this)" aria-expanded="false"><span class="advisor-menu-mark">戰</span>戰情室<span class="advisor-menu-caret">▼</span></button>
+          <div class="advisor-btn-group">
+            <button class="advisor-btn" type="button" onclick="openWarRoomPanel(event)"><span class="advisor-btn-tag">戰</span>戰情室</button>
           </div>
         </section>
         <section class="advisor-menu-section">
@@ -17298,7 +17365,7 @@ function advisorWorldRenderSnapshot(panel,payload){
 
 async function openAdvisorWorldSituation(event,auto,force){
   if(event&&event.stopPropagation)event.stopPropagation();
-  var panel=document.getElementById('advisor-world-slot')||document.getElementById('advisor-shortcut-panel');
+  var panel=advisorWorldContentTarget();
   if(!panel)return;
   advisorDividendSelection=null;
   advisorDividendMemoPending=null;
@@ -18370,7 +18437,7 @@ function advisorAIResolveAccount(text){
 function advisorAIOpenTarget(text){
   var key=advisorAICompact(text);
   if(key==='foodhouse')return {intent:'open',panel:'finance',tab:'finance-accs',label:'國庫現況'};
-  if(key==='market')return {intent:'open',panel:'council',tab:'market-watch',label:'產業輪動'};
+  if(key==='market')return {intent:'open',panel:'war-room',tab:'war-sector-rotation',label:'產業輪動'};
   if(key==='finance')return {intent:'open',panel:'finance',tab:'finance-accs',label:'財政'};
   if(key==='domestic')return {intent:'open',panel:'domestic',tab:'booking-form',label:'快速記帳'};
   if(key==='council')return {intent:'open',panel:'council',label:'軍機處'};
@@ -18380,9 +18447,9 @@ function advisorAIOpenTarget(text){
   if(key.indexOf('糧')>=0)return {intent:'open',panel:'finance',tab:'finance-accs',label:'國庫現況'};
   if(key.indexOf('年度財報')>=0||key.indexOf('財報')>=0)return {intent:'open',panel:'finance',tab:'domestic-yearly',label:'年度財報'};
   if(key.indexOf('部隊陣容')>=0||key.indexOf('陣容')>=0)return {intent:'open',panel:'council',tab:'council-roster',label:'部隊陣容'};
-  if(key.indexOf('戰情總匯報')>=0||key.indexOf('總匯報')>=0)return {intent:'open',panel:'council',tab:'battle-brief',label:'戰情總匯報'};
-  if(key.indexOf('台灣總體經濟')>=0||key.indexOf('台灣總經')>=0)return {intent:'open',panel:'council',tab:'taiwan-macro',label:'台灣總體經濟'};
-  if(key.indexOf('市集')>=0||key.indexOf('市場')>=0)return {intent:'open',panel:'council',tab:'market-watch',label:'產業輪動'};
+  if(key.indexOf('戰情總匯報')>=0||key.indexOf('總匯報')>=0)return {intent:'open',panel:'war-room',tab:'war-battle-brief',label:'戰情總匯報'};
+  if(key.indexOf('台灣總體經濟')>=0||key.indexOf('台灣總經')>=0)return {intent:'open',panel:'war-room',tab:'war-taiwan-macro',label:'台灣總體經濟'};
+  if(key.indexOf('市集')>=0||key.indexOf('市場')>=0)return {intent:'open',panel:'war-room',tab:'war-sector-rotation',label:'產業輪動'};
   if(key.indexOf('內政')>=0||key.indexOf('記帳')>=0)return {intent:'open',panel:'domestic',tab:'booking-form',label:'快速記帳'};
   return null;
 }
@@ -18586,8 +18653,8 @@ function advisorAICommand(raw){
   if(compact.indexOf('年度財報')>=0)return {intent:'open',panel:'finance',tab:'domestic-yearly',label:'年度財報'};
   if(compact==='糧'||compact.indexOf('糧倉')>=0)return {intent:'open',panel:'finance',tab:'finance-accs',label:'國庫現況'};
   if(compact.indexOf('部隊陣容')>=0||compact.indexOf('陣容')>=0)return {intent:'open',panel:'council',tab:'council-roster',label:'部隊陣容'};
-  if(compact.indexOf('戰情總匯報')>=0||compact.indexOf('總匯報')>=0)return {intent:'open',panel:'council',tab:'battle-brief',label:'戰情總匯報'};
-  if(compact.indexOf('台灣總體經濟')>=0||compact.indexOf('台灣總經')>=0)return {intent:'open',panel:'council',tab:'taiwan-macro',label:'台灣總體經濟'};
+  if(compact.indexOf('戰情總匯報')>=0||compact.indexOf('總匯報')>=0)return {intent:'open',panel:'war-room',tab:'war-battle-brief',label:'戰情總匯報'};
+  if(compact.indexOf('台灣總體經濟')>=0||compact.indexOf('台灣總經')>=0)return {intent:'open',panel:'war-room',tab:'war-taiwan-macro',label:'台灣總體經濟'};
   if(compact.indexOf('維持率')>=0)return {intent:'maintenance'};
   if(compact.indexOf('複製載具')>=0)return {intent:'copyCarrier'};
   if(compact==='載具'||compact.indexOf('顯示載具')>=0)return {intent:'showCarrier'};
@@ -18812,7 +18879,7 @@ function advisorAIDailyUpdateItems(data){
   (Array.isArray(data&&data.items)?data.items:[]).forEach(function(item){source[item.module]=item;});
   return [
     {module:'finance',icon:'💰',title:'財政部',tab:'booking-form',message:'主公今日尚未記帳。'},
-    {module:'council',icon:'⚔️',title:'軍機處',tab:'battle-brief',message:'今日尚無新的軍師報告。'},
+    {module:'council',icon:'⚔️',title:'戰情室',tab:'war-briefing',message:'今日尚無新的軍師報告。'},
     {module:'medical',icon:'🏥',title:'醫館',tab:'medical-painmap',message:'主公今日尚未記錄。'},
     {module:'wall',icon:'🧱',title:'王府',tab:'wall',message:'今日尚無新的王府紀錄。'},
     {module:'store',icon:'🏛️',title:'太倉',tab:'store-list',message:'今日尚無新的物品記錄。'}
@@ -20547,7 +20614,7 @@ function mpmRender(records){
     };
     var routes={
       pangtong:function(event){openAdvisorAIFromOrb(event);},
-      zhuge:function(event){openAdvisorDialog(event);},
+      zhuge:function(event){openWarRoomPanel(event);},
       chenqun:function(){openPanel('finance');},
       huatuo:function(){openPanel('medical');},
       liubei:function(){openArkWall();},

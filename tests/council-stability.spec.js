@@ -4,7 +4,13 @@ const url = 'file:///' + path.resolve(__dirname, '..', 'index.html').replace(/\\
 
 test.beforeEach(async ({ page }) => {
   await page.goto(url);
-  await page.evaluate(() => {
+  await page.evaluate(async () => {
+    await ensureMilitaryModule();
+    const loginOverlay = document.getElementById('web-login-overlay');
+    if (loginOverlay) {
+      loginOverlay.classList.remove('open');
+      loginOverlay.style.display = 'none';
+    }
     API_URL = 'https://example.test/exec';
     setCouncilPanelStatusIfActive = () => {};
     loadBattleFinanceSnapshots = () => Promise.resolve(null);

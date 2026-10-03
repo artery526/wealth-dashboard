@@ -4,7 +4,13 @@ const url = 'file:///' + path.resolve(__dirname, '..', 'index.html').replace(/\\
 
 test.beforeEach(async ({ page }) => {
   await page.goto(url);
-  await page.evaluate(() => {
+  await page.evaluate(async () => {
+    await ensureMilitaryModule();
+    const loginOverlay = document.getElementById('web-login-overlay');
+    if (loginOverlay) {
+      loginOverlay.classList.remove('open');
+      loginOverlay.style.display = 'none';
+    }
     document.getElementById('overlay').classList.add('open');
     document.getElementById('panel').classList.add('council-wide');
     document.getElementById('p-body').innerHTML = '<div id="council-content"></div><div id="battle-brief-content"></div><div id="market-content"></div>';
