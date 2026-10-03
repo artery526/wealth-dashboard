@@ -96,3 +96,33 @@ test('history remains available when overview fails without cached data', async 
   await expect(page.locator('[data-taiwan-history]')).toContainText('歷史趨勢');
   await expect(page.locator('.taiwan-macro-range button.active')).toHaveText('6M');
 });
+
+test('roster data preloads at entry and the panel uses the fresh cache without another API request', async ({ page }) => {
+  const result = await page.evaluate(async () => {
+    localStorage.removeItem(COUNCIL_ROSTER_STORAGE_KEY);
+    councilDashboardCache = null;
+    councilDashboardFetchedAt = 0;
+    API_URL = 'https://example.test/exec';
+    window.hasMainApiCredentials = () => true;
+    window.isEmpireSessionUnlocked = () => true;
+    let rosterCalls = 0, summaryCalls = 0;
+    window.loadCouncilDashboardData = () => {
+      rosterCalls++;
+      return Promise.resolve({ heroes: [], holdings: [{ symbol: 'TEST' }], holdingsLoaded: true });
+    };
+    window.loadCouncilDashboardSummaryData = () => {
+      summaryCalls++;
+      return Promise.resolve({ assetSnapshot: { latest: { totalAssetValue: 123 } }, dividendProjection: null });
+    };
+    window.renderCouncilRoster = (rows, el) => { el.innerHTML = '<div class="test-roster">持股資料已預載</div>'; };
+    const preloaded = await preloadCouncilDashboard();
+    openPanel('council');
+    await new Promise(resolve => setTimeout(resolve, 0));
+    return {
+      preloaded, rosterCalls, summaryCalls,
+      cachedSymbol: councilDashboardCache.holdings[0].symbol,
+      panelContent: document.getElementById('council-content').innerText
+    };
+  });
+  expect(result).toEqual({ preloaded: true, rosterCalls: 1, summaryCalls: 1, cachedSymbol: 'TEST', panelContent: '持股資料已預載' });
+});

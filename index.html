@@ -6559,6 +6559,7 @@ async function verifyCfgWebAccess(){
     setWebVerifyStatus('ok','城門驗證成功');
     renderCfgWebVerifyStatus('ok','城門驗證成功');
     setWebLoginVisible(false,'城門驗證成功','ok');
+    preloadQuickBookingAndPangTong();
     window.setTimeout(openDailyBriefingPopup,250);
   }catch(e){
     console.error(e);
@@ -6593,6 +6594,7 @@ async function saveCfg(){
     await verifyWebAccess();
     setWebVerifyStatus('ok','城門驗證成功');
     setWebLoginVisible(false,'城門驗證成功','ok');
+    preloadQuickBookingAndPangTong();
     window.setTimeout(openDailyBriefingPopup,250);
   }catch(e){
     console.error(e);
@@ -15311,7 +15313,7 @@ function ensureMilitaryModule(){
   if(!militaryModulePromise){
     militaryModulePromise=new Promise(function(resolve,reject){
       var script=document.createElement('script');
-      script.src='./military-module.js?v=20261003-roster-no-tab1';
+      script.src='./military-module.js?v=20261003-roster-preload1';
       script.async=true;
       script.onload=function(){
         if(!window.MilitaryModuleLoaded){reject(new Error('軍機處模組載入後未完成初始化'));return;}
@@ -16805,15 +16807,40 @@ function setupNotice(){
   </div>`;
 }
 
+var councilRosterPreloadPromise=null;
+function preloadCouncilRosterOnIdle(){
+  if(!API_URL||!webVerifyIsAuthorized())return Promise.resolve(false);
+  if(councilRosterPreloadPromise)return councilRosterPreloadPromise;
+  var run=function(){
+    if(!API_URL||!webVerifyIsAuthorized())return Promise.resolve(false);
+    return ensureMilitaryModule().then(function(){
+      if(typeof window.preloadCouncilDashboard!=='function')return false;
+      return window.preloadCouncilDashboard();
+    }).catch(function(error){
+      console.warn('部隊陣容背景預載失敗',error);
+      return false;
+    });
+  };
+  councilRosterPreloadPromise=new Promise(function(resolve){
+    var start=function(){run().then(resolve).finally(function(){councilRosterPreloadPromise=null;});};
+    if(window.requestIdleCallback)window.requestIdleCallback(start,{timeout:7000});
+    else window.setTimeout(start,1500);
+  });
+  return councilRosterPreloadPromise;
+}
+
 function preloadQuickBookingAndPangTong(){
   if(!API_URL||!webVerifyIsAuthorized())return Promise.resolve(false);
   var run=function(){
+    var councilFallbackTimer=window.setTimeout(preloadCouncilRosterOnIdle,6500);
     return Promise.allSettled([
       loadBookingConfig(),
       loadDividendCenter(false)
     ]).then(function(results){
+      window.clearTimeout(councilFallbackTimer);
       if(results[0].status==='rejected')console.warn('快速記帳設定預載失敗',results[0].reason);
       if(results[1].status==='rejected')console.warn('龐統配息資料預載失敗',results[1].reason);
+      window.setTimeout(preloadCouncilRosterOnIdle,900);
       return results;
     });
   };
@@ -16850,7 +16877,7 @@ function preloadQuickBookingAndPangTong(){
   restoreRememberedWebAccess();
   initEmpireCardStatuses();
   preloadQuickBookingAndPangTong();
-  // 大型板塊仍按需讀取；快速記帳設定與龐統配息選單在授權後以閒置時段預載。
+  // 大型板塊仍按需讀取；快速記帳、龐統配息及部隊陣容會在授權後的閒置時段分批預載。
   // 彰化天氣（Open-Meteo，無需 API key）
   (function(){
     var WMO={

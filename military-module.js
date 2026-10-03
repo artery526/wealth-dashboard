@@ -143,6 +143,10 @@ async function loadCouncilDashboard(){
     setDataFreshness('council-roster-freshness',dataFreshnessMeta(cached,cachedFetchedAt,true));
     renderCouncilRoster(mergeCouncilRows(cached.holdings,cached.heroes,{}),el,cached.assetSnapshot,cached.dividendProjection);
     setEmpireCardStatus('council','pending',cacheFresh&&cached.holdingsLoaded&&API_URL?'已顯示快取 · 背景更新中':'已顯示上次資料 · 背景更新中');
+    if(cacheFresh&&cached.holdingsLoaded){
+      setEmpireCardStatus('council','ok','部隊陣容已預先載入');
+      return;
+    }
   }else{
     el.innerHTML='<div class="skel-line skel"></div><div class="skel-line skel" style="width:82%"></div><div class="skel-line skel" style="width:70%"></div>';
   }
@@ -193,6 +197,28 @@ async function loadCouncilDashboard(){
     setEmpireCardStatus('council','err',e.message||'讀取失敗');
     el.innerHTML=`<div style="color:var(--coral);font-family:var(--sans);font-size:12px;padding:12px 0">${esc(e.message)}</div>`;
   }
+}
+
+function preloadCouncilDashboard(){
+  if(!API_URL||(!hasMainApiCredentials()&&!arkWallReadToken()))return Promise.resolve(false);
+  var cached=councilDashboardCache||readCouncilRosterStorageCache();
+  if(cached)councilDashboardCache=cached;
+  var cachedAt=cached&&(Number(cached.cachedAt)||councilDashboardFetchedAt)||0;
+  if(cached&&cached.holdingsLoaded&&Date.now()-cachedAt<COUNCIL_DASHBOARD_CACHE_TTL)return Promise.resolve(true);
+  return Promise.allSettled([loadCouncilDashboardData(),loadCouncilDashboardSummaryData()]).then(function(results){
+    var rosterResult=results[0].status==='fulfilled'?results[0].value:null;
+    var roster=rosterResult&&rosterResult.holdingsLoaded?rosterResult:cached;
+    if(!roster||!roster.holdingsLoaded)return false;
+    var summary=results[1].status==='fulfilled'?results[1].value:{};
+    cacheCouncilDashboardResults({
+      heroes:roster.heroes||[],
+      holdings:roster.holdings||[],
+      holdingsLoaded:true,
+      assetSnapshot:summary.assetSnapshot||roster.assetSnapshot||null,
+      dividendProjection:summary.dividendProjection||roster.dividendProjection||null
+    });
+    return true;
+  });
 }
 
 function loadCouncilDashboardData(){
