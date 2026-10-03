@@ -15,7 +15,9 @@ test.beforeEach(async ({ page }) => {
       loginOverlay.style.display = 'none';
     }
     window.warRoomLoads = [];
+    const originalBriefingLoader = window.openAdvisorWorldSituation;
     window.openAdvisorWorldSituation = () => warRoomLoads.push('briefing');
+    window.openAdvisorWorldSituation.__warRoomOriginal = originalBriefingLoader;
     window.loadBattleBrief = () => warRoomLoads.push('battle');
     window.loadMarketSectorRotation = () => warRoomLoads.push('sector');
     window.loadTaiwanMacro = () => warRoomLoads.push('taiwan');
@@ -36,6 +38,25 @@ test('War Room opens on the briefing and fetches each other area only when selec
   await page.getByRole('button', { name: '台灣總體經濟' }).click();
   expect(await page.evaluate(() => warRoomLoads)).toEqual(['briefing', 'battle', 'sector', 'taiwan']);
   await expect(page.locator('#pane-war-taiwan-macro')).toHaveClass(/active/);
+});
+
+test('Imperial Morning Brief renders stale saved data before refresh and keeps it when refresh fails', async ({ page }) => {
+  await page.evaluate(async () => {
+    window.openAdvisorWorldSituation = window.openAdvisorWorldSituation.__warRoomOriginal;
+    window.isWarRoomStandalone = () => true;
+    window.arkWallFetch = () => Promise.reject(new Error('snapshot unavailable'));
+    window.apiGet = () => Promise.reject(new Error('refresh unavailable'));
+    const oldSavedAt = Date.now() - 3 * 60 * 60 * 1000;
+    localStorage.setItem(MARKET_DASHBOARD_CACHE_KEY, JSON.stringify({ savedAt: oldSavedAt, data: { summary: { updatedAt: '2026-10-03' } } }));
+    localStorage.setItem(MARKET_MACRO_CACHE_KEY, JSON.stringify({ savedAt: oldSavedAt, data: { judgment: { date: '2026-10-03' } } }));
+    localStorage.removeItem(MARKET_ADVISOR_WORLD_CACHE_KEY);
+    openPanel('war-room');
+  });
+
+  const briefing = page.locator('#war-room-briefing-content');
+  await expect(briefing.locator('.advisor-world-card')).toBeVisible();
+  await expect(briefing).not.toContainText('諸葛亮正在整理戰報');
+  await expect(briefing.locator('.advisor-world-refresh-status')).toHaveText('背景更新失敗，先顯示上次保存的資料。');
 });
 
 test('Military panel exposes only the Troop Roster tab', async ({ page }) => {

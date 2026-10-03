@@ -17490,8 +17490,10 @@ async function openAdvisorWorldSituation(event,auto,force){
   }
   var worldEntry=force?null:readMarketCacheEntry(MARKET_ADVISOR_WORLD_CACHE_KEY,true);
   var worldPayload=worldEntry&&worldEntry.data||null;
-  var cachedMarket=force?null:readTimedMarketCache(MARKET_DASHBOARD_CACHE_KEY);
-  var cachedMacro=force?null:readTimedMarketCache(MARKET_MACRO_CACHE_KEY);
+  // 晨報優先顯示已保存的上一份資料；即使一般行情快取已超過 TTL，
+  // 仍可先供晨報閱讀，背景更新成功後再替換，避免長時間停在整理戰報。
+  var cachedMarket=force?null:(readTimedMarketCache(MARKET_DASHBOARD_CACHE_KEY)||readMarketCacheEntry(MARKET_DASHBOARD_CACHE_KEY,true)?.data||null);
+  var cachedMacro=force?null:(readTimedMarketCache(MARKET_MACRO_CACHE_KEY)||readMarketCacheEntry(MARKET_MACRO_CACHE_KEY,true)?.data||null);
   var hasCachedWorld=!!(worldPayload&&worldPayload.market&&worldPayload.macro||cachedMarket||cachedMacro);
   if(worldPayload&&worldPayload.market&&worldPayload.macro){
     if(!worldPayload.capturedAt)worldPayload.capturedAt=new Date(Number(worldEntry.savedAt)||Date.now()).toISOString();
@@ -17537,7 +17539,7 @@ async function openAdvisorWorldSituation(event,auto,force){
       advisorWorldLongReportRequest()
     ]);
     if(results[0].status!=='fulfilled'&&results[1].status!=='fulfilled'){
-      if(hasCachedWorld)return;
+      if(hasCachedWorld){advisorWorldSetRefreshStatus(panel,'背景更新失敗，先顯示上次保存的資料。');return;}
       throw new Error('市場與總經資料讀取失敗');
     }
     var market=results[0].status==='fulfilled'?(results[0].value||{}):(cachedMarket||{});
@@ -17547,9 +17549,21 @@ async function openAdvisorWorldSituation(event,auto,force){
     advisorWorldCacheSnapshot(fallbackPayload);
     advisorWorldRenderSnapshot(panel,fallbackPayload);
   }catch(err){
-    if(hasCachedWorld)return;
+    if(hasCachedWorld){advisorWorldSetRefreshStatus(panel,'背景更新失敗，先顯示上次保存的資料。');return;}
     panel.innerHTML='<div class="advisor-world-card"><div class="advisor-world-title">🏛 帝國晨報</div><div class="advisor-world-text" style="position:relative;z-index:1;text-align:center;color:var(--coral)">讀取失敗：'+esc(err&&err.message?err.message:'請稍後再試')+'</div></div>';
   }
+}
+
+function advisorWorldSetRefreshStatus(panel,message){
+  if(!panel||!message)return;
+  var status=panel.querySelector('.advisor-world-refresh-status');
+  if(!status){
+    status=document.createElement('div');
+    status.className='advisor-world-refresh-status';
+    status.style.cssText='margin:8px 0;padding:7px 10px;border:1px solid rgba(232,192,80,.24);border-radius:7px;color:#b9a879;font-size:12px';
+    panel.insertBefore(status,panel.firstChild);
+  }
+  status.textContent=message;
 }
 
 function advisorShortcutSpecs(){
