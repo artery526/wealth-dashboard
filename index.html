@@ -4768,6 +4768,7 @@ html[data-theme="deep-blue"] .scene-task-details .home-agenda-global-refresh{bor
 <script>
   // 影片不是首屏必要內容：先讓城牆與場景完成，再於瀏覽器空閒時載入。
   (function deferBackgroundVideo(){
+    if(document.documentElement.classList.contains('war-room-standalone'))return;
     var video=document.getElementById('bg-video');
     if(!video)return;
     var load=function(){
@@ -16817,6 +16818,7 @@ function setupNotice(){
 
 var councilRosterPreloadPromise=null;
 function preloadCouncilRosterOnIdle(){
+  if(isWarRoomStandalone())return Promise.resolve(false);
   if(!API_URL||!webVerifyIsAuthorized())return Promise.resolve(false);
   if(councilRosterPreloadPromise)return councilRosterPreloadPromise;
   var run=function(){
@@ -16838,6 +16840,7 @@ function preloadCouncilRosterOnIdle(){
 }
 
 function preloadQuickBookingAndPangTong(){
+  if(isWarRoomStandalone())return Promise.resolve(false);
   if(!API_URL||!webVerifyIsAuthorized())return Promise.resolve(false);
   var run=function(){
     var councilFallbackTimer=window.setTimeout(preloadCouncilRosterOnIdle,6500);
@@ -16884,10 +16887,11 @@ function preloadQuickBookingAndPangTong(){
   updateDateDisplay();
   restoreRememberedWebAccess();
   initEmpireCardStatuses();
-  preloadQuickBookingAndPangTong();
-  // 大型板塊仍按需讀取；快速記帳、龐統配息及部隊陣容會在授權後的閒置時段分批預載。
+  if(!isWarRoomStandalone())preloadQuickBookingAndPangTong();
+  // 主城登入後分段預載常用功能；戰情獨立模式跳過，其他大型板塊維持按需讀取。
   // 彰化天氣（Open-Meteo，無需 API key）
   (function(){
+    if(document.documentElement.classList.contains('war-room-standalone'))return;
     var WMO={
       0:'晴空萬里',1:'大致晴朗',2:'部分多雲',3:'陰天',
       45:'霧',48:'霧淞',
@@ -20696,6 +20700,7 @@ function mpmRender(records){
 <script>
 // 桌機與手機共用場景左上角的收合月曆與行事曆。
 (function initResponsiveHomeCalendarSlot(){
+  if(document.documentElement.classList.contains('war-room-standalone'))return;
   var calendar=document.getElementById('home-agenda-calendar');
   var mobileSlot=document.getElementById('mobile-calendar-slot');
   if(!calendar||!mobileSlot)return;
@@ -20710,6 +20715,7 @@ function mpmRender(records){
 <script>
 // 網頁端場景只負責人物與路由，正式面板仍由既有 overlay 系統管理。
 (function initWebNpcScene(){
+  if(document.documentElement.classList.contains('war-room-standalone'))return;
   var mount=document.getElementById('npc-web-scene-stage');
   var status=document.getElementById('npc-web-scene-status');
   if(!mount)return;

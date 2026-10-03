@@ -154,3 +154,38 @@ test('standalone route revalidates expired access then opens the requested secti
   await expect(app.locator('#npc-web-scene')).toBeHidden();
   expect(await app.locator('body').evaluate(() => sessionStorage.getItem('wealth_web_session_token'))).toBe('renewed-session');
 });
+
+test('standalone War Room skips home-only weather, NPC, booking, dividend, and roster preloads', async ({ page }) => {
+  const requests = [];
+  page.on('request', request => requests.push(request.url()));
+  await page.evaluate(() => {
+    localStorage.setItem('wealth_api_url', 'https://example.test/exec');
+    localStorage.setItem('wealth_write_token', 'test-write-token');
+    localStorage.setItem('wealth_web_verify_status', 'ok');
+    localStorage.setItem('wealth_web_verify_checked_at', String(Date.now()));
+    sessionStorage.setItem('wealth_empire_unlocked_v1', 'ok');
+    sessionStorage.setItem('wealth_web_session_token', 'same-tab-session');
+  });
+  await page.route('https://example.test/**', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    headers: { 'Access-Control-Allow-Origin': '*' },
+    body: JSON.stringify({ ok: true, data: {} })
+  }));
+  await page.route('https://api.ark-os26.cc/**', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    headers: { 'Access-Control-Allow-Origin': '*' },
+    body: JSON.stringify({ records: [] })
+  }));
+
+  requests.length = 0;
+  await page.goto(`${url}?war-room=1&tab=war-briefing`);
+  await expect(page.locator('#p-zh')).toHaveText('戰情室');
+  await page.waitForTimeout(1600);
+
+  expect(requests.some(request => request.includes('api.open-meteo.com'))).toBe(false);
+  expect(requests.some(request => /(?:^|\/)characterAnimations\.js/.test(new URL(request).pathname))).toBe(false);
+  expect(requests.some(request => /(?:^|\/)AnimatedCharacter\.js/.test(new URL(request).pathname))).toBe(false);
+  expect(requests.some(request => /[?&]action=(?:config|dividendCenter|holdingsOverview|assetSnapshot)(?:&|$)/.test(request))).toBe(false);
+});
