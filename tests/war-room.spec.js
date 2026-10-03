@@ -46,8 +46,9 @@ test('Military panel exposes only the Troop Roster tab', async ({ page }) => {
     window.renderCouncilPanel('battle-brief');
   });
   await expect(page.locator('#p-zh')).toHaveText('軍機處');
-  await expect(page.locator('#p-tabs .ptab')).toHaveText(['部隊陣容']);
+  await expect(page.locator('#p-tabs')).toBeHidden();
   await expect(page.locator('#pane-council-roster')).toBeVisible();
+  await expect(page.locator('#council-content')).toBeAttached();
   await expect(page.locator('#pane-battle-brief')).toHaveCount(0);
 });
 
