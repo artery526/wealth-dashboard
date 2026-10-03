@@ -1173,6 +1173,7 @@ body::after{
 .advisor-world-pill.defense strong{color:var(--coral)}
 .advisor-world-pill.attack strong{color:var(--teal)}
 .advisor-world-quote{position:relative;z-index:1;margin-top:11px;padding-top:9px;border-top:1px solid rgba(232,192,80,.16);font-family:var(--font);font-size:15px;font-weight:900;line-height:1.8;color:#f4e5b7;text-align:center;text-shadow:0 0 12px rgba(232,192,80,.14)}
+.advisor-world-card .advisor-world-section .advisor-world-quote{font-size:13px;line-height:1.6;text-align:left;text-shadow:none}
 .advisor-world-title-row{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:3px}
 .advisor-world-title-row .advisor-world-title{margin:0}
 .advisor-world-tabs{display:flex;align-items:center;justify-content:flex-end;gap:5px;flex-wrap:wrap}
@@ -1193,22 +1194,24 @@ body::after{
 @media(max-width:540px){.advisor-tw-review-statuses{grid-template-columns:1fr}.advisor-world-tab-btn{font-size:10px;padding:5px 7px}}
 .advisor-brief-date{position:relative;z-index:1;margin-top:-4px;margin-bottom:12px;text-align:center;font-family:var(--mono);font-size:12px;font-weight:900;color:#bda36d}
 .advisor-brief-divider{position:relative;z-index:1;height:1px;margin:12px 0;background:linear-gradient(90deg,transparent,rgba(232,192,80,.35),transparent)}
-.advisor-brief-grid{position:relative;z-index:1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.advisor-brief-grid{position:relative;z-index:1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .advisor-brief-section{position:relative;z-index:1;padding:2px 0}
-.advisor-brief-grid .advisor-brief-section{display:block;min-width:0;aspect-ratio:1/1;padding:11px 10px;border:1px solid rgba(232,192,80,.2);border-radius:7px;background:rgba(0,0,0,.16);overflow:hidden}
-.advisor-brief-grid .advisor-brief-head{align-items:flex-start;flex-direction:column;gap:3px;margin-bottom:3px}
-.advisor-brief-grid .advisor-brief-heading{font-size:16px}
-.advisor-brief-grid .advisor-brief-status{font-size:15px}
-.advisor-brief-grid .advisor-brief-lines{gap:3px;margin:8px 0 11px}
-.advisor-brief-grid .advisor-brief-line{font-size:13px;gap:6px;line-height:1.5}
-.advisor-brief-grid .advisor-brief-one{font-size:14px;line-height:1.65}
-.advisor-brief-grid .advisor-brief-section.valuation{grid-column:auto;aspect-ratio:auto;min-height:292px;overflow:visible}
+.advisor-brief-grid .advisor-brief-section{display:block;min-width:0;padding:9px 10px;border:1px solid rgba(232,192,80,.2);border-radius:7px;background:rgba(0,0,0,.16)}
+.advisor-brief-grid .advisor-brief-head{align-items:baseline;gap:6px;margin-bottom:5px}
+.advisor-brief-grid .advisor-brief-heading{font-size:14px}
+.advisor-brief-grid .advisor-brief-status{font-size:13px}
+.advisor-brief-grid .advisor-brief-lines{gap:3px;margin:5px 0 6px}
+.advisor-brief-grid .advisor-brief-line{font-size:12px;gap:6px;line-height:1.45}
+.advisor-brief-grid .advisor-brief-one{font-size:12px;line-height:1.55}
+.advisor-brief-grid .advisor-brief-section.valuation{grid-column:auto;min-height:0}
 .advisor-brief-section.valuation .advisor-brief-line{align-items:flex-start}
 .advisor-brief-section.valuation .advisor-brief-line span{white-space:normal;flex:0 1 45%}
 .advisor-brief-section.valuation .advisor-brief-line strong{min-width:0;overflow-wrap:anywhere;flex:1}
 @media(max-width:540px){
   .advisor-brief-grid{grid-template-columns:1fr}
-  .advisor-brief-grid .advisor-brief-section{aspect-ratio:auto;min-height:265px;overflow:visible}
+  .advisor-brief-grid .advisor-brief-section{min-height:0}
+  .advisor-brief-grid .advisor-brief-head{flex-wrap:wrap}
+  .advisor-brief-grid .advisor-brief-line span{white-space:normal}
 }
 .advisor-long-report{position:relative;z-index:1;border:1px solid rgba(232,192,80,.26);border-radius:8px;background:rgba(10,8,4,.38);padding:10px 11px;margin-top:10px}
 .advisor-long-report-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:8px}
@@ -16457,7 +16460,6 @@ function advisorWorldBuild(market,macro){
   var qqqValuation=advisorWorldQqqValuation(macro);
   sections.push(qqqValuation.section,valuation.section);
   if(!defenseCount&&(valuation.premium||qqqValuation.premium)){empireTone='watch';empireStatus='總經平穩・估值留意';}
-  todayLine+='\n'+qqqValuation.summary+'\n'+valuation.summary;
   return {
     date:advisorWorldBriefDate(sourceDate),
     updatedAt:(market.summary&&market.summary.updatedAt)||judgment.updatedAt||'--',
@@ -16474,13 +16476,12 @@ function advisorWorldHtml(view,snapshotAt){
     <div class="advisor-brief-date">${esc(view.date)}</div>
     <div class="advisor-brief-divider"></div>
     <div class="advisor-world-stance ${esc(view.empireTone)}"><span>⚔ 帝國狀態</span><strong>${esc(advisorWorldBriefStatus(view.empireTone,view.empireStatus))}</strong></div>
-    <div class="advisor-brief-divider"></div>
-    <div class="advisor-brief-grid">${view.sections.map(function(section){return advisorWorldSectionHtml(section);}).join('')}</div>
-    <div class="advisor-brief-divider"></div>
     <div class="advisor-world-section">
-      <div class="advisor-world-label">📌 今日一句</div>
+      <div class="advisor-world-label">📌 晨報摘要</div>
       <div class="advisor-world-quote">${esc(view.todayLine)}</div>
     </div>
+    <div class="advisor-brief-divider"></div>
+    <div class="advisor-brief-grid">${view.sections.map(function(section){return advisorWorldSectionHtml(section);}).join('')}</div>
     <div class="advisor-long-report-slot">
       <div class="advisor-long-report">
         <div class="advisor-long-report-summary">正在調閱30日戰略報告...</div>
