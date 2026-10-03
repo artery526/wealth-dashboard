@@ -6839,8 +6839,8 @@ function renderStorePanel(initialTab){
   }else{
     document.getElementById('store-list-content').innerHTML=setupNotice();
   }
-  if(initialTab)setTimeout(function(){
-    var tabToOpen=initialTab==='store-add'?'store-list':initialTab;
+  setTimeout(function(){
+    var tabToOpen=initialTab==='store-add'?'store-list':initialStoreTab;
     var btn=document.querySelector('.panel-menu-item[data-panel-tab="'+tabToOpen+'"]');
     if(btn)switchTab(btn,tabToOpen);
     if(initialTab==='store-add')focusStoreInlineForm();
