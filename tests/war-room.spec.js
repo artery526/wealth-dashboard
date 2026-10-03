@@ -2,6 +2,7 @@ const { test, expect } = require('@playwright/test');
 const path = require('node:path');
 
 const url = 'file:///' + path.resolve(__dirname, '..', 'index.html').replace(/\\/g, '/');
+const standaloneUrl = 'file:///' + path.resolve(__dirname, '..', 'war-room.html').replace(/\\/g, '/');
 
 test.beforeEach(async ({ page }) => {
   await page.goto(url);
@@ -22,7 +23,10 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('War Room opens on the briefing and fetches each other area only when selected', async ({ page }) => {
-  await page.evaluate(() => openPanel('war-room'));
+  await page.evaluate(() => {
+    window.isWarRoomStandalone = () => true;
+    openPanel('war-room');
+  });
   await expect(page.locator('#p-zh')).toHaveText('戰情室');
   await expect(page.locator('#p-tabs .ptab')).toHaveText(['帝國晨報', '戰情總匯報', '產業輪動', '台灣總體經濟']);
   expect(await page.evaluate(() => warRoomLoads)).toEqual(['briefing']);
@@ -52,13 +56,43 @@ test('legacy military shortcuts and voice routing now open the matching War Room
     shortcut: (() => {
       let opened;
       const original = window.openPanel;
+      const originalStandalone = window.isWarRoomStandalone;
       window.openPanel = (panel, tab) => { opened = { panel, tab }; };
+      window.isWarRoomStandalone = () => true;
       openEmpireCardShortcut({ stopPropagation() {} }, 'council', 'battle-brief');
       window.openPanel = original;
+      window.isWarRoomStandalone = originalStandalone;
       return opened;
     })(),
     parsed: advisorAIOpenTarget('戰情總匯報')
   }));
   expect(results.shortcut).toEqual({ panel: 'war-room', tab: 'war-battle-brief' });
   expect(results.parsed).toMatchObject({ panel: 'war-room', tab: 'war-battle-brief' });
+});
+
+test('standalone route keeps the same-origin session and opens the requested section', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.evaluate(() => {
+    localStorage.setItem('wealth_api_url', 'https://example.test/exec');
+    localStorage.setItem('wealth_write_token', 'test-write-token');
+    localStorage.setItem('wealth_web_verify_status', 'ok');
+    localStorage.setItem('wealth_web_verify_checked_at', String(Date.now()));
+    sessionStorage.setItem('wealth_empire_unlocked_v1', 'ok');
+    sessionStorage.setItem('wealth_web_session_token', 'same-tab-session');
+  });
+  await page.route('https://example.test/**', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    headers: { 'Access-Control-Allow-Origin': '*' },
+    body: '{}'
+  }));
+  await page.goto(`${standaloneUrl}?tab=war-battle-brief`);
+
+  const app = page.frameLocator('#war-room-app');
+  await expect(app.locator('#p-zh')).toHaveText('戰情室');
+  await expect(app.locator('#p-tabs .ptab.active')).toHaveText('戰情總匯報');
+  expect(await app.locator('body').evaluate(() => sessionStorage.getItem('wealth_web_session_token'))).toBe('same-tab-session');
+  await expect(app.locator('.panel')).toHaveCSS('width', `${await page.evaluate(() => window.innerWidth)}px`);
+  const dimensions = await app.locator('html').evaluate(el => ({ scrollWidth: el.scrollWidth, clientWidth: el.clientWidth }));
+  expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
 });

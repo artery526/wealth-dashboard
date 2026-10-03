@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="zh-TW" data-theme="deep-blue">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" content="#06131d">
+  <title>戰情室｜帝國指揮所</title>
+  <style>
+    *{box-sizing:border-box}
+    html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#06131d}
+    .war-room-app{display:block;width:100%;height:100%;border:0;background:#06131d}
+  </style>
+</head>
+<body>
+  <iframe class="war-room-app" id="war-room-app" title="諸葛軍師戰情室" loading="eager"></iframe>
+  <script>
+    (function(){
+      var allowedTabs=['war-briefing','war-battle-brief','war-sector-rotation','war-taiwan-macro'];
+      var query=new URLSearchParams(location.search);
+      var tab=query.get('tab')||'war-briefing';
+      if(allowedTabs.indexOf(tab)<0)tab='war-briefing';
+      document.getElementById('war-room-app').src='./index.html?war-room=1&tab='+encodeURIComponent(tab);
+    })();
+  </script>
+</body>
+</html>

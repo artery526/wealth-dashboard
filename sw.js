@@ -1,10 +1,11 @@
-const CACHE_NAME = 'empire-shell-v15';
+const CACHE_NAME = 'empire-shell-v16';
 
 // Keep the first offline-capable version deliberately small. The dashboard
 // already owns API caching in index.html; this cache is for the page shell.
 const PRECACHE_URLS = [
   './',
   './index.html',
+  './war-room.html',
   './manifest.json',
   './junshifu-map.png?v=20260910-bg4',
   './mobileBG.png?v=20260906-mobile1',
@@ -53,12 +54,16 @@ self.addEventListener('fetch', event => {
   // in parallel so a slow download never makes a successful navigation serve
   // an older shell; use the cache only when the network request fails.
   if (request.mode === 'navigate') {
+    const cachePath = url.pathname.endsWith('/') ? url.pathname + 'index.html' : url.pathname;
+    const cacheUrl = new URL(cachePath, url.origin);
+    cacheUrl.search = '';
+    const cacheKey = new Request(cacheUrl.toString(), { method: 'GET' });
     const networkResponse = fetch(new Request(request, {cache: 'no-store'})).catch(() => null);
     const cacheUpdate = networkResponse.then(async response => {
       if (!response || !response.ok) return false;
       try {
         const cache = await caches.open(CACHE_NAME);
-        await cache.put('./index.html', response.clone());
+        await cache.put(cacheKey, response.clone());
         return true;
       } catch {
         return false;
@@ -67,7 +72,7 @@ self.addEventListener('fetch', event => {
     event.waitUntil(cacheUpdate);
 
     const cachedResponse = caches.match(request)
-      .then(cached => cached || caches.match('./index.html'))
+      .then(cached => cached || caches.match(cacheKey) || caches.match('./index.html'))
       .catch(() => null);
     event.respondWith(networkResponse.then(response => {
       if (response) return response;
