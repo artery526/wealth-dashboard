@@ -6302,7 +6302,6 @@ async function submitWebLogin(event){
     if(!ok)throw new Error(webVerifyStoredMessage()||'城門驗證失敗');
     setWebLoginVisible(false,'城門驗證成功','ok');
     preloadQuickBookingAndPangTong();
-    window.setTimeout(openDailyBriefingPopup,250);
   }catch(error){
     setWebLoginVisible(true,error&&error.message?error.message:'城門驗證失敗','err');
   }finally{
@@ -6388,7 +6387,6 @@ function restoreRememberedWebAccess(){
   setEmpireUnlockState(true);
   setWebLoginVisible(false,'城門驗證成功','ok');
   startWebSessionAutoRefresh();
-  window.setTimeout(openDailyBriefingPopup,350);
   advisorAIUpdateWebVerifyStatus();
   return Promise.resolve(true);
 }
@@ -6569,7 +6567,6 @@ async function verifyCfgWebAccess(){
     renderCfgWebVerifyStatus('ok','城門驗證成功');
     setWebLoginVisible(false,'城門驗證成功','ok');
     preloadQuickBookingAndPangTong();
-    window.setTimeout(openDailyBriefingPopup,250);
   }catch(e){
     console.error(e);
     var msg=e.message||'驗證失敗';
@@ -6604,7 +6601,6 @@ async function saveCfg(){
     setWebVerifyStatus('ok','城門驗證成功');
     setWebLoginVisible(false,'城門驗證成功','ok');
     preloadQuickBookingAndPangTong();
-    window.setTimeout(openDailyBriefingPopup,250);
   }catch(e){
     console.error(e);
     setWebVerifyStatus('err',e.message||'驗證失敗');
