@@ -92,8 +92,18 @@ test('standalone route keeps the same-origin session and opens the requested sec
   const app = page.frameLocator('#war-room-app');
   await expect(app.locator('#p-zh')).toHaveText('戰情室');
   await expect(app.locator('#p-tabs .ptab.active')).toHaveText('戰情總匯報');
+  const homeButton = app.getByRole('button', { name: '返回主城' });
+  await expect(homeButton).toBeVisible();
+  await app.locator('.war-room-home-btn').evaluate(button => {
+    window.closePanel = () => { document.documentElement.dataset.returnHomeClicked = 'true'; };
+    button.click();
+  });
+  await expect(app.locator('html')).toHaveAttribute('data-return-home-clicked', 'true');
   expect(await app.locator('body').evaluate(() => sessionStorage.getItem('wealth_web_session_token'))).toBe('same-tab-session');
   await expect(app.locator('.panel')).toHaveCSS('width', `${await page.evaluate(() => window.innerWidth)}px`);
+  expect(await app.locator('body').evaluate(el => getComputedStyle(el, '::after').display)).toBe('none');
+  await expect(app.locator('.bg-palace')).toBeHidden();
+  await expect(app.locator('#overlay')).toHaveCSS('z-index', '100');
   const dimensions = await app.locator('html').evaluate(el => ({ scrollWidth: el.scrollWidth, clientWidth: el.clientWidth }));
   expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
 });

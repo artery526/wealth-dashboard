@@ -51,16 +51,13 @@ async function loadBattleBrief(force){
     return null;
   }
   var cachedEntry=readMarketCacheEntry(BATTLE_BRIEF_CACHE_KEY,false);
+  if(!cachedEntry)cachedEntry=readMarketCacheEntry(BATTLE_BRIEF_CACHE_KEY,true);
   var cached=cachedEntry?cachedEntry.data:null;
   if(cached&&!el.querySelector('.battle-report-head')){
     setDataFreshness('battle-freshness',dataFreshnessMeta(cached,cachedEntry.savedAt,true));
     renderBattleBrief(cached,el);
   }
-  if(cached&&!force){
-    setCouncilPanelStatusIfActive('ok','戰情總匯報快取已載入');
-    return Promise.resolve(cached);
-  }
-  setCouncilPanelStatusIfActive('pending',cached&&!force?'戰情快取更新中':'戰情總匯報讀取中');
+  setCouncilPanelStatusIfActive('pending',cached?'戰情快取已顯示，背景更新中':'戰情總匯報讀取中');
   if(!battleBriefPromise)battleBriefPromise=apiGet({action:'battleBrief'},45000).finally(function(){battleBriefPromise=null;});
   var warning=el.querySelector('.battle-refresh-warning');
   if(warning)warning.remove();
@@ -1234,7 +1231,26 @@ async function taiwanMacroUpdate(){
   return taiwanMacroSyncPromise;
 }
 // Council stability: independent sections, shared requests and latest selected range.
-var taiwanMacroView={range:'1Y',overview:null,history:{},errors:{},requests:{}};
+var TAIWAN_MACRO_CACHE_KEY='wealth_war_taiwan_macro_v1';
+var taiwanMacroView={range:'1Y',overview:null,history:{},overviewSavedAt:0,historySavedAt:{},errors:{},requests:{},cacheLoaded:false};
+function restoreTaiwanMacroCache(){
+  var state=taiwanMacroView;if(state.cacheLoaded)return;
+  state.cacheLoaded=true;
+  try{
+    var cached=JSON.parse(localStorage.getItem(TAIWAN_MACRO_CACHE_KEY)||'null');
+    if(!cached)return;
+    if(cached.overview){state.overview=cached.overview.data||null;state.overviewSavedAt=Number(cached.overview.savedAt)||0;}
+    Object.keys(cached.history||{}).forEach(function(range){
+      var entry=cached.history[range];if(!entry||!entry.data)return;
+      state.history[range]=entry.data;state.historySavedAt[range]=Number(entry.savedAt)||0;
+    });
+  }catch(e){}
+}
+function saveTaiwanMacroCache(){
+  var state=taiwanMacroView,cache={overview:state.overview?{data:state.overview,savedAt:state.overviewSavedAt}:null,history:{}};
+  Object.keys(state.history).forEach(function(range){cache.history[range]={data:state.history[range],savedAt:state.historySavedAt[range]||Date.now()};});
+  try{localStorage.setItem(TAIWAN_MACRO_CACHE_KEY,JSON.stringify(cache));}catch(e){}
+}
 function renderTaiwanMacroSections(){
   var el=document.getElementById('taiwan-macro-content');
   if(!el)return;
@@ -1261,24 +1277,30 @@ function renderTaiwanMacroSections(){
 }
 async function loadTaiwanMacro(force,range,section){
   var el=document.getElementById('taiwan-macro-content');if(!el)return;
-  if(!API_URL){el.innerHTML=setupNotice();return;}
   var state=taiwanMacroView;
+  restoreTaiwanMacroCache();
   range=range||state.range;
   if(['6M','1Y','3Y','5Y'].indexOf(range)<0)range='1Y';
   state.range=range;
+  if(!API_URL){
+    if(state.overview||state.history[range]){
+      state.errors.overview='尚未設定 API';state.errors['history:'+range]='尚未設定 API';renderTaiwanMacroSections();
+    }else el.innerHTML=setupNotice();
+    return;
+  }
   function request(key,params,save){
     if(state.requests[key])return state.requests[key];
     delete state.errors[key];
     state.requests[key]=Promise.resolve().then(function(){return apiGet(params,30000);}).then(function(data){
-      save(data);return data;
+      save(data);saveTaiwanMacroCache();return data;
     }).catch(function(error){state.errors[key]=error&&error.message||'請稍後再試';return null;}).finally(function(){
       delete state.requests[key];renderTaiwanMacroSections();
     });
     return state.requests[key];
   }
   var jobs=[];
-  if(section!=='history')jobs.push(request('overview',{action:'taiwanMacroOverview'},function(data){state.overview=data;}));
-  if(section!=='overview')jobs.push(request('history:'+range,{action:'taiwanMacroHistory',range:range},function(data){state.history[range]=data;}));
+  if(section!=='history')jobs.push(request('overview',{action:'taiwanMacroOverview'},function(data){state.overview=data;state.overviewSavedAt=Date.now();}));
+  if(section!=='overview')jobs.push(request('history:'+range,{action:'taiwanMacroHistory',range:range},function(data){state.history[range]=data;state.historySavedAt[range]=Date.now();}));
   renderTaiwanMacroSections();
   var pending=Promise.all(jobs);
   taiwanMacroPromise=pending;

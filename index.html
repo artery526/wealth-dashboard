@@ -1916,6 +1916,8 @@ body::after{
 .hero-roi{font-family:var(--mono);font-size:12px;margin-top:2px}
 .hero-bottom{position:relative;z-index:3;border-left:1px solid rgba(184,137,46,.24);padding:4px 0 4px 14px;display:grid;grid-template-columns:1fr;gap:7px;font-family:var(--sans);font-size:12px;color:#c09a50;align-content:center;text-align:center;grid-column:3;grid-row:1/3}
 .hero-bottom span{white-space:normal;display:block;border:1px solid rgba(184,137,46,.18);border-radius:6px;background:rgba(10,8,4,.34);padding:6px 7px;text-align:center}
+html.war-room-standalone body::after,
+html.war-room-standalone .bg-palace{display:none!important}
 .hero-value,.hero-cost{grid-column:1/-1;font-family:var(--mono);color:#f0dfa0;white-space:normal}
 .hero-value{color:#d7bd78}
 .hero-price{font-family:var(--mono);color:#f0dfa0}
@@ -1928,6 +1930,9 @@ body::after{
 .hero-add-plus{font-size:34px;color:#a89060;margin-bottom:10px}
 @keyframes heroEffectSweep{to{transform:rotate(360deg)}}
 @media(max-width:860px){.council-roster-group{grid-template-columns:1fr}.council-roster{grid-template-columns:1fr}.council-roster-total{border-left:0;border-top:1px solid rgba(184,137,46,.22);padding-left:0;padding-top:10px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.hero-card{grid-template-columns:112px minmax(0,1fr);grid-template-rows:auto auto auto}.hero-visual-stack{grid-row:1/3}.hero-effect{grid-column:2;grid-row:2}.hero-bottom{grid-column:1/-1;grid-row:auto;border-left:0;border-top:1px solid rgba(184,137,46,.24);padding:10px 0 0;grid-template-columns:repeat(2,minmax(0,1fr))}.council-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.council-pantry{grid-template-columns:1fr}}
+.war-room-home-btn{display:inline-flex;align-items:center;justify-content:center;gap:4px;min-height:36px;padding:6px 10px;border:1px solid rgba(98,201,232,.42);border-radius:8px;background:rgba(10,48,65,.72);color:#b8efff;font-family:var(--sans);font-size:12px;font-weight:900;white-space:nowrap;cursor:pointer}
+.war-room-home-btn:hover,.war-room-home-btn:focus-visible{border-color:#8fe4ff;background:rgba(20,75,96,.92);outline:none}
+@media(max-width:420px){.war-room-home-btn{min-height:34px;padding:5px 7px;font-size:11px}}
 @media(max-width:540px){.panel.council-wide,.panel.domestic-wide,.panel.finance-wide,.panel.medical-wide{max-width:100%}.council-roster-group{padding:8px}.council-roster-head{align-items:flex-start;flex-direction:column}.council-roster{grid-template-columns:1fr;gap:8px}.council-roster-total{grid-template-columns:1fr}.council-summary{grid-template-columns:1fr 1fr}.council-pantry{padding:12px}.pantry-main,.pantry-gauge-wrap{grid-template-columns:1fr;display:grid}.pantry-extra{grid-template-columns:1fr}.medical-form-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.medical-select{padding-left:7px;padding-right:7px;font-size:12px}.hero-card{grid-template-columns:1fr;min-height:0;padding:8px;gap:7px}.hero-visual-stack{width:86px;grid-row:auto;justify-self:center}.hero-visual{width:100%}.hero-effect{grid-column:1;grid-row:auto;padding:7px 8px}.hero-effect-text{font-size:10px}.hero-bottom{grid-template-columns:1fr}.hero-symbol{font-size:12px}.hero-name{font-size:18px;gap:4px}.hero-type-inline{font-size:10px}.hero-value-under-badge,.hero-price-under-value{font-size:10px}.hero-money-grid{grid-template-columns:1fr;gap:8px}.hero-money-value{overflow-wrap:normal;white-space:nowrap}.hero-metrics-panel{position:static;width:100%;margin-top:0;padding:9px 10px;background:rgba(8,7,5,.94);font-size:12px}}
 @media(max-width:540px){.panel.foodhouse-wide{max-width:100%}}
 
@@ -1969,7 +1974,7 @@ html.war-room-standalone .npc-web-scene,
 html.war-room-standalone #advisor-overlay,
 html.war-room-standalone #advisor-ai-standalone,
 html.war-room-standalone #daily-briefing-overlay{display:none!important}
-html.war-room-standalone .overlay{position:fixed;inset:0;z-index:1;display:flex;align-items:stretch;background:#06131d;opacity:1;pointer-events:auto;transition:none}
+html.war-room-standalone .overlay{position:fixed;inset:0;z-index:100;display:flex;align-items:stretch;background:#06131d;opacity:1;pointer-events:auto;transition:none}
 html.war-room-standalone .panel,
 html.war-room-standalone .panel.council-wide,
 html.war-room-standalone .overlay.open .panel{width:100%;height:100%;max-width:none;max-height:none;border:0;border-radius:0;box-shadow:none;transform:none;transition:none}
@@ -15477,7 +15482,7 @@ function renderCouncilPanel(initialTab){
 function renderWarRoomPanel(initialTab){
   setPanelHead('📜','STRATEGY · WAR ROOM','戰情室');
   var panelExtra=document.getElementById('p-extra');
-  if(panelExtra)panelExtra.innerHTML='';
+  if(panelExtra)panelExtra.innerHTML=isWarRoomStandalone()?'<button class="war-room-home-btn" type="button" onclick="closePanel()" aria-label="返回主城">🔙 返回主城</button>':'';
   var tabs=[
     {key:'war-briefing',label:'帝國晨報'},
     {key:'war-battle-brief',label:'戰情總匯報'},
@@ -16642,13 +16647,13 @@ function marketSectorStatusClass(status){
   return /強勢/.test(status)?'up':/弱勢|降溫/.test(status)?'down':/改善|初期/.test(status)?'improving':'';
 }
 
-function renderMarketSectorRotation(data,el){
+function renderMarketSectorRotation(data,el,refreshNote){
   if(!el)return;
   data=data||{};
   var rows=(data.rows||[]).slice().sort(function(a,b){return Number(b.rotationScore||0)-Number(a.rotationScore||0);});
   if(!rows.length){el.innerHTML='<div class="market-sector-meta">'+esc(data.status||'尚未有產業輪動快照')+'</div>';return;}
   var commentary=data.commentary&&data.commentary.summary?'<div class="market-sector-commentary"><strong>🧠 DeepSeek 產業輪動短評</strong>'+esc(data.commentary.summary)+'</div>':'';
-  el.innerHTML='<div class="market-sector-meta">快照 '+esc(data.sourceDate||data.updatedAt||'--')+' · '+esc(data.source||'資料來源未知')+(data.commentaryError?' · 短評尚未產生':'')+'</div><div class="market-sector-grid">'+rows.map(function(row){
+  el.innerHTML='<div class="market-sector-meta">快照 '+esc(data.sourceDate||data.updatedAt||'--')+' · '+esc(data.source||'資料來源未知')+(data.commentaryError?' · 短評尚未產生':'')+'</div>'+(refreshNote?'<div class="market-sector-meta" role="status">'+esc(refreshNote)+'</div>':'')+'<div class="market-sector-grid">'+rows.map(function(row){
     var cls=marketSectorStatusClass(row.status);
     return '<div class="market-sector-row"><div class="market-sector-head"><div><div class="market-sector-name">'+esc(row.name)+'</div><div class="market-sector-code">'+esc(row.code)+' · '+esc(row.quadrant||'資料不足')+'</div></div><div><div class="market-sector-status '+cls+'">'+esc(row.status||'資料不足')+'</div><div class="market-sector-score">'+(row.rotationScore==null?'--':Number(row.rotationScore).toFixed(1))+' <small>分</small></div></div></div><div class="market-sector-metrics"><div class="market-sector-metric"><span>5日</span><strong>'+marketSectorPctText(row.return5d)+'</strong></div><div class="market-sector-metric"><span>20日相對SPY</span><strong>'+marketSectorPctText(row.relative20d)+'</strong></div><div class="market-sector-metric"><span>60日相對SPY</span><strong>'+marketSectorPctText(row.relative60d)+'</strong></div></div></div>';
   }).join('')+'</div>'+commentary;
@@ -16658,8 +16663,9 @@ function loadMarketSectorRotation(){
   var host=document.getElementById('market-sector-rotation-body');
   if(!host)return Promise.resolve(null);
   if(!API_URL){host.innerHTML=setupNotice();setCouncilPanelStatusIfActive('err','尚未設定 API');return Promise.resolve(null);}
-  var cached=readTimedMarketCache(MARKET_SECTOR_ROTATION_CACHE_KEY);
-  if(cached)renderMarketSectorRotation(cached,host);
+  var cachedEntry=readMarketCacheEntry(MARKET_SECTOR_ROTATION_CACHE_KEY,true);
+  var cached=cachedEntry&&cachedEntry.data;
+  if(cached)renderMarketSectorRotation(cached,host,'已顯示上次成功快照，背景更新中…');
   setCouncilPanelStatusIfActive('pending',cached?'產業輪動快取已載入，背景更新中':'產業輪動快照讀取中');
   if(marketSectorRotationPromise)return marketSectorRotationPromise;
   marketSectorRotationPromise=apiGet({action:'marketSectorRotation'},45000).then(function(data){
@@ -16669,7 +16675,8 @@ function loadMarketSectorRotation(){
     setCouncilPanelStatusIfActive('ok','產業輪動已更新');
     return data;
   }).catch(function(error){
-    if(!cached)host.innerHTML='<div class="market-sector-meta">產業輪動快照讀取失敗：'+esc(error&&error.message?error.message:'請稍後再試')+'</div>';
+    if(cached)renderMarketSectorRotation(cached,host,'背景更新失敗，保留上次成功快照。');
+    else host.innerHTML='<div class="market-sector-meta">產業輪動快照讀取失敗：'+esc(error&&error.message?error.message:'請稍後再試')+'</div>';
     setCouncilPanelStatusIfActive(cached?'pending':'err',cached?'產業輪動快取仍可使用':'產業輪動讀取失敗');
     return null;
   }).finally(function(){marketSectorRotationPromise=null;});
