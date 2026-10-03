@@ -144,6 +144,45 @@ test('standalone tabs remain switchable from Taiwan macro back to Imperial Morni
   await expect(page.locator('.brief-insight')).toContainText('市場資料已更新');
 });
 
+test('sector rotation uses a ranked, responsive layout with source-backed metrics', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.addInitScript(() => {
+    localStorage.setItem('wealth_api_url', 'https://example.test/exec'); localStorage.setItem('wealth_write_token', 'test-write-token');
+    localStorage.setItem('wealth_web_verify_status', 'ok'); localStorage.setItem('wealth_web_verify_checked_at', String(Date.now()));
+    sessionStorage.setItem('wealth_web_session_token', 'same-tab-session');
+  });
+  await page.route('https://example.test/**', route => route.fulfill({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ ok: true, data: {
+    sourceDate: '2026-10-03', source: 'NAS 快照', commentary: { summary: '半導體與工業類股相對動能較強。' },
+    rows: [{ name: '半導體', code: 'SOXX', status: '強勢', quadrant: '領先', rotationScore: 82.5, return5d: 2.4, relative20d: 1.8, relative60d: 4.2 }, { name: '公用事業', code: 'XLU', status: '降溫', quadrant: '落後', rotationScore: 25, return5d: -1.2, relative20d: -2, relative60d: -3.1 }]
+  } }) }));
+  await page.goto(`${standaloneUrl}?tab=war-sector-rotation`);
+  await expect(page.locator('.sector-card')).toHaveCount(2);
+  await expect(page.locator('.sector-insight')).toContainText('半導體與工業類股');
+  await expect(page.locator('.sector-summary')).toContainText('相對強勢');
+  const width = await page.locator('html').evaluate(el => ({ scroll: el.scrollWidth, client: el.clientWidth }));
+  expect(width.scroll).toBeLessThanOrEqual(width.client);
+});
+
+test('Taiwan macro has grouped indicators, visible history controls, and mobile-safe charts', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.addInitScript(() => {
+    localStorage.setItem('wealth_api_url', 'https://example.test/exec'); localStorage.setItem('wealth_write_token', 'test-write-token');
+    localStorage.setItem('wealth_web_verify_status', 'ok'); localStorage.setItem('wealth_web_verify_checked_at', String(Date.now()));
+    sessionStorage.setItem('wealth_web_session_token', 'same-tab-session');
+  });
+  await page.route('https://example.test/**', route => {
+    const action = new URL(route.request().url()).searchParams.get('action');
+    const data = action === 'taiwanMacroOverview' ? { hasData: true, latest: { month: '2026/09', updated_at: '2026-10-03T12:00:00Z', overall_state: '景氣平穩', business_cycle_light: '綠燈', leading_index_without_trend: 102.4, pmi: 52.1, exports_yoy: 18.5, export_orders_yoy: 12.3, industrial_production_yoy: 9.8, usdtwd: 31.2, usdtwd_trend: '台幣升值', m2_yoy: 4.1, directions: { score: { key: 'improve', label: '改善' }, exports: { key: 'improve', label: '回升' } } } } : { rows: [{ month: '2026/07', business_cycle_score: 31, exports_yoy: 12 }, { month: '2026/08', business_cycle_score: 34, exports_yoy: 15 }, { month: '2026/09', business_cycle_score: 38, exports_yoy: 18.5 }] };
+    return route.fulfill({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ ok: true, data }) });
+  });
+  await page.goto(`${standaloneUrl}?tab=war-taiwan-macro`);
+  await expect(page.locator('.taiwan-indicator')).toHaveCount(8);
+  await expect(page.locator('.taiwan-summary')).toContainText('景氣平穩');
+  await expect(page.locator('.taiwan-chart-grid')).toContainText('3 筆歷史資料');
+  const width = await page.locator('html').evaluate(el => ({ scroll: el.scrollWidth, client: el.clientWidth }));
+  expect(width.scroll).toBeLessThanOrEqual(width.client);
+});
+
 test('standalone page loads only its own package and does not request unrelated homepage data', async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem('wealth_api_url', 'https://example.test/exec'); localStorage.setItem('wealth_write_token', 'test-write-token');
