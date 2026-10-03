@@ -90,7 +90,7 @@ test('standalone route is a direct page and reuses the same-origin session', asy
   await page.goto(`${standaloneUrl}?tab=war-battle-brief`);
   await expect(page.locator('h1')).toHaveText('諸葛軍師・戰情室');
   await expect(page.locator('.tabs button.active')).toHaveText('戰情總匯報');
-  await expect(page.locator('#content .hero h2')).toContainText('戰情總匯報');
+  await expect(page.locator('#content .battle-hero h2')).toContainText('戰情總匯報');
   expect(await page.evaluate(() => sessionStorage.getItem('wealth_web_session_token'))).toBe('same-tab-session');
   await expect(page.locator('iframe')).toHaveCount(0);
   expect(requests.some(path => path.endsWith('/index.html'))).toBe(false);
@@ -117,6 +117,31 @@ test('standalone route renews an expired shared session before loading its selec
   await expect(page.locator('.tabs button.active')).toHaveText('台灣總體經濟');
   await expect(page.locator('#content')).toContainText('2026/09');
   expect(await page.evaluate(() => sessionStorage.getItem('wealth_web_session_token'))).toBe('renewed-session');
+});
+
+test('standalone tabs remain switchable from Taiwan macro back to Imperial Morning Brief', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('wealth_api_url', 'https://example.test/exec'); localStorage.setItem('wealth_write_token', 'test-write-token');
+    localStorage.setItem('wealth_web_verify_status', 'ok'); localStorage.setItem('wealth_web_verify_checked_at', String(Date.now()));
+    sessionStorage.setItem('wealth_web_session_token', 'same-tab-session');
+  });
+  await page.route('https://example.test/**', route => {
+    const action = new URL(route.request().url()).searchParams.get('action');
+    let data = {};
+    if (action === 'taiwanMacroOverview') data = { hasData: true, latest: { month: '2026/09', overall_state: '穩定' } };
+    if (action === 'taiwanMacroHistory') data = { rows: [] };
+    if (action === 'advisorWorldBriefSnapshotRefresh') data = { snapshot: { market: { summary: { stance: '觀望', upCount: 2, downCount: 1 }, rows: [] }, macro: { judgment: { summary: '市場資料已更新，維持觀察。', date: '2026-10-03' }, indicators: [], valuations: {} }, capturedAt: '2026-10-03T12:00:00Z' } };
+    return route.fulfill({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ ok: true, data }) });
+  });
+  await page.route('https://api.ark-os26.cc/**', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ records: [] }) }));
+  await page.goto(`${standaloneUrl}?tab=war-briefing`);
+  await expect(page.locator('.brief-hero h2')).toContainText('帝國晨報');
+  await page.getByRole('button', { name: '台灣總體經濟' }).click();
+  await expect(page.locator('.tabs button.active')).toHaveText('台灣總體經濟');
+  await expect(page.locator('#content')).toContainText('2026/09');
+  await page.getByRole('button', { name: '帝國晨報' }).click();
+  await expect(page.locator('.tabs button.active')).toHaveText('帝國晨報');
+  await expect(page.locator('.brief-insight')).toContainText('市場資料已更新');
 });
 
 test('standalone page loads only its own package and does not request unrelated homepage data', async ({ page }) => {
