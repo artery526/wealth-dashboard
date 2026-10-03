@@ -93,8 +93,8 @@ function renderCouncilPanel(initialTab){
   var panelExtra=document.getElementById('p-extra');
   if(panelExtra)panelExtra.innerHTML='';
   setEmpireCardApiPendingStatus('council');
-  setTabs([{key:'council-roster',label:'部隊陣容'}]);
-  document.getElementById('p-tabs').classList.add('panel-tabs-hidden');
+  var rosterTabBar=document.getElementById('p-tabs');
+  if(rosterTabBar){rosterTabBar.innerHTML='';rosterTabBar.classList.add('panel-tabs-hidden');}
   var targetTab='council-roster';
   currentTab=targetTab;
   var apiReady=hasMainApiCredentials();
