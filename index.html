@@ -19377,12 +19377,13 @@ async function advisorAIConfirmHoldingTrade(btn){
   if(!pending)return;
   if(!advisorAIRequireWrite())return;
   if(btn&&btn.disabled)return;
-  if(btn){btn.disabled=true;btn.textContent='記錄中…';}
-  var row=pending.row;
-  var symbol=row.symbol||row.displaySymbol||'';
-  var isSell=pending.direction==='賣出';
-  try{
-    await apiPost({action:'transfer',date:today().replace(/-/g,'/'),from:isSell?symbol:'💵國泰Stock',to:isSell?'💵國泰Stock':symbol,amount:pending.amount,label:symbol,note:'龐統持股入帳',stockMode:'1',stockType:isSell?'sell':'buy',stockSymbol:symbol,stockShares:pending.shares,stockAmount:pending.amount,holdingTradeRowId:row.rowId||''});
+    if(btn){btn.disabled=true;btn.textContent='記錄中…';}
+    var row=pending.row;
+    var symbol=row.symbol||row.displaySymbol||'';
+    var ledgerSymbol=row.displaySymbol||symbol;
+    var isSell=pending.direction==='賣出';
+    try{
+      await apiPost({action:'transfer',date:today().replace(/-/g,'/'),from:isSell?ledgerSymbol:'💵國泰Stock',to:isSell?'💵國泰Stock':ledgerSymbol,amount:pending.amount,label:ledgerSymbol,note:'龐統持股入帳',stockMode:'1',stockType:isSell?'sell':'buy',stockSymbol:symbol,stockShares:pending.shares,stockAmount:pending.amount,holdingTradeRowId:row.rowId||''});
     invalidateDividendCenter();
     advisorHoldingTradeSelection=null;
     advisorHoldingTradeRecordPending=null;

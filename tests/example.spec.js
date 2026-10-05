@@ -17,6 +17,32 @@ test('Pangtong income shortcuts map to fixed Stock account', async ({ page }) =>
   ]);
 });
 
+test('Pangtong holding settlement writes the display symbol for monthly holdings matching', async ({ page }) => {
+  await page.goto(dashboardUrl);
+  const payload = await page.evaluate(async () => {
+    let request;
+    advisorAIRequireWrite = () => true;
+    apiPost = async body => { request = body; return { message: 'ok' }; };
+    advisorHoldingTradeRecordPending = {
+      row: { symbol: '施羅德收益成長A2', displaySymbol: '🌳施羅德收益成長A2', rowId: '17' },
+      amount: 90000,
+      shares: 22.38,
+      direction: '買入'
+    };
+    await advisorAIConfirmHoldingTrade(null);
+    return request;
+  });
+  expect(payload).toMatchObject({
+    from: '💵國泰Stock',
+    to: '🌳施羅德收益成長A2',
+    label: '🌳施羅德收益成長A2',
+    stockSymbol: '施羅德收益成長A2',
+    stockAmount: 90000,
+    stockShares: 22.38,
+    holdingTradeRowId: '17'
+  });
+});
+
 test('Pangtong financial commands show a confirmation card before writing', async ({ page }) => {
   await page.goto(dashboardUrl);
   await page.evaluate(() => {
