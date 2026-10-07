@@ -21,8 +21,10 @@ function decodeCharacterImage(img, timeoutMs = CHARACTER_IDLE_TIMEOUT_MS) {
 }
 
 window.AnimatedCharacter = class AnimatedCharacter {
-  constructor({ character, animationConfig, position, size, onClick, mount }) {
+  constructor({ character, animationConfig, position, size, onClick, mount, startWithAction = false }) {
     this.config = animationConfig;
+    this.startWithAction = startWithAction;
+    this.initialActionStarted = false;
     this.panelOpen = false;
     this.queue = [];
     this.button = document.createElement('button');
@@ -60,6 +62,11 @@ window.AnimatedCharacter = class AnimatedCharacter {
       this.show(this.config.idleFrame || '01', 'idle');
       if (document.hidden || this.motion.matches) return;
       this.resetDeadlines();
+      if (this.startWithAction && !this.initialActionStarted) {
+        this.initialActionStarted = true;
+        const firstAction = ['secondaryIdle', 'specialAction'].find(name => this.config.events?.[name]);
+        if (firstAction) this.enqueue(firstAction);
+      }
       this.schedule(this.config.timing.idle);
     };
     document.addEventListener('visibilitychange', this.resume);
@@ -134,7 +141,7 @@ window.AnimatedCharacter = class AnimatedCharacter {
     this.button.dataset.state = state;
     this.button.dataset.frame = frame;
     if (!this.images[frame]) {
-      if (this.interactive) this.loadFrame(frame).then(() => {
+      this.loadFrame(frame).then(() => {
         if (!this.destroyed && this.state === state && this.button.dataset.frame === frame) this.show(frame, state);
       }).catch(() => {});
       return;

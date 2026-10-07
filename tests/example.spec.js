@@ -768,6 +768,20 @@ test('council holding avatars render static first and lazy-load video on click',
   expect(result.after.active).toBeTruthy();
 });
 
+test('home scene characters begin looping actions without being clicked', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await page.goto(dashboardUrl);
+
+  const animatedCount = await page.waitForFunction(() => {
+    const characters = [...document.querySelectorAll('.npc-web-scene .animated-character')];
+    if (characters.length !== 7) return false;
+    const moving = characters.filter(character => character.querySelectorAll('.character-art img').length > 1);
+    return moving.length === 7 ? moving.length : false;
+  }, null, { timeout: 15000 }).then(handle => handle.jsonValue());
+
+  expect(animatedCount).toBe(7);
+});
+
 test('council holding static portraits follow the filenames in 武將資料', async ({ page }) => {
   await page.goto(dashboardUrl);
 

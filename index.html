@@ -20363,7 +20363,8 @@ function mpmRender(records){
         animationConfig:configs[id],
         position:window.characterPositions[id],
         mount:mount,
-        onClick:routes[id]
+        onClick:routes[id],
+        startWithAction:true
       });
       var mobilePosition=window.characterMobilePositions&&window.characterMobilePositions[id];
       if(mobilePosition){
@@ -20382,7 +20383,7 @@ function mpmRender(records){
   function start(){
     if(status)status.textContent='角色資料載入中…';
     Promise.resolve(window.AnimatedCharacter?null:loadScript('./characterAnimations.js?v=20261003-no-xunyu'))
-      .then(function(){return window.AnimatedCharacter?null:loadScript('./AnimatedCharacter.js?v=20260918-web4');})
+      .then(function(){return window.AnimatedCharacter?null:loadScript('./AnimatedCharacter.js?v=20261007-auto-loop-test1');})
       .then(initCharacters)
       .catch(function(){if(status)status.textContent='角色資料載入失敗，請重新整理。';});
   }
