@@ -681,7 +681,34 @@ test('council roster keeps cached cards visible when background refresh fails', 
   expect(result).toEqual({ hasCachedCard: true, hasRetry: true, hasFailureNotice: true });
 });
 
-test('council roster accepts the NAS cache object without reading an allSettled status', async ({ page }) => {
+test('council roster uses the latest Google Sheet holdings before NAS', async ({ page }) => {
+  await page.goto(dashboardUrl);
+
+  const result = await page.evaluate(async () => {
+    await ensureMilitaryModule();
+    const originalNasLoader = loadCouncilRosterFromNas_;
+    const originalHeroLoader = loadHeroSheet;
+    const originalHoldingsLoader = loadCouncilHoldingsOverview;
+    let nasCalls = 0;
+    loadCouncilRosterFromNas_ = async () => { nasCalls++; return null; };
+    loadHeroSheet = async () => [{ symbol: '00998A', heroName: '台股武將' }];
+    loadCouncilHoldingsOverview = async () => [{ symbol: '00998A', totalDiv: 16950, shares: 40000 }];
+    councilDashboardPromise = null;
+    try {
+      const data = await loadCouncilDashboardData();
+      return { source: data.source, totalDiv: data.holdings[0].totalDiv, nasCalls };
+    } finally {
+      loadCouncilRosterFromNas_ = originalNasLoader;
+      loadHeroSheet = originalHeroLoader;
+      loadCouncilHoldingsOverview = originalHoldingsLoader;
+      councilDashboardPromise = null;
+    }
+  });
+
+  expect(result).toEqual({ source: 'Google Sheets', totalDiv: 16950, nasCalls: 0 });
+});
+
+test('council roster falls back to NAS when Google Sheet holdings cannot be read', async ({ page }) => {
   await page.goto(dashboardUrl);
 
   const result = await page.evaluate(async () => {
@@ -695,8 +722,8 @@ test('council roster accepts the NAS cache object without reading an allSettled 
       holdingsLoaded: true,
       source: 'NAS'
     });
-    loadHeroSheet = async () => { throw new Error('Google fallback should not run'); };
-    loadCouncilHoldingsOverview = async () => { throw new Error('Google fallback should not run'); };
+    loadHeroSheet = async () => { throw new Error('Google Sheet unavailable'); };
+    loadCouncilHoldingsOverview = async () => { throw new Error('Google Sheet unavailable'); };
     councilDashboardPromise = null;
     try {
       const data = await loadCouncilDashboardData();

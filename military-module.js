@@ -234,24 +234,32 @@ function preloadCouncilDashboard(){
 function loadCouncilDashboardData(){
   if(councilDashboardPromise)return councilDashboardPromise;
   councilDashboardPromise=Promise.resolve().then(function(){
-    return loadCouncilRosterFromNas_().then(function(nas){
-      if(nas)return {nas:nas};
-      return Promise.allSettled([loadHeroSheet(),loadCouncilHoldingsOverview()]);
-    });
+    return Promise.allSettled([loadHeroSheet(),loadCouncilHoldingsOverview()]);
   }).then(function(results){
-      if(results&&results.nas)return results.nas;
       // 龐統城門已在進入卡片前完成驗證；資料載入失敗時只顯示卡片錯誤，
       // 不再由軍機處自行觸發第二次驗證，避免手機端長時間卡在驗證中。
-      return results;
-    }).then(function(results){
-      // NAS 優先路徑已經是整理好的資料物件；Google fallback 才是 allSettled 陣列。
-      // 兩者都要在這裡正規化，避免直接讀取不存在的 results[0].status。
-      if(results&&!Array.isArray(results))return results;
-      return {
-        heroes:results[0].status==='fulfilled'?results[0].value:[],
-        holdings:results[1].status==='fulfilled'?(results[1].value||[]):[],
-        holdingsLoaded:results[1].status==='fulfilled'
+      // Google Sheet 是持股單位、累計配息與損益的正式來源；成功讀取時優先用最新值。
+      var heroResult=results[0];
+      var holdingResult=results[1];
+      if(holdingResult.status==='fulfilled'&&Array.isArray(holdingResult.value))return {
+        heroes:heroResult.status==='fulfilled'&&Array.isArray(heroResult.value)?heroResult.value:[],
+        holdings:holdingResult.value,
+        holdingsLoaded:true,
+        source:'Google Sheets'
       };
+      // 試算表讀取失敗時才退回 NAS；若武將資料仍能從 Sheet 取得，沿用較新的編制。
+      return loadCouncilRosterFromNas_().then(function(nas){
+        if(nas){
+          if(heroResult.status==='fulfilled'&&Array.isArray(heroResult.value))nas.heroes=heroResult.value;
+          return nas;
+        }
+        return {
+          heroes:heroResult.status==='fulfilled'&&Array.isArray(heroResult.value)?heroResult.value:[],
+          holdings:[],
+          holdingsLoaded:false,
+          source:'Google Sheets'
+        };
+      });
     }).finally(function(){
       councilDashboardPromise=null;
     });
