@@ -79,7 +79,7 @@ test('military dividend calendar supports date filtering and fits a phone viewpo
   expect(result.days).toBe(31);
 });
 
-test('weekly dividend total includes only the weekly tickers paying on that date', async ({ page }) => {
+test('weekly dividend total sums all scheduled estimates Monday through Sunday', async ({ page }) => {
   await page.goto(dashboardUrl);
   await page.evaluate(() => ensureMilitaryModule());
   const result = await page.evaluate(() => {
@@ -88,7 +88,9 @@ test('weekly dividend total includes only the weekly tickers paying on that date
       { symbol: 'CHPY', monthlyDiv: 16176 },
       { symbol: 'GDXW', monthlyDiv: 1200 },
       { symbol: 'GLDW', monthlyDiv: 1600 },
-      { symbol: 'QQQI', monthlyDiv: 9999 }
+      { symbol: 'QQQI', monthlyDiv: 9999 },
+      { symbol: '施羅德收益成長A2', monthlyDiv: 6413 },
+      { symbol: '路博邁台灣5G', monthlyDiv: 3733 }
     ];
     councilDividendCalendarMonth = new Date(2026, 9, 1);
     const host = document.createElement('div');
@@ -96,22 +98,19 @@ test('weekly dividend total includes only the weekly tickers paying on that date
     document.body.appendChild(host);
     renderCouncilDividendCalendarIntoHost();
     setCouncilDividendCalendarDay(2);
-    const friday = new Date(2026, 9, 2);
-    const wednesday = new Date(2026, 9, 7);
+    const october2Week = councilDividendWeekEstimate(new Date(2026, 9, 2));
+    setCouncilDividendCalendarDay(5);
+    const october5WeekLabel = host.querySelector('.council-dividend-event-week-total')?.textContent;
+    const october5Week = councilDividendWeekEstimate(new Date(2026, 9, 5));
     return {
-      fridayTotal: councilDividendDateEstimate(friday),
-      wednesdayTotal: councilDividendDateEstimate(wednesday),
-      fridayLabel: host.querySelector('.council-dividend-event-week-total')?.textContent,
-      fridaySymbols: councilDividendSymbolsForDate(friday)
+      october2Week,
+      october5Week,
+      october5WeekLabel
     };
   });
-  expect(result.fridayTotal).toBe(7844);
-  expect(result.fridayLabel).toContain('本次週配 $7,844');
-  expect(result.wednesdayTotal).toBe(700);
-  expect(result.fridaySymbols).toContain('AIPI');
-  expect(result.fridaySymbols).toContain('CHPY');
-  expect(result.fridaySymbols).not.toContain('GDXW');
-  expect(result.fridaySymbols).not.toContain('GLDW');
+  expect(result.october2Week).toBe(8544);
+  expect(result.october5Week).toBe(18690);
+  expect(result.october5WeekLabel).toContain('本週預估總配息 $18,690');
 });
 
 test('military roster includes the dividend calendar without loading dividend data', async ({ page }) => {
