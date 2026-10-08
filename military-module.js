@@ -411,6 +411,11 @@ function renderCouncilMonthlyDividendHtml(totalMonthly,projection){
 // 配息月曆依主公提供的固定預估日期規則產生，不呼叫額外 API。
 var councilDividendCalendarMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1);
 var councilDividendCalendarSelectedDay='';
+var councilDividendCalendarHoldings=[];
+var councilDividendCalendarHoldingKeys={
+  '路博邁5G':['路博邁台灣5G','路博邁5G'],
+  '施羅德環球收益':['施羅德收益成長A2','施羅德環球收益']
+};
 function councilDividendEventsForMonth(year,month){
   var lastDay=new Date(year,month+1,0).getDate();
   var events={};
@@ -447,6 +452,16 @@ function renderCouncilDividendCalendar(){
   var year=monthDate.getFullYear(),month=monthDate.getMonth();
   var events=councilDividendEventsForMonth(year,month),byDay={};
   events.forEach(function(event){byDay[event.day]=event;});
+  function monthlyEstimate(symbol){
+    var candidates=councilDividendCalendarHoldingKeys[symbol]||[symbol];
+    var holding=(councilDividendCalendarHoldings||[]).find(function(row){
+      var keys=collectCouncilKeys([row.symbol,row.name,row.assetName,row.account]);
+      return candidates.some(function(candidate){return keys.indexOf(normalizeKey(candidate))>=0;});
+    });
+    if(!holding||holding.monthlyDiv==null||String(holding.monthlyDiv).trim()==='')return '月估 --';
+    var amount=Number(holding.monthlyDiv);
+    return isFinite(amount)?'月估 NT'+fmtFull(amount):'月估 --';
+  }
   var firstWeekday=new Date(year,month,1).getDay(),daysInMonth=new Date(year,month+1,0).getDate();
   var today=new Date(),todayKey=today.getFullYear()===year&&today.getMonth()===month?String(today.getDate()):'';
   var cells=[];
@@ -461,14 +476,14 @@ function renderCouncilDividendCalendar(){
   var shownEvents=councilDividendCalendarSelectedDay?events.filter(function(event){return event.day===Number(councilDividendCalendarSelectedDay);}):events;
   var list=shownEvents.map(function(event){
     var date=new Date(year,month,event.day),dateLabel=(month+1)+'/'+event.day+' '+['日','一','二','三','四','五','六'][date.getDay()];
-    return '<div class="council-dividend-event"><button type="button" class="council-dividend-event-date" onclick="setCouncilDividendCalendarDay('+event.day+')">'+esc(dateLabel)+'</button><div class="council-dividend-event-symbols">'+event.symbols.map(function(symbol){return '<span>'+esc(symbol)+'</span>';}).join('')+'</div><span class="council-dividend-event-note">預估入帳</span></div>';
+    return '<div class="council-dividend-event"><button type="button" class="council-dividend-event-date" onclick="setCouncilDividendCalendarDay('+event.day+')">'+esc(dateLabel)+'</button><div class="council-dividend-event-symbols">'+event.symbols.map(function(symbol){return '<span class="council-dividend-asset"><strong>'+esc(symbol)+'</strong><small title="取自月度戰情室 D 欄的月估配息，非單次入帳金額">'+esc(monthlyEstimate(symbol))+'</small></span>';}).join('')+'</div><span class="council-dividend-event-note">預估入帳</span></div>';
   }).join('');
   if(!list)list='<div class="council-dividend-empty">'+(councilDividendCalendarSelectedDay?'這一天沒有預估入帳項目':'本月沒有預估入帳項目')+'</div>';
   return '<section class="council-dividend-card" aria-label="配息月曆">'+
     '<div class="council-dividend-head"><div><div class="council-dividend-title">配息月曆</div><div class="council-dividend-caption">依您提供的預估日期排程 · '+events.length+' 個入帳日</div></div><div class="council-dividend-nav"><button type="button" aria-label="上個月" onclick="setCouncilDividendCalendarMonth(-1)">‹</button><strong>'+year+' 年 '+(month+1)+' 月</strong><button type="button" aria-label="下個月" onclick="setCouncilDividendCalendarMonth(1)">›</button></div></div>'+
     '<div class="council-dividend-weekdays">'+['日','一','二','三','四','五','六'].map(function(label){return '<span>'+label+'</span>';}).join('')+'</div><div class="council-dividend-grid">'+cells.join('')+'</div>'+
     '<div class="council-dividend-legend"><span><i></i>預估入帳日</span><span>點選日期可篩選</span></div><div class="council-dividend-list" aria-live="polite">'+list+'</div>'+
-    '<div class="council-dividend-footnote">日期為預估排程，實際入帳日可能不同。</div></section>';
+    '<div class="council-dividend-footnote">金額取自月度戰情室 D10:D22，標示的是月估值，不是單次入帳金額；日期為預估排程，實際入帳日可能不同。</div></section>';
 }
 
 // Council review: comparable holdings, explicit missing values, no extra requests.
@@ -519,6 +534,7 @@ function renderCouncilRoster(rows,el,assetSnapshot,dividendProjection){
   var snapshotDateBadge=snapshotDate?`<span class="council-snapshot-date">${esc(snapshotDate)}</span>`:'';
   var totalMonthly=holdings.reduce(function(s,r){return s+toNum(r.monthlyDiv);},0);
   var totalReturn=holdings.reduce(function(s,r){return s+toNum(r.totalReturn);},0);
+  councilDividendCalendarHoldings=holdings;
   councilReviewContext={rows:rows,el:el,snapshot:assetSnapshot,projection:dividendProjection,totalCost:totalCost};
   el.innerHTML=`
     <div class="council-summary">

@@ -33,15 +33,27 @@ test('military dividend calendar supports date filtering and fits a phone viewpo
   await page.evaluate(() => ensureMilitaryModule());
   const result = await page.evaluate(() => {
     councilDividendCalendarMonth = new Date(2026, 9, 1);
+    councilDividendCalendarHoldings = [
+      { symbol: 'AIPI', monthlyDiv: 15192 },
+      { symbol: 'CHPY', monthlyDiv: 16166 },
+      { symbol: '國泰高股息B', monthlyDiv: 2493 },
+      { symbol: '00997A', monthlyDiv: 3750 },
+      { symbol: '00998A', monthlyDiv: 5787 },
+      { symbol: '施羅德收益成長A2', monthlyDiv: 6411 },
+      { symbol: '路博邁台灣5G', monthlyDiv: 3733 }
+    ];
     const host = document.createElement('div');
     host.id = 'council-dividend-calendar';
     document.body.appendChild(host);
     renderCouncilDividendCalendarIntoHost();
     host.querySelector('.council-dividend-day[aria-label^="2026/10/16"]').click();
     const selectedText = host.querySelector('.council-dividend-list').textContent;
+    setCouncilDividendCalendarDay(5);
+    const monthlyHoldingsText = host.querySelector('.council-dividend-list').textContent;
     const bounds = host.getBoundingClientRect();
     return {
       selectedText,
+      monthlyHoldingsText,
       width: bounds.width,
       right: bounds.right,
       viewport: window.innerWidth,
@@ -51,6 +63,10 @@ test('military dividend calendar supports date filtering and fits a phone viewpo
   expect(result.selectedText).toContain('00997A');
   expect(result.selectedText).toContain('00998A');
   expect(result.selectedText).not.toContain('MLPI');
+  expect(result.selectedText).toContain('月估 NT$15,192');
+  expect(result.selectedText).toContain('月估 NT$5,787');
+  expect(result.monthlyHoldingsText).toContain('月估 NT$6,411');
+  expect(result.monthlyHoldingsText).toContain('月估 NT$3,733');
   expect(result.right).toBeLessThanOrEqual(result.viewport + 1);
   expect(result.days).toBe(31);
 });

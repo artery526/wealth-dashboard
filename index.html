@@ -1824,6 +1824,9 @@ body::after{
 .council-dividend-event-date{border:0;background:none;text-align:left;color:var(--teal);font:700 12px var(--mono);white-space:nowrap;cursor:pointer}
 .council-dividend-event-symbols{display:flex;flex-wrap:wrap;gap:5px}
 .council-dividend-event-symbols span{padding:3px 6px;border:1px solid rgba(184,137,46,.2);border-radius:999px;background:rgba(184,137,46,.08);color:#e3d4a1;font:700 10px/1.25 var(--sans)}
+.council-dividend-event-symbols .council-dividend-asset{display:flex;flex-direction:column;align-items:flex-start;gap:3px;white-space:nowrap}
+.council-dividend-event-symbols .council-dividend-asset strong{font:800 10px/1.2 var(--sans);color:#e3d4a1}
+.council-dividend-event-symbols .council-dividend-asset small{font:9px/1.2 var(--mono);color:#78cee2}
 .council-dividend-event-note{font:10px var(--sans);color:#8aaebb;white-space:nowrap}
 .council-dividend-empty{padding:12px 4px;color:#8aaebb;font:12px var(--sans)}
 .council-dividend-footnote{padding-top:8px;border-top:1px solid rgba(93,196,222,.12)}
@@ -14948,7 +14951,7 @@ function ensureMilitaryModule(){
   if(!militaryModulePromise){
     militaryModulePromise=new Promise(function(resolve,reject){
       var script=document.createElement('script');
-      script.src='./military-module.js?v=20261008-dividend-calendar1';
+      script.src='./military-module.js?v=20261008-dividend-calendar2';
       script.async=true;
       script.onload=function(){
         if(!window.MilitaryModuleLoaded){reject(new Error('軍機處模組載入後未完成初始化'));return;}
