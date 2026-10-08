@@ -68,18 +68,16 @@ test('military dividend calendar supports date filtering and fits a phone viewpo
   expect(result.selectedText).toContain('00997A');
   expect(result.selectedText).toContain('00998A');
   expect(result.selectedText).not.toContain('MLPI');
-  expect(result.selectedText).toContain('單次預估 NT$3,798');
-  expect(result.selectedText).toContain('單次預估 NT$4,042');
-  expect(result.selectedText).toContain('月估 NT$5,787');
-  expect(result.monthlyHoldingsText).toContain('月估 NT$6,411');
-  expect(result.monthlyHoldingsText).toContain('月估 NT$3,733');
-  expect(result.weeklyHoldingsText).toContain('單次預估 NT$1,333');
-  expect(result.weeklyHoldingsText).toContain('單次預估 NT$904');
+  expect(result.selectedText).toContain('本週共計 $22,107 配息');
+  expect(result.monthlyHoldingsText).toContain('10/4–10');
+  expect(result.monthlyHoldingsText).toContain('本週共計 $20,221 配息');
+  expect(result.weeklyHoldingsText).toContain('GDXW');
+  expect(result.weeklyHoldingsText).toContain('GLDW');
   expect(result.right).toBeLessThanOrEqual(result.viewport + 1);
   expect(result.days).toBe(31);
 });
 
-test('dividend row total sums only the estimates scheduled on that date', async ({ page }) => {
+test('dividend calendar groups each week into one row with its scheduled holdings and total', async ({ page }) => {
   await page.goto(dashboardUrl);
   await page.evaluate(() => ensureMilitaryModule());
   const result = await page.evaluate(() => {
@@ -97,22 +95,22 @@ test('dividend row total sums only the estimates scheduled on that date', async 
     host.id = 'council-dividend-calendar';
     document.body.appendChild(host);
     renderCouncilDividendCalendarIntoHost();
-    const events = councilDividendEventsForMonth(2026, 9);
-    const totalFor = day => councilDividendEventEstimate(events.find(event => event.day === day));
+    const weeks = councilDividendWeeksForMonth(2026, 9);
+    const week = weeks.find(item => item.range === '10/4–10');
     setCouncilDividendCalendarDay(5);
     return {
-      october2Total: totalFor(2),
-      october5Total: totalFor(5),
-      october7Total: totalFor(7),
-      october9Total: totalFor(9),
-      october5Label: host.querySelector('.council-dividend-event-week-total')?.textContent
+      range: week.range,
+      symbols: week.symbols,
+      total: week.total,
+      rowCount: host.querySelectorAll('.council-dividend-event').length,
+      rowLabel: host.querySelector('.council-dividend-event-week-total')?.textContent
     };
   });
-  expect(result.october2Total).toBe(7844);
-  expect(result.october5Total).toBe(10147);
-  expect(result.october7Total).toBe(2239);
-  expect(result.october9Total).toBe(7844);
-  expect(result.october5Label).toContain('本週預估總配息 $10,147');
+  expect(result.range).toBe('10/4–10');
+  expect(result.symbols).toEqual(['施羅德環球收益', '路博邁5G', 'GDXW', 'GLDW', 'AIPI', 'CHPY']);
+  expect(result.total).toBe(20230);
+  expect(result.rowCount).toBe(1);
+  expect(result.rowLabel).toContain('本週共計 $20,230 配息');
 });
 
 test('military roster includes the dividend calendar without loading dividend data', async ({ page }) => {
