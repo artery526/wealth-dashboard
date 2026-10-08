@@ -1802,6 +1802,32 @@ body::after{
 .advisor-task-note{font-family:var(--sans);font-size:12px;line-height:1.7;color:#9a7430;margin-bottom:12px}
 .council-army-title{display:flex;align-items:center;gap:10px;margin:4px 0 14px;font-family:var(--sans);font-size:15px;font-weight:900;color:var(--gold2);letter-spacing:1px}
 .council-army-title::after{content:"";height:1px;flex:1;background:linear-gradient(90deg,#5a4018,transparent)}
+.council-dividend-card{margin:0 0 14px;padding:14px;border:1px solid rgba(93,196,222,.25);border-radius:9px;background:linear-gradient(145deg,rgba(9,29,40,.94),rgba(5,17,24,.96));color:var(--ink)}
+.council-dividend-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
+.council-dividend-title{font:900 15px var(--sans);letter-spacing:1px;color:var(--teal)}
+.council-dividend-caption,.council-dividend-footnote{margin-top:4px;font:11px/1.5 var(--sans);color:#8aaebb}
+.council-dividend-nav{display:flex;align-items:center;gap:10px;font:700 13px var(--mono);color:var(--ink);white-space:nowrap}
+.council-dividend-nav button{width:30px;height:30px;border:1px solid rgba(93,196,222,.3);border-radius:7px;background:rgba(8,29,40,.8);color:var(--teal);font:700 20px/1 var(--sans);cursor:pointer}
+.council-dividend-weekdays,.council-dividend-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));text-align:center}
+.council-dividend-weekdays{padding:8px 0;border-top:1px solid rgba(93,196,222,.16);border-bottom:1px solid rgba(93,196,222,.16);font:11px var(--sans);color:#8aaebb}
+.council-dividend-grid{gap:4px 2px;padding:8px 0}
+.council-dividend-day{position:relative;display:flex;min-width:0;min-height:38px;align-items:center;justify-content:center;border:1px solid transparent;border-radius:8px;background:transparent;color:#d3e3e8;font:12px var(--mono);cursor:pointer}
+.council-dividend-day.is-empty{pointer-events:none}
+.council-dividend-day.has-event{background:rgba(93,196,222,.08);font-weight:800;color:#e9f5f8}
+.council-dividend-day.has-event i{position:absolute;bottom:4px;width:5px;height:5px;border-radius:50%;background:var(--gold);box-shadow:0 0 7px rgba(232,192,80,.4)}
+.council-dividend-day.is-today{border-color:rgba(93,196,222,.55)}
+.council-dividend-day.is-selected{border-color:var(--teal);background:rgba(93,196,222,.18);box-shadow:0 0 0 1px rgba(93,196,222,.12)}
+.council-dividend-legend{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:4px 0 9px;border-bottom:1px solid rgba(93,196,222,.16);font:10px var(--sans);color:#8aaebb}
+.council-dividend-legend span:first-child{display:flex;align-items:center;gap:6px}.council-dividend-legend i{width:6px;height:6px;border-radius:50%;background:var(--gold)}
+.council-dividend-list{display:grid;gap:6px;padding-top:8px}
+.council-dividend-event{display:grid;grid-template-columns:72px minmax(0,1fr) auto;align-items:center;gap:8px;padding:7px 8px;border:1px solid rgba(93,196,222,.12);border-radius:7px;background:rgba(3,15,21,.52)}
+.council-dividend-event-date{border:0;background:none;text-align:left;color:var(--teal);font:700 12px var(--mono);white-space:nowrap;cursor:pointer}
+.council-dividend-event-symbols{display:flex;flex-wrap:wrap;gap:5px}
+.council-dividend-event-symbols span{padding:3px 6px;border:1px solid rgba(184,137,46,.2);border-radius:999px;background:rgba(184,137,46,.08);color:#e3d4a1;font:700 10px/1.25 var(--sans)}
+.council-dividend-event-note{font:10px var(--sans);color:#8aaebb;white-space:nowrap}
+.council-dividend-empty{padding:12px 4px;color:#8aaebb;font:12px var(--sans)}
+.council-dividend-footnote{padding-top:8px;border-top:1px solid rgba(93,196,222,.12)}
+@media(max-width:540px){.council-dividend-card{padding:10px}.council-dividend-head{align-items:flex-start;flex-direction:column}.council-dividend-nav{width:100%;justify-content:space-between}.council-dividend-day{min-height:34px}.council-dividend-event{grid-template-columns:56px minmax(0,1fr);gap:6px;padding:6px}.council-dividend-event-note{display:none}.council-dividend-event-symbols{gap:4px}.council-dividend-event-symbols span{font-size:9px;padding:3px 5px}}
 .council-roster-groups{display:grid;gap:14px}
 .council-data-updating{opacity:.72;transition:opacity .22s ease}
 .council-refresh-note{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 10px;padding:8px 11px;border:1px solid rgba(93,196,222,.22);border-radius:8px;background:rgba(8,29,40,.72);color:#9bc4d1;font:12px var(--sans)}
@@ -14922,7 +14948,7 @@ function ensureMilitaryModule(){
   if(!militaryModulePromise){
     militaryModulePromise=new Promise(function(resolve,reject){
       var script=document.createElement('script');
-      script.src='./military-module.js?v=20261007-roster-sheet-first1';
+      script.src='./military-module.js?v=20261008-dividend-calendar1';
       script.async=true;
       script.onload=function(){
         if(!window.MilitaryModuleLoaded){reject(new Error('軍機處模組載入後未完成初始化'));return;}

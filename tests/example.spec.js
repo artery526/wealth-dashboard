@@ -4,6 +4,73 @@ const path = require('node:path');
 
 const dashboardUrl = 'file:///' + path.resolve(__dirname, '..', 'index.html').replace(/\\/g, '/');
 
+test('military dividend calendar follows the supplied weekly and monthly dates', async ({ page }) => {
+  await page.goto(dashboardUrl);
+  await page.evaluate(() => ensureMilitaryModule());
+  const result = await page.evaluate(() => {
+    let apiCalls = 0;
+    const originalApiGet = apiGet;
+    apiGet = (...args) => { apiCalls++; return originalApiGet(...args); };
+    const october = councilDividendEventsForMonth(2026, 9);
+    const oct16 = october.find(item => item.day === 16).symbols;
+    const oct19 = october.find(item => item.day === 19).symbols;
+    const february = councilDividendEventsForMonth(2026, 1);
+    const feb28 = february.find(item => item.day === 28).symbols;
+    const februaryHas29 = february.some(item => item.day === 29);
+    apiGet = originalApiGet;
+    return { oct16, oct19, feb28, februaryHas29, apiCalls };
+  });
+  expect(result.oct16).toEqual(['AIPI', 'CHPY', '國泰高股息B', '00997A', '00998A']);
+  expect(result.oct19).toEqual(['MLPI', 'QQQI']);
+  expect(result.feb28).toContain('00985B');
+  expect(result.februaryHas29).toBe(false);
+  expect(result.apiCalls).toBe(0);
+});
+
+test('military dividend calendar supports date filtering and fits a phone viewport', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 780 });
+  await page.goto(dashboardUrl);
+  await page.evaluate(() => ensureMilitaryModule());
+  const result = await page.evaluate(() => {
+    councilDividendCalendarMonth = new Date(2026, 9, 1);
+    const host = document.createElement('div');
+    host.id = 'council-dividend-calendar';
+    document.body.appendChild(host);
+    renderCouncilDividendCalendarIntoHost();
+    host.querySelector('.council-dividend-day[aria-label^="2026/10/16"]').click();
+    const selectedText = host.querySelector('.council-dividend-list').textContent;
+    const bounds = host.getBoundingClientRect();
+    return {
+      selectedText,
+      width: bounds.width,
+      right: bounds.right,
+      viewport: window.innerWidth,
+      days: host.querySelectorAll('.council-dividend-day:not(.is-empty)').length
+    };
+  });
+  expect(result.selectedText).toContain('00997A');
+  expect(result.selectedText).toContain('00998A');
+  expect(result.selectedText).not.toContain('MLPI');
+  expect(result.right).toBeLessThanOrEqual(result.viewport + 1);
+  expect(result.days).toBe(31);
+});
+
+test('military roster includes the dividend calendar without loading dividend data', async ({ page }) => {
+  await page.goto(dashboardUrl);
+  await page.evaluate(() => ensureMilitaryModule());
+  const result = await page.evaluate(() => {
+    const host = document.createElement('div');
+    renderCouncilRoster([], host, null, null);
+    return {
+      hasCalendar: !!host.querySelector('#council-dividend-calendar'),
+      title: host.querySelector('.council-dividend-title')?.textContent,
+      apiUrl: typeof API_URL === 'string' ? API_URL : ''
+    };
+  });
+  expect(result.hasCalendar).toBe(true);
+  expect(result.title).toBe('配息月曆');
+});
+
 test('Pangtong income shortcuts map to fixed Stock account', async ({ page }) => {
   await page.goto(dashboardUrl);
   const commands = await page.evaluate(() => ['工作','兼職','房租','買賣','爸媽','退稅'].map(keyword => advisorAICommand(keyword + ' 5000')));

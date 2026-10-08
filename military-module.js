@@ -408,6 +408,69 @@ function renderCouncilMonthlyDividendHtml(totalMonthly,projection){
   return '月總配息 '+fmtFull(base)+'<span class="council-stat-trial">（粗估 '+fmtFull(roughEstimate)+'）</span>';
 }
 
+// 配息月曆依主公提供的固定預估日期規則產生，不呼叫額外 API。
+var councilDividendCalendarMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1);
+var councilDividendCalendarSelectedDay='';
+function councilDividendEventsForMonth(year,month){
+  var lastDay=new Date(year,month+1,0).getDate();
+  var events={};
+  function add(day,symbol){if(!events[day])events[day]=[];events[day].push(symbol);}
+  for(var day=1;day<=lastDay;day++){
+    var weekday=new Date(year,month,day).getDay();
+    if(weekday===3){add(day,'GDXW');add(day,'GLDW');}
+    if(weekday===5){add(day,'AIPI');add(day,'CHPY');}
+    if(day===5){add(day,'施羅德環球收益');add(day,'路博邁5G');}
+    if(day===16){add(day,'國泰高股息B');}
+    if(day===19){add(day,'MLPI');add(day,'QQQI');}
+    if(day===(month===1?lastDay:29)){add(day,'00985B');}
+    if(day===16&&[0,3,6,9].indexOf(month)>=0){add(day,'00997A');add(day,'00998A');}
+  }
+  return Object.keys(events).map(function(day){return {day:Number(day),symbols:events[day]};}).sort(function(a,b){return a.day-b.day;});
+}
+function setCouncilDividendCalendarMonth(offset){
+  var current=councilDividendCalendarMonth||new Date();
+  councilDividendCalendarMonth=new Date(current.getFullYear(),current.getMonth()+Number(offset||0),1);
+  councilDividendCalendarSelectedDay='';
+  renderCouncilDividendCalendarIntoHost();
+}
+function setCouncilDividendCalendarDay(day){
+  var key=String(day);
+  councilDividendCalendarSelectedDay=councilDividendCalendarSelectedDay===key?'':key;
+  renderCouncilDividendCalendarIntoHost();
+}
+function renderCouncilDividendCalendarIntoHost(){
+  var host=document.getElementById('council-dividend-calendar');
+  if(host)host.innerHTML=renderCouncilDividendCalendar();
+}
+function renderCouncilDividendCalendar(){
+  var monthDate=councilDividendCalendarMonth||new Date();
+  var year=monthDate.getFullYear(),month=monthDate.getMonth();
+  var events=councilDividendEventsForMonth(year,month),byDay={};
+  events.forEach(function(event){byDay[event.day]=event;});
+  var firstWeekday=new Date(year,month,1).getDay(),daysInMonth=new Date(year,month+1,0).getDate();
+  var today=new Date(),todayKey=today.getFullYear()===year&&today.getMonth()===month?String(today.getDate()):'';
+  var cells=[];
+  for(var blank=0;blank<firstWeekday;blank++)cells.push('<span class="council-dividend-day is-empty" aria-hidden="true"></span>');
+  for(var day=1;day<=daysInMonth;day++){
+    var event=byDay[day],labels=event?event.symbols.join('、'):'';
+    var selected=councilDividendCalendarSelectedDay===String(day);
+    var classes='council-dividend-day'+(event?' has-event':'')+(selected?' is-selected':'')+(todayKey===String(day)?' is-today':'');
+    var label=year+'/'+String(month+1).padStart(2,'0')+'/'+String(day).padStart(2,'0')+(labels?'：'+labels:'：無預估配息');
+    cells.push('<button type="button" class="'+classes+'" aria-label="'+esc(label)+'" aria-pressed="'+selected+'" onclick="setCouncilDividendCalendarDay('+day+')"><span>'+day+'</span>'+(event?'<i aria-hidden="true"></i>':'')+'</button>');
+  }
+  var shownEvents=councilDividendCalendarSelectedDay?events.filter(function(event){return event.day===Number(councilDividendCalendarSelectedDay);}):events;
+  var list=shownEvents.map(function(event){
+    var date=new Date(year,month,event.day),dateLabel=(month+1)+'/'+event.day+' '+['日','一','二','三','四','五','六'][date.getDay()];
+    return '<div class="council-dividend-event"><button type="button" class="council-dividend-event-date" onclick="setCouncilDividendCalendarDay('+event.day+')">'+esc(dateLabel)+'</button><div class="council-dividend-event-symbols">'+event.symbols.map(function(symbol){return '<span>'+esc(symbol)+'</span>';}).join('')+'</div><span class="council-dividend-event-note">預估入帳</span></div>';
+  }).join('');
+  if(!list)list='<div class="council-dividend-empty">'+(councilDividendCalendarSelectedDay?'這一天沒有預估入帳項目':'本月沒有預估入帳項目')+'</div>';
+  return '<section class="council-dividend-card" aria-label="配息月曆">'+
+    '<div class="council-dividend-head"><div><div class="council-dividend-title">配息月曆</div><div class="council-dividend-caption">依您提供的預估日期排程 · '+events.length+' 個入帳日</div></div><div class="council-dividend-nav"><button type="button" aria-label="上個月" onclick="setCouncilDividendCalendarMonth(-1)">‹</button><strong>'+year+' 年 '+(month+1)+' 月</strong><button type="button" aria-label="下個月" onclick="setCouncilDividendCalendarMonth(1)">›</button></div></div>'+
+    '<div class="council-dividend-weekdays">'+['日','一','二','三','四','五','六'].map(function(label){return '<span>'+label+'</span>';}).join('')+'</div><div class="council-dividend-grid">'+cells.join('')+'</div>'+
+    '<div class="council-dividend-legend"><span><i></i>預估入帳日</span><span>點選日期可篩選</span></div><div class="council-dividend-list" aria-live="polite">'+list+'</div>'+
+    '<div class="council-dividend-footnote">日期為預估排程，實際入帳日可能不同。</div></section>';
+}
+
 // Council review: comparable holdings, explicit missing values, no extra requests.
 var councilReviewMode='cards',councilReviewSort='marketValue',councilReviewContext=null;
 function councilReviewNumber(value){
@@ -464,6 +527,7 @@ function renderCouncilRoster(rows,el,assetSnapshot,dividendProjection){
       <div class="council-stat"><div class="council-stat-l council-stat-label-row"><span>投資市值</span>${snapshotDateBadge}</div><div class="council-stat-v">${fmtFull(totalMarket)}</div>${renderCouncilMarketDelta(assetSnapshot)}</div>
     </div>
     <div class="council-review-toolbar"><span class="council-army-title">軍團檢閱</span><button type="button" class="battle-report-refresh" aria-pressed="${councilReviewMode==='cards'}" onclick="setCouncilReview('cards')">武將卡片</button><button type="button" class="battle-report-refresh" aria-pressed="${councilReviewMode==='compare'}" onclick="setCouncilReview('compare')">精簡比較</button>${councilReviewMode==='compare'?'<label>排序 <select aria-label="持股比較排序" onchange="setCouncilReview(undefined,this.value)">'+[['marketValue','市值高至低'],['weight','占比高至低'],['returnPct','報酬率高至低'],['monthlyDiv','月配息高至低']].map(function(option){return '<option value="'+option[0]+'"'+(councilReviewSort===option[0]?' selected':'')+'>'+option[1]+'</option>';}).join('')+'</select></label>':''}</div>
+    <div id="council-dividend-calendar">${renderCouncilDividendCalendar()}</div>
     ${councilReviewMode==='compare'?councilComparisonHtml(rows):renderCouncilRosterGroups(active,totalCost)}`;
 }
 
