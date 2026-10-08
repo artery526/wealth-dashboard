@@ -450,15 +450,10 @@ function councilDividendSinglePaymentAmount(symbol){
   var amount=Number(holding.monthlyDiv),divisor=councilDividendCalendarSinglePaymentSymbols[symbol];
   return isFinite(amount)&&divisor?amount/divisor:0;
 }
-function councilDividendWeekEstimate(date){
-  var start=new Date(date.getFullYear(),date.getMonth(),date.getDate()-date.getDay()),total=0;
-  for(var offset=0;offset<7;offset++){
-    var current=new Date(start.getFullYear(),start.getMonth(),start.getDate()+offset);
-    councilDividendSymbolsForDate(current).forEach(function(symbol){
-      if(councilDividendCalendarSinglePaymentSymbols[symbol])total+=councilDividendSinglePaymentAmount(symbol);
-    });
-  }
-  return total;
+function councilDividendDateEstimate(date){
+  return councilDividendSymbolsForDate(date).reduce(function(total,symbol){
+    return total+(councilDividendCalendarSinglePaymentSymbols[symbol]?Math.round(councilDividendSinglePaymentAmount(symbol)):0);
+  },0);
 }
 function setCouncilDividendCalendarMonth(offset){
   var current=councilDividendCalendarMonth||new Date();
@@ -502,15 +497,15 @@ function renderCouncilDividendCalendar(){
   var shownEvents=councilDividendCalendarSelectedDay?events.filter(function(event){return event.day===Number(councilDividendCalendarSelectedDay);}):events;
   var list=shownEvents.map(function(event){
     var date=new Date(year,month,event.day),dateLabel=(month+1)+'/'+event.day+' '+['日','一','二','三','四','五','六'][date.getDay()];
-    var weekTotal=councilDividendWeekEstimate(date);
-    return '<div class="council-dividend-event"><button type="button" class="council-dividend-event-date" onclick="setCouncilDividendCalendarDay('+event.day+')">'+esc(dateLabel)+'</button><div class="council-dividend-event-symbols">'+event.symbols.map(function(symbol){var isSingle=!!councilDividendCalendarSinglePaymentSymbols[symbol];var title=isSingle?'D欄月估值除以每月約4次週配，作為單次預估':'取自月度戰情室 D 欄的月估配息，非單次入帳金額';return '<span class="council-dividend-asset"><strong>'+esc(symbol)+'</strong><small title="'+esc(title)+'">'+esc(dividendEstimateLabel(symbol))+'</small></span>';}).join('')+'</div><span class="council-dividend-event-week-total" title="僅加總 GLDW、GDXW、AIPI、CHPY 的單次預估">本週收入 '+esc(fmtFull(weekTotal))+'</span></div>';
+    var dayTotal=councilDividendDateEstimate(date);
+    return '<div class="council-dividend-event"><button type="button" class="council-dividend-event-date" onclick="setCouncilDividendCalendarDay('+event.day+')">'+esc(dateLabel)+'</button><div class="council-dividend-event-symbols">'+event.symbols.map(function(symbol){var isSingle=!!councilDividendCalendarSinglePaymentSymbols[symbol];var title=isSingle?'D欄月估值除以每月約4次週配，作為單次預估':'取自月度戰情室 D 欄的月估配息，非單次入帳金額';return '<span class="council-dividend-asset"><strong>'+esc(symbol)+'</strong><small title="'+esc(title)+'">'+esc(dividendEstimateLabel(symbol))+'</small></span>';}).join('')+'</div><span class="council-dividend-event-week-total" title="只加總該日期入帳的週配標的；週三計 GDXW、GLDW，週五計 AIPI、CHPY">本次週配 '+esc(fmtFull(dayTotal))+'</span></div>';
   }).join('');
   if(!list)list='<div class="council-dividend-empty">'+(councilDividendCalendarSelectedDay?'這一天沒有預估入帳項目':'本月沒有預估入帳項目')+'</div>';
   return '<section class="council-dividend-card" aria-label="配息月曆">'+
     '<div class="council-dividend-head"><div><div class="council-dividend-title">配息月曆</div><div class="council-dividend-caption">依您提供的預估日期排程 · '+events.length+' 個入帳日</div></div><div class="council-dividend-nav"><button type="button" aria-label="上個月" onclick="setCouncilDividendCalendarMonth(-1)">‹</button><strong>'+year+' 年 '+(month+1)+' 月</strong><button type="button" aria-label="下個月" onclick="setCouncilDividendCalendarMonth(1)">›</button></div></div>'+
     '<div class="council-dividend-weekdays">'+['日','一','二','三','四','五','六'].map(function(label){return '<span>'+label+'</span>';}).join('')+'</div><div class="council-dividend-grid">'+cells.join('')+'</div>'+
     '<div class="council-dividend-legend"><span><i></i>預估入帳日</span><span>點選日期可篩選</span></div><div class="council-dividend-list" aria-live="polite">'+list+'</div>'+
-    '<div class="council-dividend-footnote">金額取自月度戰情室 D10:D22；GLDW、GDXW、AIPI、CHPY 以月估值除以每月約 4 次週配顯示單次預估。「本週收入」只加總這四檔週配單次預估；其餘標的顯示月估值但不納入週合計。日期為預估排程，實際入帳日可能不同。</div></section>';
+    '<div class="council-dividend-footnote">金額取自月度戰情室 D10:D22；GLDW、GDXW、AIPI、CHPY 以月估值除以每月約 4 次週配顯示單次預估。「本次週配」只加總該日期入帳的週配標的：週三為 GDXW＋GLDW、週五為 AIPI＋CHPY；其他標的雖會顯示月估值，不納入週配合計。日期為預估排程，實際入帳日可能不同。</div></section>';
 }
 
 // Council review: comparable holdings, explicit missing values, no extra requests.
