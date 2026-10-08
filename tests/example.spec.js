@@ -79,6 +79,30 @@ test('military dividend calendar supports date filtering and fits a phone viewpo
   expect(result.days).toBe(31);
 });
 
+test('weekly dividend total includes only single-payment weekly holdings across month boundaries', async ({ page }) => {
+  await page.goto(dashboardUrl);
+  await page.evaluate(() => ensureMilitaryModule());
+  const result = await page.evaluate(() => {
+    councilDividendCalendarHoldings = [
+      { symbol: 'AIPI', monthlyDiv: 400 },
+      { symbol: 'CHPY', monthlyDiv: 800 },
+      { symbol: 'GDXW', monthlyDiv: 1200 },
+      { symbol: 'GLDW', monthlyDiv: 1600 },
+      { symbol: 'QQQI', monthlyDiv: 9999 }
+    ];
+    const thu = new Date(2026, 9, 1);
+    const wed = new Date(2026, 9, 7);
+    const weekEnd = new Date(2026, 9, 31);
+    const total = councilDividendWeekEstimate(thu);
+    const sameWeek = councilDividendWeekEstimate(wed);
+    const crossMonth = councilDividendWeekEstimate(weekEnd);
+    return { total, sameWeek, crossMonth };
+  });
+  expect(result.total).toBe(1000);
+  expect(result.sameWeek).toBe(result.total);
+  expect(result.crossMonth).toBe(1000);
+});
+
 test('military roster includes the dividend calendar without loading dividend data', async ({ page }) => {
   await page.goto(dashboardUrl);
   await page.evaluate(() => ensureMilitaryModule());

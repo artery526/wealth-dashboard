@@ -1827,10 +1827,10 @@ body::after{
 .council-dividend-event-symbols .council-dividend-asset{display:flex;flex-direction:column;align-items:flex-start;gap:3px;white-space:nowrap}
 .council-dividend-event-symbols .council-dividend-asset strong{font:800 10px/1.2 var(--sans);color:#e3d4a1}
 .council-dividend-event-symbols .council-dividend-asset small{font:9px/1.2 var(--mono);color:#78cee2}
-.council-dividend-event-note{font:10px var(--sans);color:#8aaebb;white-space:nowrap}
+.council-dividend-event-week-total{font:700 10px var(--sans);color:#78cee2;white-space:nowrap;text-align:right}
 .council-dividend-empty{padding:12px 4px;color:#8aaebb;font:12px var(--sans)}
 .council-dividend-footnote{padding-top:8px;border-top:1px solid rgba(93,196,222,.12)}
-@media(max-width:540px){.council-dividend-card{padding:10px}.council-dividend-head{align-items:flex-start;flex-direction:column}.council-dividend-nav{width:100%;justify-content:space-between}.council-dividend-day{min-height:34px}.council-dividend-event{grid-template-columns:56px minmax(0,1fr);gap:6px;padding:6px}.council-dividend-event-note{display:none}.council-dividend-event-symbols{gap:4px}.council-dividend-event-symbols span{font-size:9px;padding:3px 5px}}
+@media(max-width:540px){.council-dividend-card{padding:10px}.council-dividend-head{align-items:flex-start;flex-direction:column}.council-dividend-nav{width:100%;justify-content:space-between}.council-dividend-day{min-height:34px}.council-dividend-event{grid-template-columns:56px minmax(0,1fr);gap:6px;padding:6px}.council-dividend-event-week-total{grid-column:2;justify-self:end}.council-dividend-event-symbols{gap:4px}.council-dividend-event-symbols span{font-size:9px;padding:3px 5px}}
 .council-roster-groups{display:grid;gap:14px}
 .council-data-updating{opacity:.72;transition:opacity .22s ease}
 .council-refresh-note{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 10px;padding:8px 11px;border:1px solid rgba(93,196,222,.22);border-radius:8px;background:rgba(8,29,40,.72);color:#9bc4d1;font:12px var(--sans)}
@@ -14951,7 +14951,7 @@ function ensureMilitaryModule(){
   if(!militaryModulePromise){
     militaryModulePromise=new Promise(function(resolve,reject){
       var script=document.createElement('script');
-      script.src='./military-module.js?v=20261008-dividend-calendar3';
+      script.src='./military-module.js?v=20261008-dividend-calendar4';
       script.async=true;
       script.onload=function(){
         if(!window.MilitaryModuleLoaded){reject(new Error('軍機處模組載入後未完成初始化'));return;}
