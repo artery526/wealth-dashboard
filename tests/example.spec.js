@@ -79,17 +79,17 @@ test('military dividend calendar supports date filtering and fits a phone viewpo
   expect(result.days).toBe(31);
 });
 
-test('weekly dividend total sums all scheduled estimates Monday through Sunday', async ({ page }) => {
+test('dividend row total sums only the estimates scheduled on that date', async ({ page }) => {
   await page.goto(dashboardUrl);
   await page.evaluate(() => ensureMilitaryModule());
   const result = await page.evaluate(() => {
     councilDividendCalendarHoldings = [
       { symbol: 'AIPI', monthlyDiv: 15200 },
       { symbol: 'CHPY', monthlyDiv: 16176 },
-      { symbol: 'GDXW', monthlyDiv: 1200 },
-      { symbol: 'GLDW', monthlyDiv: 1600 },
+      { symbol: 'GDXW', monthlyDiv: 5336 },
+      { symbol: 'GLDW', monthlyDiv: 3620 },
       { symbol: 'QQQI', monthlyDiv: 9999 },
-      { symbol: '施羅德收益成長A2', monthlyDiv: 6413 },
+      { symbol: '施羅德收益成長A2', monthlyDiv: 6414 },
       { symbol: '路博邁台灣5G', monthlyDiv: 3733 }
     ];
     councilDividendCalendarMonth = new Date(2026, 9, 1);
@@ -97,20 +97,22 @@ test('weekly dividend total sums all scheduled estimates Monday through Sunday',
     host.id = 'council-dividend-calendar';
     document.body.appendChild(host);
     renderCouncilDividendCalendarIntoHost();
-    setCouncilDividendCalendarDay(2);
-    const october2Week = councilDividendWeekEstimate(new Date(2026, 9, 2));
+    const events = councilDividendEventsForMonth(2026, 9);
+    const totalFor = day => councilDividendEventEstimate(events.find(event => event.day === day));
     setCouncilDividendCalendarDay(5);
-    const october5WeekLabel = host.querySelector('.council-dividend-event-week-total')?.textContent;
-    const october5Week = councilDividendWeekEstimate(new Date(2026, 9, 5));
     return {
-      october2Week,
-      october5Week,
-      october5WeekLabel
+      october2Total: totalFor(2),
+      october5Total: totalFor(5),
+      october7Total: totalFor(7),
+      october9Total: totalFor(9),
+      october5Label: host.querySelector('.council-dividend-event-week-total')?.textContent
     };
   });
-  expect(result.october2Week).toBe(8544);
-  expect(result.october5Week).toBe(18690);
-  expect(result.october5WeekLabel).toContain('本週預估總配息 $18,690');
+  expect(result.october2Total).toBe(7844);
+  expect(result.october5Total).toBe(10147);
+  expect(result.october7Total).toBe(2239);
+  expect(result.october9Total).toBe(7844);
+  expect(result.october5Label).toContain('本週預估總配息 $10,147');
 });
 
 test('military roster includes the dividend calendar without loading dividend data', async ({ page }) => {
