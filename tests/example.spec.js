@@ -36,6 +36,8 @@ test('military dividend calendar supports date filtering and fits a phone viewpo
     councilDividendCalendarHoldings = [
       { symbol: 'AIPI', monthlyDiv: 15192 },
       { symbol: 'CHPY', monthlyDiv: 16166 },
+      { symbol: 'GDXW', monthlyDiv: 5332 },
+      { symbol: 'GLDW', monthlyDiv: 3617 },
       { symbol: '國泰高股息B', monthlyDiv: 2493 },
       { symbol: '00997A', monthlyDiv: 3750 },
       { symbol: '00998A', monthlyDiv: 5787 },
@@ -50,10 +52,13 @@ test('military dividend calendar supports date filtering and fits a phone viewpo
     const selectedText = host.querySelector('.council-dividend-list').textContent;
     setCouncilDividendCalendarDay(5);
     const monthlyHoldingsText = host.querySelector('.council-dividend-list').textContent;
+    setCouncilDividendCalendarDay(7);
+    const weeklyHoldingsText = host.querySelector('.council-dividend-list').textContent;
     const bounds = host.getBoundingClientRect();
     return {
       selectedText,
       monthlyHoldingsText,
+      weeklyHoldingsText,
       width: bounds.width,
       right: bounds.right,
       viewport: window.innerWidth,
@@ -63,10 +68,13 @@ test('military dividend calendar supports date filtering and fits a phone viewpo
   expect(result.selectedText).toContain('00997A');
   expect(result.selectedText).toContain('00998A');
   expect(result.selectedText).not.toContain('MLPI');
-  expect(result.selectedText).toContain('月估 NT$15,192');
+  expect(result.selectedText).toContain('單次預估 NT$3,798');
+  expect(result.selectedText).toContain('單次預估 NT$4,042');
   expect(result.selectedText).toContain('月估 NT$5,787');
   expect(result.monthlyHoldingsText).toContain('月估 NT$6,411');
   expect(result.monthlyHoldingsText).toContain('月估 NT$3,733');
+  expect(result.weeklyHoldingsText).toContain('單次預估 NT$1,333');
+  expect(result.weeklyHoldingsText).toContain('單次預估 NT$904');
   expect(result.right).toBeLessThanOrEqual(result.viewport + 1);
   expect(result.days).toBe(31);
 });
