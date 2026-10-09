@@ -5015,7 +5015,7 @@ var dividendCenterCache=dividendCenterStorageCache&&dividendCenterStorageCache.d
 var dividendCenterFetchedAt=dividendCenterStorageCache&&dividendCenterStorageCache.savedAt||0;
 var dividendCenterLastLoadedFromCache=!!dividendCenterStorageCache;
 var DIVIDEND_CENTER_TIMEOUT_MS = 45000;
-var dividendBySymbolPromise=null;
+var dividendBySymbolPromises=Object.create(null);
 var bookingDividendHiddenRows = {};
 var bookingDividendExpanded = false;
 var bookingDividendPickerOpen = false;
@@ -12330,11 +12330,16 @@ async function loadDividendBySymbol(symbol){
     var cachedRow=findAdvisorDividendIncomeRow(key,dividendCenterCache);
     if(cachedRow)return cachedRow;
   }
-  if(dividendBySymbolPromise)return dividendBySymbolPromise;
-  dividendBySymbolPromise=apiGet({action:'dividendBySymbol',symbol:key},15000).then(function(row){
-    return row||null;
-  }).finally(function(){dividendBySymbolPromise=null;});
-  return dividendBySymbolPromise;
+  if(dividendBySymbolPromises[key])return dividendBySymbolPromises[key];
+  var request=apiGet({action:'dividendBySymbol',symbol:key},15000).then(function(row){
+    // Do not let a stale or misrouted response for another ticker become this
+    // ticker's confirmation card (and eventual ledger write).
+    return row&&normalizeKey(row.symbol||row.displaySymbol)===key?row:null;
+  }).finally(function(){
+    if(dividendBySymbolPromises[key]===request)delete dividendBySymbolPromises[key];
+  });
+  dividendBySymbolPromises[key]=request;
+  return request;
 }
 function invalidateDividendCenter(){
   dividendCenterCache=null;

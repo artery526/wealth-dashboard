@@ -142,6 +142,34 @@ test('Pangtong income shortcuts map to fixed Stock account', async ({ page }) =>
   ]);
 });
 
+test('Pangtong dividend lookups keep concurrent GLDW and other tickers isolated', async ({ page }) => {
+  await page.goto(dashboardUrl);
+  const result = await page.evaluate(async () => {
+    invalidateDividendCenter();
+    const originalApiGet = apiGet;
+    const calls = [];
+    apiGet = ({ symbol }) => new Promise(resolve => {
+      calls.push(symbol);
+      setTimeout(() => resolve({ symbol, displaySymbol: symbol === 'GLDW' ? '💛GLDW' : symbol, dividendUsd: 0.25 }), 10);
+    });
+    try {
+      const [gldw, qqqi] = await Promise.all([
+        loadDividendBySymbol('💛GLDW'),
+        loadDividendBySymbol('QQQI')
+      ]);
+      const wrongTicker = await loadDividendBySymbol('GDXW').then(row => row && row.symbol);
+      return { calls, gldw: gldw && gldw.symbol, qqqi: qqqi && qqqi.symbol, wrongTicker };
+    } finally {
+      apiGet = originalApiGet;
+      invalidateDividendCenter();
+    }
+  });
+  expect(result.calls).toEqual(['GLDW', 'QQQI', 'GDXW']);
+  expect(result.gldw).toBe('GLDW');
+  expect(result.qqqi).toBe('QQQI');
+  expect(result.wrongTicker).toBe('GDXW');
+});
+
 test('Pangtong holding settlement writes the display symbol for monthly holdings matching', async ({ page }) => {
   await page.goto(dashboardUrl);
   const payload = await page.evaluate(async () => {
