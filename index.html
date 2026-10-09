@@ -5079,7 +5079,7 @@ var DIVIDEND_SYMBOLS = [
   {value:'國泰高股息B',label:'🌐國泰高股息B'},
   {value:'00985B',label:'🎟️00985B'},{value:'00997A',label:'🪄00997A'},{value:'MLPI',label:'🛢️MLPI'},
   {value:'00998A',label:'🪙00998A'},
-  {value:'施羅德收益成長A2',label:'🌳施羅德收益成長A2'},{value:'路博邁台灣5G',label:'🪐路博邁台灣5G'},
+  {value:'施羅德收益成長A2',label:'🌳施羅德收益成長A2'},{value:'施羅德台灣樂活中小基金 - A類型',label:'🥇施羅德中小基金A'},{value:'路博邁台灣5G',label:'🪐路博邁台灣5G'},
   {value:'QQQI',label:'📡QQQI'},
   {value:'AIPI',label:'🤖AIPI'},{value:'CHPY',label:'🐦‍🔥CHPY'} ,
   {value:'GDXW',label:'\u2692\uFE0FGDXW'},{value:'💛GLDW',label:'💛GLDW'}
@@ -5087,7 +5087,7 @@ var DIVIDEND_SYMBOLS = [
 var STOCK_SYMBOLS = [
   {value:'🌐國泰高股息B',label:'🌐國泰高股息B'},
   {value:'📡QQQI',label:'📡QQQI'},{value:'🛢️MLPI',label:'🛢️MLPI'},
-  {value:'🪐路博邁台灣5G',label:'🪐路博邁台灣5G'},{value:'🌳施羅德收益成長A2',label:'🌳施羅德收益成長A2'},
+  {value:'🪐路博邁台灣5G',label:'🪐路博邁台灣5G'},{value:'🌳施羅德收益成長A2',label:'🌳施羅德收益成長A2'},{value:'🥇施羅德台灣樂活中小基金 - A類型',label:'🥇施羅德中小基金A'},
   {value:'🎟️00985B',label:'🎟️00985B'},{value:'🪄00997A',label:'🪄00997A'},{value:'🤖AIPI',label:'🤖AIPI'},
   {value:'🪙00998A',label:'🪙00998A'},
   {value:'🐦‍🔥CHPY',label:'🐦‍🔥CHPY'},
@@ -5096,7 +5096,7 @@ var STOCK_SYMBOLS = [
 var HOLDING_META = {
   '國泰高股息B':{emoji:'🌐',name:'國泰高股息B'},
   'IAU':{emoji:'👑',name:'IAU'},'QQQI':{emoji:'📡',name:'QQQI'},'MLPI':{emoji:'🛢️',name:'MLPI'},
-  '路博邁台灣5G':{emoji:'🪐',name:'路博邁台灣5G'},'施羅德收益成長A2':{emoji:'🌳',name:'施羅德收益成長A2'},
+  '路博邁台灣5G':{emoji:'🪐',name:'路博邁台灣5G'},'施羅德收益成長A2':{emoji:'🌳',name:'施羅德收益成長A2'},'施羅德台灣樂活中小基金 - A類型':{emoji:'🥇',name:'施羅德中小基金A'},
   '00985B':{emoji:'🎟️',name:'00985B'},'00997A':{emoji:'🪄',name:'00997A'},'00998A':{emoji:'🪙',name:'00998A'},'AIPI':{emoji:'🤖',name:'AIPI'},
   'SPYI':{emoji:'💎',name:'SPYI'},'PLTY':{emoji:'🪖',name:'PLTY'},'CHPY':{emoji:'🐦‍🔥',name:'CHPY'},
   'GDXW':{emoji:'\u2692\uFE0F',name:'GDXW'},'GLDW':{emoji:'💛',name:'GLDW'}
@@ -5173,6 +5173,7 @@ function normalizeKey(s){
   if(s.indexOf('CHPY')>=0)return 'CHPY';
   if(s.indexOf('IAU')>=0)return 'IAU';
   if(s.indexOf('路博邁')>=0||s.indexOf('5G')>=0)return '路博邁台灣5G';
+  if(s.indexOf('施羅德中小基金A')>=0||s.indexOf('施羅德台灣樂活中小基金')>=0)return '施羅德台灣樂活中小基金 - A類型';
   if(s.indexOf('施羅德')>=0)return '施羅德收益成長A2';
   return s.trim();
 }
@@ -18124,6 +18125,7 @@ function advisorAIResolveInvestmentSymbol(value){
   if(key.indexOf('997a')>=0||key.indexOf('00997a')>=0)return '00997A';
   if(key.indexOf('高股息')>=0)return '國泰高股息B';
   if(key.indexOf('台灣5g')>=0||key.indexOf('路博邁')>=0)return '路博邁台灣5G';
+  if(key.indexOf('施羅德中小基金a')>=0||key.indexOf('施羅德台灣樂活中小基金')>=0)return '施羅德台灣樂活中小基金 - A類型';
   if(key.indexOf('施羅德')>=0)return '施羅德收益成長A2';
   var symbols=['AIPI','IAU','QQQI','MLPI','SPYI','PLTY','CHPY','GDXW','GLDW'];
   var up=raw.toUpperCase();
