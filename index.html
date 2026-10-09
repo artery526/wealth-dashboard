@@ -19339,7 +19339,12 @@ function advisorHoldingTradeEstimate(row,shares){
   var fx=Number(row&&row.fx)||0;
   var fee=Number(row&&row.feeUsd)||0;
   var qty=Number(shares==null?row&&row.shares:shares)||0;
-  return Math.round(Math.abs(price*fx*qty)+fee*fx);
+  var amount=Math.abs(price*qty)+fee;
+  return Math.round(row&&row.fxIncluded===false?amount:amount*fx);
+}
+
+function advisorHoldingTradeFxText(row){
+  return row&&row.fxIncluded===false?'匯率未計':'匯率 '+(row&&row.fx||'--');
 }
 
 async function advisorAIOpenHoldingTradeRecord(force){
@@ -19367,7 +19372,7 @@ function advisorHoldingTradeRowHtml(row){
   var estimate=advisorHoldingTradeEstimate(row,shares);
   return `<button class="advisor-dividend-row" type="button" onclick="selectAdvisorHoldingTradePending('${esc(row.rowId||'')}')">
     <div class="advisor-dividend-name">${esc(row.displaySymbol||row.symbol||'未命名標的')} · ${advisorHoldingTradeDirection(row)} ${esc(shares)} 股</div>
-    <div class="advisor-dividend-meta">股價 ${esc(row.priceUsd||'--')} · 匯率 ${esc(row.fx||'--')} · 手續費 ${esc(row.feeUsd==null?'0':row.feeUsd)}</div>
+    <div class="advisor-dividend-meta">股價 ${esc(row.priceUsd||'--')} · ${esc(advisorHoldingTradeFxText(row))} · 手續費 ${esc(row.feeUsd==null?'0':row.feeUsd)}</div>
     <div class="advisor-dividend-amount">預估 NT${fmtFull(estimate)}</div>
   </button>`;
 }
@@ -19404,7 +19409,7 @@ function advisorAIReviewHoldingTrade(btn){
     (advisorHoldingTradeRecordPending.direction==='買入'?'轉入標的：'+symbol:'轉入帳戶：💵國泰Stock'),
     '實際交易股數：'+shares,
     '實際金額：NT'+fmtFull(amount),
-    '原始試算：股價 '+(row.priceUsd||'--')+' × 匯率 '+(row.fx||'--')+' × 原股數 '+Math.abs(Number(row.shares)||0)
+    '原始試算：股價 '+(row.priceUsd||'--')+(row.fxIncluded===false?' × 原股數 ':' × 匯率 '+(row.fx||'--')+' × 原股數 ')+Math.abs(Number(row.shares)||0)
   ])}<div class="advisor-dividend-actions"><button class="advisor-shortcut-secondary" type="button" onclick="selectAdvisorHoldingTradePending('${esc(row.rowId||'')}')">返回修改</button><button class="advisor-shortcut-submit" type="button" onclick="advisorAIConfirmHoldingTrade(this)">確認記錄</button></div><div class="advisor-shortcut-msg" id="advisor-ai-msg"></div>`;
 }
 

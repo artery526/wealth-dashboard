@@ -196,6 +196,35 @@ test('Pangtong holding settlement writes the display symbol for monthly holdings
   });
 });
 
+test('Pangtong holding settlement honors records whose estimated amount excludes FX', async ({ page }) => {
+  await page.goto(dashboardUrl);
+  const result = await page.evaluate(() => {
+    const fund = {
+      rowId: 24,
+      symbol: '施羅德台灣樂活中小基金 - A類型',
+      displaySymbol: '🥇施羅德中小基金A',
+      tradeDate: '2026/10/12',
+      fx: 31.91,
+      shares: 417.5,
+      priceUsd: 215.57,
+      feeUsd: 0,
+      estimatedTwd: 90000,
+      fxIncluded: false
+    };
+    const html = advisorHoldingTradeRowHtml(fund);
+    return {
+      estimate: advisorHoldingTradeEstimate(fund, fund.shares),
+      rowShowsSavedEstimate: html.includes('NT$90,000'),
+      rowShowsNoFx: html.includes('匯率未計'),
+      fxIncludedEstimate: advisorHoldingTradeEstimate({ ...fund, fxIncluded: true }, fund.shares)
+    };
+  });
+  expect(result.estimate).toBe(90000);
+  expect(result.rowShowsSavedEstimate).toBe(true);
+  expect(result.rowShowsNoFx).toBe(true);
+  expect(result.fxIncludedEstimate).toBe(Math.round(417.5 * 215.57 * 31.91));
+});
+
 test('Pangtong financial commands show a confirmation card before writing', async ({ page }) => {
   await page.goto(dashboardUrl);
   await page.evaluate(() => {
