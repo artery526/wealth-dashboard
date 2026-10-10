@@ -4841,7 +4841,7 @@ html[data-theme="deep-blue"] .scene-task-details .home-agenda-global-refresh{bor
     <p class="compound-interest-note">輸入初始投入本金與試算年數；每年的追加投入會先加入本金，再依當年報酬率計算。</p>
     <div class="compound-interest-inputs">
       <label>初始投入本金（元）<input id="compound-interest-principal" type="number" inputmode="decimal" min="1" step="10000" value="1000000"></label>
-      <label>試算年數<input id="compound-interest-years" type="number" inputmode="numeric" min="1" max="20" step="1" value="20"></label>
+      <label>試算年數<input id="compound-interest-years" type="number" inputmode="numeric" min="1" max="40" step="1" value="20"></label>
     </div>
     <label class="compound-interest-carry"><input id="compound-interest-carry-forward" type="checkbox" checked>後續年度沿用上一年的追加投入金額</label>
     <div class="compound-interest-summary" id="compound-interest-summary" aria-live="polite"></div>
@@ -19820,8 +19820,8 @@ function renderCompoundInterest(){
   if(!principalInput||!yearsInput||!summary||!rows)return;
   var principal=Number(principalInput.value);
   var years=Number(yearsInput.value);
-  if(!yearsInput.value.trim()||!isFinite(years)||Math.floor(years)!==years||years<1||years>20){
-    summary.textContent='試算年數請輸入 1 至 20 的整數。';clearCompoundInterestResults(rows);return;
+  if(!yearsInput.value.trim()||!isFinite(years)||Math.floor(years)!==years||years<1||years>40){
+    summary.textContent='試算年數請輸入 1 至 40 的整數。';clearCompoundInterestResults(rows);return;
   }
   ensureCompoundInterestRows(years,rows);
   if(!principalInput.value.trim()||!isFinite(principal)||principal<=0){
