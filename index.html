@@ -4694,7 +4694,37 @@ html[data-theme="deep-blue"] .scene-task-details .home-agenda-global-refresh{bor
   .scene-task-toggle{min-height:74px;padding-left:9px;padding-right:9px}
   .scene-task-details{max-height:68vh}
 }
-@media(prefers-reduced-motion:reduce){.npc-web-scene .character-art{transition:none}.npc-web-scene .animated-character:hover .character-art{transform:none}}
+.compound-interest-trigger{position:absolute;z-index:10;top:30%;left:29%;display:grid;place-items:center;width:clamp(38px,4vw,48px);height:clamp(38px,4vw,48px);padding:0;border:1px solid rgba(143,228,255,.82);border-radius:13px;background:linear-gradient(145deg,rgba(7,42,60,.96),rgba(4,20,33,.98));color:#dff7ff;font-size:22px;cursor:pointer;box-shadow:0 5px 18px rgba(0,0,0,.4),0 0 14px rgba(63,190,232,.2);transition:transform .16s,border-color .16s,box-shadow .16s}
+.compound-interest-trigger:hover,.compound-interest-trigger:focus-visible{transform:translateY(-2px) scale(1.04);border-color:#bcefff;box-shadow:0 7px 22px rgba(0,0,0,.46),0 0 18px rgba(63,190,232,.34);outline:none}
+.compound-interest-overlay{position:fixed;inset:0;z-index:7000;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(1,8,13,.78);backdrop-filter:blur(5px);opacity:0;pointer-events:none;transition:opacity .18s}
+.compound-interest-overlay.open{opacity:1;pointer-events:auto}
+.compound-interest-dialog{display:flex;flex-direction:column;width:min(720px,100%);max-height:min(90vh,900px);overflow:hidden;border:1px solid rgba(98,201,232,.58);border-radius:16px;background:linear-gradient(155deg,#10263a,#071521 68%);box-shadow:0 22px 70px rgba(0,0,0,.6);color:#dff7ff;transform:translateY(12px);transition:transform .18s}
+.compound-interest-overlay.open .compound-interest-dialog{transform:translateY(0)}
+.compound-interest-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 20px 13px;border-bottom:1px solid rgba(98,201,232,.18)}
+.compound-interest-kicker{color:#65c9ed;font:800 10px/1.3 var(--sans);letter-spacing:2px}
+.compound-interest-head h2{margin:4px 0 0;color:#e8f9ff;font:900 22px/1.3 'Noto Serif TC',serif}
+.compound-interest-close{width:36px;height:36px;border:1px solid rgba(98,201,232,.34);border-radius:9px;background:#0a1a27;color:#bcefff;font-size:16px;cursor:pointer}
+.compound-interest-note{margin:12px 20px;color:#99bac8;font:12px/1.6 var(--sans)}
+.compound-interest-inputs{display:grid;grid-template-columns:1.2fr 1fr .75fr;gap:10px;padding:0 20px 14px}
+.compound-interest-inputs label{display:grid;gap:6px;color:#99bac8;font:700 11px/1.4 var(--sans)}
+.compound-interest-inputs input{width:100%;min-width:0;padding:10px;border:1px solid #29495f;border-radius:8px;background:#071521;color:#e8f9ff;font:700 14px var(--mono);outline:none}
+.compound-interest-inputs input:focus{border-color:#71d8f7;box-shadow:0 0 0 2px rgba(53,184,228,.14)}
+.compound-interest-summary{margin:0 20px 12px;padding:11px 13px;border:1px solid rgba(98,201,232,.24);border-radius:9px;background:rgba(3,18,29,.65);color:#bcefff;font:800 13px/1.6 var(--sans)}
+.compound-interest-summary strong{color:#5de1a2}
+.compound-interest-table-wrap{min-height:0;overflow:auto;margin:0 20px;border:1px solid rgba(98,201,232,.2);border-radius:9px}
+.compound-interest-table{width:100%;border-collapse:collapse;font:12px/1.45 var(--sans);font-variant-numeric:tabular-nums}
+.compound-interest-table th,.compound-interest-table td{padding:9px 11px;border-bottom:1px solid rgba(98,201,232,.13);text-align:right;white-space:nowrap}
+.compound-interest-table th{position:sticky;top:0;background:#0b2030;color:#8fc6d8;font-size:10px}
+.compound-interest-table th:first-child,.compound-interest-table td:first-child{text-align:left}
+.compound-interest-table tr:last-child td{border-bottom:0}
+.compound-interest-table td:nth-child(2){color:#bcefff;font-weight:800}
+.compound-interest-table td:last-child{color:#5de1a2;font-weight:800}
+.compound-interest-table td.negative{color:#ff8b8b}
+.compound-interest-table small{display:block;margin-top:2px;color:#789aaa;font-size:10px;font-weight:400}
+.compound-interest-disclaimer{padding:11px 20px 15px;color:#789aaa;font:10px/1.6 var(--sans)}
+@media(max-width:768px){.compound-interest-trigger{top:45%;left:34%;width:42px;height:42px;border-radius:12px;font-size:20px}}
+@media(max-width:560px){.compound-interest-overlay{align-items:flex-end;padding:0}.compound-interest-dialog{width:100%;max-height:92dvh;border-radius:16px 16px 0 0}.compound-interest-head{padding:14px 16px 10px}.compound-interest-head h2{font-size:19px}.compound-interest-note{margin:10px 16px}.compound-interest-inputs{grid-template-columns:1fr 1fr;gap:8px;padding:0 16px 11px}.compound-interest-inputs label:first-child{grid-column:1/-1}.compound-interest-summary{margin:0 16px 10px;padding:9px 10px;font-size:12px}.compound-interest-table-wrap{margin:0 16px}.compound-interest-table th,.compound-interest-table td{padding:8px 7px;font-size:10px}.compound-interest-disclaimer{padding:9px 16px 12px}}
+@media(prefers-reduced-motion:reduce){.npc-web-scene .character-art{transition:none}.npc-web-scene .animated-character:hover .character-art{transform:none}.compound-interest-dialog,.compound-interest-overlay,.compound-interest-trigger{transition:none}}
 </style>
 <style>
 .council-review-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:16px 0 10px;font-family:var(--sans)}
@@ -4781,6 +4811,7 @@ html[data-theme="deep-blue"] .scene-task-details .home-agenda-global-refresh{bor
     </picture>
     <div class="scene-widget-dock" id="scene-widget-dock">
     </div>
+    <button class="compound-interest-trigger" type="button" onclick="openCompoundInterestCalculator(event)" aria-label="開啟複利試算" title="複利試算">📱</button>
     <div class="scene-task-slot" id="scene-task-slot" hidden aria-hidden="true">
       <div class="scene-task-card">
         <button class="scene-task-toggle" id="scene-task-toggle" type="button" aria-expanded="false" aria-controls="scene-task-details" aria-label="展開完整待辦事項" onclick="toggleSceneTask(event)">
@@ -4795,6 +4826,29 @@ html[data-theme="deep-blue"] .scene-task-details .home-agenda-global-refresh{bor
     </div>
   </div>
 </section>
+
+<div class="compound-interest-overlay" id="compound-interest-overlay" onclick="compoundInterestOverlayClick(event)" aria-hidden="true">
+  <section class="compound-interest-dialog" role="dialog" aria-modal="true" aria-labelledby="compound-interest-title">
+    <header class="compound-interest-head">
+      <div><div class="compound-interest-kicker">COMPOUND GROWTH</div><h2 id="compound-interest-title">📱 複利試算</h2></div>
+      <button class="compound-interest-close" type="button" onclick="closeCompoundInterestCalculator()" aria-label="關閉複利試算">✕</button>
+    </header>
+    <p class="compound-interest-note">輸入本金與年化平均報酬率，試算每年期末金額與當年增加額。</p>
+    <div class="compound-interest-inputs">
+      <label>投入本金（元）<input id="compound-interest-principal" type="number" inputmode="decimal" min="1" step="10000" value="1000000"></label>
+      <label>年化平均報酬率（%）<input id="compound-interest-rate" type="number" inputmode="decimal" min="-99.99" max="1000" step="0.1" value="6"></label>
+      <label>試算年數<input id="compound-interest-years" type="number" inputmode="numeric" min="1" max="20" step="1" value="20"></label>
+    </div>
+    <div class="compound-interest-summary" id="compound-interest-summary" aria-live="polite"></div>
+    <div class="compound-interest-table-wrap">
+      <table class="compound-interest-table">
+        <thead><tr><th>年度</th><th>期末金額</th><th>本年度增加</th></tr></thead>
+        <tbody id="compound-interest-rows"></tbody>
+      </table>
+    </div>
+    <div class="compound-interest-disclaimer">試算假設每年以相同報酬率複利計算，未納入費用、稅金與額外投入；實際報酬不保證固定。</div>
+  </section>
+</div>
 
 <!-- 保留既有解鎖狀態錨點；首頁舊影片卡片已移除。 -->
 <div id="empire-cards" class="cards empire-locked" hidden aria-hidden="true"></div>
@@ -19673,6 +19727,79 @@ function closeLordPanel(){
 function lordOverlayClick(e){
   if(e.target===document.getElementById('lord-overlay'))closeLordPanel();
 }
+
+var compoundInterestReturnFocus=null;
+function formatCompoundCurrency(value){
+  return 'NT$'+Math.round(Number(value)||0).toLocaleString('zh-TW');
+}
+function formatCompoundWan(value){
+  return (Number(value||0)/10000).toLocaleString('zh-TW',{minimumFractionDigits:2,maximumFractionDigits:2})+' 萬';
+}
+function renderCompoundInterest(){
+  var principalInput=document.getElementById('compound-interest-principal');
+  var rateInput=document.getElementById('compound-interest-rate');
+  var yearsInput=document.getElementById('compound-interest-years');
+  var summary=document.getElementById('compound-interest-summary');
+  var rows=document.getElementById('compound-interest-rows');
+  if(!principalInput||!rateInput||!yearsInput||!summary||!rows)return;
+  var principal=Number(principalInput.value);
+  var rate=Number(rateInput.value);
+  var years=Number(yearsInput.value);
+  if(!principalInput.value.trim()||!isFinite(principal)||principal<=0){
+    summary.textContent='請輸入大於 0 的本金。';rows.innerHTML='';return;
+  }
+  if(!rateInput.value.trim()||!isFinite(rate)||rate<=-100||rate>1000){
+    summary.textContent='年化報酬率請輸入大於 -100% 且不超過 1000% 的數值。';rows.innerHTML='';return;
+  }
+  if(!yearsInput.value.trim()||!isFinite(years)||Math.floor(years)!==years||years<1||years>20){
+    summary.textContent='試算年數請輸入 1 至 20 的整數。';rows.innerHTML='';return;
+  }
+  var balance=principal;
+  var html='';
+  for(var year=1;year<=years;year++){
+    var previous=balance;
+    balance=principal*Math.pow(1+rate/100,year);
+    var annualGain=balance-previous;
+    var gainClass=annualGain<0?' class="negative"':'';
+    var gainPrefix=annualGain>0?'+':'';
+    html+='<tr><td>第 '+year+' 年</td><td>'+formatCompoundCurrency(balance)+'<small>'+formatCompoundWan(balance)+'</small></td><td'+gainClass+'>'+gainPrefix+formatCompoundCurrency(annualGain)+'<small>'+gainPrefix+formatCompoundWan(annualGain)+'</small></td></tr>';
+  }
+  rows.innerHTML=html;
+  var totalGain=balance-principal;
+  var totalPrefix=totalGain>0?'+':'';
+  summary.innerHTML=years+' 年後預估 <strong>'+formatCompoundCurrency(balance)+'（'+formatCompoundWan(balance)+'）</strong>，累積增加 <strong>'+totalPrefix+formatCompoundCurrency(totalGain)+'（'+totalPrefix+formatCompoundWan(totalGain)+'）</strong>。';
+}
+function openCompoundInterestCalculator(event){
+  if(event&&event.stopPropagation)event.stopPropagation();
+  var overlay=document.getElementById('compound-interest-overlay');
+  if(!overlay)return;
+  overlay.classList.add('open');
+  overlay.setAttribute('aria-hidden','false');
+  compoundInterestReturnFocus=document.activeElement;
+  ['compound-interest-principal','compound-interest-rate','compound-interest-years'].forEach(function(id){
+    var input=document.getElementById(id);
+    if(input&&input.dataset.calculatorBound!=='1'){
+      input.addEventListener('input',renderCompoundInterest);
+      input.dataset.calculatorBound='1';
+    }
+  });
+  renderCompoundInterest();
+  var principalInput=document.getElementById('compound-interest-principal');
+  if(principalInput)principalInput.focus();
+}
+function closeCompoundInterestCalculator(){
+  var overlay=document.getElementById('compound-interest-overlay');
+  if(!overlay)return;
+  overlay.classList.remove('open');
+  overlay.setAttribute('aria-hidden','true');
+  if(compoundInterestReturnFocus&&typeof compoundInterestReturnFocus.focus==='function')compoundInterestReturnFocus.focus();
+}
+function compoundInterestOverlayClick(event){
+  if(event&&event.target===document.getElementById('compound-interest-overlay'))closeCompoundInterestCalculator();
+}
+document.addEventListener('keydown',function(event){
+  if(event.key==='Escape'&&document.getElementById('compound-interest-overlay')?.classList.contains('open'))closeCompoundInterestCalculator();
+});
 
 // ── Finance Card Video: click anywhere on card triggers openPanel via card onclick ──
 
