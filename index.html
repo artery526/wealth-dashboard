@@ -4710,6 +4710,8 @@ html[data-theme="deep-blue"] .scene-task-details .home-agenda-global-refresh{bor
 .compound-interest-inputs label{display:grid;gap:6px;color:#99bac8;font:700 11px/1.4 var(--sans)}
 .compound-interest-inputs input{width:100%;min-width:0;padding:10px;border:1px solid #29495f;border-radius:8px;background:#071521;color:#e8f9ff;font:700 14px var(--mono);outline:none}
 .compound-interest-inputs input:focus{border-color:#71d8f7;box-shadow:0 0 0 2px rgba(53,184,228,.14)}
+.compound-interest-carry{display:flex;align-items:center;gap:8px;margin:0 20px 12px;color:#9bbbc9;font:700 11px/1.5 var(--sans);cursor:pointer}
+.compound-interest-carry input{width:15px;height:15px;margin:0;accent-color:#52c7e8}
 .compound-interest-summary{margin:0 20px 12px;padding:11px 13px;border:1px solid rgba(98,201,232,.24);border-radius:9px;background:rgba(3,18,29,.65);color:#bcefff;font:800 13px/1.6 var(--sans)}
 .compound-interest-summary strong{color:#5de1a2}
 .compound-interest-table-wrap{min-height:0;overflow:auto;margin:0 20px;border:1px solid rgba(98,201,232,.2);border-radius:9px}
@@ -4841,6 +4843,7 @@ html[data-theme="deep-blue"] .scene-task-details .home-agenda-global-refresh{bor
       <label>初始投入本金（元）<input id="compound-interest-principal" type="number" inputmode="decimal" min="1" step="10000" value="1000000"></label>
       <label>試算年數<input id="compound-interest-years" type="number" inputmode="numeric" min="1" max="20" step="1" value="20"></label>
     </div>
+    <label class="compound-interest-carry"><input id="compound-interest-carry-forward" type="checkbox" checked>後續年度沿用上一年的追加投入金額</label>
     <div class="compound-interest-summary" id="compound-interest-summary" aria-live="polite"></div>
     <div class="compound-interest-table-wrap">
       <table class="compound-interest-table">
@@ -19755,9 +19758,12 @@ function ensureCompoundInterestRows(years,rows){
   if(oldRateInputs.length===years&&oldContributionInputs.length===years)return;
   var savedRates=[];
   var savedContributions=[];
+  var carryForward=document.getElementById('compound-interest-carry-forward');
+  var carryForwardEnabled=!!(carryForward&&carryForward.checked);
   oldRateInputs.forEach(function(input){savedRates.push(input.value);});
   oldContributionInputs.forEach(function(input){savedContributions.push(input.value);});
   rows.innerHTML='';
+  var lastContribution='0';
   for(var year=1;year<=years;year++){
     var tr=document.createElement('tr');
     var yearCell=document.createElement('td');
@@ -19769,7 +19775,10 @@ function ensureCompoundInterestRows(years,rows){
     contributionInput.inputMode='decimal';
     contributionInput.min='0';
     contributionInput.step='10000';
-    contributionInput.value=savedContributions[year-1]===undefined?'0':savedContributions[year-1];
+    var contributionValue=savedContributions[year-1];
+    if(contributionValue===undefined)contributionValue=carryForwardEnabled&&year>1?lastContribution:'0';
+    contributionInput.value=contributionValue;
+    lastContribution=contributionInput.value;
     contributionInput.setAttribute('aria-label','第 '+year+' 年追加投入金額（元）');
     contributionCell.appendChild(contributionInput);
     var rateCell=document.createElement('td');
@@ -19868,9 +19877,30 @@ function openCompoundInterestCalculator(event){
   var rows=document.getElementById('compound-interest-rows');
   if(rows&&rows.dataset.calculatorBound!=='1'){
     rows.addEventListener('input',function(event){
-      if(event.target&&event.target.classList.contains('compound-interest-row-input'))renderCompoundInterest();
+      var target=event.target;
+      if(!target||!target.classList.contains('compound-interest-row-input'))return;
+      if(target.classList.contains('compound-interest-contribution-input')){
+        var carryForward=document.getElementById('compound-interest-carry-forward');
+        var contributionInputs=rows.querySelectorAll('.compound-interest-contribution-input');
+        var targetIndex=Array.prototype.indexOf.call(contributionInputs,target);
+        if(carryForward&&carryForward.checked){
+          for(var i=targetIndex+1;i<contributionInputs.length;i++)contributionInputs[i].value=target.value;
+        }
+      }
+      renderCompoundInterest();
     });
     rows.dataset.calculatorBound='1';
+  }
+  var carryForward=document.getElementById('compound-interest-carry-forward');
+  if(carryForward&&carryForward.dataset.calculatorBound!=='1'){
+    carryForward.addEventListener('change',function(){
+      if(carryForward.checked){
+        var contributionInputs=document.querySelectorAll('#compound-interest-rows .compound-interest-contribution-input');
+        for(var i=1;i<contributionInputs.length;i++)contributionInputs[i].value=contributionInputs[i-1].value;
+      }
+      renderCompoundInterest();
+    });
+    carryForward.dataset.calculatorBound='1';
   }
   renderCompoundInterest();
   var principalInput=document.getElementById('compound-interest-principal');
