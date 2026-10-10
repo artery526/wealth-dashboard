@@ -4718,9 +4718,10 @@ html[data-theme="deep-blue"] .scene-task-details .home-agenda-global-refresh{bor
 .compound-interest-table th{position:sticky;top:0;background:#0b2030;color:#8fc6d8;font-size:10px}
 .compound-interest-table th:first-child,.compound-interest-table td:first-child{text-align:left}
 .compound-interest-table tr:last-child td{border-bottom:0}
-.compound-interest-rate-input{width:88px;max-width:100%;padding:6px 7px;border:1px solid #29495f;border-radius:7px;background:#071521;color:#bcefff;text-align:right;font:800 12px var(--mono);outline:none}
-.compound-interest-rate-input:focus{border-color:#71d8f7;box-shadow:0 0 0 2px rgba(53,184,228,.14)}
-.compound-interest-table td:nth-child(3){color:#bcefff;font-weight:800}
+.compound-interest-table{min-width:650px}
+.compound-interest-row-input{width:88px;max-width:100%;padding:6px 7px;border:1px solid #29495f;border-radius:7px;background:#071521;color:#bcefff;text-align:right;font:800 12px var(--mono);outline:none}
+.compound-interest-row-input:focus{border-color:#71d8f7;box-shadow:0 0 0 2px rgba(53,184,228,.14)}
+.compound-interest-table td:nth-child(4){color:#bcefff;font-weight:800}
 .compound-interest-table td:last-child{color:#5de1a2;font-weight:800}
 .compound-interest-table td.negative{color:#ff8b8b}
 .compound-interest-table small{display:block;margin-top:2px;color:#789aaa;font-size:10px;font-weight:400}
@@ -4835,19 +4836,19 @@ html[data-theme="deep-blue"] .scene-task-details .home-agenda-global-refresh{bor
       <div><div class="compound-interest-kicker">COMPOUND GROWTH</div><h2 id="compound-interest-title">📱 複利試算</h2></div>
       <button class="compound-interest-close" type="button" onclick="closeCompoundInterestCalculator()" aria-label="關閉複利試算">✕</button>
     </header>
-    <p class="compound-interest-note">輸入本金與試算年數，再為每一年設定年化報酬率；各年報酬會依序複利累積。</p>
+    <p class="compound-interest-note">輸入初始投入本金與試算年數；每年的追加投入會先加入本金，再依當年報酬率計算。</p>
     <div class="compound-interest-inputs">
-      <label>投入本金（元）<input id="compound-interest-principal" type="number" inputmode="decimal" min="1" step="10000" value="1000000"></label>
+      <label>初始投入本金（元）<input id="compound-interest-principal" type="number" inputmode="decimal" min="1" step="10000" value="1000000"></label>
       <label>試算年數<input id="compound-interest-years" type="number" inputmode="numeric" min="1" max="20" step="1" value="20"></label>
     </div>
     <div class="compound-interest-summary" id="compound-interest-summary" aria-live="polite"></div>
     <div class="compound-interest-table-wrap">
       <table class="compound-interest-table">
-        <thead><tr><th>年度</th><th>年化報酬率</th><th>期末金額</th><th>本年度增加</th></tr></thead>
+        <thead><tr><th>年度</th><th>本年追加投入</th><th>年化報酬率</th><th>期末金額</th><th>本年度報酬</th></tr></thead>
         <tbody id="compound-interest-rows"></tbody>
       </table>
     </div>
-    <div class="compound-interest-disclaimer">各年報酬率依序複利計算，未納入費用、稅金與額外投入；實際報酬不保證固定。</div>
+    <div class="compound-interest-disclaimer">各年追加投入於當年報酬計算前加入本金；未納入費用與稅金，實際報酬不保證固定。</div>
   </section>
 </div>
 
@@ -19749,18 +19750,31 @@ function formatCompoundWan(value){
   return (Number(value||0)/10000).toLocaleString('zh-TW',{minimumFractionDigits:2,maximumFractionDigits:2})+' 萬';
 }
 function ensureCompoundInterestRows(years,rows){
-  var oldInputs=rows.querySelectorAll('.compound-interest-rate-input');
-  if(oldInputs.length===years)return;
+  var oldRateInputs=rows.querySelectorAll('.compound-interest-rate-input');
+  var oldContributionInputs=rows.querySelectorAll('.compound-interest-contribution-input');
+  if(oldRateInputs.length===years&&oldContributionInputs.length===years)return;
   var savedRates=[];
-  oldInputs.forEach(function(input){savedRates.push(input.value);});
+  var savedContributions=[];
+  oldRateInputs.forEach(function(input){savedRates.push(input.value);});
+  oldContributionInputs.forEach(function(input){savedContributions.push(input.value);});
   rows.innerHTML='';
   for(var year=1;year<=years;year++){
     var tr=document.createElement('tr');
     var yearCell=document.createElement('td');
     yearCell.textContent='第 '+year+' 年';
+    var contributionCell=document.createElement('td');
+    var contributionInput=document.createElement('input');
+    contributionInput.className='compound-interest-row-input compound-interest-contribution-input';
+    contributionInput.type='number';
+    contributionInput.inputMode='decimal';
+    contributionInput.min='0';
+    contributionInput.step='10000';
+    contributionInput.value=savedContributions[year-1]===undefined?'0':savedContributions[year-1];
+    contributionInput.setAttribute('aria-label','第 '+year+' 年追加投入金額（元）');
+    contributionCell.appendChild(contributionInput);
     var rateCell=document.createElement('td');
     var rateInput=document.createElement('input');
-    rateInput.className='compound-interest-rate-input';
+    rateInput.className='compound-interest-row-input compound-interest-rate-input';
     rateInput.type='number';
     rateInput.inputMode='decimal';
     rateInput.min='-100';
@@ -19772,18 +19786,19 @@ function ensureCompoundInterestRows(years,rows){
     var balanceCell=document.createElement('td');
     balanceCell.id='compound-interest-balance-'+year;
     balanceCell.textContent='--';
-    var gainCell=document.createElement('td');
-    gainCell.id='compound-interest-gain-'+year;
-    gainCell.textContent='--';
+    var returnCell=document.createElement('td');
+    returnCell.id='compound-interest-return-'+year;
+    returnCell.textContent='--';
     tr.appendChild(yearCell);
+    tr.appendChild(contributionCell);
     tr.appendChild(rateCell);
     tr.appendChild(balanceCell);
-    tr.appendChild(gainCell);
+    tr.appendChild(returnCell);
     rows.appendChild(tr);
   }
 }
 function clearCompoundInterestResults(rows){
-  rows.querySelectorAll('[id^="compound-interest-balance-"],[id^="compound-interest-gain-"]').forEach(function(cell){
+  rows.querySelectorAll('[id^="compound-interest-balance-"],[id^="compound-interest-return-"]').forEach(function(cell){
     cell.textContent='--';
     cell.classList.remove('negative');
   });
@@ -19803,29 +19818,38 @@ function renderCompoundInterest(){
   if(!principalInput.value.trim()||!isFinite(principal)||principal<=0){
     summary.textContent='請輸入大於 0 的本金。';clearCompoundInterestResults(rows);return;
   }
+  var contributionInputs=rows.querySelectorAll('.compound-interest-contribution-input');
   var rateInputs=rows.querySelectorAll('.compound-interest-rate-input');
   var balance=principal;
+  var totalContributions=0;
   for(var year=1;year<=years;year++){
+    var contributionInput=contributionInputs[year-1];
+    var contribution=Number(contributionInput.value);
+    if(!contributionInput.value.trim()||!isFinite(contribution)||contribution<0){
+      summary.textContent='第 '+year+' 年追加投入請輸入 0 或正數。';clearCompoundInterestResults(rows);return;
+    }
     var rateInput=rateInputs[year-1];
     var rate=Number(rateInput.value);
     if(!rateInput.value.trim()||!isFinite(rate)||rate< -100||rate>1000){
       summary.textContent='第 '+year+' 年報酬率請輸入 -100% 至 1000% 的數值。';clearCompoundInterestResults(rows);return;
     }
-    var previous=balance;
-    balance=previous*(1+rate/100);
-    var annualGain=balance-previous;
+    var investedThisYear=balance+contribution;
+    balance=investedThisYear*(1+rate/100);
+    var annualReturn=balance-investedThisYear;
+    totalContributions+=contribution;
     var balanceCell=document.getElementById('compound-interest-balance-'+year);
-    var gainCell=document.getElementById('compound-interest-gain-'+year);
+    var returnCell=document.getElementById('compound-interest-return-'+year);
     if(balanceCell)balanceCell.innerHTML=formatCompoundCurrency(balance)+'<small>'+formatCompoundWan(balance)+'</small>';
-    if(gainCell){
-      gainCell.classList.toggle('negative',annualGain<0);
-      var gainPrefix=annualGain>0?'+':'';
-      gainCell.innerHTML=gainPrefix+formatCompoundCurrency(annualGain)+'<small>'+gainPrefix+formatCompoundWan(annualGain)+'</small>';
+    if(returnCell){
+      returnCell.classList.toggle('negative',annualReturn<0);
+      var returnPrefix=annualReturn>0?'+':'';
+      returnCell.innerHTML=returnPrefix+formatCompoundCurrency(annualReturn)+'<small>'+returnPrefix+formatCompoundWan(annualReturn)+'</small>';
     }
   }
-  var totalGain=balance-principal;
+  var totalInvested=principal+totalContributions;
+  var totalGain=balance-totalInvested;
   var totalPrefix=totalGain>0?'+':'';
-  summary.innerHTML=years+' 年後預估 <strong>'+formatCompoundCurrency(balance)+'（'+formatCompoundWan(balance)+'）</strong>，累積增加 <strong>'+totalPrefix+formatCompoundCurrency(totalGain)+'（'+totalPrefix+formatCompoundWan(totalGain)+'）</strong>。';
+  summary.innerHTML=years+' 年後預估 <strong>'+formatCompoundCurrency(balance)+'（'+formatCompoundWan(balance)+'）</strong>；累計投入 '+formatCompoundCurrency(totalInvested)+'，投資損益 <strong>'+totalPrefix+formatCompoundCurrency(totalGain)+'（'+totalPrefix+formatCompoundWan(totalGain)+'）</strong>。';
 }
 function openCompoundInterestCalculator(event){
   if(event&&event.stopPropagation)event.stopPropagation();
@@ -19844,7 +19868,7 @@ function openCompoundInterestCalculator(event){
   var rows=document.getElementById('compound-interest-rows');
   if(rows&&rows.dataset.calculatorBound!=='1'){
     rows.addEventListener('input',function(event){
-      if(event.target&&event.target.classList.contains('compound-interest-rate-input'))renderCompoundInterest();
+      if(event.target&&event.target.classList.contains('compound-interest-row-input'))renderCompoundInterest();
     });
     rows.dataset.calculatorBound='1';
   }
