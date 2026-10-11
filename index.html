@@ -20281,7 +20281,8 @@ function mcsRenderTarotList(containerId,rows,emptyText){
     var date=mcsFirstValue(r,['抽牌日期','日期','date']);
     var spread=mcsFirstValue(r,['牌陣','牌陣類型','抽牌類型','spreadType','drawType']);
     var question=mcsFirstValue(r,['抽牌問題','問題','question','牌卡訊息','解讀/備註','備註','tarotNotes']);
-    var key=[recTime||date||('row-'+index),spread,question].join('|');
+    var drawGroupId=mcsFirstValue(r,['抽牌組ID','drawGroupId','draw_group_id']);
+    var key=drawGroupId?'group:'+drawGroupId:[recTime||date||('row-'+index),spread,question].join('|');
     if(!groups[key])groups[key]={time:recTime||date||'未記錄時間',spread:spread,question:question,cards:[],rows:[]};
     var card=mcsCardWithPosition(r);
     if(card)groups[key].cards.push({label:card,row:r});
