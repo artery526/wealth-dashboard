@@ -8630,7 +8630,7 @@ function parseAdvisorAICommandWithDeepSeek_(raw) {
             'expense 欄位: category, account, amount, note。',
             'transfer 欄位: from, to, amount, note。',
             'dividend 欄位: symbol, amount。這是已入帳金額，不是每股配息。',
-            'advisorDividendMemo 欄位: market, symbol, dividendPerShare。用途是新增持股備忘錄待入帳配息；例如「台灣5G 0.12」或「AIPI 0.234」。market 可省略；美股只有 QQQI, AIPI, PLTY, CHPY, GDXW, GLDW；其餘為台股；施羅德收益成長A2 是美股但免先扣 30%。',
+            'advisorDividendMemo 欄位: market, symbol, dividendPerShare。用途是新增持股備忘錄待入帳配息；例如「台灣5G 0.12」或「AIPI 0.234」。market 可省略；美股包含 QQQI, AIPI, PLTY, CHPY, GDXW, GLDW, AVGW；其餘為台股；施羅德收益成長A2 是美股但免先扣 30%。',
             'stockSell 欄位: symbol, shares, amount。',
             'open 欄位: panel, tab, label。panel 只可用 finance, foodhouse, market, domestic, council, stars, medical。',
             'member 欄位: type，7-11 用 seven，全家用 family。',
@@ -9695,7 +9695,7 @@ function normalizeInvestmentSymbol_(value) {
   if (s.indexOf('00988A') >= 0) return 'GDXW';
   if (s.indexOf('985B') >= 0) return '00985B';
   if (s.indexOf('997A') >= 0) return '00997A';
-  var symbols = ['AIPI', 'CHPY', 'PLTY', 'QQQI', 'SPYI', 'MLPI', 'IAU', 'GDXW', 'GLDW', '00985B', '00997A', '00998A'];
+  var symbols = ['AIPI', 'AVGW', 'CHPY', 'PLTY', 'QQQI', 'SPYI', 'MLPI', 'IAU', 'GDXW', 'GLDW', '00985B', '00997A', '00998A'];
   for (var i = 0; i < symbols.length; i++) {
     if (s.indexOf(symbols[i]) >= 0) return symbols[i];
   }
@@ -9716,6 +9716,7 @@ function getDividendDisplayLabel_(symbol) {
     '00997A': '🪄00997A',
     'MLPI': '🛢️MLPI',
     '施羅德收益成長A2': '🌳施羅德收益成長A2',
+    'AVGW': '☯️AVGW',
     '路博邁台灣5G': '🪐路博邁台灣5G',
     'SPYI': '💎SPYI',
     'QQQI': '📡QQQI',
