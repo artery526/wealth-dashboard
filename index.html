@@ -4731,6 +4731,8 @@ html[data-theme="deep-blue"] .scene-task-details .home-agenda-global-refresh{bor
 .compound-interest-carry input{width:15px;height:15px;margin:0;accent-color:#52c7e8}
 .compound-interest-summary{margin:0 20px 12px;padding:11px 13px;border:1px solid rgba(98,201,232,.24);border-radius:9px;background:rgba(3,18,29,.65);color:#bcefff;font:800 15px/1.6 var(--sans)}
 .compound-interest-summary strong{color:#5de1a2}
+.compound-interest-purchasing-loss{color:#5de1a2}
+.compound-interest-purchasing-gain{color:#ff8b8b}
 .compound-interest-table-wrap{min-height:0;overflow:auto;margin:0 20px;border:1px solid rgba(98,201,232,.2);border-radius:9px}
 .compound-interest-table{width:100%;border-collapse:collapse;font:14px/1.45 var(--sans);font-variant-numeric:tabular-nums}
 .compound-interest-table th,.compound-interest-table td{padding:9px 11px;border-bottom:1px solid rgba(98,201,232,.13);text-align:right;white-space:nowrap}
@@ -19914,7 +19916,13 @@ function renderCompoundInterest(){
   var totalGain=balance-totalInvested;
   var totalPrefix=totalGain>0?'+':'';
   var finalRealValue=balance/Math.pow(1+inflation/100,years);
-  summary.innerHTML=years+' 年後名目金額 <strong>'+formatCompoundCurrency(balance)+'（'+formatCompoundWan(balance)+'）</strong>；以年通膨 '+inflation+'% 折算，購買力約 <strong>'+formatCompoundCurrency(finalRealValue)+'（今日幣值）</strong>。累計投入 '+formatCompoundCurrency(totalInvested)+'，投資損益 <strong>'+totalPrefix+formatCompoundCurrency(totalGain)+'（'+totalPrefix+formatCompoundWan(totalGain)+'）</strong>。';
+  var purchasingDelta=finalRealValue-balance;
+  var purchasingDeltaText=purchasingDelta<0
+    ?'<span class="compound-interest-purchasing-loss">約減 '+formatCompoundCurrency(Math.abs(purchasingDelta))+'</span>'
+    :purchasingDelta>0
+      ?'<span class="compound-interest-purchasing-gain">約加 '+formatCompoundCurrency(purchasingDelta)+'</span>'
+      :'<span>與名目金額相同</span>';
+  summary.innerHTML=years+' 年後名目金額 <strong>'+formatCompoundCurrency(balance)+'（'+formatCompoundWan(balance)+'）</strong>；以年通膨 '+inflation+'% 折算，購買力約 <strong>'+formatCompoundCurrency(finalRealValue)+'（今日幣值）</strong> '+purchasingDeltaText+'。累計投入 '+formatCompoundCurrency(totalInvested)+'，投資損益 <strong>'+totalPrefix+formatCompoundCurrency(totalGain)+'（'+totalPrefix+formatCompoundWan(totalGain)+'）</strong>。';
 }
 function zeroCompoundInterestRates(event){
   if(event&&event.stopPropagation)event.stopPropagation();

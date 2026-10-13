@@ -20,6 +20,24 @@ test('compound calculator shows inflation-adjusted purchasing power', async ({ p
 
   expect(result.realValue).toContain('NT$98,039');
   expect(result.summary).toContain('購買力約 NT$98,039');
+  expect(result.summary).toContain('約減 NT$1,961');
+});
+
+test('deflation shows the purchasing power increase in red', async ({ page }) => {
+  await page.goto(dashboardUrl);
+  const result = await page.evaluate(() => {
+    document.getElementById('compound-interest-principal').value = '100000';
+    document.getElementById('compound-interest-inflation').value = '-2';
+    document.getElementById('compound-interest-years').value = '1';
+    renderCompoundInterest();
+    document.querySelector('.compound-interest-rate-input').value = '0';
+    renderCompoundInterest();
+    const delta = document.querySelector('.compound-interest-purchasing-gain');
+    return { text: delta.textContent, color: getComputedStyle(delta).color };
+  });
+
+  expect(result.text).toBe('約加 NT$2,041');
+  expect(result.color).toBe('rgb(255, 139, 139)');
 });
 
 test('compound calculator text is enlarged and remains usable on mobile', async ({ page }) => {
