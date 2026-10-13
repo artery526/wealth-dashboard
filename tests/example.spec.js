@@ -169,6 +169,33 @@ test('Schroder Taiwan small-cap holding is Cao Cao in index growth with a gold p
   expect(result.portraitBorder).toBe('rgb(212, 175, 55)');
 });
 
+test('AVGW appears in options income as Lu Bu with the static portrait', async ({ page }) => {
+  await page.goto(dashboardUrl);
+  await page.evaluate(() => ensureMilitaryModule());
+  const result = await page.evaluate(async () => {
+    const row = { symbol: 'AVGW', heroName: 'AVGW', holding: { symbol: 'AVGW', name: 'AVGW', shares: 1, cost: 1000, marketValue: 1100 } };
+    const groups = councilRosterGroups();
+    const host = document.createElement('div');
+    host.innerHTML = renderCouncilRosterGroups([row], 1000);
+    document.body.appendChild(host);
+    const card = host.querySelector('.council-roster-group .hero-card');
+    const image = card.querySelector('.hero-visual img');
+    try { await image.decode(); } catch (error) {}
+    return {
+      optionsIncomeContains: groups[1].keys.includes('AVGW'),
+      placedInOptionsIncome: !!host.querySelector('.council-roster-group:nth-child(2) .hero-card'),
+      name: card.querySelector('.troop-name')?.textContent,
+      imageSource: image.getAttribute('src'),
+      imageWidth: image.naturalWidth
+    };
+  });
+  expect(result.optionsIncomeContains).toBe(true);
+  expect(result.placedInOptionsIncome).toBe(true);
+  expect(result.name).toBe('呂布');
+  expect(result.imageSource).toContain(encodeURIComponent('呂布.webp'));
+  expect(result.imageWidth).toBe(512);
+});
+
 test('Pangtong income shortcuts map to fixed Stock account', async ({ page }) => {
   await page.goto(dashboardUrl);
   const commands = await page.evaluate(() => ['工作','兼職','房租','買賣','爸媽','退稅'].map(keyword => advisorAICommand(keyword + ' 5000')));
