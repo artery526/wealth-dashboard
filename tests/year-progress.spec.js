@@ -14,12 +14,16 @@ test('Pangtong year progress shows elapsed days, remaining days, and one dot per
       progress,
       dotCount: host.querySelectorAll('.advisor-ai-year-progress-dot').length,
       elapsedDots: host.querySelectorAll('.advisor-ai-year-progress-dot.is-elapsed').length,
-      summary: host.querySelector('.advisor-ai-year-progress-foot').textContent.replace(/\\s+/g, ' ').trim()
+      elapsedLabel: host.querySelector('.advisor-ai-year-progress-elapsed').textContent.trim(),
+      remainingLabel: host.querySelector('.advisor-ai-year-progress-remaining').textContent.trim(),
+      summary: host.querySelector('.advisor-ai-year-progress-foot').textContent.replace(/\s+/g, ' ').trim()
     };
   });
   expect(result.progress).toEqual({ year: 2026, elapsed: 286, total: 365, remaining: 79, percent: 78 });
   expect(result.dotCount).toBe(365);
   expect(result.elapsedDots).toBe(286);
+  expect(result.elapsedLabel).toBe('已過 286 天');
+  expect(result.remainingLabel).toBe('還剩 79 天');
   expect(result.summary).toContain('今年已過去 78%');
   expect(result.summary).toContain('還剩 79 天');
 });
