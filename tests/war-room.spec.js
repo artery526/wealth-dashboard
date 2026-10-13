@@ -99,6 +99,46 @@ test('standalone route is a direct page and reuses the same-origin session', asy
   expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
 });
 
+test('Battle Brief shows the year-to-date foreign net sell from TWSE monthly reports on mobile', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.clock.install({ time: new Date('2026-10-13T05:00:00.000Z') });
+  await page.addInitScript(() => {
+    localStorage.setItem('wealth_api_url', 'https://example.test/exec');
+    localStorage.setItem('wealth_write_token', 'test-write-token');
+    localStorage.setItem('wealth_web_verify_status', 'ok');
+    localStorage.setItem('wealth_web_verify_checked_at', String(Date.now()));
+    sessionStorage.setItem('wealth_web_session_token', 'same-tab-session');
+  });
+  await page.route('https://example.test/**', route => route.fulfill({
+    status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' },
+    body: JSON.stringify({ ok: true, data: { summary: {}, holdings: [], funds: [], market: [] } })
+  }));
+  const requestedMonths = [];
+  await page.route('https://www.twse.com.tw/**', route => {
+    const monthDate = new URL(route.request().url()).searchParams.get('monthDate');
+    requestedMonths.push(monthDate);
+    const month = Number(monthDate.slice(4, 6));
+    const lastDay = month === 10 ? 12 : new Date(2026, month, 0).getDate();
+    return route.fulfill({
+      status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' },
+      body: JSON.stringify({
+        stat: 'OK',
+        title: `115年${month}月01日至115年${month}月${lastDay}日 三大法人買賣金額統計表`,
+        data: [['外資及陸資(不含外資自營商)', '100,000,000', '200,000,000', `${-month * 100000000}`]]
+      })
+    });
+  });
+
+  await page.goto(`${standaloneUrl}?tab=war-battle-brief`);
+  const ytd = page.locator('.battle-foreign-ytd');
+  await expect(ytd).toContainText('賣超 55.00 億');
+  await expect(ytd).toContainText('資料截至 2026/10/12');
+  await expect(ytd).toContainText('不含外資自營商');
+  expect(requestedMonths).toHaveLength(10);
+  const width = await page.locator('html').evaluate(el => ({ scroll: el.scrollWidth, client: el.clientWidth }));
+  expect(width.scroll).toBeLessThanOrEqual(width.client);
+});
+
 test('standalone route renews an expired shared session before loading its selected tab', async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem('wealth_api_url', 'https://example.test/exec'); localStorage.setItem('wealth_write_token', 'test-write-token');
