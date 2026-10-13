@@ -890,7 +890,7 @@ var STATIC_HOLDING_AVATAR_FILES={
   'GLDW':'GLDW.webp',
   'MLPI':'MLPI.webp',
   'PLTY':'呂布.webp',
-  'AVGW':'呂布.webp',
+  'AVGW':'AVGW呂布.webp',
   'QQQI':'QQQI.webp',
   '國泰高股息B':'國泰高股息B.webp',
   '施羅德收益成長A2':'施羅德收益成長.webp',

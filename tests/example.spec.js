@@ -192,7 +192,7 @@ test('AVGW appears in options income as Lu Bu with the static portrait', async (
   expect(result.optionsIncomeContains).toBe(true);
   expect(result.placedInOptionsIncome).toBe(true);
   expect(result.name).toBe('呂布');
-  expect(result.imageSource).toContain(encodeURIComponent('呂布.webp'));
+  expect(result.imageSource).toContain(encodeURIComponent('AVGW呂布.webp'));
   expect(result.imageWidth).toBe(512);
 });
 
