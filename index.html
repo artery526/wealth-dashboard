@@ -4735,6 +4735,8 @@ html[data-theme="deep-blue"] .scene-task-details .home-agenda-global-refresh{bor
 .compound-interest-table{width:100%;border-collapse:collapse;font:14px/1.45 var(--sans);font-variant-numeric:tabular-nums}
 .compound-interest-table th,.compound-interest-table td{padding:9px 11px;border-bottom:1px solid rgba(98,201,232,.13);text-align:right;white-space:nowrap}
 .compound-interest-table th{position:sticky;top:0;background:#0b2030;color:#8fc6d8;font-size:12px}
+.compound-interest-zero-rates{margin-left:6px;padding:4px 7px;border:1px solid rgba(98,201,232,.4);border-radius:6px;background:#102b3d;color:#bcefff;font:700 12px/1.2 var(--sans);cursor:pointer}
+.compound-interest-zero-rates:hover,.compound-interest-zero-rates:focus-visible{border-color:#71d8f7;background:#163b51;outline:none}
 .compound-interest-table th:first-child,.compound-interest-table td:first-child{text-align:left}
 .compound-interest-table tr:last-child td{border-bottom:0}
 .compound-interest-table{min-width:760px}
@@ -4865,7 +4867,7 @@ html[data-theme="deep-blue"] .scene-task-details .home-agenda-global-refresh{bor
     <div class="compound-interest-summary" id="compound-interest-summary" aria-live="polite"></div>
     <div class="compound-interest-table-wrap">
       <table class="compound-interest-table">
-        <thead><tr><th>年度</th><th>本年追加投入</th><th>年化報酬率</th><th>期末金額</th><th>通膨後購買力</th><th>本年度報酬</th></tr></thead>
+        <thead><tr><th>年度</th><th>本年追加投入</th><th>年化報酬率 <button class="compound-interest-zero-rates" type="button" onclick="zeroCompoundInterestRates(event)" aria-label="將所有年度年化報酬率設為 0%" title="將所有年度年化報酬率設為 0%">一鍵清零</button></th><th>期末金額</th><th>通膨後購買力</th><th>本年度報酬</th></tr></thead>
         <tbody id="compound-interest-rows"></tbody>
       </table>
     </div>
@@ -19913,6 +19915,13 @@ function renderCompoundInterest(){
   var totalPrefix=totalGain>0?'+':'';
   var finalRealValue=balance/Math.pow(1+inflation/100,years);
   summary.innerHTML=years+' 年後名目金額 <strong>'+formatCompoundCurrency(balance)+'（'+formatCompoundWan(balance)+'）</strong>；以年通膨 '+inflation+'% 折算，購買力約 <strong>'+formatCompoundCurrency(finalRealValue)+'（今日幣值）</strong>。累計投入 '+formatCompoundCurrency(totalInvested)+'，投資損益 <strong>'+totalPrefix+formatCompoundCurrency(totalGain)+'（'+totalPrefix+formatCompoundWan(totalGain)+'）</strong>。';
+}
+function zeroCompoundInterestRates(event){
+  if(event&&event.stopPropagation)event.stopPropagation();
+  var rows=document.getElementById('compound-interest-rows');
+  if(!rows)return;
+  rows.querySelectorAll('.compound-interest-rate-input').forEach(function(input){input.value='0';});
+  renderCompoundInterest();
 }
 function openCompoundInterestCalculator(event){
   if(event&&event.stopPropagation)event.stopPropagation();

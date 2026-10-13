@@ -43,3 +43,28 @@ test('compound calculator text is enlarged and remains usable on mobile', async 
   expect(result.summarySize).toBe('14px');
   expect(result.dialogBottom).toBeLessThanOrEqual(result.viewportHeight);
 });
+
+test('one-click zero sets every annual return rate to zero and recalculates', async ({ page }) => {
+  await page.goto(dashboardUrl);
+  await page.evaluate(() => {
+    document.getElementById('compound-interest-principal').value = '100000';
+    document.getElementById('compound-interest-years').value = '3';
+    renderCompoundInterest();
+    document.querySelectorAll('.compound-interest-rate-input').forEach((input, index) => {
+      input.value = String((index + 1) * 5);
+    });
+    renderCompoundInterest();
+    openCompoundInterestCalculator();
+  });
+
+  await page.getByRole('button', { name: '將所有年度年化報酬率設為 0%' }).click();
+  const result = await page.evaluate(() => ({
+    rates: Array.from(document.querySelectorAll('.compound-interest-rate-input')).map(input => input.value),
+    annualReturns: [1, 2, 3].map(year => document.getElementById('compound-interest-return-' + year).textContent),
+    summary: document.getElementById('compound-interest-summary').textContent
+  }));
+
+  expect(result.rates).toEqual(['0', '0', '0']);
+  expect(result.annualReturns.every(value => value.includes('NT$0'))).toBe(true);
+  expect(result.summary).toContain('NT$100,000');
+});
