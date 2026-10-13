@@ -21,3 +21,25 @@ test('compound calculator shows inflation-adjusted purchasing power', async ({ p
   expect(result.realValue).toContain('NT$98,039');
   expect(result.summary).toContain('購買力約 NT$98,039');
 });
+
+test('compound calculator text is enlarged and remains usable on mobile', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(dashboardUrl);
+  await page.evaluate(() => document.getElementById('compound-interest-overlay').classList.add('open'));
+  await page.waitForTimeout(250);
+  const result = await page.evaluate(() => {
+    const dialog = document.querySelector('.compound-interest-dialog').getBoundingClientRect();
+    return {
+      labelSize: getComputedStyle(document.querySelector('.compound-interest-inputs label')).fontSize,
+      inputSize: getComputedStyle(document.getElementById('compound-interest-principal')).fontSize,
+      summarySize: getComputedStyle(document.getElementById('compound-interest-summary')).fontSize,
+      dialogBottom: dialog.bottom,
+      viewportHeight: window.innerHeight
+    };
+  });
+
+  expect(result.labelSize).toBe('13px');
+  expect(result.inputSize).toBe('16px');
+  expect(result.summarySize).toBe('14px');
+  expect(result.dialogBottom).toBeLessThanOrEqual(result.viewportHeight);
+});
