@@ -4723,7 +4723,7 @@ html[data-theme="deep-blue"] .scene-task-details .home-agenda-global-refresh{bor
 .compound-interest-head h2{margin:4px 0 0;color:#e8f9ff;font:900 22px/1.3 'Noto Serif TC',serif}
 .compound-interest-close{width:36px;height:36px;border:1px solid rgba(98,201,232,.34);border-radius:9px;background:#0a1a27;color:#bcefff;font-size:16px;cursor:pointer}
 .compound-interest-note{margin:12px 20px;color:#99bac8;font:12px/1.6 var(--sans)}
-.compound-interest-inputs{display:grid;grid-template-columns:1.2fr .75fr;gap:10px;padding:0 20px 14px}
+.compound-interest-inputs{display:grid;grid-template-columns:1.2fr .75fr .75fr;gap:10px;padding:0 20px 14px}
 .compound-interest-inputs label{display:grid;gap:6px;color:#99bac8;font:700 11px/1.4 var(--sans)}
 .compound-interest-inputs input{width:100%;min-width:0;padding:10px;border:1px solid #29495f;border-radius:8px;background:#071521;color:#e8f9ff;font:700 14px var(--mono);outline:none}
 .compound-interest-inputs input:focus{border-color:#71d8f7;box-shadow:0 0 0 2px rgba(53,184,228,.14)}
@@ -4737,7 +4737,7 @@ html[data-theme="deep-blue"] .scene-task-details .home-agenda-global-refresh{bor
 .compound-interest-table th{position:sticky;top:0;background:#0b2030;color:#8fc6d8;font-size:10px}
 .compound-interest-table th:first-child,.compound-interest-table td:first-child{text-align:left}
 .compound-interest-table tr:last-child td{border-bottom:0}
-.compound-interest-table{min-width:650px}
+.compound-interest-table{min-width:760px}
 .compound-interest-row-input{width:88px;max-width:100%;padding:6px 7px;border:1px solid #29495f;border-radius:7px;background:#071521;color:#bcefff;text-align:right;font:800 12px var(--mono);outline:none}
 .compound-interest-row-input:focus{border-color:#71d8f7;box-shadow:0 0 0 2px rgba(53,184,228,.14)}
 .compound-interest-table td:nth-child(4){color:#bcefff;font-weight:800}
@@ -4855,20 +4855,21 @@ html[data-theme="deep-blue"] .scene-task-details .home-agenda-global-refresh{bor
       <div><div class="compound-interest-kicker">COMPOUND GROWTH</div><h2 id="compound-interest-title">📱 複利試算</h2></div>
       <button class="compound-interest-close" type="button" onclick="closeCompoundInterestCalculator()" aria-label="關閉複利試算">✕</button>
     </header>
-    <p class="compound-interest-note">輸入初始投入本金與試算年數；每年的追加投入會先加入本金，再依當年報酬率計算。</p>
+    <p class="compound-interest-note">輸入初始投入本金、年通膨率與試算年數；表格會同時顯示名目期末金額與折算為今日購買力的金額。</p>
     <div class="compound-interest-inputs">
       <label>初始投入本金（元）<input id="compound-interest-principal" type="number" inputmode="decimal" min="1" step="10000" value="1000000"></label>
+      <label>年通膨率（%）<input id="compound-interest-inflation" type="number" inputmode="decimal" min="-99.9" max="1000" step="0.1" value="2"></label>
       <label>試算年數<input id="compound-interest-years" type="number" inputmode="numeric" min="1" max="40" step="1" value="20"></label>
     </div>
     <label class="compound-interest-carry"><input id="compound-interest-carry-forward" type="checkbox" checked>後續年度沿用上一年的追加投入金額</label>
     <div class="compound-interest-summary" id="compound-interest-summary" aria-live="polite"></div>
     <div class="compound-interest-table-wrap">
       <table class="compound-interest-table">
-        <thead><tr><th>年度</th><th>本年追加投入</th><th>年化報酬率</th><th>期末金額</th><th>本年度報酬</th></tr></thead>
+        <thead><tr><th>年度</th><th>本年追加投入</th><th>年化報酬率</th><th>期末金額</th><th>通膨後購買力</th><th>本年度報酬</th></tr></thead>
         <tbody id="compound-interest-rows"></tbody>
       </table>
     </div>
-    <div class="compound-interest-disclaimer">各年追加投入於當年報酬計算前加入本金；未納入費用與稅金，實際報酬不保證固定。</div>
+    <div class="compound-interest-disclaimer">各年追加投入於當年報酬計算前加入本金；通膨以固定年率逐年複利折算為今日幣值。未納入費用與稅金，實際報酬與通膨不保證固定。</div>
   </section>
 </div>
 
@@ -19835,6 +19836,9 @@ function ensureCompoundInterestRows(years,rows){
     var balanceCell=document.createElement('td');
     balanceCell.id='compound-interest-balance-'+year;
     balanceCell.textContent='--';
+    var realValueCell=document.createElement('td');
+    realValueCell.id='compound-interest-real-value-'+year;
+    realValueCell.textContent='--';
     var returnCell=document.createElement('td');
     returnCell.id='compound-interest-return-'+year;
     returnCell.textContent='--';
@@ -19842,23 +19846,26 @@ function ensureCompoundInterestRows(years,rows){
     tr.appendChild(contributionCell);
     tr.appendChild(rateCell);
     tr.appendChild(balanceCell);
+    tr.appendChild(realValueCell);
     tr.appendChild(returnCell);
     rows.appendChild(tr);
   }
 }
 function clearCompoundInterestResults(rows){
-  rows.querySelectorAll('[id^="compound-interest-balance-"],[id^="compound-interest-return-"]').forEach(function(cell){
+  rows.querySelectorAll('[id^="compound-interest-balance-"],[id^="compound-interest-real-value-"],[id^="compound-interest-return-"]').forEach(function(cell){
     cell.textContent='--';
     cell.classList.remove('negative');
   });
 }
 function renderCompoundInterest(){
   var principalInput=document.getElementById('compound-interest-principal');
+  var inflationInput=document.getElementById('compound-interest-inflation');
   var yearsInput=document.getElementById('compound-interest-years');
   var summary=document.getElementById('compound-interest-summary');
   var rows=document.getElementById('compound-interest-rows');
-  if(!principalInput||!yearsInput||!summary||!rows)return;
+  if(!principalInput||!inflationInput||!yearsInput||!summary||!rows)return;
   var principal=Number(principalInput.value);
+  var inflation=Number(inflationInput.value);
   var years=Number(yearsInput.value);
   if(!yearsInput.value.trim()||!isFinite(years)||Math.floor(years)!==years||years<1||years>40){
     summary.textContent='試算年數請輸入 1 至 40 的整數。';clearCompoundInterestResults(rows);return;
@@ -19866,6 +19873,9 @@ function renderCompoundInterest(){
   ensureCompoundInterestRows(years,rows);
   if(!principalInput.value.trim()||!isFinite(principal)||principal<=0){
     summary.textContent='請輸入大於 0 的本金。';clearCompoundInterestResults(rows);return;
+  }
+  if(!inflationInput.value.trim()||!isFinite(inflation)||inflation< -99.9||inflation>1000){
+    summary.textContent='年通膨率請輸入 -99.9% 至 1000% 的數值。';clearCompoundInterestResults(rows);return;
   }
   var contributionInputs=rows.querySelectorAll('.compound-interest-contribution-input');
   var rateInputs=rows.querySelectorAll('.compound-interest-rate-input');
@@ -19887,8 +19897,11 @@ function renderCompoundInterest(){
     var annualReturn=balance-investedThisYear;
     totalContributions+=contribution;
     var balanceCell=document.getElementById('compound-interest-balance-'+year);
+    var realValueCell=document.getElementById('compound-interest-real-value-'+year);
     var returnCell=document.getElementById('compound-interest-return-'+year);
     if(balanceCell)balanceCell.innerHTML=formatCompoundCurrency(balance)+'<small>'+formatCompoundWan(balance)+'</small>';
+    var realValue=balance/Math.pow(1+inflation/100,year);
+    if(realValueCell)realValueCell.innerHTML=formatCompoundCurrency(realValue)+'<small>以今日幣值估算</small>';
     if(returnCell){
       returnCell.classList.toggle('negative',annualReturn<0);
       var returnPrefix=annualReturn>0?'+':'';
@@ -19898,7 +19911,8 @@ function renderCompoundInterest(){
   var totalInvested=principal+totalContributions;
   var totalGain=balance-totalInvested;
   var totalPrefix=totalGain>0?'+':'';
-  summary.innerHTML=years+' 年後預估 <strong>'+formatCompoundCurrency(balance)+'（'+formatCompoundWan(balance)+'）</strong>；累計投入 '+formatCompoundCurrency(totalInvested)+'，投資損益 <strong>'+totalPrefix+formatCompoundCurrency(totalGain)+'（'+totalPrefix+formatCompoundWan(totalGain)+'）</strong>。';
+  var finalRealValue=balance/Math.pow(1+inflation/100,years);
+  summary.innerHTML=years+' 年後名目金額 <strong>'+formatCompoundCurrency(balance)+'（'+formatCompoundWan(balance)+'）</strong>；以年通膨 '+inflation+'% 折算，購買力約 <strong>'+formatCompoundCurrency(finalRealValue)+'（今日幣值）</strong>。累計投入 '+formatCompoundCurrency(totalInvested)+'，投資損益 <strong>'+totalPrefix+formatCompoundCurrency(totalGain)+'（'+totalPrefix+formatCompoundWan(totalGain)+'）</strong>。';
 }
 function openCompoundInterestCalculator(event){
   if(event&&event.stopPropagation)event.stopPropagation();
@@ -19907,7 +19921,7 @@ function openCompoundInterestCalculator(event){
   overlay.classList.add('open');
   overlay.setAttribute('aria-hidden','false');
   compoundInterestReturnFocus=document.activeElement;
-  ['compound-interest-principal','compound-interest-years'].forEach(function(id){
+  ['compound-interest-principal','compound-interest-inflation','compound-interest-years'].forEach(function(id){
     var input=document.getElementById(id);
     if(input&&input.dataset.calculatorBound!=='1'){
       input.addEventListener('input',renderCompoundInterest);
