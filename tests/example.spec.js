@@ -129,6 +129,46 @@ test('military roster includes the dividend calendar without loading dividend da
   expect(result.title).toBe('配息月曆');
 });
 
+test('Schroder Taiwan small-cap holding is Cao Cao in index growth with a gold portrait frame', async ({ page }) => {
+  await page.goto(dashboardUrl);
+  await page.evaluate(() => ensureMilitaryModule());
+  const result = await page.evaluate(async () => {
+    const symbol = '施羅德台灣樂活中小基金 - A類型';
+    const row = {
+      symbol,
+      heroName: '施羅德中小基金A',
+      icon: '🥇',
+      holding: { symbol, name: '施羅德中小基金A', shares: 1, cost: 1000, marketValue: 1000 }
+    };
+    const groups = councilRosterGroups();
+    const html = renderCouncilRosterGroups([row], 1000);
+    const host = document.createElement('div');
+    host.innerHTML = html;
+    document.body.appendChild(host);
+    const card = host.querySelector('.council-roster-group .hero-card');
+    const image = card.querySelector('.hero-visual img');
+    try { await image.decode(); } catch (error) {}
+    return {
+      growthContains: groups[0].keys.includes(symbol),
+      defenseContains: groups[2].keys.includes(symbol),
+      placedInGrowth: !!host.querySelector('.council-roster-group:first-child .council-cao-cao'),
+      name: card.querySelector('.troop-name')?.textContent,
+      imageSource: image.getAttribute('src'),
+      imageWidth: image.naturalWidth,
+      cardBorder: getComputedStyle(card).borderTopColor,
+      portraitBorder: getComputedStyle(card.querySelector('.hero-visual')).borderTopColor
+    };
+  });
+  expect(result.growthContains).toBe(true);
+  expect(result.defenseContains).toBe(false);
+  expect(result.placedInGrowth).toBe(true);
+  expect(result.name).toBe('曹操');
+  expect(result.imageSource).toContain(encodeURIComponent('曹操.webp'));
+  expect(result.imageWidth).toBe(512);
+  expect(result.cardBorder).toBe('rgba(212, 175, 55, 0.72)');
+  expect(result.portraitBorder).toBe('rgb(212, 175, 55)');
+});
+
 test('Pangtong income shortcuts map to fixed Stock account', async ({ page }) => {
   await page.goto(dashboardUrl);
   const commands = await page.evaluate(() => ['工作','兼職','房租','買賣','爸媽','退稅'].map(keyword => advisorAICommand(keyword + ' 5000')));
