@@ -1424,6 +1424,18 @@ body::after{
 .advisor-ai-daily-patrol-dot.active{background:var(--gold);transform:scale(1.25);box-shadow:0 0 8px rgba(232,192,80,.42)}
 @keyframes advisorDailyPatrolIn{from{opacity:.25;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 .advisor-ai-daily-updates-empty,.advisor-ai-daily-updates-error{font-family:var(--sans);font-size:11px;line-height:1.55;color:#a98a48;text-align:center}
+.advisor-ai-year-progress{position:relative;overflow:hidden;margin:0 0 10px;padding:9px 11px 8px;border:1px solid rgba(232,192,80,.24);border-radius:9px;background:linear-gradient(115deg,rgba(33,25,34,.88),rgba(9,9,14,.9));color:#f2edf4}
+.advisor-ai-year-progress-head,.advisor-ai-year-progress-foot{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.advisor-ai-year-progress-year{font-family:var(--mono);font-size:16px;font-weight:950;letter-spacing:.5px}
+.advisor-ai-year-progress-percent{font-family:var(--mono);font-size:18px;font-weight:950;color:#fff}
+.advisor-ai-year-progress-dots{display:grid;grid-template-columns:repeat(37,minmax(0,1fr));gap:3px;margin:7px 0}
+.advisor-ai-year-progress-dot{width:100%;aspect-ratio:1;border-radius:50%;background:rgba(220,215,222,.19)}
+.advisor-ai-year-progress-dot.is-elapsed{background:#f2edf4;box-shadow:0 0 4px rgba(255,255,255,.2)}
+.advisor-ai-year-progress-foot{font-family:var(--sans);font-size:10px;font-weight:750;color:#bdb7c0}
+html[data-theme="deep-blue"] .advisor-ai-year-progress{border-color:rgba(79,181,220,.28);background:linear-gradient(115deg,rgba(13,52,73,.84),rgba(3,15,25,.92));color:#e8faff}
+html[data-theme="deep-blue"] .advisor-ai-year-progress-dot{background:rgba(120,174,192,.22)}
+html[data-theme="deep-blue"] .advisor-ai-year-progress-dot.is-elapsed{background:#8fe4ff;box-shadow:0 0 5px rgba(79,181,220,.32)}
+html[data-theme="deep-blue"] .advisor-ai-year-progress-foot{color:#78aec0}
 .advisor-ai-standalone{position:fixed;left:calc(50% + 44px);top:116px;z-index:2950;width:min(690px,calc(100vw - 150px));border:1.5px solid rgba(232,192,80,.55);border-radius:0 16px 16px 16px;background:linear-gradient(145deg,rgba(26,16,5,.96),rgba(10,7,3,.96));backdrop-filter:blur(8px);padding:18px 20px 16px;box-shadow:0 18px 42px rgba(0,0,0,.62),0 0 28px rgba(232,192,80,.18),0 0 0 9999px rgba(0,0,0,.52);opacity:0;pointer-events:none;transform:translateX(-50%) translateY(-8px);transition:opacity .18s,transform .18s}
 .advisor-ai-standalone::before{content:'';position:absolute;left:-10px;top:42px;border:5px solid transparent;border-right-color:rgba(232,192,80,.55)}
 .advisor-ai-standalone::after{content:'';position:absolute;left:-8px;top:43px;border:4px solid transparent;border-right-color:#1a1005}
@@ -17468,6 +17480,27 @@ function advisorAIHeaderHtml(title){
     `;
 }
 
+function advisorAIYearProgressData(date){
+  var current=date instanceof Date?date:new Date();
+  var year=current.getFullYear();
+  var start=Date.UTC(year,0,1);
+  var todayUtc=Date.UTC(year,current.getMonth(),current.getDate());
+  var daysInYear=(Date.UTC(year+1,0,1)-start)/86400000;
+  var elapsed=Math.floor((todayUtc-start)/86400000)+1;
+  return {year:year,elapsed:elapsed,total:daysInYear,remaining:daysInYear-elapsed,percent:Math.round(elapsed/daysInYear*100)};
+}
+
+function advisorAIYearProgressHtml(date){
+  var progress=advisorAIYearProgressData(date);
+  var dots='';
+  for(var i=0;i<progress.total;i++)dots+='<span class="advisor-ai-year-progress-dot'+(i<progress.elapsed?' is-elapsed':'')+'" aria-hidden="true"></span>';
+  return `<section class="advisor-ai-year-progress" aria-label="${progress.year}年度進度">
+    <div class="advisor-ai-year-progress-head"><strong class="advisor-ai-year-progress-year">${progress.year}</strong><strong class="advisor-ai-year-progress-percent">${progress.percent}%</strong></div>
+    <div class="advisor-ai-year-progress-dots" aria-hidden="true">${dots}</div>
+    <div class="advisor-ai-year-progress-foot"><span>今年已過去 ${progress.percent}%</span><span>還剩 ${progress.remaining} 天</span></div>
+  </section>`;
+}
+
 function advisorAICompactDate(){
   var parts=today().split('-');
   return parts.length===3?parts[0].slice(-2)+'/'+parts[1]+'/'+parts[2]:today();
@@ -17997,6 +18030,7 @@ function openAdvisorAI(targetPanel){
   advisorDividendQuickHolding=null;
   advisorAIScheduleOpen=false;
   panel.innerHTML=`${advisorAIHeaderHtml('🗡️主公，請下令')}
+    ${advisorAIYearProgressHtml()}
      <div class="advisor-ai-portrait"><img class="advisor-ai-portrait-img" src="pangtong.png?v=20260906-advisor1" alt="龐統軍師"></div>
     <div class="advisor-ai-row">
       ${advisorAIIncomeQuickSelectHtml()}
