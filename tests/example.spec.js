@@ -186,7 +186,10 @@ test('AVGW appears in options income as Lu Bu with the static portrait', async (
       placedInOptionsIncome: !!host.querySelector('.council-roster-group:nth-child(2) .hero-card'),
       name: card.querySelector('.troop-name')?.textContent,
       imageSource: image.getAttribute('src'),
-      imageWidth: image.naturalWidth
+      imageWidth: image.naturalWidth,
+      hasRedFrame: card.classList.contains('council-lubu'),
+      cardBorder: getComputedStyle(card).borderTopColor,
+      portraitBorder: getComputedStyle(card.querySelector('.hero-visual')).borderTopColor
     };
   });
   expect(result.optionsIncomeContains).toBe(true);
@@ -194,6 +197,9 @@ test('AVGW appears in options income as Lu Bu with the static portrait', async (
   expect(result.name).toBe('呂布');
   expect(result.imageSource).toContain(encodeURIComponent('AVGW呂布.webp'));
   expect(result.imageWidth).toBe(512);
+  expect(result.hasRedFrame).toBe(true);
+  expect(result.cardBorder).toBe('rgb(214, 69, 69)');
+  expect(result.portraitBorder).toBe('rgb(214, 69, 69)');
 });
 
 test('Pangtong income shortcuts map to fixed Stock account', async ({ page }) => {

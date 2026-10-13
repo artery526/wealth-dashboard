@@ -2826,6 +2826,8 @@ html.war-room-standalone .panel-head{padding:12px 18px;border-bottom-color:rgba(
 .hero-card.troop-card{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto;gap:10px;padding:13px;min-height:0;overflow:hidden}
 .hero-card.troop-card.council-cao-cao{border-width:2px!important;box-shadow:0 0 16px rgba(212,175,55,.32),inset 0 0 20px rgba(212,175,55,.08)}
 .hero-card.troop-card.council-cao-cao .hero-visual{border:2px solid #D4AF37;box-shadow:0 0 14px rgba(212,175,55,.58),inset 0 0 8px rgba(212,175,55,.12)}
+.hero-card.troop-card.council-lubu{border:2px solid #D64545!important;box-shadow:0 0 16px rgba(214,69,69,.32),inset 0 0 20px rgba(214,69,69,.08)}
+.hero-card.troop-card.council-lubu .hero-visual{border:2px solid #D64545;box-shadow:0 0 14px rgba(214,69,69,.58),inset 0 0 8px rgba(214,69,69,.12)}
 .hero-card.troop-card::before{border-radius:inherit}
 .troop-rank,.troop-identity,.troop-battle,.troop-resources{position:relative;z-index:2;min-width:0}
 .troop-rank{display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding-bottom:7px;border-bottom:1px solid rgba(184,137,46,.2);font-family:var(--sans);font-size:11px;font-weight:900;color:#d7bd78}
@@ -15053,7 +15055,7 @@ function ensureMilitaryModule(){
   if(!militaryModulePromise){
     militaryModulePromise=new Promise(function(resolve,reject){
       var script=document.createElement('script');
-      script.src='./military-module.js?v=20261013-avgw-lubu1';
+      script.src='./military-module.js?v=20261013-avgw-lubu-redframe1';
       script.async=true;
       script.onload=function(){
         if(!window.MilitaryModuleLoaded){reject(new Error('軍機處模組載入後未完成初始化'));return;}
@@ -15491,7 +15493,7 @@ function renderHeroCard(row,totalCost){
   var staticImg=staticHoldingAvatarUrl(symbol,name)||staticHeroAvatarUrl(name);
   var img=staticImg||normalizeImageUrl(row.avatarUrl);
   var videoUrl=holdingVideoUrl(symbol,name);
-  return `<div class="hero-card troop-card ${unrealized<0?'down':'up'} ${isCaoCaoHolding?'council-cao-cao':''}" style="--hero-color:${esc(color)};--hero-glow:${hexToRgba(color,.24)};border-color:${hexToRgba(color,.72)}">
+  return `<div class="hero-card troop-card ${unrealized<0?'down':'up'} ${isCaoCaoHolding?'council-cao-cao':''} ${isLuBuHolding?'council-lubu':''}" style="--hero-color:${esc(color)};--hero-glow:${hexToRgba(color,.24)};border-color:${hexToRgba(color,.72)}">
     <div class="troop-rank" title="依投入成本占全部持股成本比例分級"><span class="troop-rank-stars" aria-label="${level} 級">${stars}</span><span class="troop-rank-level">LV.${level}</span><span class="troop-rank-title">${rankTitle}</span><span class="troop-rank-basis">部位 ${costWeight.toFixed(1)}%</span></div>
     <div class="troop-identity">
       <div class="hero-visual-stack"><div class="hero-visual" role="button" tabindex="0" aria-label="播放持股動態影片" aria-expanded="false" onclick="toggleHeroMedia(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleHeroMedia(this)}">
