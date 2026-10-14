@@ -169,6 +169,30 @@ test('Schroder Taiwan small-cap holding is Cao Cao in index growth with a gold p
   expect(result.portraitBorder).toBe('rgb(212, 175, 55)');
 });
 
+test('index growth roster sorts the named heroes before other holdings', async ({ page }) => {
+  await page.goto(dashboardUrl);
+  await page.evaluate(() => ensureMilitaryModule());
+  const result = await page.evaluate(() => {
+    const rows = [
+      { symbol: '路博邁台灣5G', heroName: '龐統', holding: { symbol: '路博邁台灣5G' } },
+      { symbol: '施羅德台灣樂活中小基金 - A類型', heroName: '施羅德中小基金A', holding: { symbol: '施羅德台灣樂活中小基金 - A類型' } },
+      { symbol: '00997A', heroName: '張遼', holding: { symbol: '00997A' } },
+      { symbol: 'QQQI', heroName: '諸葛亮', holding: { symbol: 'QQQI' } },
+      { symbol: '國泰高股息B', heroName: '黃忠', holding: { symbol: '國泰高股息B' } },
+      { symbol: 'SPYI', heroName: '其他武將', holding: { symbol: 'SPYI' } }
+    ];
+    return sortCouncilRosterRows(rows, councilRosterGroups()[0]).map(row => row.symbol);
+  });
+  expect(result).toEqual([
+    '施羅德台灣樂活中小基金 - A類型',
+    'QQQI',
+    '國泰高股息B',
+    '00997A',
+    '路博邁台灣5G',
+    'SPYI'
+  ]);
+});
+
 test('AVGW appears in options income as Lu Bu with the static portrait', async ({ page }) => {
   await page.goto(dashboardUrl);
   await page.evaluate(() => ensureMilitaryModule());
