@@ -193,6 +193,26 @@ test('index growth roster sorts the named heroes before other holdings', async (
   ]);
 });
 
+test('ordinary roster cards have a soft glow on both card and portrait frame', async ({ page }) => {
+  await page.goto(dashboardUrl);
+  await page.evaluate(() => ensureMilitaryModule());
+  const result = await page.evaluate(() => {
+    const host = document.createElement('div');
+    host.innerHTML = renderCouncilRosterGroups([
+      { symbol: 'QQQI', heroName: '諸葛亮', holding: { symbol: 'QQQI', shares: 1, cost: 100, marketValue: 100 } }
+    ], 100);
+    document.body.appendChild(host);
+    const card = host.querySelector('.hero-card');
+    const portrait = card.querySelector('.hero-visual');
+    return {
+      cardGlow: getComputedStyle(card).boxShadow,
+      portraitGlow: getComputedStyle(portrait).boxShadow
+    };
+  });
+  expect(result.cardGlow).not.toBe('none');
+  expect(result.portraitGlow).not.toBe('none');
+});
+
 test('AVGW appears in options income as Lu Bu with the static portrait', async ({ page }) => {
   await page.goto(dashboardUrl);
   await page.evaluate(() => ensureMilitaryModule());
