@@ -1,5 +1,5 @@
 (function(){
-  var growthState={data:null,busy:false,message:'',error:false,dataVersion:0,readRequestId:0,historyDate:''};
+  var growthState={data:null,busy:false,message:'',error:false,dataVersion:0,readRequestId:0,historyDate:'',calendarMonth:''};
   var growthCategories=['健康','學習','生活','人際'];
   var growthAttribute={健康:'活力',學習:'專注',生活:'紀律',人際:'連結感'};
 
@@ -9,6 +9,20 @@
     return values.year+'-'+values.month+'-'+values.day;
   }
   function growthHistoryStartDate(){var date=new Date(growthToday()+'T12:00:00+08:00');date.setDate(date.getDate()-89);return date.toISOString().slice(0,10);}
+  function growthMonthShift(month,delta){var parts=month.split('-').map(Number),date=new Date(Date.UTC(parts[0],parts[1]-1+delta,1));return date.getUTCFullYear()+'-'+String(date.getUTCMonth()+1).padStart(2,'0');}
+  function growthRenderCalendar(historyDate,today,events){
+    var month=growthState.calendarMonth||historyDate.slice(0,7),parts=month.split('-').map(Number),year=parts[0],monthNumber=parts[1];
+    var firstDay=new Date(Date.UTC(year,monthNumber-1,1)).getUTCDay(),daysInMonth=new Date(Date.UTC(year,monthNumber,0)).getUTCDate();
+    var startDate=growthHistoryStartDate(),firstMonth=startDate.slice(0,7),lastMonth=today.slice(0,7),counts={};
+    events.forEach(function(event){if(event.done)counts[event.date]=(counts[event.date]||0)+1;});
+    var cells='';for(var blank=0;blank<firstDay;blank++)cells+='<span class="dg-cal-blank" aria-hidden="true"></span>';
+    for(var day=1;day<=daysInMonth;day++){
+      var date=year+'-'+String(monthNumber).padStart(2,'0')+'-'+String(day).padStart(2,'0'),count=counts[date]||0,available=date>=startDate&&date<=today;
+      var classes='dg-cal-day'+(date===historyDate?' is-selected':'')+(date===today?' is-today':'')+(count?' has-achievement':'');
+      cells+='<button class="'+classes+'" type="button" '+(available?'':'disabled')+' onclick="selectDailyGrowthCalendarDate(\''+date+'\')" aria-label="'+date+'，完成 '+count+' 項" title="'+date+' · 完成 '+count+' 項"><span>'+day+'</span>'+(count?'<small>'+count+'</small>':'')+'</button>';
+    }
+    return '<section class="dg-card dg-calendar-card"><div class="dg-cal-head"><button class="dg-cal-nav" type="button" '+(month<=firstMonth?'disabled':'')+' onclick="changeDailyGrowthCalendarMonth(-1)" aria-label="上一個月">‹</button><div><div class="dg-card-title">🗓️ 成長月曆</div><div class="dg-card-note">點日期查看當天成就</div></div><strong>'+year+' 年 '+monthNumber+' 月</strong><button class="dg-cal-nav" type="button" '+(month>=lastMonth?'disabled':'')+' onclick="changeDailyGrowthCalendarMonth(1)" aria-label="下一個月">›</button></div><div class="dg-calendar-grid dg-weekdays">'+['日','一','二','三','四','五','六'].map(function(day){return '<span>'+day+'</span>';}).join('')+'</div><div class="dg-calendar-grid">'+cells+'</div><div class="dg-cal-legend"><span><i></i>已完成成就</span><span>目前查看：'+historyDate.replace(/-/g,' / ')+'</span></div></section>';
+  }
   function growthEscape(value){return String(value==null?'':value).replace(/[&<>"']/g,function(char){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char];});}
   function growthLevel(total){
     var level=1,floor=0,next=10;
@@ -67,7 +81,7 @@
       +'<div class="dg-task-list">'+taskHtml+'</div>'
       +'<section class="dg-completed"><div class="dg-completed-head"><span>✅ 今日已完成</span><span>'+completedTasks.length+' 項</span></div><div class="dg-task-list">'+completedTaskHtml+'</div></section>'
       +'<form class="dg-add-form" onsubmit="submitDailyGrowthTask(event)"><input class="dg-input" id="dg-new-task" maxlength="40" placeholder="新增一件想完成的小事" aria-label="新增成就名稱" required><select class="dg-select" id="dg-new-category" aria-label="成就分類">'+growthCategories.map(function(category){return '<option value="'+category+'">'+category+' · '+growthAttribute[category]+'</option>';}).join('')+'</select><button class="dg-button" type="submit" '+(growthState.busy?'disabled':'')+'>＋ 新增成就</button></form>'
-      +'</section><aside class="dg-side"><section class="dg-card"><div class="dg-card-head"><div><div class="dg-card-title">🌼 主角屬性</div><div class="dg-card-note">每次完成都會累積對應成長</div></div></div><div class="dg-attributes">'+attributeHtml+'</div></section>'
+      +'</section><aside class="dg-side">'+growthRenderCalendar(historyDate,today,events)+'<section class="dg-card"><div class="dg-card-head"><div><div class="dg-card-title">🌼 主角屬性</div><div class="dg-card-note">每次完成都會累積對應成長</div></div></div><div class="dg-attributes">'+attributeHtml+'</div></section>'
       +'<section class="dg-card"><div class="dg-card-head"><div><div class="dg-card-title">📅 最近七日</div><div class="dg-card-note">每日完成成就數</div></div></div><div class="dg-history">'+historyHtml+'</div><div class="dg-history-note">這週累積 '+weekCounts.reduce(function(sum,value){return sum+value;},0)+' 點經驗</div><div class="dg-history-picker"><label for="dg-history-date">查看日期明細</label><input class="dg-input" id="dg-history-date" type="date" min="'+growthHistoryStartDate()+'" max="'+today+'" value="'+growthEscape(historyDate)+'" onchange="selectDailyGrowthHistory(this.value)"></div><div class="dg-history-selected">'+historyDate.replace(/-/g,' / ')+'　·　完成 '+historyDone.length+' 項</div><div class="dg-task-list">'+historyTaskHtml+'</div></section></aside></div></div>';
   }
   async function growthLoad(){
@@ -90,10 +104,19 @@
     growthLoad();
   };
   window.refreshDailyGrowth=function(){growthLoad();};
+  window.changeDailyGrowthCalendarMonth=function(delta){
+    var current=growthState.calendarMonth||growthToday().slice(0,7),next=growthMonthShift(current,Number(delta)||0);
+    if(next>=growthHistoryStartDate().slice(0,7)&&next<=growthToday().slice(0,7)){growthState.calendarMonth=next;growthRender();}
+  };
+  window.selectDailyGrowthCalendarDate=function(value){
+    var date=String(value||''),today=growthToday();
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||date>today||date<growthHistoryStartDate())return;
+    growthState.historyDate=date;growthState.calendarMonth=date.slice(0,7);growthRender();
+  };
   window.selectDailyGrowthHistory=function(value){
     var date=String(value||''),today=growthToday();
     if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||date>today||date<growthHistoryStartDate())return;
-    growthState.historyDate=date;growthRender();
+    growthState.historyDate=date;growthState.calendarMonth=date.slice(0,7);growthRender();
   };
   window.toggleDailyGrowthCompletion=async function(taskId,done){
     if(growthState.busy)return;growthState.busy=true;growthRender();
