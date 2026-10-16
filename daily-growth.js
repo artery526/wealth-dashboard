@@ -111,7 +111,7 @@
       }
       growthStatus(done?'成就已記錄，正在更新總覽…':'已取消這項成就，正在更新總覽…',false);growthRender();
       try{
-        var latest=await apiGet({action:'dailyGrowth'},20000);
+        var latest=await apiGet({action:'dailyGrowth',forceRefresh:'1'},20000);
         var latestHasCompletion=(latest.events||[]).some(function(event){return event.date===today&&event.taskId===taskId&&event.done===true;});
         if(readRequestId===growthState.readRequestId&&writeDataVersion===growthState.dataVersion){
           if(done===latestHasCompletion){growthState.data=latest;growthStatus(done?'完成一項，經驗與屬性已更新 🌱':'已取消這項成就，經驗同步調整。',false);}
