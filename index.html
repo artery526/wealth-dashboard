@@ -1740,6 +1740,17 @@ html[data-theme="deep-blue"] .advisor-ai-year-progress-remaining{color:#ff8585!i
 .mpm-trend-level-moderate{color:#d5b66b;background:rgba(184,137,46,.1)}
 .mpm-trend-level-mild{color:#92d8bd;background:rgba(29,158,117,.1)}
 .mpm-area-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:9px;margin-top:6px}
+.mpm-body-map{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:8px 0 14px}
+.mpm-body-view{border:1px solid rgba(216,90,48,.26);border-radius:9px;background:rgba(10,5,4,.62);padding:10px;min-width:0}
+.mpm-body-view h4{margin:0 0 5px;text-align:center;color:var(--gold);font:800 13px var(--sans)}
+.mpm-body-svg{display:block;width:100%;height:170px;max-width:260px;margin:0 auto}
+.mpm-body-outline{fill:rgba(184,137,46,.1);stroke:rgba(240,223,160,.64);stroke-width:2}
+.mpm-body-feature{fill:none;stroke:rgba(240,223,160,.45);stroke-width:1.5;stroke-linecap:round}
+.mpm-body-zone{fill:rgba(216,90,48,.86);stroke:#ffe1a0;stroke-width:1.5}
+.mpm-body-zone-label{fill:#f0dfa0;font:700 9px var(--sans);text-anchor:middle}
+.mpm-body-key{display:grid;gap:4px;margin-top:4px}
+.mpm-body-key-row{display:flex;justify-content:space-between;gap:8px;color:#c09a50;font:700 12px/1.4 var(--sans)}
+.mpm-body-key-row b{color:var(--coral);white-space:nowrap}
 .mpm-area-item{background:rgba(14,8,5,.82);border:1px solid rgba(216,90,48,.26);border-radius:8px;padding:11px 12px;display:flex;flex-direction:column;gap:5px}
 .mpm-area-name{font-family:var(--sans);font-size:15px;font-weight:800;color:#e0b0a0;line-height:1.45}
 .mpm-area-count-row{display:flex;align-items:center;gap:6px}
@@ -1763,7 +1774,7 @@ html[data-theme="deep-blue"] .advisor-ai-year-progress-remaining{color:#ff8585!i
 .mpm-badge.pain-lo{border-color:rgba(29,158,117,.38);background:rgba(29,158,117,.10);color:var(--teal)}
 .mpm-rec-note{font-family:var(--sans);font-size:14px;color:#8a7050;line-height:1.75;white-space:pre-wrap;overflow-wrap:anywhere}
 .mpm-empty{font-family:var(--sans);font-size:14px;color:#5a3020;text-align:center;padding:14px 6px}
-@media(max-width:540px){.mpm-summary{grid-template-columns:1fr 1fr}.mpm-rec-item{grid-template-columns:1fr;gap:5px}.mpm-area-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:540px){.mpm-summary{grid-template-columns:1fr 1fr}.mpm-rec-item{grid-template-columns:1fr;gap:5px}.mpm-area-grid{grid-template-columns:repeat(2,1fr)}.mpm-body-map{gap:6px}.mpm-body-view{padding:7px 4px}.mpm-body-svg{height:140px}.mpm-body-key-row{font-size:10px}}
 .tarot-mode-switch{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .tarot-mode-btn{border:1px solid rgba(184,137,46,.42);border-radius:6px;background:rgba(10,8,4,.58);color:#9a7430;padding:9px 10px;font-family:var(--sans);font-size:13px;font-weight:800;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
 .tarot-mode-btn.active{border-color:rgba(232,192,80,.74);background:rgba(184,137,46,.22);color:var(--gold)}
@@ -20622,7 +20633,32 @@ function mpmRender(records){
   if(!areaEntries.length){
     areaEl.innerHTML = '<div class="mpm-empty">尚無疼痛部位記錄</div>';
   }else{
-    areaEl.innerHTML = '<div class="mpm-area-grid">'+areaEntries.map(function(e){
+    var bodyZones=[
+      {name:'左半邊眼窩額頭',count:areaCounts['左半邊眼窩額頭']||0},
+      {name:'右半邊眼窩額頭',count:areaCounts['右半邊眼窩額頭']||0},
+      {name:'左後頸風池穴',count:areaCounts['左後頸風池穴']||0},
+      {name:'右後頸風池穴',count:areaCounts['右後頸風池穴']||0},
+      {name:'落枕膏肓穴',count:areaCounts['落枕膏肓穴']||0}
+    ];
+    var mapHtml='<div class="mpm-body-map" role="group" aria-label="疼痛部位示意圖與記錄次數">'
+      +'<section class="mpm-body-view"><h4>正面｜眼窩與額頭</h4>'
+      +'<svg class="mpm-body-svg" viewBox="0 0 160 180" role="img" aria-label="正面頭部示意，左右眼窩額頭位置以紅點標示">'
+      +'<path class="mpm-body-outline" d="M80 12 C48 12 38 39 42 73 C45 101 58 119 80 123 C102 119 115 101 118 73 C122 39 112 12 80 12Z"/>'
+      +'<path class="mpm-body-feature" d="M45 66 Q56 60 67 66 M93 66 Q104 60 115 66 M78 69 Q73 82 80 85 Q87 82 82 69 M68 99 Q80 105 92 99"/>'
+      +'<circle class="mpm-body-zone" cx="59" cy="69" r="7"><title>左半邊眼窩額頭 '+bodyZones[0].count+' 次</title></circle>'
+      +'<circle class="mpm-body-zone" cx="101" cy="69" r="7"><title>右半邊眼窩額頭 '+bodyZones[1].count+' 次</title></circle>'
+      +'<text class="mpm-body-zone-label" x="59" y="53">左眼窩</text><text class="mpm-body-zone-label" x="101" y="53">右眼窩</text></svg>'
+      +'<div class="mpm-body-key"><div class="mpm-body-key-row"><span>左半邊眼窩額頭</span><b>'+bodyZones[0].count+' 次</b></div><div class="mpm-body-key-row"><span>右半邊眼窩額頭</span><b>'+bodyZones[1].count+' 次</b></div></div></section>'
+      +'<section class="mpm-body-view"><h4>背面｜後頸與膏肓</h4>'
+      +'<svg class="mpm-body-svg" viewBox="0 0 160 180" role="img" aria-label="背面頭頸與上背示意，風池穴及膏肓區域以紅點標示">'
+      +'<path class="mpm-body-outline" d="M57 17 Q80 5 103 17 Q117 30 113 54 Q109 72 94 79 L94 89 Q123 94 137 113 L148 160 L12 160 L23 113 Q37 94 66 89 L66 79 Q51 72 47 54 Q43 30 57 17Z"/>'
+      +'<path class="mpm-body-feature" d="M66 82 Q80 91 94 82 M80 91 L80 157 M32 119 Q80 108 128 119"/>'
+      +'<circle class="mpm-body-zone" cx="65" cy="82" r="6"><title>左後頸風池穴 '+bodyZones[2].count+' 次</title></circle>'
+      +'<circle class="mpm-body-zone" cx="95" cy="82" r="6"><title>右後頸風池穴 '+bodyZones[3].count+' 次</title></circle>'
+      +'<circle class="mpm-body-zone" cx="65" cy="116" r="7"><title>落枕膏肓穴 '+bodyZones[4].count+' 次</title></circle>'
+      +'<text class="mpm-body-zone-label" x="80" y="74">風池</text><text class="mpm-body-zone-label" x="80" y="108">膏肓</text></svg>'
+      +'<div class="mpm-body-key"><div class="mpm-body-key-row"><span>左後頸風池穴</span><b>'+bodyZones[2].count+' 次</b></div><div class="mpm-body-key-row"><span>右後頸風池穴</span><b>'+bodyZones[3].count+' 次</b></div><div class="mpm-body-key-row"><span>落枕膏肓穴</span><b>'+bodyZones[4].count+' 次</b></div></div></section></div>';
+    areaEl.innerHTML = mapHtml+'<div class="mpm-area-grid">'+areaEntries.map(function(e){
       var name=e[0], cnt=e[1];
       var pct = areaTotal ? Math.round(cnt/areaTotal*100) : 0;
       return '<div class="mpm-area-item">'
