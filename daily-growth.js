@@ -27,16 +27,23 @@
   function growthRender(){
     var body=document.getElementById('p-body');if(!body)return;
     if(!growthState.data){body.innerHTML='<div class="dg-page">'+growthRenderMessage()+'</div>';return;}
-    var data=growthState.data,tasks=data.tasks||[],events=data.events||[],today=growthToday(),todayDone=growthEventsForToday(),totalDone=Object.keys(todayDone).length,level=growthLevel(Number(data.totalXp)||0);
+    var data=growthState.data,tasks=data.tasks||[],events=data.events||[],today=growthToday(),todayDone=growthEventsForToday(),level=growthLevel(Number(data.totalXp)||0);
     var doneCount=events.filter(function(event){return event.date===today&&event.done;}).length;
     var attributeNames=['活力','專注','紀律','連結感'];
-    var taskHtml=tasks.length?tasks.map(function(task){
-      var done=!!todayDone[task.id];
-      return '<article class="dg-task'+(done?' is-done':'')+'">'
-        +'<button class="dg-check" type="button" '+(growthState.busy?'disabled':'')+' onclick="toggleDailyGrowthCompletion(\''+growthEscape(task.id)+'\','+(!done)+')" aria-label="'+(done?'取消':'完成')+growthEscape(task.name)+'">'+(done?'✓':'')+'</button>'
+    var availableTasks=tasks.filter(function(task){return !todayDone[task.id];});
+    var completedTasks=tasks.filter(function(task){return !!todayDone[task.id];});
+    var taskHtml=availableTasks.length?availableTasks.map(function(task){
+      return '<article class="dg-task">'
+        +'<button class="dg-check" type="button" '+(growthState.busy?'disabled':'')+' onclick="toggleDailyGrowthCompletion(\''+growthEscape(task.id)+'\',true)" aria-label="完成'+growthEscape(task.name)+'"></button>'
         +'<div><div class="dg-task-name">'+growthEscape(task.name)+'</div><div class="dg-task-meta">'+growthEscape(task.category)+' · 培養 '+growthEscape(task.attribute||growthAttribute[task.category]||'紀律')+'</div></div>'
-        +'<span class="dg-task-xp">'+(done?'已完成':'+1 經驗')+'</span></article>';
-    }).join(''):'<div class="dg-empty">還沒有成就，新增一項今天想完成的小事吧。</div>';
+        +'<span class="dg-task-xp">+1 經驗</span></article>';
+    }).join(''):(tasks.length?'<div class="dg-empty">今天的成就都完成了，做得好！</div>':'<div class="dg-empty">還沒有成就，新增一項今天想完成的小事吧。</div>');
+    var completedTaskHtml=completedTasks.length?completedTasks.map(function(task){
+      return '<article class="dg-task is-done">'
+        +'<span class="dg-check" aria-hidden="true">✓</span>'
+        +'<div><div class="dg-task-name">'+growthEscape(task.name)+'</div><div class="dg-task-meta">'+growthEscape(task.category)+' · 培養 '+growthEscape(task.attribute||growthAttribute[task.category]||'紀律')+'</div></div>'
+        +'<span class="dg-task-xp">已完成 · +1 經驗</span></article>';
+    }).join(''):'<div class="dg-empty">今天還沒有完成的成就。</div>';
     var attributes=data.attributes||{};
     var attributeHtml=attributeNames.map(function(name){var value=Number(attributes[name])||0;return '<div class="dg-attribute"><div class="dg-attribute-name">'+name+'</div><div class="dg-attribute-track"><span style="width:'+Math.min(100,value*5)+'%"></span></div><div class="dg-attribute-value">'+value+'</div></div>';}).join('');
     var week=[];for(var i=6;i>=0;i--){var date=new Date(new Date(today+'T12:00:00+08:00').getTime()-i*86400000);week.push(date.toISOString().slice(0,10));}
@@ -49,6 +56,7 @@
       +'<div class="dg-level"><div class="dg-level-badge"><span aria-hidden="true">🌱</span> Lv. '+level.level+' 新芽冒險者</div><div class="dg-xp-line">累積 '+(Number(data.totalXp)||0)+' 經驗 · 下一級還差 '+level.remaining+' 點</div><div class="dg-progress" aria-label="升級進度"><span style="width:'+level.progress+'%"></span></div></div></section>'
       +'<div class="dg-layout"><section class="dg-card"><div class="dg-card-head"><div><div class="dg-card-title">☀️ 今日成就</div><div class="dg-card-note">完成一項，累積 1 點經驗與對應屬性</div></div><span class="dg-count">'+doneCount+' / '+tasks.length+' 完成</span></div>'
       +'<div class="dg-task-list">'+taskHtml+'</div>'
+      +'<section class="dg-completed"><div class="dg-completed-head"><span>✅ 今日已完成</span><span>'+completedTasks.length+' 項</span></div><div class="dg-task-list">'+completedTaskHtml+'</div></section>'
       +'<form class="dg-add-form" onsubmit="submitDailyGrowthTask(event)"><input class="dg-input" id="dg-new-task" maxlength="40" placeholder="新增一件想完成的小事" aria-label="新增成就名稱" required><select class="dg-select" id="dg-new-category" aria-label="成就分類">'+growthCategories.map(function(category){return '<option value="'+category+'">'+category+' · '+growthAttribute[category]+'</option>';}).join('')+'</select><button class="dg-button" type="submit" '+(growthState.busy?'disabled':'')+'>＋ 新增成就</button></form>'
       +'</section><aside class="dg-side"><section class="dg-card"><div class="dg-card-head"><div><div class="dg-card-title">🌼 主角屬性</div><div class="dg-card-note">每次完成都會累積對應成長</div></div></div><div class="dg-attributes">'+attributeHtml+'</div></section>'
       +'<section class="dg-card"><div class="dg-card-head"><div><div class="dg-card-title">📅 最近七日</div><div class="dg-card-note">每日完成成就數</div></div></div><div class="dg-history">'+historyHtml+'</div><div class="dg-history-note">這週累積 '+weekCounts.reduce(function(sum,value){return sum+value;},0)+' 點經驗</div></section></aside></div></div>';
