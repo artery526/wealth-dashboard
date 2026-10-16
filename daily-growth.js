@@ -55,7 +55,7 @@
   }
   async function growthLoad(){
     if(!API_URL){growthStatus('尚未設定網站 API，請先完成城門設定。',true);growthRender();return;}
-    growthStatus('正在整理你的成長紀錄…',false);growthRender();
+    growthStatus(growthState.data?'正在同步最新成長紀錄…':'正在整理你的成長紀錄…',false);growthRender();
     try{growthState.data=await apiGet({action:'dailyGrowth'},20000);growthStatus('',false);growthRender();}
     catch(error){growthStatus('讀取成長紀錄失敗：'+(error&&error.message||'請稍後重試'),true);growthRender();}
   }
