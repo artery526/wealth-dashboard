@@ -5456,7 +5456,7 @@ function parseApiJsonText(text){
   throw new Error('API returned non-JSON response');
 }
 function isApiWriteAction(action){
-  return /^(expense|income|transfer|transactionUndo|stockTradeVoid|dividendEntry|dividendDelete|holdingTradeEntry|holdingTradeDelete|calendarCreate|calendarDelete|taskCreate|taskDelete|eventChronicleSave|eventChronicleEdit|eventChronicleDelete|storeRecordCreate|storeRecordUpdate|storeRecordDelete|macroLongReportGenerate|macroLongReportTriggerInstall|taiwanStockReviewGenerate)$/.test(action||'');
+  return /^(expense|income|transfer|transactionUndo|stockTradeVoid|dividendEntry|dividendDelete|holdingTradeEntry|holdingTradeDelete|calendarCreate|calendarDelete|taskCreate|taskDelete|eventChronicleSave|eventChronicleEdit|eventChronicleDelete|storeRecordCreate|storeRecordUpdate|storeRecordDelete|dailyGrowthTaskCreate|dailyGrowthSetCompletion|macroLongReportGenerate|macroLongReportTriggerInstall|taiwanStockReviewGenerate)$/.test(action||'');
 }
 function apiWriteTimeoutMs(action){
   action=String(action||'');
@@ -5539,6 +5539,7 @@ var WEALTH_API_QUEUE_WAIT_TIMEOUT_MS=20000;
 function wealthApiRequestPriority(action){
   action=String(action||'');
   if(action==='verifyWriteToken'||action==='createWebSession')return 10;
+  if(/^(dailyGrowthSetCompletion|dailyGrowthTaskCreate)$/.test(action))return 10;
   if(/^(expense|income|transfer|transactionUndo|stockTradeVoid|dividendEntry|dividendDelete|holdingTradeEntry|holdingTradeDelete)$/.test(action))return 9;
    if(action==='storeRecords')return 8;
   if(/^(yearly|history)$/.test(action))return 8;
