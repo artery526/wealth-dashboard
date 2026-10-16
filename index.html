@@ -16953,12 +16953,6 @@ initAdvisorDuoVideoPlayback();
           </div>
         </section>
         <section class="advisor-menu-section">
-          <button class="advisor-menu-toggle" type="button" onclick="toggleAdvisorMenuGroup(this)" aria-expanded="false"><span class="advisor-menu-mark">成</span>每日成長<span class="advisor-menu-caret">▼</span></button>
-          <div class="advisor-btn-group">
-            <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'daily-growth')"><span class="advisor-btn-tag">🌱</span>每日成長</button>
-          </div>
-        </section>
-        <section class="advisor-menu-section">
           <button class="advisor-menu-toggle" type="button" onclick="toggleAdvisorMenuGroup(this)" aria-expanded="false"><span class="advisor-menu-mark">王</span>王府<span class="advisor-menu-caret">▼</span></button>
           <div class="advisor-btn-group">
             <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'wall')"><span class="advisor-btn-tag">王</span>打開王府</button>
@@ -17666,6 +17660,7 @@ async function advisorAIRefreshGoldQuote(btn){
 
 function advisorAIQuickCommands(){
   return [
+    {label:'每日成長',command:'__daily_growth__'},
     {label:'配息試算',command:'__dividend_calculator__'},
     {label:'配息記錄',command:'__dividend_record__'},
     {label:'影片下載',command:'__video_download__'},
@@ -17951,6 +17946,11 @@ async function advisorAIRecordQuickDividend(btn){
 function advisorAIRunQuickCommand(select){
   var command=String(select&&select.value||'').trim();
   if(!command)return;
+  if(command==='__daily_growth__'){
+    if(select)select.value='';
+    openEmpireCardShortcut(null,'daily-growth');
+    return;
+  }
   if(command==='__dividend_calculator__'){
     if(select)select.value='';
     openDividendCalculatorInFinanceCenter();
