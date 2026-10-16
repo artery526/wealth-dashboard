@@ -1773,6 +1773,7 @@ html[data-theme="deep-blue"] .advisor-ai-year-progress-remaining{color:#ff8585!i
 .mpm-badge.pain-md{border-color:rgba(200,150,40,.48);background:rgba(200,150,40,.12);color:var(--gold2)}
 .mpm-badge.pain-lo{border-color:rgba(29,158,117,.38);background:rgba(29,158,117,.10);color:var(--teal)}
 .mpm-rec-note{font-family:var(--sans);font-size:14px;color:#8a7050;line-height:1.75;white-space:pre-wrap;overflow-wrap:anywhere}
+.mpm-rec-review-reason{font-family:var(--sans);font-size:11px;color:#8a7050;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}
 .mpm-empty{font-family:var(--sans);font-size:14px;color:#5a3020;text-align:center;padding:14px 6px}
 @media(max-width:540px){.mpm-summary{grid-template-columns:1fr 1fr}.mpm-rec-item{grid-template-columns:1fr;gap:5px}.mpm-area-grid{grid-template-columns:repeat(2,1fr)}.mpm-body-map{gap:6px}.mpm-body-view{padding:7px 4px}.mpm-body-svg{height:140px}.mpm-body-key-row{font-size:10px}}
 .tarot-mode-switch{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
@@ -20698,7 +20699,6 @@ function mpmRender(records){
     if(lvlTxt)   badges += '<span class="mpm-badge '+level.className+'">'+mpmEsc(lvlTxt)+'</span>';
     if(painDuration)badges += '<span class="mpm-badge">⏱️ '+mpmEsc(painDuration)+'</span>';
     if(areas)    badges += '<span class="mpm-badge">📍 '+mpmEsc(areas)+'</span>';
-    if(reviewReason)badges += '<span class="mpm-badge">🪞 '+mpmEsc(reviewReason)+'</span>';
     if(cause)    badges += '<span class="mpm-badge">⚡ '+mpmEsc(cause)+'</span>';
     if(medTxt)   badges += '<span class="mpm-badge">'+mpmEsc(medTxt)+'</span>';
 
@@ -20706,6 +20706,7 @@ function mpmRender(records){
       +'<div class="mpm-rec-time">'+mpmEsc(timeStr||'未記錄')+'</div>'
       +'<div class="mpm-rec-body">'
       +(badges?'<div class="mpm-rec-badges">'+badges+'</div>':'')
+      +(reviewReason?'<div class="mpm-rec-review-reason">🪞 自填疼痛起因：'+mpmEsc(reviewReason)+'</div>':'')
       +(notes?'<div class="mpm-rec-note">'+mpmEsc(notes)+'</div>':'')
       +'</div></div>';
   }).join('')+'</div>';
