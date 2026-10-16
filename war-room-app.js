@@ -99,11 +99,30 @@
   function renderBrief(payload,stale){
     var market=payload.market||payload.marketDashboard||{},macro=payload.macro||payload.macroOverview||{},report=payload.longReport||{};
     var captured=payload.capturedAt||payload.sourceDate||'',summary=market.summary||{},judgment=macro.judgment||{},valuations=macro.valuations||{};
+    function marketBreadth_(marketData,marketSummary){
+      var rows=Array.isArray(marketData.rows)?marketData.rows:[],counts={up:0,down:0,flat:0,total:0};
+      rows.forEach(function(row){
+        if(!row||typeof row!=='object')return;
+        var change=row.changePct;
+        if(change==null||change==='')change=row.change;
+        if((change==null||change==='')&&row.price!=null&&row.previous!=null&&Number(row.previous)!==0){change=(Number(row.price)-Number(row.previous))/Math.abs(Number(row.previous))*100;}
+        if(change==null||change===''||!isFinite(Number(change)))return;
+        counts.total++;
+        if(Number(change)>0)counts.up++;else if(Number(change)<0)counts.down++;else counts.flat++;
+      });
+      if(counts.total)return counts;
+      if(marketSummary.upCount!=null&&marketSummary.downCount!=null){
+        var up=Number(marketSummary.upCount),down=Number(marketSummary.downCount),flat=Number(marketSummary.flatCount||0),total=Number(marketSummary.totalCount||marketSummary.symbolCount||up+down+flat);
+        if(isFinite(up)&&isFinite(down)&&isFinite(flat)&&isFinite(total))return {up:up,down:down,flat:flat,total:total};
+      }
+      return null;
+    }
+    var breadth=marketBreadth_(market,summary);
     var html='<div class="brief-hero"><div><div class="brief-kicker">ADVISOR WORLD · DAILY INTELLIGENCE</div><h2>🏛 帝國晨報</h2><p>依最近可得的市場與總經快照整理今日狀態；不是投資建議。</p></div><span class="pill">'+(stale?'保留快照':'資料已更新')+'</span></div>';
     if(stale)html+='<div class="notice">背景更新尚未完成，先保留上次成功資料。</div>';
     var marketState=summary.stance||summary.signal||summary.marketStance||'資料暫缺';
     var riskState=judgment.signal||judgment.scenario||judgment.conclusion||'總經資料待判讀';
-    html+='<div class="brief-top-grid"><article class="brief-state"><span>市場狀態</span><strong>'+esc(marketState)+'</strong><small>市場資料 '+esc(dateText(summary.updatedAt||market.sourceDate||captured))+'</small></article><article class="brief-state"><span>總經風險</span><strong>'+esc(riskState)+'</strong><small>指標日期 '+esc(judgment.date||macro.sourceDate||'--')+'</small></article><article class="brief-state"><span>市場漲跌家數</span><strong>'+esc(summary.upCount==null?'--':summary.upCount)+' <i>/</i> '+esc(summary.downCount==null?'--':summary.downCount)+'</strong><small>上漲 / 下跌 · 監控 '+esc(summary.totalCount||summary.symbolCount||'--')+' 項</small></article></div>';
+    html+='<div class="brief-top-grid"><article class="brief-state"><span>市場狀態</span><strong>'+esc(marketState)+'</strong><small>市場資料 '+esc(dateText(summary.updatedAt||market.sourceDate||captured))+'</small></article><article class="brief-state"><span>總經風險</span><strong>'+esc(riskState)+'</strong><small>指標日期 '+esc(judgment.date||macro.sourceDate||'--')+'</small></article><article class="brief-state"><span>監控市場漲跌</span><strong>'+esc(breadth?num(breadth.up,0):'--')+' <i>/</i> '+esc(breadth?num(breadth.down,0):'--')+'</strong><small>上漲 / 下跌 · 平盤 '+esc(breadth?num(breadth.flat,0):'--')+' · 有效報價 '+esc(breadth?num(breadth.total,0):'--')+' 項</small></article></div>';
     var oneLine=judgment.summary||judgment.oneLine||judgment.mainRisk||'目前尚無一句話總經摘要。';
     html+='<section class="brief-insight"><div class="brief-insight-heading"><span>📌 今日一句話戰情</span><small>快照 '+esc(dateText(captured))+'</small></div><p>'+esc(oneLine)+'</p>';
     if(judgment.mainRisk||judgment.suggestion)html+='<div class="brief-guidance">'+(judgment.mainRisk?'<div><small>主要風險</small><strong>'+esc(judgment.mainRisk)+'</strong></div>':'')+(judgment.suggestion?'<div><small>注意事項</small><strong>'+esc(judgment.suggestion)+'</strong></div>':'')+'</div>';

@@ -99,6 +99,39 @@ test('standalone route is a direct page and reuses the same-origin session', asy
   expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
 });
 
+test('Imperial Morning Brief derives monitored market rise and fall counts from quote rows', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.addInitScript(() => {
+    localStorage.setItem('wealth_api_url', 'https://example.test/exec');
+    localStorage.setItem('wealth_write_token', 'test-write-token');
+    localStorage.setItem('wealth_web_verify_status', 'ok');
+    localStorage.setItem('wealth_web_verify_checked_at', String(Date.now()));
+    sessionStorage.setItem('wealth_web_session_token', 'same-tab-session');
+  });
+  await page.route('https://example.test/**', route => {
+    const action = new URL(route.request().url()).searchParams.get('action');
+    const data = action === 'advisorWorldBriefSnapshotRefresh' ? { snapshot: {
+      market: { summary: { stance: '觀望', counts: { 觀望: 4 } }, rows: [
+        { code: 'TAIEX', name: '加權指數', price: 23000, previous: 22900, changePct: 0.44 },
+        { code: 'SPX', name: 'S&P 500', price: 6000, previous: 6010, changePct: -0.17 },
+        { code: 'VIX', name: 'VIX', price: 18, previous: 18, changePct: 0 }
+      ] },
+      macro: { judgment: { summary: '維持觀察。' }, indicators: [], valuations: {} },
+      capturedAt: '2026-10-15T12:00:00Z'
+    } } : {};
+    return route.fulfill({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ ok: true, data }) });
+  });
+  await page.route('https://api.ark-os26.cc/**', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ records: [] }) }));
+
+  await page.goto(`${standaloneUrl}?tab=war-briefing`);
+  const breadth = page.locator('.brief-state').filter({ hasText: '監控市場漲跌' });
+  await expect(breadth).toContainText('1 / 1');
+  await expect(breadth).toContainText('平盤 1');
+  await expect(breadth).toContainText('有效報價 3 項');
+  const width = await page.locator('html').evaluate(el => ({ scroll: el.scrollWidth, client: el.clientWidth }));
+  expect(width.scroll).toBeLessThanOrEqual(width.client);
+});
+
 test('Battle Brief shows the year-to-date foreign net sell from TWSE monthly reports on mobile', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.clock.install({ time: new Date('2026-10-13T05:00:00.000Z') });
