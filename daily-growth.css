@@ -8,3 +8,5 @@
 @media(max-width:420px){.dg-side{grid-template-columns:1fr}.dg-hero{gap:8px}.dg-task-xp{font-size:10px}.dg-add-form{grid-template-columns:minmax(0,1fr) 94px}}
 
 .dg-completed{display:grid;gap:9px;margin-top:13px;padding-top:12px;border-top:1px solid #eee5d8}.dg-completed-head{display:flex;justify-content:space-between;gap:8px;color:#688568;font-size:12px;font-weight:900}.dg-task.is-done .dg-check{cursor:default}
+
+.dg-history-picker{display:grid;grid-template-columns:minmax(0,1fr) minmax(132px,.9fr);gap:8px;align-items:center;margin-top:11px}.dg-history-picker label{color:#625648;font-size:11px;font-weight:900}.dg-history-picker .dg-input{height:35px;font-size:11px}.dg-history-selected{margin:10px 0 7px;color:#688568;font-size:12px;font-weight:900}@media(max-width:420px){.dg-history-picker{grid-template-columns:1fr}.dg-history-picker .dg-input{width:100%}}
