@@ -179,6 +179,7 @@ test('index growth roster sorts the named heroes before other holdings', async (
       { symbol: '00997A', heroName: '張遼', holding: { symbol: '00997A' } },
       { symbol: 'QQQI', heroName: '諸葛亮', holding: { symbol: 'QQQI' } },
       { symbol: '國泰高股息B', heroName: '黃忠', holding: { symbol: '國泰高股息B' } },
+      { symbol: 'XQQI', heroName: '劉備', holding: { symbol: 'XQQI' } },
       { symbol: 'SPYI', heroName: '其他武將', holding: { symbol: 'SPYI' } }
     ];
     return sortCouncilRosterRows(rows, councilRosterGroups()[0]).map(row => row.symbol);
@@ -189,6 +190,7 @@ test('index growth roster sorts the named heroes before other holdings', async (
     '國泰高股息B',
     '00997A',
     '路博邁台灣5G',
+    'XQQI',
     'SPYI'
   ]);
 });
@@ -211,6 +213,33 @@ test('ordinary roster cards have a soft glow on both card and portrait frame', a
   });
   expect(result.cardGlow).not.toBe('none');
   expect(result.portraitGlow).not.toBe('none');
+});
+
+test('XQQI is assigned to Liu Bei in index growth with the optimized static portrait', async ({ page }) => {
+  await page.goto(dashboardUrl);
+  await page.evaluate(() => ensureMilitaryModule());
+  const result = await page.evaluate(async () => {
+    const row = { symbol: 'XQQI', heroName: '劉備', holding: { symbol: 'XQQI', name: 'XQQI', shares: 1, cost: 100, marketValue: 110 } };
+    const groups = councilRosterGroups();
+    const host = document.createElement('div');
+    host.innerHTML = renderCouncilRosterGroups([row], 100);
+    document.body.appendChild(host);
+    const card = host.querySelector('.council-roster-group .hero-card');
+    const image = card.querySelector('.hero-visual img');
+    try { await image.decode(); } catch (error) {}
+    return {
+      included: groups[0].keys.includes('XQQI'),
+      placedInGrowth: !!host.querySelector('.council-roster-group:first-child .hero-card'),
+      name: card.querySelector('.troop-name')?.textContent,
+      imageSource: image.getAttribute('src'),
+      imageWidth: image.naturalWidth
+    };
+  });
+  expect(result.included).toBe(true);
+  expect(result.placedInGrowth).toBe(true);
+  expect(result.name).toBe('劉備');
+  expect(result.imageSource).toContain(encodeURIComponent('劉備.webp'));
+  expect(result.imageWidth).toBe(512);
 });
 
 test('AVGW appears in options income as Lu Bu with the static portrait', async ({ page }) => {

@@ -599,7 +599,7 @@ function renderCouncilRoster(rows,el,assetSnapshot,dividendProjection){
 
 function councilRosterGroups(){
   return [
-    {label:'\u6307\u6578\u6210\u9577\u578b',keys:['QQQI','SPYI','00997A','國泰高股息B','路博邁台灣5G','施羅德台灣樂活中小基金 - A類型'],aliases:['QQQI','SPYI','00997A','國泰高股息','路博邁台灣5G','5G','施羅德中小基金A'],order:['QQQI','00997A','國泰高股息B','路博邁台灣5G','施羅德台灣樂活中小基金 - A類型','SPYI'],heroOrder:['曹操','諸葛亮','黃忠','張遼','龐統']},
+    {label:'\u6307\u6578\u6210\u9577\u578b',keys:['QQQI','SPYI','00997A','國泰高股息B','路博邁台灣5G','施羅德台灣樂活中小基金 - A類型','XQQI'],aliases:['QQQI','SPYI','00997A','國泰高股息','路博邁台灣5G','5G','施羅德中小基金A','XQQI'],order:['QQQI','00997A','國泰高股息B','路博邁台灣5G','施羅德台灣樂活中小基金 - A類型','XQQI','SPYI'],heroOrder:['曹操','諸葛亮','黃忠','張遼','龐統','劉備']},
     {label:'\u671f\u6b0a\u6536\u76ca\u578b',keys:['CHPY','AIPI','PLTY','AVGW'],aliases:['CHPY','AIPI','PLTY','AVGW'],order:['PLTY','AIPI','CHPY','AVGW']},
     {label:'\u9632\u79a6\u6536\u76ca\u578b',keys:['00985B','IAU','GDXW','GLDW','MLPI','00998A','施羅德收益成長A2'],aliases:['00985B','IAU','GDXW','GLDW','MLPI','00998A'],order:['00985B','施羅德收益成長A2','MLPI','00998A','IAU','GDXW','GLDW']}
   ];
@@ -901,6 +901,7 @@ var STATIC_HOLDING_AVATAR_FILES={
   'MLPI':'MLPI.webp',
   'PLTY':'呂布.webp',
   'AVGW':'AVGW呂布.webp',
+  'XQQI':'劉備.webp',
   'QQQI':'QQQI.webp',
   '國泰高股息B':'國泰高股息B.webp',
   '施羅德收益成長A2':'施羅德收益成長.webp',
