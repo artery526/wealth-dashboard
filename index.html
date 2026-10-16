@@ -5155,7 +5155,7 @@ var DEFAULT_MEDICAL_OPTIONS = {
   emotions: ['😎開心','🤔思考疑惑','🤕頭痛','😴想睡疲累','🥲難過','😡生氣','😮‍💨無奈','🫶感恩','😁豁然開朗'],
   causes: ['🫂情緒波動','🎅身體緊繃','🗣️不明頭痛','🦕身體病痛','🍔腸胃消化','☕咖啡&茶'],
   meds: ['✨EVE 三重','⚪EVE銀白','🎗️EVE黃金DX','🩹普拿疼加強錠','💊阿德比膠囊','🏥其他'],
-  painAreas: ['左眼窩','右眼窩','左額頭','中間額頭','右邊額頭','太陽穴','膏肓穴','無痛'],
+  painAreas: ['左半邊眼窩額頭','右半邊眼窩額頭','左後頸風池穴','右後頸風池穴','落枕膏肓穴'],
   tarots: ['未抽取','0.愚者','1.魔術師','2.​女祭司','3.皇后','4.國王 (皇帝)','5.教皇 (大祭司)','6.戀人','7.戰車','8.力量','9.隱士','10.命運之輪','11.正義','12.吊人','13.死神','14.節制','15.惡魔','16.高塔','17.星星','18.月亮','19.太陽','20.審判','21.世界','權杖1','權杖2','權杖3','權杖4','權杖5','權杖6','權杖7','權杖8','權杖9','權杖10','聖杯1','聖杯2','聖杯3','聖杯4','聖杯5','聖杯6','聖杯7','聖杯8','聖杯9','聖杯10','寶劍1','寶劍2','寶劍3','寶劍4','寶劍5','寶劍6','寶劍7','寶劍8','寶劍9','寶劍10','錢幣1','錢幣2','錢幣3','錢幣4','錢幣5','錢幣6','錢幣7','錢幣8','錢幣9','錢幣10'],
   positions: ['❌','正位','逆位'],
   oracles: ['❌','0.愚者','1.存在','2.內在的聲音','3.創造力','4.叛逆者','5.空','6.愛人','7.覺知','8.勇氣','9.單獨','10.改變','11.突破','12.新的洞見','13.蛻變','14.整合','15.制約','16.雷電','17.寧靜','18.前世','19.天真','20.超越幻象','21.完成','22.師父','火之1─源頭','火之2─可能性','火之3─正在經驗','火之4─參與','火之5─全然','火之6─成功','火之7─壓力','火之8─旅行','火之9─精疲力竭','火之10─壓抑','水之1─順著流走','水之2─友誼','水之3─慶祝','水之4─轉入內在','水之5─執著於過去','水之6─愛情夢','水之7─投射','水之8─放手','水之9─懶惰','水之10─和諧','雲之1─意識','雲之2─精神分裂','雲之3─封閉','雲之4─延緩','雲之5─比較','雲之6─重擔','雲之7 ─政治手腕','雲之8─罪惡感','雲之9─憂傷','雲之10─再生','彩虹之1─心智圓熟','彩虹之2 ─ 一個片刻接著一個片刻','彩虹之3─引導','彩虹之4─守財奴','彩虹之5─局外人','彩虹之6─妥協','彩虹之7─耐心','彩虹之8─平凡','彩虹之9─成熟','彩虹之10─四海一家'],
@@ -8377,12 +8377,9 @@ function renderMedicalPanel(){
       <form class="medical-form" id="medical-quick-form">
         <div class="medical-form-grid">
           <div class="medical-field">
-            <label for="medical-cause">起因</label>
-            <select class="medical-select" id="medical-cause"></select>
-          </div>
-          <div class="medical-field">
-            <label for="medical-pain-level">疼痛程度</label>
+            <label for="medical-pain-level">疼痛程度／持續時間</label>
             <select class="medical-select" id="medical-pain-level"></select>
+            <small style="display:block;margin-top:4px;color:var(--ink2);font-size:10px">半天內 ≤12 小時；整天 >12–24 小時；兩天 >24–48 小時；更久可於備註補充。</small>
           </div>
           <div class="medical-field" style="grid-column:1/-1">
             <label>疼痛部位（可複選）</label>
@@ -8395,6 +8392,10 @@ function renderMedicalPanel(){
           <div class="medical-field">
             <label for="medical-dose">服用藥量</label>
             <select class="medical-select" id="medical-dose"></select>
+          </div>
+          <div class="medical-field medical-notes-field" style="grid-column:1/-1">
+            <label for="medical-review-reason">檢討原因</label>
+            <textarea class="medical-textarea" id="medical-review-reason" maxlength="500" rows="2" placeholder="記錄這次可能的原因或事後檢討..."></textarea>
           </div>
           <div class="medical-field medical-notes-field" style="grid-column:1/-1">
             <div class="medical-notes-head"><label for="medical-notes">備註／觀察</label><button class="medical-notes-toggle" id="medical-notes-toggle" type="button" aria-expanded="false" aria-controls="medical-notes">展開</button></div>
@@ -8594,10 +8595,14 @@ function toggleMedicalNotes(){
 }
 
 var MEDICAL_PAIN_LEVEL_OPTIONS=[
-  {value:'⚪輕度',label:'⚪輕度'},
-  {value:'🔵中度',label:'🔵中度'},
-  {value:'🟡重度',label:'🟡重度'},
-  {value:'🔴嚴重',label:'🔴嚴重'}
+  {value:'⚪輕度|整天',label:'⚪輕度，整天'},
+  {value:'⚪輕度|半天內',label:'⚪輕度，半天內'},
+  {value:'🔵中度|整天',label:'🔵中度，整天'},
+  {value:'🔵中度|半天內',label:'🔵中度，半天內'},
+  {value:'🟡重度|整天',label:'🟡重度，整天'},
+  {value:'🟡重度|半天內',label:'🟡重度，半天內'},
+  {value:'🔴嚴重|整天',label:'🔴嚴重，整天'},
+  {value:'🔴嚴重|兩天',label:'🔴嚴重，兩天'}
 ];
 
 function medicalPainLevelInfo(value){
@@ -9398,13 +9403,11 @@ async function loadMedicalOptions(){
     var cached=await loadMedicalNasCache_();
     var data=cached?{options:cached.options}:await medicalPost({_action:'getOptions'});
     var options=data.options||{};
-    var removedPainAreas=['風池穴','枕下肌','上斜方肌','腸胃','胸大肌'];
-    var configuredPainAreas=options.painAreas&&options.painAreas.length?options.painAreas:DEFAULT_MEDICAL_OPTIONS.painAreas;
     medicalOptionsCache={
       emotions: options.emotions&&options.emotions.length?options.emotions:DEFAULT_MEDICAL_OPTIONS.emotions,
       causes: options.causes&&options.causes.length?options.causes:DEFAULT_MEDICAL_OPTIONS.causes,
       meds: options.meds&&options.meds.length?options.meds:DEFAULT_MEDICAL_OPTIONS.meds,
-      painAreas: configuredPainAreas.filter(function(area){return removedPainAreas.indexOf(area)<0;}),
+      painAreas: DEFAULT_MEDICAL_OPTIONS.painAreas.slice(),
       tarots: options.tarots&&options.tarots.length?options.tarots:DEFAULT_MEDICAL_OPTIONS.tarots,
       positions: options.positions&&options.positions.length?options.positions:DEFAULT_MEDICAL_OPTIONS.positions,
       oracles: options.oracles&&options.oracles.length?options.oracles:DEFAULT_MEDICAL_OPTIONS.oracles,
@@ -9437,13 +9440,12 @@ async function initMedicalQuickForm(){
   syncMedicalHeaderTime();
   var notesToggle=document.getElementById('medical-notes-toggle');
   if(notesToggle)notesToggle.addEventListener('click',toggleMedicalNotes);
-  fillMedicalSelect('medical-pain-level',MEDICAL_PAIN_LEVEL_OPTIONS,'選擇疼痛程度');
+  fillMedicalSelect('medical-pain-level',MEDICAL_PAIN_LEVEL_OPTIONS,'選擇程度與時間');
   fillMedicalSelect('medical-dose',Array.from({length:7},function(_,i){return i+'顆';}),'選擇藥量');
   form.addEventListener('submit',submitMedicalQuickRecord);
 
   var options=await loadMedicalOptions();
   initPainAreaChips(options.painAreas);
-  fillMedicalSelect('medical-cause',options.causes,'選擇起因');
   fillMedicalSelect('medical-med',options.meds,'選擇藥物');
   var usingFallback=medicalOptionsCache===DEFAULT_MEDICAL_OPTIONS;
   setMedicalStatus(usingFallback?'已載入備援選項，可直接快記':'已載入設定選項','ok');
@@ -9458,11 +9460,13 @@ async function submitMedicalQuickRecord(e){
   var time=timeValue.slice(11,16);
   var painAreas=Array.from(document.querySelectorAll('#medical-pain-area-group .pain-chip.active')).map(function(el){return el.dataset.value;});
   var painLevelValue=document.getElementById('medical-pain-level').value;
-  var cause=document.getElementById('medical-cause').value;
   var med=document.getElementById('medical-med').value;
   var dose=document.getElementById('medical-dose').value;
   var notes=(document.getElementById('medical-notes')||{}).value||'';
-  var painLevel=painLevelValue||'';
+  var reviewReason=(document.getElementById('medical-review-reason')||{}).value||'';
+  var painLevelParts=painLevelValue.split('|');
+  var painLevel=painLevelParts[0]||'';
+  var painDuration=painLevelParts[1]||'';
 
   if(!date||!time){
     setMedicalStatus('請確認紀錄時間','err');
@@ -9480,7 +9484,8 @@ async function submitMedicalQuickRecord(e){
       time:time,
       painAreas:painAreas,
       painLevel:painLevel,
-      causes:cause?[cause]:[],
+      painDuration:painDuration,
+      reviewReason:reviewReason,
       meds:med?[med]:[],
       medDose:dose,
       notes:notes
@@ -20647,13 +20652,17 @@ function mpmRender(records){
     var medDose = String(r.medDose||'').trim();
     var medTxt  = (!meds||meds.includes('未用藥')) ? '' : ('💊 '+meds+(medDose?'（'+medDose+'）':''));
     var areas   = String(r.painAreas||'').trim();
+    var painDuration = String(r.painDuration||'').trim();
+    var reviewReason = String(r.reviewReason||'').trim();
     var notes   = String(r.notes||'').trim();
     var cause   = String(r.cause||r.causes||'').trim();
 
     var badges  = '';
     if(emotion)  badges += '<span class="mpm-badge">'+mpmEsc(emotion)+'</span>';
     if(lvlTxt)   badges += '<span class="mpm-badge '+level.className+'">'+mpmEsc(lvlTxt)+'</span>';
+    if(painDuration)badges += '<span class="mpm-badge">⏱️ '+mpmEsc(painDuration)+'</span>';
     if(areas)    badges += '<span class="mpm-badge">📍 '+mpmEsc(areas)+'</span>';
+    if(reviewReason)badges += '<span class="mpm-badge">🪞 '+mpmEsc(reviewReason)+'</span>';
     if(cause)    badges += '<span class="mpm-badge">⚡ '+mpmEsc(cause)+'</span>';
     if(medTxt)   badges += '<span class="mpm-badge">'+mpmEsc(medTxt)+'</span>';
 
