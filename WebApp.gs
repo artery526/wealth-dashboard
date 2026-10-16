@@ -10876,7 +10876,9 @@ var MEDICAL_RECORD_COLUMNS = [
   '疼痛部位',
   '疼痛程度',
   '緩解時間',
-  '備註／觀察'
+  '備註／觀察',
+  '檢討原因',
+  '疼痛持續時間'
 ];
 var MEDICAL_CARD_STATS_COLUMNS = [
   '月份',
@@ -10927,7 +10929,9 @@ function getMedicalRecords_() {
       medDose: String(row[4] || ''),
       painAreas: String(row[5] || ''),
       painLevel: row[6] !== '' ? String(row[6]).trim() : '',
-      notes: String(row[8] || '')
+      notes: String(row[8] || ''),
+      reviewReason: String(row[9] || ''),
+      painDuration: String(row[10] || '')
     };
   }).filter(function(record) {
     return record.recordTime;
@@ -11738,7 +11742,9 @@ function buildMedicalRecordRow_(body) {
     normalizeMedicalList_(body.painAreas),
     painLevel,
     '',
-    body.notes || ''
+    body.notes || '',
+    body.reviewReason || '',
+    body.painDuration || ''
   ];
 }
 
