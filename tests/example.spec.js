@@ -179,7 +179,7 @@ test('index growth roster sorts the named heroes before other holdings', async (
       { symbol: '00997A', heroName: '張遼', holding: { symbol: '00997A' } },
       { symbol: 'QQQI', heroName: '諸葛亮', holding: { symbol: 'QQQI' } },
       { symbol: '國泰高股息B', heroName: '黃忠', holding: { symbol: '國泰高股息B' } },
-      { symbol: 'XQQI', heroName: '劉備', holding: { symbol: 'XQQI' } },
+      { symbol: 'XQQI', heroName: '周瑜', holding: { symbol: 'XQQI' } },
       { symbol: 'SPYI', heroName: '其他武將', holding: { symbol: 'SPYI' } }
     ];
     return sortCouncilRosterRows(rows, councilRosterGroups()[0]).map(row => row.symbol);
@@ -215,11 +215,11 @@ test('ordinary roster cards have a soft glow on both card and portrait frame', a
   expect(result.portraitGlow).not.toBe('none');
 });
 
-test('XQQI is assigned to Liu Bei in index growth with the optimized static portrait', async ({ page }) => {
+test('XQQI is assigned to Zhou Yu in index growth with the optimized static portrait', async ({ page }) => {
   await page.goto(dashboardUrl);
   await page.evaluate(() => ensureMilitaryModule());
   const result = await page.evaluate(async () => {
-    const row = { symbol: 'XQQI', heroName: '劉備', holding: { symbol: 'XQQI', name: 'XQQI', shares: 1, cost: 100, marketValue: 110 } };
+    const row = { symbol: 'XQQI', heroName: '周瑜', holding: { symbol: 'XQQI', name: 'XQQI', shares: 1, cost: 100, marketValue: 110 } };
     const groups = councilRosterGroups();
     const host = document.createElement('div');
     host.innerHTML = renderCouncilRosterGroups([row], 100);
@@ -237,8 +237,8 @@ test('XQQI is assigned to Liu Bei in index growth with the optimized static port
   });
   expect(result.included).toBe(true);
   expect(result.placedInGrowth).toBe(true);
-  expect(result.name).toBe('劉備');
-  expect(result.imageSource).toContain(encodeURIComponent('劉備.webp'));
+  expect(result.name).toBe('周瑜');
+  expect(result.imageSource).toContain(encodeURIComponent('周瑜.webp'));
   expect(result.imageWidth).toBe(512);
 });
 
