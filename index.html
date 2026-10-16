@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <link rel="manifest" href="./manifest.json">
+<link rel="stylesheet" href="./daily-growth.css?v=20261016.1">
 <meta name="theme-color" content="#06131d">
 <title>⚔️ 帝國指揮所</title>
 <script>
@@ -6637,6 +6638,7 @@ function openPanel(key,initialTab){
   document.getElementById('panel').classList.toggle('medical-wide',key==='medical');
   document.getElementById('panel').classList.toggle('stars-wide',key==='stars');
   document.getElementById('panel').classList.toggle('store-wide',key==='store');
+  document.getElementById('panel').classList.toggle('daily-growth-wide',key==='daily-growth');
   document.getElementById('overlay').classList.toggle('medical-overlay',key==='medical');
   currentPanel=key;
   if(key==='finance')renderFinancePanel(initialTab);
@@ -6647,6 +6649,7 @@ function openPanel(key,initialTab){
   else if(key==='medical'){setEmpireCardApiPendingStatus('medical');renderMedicalPanel();}
   else if(key==='stars'){setEmpireCardApiPendingStatus('stars');renderStarsPanel();}
   else if(key==='store'){setEmpireCardApiPendingStatus('store');renderStorePanel(initialTab);}
+  else if(key==='daily-growth')renderDailyGrowthPanel();
   document.getElementById('overlay').classList.add('open');
 }
 
@@ -6664,6 +6667,7 @@ function closePanel(){
   document.getElementById('panel').classList.remove('medical-wide');
   document.getElementById('panel').classList.remove('stars-wide');
   document.getElementById('panel').classList.remove('store-wide');
+  document.getElementById('panel').classList.remove('daily-growth-wide');
   document.querySelectorAll('.card').forEach(c=>c.classList.remove('active'));
   currentPanel=null;
 }
@@ -16949,6 +16953,12 @@ initAdvisorDuoVideoPlayback();
           </div>
         </section>
         <section class="advisor-menu-section">
+          <button class="advisor-menu-toggle" type="button" onclick="toggleAdvisorMenuGroup(this)" aria-expanded="false"><span class="advisor-menu-mark">成</span>每日成長<span class="advisor-menu-caret">▼</span></button>
+          <div class="advisor-btn-group">
+            <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'daily-growth')"><span class="advisor-btn-tag">🌱</span>每日成長</button>
+          </div>
+        </section>
+        <section class="advisor-menu-section">
           <button class="advisor-menu-toggle" type="button" onclick="toggleAdvisorMenuGroup(this)" aria-expanded="false"><span class="advisor-menu-mark">王</span>王府<span class="advisor-menu-caret">▼</span></button>
           <div class="advisor-btn-group">
             <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'wall')"><span class="advisor-btn-tag">王</span>打開王府</button>
@@ -20808,10 +20818,11 @@ function mpmRender(records){
   }
 })();
 </script>
+<script src="./daily-growth.js?v=20261016.1"></script>
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('./sw.js?v=20261013-shell-v17', {updateViaCache:'none'}).then(function (registration) {
+    navigator.serviceWorker.register('./sw.js?v=20261016-daily-growth1', {updateViaCache:'none'}).then(function (registration) {
       return registration.update();
     }).catch(function (error) {
       console.warn('Empire Service Worker registration failed', error);

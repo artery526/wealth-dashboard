@@ -1,0 +1,85 @@
+(function(){
+  var growthState={data:null,busy:false,message:'',error:false};
+  var growthCategories=['健康','學習','生活','人際'];
+  var growthAttribute={健康:'活力',學習:'專注',生活:'紀律',人際:'連結感'};
+
+  function growthToday(){
+    var parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+    var values={};parts.forEach(function(part){if(part.type!=='literal')values[part.type]=part.value;});
+    return values.year+'-'+values.month+'-'+values.day;
+  }
+  function growthEscape(value){return String(value==null?'':value).replace(/[&<>"']/g,function(char){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char];});}
+  function growthLevel(total){
+    var level=1,floor=0,next=10;
+    while(total>=next){level++;floor=next;next+=5*(level-1);}
+    return {level:level,floor:floor,next:next,progress:Math.max(0,Math.min(100,(total-floor)/(next-floor)*100)),remaining:Math.max(0,next-total)};
+  }
+  function growthStatus(message,isError){growthState.message=message||'';growthState.error=!!isError;}
+  function growthEventsForToday(){
+    var today=growthToday();var result={};
+    (growthState.data&&growthState.data.events||[]).forEach(function(event){if(event.date===today&&event.done)result[event.taskId]=true;});
+    return result;
+  }
+  function growthRenderMessage(){
+    if(!growthState.message)return '';
+    return '<div class="dg-message'+(growthState.error?' is-error':'')+'" role="status">'+growthEscape(growthState.message)+'</div>';
+  }
+  function growthRender(){
+    var body=document.getElementById('p-body');if(!body)return;
+    if(!growthState.data){body.innerHTML='<div class="dg-page">'+growthRenderMessage()+'</div>';return;}
+    var data=growthState.data,tasks=data.tasks||[],events=data.events||[],today=growthToday(),todayDone=growthEventsForToday(),totalDone=Object.keys(todayDone).length,level=growthLevel(Number(data.totalXp)||0);
+    var doneCount=events.filter(function(event){return event.date===today&&event.done;}).length;
+    var attributeNames=['活力','專注','紀律','連結感'];
+    var taskHtml=tasks.length?tasks.map(function(task){
+      var done=!!todayDone[task.id];
+      return '<article class="dg-task'+(done?' is-done':'')+'">'
+        +'<button class="dg-check" type="button" '+(growthState.busy?'disabled':'')+' onclick="toggleDailyGrowthCompletion(\''+growthEscape(task.id)+'\','+(!done)+')" aria-label="'+(done?'取消':'完成')+growthEscape(task.name)+'">'+(done?'✓':'')+'</button>'
+        +'<div><div class="dg-task-name">'+growthEscape(task.name)+'</div><div class="dg-task-meta">'+growthEscape(task.category)+' · 培養 '+growthEscape(task.attribute||growthAttribute[task.category]||'紀律')+'</div></div>'
+        +'<span class="dg-task-xp">'+(done?'已完成':'+1 經驗')+'</span></article>';
+    }).join(''):'<div class="dg-empty">還沒有成就，新增一項今天想完成的小事吧。</div>';
+    var attributes=data.attributes||{};
+    var attributeHtml=attributeNames.map(function(name){var value=Number(attributes[name])||0;return '<div class="dg-attribute"><div class="dg-attribute-name">'+name+'</div><div class="dg-attribute-track"><span style="width:'+Math.min(100,value*5)+'%"></span></div><div class="dg-attribute-value">'+value+'</div></div>';}).join('');
+    var week=[];for(var i=6;i>=0;i--){var date=new Date(new Date(today+'T12:00:00+08:00').getTime()-i*86400000);week.push(date.toISOString().slice(0,10));}
+    var weekCounts=week.map(function(date){return events.filter(function(event){return event.date===date&&event.done;}).length;});
+    var maxCount=Math.max.apply(Math,[1].concat(weekCounts));
+    var historyHtml=week.map(function(date,index){var height=weekCounts[index]?Math.max(12,weekCounts[index]/maxCount*100):5;return '<div class="dg-day"><div class="dg-day-bar-wrap"><span class="dg-day-bar" style="height:'+height+'%" title="'+date+' 完成 '+weekCounts[index]+' 項"></span></div><span class="dg-day-label">'+Number(date.slice(8,10))+'日</span></div>';}).join('');
+    body.innerHTML='<div class="dg-page">'
+      +growthRenderMessage()
+      +'<section class="dg-hero"><div><div class="dg-eyebrow">YOUR LITTLE ADVENTURE · 每一步都算數</div><div class="dg-greeting">今天也為自己種下一點成長</div><div class="dg-date">'+today.replace(/-/g,' / ')+'　·　完成 '+doneCount+' 項今日成就</div></div>'
+      +'<div class="dg-level"><div class="dg-level-badge"><span aria-hidden="true">🌱</span> Lv. '+level.level+' 新芽冒險者</div><div class="dg-xp-line">累積 '+(Number(data.totalXp)||0)+' 經驗 · 下一級還差 '+level.remaining+' 點</div><div class="dg-progress" aria-label="升級進度"><span style="width:'+level.progress+'%"></span></div></div></section>'
+      +'<div class="dg-layout"><section class="dg-card"><div class="dg-card-head"><div><div class="dg-card-title">☀️ 今日成就</div><div class="dg-card-note">完成一項，累積 1 點經驗與對應屬性</div></div><span class="dg-count">'+doneCount+' / '+tasks.length+' 完成</span></div>'
+      +'<div class="dg-task-list">'+taskHtml+'</div>'
+      +'<form class="dg-add-form" onsubmit="submitDailyGrowthTask(event)"><input class="dg-input" id="dg-new-task" maxlength="40" placeholder="新增一件想完成的小事" aria-label="新增成就名稱" required><select class="dg-select" id="dg-new-category" aria-label="成就分類">'+growthCategories.map(function(category){return '<option value="'+category+'">'+category+' · '+growthAttribute[category]+'</option>';}).join('')+'</select><button class="dg-button" type="submit" '+(growthState.busy?'disabled':'')+'>＋ 新增成就</button></form>'
+      +'</section><aside class="dg-side"><section class="dg-card"><div class="dg-card-head"><div><div class="dg-card-title">🌼 主角屬性</div><div class="dg-card-note">每次完成都會累積對應成長</div></div></div><div class="dg-attributes">'+attributeHtml+'</div></section>'
+      +'<section class="dg-card"><div class="dg-card-head"><div><div class="dg-card-title">📅 最近七日</div><div class="dg-card-note">每日完成成就數</div></div></div><div class="dg-history">'+historyHtml+'</div><div class="dg-history-note">這週累積 '+weekCounts.reduce(function(sum,value){return sum+value;},0)+' 點經驗</div></section></aside></div></div>';
+  }
+  async function growthLoad(){
+    if(!API_URL){growthStatus('尚未設定網站 API，請先完成城門設定。',true);growthRender();return;}
+    growthStatus('正在整理你的成長紀錄…',false);growthRender();
+    try{growthState.data=await apiGet({action:'dailyGrowth'},20000);growthStatus('',false);growthRender();}
+    catch(error){growthStatus('讀取成長紀錄失敗：'+(error&&error.message||'請稍後重試'),true);growthRender();}
+  }
+  window.renderDailyGrowthPanel=function(){
+    setPanelHead('🌱','Daily Growth · Little Steps','每日成長');
+    var extra=document.getElementById('p-extra');if(extra)extra.innerHTML='<button class="store-header-date-button" type="button" onclick="refreshDailyGrowth()" aria-label="重新整理成長紀錄" title="重新整理">↻</button>';
+    var body=document.getElementById('p-body');if(body)body.innerHTML='<div class="dg-page"><div class="dg-message">正在打開每日成長…</div></div>';
+    growthLoad();
+  };
+  window.refreshDailyGrowth=function(){growthLoad();};
+  window.toggleDailyGrowthCompletion=async function(taskId,done){
+    if(growthState.busy)return;growthState.busy=true;growthRender();
+    try{await apiGet({action:'dailyGrowthSetCompletion',date:growthToday(),taskId:taskId,done:done?'true':'false'},20000);growthStatus(done?'完成一項，經驗與屬性已更新 🌱':'已取消這項成就，經驗同步調整。',false);growthState.data=await apiGet({action:'dailyGrowth'},20000);}
+    catch(error){growthStatus('儲存失敗：'+(error&&error.message||'請稍後重試'),true);}
+    finally{growthState.busy=false;growthRender();}
+  };
+  window.submitDailyGrowthTask=async function(event){
+    if(event&&event.preventDefault)event.preventDefault();
+    var input=document.getElementById('dg-new-task'),select=document.getElementById('dg-new-category');
+    var name=String(input&&input.value||'').trim(),category=String(select&&select.value||'');
+    if(!name||growthState.busy)return;
+    growthState.busy=true;growthRender();
+    try{await apiGet({action:'dailyGrowthTaskCreate',name:name,category:category},20000);growthStatus('新成就已加入清單。',false);growthState.data=await apiGet({action:'dailyGrowth'},20000);}
+    catch(error){growthStatus('新增失敗：'+(error&&error.message||'請稍後重試'),true);}
+    finally{growthState.busy=false;growthRender();}
+  };
+})();
