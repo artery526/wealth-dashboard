@@ -108,6 +108,8 @@
   }
   window.renderDailyGrowthPanel=function(){
     setPanelHead('🌱','Daily Growth · Little Steps','每日成長');
+    var tabs=document.getElementById('p-tabs');
+    if(tabs){tabs.classList.remove('finance-panel-tabs','is-open');tabs.classList.add('panel-tabs-hidden');tabs.innerHTML='';}
     var extra=document.getElementById('p-extra');if(extra)extra.innerHTML='<button class="store-header-date-button" type="button" onclick="refreshDailyGrowth()" aria-label="重新整理成長紀錄" title="重新整理">↻</button>';
     var body=document.getElementById('p-body');if(body)body.innerHTML='<div class="dg-page"><div class="dg-message">正在打開每日成長…</div></div>';
     growthLoad();
