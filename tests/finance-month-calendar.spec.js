@@ -21,6 +21,7 @@ test('finance monthly calendar groups daily income and expenses with totals', as
     const cell = document.getElementById('finance-calendar-day-' + key);
     return {
       text: cell.textContent,
+      countText: cell.querySelector('.finance-month-calendar-counts').textContent,
       expenseColor: getComputedStyle(cell.querySelector('.finance-month-calendar-expense')).color,
       incomeColor: getComputedStyle(cell.querySelector('.finance-month-calendar-income')).color,
       title: document.querySelector('.finance-month-calendar-title').textContent
@@ -28,8 +29,8 @@ test('finance monthly calendar groups daily income and expenses with totals', as
   });
 
   expect(result.title).toContain('本月收支');
-  expect(result.text).toContain('支2');
-  expect(result.text).toContain('收1');
+  expect(result.countText).toBe('21');
+  expect(result.countText).not.toMatch(/[支收]/);
   expect(result.text).toContain('$500');
   expect(result.text).toContain('$900');
   expect(result.text).not.toContain('$5,000');

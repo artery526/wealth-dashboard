@@ -12949,7 +12949,7 @@ function renderFinanceMonthlyCalendar(rows,isCached){
   for(var date=1;date<=dayCount;date++){
     var entry=daily[date]||{expenseCount:0,expenseAmount:0,incomeCount:0,incomeAmount:0};
     var dateKey=year+'-'+String(month).padStart(2,'0')+'-'+String(date).padStart(2,'0');
-    var counts=(entry.expenseCount?'<span class="finance-month-calendar-expense">支'+entry.expenseCount+'</span>':'')+(entry.incomeCount?'<span class="finance-month-calendar-income">收'+entry.incomeCount+'</span>':'');
+    var counts=(entry.expenseCount?'<span class="finance-month-calendar-expense">'+entry.expenseCount+'</span>':'')+(entry.incomeCount?'<span class="finance-month-calendar-income">'+entry.incomeCount+'</span>':'');
     var amounts=(entry.expenseCount?'<span class="finance-month-calendar-expense">−'+fmtN(entry.expenseAmount)+'</span>':'')+(entry.incomeCount?'<span class="finance-month-calendar-income">+'+fmtN(entry.incomeAmount)+'</span>':'');
     var aria=date+'日，支出 '+entry.expenseCount+' 筆 '+fmtFull(entry.expenseAmount)+'，收入 '+entry.incomeCount+' 筆 '+fmtFull(entry.incomeAmount);
     cells.push('<div class="finance-month-calendar-day'+(dateKey===todayText?' today':'')+'" id="finance-calendar-day-'+dateKey+'" aria-label="'+esc(aria)+'"><div class="finance-month-calendar-date">'+date+'</div><div class="finance-month-calendar-counts">'+(counts||'&nbsp;')+'</div><div class="finance-month-calendar-amounts">'+(amounts||'&nbsp;')+'</div></div>');
