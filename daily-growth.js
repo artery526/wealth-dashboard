@@ -1,5 +1,6 @@
 (function(){
   var growthState={data:null,busy:false,message:'',error:false,dataVersion:0,readRequestId:0,historyDate:'',calendarMonth:''};
+  var growthCacheKey='daily-growth-cache-v1';
   var growthCategories=['健康','學習','生活','人際'];
   var growthAttribute={健康:'活力',學習:'專注',生活:'紀律',人際:'連結感'};
 
@@ -24,6 +25,13 @@
     return '<section class="dg-card dg-calendar-card"><div class="dg-cal-head"><button class="dg-cal-nav" type="button" '+(month<=firstMonth?'disabled':'')+' onclick="changeDailyGrowthCalendarMonth(-1)" aria-label="上一個月">‹</button><div><div class="dg-card-title">🗓️ 成長月曆</div><div class="dg-card-note">點日期查看當天成就</div></div><strong>'+year+' 年 '+monthNumber+' 月</strong><button class="dg-cal-nav" type="button" '+(month>=lastMonth?'disabled':'')+' onclick="changeDailyGrowthCalendarMonth(1)" aria-label="下一個月">›</button></div><div class="dg-calendar-grid dg-weekdays">'+['日','一','二','三','四','五','六'].map(function(day){return '<span>'+day+'</span>';}).join('')+'</div><div class="dg-calendar-grid">'+cells+'</div><div class="dg-cal-legend"><span><i></i>已完成成就</span><span>目前查看：'+historyDate.replace(/-/g,' / ')+'</span></div></section>';
   }
   function growthEscape(value){return String(value==null?'':value).replace(/[&<>"']/g,function(char){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char];});}
+  function growthReadCache(){
+    try{var cached=JSON.parse(localStorage.getItem(growthCacheKey)||'null');if(cached&&cached.version===1&&cached.data&&Array.isArray(cached.data.tasks)&&Array.isArray(cached.data.events))return cached.data;}catch(ignore){}
+    return null;
+  }
+  function growthWriteCache(data){
+    try{localStorage.setItem(growthCacheKey,JSON.stringify({version:1,savedAt:Date.now(),data:data}));}catch(ignore){}
+  }
   function growthLevel(total){
     var level=1,floor=0,next=10;
     while(total>=next){level++;floor=next;next+=5*(level-1);}
@@ -86,12 +94,13 @@
   }
   async function growthLoad(){
     if(!API_URL){growthStatus('尚未設定網站 API，請先完成城門設定。',true);growthRender();return;}
+    if(!growthState.data)growthState.data=growthReadCache();
     var requestId=++growthState.readRequestId,dataVersion=growthState.dataVersion;
-    growthStatus(growthState.data?'正在同步最新成長紀錄…':'正在整理你的成長紀錄…',false);growthRender();
+    growthStatus(growthState.data?'正在背景同步最新成長紀錄…':'正在整理你的成長紀錄…',false);growthRender();
     try{
       var latest=await apiGet({action:'dailyGrowth'},20000);
       if(requestId!==growthState.readRequestId||dataVersion!==growthState.dataVersion)return;
-      growthState.data=latest;growthStatus('',false);growthRender();
+      growthState.data=latest;growthWriteCache(latest);growthStatus('',false);growthRender();
     }catch(error){
       if(requestId!==growthState.readRequestId||dataVersion!==growthState.dataVersion)return;
       growthStatus('讀取成長紀錄失敗：'+(error&&error.message||'請稍後重試'),true);growthRender();
@@ -127,6 +136,7 @@
       var data=growthState.data,today=growthToday(),events=data.events||(data.events=[]),eventIndex=events.findIndex(function(event){return event.date===today&&event.taskId===taskId;}),wasDone=eventIndex>=0&&events[eventIndex].done===true;
       if(eventIndex>=0)events[eventIndex].done=!!done;
       else events.push({date:today,taskId:taskId,done:!!done});
+      growthWriteCache(data);
       if(!!done!==wasDone){
         data.totalXp=Math.max(0,(Number(data.totalXp)||0)+(done?1:-1));
         var task=(data.tasks||[]).find(function(item){return item.id===taskId;}),attribute=task&&(task.attribute||growthAttribute[task.category]);
@@ -137,7 +147,7 @@
         var latest=await apiGet({action:'dailyGrowth',forceRefresh:'1'},20000);
         var latestHasCompletion=(latest.events||[]).some(function(event){return event.date===today&&event.taskId===taskId&&event.done===true;});
         if(readRequestId===growthState.readRequestId&&writeDataVersion===growthState.dataVersion){
-          if(done===latestHasCompletion){growthState.data=latest;growthStatus(done?'完成一項，經驗與屬性已更新 🌱':'已取消這項成就，經驗同步調整。',false);}
+          if(done===latestHasCompletion){growthState.data=latest;growthWriteCache(latest);growthStatus(done?'完成一項，經驗與屬性已更新 🌱':'已取消這項成就，經驗同步調整。',false);}
           else growthStatus('成就已記錄，清單正在同步中…',false);
         }
       }
@@ -152,7 +162,7 @@
     var name=String(input&&input.value||'').trim(),category=String(select&&select.value||'');
     if(!name||growthState.busy)return;
     growthState.busy=true;growthRender();
-    try{await apiGet({action:'dailyGrowthTaskCreate',name:name,category:category},20000);growthStatus('新成就已加入清單。',false);growthState.data=await apiGet({action:'dailyGrowth'},20000);}
+    try{await apiGet({action:'dailyGrowthTaskCreate',name:name,category:category},20000);growthStatus('新成就已加入清單。',false);growthState.data=await apiGet({action:'dailyGrowth'},20000);growthWriteCache(growthState.data);}
     catch(error){growthStatus('新增失敗：'+(error&&error.message||'請稍後重試'),true);}
     finally{growthState.busy=false;growthRender();}
   };
