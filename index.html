@@ -5565,7 +5565,7 @@ function wealthApiRequestPriority(action){
   if(/^(yearly|history)$/.test(action))return 8;
   if(/^(ledgerRequestStatus|advisorDividendMemo)$/.test(action))return 7;
   // 國庫現況是進入財政頁面的主資料；不可被戰情／行情／星象的背景預抓堵在佇列中。
-  if(/^(accounts|monthly|transactions|assetSnapshot|bills)$/.test(action))return 7;
+  if(/^(accounts|monthly|transactions|financeCalendarSummary|assetSnapshot|bills)$/.test(action))return 7;
   if(action==='pledgeLoans')return 7;
   return 0;
 }
@@ -12909,22 +12909,24 @@ function writeBookingRecentCache(rows){
   try{localStorage.setItem(bookingRecentCacheKey(),JSON.stringify({savedAt:Date.now(),rows:rows.slice(0,50)}));}catch(e){}
 }
 
-function financeCalendarDayFromTxnDate(dateText,year,month){
-  var raw=String(dateText||'').trim().replace(/-/g,'/');
-  var match=raw.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
-  var txnYear=year,txnMonth=month,day=0;
-  if(match){txnYear=Number(match[1]);txnMonth=Number(match[2]);day=Number(match[3]);}
-  else{
-    match=raw.match(/^(\d{1,2})\/(\d{1,2})$/);
-    if(!match)return 0;
-    txnMonth=Number(match[1]);day=Number(match[2]);
-  }
-  if(txnYear!==year||txnMonth!==month||day<1||day>31)return 0;
-  var check=new Date(year,month-1,day);
-  return check.getFullYear()===year&&check.getMonth()===month-1&&check.getDate()===day?day:0;
+var FINANCE_MONTH_CALENDAR_CACHE_PREFIX='wealth_finance_month_calendar_v1_';
+
+function financeMonthCalendarCacheKey(){
+  return FINANCE_MONTH_CALENDAR_CACHE_PREFIX+String(currentYM()||'unknown');
 }
 
-function renderFinanceMonthlyCalendar(rows,isCached){
+function readFinanceMonthCalendarCache(){
+  try{
+    var cached=JSON.parse(localStorage.getItem(financeMonthCalendarCacheKey())||'null');
+    return cached&&cached.summary&&cached.summary.ym===currentYM()?cached.summary:null;
+  }catch(e){return null}
+}
+
+function writeFinanceMonthCalendarCache(summary){
+  try{localStorage.setItem(financeMonthCalendarCacheKey(),JSON.stringify({savedAt:Date.now(),summary:summary}));}catch(e){}
+}
+
+function renderFinanceMonthlyCalendar(summary,isCached,warning){
   var host=document.getElementById('finance-month-calendar');
   if(!host)return;
   var ym=String(currentYM()||'').split('/');
@@ -12932,36 +12934,43 @@ function renderFinanceMonthlyCalendar(rows,isCached){
   if(!year||!month){host.innerHTML='';return;}
   var monthStart=new Date(year,month-1,1);
   var dayCount=new Date(year,month,0).getDate();
-  var daily={};
-  (Array.isArray(rows)?rows:[]).forEach(function(txn){
-    var type=String(txn&&txn.type||'');
-    var kind=type==='支出'?'expense':(type==='收入'||type==='配息收入'?'income':'');
-    if(!kind)return;
-    var day=financeCalendarDayFromTxnDate(txn.date,year,month);
-    if(!day)return;
-    var item=daily[day]||(daily[day]={expenseCount:0,expenseAmount:0,incomeCount:0,incomeAmount:0});
-    if(kind==='expense'){item.expenseCount++;item.expenseAmount+=Math.abs(Number(txn.amount)||0);}
-    else{item.incomeCount++;item.incomeAmount+=Math.abs(Number(txn.amount)||0);}
-  });
+  var daily=summary&&summary.ym===currentYM()&&summary.days&&typeof summary.days==='object'?summary.days:{};
   var cells=['<div class="finance-month-calendar-weekday">日</div>','<div class="finance-month-calendar-weekday">一</div>','<div class="finance-month-calendar-weekday">二</div>','<div class="finance-month-calendar-weekday">三</div>','<div class="finance-month-calendar-weekday">四</div>','<div class="finance-month-calendar-weekday">五</div>','<div class="finance-month-calendar-weekday">六</div>'];
   for(var blank=0;blank<monthStart.getDay();blank++)cells.push('<div class="finance-month-calendar-day empty" aria-hidden="true"></div>');
   var todayText=today();
   for(var date=1;date<=dayCount;date++){
-    var entry=daily[date]||{expenseCount:0,expenseAmount:0,incomeCount:0,incomeAmount:0};
+    var entry=daily[date]||daily[String(date)]||{expenseCount:0,expenseAmount:0,incomeCount:0,incomeAmount:0};
     var dateKey=year+'-'+String(month).padStart(2,'0')+'-'+String(date).padStart(2,'0');
     var counts=(entry.expenseCount?'<span class="finance-month-calendar-expense">'+entry.expenseCount+'</span>':'')+(entry.incomeCount?'<span class="finance-month-calendar-income">'+entry.incomeCount+'</span>':'');
     var amounts=(entry.expenseCount?'<span class="finance-month-calendar-expense">−'+fmtN(entry.expenseAmount)+'</span>':'')+(entry.incomeCount?'<span class="finance-month-calendar-income">+'+fmtN(entry.incomeAmount)+'</span>':'');
     var aria=date+'日，支出 '+entry.expenseCount+' 筆 '+fmtFull(entry.expenseAmount)+'，收入 '+entry.incomeCount+' 筆 '+fmtFull(entry.incomeAmount);
     cells.push('<div class="finance-month-calendar-day'+(dateKey===todayText?' today':'')+'" id="finance-calendar-day-'+dateKey+'" aria-label="'+esc(aria)+'"><div class="finance-month-calendar-date">'+date+'</div><div class="finance-month-calendar-counts">'+(counts||'&nbsp;')+'</div><div class="finance-month-calendar-amounts">'+(amounts||'&nbsp;')+'</div></div>');
   }
-  var note=isCached?'快取資料，背景同步中；目前顯示內容可能尚未完整。':(Array.isArray(rows)&&rows.length>=50?'已達近期資料 50 筆上限；若本月超過 50 筆，統計可能不完整。':'');
+  var note=warning||(isCached?'快取資料，背景同步中。':'');
   host.innerHTML='<div class="finance-month-calendar"><div class="finance-month-calendar-head"><div class="finance-month-calendar-title">📅 本月收支</div><div class="finance-month-calendar-meta">'+year+' 年 '+month+' 月</div></div><div class="finance-month-calendar-legend"><span class="finance-month-calendar-expense">綠色＝支出</span><span class="finance-month-calendar-income">紅色＝收入</span></div><div class="finance-month-calendar-grid">'+cells.join('')+'</div>'+(note?'<div class="finance-month-calendar-warning">'+note+'</div>':'')+'</div>';
+}
+
+async function loadFinanceMonthlyCalendar(){
+  var host=document.getElementById('finance-month-calendar');
+  if(!host)return;
+  var ym=currentYM();
+  var cached=readFinanceMonthCalendarCache();
+  if(cached)renderFinanceMonthlyCalendar(cached,true);
+  else renderFinanceMonthlyCalendar({ym:ym,days:{}},false,'正在讀取本月收支…');
+  try{
+    var summary=await apiGet({action:'financeCalendarSummary',ym:ym},15000);
+    if(!summary||summary.ym!==ym||!summary.days||typeof summary.days!=='object')throw new Error('月曆彙總資料格式不正確');
+    writeFinanceMonthCalendarCache(summary);
+    renderFinanceMonthlyCalendar(summary,false);
+  }catch(e){
+    if(cached)renderFinanceMonthlyCalendar(cached,true,'更新失敗，暫時顯示快取資料。');
+    else host.innerHTML='<div class="finance-month-calendar-warning">本月收支暫時無法取得：'+esc(e.message||'讀取失敗')+'</div>';
+  }
 }
 
 function renderRecentBooking(rows,isCached){
   var el=document.getElementById('recent-content');
   var allRows=Array.isArray(rows)?rows.slice(0,50):[];
-  renderFinanceMonthlyCalendar(allRows,isCached);
   var txns=allRows.slice(0,10);
   bookingRecentRows=allRows;
   if(txns.length){
@@ -12996,6 +13005,7 @@ async function loadRecentBooking(){
   var el=document.getElementById('recent-content');
   if(!el)return;
   if(!API_URL){setEmpireCardStatus(bookingPanelStatusKey(),'err','尚未設定 API');var noApiCalendar=document.getElementById('finance-month-calendar');if(noApiCalendar)noApiCalendar.innerHTML='<div class="finance-month-calendar-warning">尚未設定 API，無法載入本月收支。</div>';el.innerHTML=setupNotice();return}
+  loadFinanceMonthlyCalendar();
   var cachedRows=readBookingRecentCache();
   if(cachedRows.length){
     renderRecentBooking(cachedRows,true);
@@ -20895,7 +20905,7 @@ function mpmRender(records){
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('./sw.js?v=20261017-daily-growth4', {updateViaCache:'none'}).then(function (registration) {
+    navigator.serviceWorker.register('./sw.js?v=20261017-finance-calendar1', {updateViaCache:'none'}).then(function (registration) {
       return registration.update();
     }).catch(function (error) {
       console.warn('Empire Service Worker registration failed', error);
