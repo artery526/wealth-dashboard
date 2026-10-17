@@ -537,7 +537,7 @@ test('treasury renders fresh cache immediately and revalidates in the background
       calls.push(params.action);
       if (params.action === 'accounts') return Promise.resolve([{ name: '💵國泰Stock', value: 5678 }, { name: '總資產', value: 5678 }]);
       if (params.action === 'monthly') return Promise.resolve({ ym: currentYM(), income: 114860, expense: 62906, net: 51954, savingRate: '45.2%' });
-      if (params.action === 'financeCalendarSummary') return Promise.resolve({ ym: currentYM(), categories: { income: [{ name: '薪資', amount: 100000 }], expense: [{ name: '外食餐飲', amount: 12000 }] } });
+      if (params.action === 'financeCalendarSummary') return Promise.resolve({ ym: currentYM(), categories: { income: [{ name: '薪資', amount: 100000 }], expense: [{ name: '外食餐飲', amount: 12000 }], previousYm: '2026/09', previous: { income: [{ name: '薪資', amount: 90000 }], expense: [{ name: '外食餐飲', amount: 15000 }] } } });
       if (params.action === 'assetSnapshot') return Promise.resolve(null);
       return Promise.resolve([]);
     };
@@ -613,7 +613,7 @@ test('treasury shows monthly income and expense categories and masks their amoun
       [{ name: '💵國泰Stock', value: 1234 }, { name: '總資產', value: 1234 }],
       { ym: currentYM(), income: 100000, expense: 12000, net: 88000, savingRate: '88%' },
       content, null, [], false,
-      { income: [{ name: '薪資', amount: 100000 }], expense: [{ name: '外食餐飲', amount: 12000 }] }
+      { income: [{ name: '薪資', amount: 100000 }], expense: [{ name: '外食餐飲', amount: 12000 }], previousYm: '2026/09', previous: { income: [{ name: '薪資', amount: 90000 }], expense: [{ name: '外食餐飲', amount: 15000 }] } }
     );
     document.body.appendChild(content);
     const details = content.querySelector('.treasury-category-details');
@@ -623,16 +623,20 @@ test('treasury shows monthly income and expense categories and masks their amoun
     const output = {
       labels: Array.from(content.querySelectorAll('.treasury-category-row span')).map(node => node.textContent),
       valuesBeforeMask,
+      deltasBeforeMask: Array.from(content.querySelectorAll('.treasury-category-delta')).map(node => node.textContent),
       masked: content.querySelector('.finance-accounts-collapse').classList.contains('is-masked'),
-      maskedStyle: getComputedStyle(content.querySelector('.treasury-category-amount')).fontSize
+      maskedStyle: getComputedStyle(content.querySelector('.treasury-category-amount')).fontSize,
+      maskedDeltaStyle: getComputedStyle(content.querySelector('.treasury-category-delta')).fontSize
     };
     content.remove();
     return output;
   });
   expect(result.labels).toEqual(['薪資', '外食餐飲']);
   expect(result.valuesBeforeMask).toEqual(['$100,000', '$12,000']);
+  expect(result.deltasBeforeMask).toEqual(['較上月 +$10,000', '較上月 −$3,000']);
   expect(result.masked).toBe(true);
   expect(result.maskedStyle).toBe('0px');
+  expect(result.maskedDeltaStyle).toBe('0px');
 });
 
 test('a new ledger entry is allowed after a different previous entry was confirmed', async ({ page }) => {

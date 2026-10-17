@@ -2092,9 +2092,10 @@ html.war-room-standalone .panel-head{padding:12px 18px;border-bottom-color:rgba(
 .finance-accounts-collapse.is-masked .treasury-total-delta::after{content:'較舊值 ***';font-family:var(--mono);font-size:11px;color:#8d6a2a}
 .finance-accounts-collapse.is-masked .treasury-total-trend{font-size:0;color:transparent}
 .finance-accounts-collapse.is-masked .treasury-total-trend::after{content:'史記 ***';font-family:var(--mono);font-size:11px;color:#8d6a2a}
-.finance-accounts-collapse.is-masked .treasury-monthly-row strong,.finance-accounts-collapse.is-masked .treasury-category-amount{font-size:0;color:transparent}
+.finance-accounts-collapse.is-masked .treasury-monthly-row strong,.finance-accounts-collapse.is-masked .treasury-category-amount,.finance-accounts-collapse.is-masked .treasury-category-delta{font-size:0;color:transparent}
 .finance-accounts-collapse.is-masked .treasury-monthly-row strong::after{content:'***';font-family:var(--mono);font-size:15px}
 .finance-accounts-collapse.is-masked .treasury-category-amount::after{content:'***';font-family:var(--mono);font-size:11px;color:var(--gold)}
+.finance-accounts-collapse.is-masked .treasury-category-delta::after{content:'***';font-family:var(--mono);font-size:9px;color:var(--gold)}
 .finance-accounts-collapse.is-masked .treasury-monthly-income::after{color:var(--coral)}
 .finance-accounts-collapse.is-masked .treasury-monthly-expense::after{color:var(--teal)}
 .finance-accounts-collapse.is-masked .treasury-account-merge-value{font-size:0;color:transparent}
@@ -2182,8 +2183,14 @@ html.war-room-standalone .panel-head{padding:12px 18px;border-bottom-color:rgba(
 .treasury-category-heading{font-size:10px;font-weight:900;margin-bottom:4px;color:var(--coral)}
 .treasury-category-heading.expense{color:var(--teal)}
 .treasury-category-row{display:flex;justify-content:space-between;gap:6px;padding:3px 0;border-top:1px solid rgba(232,192,80,.08);color:#9bb5bd}
-.treasury-category-row span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.treasury-category-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.treasury-category-values{display:flex;flex-direction:column;align-items:flex-end;gap:1px;flex:none}
 .treasury-category-amount{flex:none;font-family:var(--mono);font-weight:800;color:#d7e9ee}
+.treasury-category-delta{font-family:var(--mono);font-size:9px;font-weight:800;white-space:nowrap}
+.treasury-category-delta.good{color:var(--teal)}
+.treasury-category-delta.bad{color:var(--coral)}
+.treasury-category-delta.same{color:#76919a}
+.treasury-category-compare-label{float:right;font-size:9px;font-weight:700;color:#76919a}
 .treasury-category-empty{font-size:10px;color:#76919a;padding:3px 0}
 @media(max-width:520px){.treasury-category-columns{grid-template-columns:1fr}}
 .treasury-monthly-income{color:var(--coral)}
@@ -10178,11 +10185,22 @@ function renderTreasuryAccountTotalAssetCard(assetSnapshot,totalAssetAccount,mon
 
 function renderTreasuryCategoryDetails(summary){
   if(!summary)return `<details class="treasury-category-details"><summary>📊 本月收支細項</summary><div class="treasury-category-empty">分類資料暫不可用</div></details>`;
-  function column(title,items,kind){
-    var rows=(Array.isArray(items)?items:[]).map(function(item){return `<div class="treasury-category-row"><span title="${esc(item.name||'未分類')}">${esc(item.name||'未分類')}</span><strong class="treasury-category-amount">${fmtFull(item.amount||0)}</strong></div>`;}).join('');
+  function column(title,items,previousItems,kind){
+    var currentMap={};var previousMap={};
+    (Array.isArray(items)?items:[]).forEach(function(item){currentMap[String(item.name||'未分類')]=Number(item.amount)||0;});
+    (Array.isArray(previousItems)?previousItems:[]).forEach(function(item){previousMap[String(item.name||'未分類')]=Number(item.amount)||0;});
+    var names=Array.from(new Set(Object.keys(currentMap).concat(Object.keys(previousMap))));
+    names.sort(function(a,b){return (currentMap[b]||0)-(currentMap[a]||0)||a.localeCompare(b);});
+    var rows=names.map(function(name){
+      var amount=currentMap[name]||0;var previous=previousMap[name]||0;var delta=amount-previous;
+      var compareKind=kind==='expense'?(delta>0?'bad':delta<0?'good':'same'):(delta>0?'good':delta<0?'bad':'same');
+      var hasComparison=!!summary.previousYm&&!!summary.previous&&Array.isArray(summary.previous.income)&&Array.isArray(summary.previous.expense);
+      var compareText=hasComparison?(delta===0?'較上月 持平':'較上月 '+(delta>0?'+':'−')+fmtFull(Math.abs(delta))):'上月比較暫不可用';
+      return `<div class="treasury-category-row"><span class="treasury-category-name" title="${esc(name)}">${esc(name)}</span><div class="treasury-category-values"><strong class="treasury-category-amount">${fmtFull(amount)}</strong><small class="treasury-category-delta ${compareKind}">${esc(compareText)}</small></div></div>`;
+    }).join('');
     return `<div><div class="treasury-category-heading ${kind}">${title}</div>${rows||'<div class="treasury-category-empty">本月無資料</div>'}</div>`;
   }
-  return `<details class="treasury-category-details"><summary>📊 本月收支細項</summary><div class="treasury-category-columns">${column('收入分類',summary.income,'')}${column('支出分類',summary.expense,'expense')}</div></details>`;
+  return `<details class="treasury-category-details"><summary>📊 本月收支細項 <span class="treasury-category-compare-label">較上月增減</span></summary><div class="treasury-category-columns">${column('收入分類',summary.income,summary.previous&&summary.previous.income,'income')}${column('支出分類',summary.expense,summary.previous&&summary.previous.expense,'expense')}</div></details>`;
 }
 
 function renderTreasuryCashStockCard(cashAccount,cathayStockAccount,monthly){
@@ -20931,7 +20949,7 @@ function mpmRender(records){
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('./sw.js?v=20261017-finance-category-breakdown1', {updateViaCache:'none'}).then(function (registration) {
+    navigator.serviceWorker.register('./sw.js?v=20261017-finance-category-delta1', {updateViaCache:'none'}).then(function (registration) {
       return registration.update();
     }).catch(function (error) {
       console.warn('Empire Service Worker registration failed', error);
