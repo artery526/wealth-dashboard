@@ -2478,6 +2478,20 @@ html.war-room-standalone .panel-head{padding:12px 18px;border-bottom-color:rgba(
 
 /* ── Recent txns ── */
 .booking-recent-inline{margin-top:18px;padding-top:4px;border-top:1px solid #1e1408}
+.finance-month-calendar{margin:10px 0 18px;padding:11px;border:1px solid rgba(184,137,46,.24);border-radius:9px;background:rgba(10,8,4,.28)}
+.finance-month-calendar-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px}
+.finance-month-calendar-title{color:var(--gold);font:800 12px/1.4 var(--sans)}
+.finance-month-calendar-meta{color:#8f7439;font:10px/1.4 var(--sans);text-align:right}
+.finance-month-calendar-legend{display:flex;gap:10px;margin-bottom:7px;color:#9a8660;font:9px/1.3 var(--sans)}
+.finance-month-calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}
+.finance-month-calendar-weekday{padding:3px 1px;color:#8f7439;font:700 9px/1.2 var(--sans);text-align:center}
+.finance-month-calendar-day{min-width:0;min-height:62px;padding:4px 3px;border:1px solid rgba(184,137,46,.13);border-radius:5px;background:rgba(4,12,16,.5);overflow:hidden}
+.finance-month-calendar-day.today{border-color:rgba(93,225,162,.58);background:rgba(93,225,162,.06)}
+.finance-month-calendar-date{color:#c2aa78;font:700 10px/1.2 var(--mono);text-align:center}
+.finance-month-calendar-counts{display:flex;justify-content:center;gap:4px;margin-top:4px;font:800 9px/1.2 var(--sans);white-space:nowrap}
+.finance-month-calendar-expense{color:#5de1a2}.finance-month-calendar-income{color:#ff8b8b}
+.finance-month-calendar-amounts{display:grid;justify-content:center;gap:1px;margin-top:3px;color:#aab4a7;font:8px/1.25 var(--mono);white-space:nowrap}
+.finance-month-calendar-warning{margin-top:7px;color:#d3ad59;font:9px/1.4 var(--sans)}
 .txn-list-title{font-family:var(--sans);font-size:9px;letter-spacing:3px;color:#5a4018;text-transform:uppercase;margin:14px 0 8px;border-bottom:1px solid #1e1408;padding-bottom:6px}
 .txn-item{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #1e1408}
 .txn-item:last-child{border:none}
@@ -2514,6 +2528,12 @@ html.war-room-standalone .panel-head{padding:12px 18px;border-bottom-color:rgba(
 .booking-queue-detail{min-width:0;font-family:var(--sans);font-size:11px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .booking-queue-time{font-family:var(--mono);font-size:9px;color:#7a5c28;white-space:nowrap}
 @media(max-width:640px){
+  .finance-month-calendar{padding:8px 5px}
+  .finance-month-calendar-grid{gap:2px}
+  .finance-month-calendar-day{min-height:55px;padding:3px 1px}
+  .finance-month-calendar-counts{gap:2px;font-size:8px}
+  .finance-month-calendar-amounts{font-size:7px}
+  .finance-month-calendar-legend{font-size:8px}
   .txn-item{display:grid;grid-template-columns:auto auto 1fr auto;align-items:center;gap:6px}
   .txn-cat{grid-column:1/4;white-space:normal;line-height:1.35}
   .txn-balance{grid-column:1/-1;max-width:none;min-width:0;text-align:left;white-space:normal}
@@ -10407,6 +10427,7 @@ async function initBookingForm(){
       </div>
     </div>
     <section class="booking-recent-inline" aria-labelledby="booking-recent-title">
+      <div id="finance-month-calendar"><div class="finance-month-calendar-meta">正在載入本月收支…</div></div>
       <div id="recent-content"><div class="txn-list-title" id="booking-recent-title">最近紀錄</div><div class="skel-line skel"></div><div class="skel-line skel" style="width:80%"></div></div>
     </section>`;
   initBookingDateInputs(true);
@@ -12885,13 +12906,64 @@ function readBookingRecentCache(){
 }
 
 function writeBookingRecentCache(rows){
-  try{localStorage.setItem(bookingRecentCacheKey(),JSON.stringify({savedAt:Date.now(),rows:rows.slice(0,10)}));}catch(e){}
+  try{localStorage.setItem(bookingRecentCacheKey(),JSON.stringify({savedAt:Date.now(),rows:rows.slice(0,50)}));}catch(e){}
+}
+
+function financeCalendarDayFromTxnDate(dateText,year,month){
+  var raw=String(dateText||'').trim().replace(/-/g,'/');
+  var match=raw.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
+  var txnYear=year,txnMonth=month,day=0;
+  if(match){txnYear=Number(match[1]);txnMonth=Number(match[2]);day=Number(match[3]);}
+  else{
+    match=raw.match(/^(\d{1,2})\/(\d{1,2})$/);
+    if(!match)return 0;
+    txnMonth=Number(match[1]);day=Number(match[2]);
+  }
+  if(txnYear!==year||txnMonth!==month||day<1||day>31)return 0;
+  var check=new Date(year,month-1,day);
+  return check.getFullYear()===year&&check.getMonth()===month-1&&check.getDate()===day?day:0;
+}
+
+function renderFinanceMonthlyCalendar(rows,isCached){
+  var host=document.getElementById('finance-month-calendar');
+  if(!host)return;
+  var ym=String(currentYM()||'').split('/');
+  var year=Number(ym[0]),month=Number(ym[1]);
+  if(!year||!month){host.innerHTML='';return;}
+  var monthStart=new Date(year,month-1,1);
+  var dayCount=new Date(year,month,0).getDate();
+  var daily={};
+  (Array.isArray(rows)?rows:[]).forEach(function(txn){
+    var type=String(txn&&txn.type||'');
+    var kind=type==='支出'?'expense':(type==='收入'||type==='配息收入'?'income':'');
+    if(!kind)return;
+    var day=financeCalendarDayFromTxnDate(txn.date,year,month);
+    if(!day)return;
+    var item=daily[day]||(daily[day]={expenseCount:0,expenseAmount:0,incomeCount:0,incomeAmount:0});
+    if(kind==='expense'){item.expenseCount++;item.expenseAmount+=Math.abs(Number(txn.amount)||0);}
+    else{item.incomeCount++;item.incomeAmount+=Math.abs(Number(txn.amount)||0);}
+  });
+  var cells=['<div class="finance-month-calendar-weekday">日</div>','<div class="finance-month-calendar-weekday">一</div>','<div class="finance-month-calendar-weekday">二</div>','<div class="finance-month-calendar-weekday">三</div>','<div class="finance-month-calendar-weekday">四</div>','<div class="finance-month-calendar-weekday">五</div>','<div class="finance-month-calendar-weekday">六</div>'];
+  for(var blank=0;blank<monthStart.getDay();blank++)cells.push('<div class="finance-month-calendar-day empty" aria-hidden="true"></div>');
+  var todayText=today();
+  for(var date=1;date<=dayCount;date++){
+    var entry=daily[date]||{expenseCount:0,expenseAmount:0,incomeCount:0,incomeAmount:0};
+    var dateKey=year+'-'+String(month).padStart(2,'0')+'-'+String(date).padStart(2,'0');
+    var counts=(entry.expenseCount?'<span class="finance-month-calendar-expense">支'+entry.expenseCount+'</span>':'')+(entry.incomeCount?'<span class="finance-month-calendar-income">收'+entry.incomeCount+'</span>':'');
+    var amounts=(entry.expenseCount?'<span class="finance-month-calendar-expense">−'+fmtN(entry.expenseAmount)+'</span>':'')+(entry.incomeCount?'<span class="finance-month-calendar-income">+'+fmtN(entry.incomeAmount)+'</span>':'');
+    var aria=date+'日，支出 '+entry.expenseCount+' 筆 '+fmtFull(entry.expenseAmount)+'，收入 '+entry.incomeCount+' 筆 '+fmtFull(entry.incomeAmount);
+    cells.push('<div class="finance-month-calendar-day'+(dateKey===todayText?' today':'')+'" id="finance-calendar-day-'+dateKey+'" aria-label="'+esc(aria)+'"><div class="finance-month-calendar-date">'+date+'</div><div class="finance-month-calendar-counts">'+(counts||'&nbsp;')+'</div><div class="finance-month-calendar-amounts">'+(amounts||'&nbsp;')+'</div></div>');
+  }
+  var note=isCached?'快取資料，背景同步中；目前顯示內容可能尚未完整。':(Array.isArray(rows)&&rows.length>=50?'已達近期資料 50 筆上限；若本月超過 50 筆，統計可能不完整。':'');
+  host.innerHTML='<div class="finance-month-calendar"><div class="finance-month-calendar-head"><div class="finance-month-calendar-title">📅 本月收支</div><div class="finance-month-calendar-meta">'+year+' 年 '+month+' 月</div></div><div class="finance-month-calendar-legend"><span class="finance-month-calendar-expense">綠色＝支出</span><span class="finance-month-calendar-income">紅色＝收入</span></div><div class="finance-month-calendar-grid">'+cells.join('')+'</div>'+(note?'<div class="finance-month-calendar-warning">'+note+'</div>':'')+'</div>';
 }
 
 function renderRecentBooking(rows,isCached){
   var el=document.getElementById('recent-content');
-  var txns=Array.isArray(rows)?rows.slice(0,10):[];
-  bookingRecentRows=txns;
+  var allRows=Array.isArray(rows)?rows.slice(0,50):[];
+  renderFinanceMonthlyCalendar(allRows,isCached);
+  var txns=allRows.slice(0,10);
+  bookingRecentRows=allRows;
   if(txns.length){
     el.innerHTML='<div class="txn-list-title" id="booking-recent-title">最近紀錄｜近 10 筆'+(isCached?'<span class="txn-list-cache-note">（快取，背景同步中）</span>':'')+'</div>'+
       txns.map(function(t,idx){
@@ -12923,7 +12995,7 @@ function renderRecentBooking(rows,isCached){
 async function loadRecentBooking(){
   var el=document.getElementById('recent-content');
   if(!el)return;
-  if(!API_URL){setEmpireCardStatus(bookingPanelStatusKey(),'err','尚未設定 API');el.innerHTML=setupNotice();return}
+  if(!API_URL){setEmpireCardStatus(bookingPanelStatusKey(),'err','尚未設定 API');var noApiCalendar=document.getElementById('finance-month-calendar');if(noApiCalendar)noApiCalendar.innerHTML='<div class="finance-month-calendar-warning">尚未設定 API，無法載入本月收支。</div>';el.innerHTML=setupNotice();return}
   var cachedRows=readBookingRecentCache();
   if(cachedRows.length){
     renderRecentBooking(cachedRows,true);
@@ -12932,8 +13004,8 @@ async function loadRecentBooking(){
     setEmpireCardStatus(bookingPanelStatusKey(),'pending');
   }
   try{
-    var txns=await apiGet({action:'transactions',ym:currentYM(),recentDays:14,recentLimit:10},15000);
-    txns=Array.isArray(txns)?txns.slice(0,10):[];
+    var txns=await apiGet({action:'transactions',ym:currentYM(),recentDays:31,recentLimit:50},15000);
+    txns=Array.isArray(txns)?txns.slice(0,50):[];
     writeBookingRecentCache(txns);
     renderRecentBooking(txns,false);
     setEmpireCardStatus(bookingPanelStatusKey(),'ok','最近記錄已載入');
@@ -12945,7 +13017,7 @@ async function loadRecentBooking(){
     }
     else if(cachedRows.length)setEmpireCardStatus(bookingPanelStatusKey(),'ok','快取資料可用，最新資料同步失敗');
     else if(webVerifyIsAuthorized())setEmpireCardStatus(bookingPanelStatusKey(),'ok','財政主連線正常，最近記錄暫時無法更新');
-    if(!cachedRows.length)el.innerHTML='<div style="color:var(--coral);font-family:var(--sans);font-size:12px;padding:12px 0">'+esc(e.message)+'</div>';
+    if(!cachedRows.length){var calendar=document.getElementById('finance-month-calendar');if(calendar)calendar.innerHTML='<div class="finance-month-calendar-warning">本月收支暫時無法取得：'+esc(e.message)+'</div>';el.innerHTML='<div style="color:var(--coral);font-family:var(--sans);font-size:12px;padding:12px 0">'+esc(e.message)+'</div>';}
   }
 }
 
