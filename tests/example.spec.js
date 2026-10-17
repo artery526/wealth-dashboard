@@ -537,6 +537,7 @@ test('treasury renders fresh cache immediately and revalidates in the background
       calls.push(params.action);
       if (params.action === 'accounts') return Promise.resolve([{ name: '💵國泰Stock', value: 5678 }, { name: '總資產', value: 5678 }]);
       if (params.action === 'monthly') return Promise.resolve({ ym: currentYM(), income: 114860, expense: 62906, net: 51954, savingRate: '45.2%' });
+      if (params.action === 'financeCalendarSummary') return Promise.resolve({ ym: currentYM(), categories: { income: [{ name: '薪資', amount: 100000 }], expense: [{ name: '外食餐飲', amount: 12000 }] } });
       if (params.action === 'assetSnapshot') return Promise.resolve(null);
       return Promise.resolve([]);
     };
@@ -555,7 +556,7 @@ test('treasury renders fresh cache immediately and revalidates in the background
   expect(result.cacheVisibleBeforeRefresh).toBe(true);
   expect(result.freshVisibleAfterRefresh).toBe(true);
   expect(result.fullMonthVisible).toBe(true);
-  expect(result.calls.sort()).toEqual(['accounts', 'assetSnapshot', 'bills', 'monthly']);
+  expect(result.calls.sort()).toEqual(['accounts', 'assetSnapshot', 'bills', 'financeCalendarSummary', 'monthly']);
 });
 
 test('treasury keeps the last valid monthly totals when monthly API refresh fails', async ({ page }) => {
@@ -602,6 +603,36 @@ test('treasury does not show zero totals when monthly summary is unavailable', a
   expect(result.expense).toBe('—');
   expect(result.savingRate).toBe('—');
   expect(result.classEquivalent).toBeNull();
+});
+
+test('treasury shows monthly income and expense categories and masks their amounts', async ({ page }) => {
+  await page.goto(dashboardUrl);
+  const result = await page.evaluate(() => {
+    const content = document.createElement('div');
+    renderAccounts(
+      [{ name: '💵國泰Stock', value: 1234 }, { name: '總資產', value: 1234 }],
+      { ym: currentYM(), income: 100000, expense: 12000, net: 88000, savingRate: '88%' },
+      content, null, [], false,
+      { income: [{ name: '薪資', amount: 100000 }], expense: [{ name: '外食餐飲', amount: 12000 }] }
+    );
+    document.body.appendChild(content);
+    const details = content.querySelector('.treasury-category-details');
+    details.open = true;
+    const valuesBeforeMask = Array.from(content.querySelectorAll('.treasury-category-amount')).map(node => node.textContent);
+    content.querySelector('.finance-accounts-toggle').click();
+    const output = {
+      labels: Array.from(content.querySelectorAll('.treasury-category-row span')).map(node => node.textContent),
+      valuesBeforeMask,
+      masked: content.querySelector('.finance-accounts-collapse').classList.contains('is-masked'),
+      maskedStyle: getComputedStyle(content.querySelector('.treasury-category-amount')).fontSize
+    };
+    content.remove();
+    return output;
+  });
+  expect(result.labels).toEqual(['薪資', '外食餐飲']);
+  expect(result.valuesBeforeMask).toEqual(['$100,000', '$12,000']);
+  expect(result.masked).toBe(true);
+  expect(result.maskedStyle).toBe('0px');
 });
 
 test('a new ledger entry is allowed after a different previous entry was confirmed', async ({ page }) => {

@@ -2092,8 +2092,9 @@ html.war-room-standalone .panel-head{padding:12px 18px;border-bottom-color:rgba(
 .finance-accounts-collapse.is-masked .treasury-total-delta::after{content:'較舊值 ***';font-family:var(--mono);font-size:11px;color:#8d6a2a}
 .finance-accounts-collapse.is-masked .treasury-total-trend{font-size:0;color:transparent}
 .finance-accounts-collapse.is-masked .treasury-total-trend::after{content:'史記 ***';font-family:var(--mono);font-size:11px;color:#8d6a2a}
-.finance-accounts-collapse.is-masked .treasury-monthly-row strong{font-size:0;color:transparent}
+.finance-accounts-collapse.is-masked .treasury-monthly-row strong,.finance-accounts-collapse.is-masked .treasury-category-amount{font-size:0;color:transparent}
 .finance-accounts-collapse.is-masked .treasury-monthly-row strong::after{content:'***';font-family:var(--mono);font-size:15px}
+.finance-accounts-collapse.is-masked .treasury-category-amount::after{content:'***';font-family:var(--mono);font-size:11px;color:var(--gold)}
 .finance-accounts-collapse.is-masked .treasury-monthly-income::after{color:var(--coral)}
 .finance-accounts-collapse.is-masked .treasury-monthly-expense::after{color:var(--teal)}
 .finance-accounts-collapse.is-masked .treasury-account-merge-value{font-size:0;color:transparent}
@@ -2172,6 +2173,19 @@ html.war-room-standalone .panel-head{padding:12px 18px;border-bottom-color:rgba(
 .treasury-monthly-title{display:flex;align-items:center;justify-content:space-between;gap:6px;font-family:var(--sans);font-size:10px;font-weight:900;color:#c6a85d;letter-spacing:.6px;margin-top:10px;padding-top:8px;border-top:1px solid rgba(232,192,80,.14)}
 .treasury-monthly-row{display:flex;align-items:center;gap:8px;font-family:var(--sans);font-size:11px;font-weight:800;color:#8d6a2a;line-height:1.8;white-space:nowrap}
 .treasury-monthly-row strong{font-family:var(--mono);font-size:15px}
+.treasury-category-details{margin-top:8px;border:1px solid rgba(232,192,80,.14);border-radius:8px;padding:7px 9px;font-family:var(--sans);font-size:11px;color:#c6a85d}
+.treasury-category-details summary{cursor:pointer;font-weight:900;list-style:none}
+.treasury-category-details summary::-webkit-details-marker{display:none}
+.treasury-category-details summary::after{content:'＋';float:right;color:var(--cyan)}
+.treasury-category-details[open] summary::after{content:'－'}
+.treasury-category-columns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
+.treasury-category-heading{font-size:10px;font-weight:900;margin-bottom:4px;color:var(--coral)}
+.treasury-category-heading.expense{color:var(--teal)}
+.treasury-category-row{display:flex;justify-content:space-between;gap:6px;padding:3px 0;border-top:1px solid rgba(232,192,80,.08);color:#9bb5bd}
+.treasury-category-row span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.treasury-category-amount{flex:none;font-family:var(--mono);font-weight:800;color:#d7e9ee}
+.treasury-category-empty{font-size:10px;color:#76919a;padding:3px 0}
+@media(max-width:520px){.treasury-category-columns{grid-template-columns:1fr}}
 .treasury-monthly-income{color:var(--coral)}
 .treasury-monthly-expense{color:var(--teal)}
 .treasury-cash-stock-card{min-height:116px}
@@ -9836,7 +9850,7 @@ async function loadAccounts(){
   var cached=cachedEntry?cachedEntry.data:null;
   if(cached){
     setDataFreshness('finance-treasury-freshness',dataFreshnessMeta(cached,cachedEntry.savedAt,true));
-    renderAccounts(cached.accs,cached.monthly,el,cached.assetSnapshot,cached.bills,true);
+    renderAccounts(cached.accs,cached.monthly,el,cached.assetSnapshot,cached.bills,true,cached.categorySummary);
   }
   var shouldRevalidate=!financeTreasuryPromise&&(!freshEntry||(Date.now()-financeTreasuryLastFetchAt)>=FINANCE_TREASURY_REVALIDATE_GAP);
   if(freshEntry&&cached&&!shouldRevalidate){
@@ -9849,7 +9863,7 @@ async function loadAccounts(){
     return financeTreasuryPromise.then(function(data){
       if(data&&data.accs){
         setDataFreshness('finance-treasury-freshness',dataFreshnessMeta(data,false,false));
-        if(document.getElementById('acc-content'))renderAccounts(data.accs,data.monthly,document.getElementById('acc-content'),data.assetSnapshot,data.bills,false);
+        if(document.getElementById('acc-content'))renderAccounts(data.accs,data.monthly,document.getElementById('acc-content'),data.assetSnapshot,data.bills,false,data.categorySummary);
       }
       if(data&&data.accs)setFinanceCardStatus('ok',financeTreasuryLoadedMessage(data));
       return data;
@@ -9859,7 +9873,7 @@ async function loadAccounts(){
   financeTreasuryPromise=fetchFinanceTreasuryData(cached).then(function(data){
     writeTimedFinanceCache(FINANCE_TREASURY_CACHE_KEY,data);
     setDataFreshness('finance-treasury-freshness',dataFreshnessMeta(data,false,false));
-    if(document.getElementById('acc-content'))renderAccounts(data.accs,data.monthly,document.getElementById('acc-content'),data.assetSnapshot,data.bills,false);
+    if(document.getElementById('acc-content'))renderAccounts(data.accs,data.monthly,document.getElementById('acc-content'),data.assetSnapshot,data.bills,false,data.categorySummary);
     setFinanceCardStatus('ok',financeTreasuryLoadedMessage(data));
     refreshFinanceTreasuryDetails(data);
     return data;
@@ -9877,7 +9891,8 @@ function fetchFinanceTreasuryData(cached){
   var requestedYm=currentYM();
   return Promise.allSettled([
     apiGet({action:'accounts'}),
-    apiGet({action:'monthly',ym:requestedYm})
+    apiGet({action:'monthly',ym:requestedYm}),
+    apiGet({action:'financeCalendarSummary',ym:requestedYm})
   ]).then(function(results){
     if(results[0].status!=='fulfilled'){
       throw (results[0].reason||new Error('finance load failed'));
@@ -9904,6 +9919,7 @@ function fetchFinanceTreasuryData(cached){
     var data={
       accs:results[0].value||[],
       monthly:monthly,
+      categorySummary:results[2].status==='fulfilled'&&results[2].value&&results[2].value.categories?results[2].value.categories:(cached&&cached.categorySummary||null),
       assetSnapshot:cached&&cached.assetSnapshot||null,
       bills:cached&&cached.bills||null,
       sourceStatus:{monthly:monthlyStatus,assetSnapshot:cached&&cached.assetSnapshot?'cached':'pending',bills:cached&&cached.bills?'cached':'pending'}
@@ -9941,7 +9957,7 @@ function refreshFinanceTreasuryDetails(fallbackData){
     if(changed)writeTimedFinanceCache(FINANCE_TREASURY_CACHE_KEY,next);
     if(changed&&currentPanel==='finance'&&currentTab==='finance-accs'&&document.getElementById('acc-content')){
       setDataFreshness('finance-treasury-freshness',dataFreshnessMeta(next,false,false));
-      renderAccounts(next.accs,next.monthly,document.getElementById('acc-content'),next.assetSnapshot,next.bills,false);
+      renderAccounts(next.accs,next.monthly,document.getElementById('acc-content'),next.assetSnapshot,next.bills,false,next.categorySummary);
     }
     return next;
   }).catch(function(error){
@@ -10045,7 +10061,7 @@ function renderTreasuryOverview(all,filtered,monthly,assetSnapshot,totalRow){
   </div>`;
 }
 
-function renderAccounts(accs,monthly,el,assetSnapshot,bills,stale){
+function renderAccounts(accs,monthly,el,assetSnapshot,bills,stale,categorySummary){
   var all=accs||[];
   var filtered=all.filter(function(a){
     if(a.name==='總資產'||a.name==='總資產/總計')return false;
@@ -10073,7 +10089,7 @@ function renderAccounts(accs,monthly,el,assetSnapshot,bills,stale){
     return aIndex-bIndex;
   });
 
-  var totalAssetHtml=renderTreasuryAccountTotalAssetCard(assetSnapshot,totalAssetAccount,monthly);
+  var totalAssetHtml=renderTreasuryAccountTotalAssetCard(assetSnapshot,totalAssetAccount,monthly,categorySummary);
   var cashStockHtml=renderTreasuryCashStockCard(cashAccount,cathayStockAccount,monthly);
   var leftAccounts=ordinaryAccounts.filter(function(a){
     return stripIconText(a&&a.name).replace(/\s+/g,'').toLowerCase()!=='cube';
@@ -10111,7 +10127,7 @@ function renderAccounts(accs,monthly,el,assetSnapshot,bills,stale){
   });
 }
 
-function renderTreasuryAccountTotalAssetCard(assetSnapshot,totalAssetAccount,monthly){
+function renderTreasuryAccountTotalAssetCard(assetSnapshot,totalAssetAccount,monthly,categorySummary){
   monthly=monthly||{};
   var latest=assetSnapshot&&assetSnapshot.latest;
   var previous=assetSnapshot&&assetSnapshot.previous;
@@ -10156,7 +10172,17 @@ function renderTreasuryAccountTotalAssetCard(assetSnapshot,totalAssetAccount,mon
     <div class="treasury-monthly-title"><span>月收／支</span></div>
     <div class="treasury-monthly-row"><span>收入</span><strong class="treasury-monthly-income">${financeMonthlySummaryAvailable(monthly)?fmtFull(monthly.income):'—'}</strong></div>
     <div class="treasury-monthly-row"><span>支出</span><strong class="treasury-monthly-expense">${financeMonthlySummaryAvailable(monthly)?fmtFull(monthly.expense):'—'}</strong></div>
+    ${renderTreasuryCategoryDetails(categorySummary)}
   </div>`;
+}
+
+function renderTreasuryCategoryDetails(summary){
+  if(!summary)return `<details class="treasury-category-details"><summary>📊 本月收支細項</summary><div class="treasury-category-empty">分類資料暫不可用</div></details>`;
+  function column(title,items,kind){
+    var rows=(Array.isArray(items)?items:[]).map(function(item){return `<div class="treasury-category-row"><span title="${esc(item.name||'未分類')}">${esc(item.name||'未分類')}</span><strong class="treasury-category-amount">${fmtFull(item.amount||0)}</strong></div>`;}).join('');
+    return `<div><div class="treasury-category-heading ${kind}">${title}</div>${rows||'<div class="treasury-category-empty">本月無資料</div>'}</div>`;
+  }
+  return `<details class="treasury-category-details"><summary>📊 本月收支細項</summary><div class="treasury-category-columns">${column('收入分類',summary.income,'')}${column('支出分類',summary.expense,'expense')}</div></details>`;
 }
 
 function renderTreasuryCashStockCard(cashAccount,cathayStockAccount,monthly){
@@ -20905,7 +20931,7 @@ function mpmRender(records){
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('./sw.js?v=20261017-finance-calendar1', {updateViaCache:'none'}).then(function (registration) {
+    navigator.serviceWorker.register('./sw.js?v=20261017-finance-category-breakdown1', {updateViaCache:'none'}).then(function (registration) {
       return registration.update();
     }).catch(function (error) {
       console.warn('Empire Service Worker registration failed', error);
