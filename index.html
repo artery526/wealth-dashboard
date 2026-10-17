@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <link rel="manifest" href="./manifest.json">
-<link rel="stylesheet" href="./daily-growth.css?v=20261017.3">
+<link rel="stylesheet" href="./daily-growth.css?v=20261017.4">
 <meta name="theme-color" content="#06131d">
 <title>⚔️ 帝國指揮所</title>
 <script>
@@ -5456,7 +5456,7 @@ function parseApiJsonText(text){
   throw new Error('API returned non-JSON response');
 }
 function isApiWriteAction(action){
-  return /^(expense|income|transfer|transactionUndo|stockTradeVoid|dividendEntry|dividendDelete|holdingTradeEntry|holdingTradeDelete|calendarCreate|calendarDelete|taskCreate|taskDelete|eventChronicleSave|eventChronicleEdit|eventChronicleDelete|storeRecordCreate|storeRecordUpdate|storeRecordDelete|dailyGrowthTaskCreate|dailyGrowthSetCompletion|macroLongReportGenerate|macroLongReportTriggerInstall|taiwanStockReviewGenerate)$/.test(action||'');
+  return /^(expense|income|transfer|transactionUndo|stockTradeVoid|dividendEntry|dividendDelete|holdingTradeEntry|holdingTradeDelete|calendarCreate|calendarDelete|taskCreate|taskDelete|eventChronicleSave|eventChronicleEdit|eventChronicleDelete|storeRecordCreate|storeRecordUpdate|storeRecordDelete|dailyGrowthTaskCreate|dailyGrowthSetCompletion|dailyMealsSetCompletion|macroLongReportGenerate|macroLongReportTriggerInstall|taiwanStockReviewGenerate)$/.test(action||'');
 }
 function apiWriteTimeoutMs(action){
   action=String(action||'');
@@ -5539,7 +5539,7 @@ var WEALTH_API_QUEUE_WAIT_TIMEOUT_MS=20000;
 function wealthApiRequestPriority(action){
   action=String(action||'');
   if(action==='verifyWriteToken'||action==='createWebSession')return 10;
-  if(/^(dailyGrowth|dailyGrowthSetCompletion|dailyGrowthTaskCreate)$/.test(action))return 10;
+  if(/^(dailyGrowth|dailyGrowthSetCompletion|dailyGrowthTaskCreate|dailyMeals|dailyMealsSetCompletion)$/.test(action))return 10;
   if(/^(expense|income|transfer|transactionUndo|stockTradeVoid|dividendEntry|dividendDelete|holdingTradeEntry|holdingTradeDelete)$/.test(action))return 9;
    if(action==='storeRecords')return 8;
   if(/^(yearly|history)$/.test(action))return 8;
@@ -20819,11 +20819,11 @@ function mpmRender(records){
   }
 })();
 </script>
-<script src="./daily-growth.js?v=20261017.3"></script>
+<script src="./daily-growth.js?v=20261017.4"></script>
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('./sw.js?v=20261017-daily-growth3', {updateViaCache:'none'}).then(function (registration) {
+    navigator.serviceWorker.register('./sw.js?v=20261017-daily-growth4', {updateViaCache:'none'}).then(function (registration) {
       return registration.update();
     }).catch(function (error) {
       console.warn('Empire Service Worker registration failed', error);

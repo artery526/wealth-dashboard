@@ -1,5 +1,5 @@
 (function(){
-  var growthState={data:null,busy:false,message:'',error:false,dataVersion:0,readRequestId:0,historyDate:'',calendarMonth:''};
+  var growthState={data:null,busy:false,message:'',error:false,dataVersion:0,readRequestId:0,historyDate:'',calendarMonth:'',activeTab:'growth',mealMonth:'',mealData:null,mealDate:'',mealBusy:false,mealRequestId:0};
   var growthCacheKey='daily-growth-cache-v1';
   var growthCategories=['健康','學習','生活','人際'];
   var growthAttribute={健康:'活力',學習:'專注',生活:'紀律',人際:'連結感'};
@@ -47,9 +47,41 @@
     if(!growthState.message)return '';
     return '<div class="dg-message'+(growthState.error?' is-error':'')+'" role="status">'+growthEscape(growthState.message)+'</div>';
   }
+  function growthTabsHtml(){
+    return '<nav class="dg-tabs" aria-label="每日成長分頁"><button type="button" class="dg-tab'+(growthState.activeTab==='growth'?' is-active':'')+'" aria-current="'+(growthState.activeTab==='growth'?'page':'false')+'" onclick="selectDailyGrowthTab(\'growth\')">🌱 每日成長</button><button type="button" class="dg-tab'+(growthState.activeTab==='meals'?' is-active':'')+'" aria-current="'+(growthState.activeTab==='meals'?'page':'false')+'" onclick="selectDailyGrowthTab(\'meals\')">🍳 三餐自煮</button></nav>';
+  }
+  function growthMealsCacheKey(month){return 'daily-growth-meals-v1-'+month;}
+  function growthReadMealsCache(month){
+    try{var cached=JSON.parse(localStorage.getItem(growthMealsCacheKey(month))||'null');if(cached&&cached.version===1&&cached.data&&cached.data.month===month&&Array.isArray(cached.data.meals))return cached.data;}catch(ignore){}
+    return null;
+  }
+  function growthWriteMealsCache(data){try{localStorage.setItem(growthMealsCacheKey(data.month),JSON.stringify({version:1,savedAt:Date.now(),data:data}));}catch(ignore){}}
+  function growthMealMonthShift(month,delta){return growthMonthShift(month,delta);}
+  function growthMealRender(){
+    var month=growthState.mealMonth||growthToday().slice(0,7),parts=month.split('-').map(Number),year=parts[0],monthNum=parts[1],today=growthToday();
+    var firstDay=new Date(Date.UTC(year,monthNum-1,1)).getUTCDay(),days=new Date(Date.UTC(year,monthNum,0)).getUTCDate(),counts={},byMeal={breakfast:0,lunch:0,dinner:0};
+    (growthState.mealData&&growthState.mealData.meals||[]).forEach(function(item){if(item.homeCooked){counts[item.date]=(counts[item.date]||0)+1;if(Object.prototype.hasOwnProperty.call(byMeal,item.meal))byMeal[item.meal]++;}});
+    var selected=growthState.mealDate||((month===today.slice(0,7))?today:(month+'-'+String(days).padStart(2,'0')));
+    if(selected.slice(0,7)!==month||selected>today)selected=(month===today.slice(0,7))?today:(month+'-'+String(days).padStart(2,'0'));
+    growthState.mealDate=selected;
+    var cells='';for(var blank=0;blank<firstDay;blank++)cells+='<span class="dg-cal-blank" aria-hidden="true"></span>';
+    for(var day=1;day<=days;day++){
+      var date=month+'-'+String(day).padStart(2,'0'),count=counts[date]||0,disabled=date>today;
+      cells+='<button type="button" class="dg-cal-day'+(date===selected?' is-selected':'')+(date===today?' is-today':'')+(count?' has-achievement':'')+'" '+(disabled?'disabled':'')+' onclick="selectDailyMealDate(\''+date+'\')" aria-label="'+date+'，自煮 '+count+' 餐" title="'+date+' · 自煮 '+count+' 餐"><span>'+day+'</span>'+(count?'<small>'+count+'</small>':'')+'</button>';
+    }
+    var options=[['breakfast','早餐','🌅'],['lunch','午餐','☀️'],['dinner','晚餐','🌙']],records={};
+    (growthState.mealData&&growthState.mealData.meals||[]).forEach(function(item){if(item.date===selected)records[item.meal]=!!item.homeCooked;});
+    var mealRows=options.map(function(option){var checked=!!records[option[0]];return '<div class="dg-meal-row'+(checked?' is-cooked':'')+'"><div class="dg-meal-row-label"><span aria-hidden="true">'+option[2]+'</span><div><strong>'+option[1]+'</strong><small>'+selected.replace(/-/g,' / ')+'</small></div></div><button type="button" class="dg-meal-toggle'+(checked?' is-on':'')+'" '+(growthState.mealBusy?'disabled':'')+' aria-pressed="'+checked+'" onclick="toggleDailyMeal(\''+selected+'\',\''+option[0]+'\','+(!checked)+')">'+(checked?'✓ 自己煮':'＋ 記為自己煮')+'</button></div>';}).join('');
+    var total=byMeal.breakfast+byMeal.lunch+byMeal.dinner,next=month>=today.slice(0,7);
+    return '<section class="dg-card dg-meals-card"><div class="dg-card-head"><div><div class="dg-card-title">🍳 每日三餐自煮</div><div class="dg-card-note">選擇日期，記錄早餐、午餐與晚餐是否自己煮</div></div></div><div class="dg-month-summary"><div class="dg-month-total"><strong>'+total+'</strong><span>本月自煮餐次</span></div><div class="dg-month-breakdown"><span>🌅 早餐 <b>'+byMeal.breakfast+'</b></span><span>☀️ 午餐 <b>'+byMeal.lunch+'</b></span><span>🌙 晚餐 <b>'+byMeal.dinner+'</b></span></div></div><section class="dg-card dg-calendar-card dg-meal-calendar"><div class="dg-cal-head"><button class="dg-cal-nav" type="button" onclick="changeDailyMealMonth(-1)" aria-label="上一個月">‹</button><div><div class="dg-card-title">🗓️ 每月紀錄</div><div class="dg-card-note">點選日期查看或補登三餐</div></div><strong>'+year+' 年 '+monthNum+' 月</strong><button class="dg-cal-nav" type="button" '+(next?'disabled':'')+' onclick="changeDailyMealMonth(1)" aria-label="下一個月">›</button></div><div class="dg-calendar-grid dg-weekdays">'+['日','一','二','三','四','五','六'].map(function(day){return '<span>'+day+'</span>';}).join('')+'</div><div class="dg-calendar-grid">'+cells+'</div><div class="dg-cal-legend"><span><i></i>自煮餐次</span><span>本月共 '+total+' 餐</span></div></section><div class="dg-meal-list">'+mealRows+'</div></section>';
+  }
   function growthRender(){
     var body=document.getElementById('p-body');if(!body)return;
-    if(!growthState.data){body.innerHTML='<div class="dg-page">'+growthRenderMessage()+'</div>';return;}
+    if(growthState.activeTab==='meals'){
+      body.innerHTML='<div class="dg-page">'+growthTabsHtml()+growthRenderMessage()+(growthState.mealData?growthMealRender():'<div class="dg-message">載入本月三餐紀錄中…</div>')+'</div>';
+      return;
+    }
+    if(!growthState.data){body.innerHTML='<div class="dg-page">'+growthTabsHtml()+growthRenderMessage()+'</div>';return;}
     var data=growthState.data,tasks=data.tasks||[],events=data.events||[],today=growthToday(),todayDone=growthEventsForToday(),level=growthLevel(Number(data.totalXp)||0);
     var historyDate=growthState.historyDate||today;
     if(historyDate>today||historyDate<growthHistoryStartDate())historyDate=today;
@@ -81,7 +113,7 @@
       var task=taskById[event.taskId],name=task?task.name:'已完成的成就',category=task?task.category:'';
       return '<article class="dg-task is-done"><span class="dg-check" aria-hidden="true">✓</span><div><div class="dg-task-name">'+growthEscape(name)+'</div>'+(category?'<div class="dg-task-meta">'+growthEscape(category)+'</div>':'')+'</div><span class="dg-task-xp">+1 經驗</span></article>';
     }).join(''):'<div class="dg-empty">這一天沒有完成紀錄。</div>';
-    body.innerHTML='<div class="dg-page">'
+    body.innerHTML='<div class="dg-page">'+growthTabsHtml()
       +growthRenderMessage()
       +'<section class="dg-hero"><div><div class="dg-eyebrow">YOUR LITTLE ADVENTURE · 每一步都算數</div><div class="dg-greeting">今天也為自己種下一點成長</div><div class="dg-date">'+today.replace(/-/g,' / ')+'　·　完成 '+doneCount+' 項今日成就</div></div>'
       +'<div class="dg-level"><div class="dg-level-badge"><span aria-hidden="true">🌱</span> Lv. '+level.level+' 新芽冒險者</div><div class="dg-xp-line">累積 '+(Number(data.totalXp)||0)+' 經驗 · 下一級還差 '+level.remaining+' 點</div><div class="dg-progress" aria-label="升級進度"><span style="width:'+level.progress+'%"></span></div></div></section>'
@@ -113,6 +145,46 @@
     var extra=document.getElementById('p-extra');if(extra)extra.innerHTML='<button class="store-header-date-button" type="button" onclick="refreshDailyGrowth()" aria-label="重新整理成長紀錄" title="重新整理">↻</button>';
     var body=document.getElementById('p-body');if(body)body.innerHTML='<div class="dg-page"><div class="dg-message">正在打開每日成長…</div></div>';
     growthLoad();
+  };
+  async function growthLoadMeals(month){
+    month=month||growthToday().slice(0,7);
+    var today=growthToday();growthState.mealMonth=month;growthState.mealDate=(month===today.slice(0,7))?today:(month+'-'+String(new Date(Date.UTC(Number(month.slice(0,4)),Number(month.slice(5,7)),0)).getUTCDate()).padStart(2,'0'));
+    growthState.mealData=growthReadMealsCache(month);growthStatus(growthState.mealData?'正在背景同步本月三餐紀錄…':'正在載入本月三餐紀錄…',false);growthRender();
+    var requestId=++growthState.mealRequestId;
+    try{
+      var result=await apiGet({action:'dailyMeals',month:month},20000);
+      if(requestId!==growthState.mealRequestId||growthState.mealMonth!==month)return;
+      growthState.mealData=result;growthWriteMealsCache(result);growthStatus('',false);growthRender();
+    }catch(error){
+      if(requestId!==growthState.mealRequestId)return;
+      growthStatus('三餐紀錄讀取失敗：'+(error&&error.message||'請稍後重試'),true);growthRender();
+    }
+  }
+  window.selectDailyGrowthTab=function(tab){
+    growthState.activeTab=tab==='meals'?'meals':'growth';
+    if(growthState.activeTab==='meals')growthLoadMeals(growthState.mealMonth||growthToday().slice(0,7));
+    else{growthStatus('',false);growthRender();}
+  };
+  window.changeDailyMealMonth=function(delta){
+    var next=growthMealMonthShift(growthState.mealMonth||growthToday().slice(0,7),Number(delta)||0);
+    if(next<=growthToday().slice(0,7))growthLoadMeals(next);
+  };
+  window.selectDailyMealDate=function(date){
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(String(date||''))||date.slice(0,7)!==growthState.mealMonth||date>growthToday())return;
+    growthState.mealDate=date;growthStatus('',false);growthRender();
+  };
+  window.toggleDailyMeal=async function(date,meal,homeCooked){
+    if(growthState.mealBusy)return;
+    growthState.mealBusy=true;growthStatus('正在儲存三餐紀錄…',false);growthRender();
+    try{
+      var saved=await apiGet({action:'dailyMealsSetCompletion',date:date,meal:meal,homeCooked:homeCooked?'true':'false'},apiWriteTimeoutMs('dailyMealsSetCompletion'));
+      if(saved&&saved.date===date&&saved.meal===meal){
+        var meals=growthState.mealData.meals||(growthState.mealData.meals=[]),record=meals.find(function(item){return item.date===date&&item.meal===meal;});
+        if(record)record.homeCooked=!!saved.homeCooked;else meals.push({date:date,meal:meal,homeCooked:!!saved.homeCooked});
+        growthWriteMealsCache(growthState.mealData);growthStatus(homeCooked?'已記錄這餐自己煮 🍳':'已更新這餐紀錄。',false);
+      }else growthStatus('伺服器回覆與選擇不一致，請重新整理確認。',true);
+    }catch(error){growthStatus('三餐紀錄儲存失敗：'+(error&&error.message||'請稍後重試'),true);}
+    finally{growthState.mealBusy=false;growthRender();}
   };
   window.refreshDailyGrowth=function(){growthLoad();};
   window.changeDailyGrowthCalendarMonth=function(delta){
