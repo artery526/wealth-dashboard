@@ -1,7 +1,7 @@
 {
   "id": "2026-10-18-finance-category-annual-report",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-10-18",
   "area": "財政",
   "summary": "調整本月收支分類明細在手機版的呈現位置",
   "details": "將本月收入與支出分類及上月差額移至年度財報頁面上方，避免國庫現況窄欄裁切內容。",
