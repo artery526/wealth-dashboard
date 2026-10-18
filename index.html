@@ -2403,17 +2403,19 @@ html.war-room-standalone .panel-head{padding:12px 18px;border-bottom-color:rgba(
 .dividend-center-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:0 0 12px}
 .dividend-center-tab{min-width:0;padding:9px 8px;border:1px solid rgba(232,192,80,.28);border-radius:7px;background:rgba(232,192,80,.05);color:#9a7430;font-family:var(--sans);font-size:12px;font-weight:900;cursor:pointer}
 .dividend-center-tab.active{border-color:rgba(124,111,192,.7);background:linear-gradient(180deg,rgba(71,59,147,.72),rgba(43,33,92,.72));color:#fff}
-.manual-return-card{border:1px solid rgba(232,192,80,.25);border-radius:9px;background:linear-gradient(145deg,rgba(15,20,30,.96),rgba(8,10,17,.98));padding:12px;min-width:0}
-.manual-return-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-.manual-return-card-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.manual-return-table-wrap{width:100%;overflow-x:auto;border:1px solid rgba(232,192,80,.25);border-radius:9px}
+.manual-return-grid{min-width:830px}
+.manual-return-table-head,.manual-return-card{display:grid;grid-template-columns:minmax(130px,1.15fr) minmax(100px,.9fr) minmax(145px,1.25fr) minmax(100px,.9fr) minmax(135px,1.15fr) minmax(112px,.95fr);gap:8px;align-items:center;padding:9px 10px}
+.manual-return-table-head{background:rgba(232,192,80,.08);color:#d2bb82;font:800 10px var(--sans)}
+.manual-return-card{border-top:1px solid rgba(232,192,80,.14);background:linear-gradient(145deg,rgba(15,20,30,.96),rgba(8,10,17,.98));min-width:0}
+.manual-return-card-head{display:none}
 .manual-return-card-title{margin:0;color:#e4cc91;font:800 13px var(--sans)}
-.manual-return-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .manual-return-field{min-width:0}
-.manual-return-field.name{grid-column:1/-1}
-.manual-return-field label{display:block;margin:0 0 4px;color:#9f8d69;font:700 10px var(--sans)}
+.manual-return-field label{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 .manual-return-field input{box-sizing:border-box;width:100%;min-width:0;height:36px;padding:6px 8px;border:1px solid rgba(124,111,192,.38);border-radius:6px;background:#0a0d16;color:#e8e5f2;font:700 13px var(--mono)}
 .manual-return-field input:focus{outline:2px solid rgba(124,111,192,.65);outline-offset:1px}
-.manual-return-output{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-top:10px;padding-top:9px;border-top:1px solid rgba(232,192,80,.16);color:#9f8d69;font:700 11px var(--sans)}
+.manual-return-output{display:flex;align-items:center;justify-content:center;min-width:0;color:#9f8d69;font:700 11px var(--sans)}
+.manual-return-output span{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 .manual-return-output strong{font:900 19px var(--mono);color:#86d8ec;white-space:nowrap}
 .manual-return-output strong.positive{color:#ff8d91}
 .manual-return-output strong.negative{color:#76d5a7}
@@ -2421,7 +2423,7 @@ html.war-room-standalone .panel-head{padding:12px 18px;border-bottom-color:rgba(
 .manual-return-method{margin:0 0 10px;color:#8ca9b7;font:11px/1.6 var(--sans)}
 .manual-return-actions{display:flex;justify-content:flex-end;margin-bottom:9px}
 .manual-return-reset{padding:6px 10px;border:1px solid rgba(124,111,192,.4);border-radius:6px;background:rgba(124,111,192,.1);color:#cbbcf0;font:800 10px var(--sans);cursor:pointer}
-@media(max-width:540px){.dividend-center-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}.dividend-center-tab:last-child{grid-column:1/-1}.manual-return-grid{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:700px){.dividend-center-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}.dividend-center-tab:last-child{grid-column:1/-1}.manual-return-grid{min-width:0}.manual-return-table-head{display:none}.manual-return-card{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:12px}.manual-return-card-head{display:flex;grid-column:1/-1;margin:0}.manual-return-field label{position:static;display:block;width:auto;height:auto;padding:0;margin:0 0 4px;overflow:visible;clip:auto;white-space:normal;border:0;color:#9f8d69;font:700 10px var(--sans)}.manual-return-field.name{grid-column:1/-1}.manual-return-output{grid-column:1/-1;justify-content:space-between;margin-top:2px;padding-top:9px;border-top:1px solid rgba(232,192,80,.16)}.manual-return-output span{position:static;width:auto;height:auto;padding:0;margin:0;overflow:visible;clip:auto;white-space:normal;border:0}}
 .dividend-pending-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid #1e1408}
 .dividend-pending-name{font-family:var(--sans);font-size:12px;font-weight:800;color:var(--ink)}
 .dividend-pending-meta{font-family:var(--sans);font-size:12px;font-weight:800;color:#c09a50;margin-top:4px;line-height:1.5}
@@ -13490,22 +13492,22 @@ function renderManualReturnComparisonPanel(){
     {key:'latestPrice',label:'最新股價',type:'number',placeholder:'例如 105'},
     {key:'dividendFactor',label:'退稅後實拿比例（%）',type:'number',placeholder:'例如 96.3'}
   ];
-  var cards=manualReturnComparisonState.map(function(row,index){
+  var rows=manualReturnComparisonState.map(function(row,index){
     var calculation=manualReturnCalculation(row);
     var resultText=calculation.valid?(calculation.percent>0?'+':'')+calculation.percent.toFixed(2)+'%':'—';
     var resultClass=calculation.valid?(calculation.percent>0?'positive':(calculation.percent<0?'negative':'')):'invalid';
     var inputs=fields.map(function(field){
       var value=String(row[field.key]==null?'':row[field.key]);
       var numeric=field.type==='number';
-      return `<div class="manual-return-field ${field.className||''}">
+      return `<div class="manual-return-field ${field.className||''}" role="cell">
         <label for="manual-return-${index}-${field.key}">${field.label}</label>
-        <input id="manual-return-${index}-${field.key}" data-return-index="${index}" data-return-field="${field.key}" type="${field.type}" ${numeric?'min="0" step="any" inputmode="decimal"':''} ${field.key==='dividendFactor'?'max="100"':''} value="${esc(value)}" placeholder="${field.placeholder}" oninput="updateManualReturnComparison(this)">
+        <input id="manual-return-${index}-${field.key}" aria-label="比較 ${index+1}：${field.label}" data-return-index="${index}" data-return-field="${field.key}" type="${field.type}" ${numeric?'min="0" step="any" inputmode="decimal"':''} ${field.key==='dividendFactor'?'max="100"':''} value="${esc(value)}" placeholder="${field.placeholder}" oninput="updateManualReturnComparison(this)">
       </div>`;
     }).join('');
-    return `<article class="manual-return-card" data-manual-return-card="${index}">
+    return `<article class="manual-return-card" role="row" data-manual-return-card="${index}">
       <div class="manual-return-card-head"><h3 class="manual-return-card-title">比較 ${index+1}</h3></div>
-      <div class="manual-return-fields">${inputs}</div>
-      <div class="manual-return-output"><span>總報酬率</span><strong class="${resultClass}" id="manual-return-${index}-result" aria-live="polite">${resultText}</strong></div>
+      ${inputs}
+      <div class="manual-return-output" role="cell" aria-label="比較 ${index+1}：總報酬率"><span>總報酬率</span><strong class="${resultClass}" id="manual-return-${index}-result" aria-live="polite">${resultText}</strong></div>
     </article>`;
   }).join('');
   return `<section class="advisor-div-calc-card dividend-center-calculator manual-return-panel" aria-labelledby="manual-return-title">
@@ -13513,7 +13515,10 @@ function renderManualReturnComparisonPanel(){
     <div class="advisor-shortcut-hint">五組標的自行輸入比較；資料只留在目前頁面記憶體，不會寫入試算表或儲存空間。</div>
     <p class="manual-return-method">公式：（最新股價 − 初始股價 + 每股稅前配息 × 退稅後實拿比例）÷ 初始股價。比例是實拿占比（例如 96.3% 乘上配息），不是額外加回的稅額；每組請使用同一幣別。</p>
     <div class="manual-return-actions"><button class="manual-return-reset" type="button" onclick="resetManualReturnComparisons()">清空五組</button></div>
-    <div class="manual-return-grid">${cards}</div>
+    <div class="manual-return-table-wrap"><div class="manual-return-grid" role="table" aria-label="五組標的總報酬比較">
+      <div class="manual-return-table-head" role="row"><span role="columnheader">標的名稱</span><span role="columnheader">初始股價</span><span role="columnheader">期間總配息</span><span role="columnheader">最新股價</span><span role="columnheader">退稅實拿比例%</span><span role="columnheader">總報酬率</span></div>
+      ${rows}
+    </div></div>
   </section>`;
 }
 
@@ -21121,7 +21126,7 @@ function mpmRender(records){
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('./sw.js?v=20261018-manual-return-comparison1', {updateViaCache:'none'}).then(function (registration) {
+    navigator.serviceWorker.register('./sw.js?v=20261018-return-horizontal1', {updateViaCache:'none'}).then(function (registration) {
       return registration.update();
     }).catch(function (error) {
       console.warn('Empire Service Worker registration failed', error);

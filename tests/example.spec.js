@@ -500,6 +500,43 @@ test('manual total return comparison calculates five entries without API or stor
   await expect(page.locator('#manual-return-4-dividendFactor')).toHaveValue('100');
 });
 
+test('manual return comparison uses aligned desktop columns and keeps mobile cards', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto(dashboardUrl);
+  await page.evaluate(() => {
+    document.querySelectorAll('#web-login-overlay,.web-login-scroll').forEach(element => element.remove());
+    const host = document.createElement('div');
+    host.id = 'dividend-center-content';
+    host.style.width = '100%';
+    document.body.appendChild(host);
+    manualReturnComparisonState = Array.from({ length: 5 }, () => ({ name: '', initialPrice: '', periodDividend: '', latestPrice: '', dividendFactor: '100' }));
+    host.innerHTML = renderManualReturnComparisonPanel();
+  });
+  await expect(page.locator('.manual-return-table-head [role="columnheader"]')).toHaveText([
+    '標的名稱', '初始股價', '期間總配息', '最新股價', '退稅實拿比例%', '總報酬率'
+  ]);
+  await expect(page.locator('.manual-return-card')).toHaveCount(5);
+  const desktop = await page.locator('.manual-return-card').first().evaluate(element => ({
+    columns: getComputedStyle(element).gridTemplateColumns.split(' ').length,
+    horizontalScroll: element.closest('.manual-return-table-wrap').scrollWidth > element.closest('.manual-return-table-wrap').clientWidth
+  }));
+  expect(desktop.columns).toBe(6);
+  expect(desktop.horizontalScroll).toBe(false);
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  const mobile = await page.evaluate(() => ({
+    headerDisplay: getComputedStyle(document.querySelector('.manual-return-table-head')).display,
+    cardColumns: getComputedStyle(document.querySelector('.manual-return-card')).gridTemplateColumns.split(' ').length,
+    labelVisible: getComputedStyle(document.querySelector('.manual-return-field label')).position === 'static',
+    documentWidth: document.documentElement.scrollWidth,
+    viewport: window.innerWidth
+  }));
+  expect(mobile.headerDisplay).toBe('none');
+  expect(mobile.cardColumns).toBe(2);
+  expect(mobile.labelVisible).toBe(true);
+  expect(mobile.documentWidth).toBeLessThanOrEqual(mobile.viewport);
+});
+
 test('Pangtong income dropdown builds a fixed Stock income command', async ({ page }) => {
   await page.goto(dashboardUrl);
   const result = await page.evaluate(() => {
