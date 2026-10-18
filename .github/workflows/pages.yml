@@ -27,6 +27,9 @@ jobs:
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v6
 
+      - name: Validate and build release notes feed
+        run: node scripts/build-release-feed.js
+
       - name: Upload site artifact
         uses: actions/upload-pages-artifact@v5
         with:

@@ -1,0 +1,9 @@
+{
+  "id": "2026-10-12-windows-legacy-ledger-summary",
+  "status": "released",
+  "date": "2026-10-12",
+  "area": "監視面板",
+  "summary": "新增舊帳整理年度彙總分頁",
+  "details": "可檢視年度收支、轉帳與投資交易，以及全期間資料品質摘要；只讀彙總，不修改舊帳原始資料。",
+  "platforms": ["windows", "app-script"]
+}

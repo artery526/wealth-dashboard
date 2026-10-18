@@ -1,0 +1,9 @@
+{
+  "id": "2026-10-18-cross-thread-update-log",
+  "status": "in_progress",
+  "date": null,
+  "area": "監視面板",
+  "summary": "建立跨討論串共用更新紀錄與監視面板分頁",
+  "details": "以獨立條目供各討論串查閱，僅將已驗證發布的更新送入 Windows 監視面板。",
+  "platforms": ["website", "windows"]
+}

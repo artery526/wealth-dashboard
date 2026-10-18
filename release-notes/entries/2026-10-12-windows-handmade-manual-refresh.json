@@ -1,0 +1,9 @@
+{
+  "id": "2026-10-12-windows-handmade-manual-refresh",
+  "status": "released",
+  "date": "2026-10-12",
+  "area": "監視面板",
+  "summary": "手作訂單改為手動即時更新",
+  "details": "取消訂單背景定時讀取，改由即時監視卡片上的按鈕觸發更新。",
+  "platforms": ["windows"]
+}
