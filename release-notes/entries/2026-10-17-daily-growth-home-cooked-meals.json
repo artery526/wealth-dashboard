@@ -1,0 +1,9 @@
+{
+  "id": "2026-10-17-daily-growth-home-cooked-meals",
+  "status": "in_progress",
+  "date": null,
+  "area": "每日成長",
+  "summary": "每日成長新增三餐自煮記錄與月統計",
+  "details": "新增早餐、午餐、晚餐自煮記錄，可按月份查看每日餐次與月總數、餐別統計，並支援過去日期補登。記錄儲存於獨立試算表分頁，不影響每日成就經驗。",
+  "platforms": ["website", "app-script"]
+}
