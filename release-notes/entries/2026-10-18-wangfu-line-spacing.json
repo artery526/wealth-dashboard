@@ -1,0 +1,9 @@
+{
+  "id": "2026-10-18-wangfu-line-spacing",
+  "status": "released",
+  "date": "2026-10-18",
+  "area": "王府",
+  "summary": "調整指定文章粗體段落的空行",
+  "details": "將指定粗體段落中的多餘空白行改為單次換行，已在 Chrome 儲存並確認兩句粗體連續顯示。本次僅調整文章內容，不涉及程式或容器部署。",
+  "platforms": ["website"]
+}
