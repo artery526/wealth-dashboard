@@ -71,9 +71,9 @@
     }
     var options=[['breakfast','早餐','🌅'],['lunch','午餐','☀️'],['dinner','晚餐','🌙']],records={};
     (growthState.mealData&&growthState.mealData.meals||[]).forEach(function(item){if(item.date===selected)records[item.meal]=!!item.homeCooked;});
-    var mealRows=options.map(function(option){var checked=!!records[option[0]];return '<div class="dg-meal-row'+(checked?' is-cooked':'')+'"><div class="dg-meal-row-label"><span aria-hidden="true">'+option[2]+'</span><div><strong>'+option[1]+'</strong><small>'+selected.replace(/-/g,' / ')+'</small></div></div><button type="button" class="dg-meal-toggle'+(checked?' is-on':'')+'" '+(growthState.mealBusy?'disabled':'')+' aria-pressed="'+checked+'" onclick="toggleDailyMeal(\''+selected+'\',\''+option[0]+'\','+(!checked)+')">'+(checked?'✓ 自己煮':'＋ 記為自己煮')+'</button></div>';}).join('');
+    var mealRows=options.map(function(option){var checked=!!records[option[0]];return '<div class="dg-meal-row'+(checked?' is-cooked':'')+'"><div class="dg-meal-row-label"><span aria-hidden="true">'+option[2]+'</span><div><strong>'+option[1]+'</strong><small>'+selected.replace(/-/g,' / ')+'</small></div></div><span class="dg-meal-toggle'+(checked?' is-on':'')+'">'+(checked?'✓ 自己煮':'未記錄')+'</span></div>';}).join('');
     var total=byMeal.breakfast+byMeal.lunch+byMeal.dinner,next=month>=today.slice(0,7);
-    return '<section class="dg-card dg-meals-card"><div class="dg-card-head"><div><div class="dg-card-title">🍳 每日三餐自煮</div><div class="dg-card-note">選擇日期，記錄早餐、午餐與晚餐是否自己煮</div></div></div><div class="dg-month-summary"><div class="dg-month-total"><strong>'+total+'</strong><span>本月自煮餐次</span></div><div class="dg-month-breakdown"><span>🌅 早餐 <b>'+byMeal.breakfast+'</b></span><span>☀️ 午餐 <b>'+byMeal.lunch+'</b></span><span>🌙 晚餐 <b>'+byMeal.dinner+'</b></span></div></div><section class="dg-card dg-calendar-card dg-meal-calendar"><div class="dg-cal-head"><button class="dg-cal-nav" type="button" onclick="changeDailyMealMonth(-1)" aria-label="上一個月">‹</button><div><div class="dg-card-title">🗓️ 每月紀錄</div><div class="dg-card-note">點選日期查看或補登三餐</div></div><strong>'+year+' 年 '+monthNum+' 月</strong><button class="dg-cal-nav" type="button" '+(next?'disabled':'')+' onclick="changeDailyMealMonth(1)" aria-label="下一個月">›</button></div><div class="dg-calendar-grid dg-weekdays">'+['日','一','二','三','四','五','六'].map(function(day){return '<span>'+day+'</span>';}).join('')+'</div><div class="dg-calendar-grid">'+cells+'</div><div class="dg-cal-legend"><span><i></i>自煮餐次</span><span>本月共 '+total+' 餐</span></div></section><div class="dg-meal-list">'+mealRows+'</div></section>';
+    return '<section class="dg-card dg-meals-card"><div class="dg-card-head"><div><div class="dg-card-title">🍳 每日三餐自煮</div><div class="dg-card-note">選擇日期，查看早餐、午餐與晚餐紀錄</div></div></div><div class="dg-month-summary"><div class="dg-month-total"><strong>'+total+'</strong><span>本月自煮餐次</span></div><div class="dg-month-breakdown"><span>🌅 早餐 <b>'+byMeal.breakfast+'</b></span><span>☀️ 午餐 <b>'+byMeal.lunch+'</b></span><span>🌙 晚餐 <b>'+byMeal.dinner+'</b></span></div></div><section class="dg-card dg-calendar-card dg-meal-calendar"><div class="dg-cal-head"><button class="dg-cal-nav" type="button" onclick="changeDailyMealMonth(-1)" aria-label="上一個月">‹</button><div><div class="dg-card-title">🗓️ 每月紀錄</div><div class="dg-card-note">點選日期查看餐次</div></div><strong>'+year+' 年 '+monthNum+' 月</strong><button class="dg-cal-nav" type="button" '+(next?'disabled':'')+' onclick="changeDailyMealMonth(1)" aria-label="下一個月">›</button></div><div class="dg-calendar-grid dg-weekdays">'+['日','一','二','三','四','五','六'].map(function(day){return '<span>'+day+'</span>';}).join('')+'</div><div class="dg-calendar-grid">'+cells+'</div><div class="dg-cal-legend"><span><i></i>自煮餐次</span><span>本月共 '+total+' 餐</span></div></section><div class="dg-meal-list">'+mealRows+'</div></section>';
   }
   function growthRender(){
     var body=document.getElementById('p-body');if(!body)return;
@@ -87,20 +87,13 @@
     if(historyDate>today||historyDate<growthHistoryStartDate())historyDate=today;
     var doneCount=events.filter(function(event){return event.date===today&&event.done;}).length;
     var attributeNames=['活力','專注','紀律','連結感'];
-    var availableTasks=tasks.filter(function(task){return !todayDone[task.id];});
-    var completedTasks=tasks.filter(function(task){return !!todayDone[task.id];});
-    var taskHtml=availableTasks.length?availableTasks.map(function(task){
-      return '<article class="dg-task">'
-        +'<button class="dg-check" type="button" '+(growthState.busy?'disabled':'')+' onclick="toggleDailyGrowthCompletion(\''+growthEscape(task.id)+'\',true)" aria-label="完成'+growthEscape(task.name)+'"></button>'
+    var taskHtml=tasks.length?tasks.map(function(task){
+      var done=!!todayDone[task.id];
+      return '<article class="dg-task'+(done?' is-done':'')+'">'
+        +'<span class="dg-check" aria-hidden="true">'+(done?'✓':'')+'</span>'
         +'<div><div class="dg-task-name">'+growthEscape(task.name)+'</div><div class="dg-task-meta">'+growthEscape(task.category)+' · 培養 '+growthEscape(task.attribute||growthAttribute[task.category]||'紀律')+'</div></div>'
-        +'<span class="dg-task-xp">+1 經驗</span></article>';
-    }).join(''):(tasks.length?'<div class="dg-empty">今天的成就都完成了，做得好！</div>':'<div class="dg-empty">還沒有成就，新增一項今天想完成的小事吧。</div>');
-    var completedTaskHtml=completedTasks.length?completedTasks.map(function(task){
-      return '<article class="dg-task is-done">'
-        +'<span class="dg-check" aria-hidden="true">✓</span>'
-        +'<div><div class="dg-task-name">'+growthEscape(task.name)+'</div><div class="dg-task-meta">'+growthEscape(task.category)+' · 培養 '+growthEscape(task.attribute||growthAttribute[task.category]||'紀律')+'</div></div>'
-        +'<span class="dg-task-xp">'+(event.syncStatus==='pending'?'⏳ 待同步':'☁️ 已同步')+' · +1 經驗</span></article>';
-    }).join(''):'<div class="dg-empty">今天還沒有完成的成就。</div>';
+        +'<span class="dg-task-xp">'+(done?'已完成':'今日待完成')+'</span></article>';
+    }).join(''):'<div class="dg-empty">還沒有成就紀錄。</div>';
     var attributes=data.attributes||{};
     var attributeHtml=attributeNames.map(function(name){var value=Number(attributes[name])||0;return '<div class="dg-attribute"><div class="dg-attribute-name">'+name+'</div><div class="dg-attribute-track"><span style="width:'+Math.min(100,value*5)+'%"></span></div><div class="dg-attribute-value">'+value+'</div></div>';}).join('');
     var week=[];for(var i=6;i>=0;i--){var date=new Date(new Date(today+'T12:00:00+08:00').getTime()-i*86400000);week.push(date.toISOString().slice(0,10));}
@@ -113,14 +106,16 @@
       var task=taskById[event.taskId],name=task?task.name:'已完成的成就',category=task?task.category:'';
       return '<article class="dg-task is-done"><span class="dg-check" aria-hidden="true">✓</span><div><div class="dg-task-name">'+growthEscape(name)+'</div>'+(category?'<div class="dg-task-meta">'+growthEscape(category)+'</div>':'')+'</div><span class="dg-task-xp">+1 經驗</span></article>';
     }).join(''):'<div class="dg-empty">這一天沒有完成紀錄。</div>';
+    var notes=data.notes||[];
+    var notesHtml=notes.length?notes.slice(0,10).map(function(note){return '<article class="dg-note-row"><time>'+growthEscape(note.date)+'</time><div>'+growthEscape(note.content).replace(/\r?\n/g,'<br>')+'</div></article>';}).join(''):'<div class="dg-empty">還沒有文字紀錄。</div>';
     body.innerHTML='<div class="dg-page">'+growthTabsHtml()
       +growthRenderMessage()
       +'<section class="dg-hero"><div><div class="dg-eyebrow">YOUR LITTLE ADVENTURE · 每一步都算數</div><div class="dg-greeting">今天也為自己種下一點成長</div><div class="dg-date">'+today.replace(/-/g,' / ')+'　·　完成 '+doneCount+' 項今日成就</div></div>'
       +'<div class="dg-level"><div class="dg-level-badge"><span aria-hidden="true">🌱</span> Lv. '+level.level+' 新芽冒險者</div><div class="dg-xp-line">累積 '+(Number(data.totalXp)||0)+' 經驗 · 下一級還差 '+level.remaining+' 點</div><div class="dg-progress" aria-label="升級進度"><span style="width:'+level.progress+'%"></span></div></div></section>'
       +'<div class="dg-layout"><section class="dg-card"><div class="dg-card-head"><div><div class="dg-card-title">☀️ 今日成就</div><div class="dg-card-note">完成一項，累積 1 點經驗與對應屬性</div></div><span class="dg-count">'+doneCount+' / '+tasks.length+' 完成</span></div>'
       +'<div class="dg-task-list">'+taskHtml+'</div>'
-      +'<section class="dg-completed"><div class="dg-completed-head"><span>✅ 今日已完成</span><span>'+completedTasks.length+' 項</span></div><div class="dg-task-list">'+completedTaskHtml+'</div></section>'
-      +'<form class="dg-add-form" onsubmit="submitDailyGrowthTask(event)"><input class="dg-input" id="dg-new-task" maxlength="40" placeholder="新增一件想完成的小事" aria-label="新增成就名稱" required><select class="dg-select" id="dg-new-category" aria-label="成就分類">'+growthCategories.map(function(category){return '<option value="'+category+'">'+category+' · '+growthAttribute[category]+'</option>';}).join('')+'</select><button class="dg-button" type="submit" '+(growthState.busy?'disabled':'')+'>＋ 新增成就</button></form>'
+      +'<section class="dg-notes-readonly"><div class="dg-completed-head"><span>📝 最近文字紀錄</span><span>共 '+notes.length+' 則</span></div><div class="dg-note-list">'+notesHtml+'</div></section>'
+      +'<div class="dg-readonly-note">紀錄由 E-Habit APP 輸入與同步</div>'
       +'</section><aside class="dg-side">'+growthRenderCalendar(historyDate,today,events)+'<section class="dg-card"><div class="dg-card-head"><div><div class="dg-card-title">🌼 主角屬性</div><div class="dg-card-note">每次完成都會累積對應成長</div></div></div><div class="dg-attributes">'+attributeHtml+'</div></section>'
       +'<section class="dg-card"><div class="dg-card-head"><div><div class="dg-card-title">📅 最近七日</div><div class="dg-card-note">每日完成成就數</div></div></div><div class="dg-history">'+historyHtml+'</div><div class="dg-history-note">這週累積 '+weekCounts.reduce(function(sum,value){return sum+value;},0)+' 點經驗</div><div class="dg-history-picker"><label for="dg-history-date">查看日期明細</label><input class="dg-input" id="dg-history-date" type="date" min="'+growthHistoryStartDate()+'" max="'+today+'" value="'+growthEscape(historyDate)+'" onchange="selectDailyGrowthHistory(this.value)"></div><div class="dg-history-selected">'+historyDate.replace(/-/g,' / ')+'　·　完成 '+historyDone.length+' 項</div><div class="dg-task-list">'+historyTaskHtml+'</div></section></aside></div></div>';
   }
@@ -173,19 +168,6 @@
     if(!/^\d{4}-\d{2}-\d{2}$/.test(String(date||''))||date.slice(0,7)!==growthState.mealMonth||date>growthToday())return;
     growthState.mealDate=date;growthStatus('',false);growthRender();
   };
-  window.toggleDailyMeal=async function(date,meal,homeCooked){
-    if(growthState.mealBusy)return;
-    growthState.mealBusy=true;growthStatus('正在儲存三餐紀錄…',false);growthRender();
-    try{
-      var saved=await apiGet({action:'dailyMealsSetCompletion',date:date,meal:meal,homeCooked:homeCooked?'true':'false'},apiWriteTimeoutMs('dailyMealsSetCompletion'));
-      if(saved&&saved.date===date&&saved.meal===meal){
-        var meals=growthState.mealData.meals||(growthState.mealData.meals=[]),record=meals.find(function(item){return item.date===date&&item.meal===meal;});
-        if(record)record.homeCooked=!!saved.homeCooked;else meals.push({date:date,meal:meal,homeCooked:!!saved.homeCooked});
-        growthWriteMealsCache(growthState.mealData);growthStatus(homeCooked?'已記錄這餐自己煮 🍳':'已更新這餐紀錄。',false);
-      }else growthStatus('伺服器回覆與選擇不一致，請重新整理確認。',true);
-    }catch(error){growthStatus('三餐紀錄儲存失敗：'+(error&&error.message||'請稍後重試'),true);}
-    finally{growthState.mealBusy=false;growthRender();}
-  };
   window.refreshDailyGrowth=function(){growthLoad();};
   window.changeDailyGrowthCalendarMonth=function(delta){
     var current=growthState.calendarMonth||growthToday().slice(0,7),next=growthMonthShift(current,Number(delta)||0);
@@ -200,48 +182,5 @@
     var date=String(value||''),today=growthToday();
     if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||date>today||date<growthHistoryStartDate())return;
     growthState.historyDate=date;growthState.calendarMonth=date.slice(0,7);growthRender();
-  };
-  window.toggleDailyGrowthCompletion=async function(taskId,done){
-    if(growthState.busy||!growthState.data)return;
-    var data=growthState.data,today=growthToday(),events=data.events||(data.events=[]),eventIndex=events.findIndex(function(event){return event.date===today&&event.taskId===taskId;}),previousEvent=eventIndex>=0?Object.assign({},events[eventIndex]):null,wasDone=!!(previousEvent&&previousEvent.done===true),task=(data.tasks||[]).find(function(item){return item.id===taskId;}),attribute=task&&(task.attribute||growthAttribute[task.category]),previousXp=Number(data.totalXp)||0,previousAttributes=Object.assign({},data.attributes||{});
-    if(!!done===wasDone)return;
-    var optimisticEvent={date:today,taskId:taskId,done:!!done,syncStatus:'pending'};
-    if(eventIndex>=0)events[eventIndex]=optimisticEvent;else{eventIndex=events.length;events.push(optimisticEvent);}
-    data.totalXp=Math.max(0,previousXp+(done?1:-1));
-    if(attribute){data.attributes=data.attributes||{};data.attributes[attribute]=Math.max(0,(Number(data.attributes[attribute])||0)+(done?1:-1));}
-    growthWriteCache(data);growthState.busy=true;growthStatus('成就已加入同步佇列，正在送往伺服器…',false);growthRender();
-    try{
-      await apiGet({action:'dailyGrowthSetCompletion',date:today,taskId:taskId,done:done?'true':'false'},apiWriteTimeoutMs('dailyGrowthSetCompletion'));
-      var savedEvent=(growthState.data.events||[]).find(function(event){return event.date===today&&event.taskId===taskId;});
-      if(savedEvent){savedEvent.done=!!done;savedEvent.syncStatus='synced';}
-      growthWriteCache(growthState.data);growthStatus(done?'已同步至伺服器，正在更新經驗與屬性…':'已同步取消紀錄，正在更新總覽…',false);growthRender();
-      growthState.dataVersion++;
-      var readRequestId=++growthState.readRequestId,writeDataVersion=growthState.dataVersion;
-      try{
-        var latest=await apiGet({action:'dailyGrowth',forceRefresh:'1'},20000);
-        var latestHasCompletion=(latest.events||[]).some(function(event){return event.date===today&&event.taskId===taskId&&event.done===true;});
-        if(readRequestId===growthState.readRequestId&&writeDataVersion===growthState.dataVersion){
-          if(done===latestHasCompletion){growthState.data=latest;growthWriteCache(latest);growthStatus(done?'成就已同步，經驗與屬性已更新 🌱':'取消紀錄已同步，總覽已更新。',false);}
-          else growthStatus('寫入已確認，總覽回讀尚未反映；請稍後重新整理確認。',true);
-        }
-      }
-      catch(readError){if(readRequestId===growthState.readRequestId&&writeDataVersion===growthState.dataVersion)growthStatus('成就已同步；經驗與屬性回讀暫時失敗，稍後可按重新整理。',true);}
-    }
-    catch(error){
-      var currentEvents=growthState.data.events||[],currentIndex=currentEvents.findIndex(function(event){return event.date===today&&event.taskId===taskId;});
-      if(currentIndex>=0){if(previousEvent)currentEvents[currentIndex]=previousEvent;else currentEvents.splice(currentIndex,1);}
-      growthState.data.totalXp=previousXp;growthState.data.attributes=previousAttributes;growthWriteCache(growthState.data);growthStatus('同步失敗，已還原本次勾選：'+(error&&error.message||'請稍後重試'),true);
-    }
-    finally{growthState.busy=false;growthRender();}
-  };
-  window.submitDailyGrowthTask=async function(event){
-    if(event&&event.preventDefault)event.preventDefault();
-    var input=document.getElementById('dg-new-task'),select=document.getElementById('dg-new-category');
-    var name=String(input&&input.value||'').trim(),category=String(select&&select.value||'');
-    if(!name||growthState.busy)return;
-    growthState.busy=true;growthRender();
-    try{await apiGet({action:'dailyGrowthTaskCreate',name:name,category:category},20000);growthStatus('新成就已加入清單。',false);growthState.data=await apiGet({action:'dailyGrowth'},20000);growthWriteCache(growthState.data);}
-    catch(error){growthStatus('新增失敗：'+(error&&error.message||'請稍後重試'),true);}
-    finally{growthState.busy=false;growthRender();}
   };
 })();
