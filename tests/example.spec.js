@@ -606,6 +606,7 @@ test('treasury does not show zero totals when monthly summary is unavailable', a
 });
 
 test('treasury shows monthly income and expense categories and masks their amounts', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(dashboardUrl);
   const result = await page.evaluate(() => {
     const content = document.createElement('div');
@@ -626,7 +627,8 @@ test('treasury shows monthly income and expense categories and masks their amoun
       deltasBeforeMask: Array.from(content.querySelectorAll('.treasury-category-delta')).map(node => node.textContent),
       masked: content.querySelector('.finance-accounts-collapse').classList.contains('is-masked'),
       maskedStyle: getComputedStyle(content.querySelector('.treasury-category-amount')).fontSize,
-      maskedDeltaStyle: getComputedStyle(content.querySelector('.treasury-category-delta')).fontSize
+      maskedDeltaStyle: getComputedStyle(content.querySelector('.treasury-category-delta')).fontSize,
+      rowOverflow: Math.max(...Array.from(content.querySelectorAll('.treasury-category-row')).map(row => row.getBoundingClientRect().right - row.parentElement.getBoundingClientRect().right))
     };
     content.remove();
     return output;
@@ -637,6 +639,7 @@ test('treasury shows monthly income and expense categories and masks their amoun
   expect(result.masked).toBe(true);
   expect(result.maskedStyle).toBe('0px');
   expect(result.maskedDeltaStyle).toBe('0px');
+  expect(result.rowOverflow).toBeLessThanOrEqual(1);
 });
 
 test('a new ledger entry is allowed after a different previous entry was confirmed', async ({ page }) => {

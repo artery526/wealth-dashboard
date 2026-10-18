@@ -2182,11 +2182,10 @@ html.war-room-standalone .panel-head{padding:12px 18px;border-bottom-color:rgba(
 .treasury-category-columns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
 .treasury-category-heading{font-size:10px;font-weight:900;margin-bottom:4px;color:var(--coral)}
 .treasury-category-heading.expense{color:var(--teal)}
-.treasury-category-row{display:flex;justify-content:space-between;gap:6px;padding:3px 0;border-top:1px solid rgba(232,192,80,.08);color:#9bb5bd}
-.treasury-category-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.treasury-category-values{display:flex;flex-direction:column;align-items:flex-end;gap:1px;flex:none}
-.treasury-category-amount{flex:none;font-family:var(--mono);font-weight:800;color:#d7e9ee}
-.treasury-category-delta{font-family:var(--mono);font-size:9px;font-weight:800;white-space:nowrap}
+.treasury-category-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:baseline;gap:2px 8px;padding:5px 0;border-top:1px solid rgba(232,192,80,.08);color:#9bb5bd;min-width:0}
+.treasury-category-name{grid-column:1;grid-row:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.treasury-category-amount{grid-column:2;grid-row:1;white-space:nowrap;font-family:var(--mono);font-weight:800;color:#d7e9ee}
+.treasury-category-delta{grid-column:1/-1;justify-self:end;max-width:100%;font-family:var(--mono);font-size:9px;font-weight:800;white-space:normal;text-align:right;overflow-wrap:anywhere;line-height:1.25}
 .treasury-category-delta.good{color:var(--teal)}
 .treasury-category-delta.bad{color:var(--coral)}
 .treasury-category-delta.same{color:#76919a}
@@ -10196,7 +10195,7 @@ function renderTreasuryCategoryDetails(summary){
       var compareKind=kind==='expense'?(delta>0?'bad':delta<0?'good':'same'):(delta>0?'good':delta<0?'bad':'same');
       var hasComparison=!!summary.previousYm&&!!summary.previous&&Array.isArray(summary.previous.income)&&Array.isArray(summary.previous.expense);
       var compareText=hasComparison?(delta===0?'較上月 持平':'較上月 '+(delta>0?'+':'−')+fmtFull(Math.abs(delta))):'上月比較暫不可用';
-      return `<div class="treasury-category-row"><span class="treasury-category-name" title="${esc(name)}">${esc(name)}</span><div class="treasury-category-values"><strong class="treasury-category-amount">${fmtFull(amount)}</strong><small class="treasury-category-delta ${compareKind}">${esc(compareText)}</small></div></div>`;
+      return `<div class="treasury-category-row"><span class="treasury-category-name" title="${esc(name)}">${esc(name)}</span><strong class="treasury-category-amount">${fmtFull(amount)}</strong><small class="treasury-category-delta ${compareKind}">${esc(compareText)}</small></div>`;
     }).join('');
     return `<div><div class="treasury-category-heading ${kind}">${title}</div>${rows||'<div class="treasury-category-empty">本月無資料</div>'}</div>`;
   }
@@ -20949,7 +20948,7 @@ function mpmRender(records){
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('./sw.js?v=20261017-finance-category-delta1', {updateViaCache:'none'}).then(function (registration) {
+    navigator.serviceWorker.register('./sw.js?v=20261018-finance-category-mobile-fix1', {updateViaCache:'none'}).then(function (registration) {
       return registration.update();
     }).catch(function (error) {
       console.warn('Empire Service Worker registration failed', error);
