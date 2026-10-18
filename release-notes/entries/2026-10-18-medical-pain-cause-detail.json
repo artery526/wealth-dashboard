@@ -1,7 +1,7 @@
 {
   "id": "2026-10-18-medical-pain-cause-detail",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-10-18",
   "area": "醫館疼痛地圖",
   "summary": "疼痛明細顯示自填疼痛起因",
   "details": "在疼痛記錄明細中以小字呈現快速記錄的自填疼痛起因，與舊起因選項分開顯示，並加上輔助技術可辨識的語意標籤。",
