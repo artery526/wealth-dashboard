@@ -556,7 +556,7 @@ test('treasury renders fresh cache immediately and revalidates in the background
   expect(result.cacheVisibleBeforeRefresh).toBe(true);
   expect(result.freshVisibleAfterRefresh).toBe(true);
   expect(result.fullMonthVisible).toBe(true);
-  expect(result.calls.sort()).toEqual(['accounts', 'assetSnapshot', 'bills', 'financeCalendarSummary', 'monthly']);
+  expect(result.calls.sort()).toEqual(['accounts', 'assetSnapshot', 'bills', 'monthly']);
 });
 
 test('treasury keeps the last valid monthly totals when monthly API refresh fails', async ({ page }) => {
@@ -610,26 +610,35 @@ test('treasury shows monthly income and expense categories and masks their amoun
   await page.goto(dashboardUrl);
   const result = await page.evaluate(() => {
     const content = document.createElement('div');
+    const yearlyCategoryHost = document.createElement('div');
+    yearlyCategoryHost.id = 'annual-month-category-summary';
+    document.body.appendChild(yearlyCategoryHost);
     renderAccounts(
       [{ name: '💵國泰Stock', value: 1234 }, { name: '總資產', value: 1234 }],
       { ym: currentYM(), income: 100000, expense: 12000, net: 88000, savingRate: '88%' },
-      content, null, [], false,
-      { income: [{ name: '薪資', amount: 100000 }], expense: [{ name: '外食餐飲', amount: 12000 }], previousYm: '2026/09', previous: { income: [{ name: '薪資', amount: 90000 }], expense: [{ name: '外食餐飲', amount: 15000 }] } }
+      content, null, [], false
     );
     document.body.appendChild(content);
-    const details = content.querySelector('.treasury-category-details');
+    renderFinanceYearlyCategorySummary({
+      ym: currentYM(), previousYm: '2026/09',
+      income: [{ name: '薪資', amount: 100000 }], expense: [{ name: '外食餐飲', amount: 12000 }],
+      previous: { income: [{ name: '薪資', amount: 90000 }], expense: [{ name: '外食餐飲', amount: 15000 }] }
+    });
+    const details = yearlyCategoryHost.querySelector('.treasury-category-details');
     details.open = true;
-    const valuesBeforeMask = Array.from(content.querySelectorAll('.treasury-category-amount')).map(node => node.textContent);
-    content.querySelector('.finance-accounts-toggle').click();
+    const valuesBeforeMask = Array.from(yearlyCategoryHost.querySelectorAll('.treasury-category-amount')).map(node => node.textContent);
+    yearlyCategoryHost.querySelector('.finance-accounts-toggle').click();
     const output = {
-      labels: Array.from(content.querySelectorAll('.treasury-category-row span')).map(node => node.textContent),
+      labels: Array.from(yearlyCategoryHost.querySelectorAll('.treasury-category-name')).map(node => node.textContent),
       valuesBeforeMask,
-      deltasBeforeMask: Array.from(content.querySelectorAll('.treasury-category-delta')).map(node => node.textContent),
-      masked: content.querySelector('.finance-accounts-collapse').classList.contains('is-masked'),
-      maskedStyle: getComputedStyle(content.querySelector('.treasury-category-amount')).fontSize,
-      maskedDeltaStyle: getComputedStyle(content.querySelector('.treasury-category-delta')).fontSize,
-      rowOverflow: Math.max(...Array.from(content.querySelectorAll('.treasury-category-row')).map(row => row.getBoundingClientRect().right - row.parentElement.getBoundingClientRect().right))
+      deltasBeforeMask: Array.from(yearlyCategoryHost.querySelectorAll('.treasury-category-delta')).map(node => node.textContent),
+      masked: yearlyCategoryHost.querySelector('.finance-accounts-collapse').classList.contains('is-masked'),
+      maskedStyle: getComputedStyle(yearlyCategoryHost.querySelector('.treasury-category-amount')).fontSize,
+      maskedDeltaStyle: getComputedStyle(yearlyCategoryHost.querySelector('.treasury-category-delta')).fontSize,
+      rowOverflow: Math.max(...Array.from(yearlyCategoryHost.querySelectorAll('.treasury-category-row')).map(row => row.getBoundingClientRect().right - row.parentElement.getBoundingClientRect().right)),
+      treasuryStillContainsBreakdown: !!content.querySelector('.treasury-category-details')
     };
+    yearlyCategoryHost.remove();
     content.remove();
     return output;
   });
@@ -640,6 +649,46 @@ test('treasury shows monthly income and expense categories and masks their amoun
   expect(result.maskedStyle).toBe('0px');
   expect(result.maskedDeltaStyle).toBe('0px');
   expect(result.rowOverflow).toBeLessThanOrEqual(1);
+  expect(result.treasuryStillContainsBreakdown).toBe(false);
+});
+
+test('annual report loads monthly category comparisons above the report content', async ({ page }) => {
+  await page.goto(dashboardUrl);
+  const result = await page.evaluate(async () => {
+    window.API_URL = 'https://example.test/web-app';
+    localStorage.removeItem(FINANCE_MONTH_CATEGORY_CACHE_KEY);
+    localStorage.removeItem(FINANCE_TREASURY_CACHE_KEY);
+    const oldApiGet = apiGet;
+    const oldLoadDomesticYearly = loadDomesticYearly;
+    const calls = [];
+    apiGet = params => {
+      calls.push(params.action);
+      return Promise.resolve({
+        ym: currentYM(), previousYm: '2026/09', days: {},
+        categories: { income: [{ name: '薪資', amount: 100000 }], expense: [{ name: '餐飲', amount: 2000 }], previousYm: '2026/09', previous: { income: [], expense: [] } }
+      });
+    };
+    loadDomesticYearly = () => Promise.resolve(null);
+    renderFinancePanel('domestic-yearly');
+    const summary = await financeYearlyCategoryPromise;
+    const host = document.getElementById('annual-month-category-summary');
+    const annualContent = document.getElementById('annual-content');
+    const result = {
+      incomeLabel: host.querySelector('.treasury-category-name').textContent,
+      monthLabel: host.querySelector('.finance-collapse-meta').textContent.includes(currentYM()),
+      beforeAnnualContent: host.compareDocumentPosition(annualContent) & Node.DOCUMENT_POSITION_FOLLOWING ? true : false,
+      calls,
+      summaryYm: summary.ym
+    };
+    apiGet = oldApiGet;
+    loadDomesticYearly = oldLoadDomesticYearly;
+    return result;
+  });
+  expect(result.incomeLabel).toBe('薪資');
+  expect(result.monthLabel).toBe(true);
+  expect(result.beforeAnnualContent).toBe(true);
+  expect(result.calls).toEqual(['financeCalendarSummary']);
+  expect(result.summaryYm).toMatch(/^\d{4}\/\d{2}$/);
 });
 
 test('a new ledger entry is allowed after a different previous entry was confirmed', async ({ page }) => {

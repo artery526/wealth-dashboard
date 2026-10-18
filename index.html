@@ -2084,6 +2084,10 @@ html.war-room-standalone .panel-head{padding:12px 18px;border-bottom-color:rgba(
 .finance-collapse-body{padding:0 10px 10px}
 .finance-accounts-heading{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid rgba(232,192,80,.12);font-family:var(--sans);font-size:11px;font-weight:900;letter-spacing:1px;color:var(--gold)}
 .finance-accounts-heading .finance-collapse-meta{margin-left:auto}
+.finance-yearly-category-panel{border:1px solid rgba(232,192,80,.2);border-radius:8px;background:rgba(10,8,4,.42);margin:0 0 12px;overflow:hidden}
+.finance-yearly-category-panel .finance-collapse-body{padding:8px 10px 10px}
+.finance-yearly-category-panel .treasury-category-details{margin:0}
+.finance-yearly-category-panel .annual-category-load-error{font-family:var(--sans);font-size:11px;color:var(--coral);padding:5px 2px}
 .finance-accounts-toggle{flex:0 0 auto;width:32px;height:32px;display:inline-grid;place-items:center;border:1px solid rgba(232,192,80,.34);border-radius:999px;background:transparent;color:var(--gold);padding:0;font-family:var(--sans);font-size:18px;font-weight:900;line-height:1;cursor:pointer;white-space:nowrap}
 .finance-accounts-toggle:hover{background:rgba(232,192,80,.1)}
 .finance-accounts-collapse.is-masked .acc-val{font-size:0!important;color:transparent!important}
@@ -5960,6 +5964,7 @@ var advisorAIDailyUpdatesIndex=0;
 // v10: 月收支只採用完整月摘要；捨棄曾由最近 50 筆交易拼成的錯誤快取。
 var FINANCE_TREASURY_CACHE_KEY='wealth_finance_treasury_v10';
 var FINANCE_TREASURY_CACHE_PREFIX='wealth_finance_treasury_v';
+var FINANCE_MONTH_CATEGORY_CACHE_KEY='wealth_finance_month_category_v1';
 var FINANCE_PLEDGE_CACHE_KEY='wealth_finance_pledge_v2';
 var FINANCE_YEARLY_CACHE_PREFIX='wealth_finance_yearly_v3_';
 var FINANCE_YEARLY_REVALIDATE_GAP=60*1000;
@@ -5970,6 +5975,8 @@ var FINANCE_YEARLY_ARCHIVE_CACHE_KEY='wealth_finance_yearly_archive_v1';
 var FINANCE_CACHE_TTL=6*60*60*1000;
 var financeTreasuryPromise=null;
 var financeTreasuryLastFetchAt=0;
+var financeYearlyCategoryPromise=null;
+var financeYearlyCategoryRequestYm='';
 var FINANCE_TREASURY_REVALIDATE_GAP=30*1000;
 var financeTreasuryDetailsPromise=null;
 var financeTreasuryDetailsLastFetchAt=0;
@@ -6956,7 +6963,7 @@ function switchTab(btn,key){
   }
   else if(key==='booking-form')initBookingForm();
   else if(key==='dividend-center')loadDividendCenterPanel();
-  else if(key==='domestic-yearly')loadDomesticYearly();
+  else if(key==='domestic-yearly'){loadFinanceYearlyCategorySummary();loadDomesticYearly();}
   else if(key==='battle-brief')loadBattleBrief();
   else if(key==='war-briefing')openAdvisorWorldSituation(null,true);
   else if(key==='war-battle-brief')loadBattleBrief();
@@ -7427,6 +7434,7 @@ pruneFinanceTreasuryCacheVersions();
 function invalidateFinanceDashboardCache(){
   try{
     localStorage.removeItem(FINANCE_TREASURY_CACHE_KEY);
+    localStorage.removeItem(FINANCE_MONTH_CATEGORY_CACHE_KEY);
     localStorage.removeItem(FINANCE_PLEDGE_CACHE_KEY);
     for(var i=localStorage.length-1;i>=0;i--){
       var key=localStorage.key(i);
@@ -9825,6 +9833,7 @@ function renderFinancePanel(initialTab){
       <div id="dividend-center-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:80%"></div></div>
     </div>
     <div class="pane ${targetTab==='domestic-yearly'?'active':''}" id="pane-domestic-yearly">
+      <div id="annual-month-category-summary"></div>
       <div class="api-bar">
         <div class="api-dot ${API_URL?'ok':'err'}"></div>
         <span class="api-label">${API_URL?'年度財報 API 已連線':'尚未設定 API'}</span>
@@ -9839,6 +9848,9 @@ function renderFinancePanel(initialTab){
     initBookingForm();
   }else if(targetTab==='dividend-center'){
     loadDividendCenterPanel();
+  }else if(targetTab==='domestic-yearly'){
+    loadFinanceYearlyCategorySummary();
+    loadDomesticYearly();
   }else if(API_URL&&targetTab==='finance-accs'){
       loadAccounts();
       loadPledgePanel();
@@ -9856,7 +9868,7 @@ async function loadAccounts(){
   var cached=cachedEntry?cachedEntry.data:null;
   if(cached){
     setDataFreshness('finance-treasury-freshness',dataFreshnessMeta(cached,cachedEntry.savedAt,true));
-    renderAccounts(cached.accs,cached.monthly,el,cached.assetSnapshot,cached.bills,true,cached.categorySummary);
+    renderAccounts(cached.accs,cached.monthly,el,cached.assetSnapshot,cached.bills,true);
   }
   var shouldRevalidate=!financeTreasuryPromise&&(!freshEntry||(Date.now()-financeTreasuryLastFetchAt)>=FINANCE_TREASURY_REVALIDATE_GAP);
   if(freshEntry&&cached&&!shouldRevalidate){
@@ -9869,7 +9881,7 @@ async function loadAccounts(){
     return financeTreasuryPromise.then(function(data){
       if(data&&data.accs){
         setDataFreshness('finance-treasury-freshness',dataFreshnessMeta(data,false,false));
-        if(document.getElementById('acc-content'))renderAccounts(data.accs,data.monthly,document.getElementById('acc-content'),data.assetSnapshot,data.bills,false,data.categorySummary);
+        if(document.getElementById('acc-content'))renderAccounts(data.accs,data.monthly,document.getElementById('acc-content'),data.assetSnapshot,data.bills,false);
       }
       if(data&&data.accs)setFinanceCardStatus('ok',financeTreasuryLoadedMessage(data));
       return data;
@@ -9879,7 +9891,7 @@ async function loadAccounts(){
   financeTreasuryPromise=fetchFinanceTreasuryData(cached).then(function(data){
     writeTimedFinanceCache(FINANCE_TREASURY_CACHE_KEY,data);
     setDataFreshness('finance-treasury-freshness',dataFreshnessMeta(data,false,false));
-    if(document.getElementById('acc-content'))renderAccounts(data.accs,data.monthly,document.getElementById('acc-content'),data.assetSnapshot,data.bills,false,data.categorySummary);
+    if(document.getElementById('acc-content'))renderAccounts(data.accs,data.monthly,document.getElementById('acc-content'),data.assetSnapshot,data.bills,false);
     setFinanceCardStatus('ok',financeTreasuryLoadedMessage(data));
     refreshFinanceTreasuryDetails(data);
     return data;
@@ -9897,8 +9909,7 @@ function fetchFinanceTreasuryData(cached){
   var requestedYm=currentYM();
   return Promise.allSettled([
     apiGet({action:'accounts'}),
-    apiGet({action:'monthly',ym:requestedYm}),
-    apiGet({action:'financeCalendarSummary',ym:requestedYm})
+    apiGet({action:'monthly',ym:requestedYm})
   ]).then(function(results){
     if(results[0].status!=='fulfilled'){
       throw (results[0].reason||new Error('finance load failed'));
@@ -9925,7 +9936,6 @@ function fetchFinanceTreasuryData(cached){
     var data={
       accs:results[0].value||[],
       monthly:monthly,
-      categorySummary:results[2].status==='fulfilled'&&results[2].value&&results[2].value.categories?results[2].value.categories:(cached&&cached.categorySummary||null),
       assetSnapshot:cached&&cached.assetSnapshot||null,
       bills:cached&&cached.bills||null,
       sourceStatus:{monthly:monthlyStatus,assetSnapshot:cached&&cached.assetSnapshot?'cached':'pending',bills:cached&&cached.bills?'cached':'pending'}
@@ -9963,7 +9973,7 @@ function refreshFinanceTreasuryDetails(fallbackData){
     if(changed)writeTimedFinanceCache(FINANCE_TREASURY_CACHE_KEY,next);
     if(changed&&currentPanel==='finance'&&currentTab==='finance-accs'&&document.getElementById('acc-content')){
       setDataFreshness('finance-treasury-freshness',dataFreshnessMeta(next,false,false));
-      renderAccounts(next.accs,next.monthly,document.getElementById('acc-content'),next.assetSnapshot,next.bills,false,next.categorySummary);
+      renderAccounts(next.accs,next.monthly,document.getElementById('acc-content'),next.assetSnapshot,next.bills,false);
     }
     return next;
   }).catch(function(error){
@@ -10067,7 +10077,7 @@ function renderTreasuryOverview(all,filtered,monthly,assetSnapshot,totalRow){
   </div>`;
 }
 
-function renderAccounts(accs,monthly,el,assetSnapshot,bills,stale,categorySummary){
+function renderAccounts(accs,monthly,el,assetSnapshot,bills,stale){
   var all=accs||[];
   var filtered=all.filter(function(a){
     if(a.name==='總資產'||a.name==='總資產/總計')return false;
@@ -10095,7 +10105,7 @@ function renderAccounts(accs,monthly,el,assetSnapshot,bills,stale,categorySummar
     return aIndex-bIndex;
   });
 
-  var totalAssetHtml=renderTreasuryAccountTotalAssetCard(assetSnapshot,totalAssetAccount,monthly,categorySummary);
+  var totalAssetHtml=renderTreasuryAccountTotalAssetCard(assetSnapshot,totalAssetAccount,monthly);
   var cashStockHtml=renderTreasuryCashStockCard(cashAccount,cathayStockAccount,monthly);
   var leftAccounts=ordinaryAccounts.filter(function(a){
     return stripIconText(a&&a.name).replace(/\s+/g,'').toLowerCase()!=='cube';
@@ -10133,7 +10143,7 @@ function renderAccounts(accs,monthly,el,assetSnapshot,bills,stale,categorySummar
   });
 }
 
-function renderTreasuryAccountTotalAssetCard(assetSnapshot,totalAssetAccount,monthly,categorySummary){
+function renderTreasuryAccountTotalAssetCard(assetSnapshot,totalAssetAccount,monthly){
   monthly=monthly||{};
   var latest=assetSnapshot&&assetSnapshot.latest;
   var previous=assetSnapshot&&assetSnapshot.previous;
@@ -10178,11 +10188,10 @@ function renderTreasuryAccountTotalAssetCard(assetSnapshot,totalAssetAccount,mon
     <div class="treasury-monthly-title"><span>月收／支</span></div>
     <div class="treasury-monthly-row"><span>收入</span><strong class="treasury-monthly-income">${financeMonthlySummaryAvailable(monthly)?fmtFull(monthly.income):'—'}</strong></div>
     <div class="treasury-monthly-row"><span>支出</span><strong class="treasury-monthly-expense">${financeMonthlySummaryAvailable(monthly)?fmtFull(monthly.expense):'—'}</strong></div>
-    ${renderTreasuryCategoryDetails(categorySummary)}
   </div>`;
 }
 
-function renderTreasuryCategoryDetails(summary){
+function renderTreasuryCategoryDetails(summary,expanded){
   if(!summary)return `<details class="treasury-category-details"><summary>📊 本月收支細項</summary><div class="treasury-category-empty">分類資料暫不可用</div></details>`;
   function column(title,items,previousItems,kind){
     var currentMap={};var previousMap={};
@@ -10199,7 +10208,69 @@ function renderTreasuryCategoryDetails(summary){
     }).join('');
     return `<div><div class="treasury-category-heading ${kind}">${title}</div>${rows||'<div class="treasury-category-empty">本月無資料</div>'}</div>`;
   }
-  return `<details class="treasury-category-details"><summary>📊 本月收支細項 <span class="treasury-category-compare-label">較上月增減</span></summary><div class="treasury-category-columns">${column('收入分類',summary.income,summary.previous&&summary.previous.income,'income')}${column('支出分類',summary.expense,summary.previous&&summary.previous.expense,'expense')}</div></details>`;
+  return `<details class="treasury-category-details"${expanded?' open':''}><summary>📊 本月收支細項 <span class="treasury-category-compare-label">較上月增減</span></summary><div class="treasury-category-columns">${column('收入分類',summary.income,summary.previous&&summary.previous.income,'income')}${column('支出分類',summary.expense,summary.previous&&summary.previous.expense,'expense')}</div></details>`;
+}
+
+function renderFinanceYearlyCategorySummary(summary,status){
+  var host=document.getElementById('annual-month-category-summary');
+  if(!host)return;
+  if(!summary){host.innerHTML='<div class="annual-category-load-error">本月分類摘要載入中…</div>';return;}
+  var period=String(summary.ym||currentYM())+' ／ 上月 '+String(summary.previousYm||'—');
+  host.dataset.ym=String(summary.ym||currentYM());
+  host.innerHTML=`<section class="finance-yearly-category-panel finance-accounts-collapse">
+    <div class="finance-accounts-heading"><span class="finance-collapse-title">📊 本月收支分類</span><span class="finance-collapse-meta">${esc(period)}${status?' · '+esc(status):''}</span><button class="finance-accounts-toggle" type="button" aria-label="隱藏數字" title="隱藏數字" aria-pressed="false">🔒</button></div>
+    <div class="finance-collapse-body">${renderTreasuryCategoryDetails(summary,true)}</div>
+  </section>`;
+  var panel=host.querySelector('.finance-yearly-category-panel');
+  var toggle=host.querySelector('.finance-accounts-toggle');
+  if(panel&&toggle)toggle.addEventListener('click',function(){
+    var masked=panel.classList.toggle('is-masked');
+    toggle.setAttribute('aria-pressed',String(masked));
+    toggle.textContent=masked?'🔓':'🔒';
+    toggle.setAttribute('aria-label',masked?'顯示數字':'隱藏數字');
+    toggle.setAttribute('title',masked?'顯示數字':'隱藏數字');
+  });
+}
+
+function loadFinanceYearlyCategorySummary(forceRefresh){
+  var host=document.getElementById('annual-month-category-summary');
+  if(!host)return Promise.resolve(null);
+  var requestedYm=currentYM();
+  var cachedEntry=forceRefresh?null:readFinanceCacheEntry(FINANCE_MONTH_CATEGORY_CACHE_KEY,true);
+  var cached=cachedEntry&&cachedEntry.data&&cachedEntry.data.ym===requestedYm?cachedEntry.data:null;
+  if(!cached){
+    var treasuryEntry=readFinanceCacheEntry(FINANCE_TREASURY_CACHE_KEY,true);
+    var treasury=treasuryEntry&&treasuryEntry.data;
+    var oldCategories=treasury&&treasury.categorySummary;
+    if(treasury&&treasury.monthly&&treasury.monthly.ym===requestedYm&&oldCategories){
+      cached={ym:requestedYm,previousYm:oldCategories.previousYm,income:oldCategories.income||[],expense:oldCategories.expense||[],previous:oldCategories.previous||{income:[],expense:[]}};
+      writeTimedFinanceCache(FINANCE_MONTH_CATEGORY_CACHE_KEY,cached);
+      cachedEntry=readFinanceCacheEntry(FINANCE_MONTH_CATEGORY_CACHE_KEY,true);
+    }
+  }
+  if(cached)renderFinanceYearlyCategorySummary(cached);
+  else renderFinanceYearlyCategorySummary(null);
+  if(!API_URL){
+    if(!cached)host.innerHTML=setupNotice();
+    else renderFinanceYearlyCategorySummary(cached,'快取資料');
+    return Promise.resolve(cached);
+  }
+  if(cached&&!forceRefresh&&cachedEntry&&Date.now()-Number(cachedEntry.savedAt||0)<FINANCE_TREASURY_REVALIDATE_GAP)return Promise.resolve(cached);
+  if(financeYearlyCategoryPromise&&financeYearlyCategoryRequestYm===requestedYm)return financeYearlyCategoryPromise;
+  financeYearlyCategoryRequestYm=requestedYm;
+  financeYearlyCategoryPromise=apiGet({action:'financeCalendarSummary',ym:requestedYm},15000).then(function(result){
+    var categories=result&&result.categories;
+    if(!categories||!Array.isArray(categories.income)||!Array.isArray(categories.expense)||!categories.previous||!Array.isArray(categories.previous.income)||!Array.isArray(categories.previous.expense))throw new Error('分類摘要格式無效');
+    var summary={ym:result.ym||requestedYm,previousYm:categories.previousYm||result.previousYm||'',income:categories.income,expense:categories.expense,previous:categories.previous};
+    writeTimedFinanceCache(FINANCE_MONTH_CATEGORY_CACHE_KEY,summary);
+    if(currentYM()===requestedYm&&document.getElementById('annual-month-category-summary'))renderFinanceYearlyCategorySummary(summary);
+    return summary;
+  }).catch(function(error){
+    if(cached)renderFinanceYearlyCategorySummary(cached,'更新失敗，暫顯快取');
+    else host.innerHTML=`<div class="annual-category-load-error">分類摘要讀取失敗：${esc(error.message||error)}</div>`;
+    return cached||null;
+  }).finally(function(){financeYearlyCategoryPromise=null;financeYearlyCategoryRequestYm='';});
+  return financeYearlyCategoryPromise;
 }
 
 function renderTreasuryCashStockCard(cashAccount,cathayStockAccount,monthly){
@@ -20948,7 +21019,7 @@ function mpmRender(records){
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('./sw.js?v=20261018-finance-category-mobile-fix1', {updateViaCache:'none'}).then(function (registration) {
+    navigator.serviceWorker.register('./sw.js?v=20261018-finance-category-annual1', {updateViaCache:'none'}).then(function (registration) {
       return registration.update();
     }).catch(function (error) {
       console.warn('Empire Service Worker registration failed', error);
