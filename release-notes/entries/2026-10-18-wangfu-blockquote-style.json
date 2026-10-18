@@ -1,9 +1,9 @@
 {
   "id": "2026-10-18-wangfu-blockquote-style",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-10-18",
   "area": "王府",
-  "summary": "支援文章引用區塊顯示",
-  "details": "解析文章中以 > 開頭的連續行，顯示為帶灰色側線的引用區塊，保留內文格式標記。",
+  "summary": "王府文章支援虛線引用區塊與編輯快捷按鈕",
+  "details": "文章內以 > 開頭的連續行會顯示為灰色虛線側邊引用區塊，編輯器可選取文字後一鍵套用或移除引用標記；粗體等既有格式仍保留。",
   "platforms": ["website"]
 }
