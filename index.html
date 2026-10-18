@@ -20913,7 +20913,7 @@ function mpmRender(records){
       +'<div class="mpm-rec-time">'+mpmEsc(timeStr||'未記錄')+'</div>'
       +'<div class="mpm-rec-body">'
       +(badges?'<div class="mpm-rec-badges">'+badges+'</div>':'')
-      +(reviewReason?'<div class="mpm-rec-review-reason">🪞 自填疼痛起因：'+mpmEsc(reviewReason)+'</div>':'')
+      +(reviewReason?'<div class="mpm-rec-review-reason" role="note" aria-label="自填疼痛起因">🪞 自填疼痛起因：'+mpmEsc(reviewReason)+'</div>':'')
       +(notes?'<div class="mpm-rec-note">'+mpmEsc(notes)+'</div>':'')
       +'</div></div>';
   }).join('')+'</div>';
