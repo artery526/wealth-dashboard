@@ -406,6 +406,7 @@ test('dividend calculator is the second holdings center tab and Pangtong routes 
     const content = document.createElement('div');
     content.id = 'dividend-center-content';
     document.body.appendChild(content);
+    document.querySelectorAll('#web-login-overlay,.web-login-scroll').forEach(element => element.remove());
     dividendCenterCache = { pending: [], holdingTradePending: [] };
     dividendCenterView = 'pending';
     content.innerHTML = renderDividendCenter(dividendCenterCache, true);
@@ -428,7 +429,7 @@ test('dividend calculator is the second holdings center tab and Pangtong routes 
     return { pendingView, calculatorView, route };
   });
   expect(result.pendingView).toEqual({
-    tabs: ['待入帳持股記錄', '🧮 配息試算'],
+    tabs: ['待入帳持股記錄', '🧮 配息試算', '📈 報酬試算'],
     hasHoldingEntry: true,
     hasCalculator: false
   });
@@ -438,6 +439,65 @@ test('dividend calculator is the second holdings center tab and Pangtong routes 
     title: '🧮 配息試算'
   });
   expect(result.route).toEqual([null, 'finance', 'dividend-center']);
+});
+
+test('manual total return comparison calculates five entries without API or storage writes', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 820 });
+  await page.goto(dashboardUrl);
+  await page.evaluate(() => {
+    const content = document.createElement('div');
+    content.id = 'dividend-center-content';
+    document.body.appendChild(content);
+    document.querySelectorAll('#web-login-overlay,.web-login-scroll').forEach(element => element.remove());
+    dividendCenterCache = { pending: [], holdingTradePending: [] };
+    dividendCenterView = 'pending';
+    manualReturnComparisonState = Array.from({ length: 5 }, () => ({ name: '', initialPrice: '', periodDividend: '', latestPrice: '', dividendFactor: '100' }));
+    content.innerHTML = renderDividendCenter(dividendCenterCache, true);
+    window.__manualReturnApiCalls = 0;
+    window.__manualReturnApiPosts = 0;
+    window.__manualReturnStorageWrites = 0;
+    apiGet = (...args) => { window.__manualReturnApiCalls++; return Promise.resolve({}); };
+    apiPost = (...args) => { window.__manualReturnApiPosts++; return Promise.resolve({}); };
+    const originalSetItem = Storage.prototype.setItem;
+    Storage.prototype.setItem = function (...args) {
+      window.__manualReturnStorageWrites++;
+      return originalSetItem.apply(this, args);
+    };
+  });
+  await page.waitForTimeout(1200);
+  await page.evaluate(() => { window.__manualReturnStorageWrites = 0; });
+  await page.locator('#dividend-center-content .dividend-center-tab').nth(2).click();
+  await expect(page.locator('.manual-return-card')).toHaveCount(5);
+  await page.locator('#manual-return-0-name').fill('QQQI');
+  await page.locator('#manual-return-0-initialPrice').fill('36.61');
+  await page.locator('#manual-return-0-periodDividend').fill('11.3836');
+  await page.locator('#manual-return-0-latestPrice').fill('53.62');
+  await page.locator('#manual-return-0-dividendFactor').fill('96.3');
+  await expect(page.locator('#manual-return-0-result')).toHaveText('+76.41%');
+  await page.locator('#manual-return-1-initialPrice').fill('100');
+  await page.locator('#manual-return-1-periodDividend').fill('10');
+  await page.locator('#manual-return-1-latestPrice').fill('105');
+  await page.locator('#manual-return-1-dividendFactor').fill('0');
+  await expect(page.locator('#manual-return-1-result')).toHaveText('+5.00%');
+  await page.evaluate(() => {
+    setDividendCenterView('calculator');
+    setDividendCenterView('return-comparison');
+  });
+  await expect(page.locator('#manual-return-0-result')).toHaveText('+76.41%');
+  const layoutAndSideEffects = await page.evaluate(() => ({
+    viewport: window.innerWidth,
+    documentWidth: document.documentElement.scrollWidth,
+    apiCalls: window.__manualReturnApiCalls,
+    apiPosts: window.__manualReturnApiPosts,
+    storageWrites: window.__manualReturnStorageWrites
+  }));
+  expect(layoutAndSideEffects.documentWidth).toBeLessThanOrEqual(layoutAndSideEffects.viewport);
+  expect(layoutAndSideEffects.apiCalls).toBe(0);
+  expect(layoutAndSideEffects.apiPosts).toBe(0);
+  expect(layoutAndSideEffects.storageWrites).toBe(0);
+  await page.getByRole('button', { name: '清空五組' }).click();
+  await expect(page.locator('#manual-return-0-result')).toHaveText('—');
+  await expect(page.locator('#manual-return-4-dividendFactor')).toHaveValue('100');
 });
 
 test('Pangtong income dropdown builds a fixed Stock income command', async ({ page }) => {

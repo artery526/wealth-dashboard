@@ -1,0 +1,9 @@
+{
+  "id": "2026-10-18-finance-manual-return-comparison",
+  "status": "in_progress",
+  "date": null,
+  "area": "財政",
+  "summary": "新增五組手動標的總報酬比較試算",
+  "details": "於持股與配息新增純手動試算頁，輸入每股初始價、期間配息、最新價與配息折算比例，即時計算總報酬；不讀取或儲存標的資料。",
+  "platforms": ["website"]
+}
