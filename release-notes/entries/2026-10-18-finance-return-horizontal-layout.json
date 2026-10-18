@@ -1,9 +1,9 @@
 {
   "id": "2026-10-18-finance-return-horizontal-layout",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-10-18",
   "area": "財政",
   "summary": "調整報酬試算在桌機的比較版面",
-  "details": "桌機改為欄位橫向對齊的五組比較列，手機保留直向卡片；計算方式與不儲存設計不變。",
+  "details": "桌機以六欄表頭對齊五組手動比較列，手機保留直向卡片；總報酬公式與不儲存設計不變。",
   "platforms": ["website"]
 }
