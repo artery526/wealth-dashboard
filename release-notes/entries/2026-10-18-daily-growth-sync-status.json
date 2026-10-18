@@ -1,7 +1,7 @@
 {
   "id": "2026-10-18-daily-growth-sync-status",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-10-18",
   "area": "每日成長",
   "summary": "成就勾選即時顯示待同步與已同步狀態",
   "details": "勾選後立即更新本機畫面並顯示待同步，伺服器確認寫入後顯示已同步；寫入失敗時還原本次勾選並提示錯誤。",
