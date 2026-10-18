@@ -1,0 +1,9 @@
+{
+  "id": "2026-10-18-wangfu-bold-markdown",
+  "status": "released",
+  "date": "2026-10-18",
+  "area": "王府",
+  "summary": "修正王府文章跨行粗體顯示",
+  "details": "修正文章檢視器段落切分，避免粗體標記跨空白段落時失去配對；原空行版面保留，並驗證線上生成頁面的腳本與粗體輸出。",
+  "platforms": ["website"]
+}
