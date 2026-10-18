@@ -1,7 +1,7 @@
 {
   "id": "2026-10-18-e-habit-native-app",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-10-18",
   "area": "每日成長",
   "summary": "建立 E-Habit 原生習慣紀錄 APP 與唯讀網頁同步",
   "details": "新增今日快速紀錄、歷史成就瀏覽、本機文字備份及背景同步流程，網頁端改為唯讀呈現。",
