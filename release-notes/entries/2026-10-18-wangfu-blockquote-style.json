@@ -1,0 +1,9 @@
+{
+  "id": "2026-10-18-wangfu-blockquote-style",
+  "status": "in_progress",
+  "date": null,
+  "area": "王府",
+  "summary": "支援文章引用區塊顯示",
+  "details": "解析文章中以 > 開頭的連續行，顯示為帶灰色側線的引用區塊，保留內文格式標記。",
+  "platforms": ["website"]
+}
