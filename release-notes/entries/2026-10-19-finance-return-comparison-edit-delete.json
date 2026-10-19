@@ -1,9 +1,9 @@
 {
   "id": "2026-10-19-finance-return-comparison-edit-delete",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-10-19",
   "area": "財政",
   "summary": "報酬試算比較組支援覆存與刪除",
-  "details": "還原已存比較後可更新原組，並可明確另存新組或刪除既有比較組。",
+  "details": "還原已存比較後可更新原組，並可明確另存新組或刪除既有比較組。更新與刪除由後端驗證比較組 ID、鎖定資料表並檢查完整的五列範圍；已部署 Apps Script API 版本 529 與 GitHub Pages，線上 UI 和 Service Worker 版本均已驗證。",
   "platforms": ["website", "app-script"]
 }
