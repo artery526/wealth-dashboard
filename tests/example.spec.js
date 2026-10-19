@@ -547,9 +547,16 @@ test('manual return comparison stores and restores only on explicit user action'
     dividendCenterView = 'return-comparison';
     manualReturnComparisonState = Array.from({ length: 5 }, () => ({ name: '', initialPrice: '', periodDividend: '', latestPrice: '', dividendFactor: '100' }));
     manualReturnPeriodState = { startDate: '', endDate: '2026-10-19' };
+    manualReturnActiveSetId = '';
+    manualReturnSavedSets = [];
     host.innerHTML = renderDividendCenter(dividendCenterCache, true);
     let requests = [];
-    apiPostJson = async body => { requests.push(body); return body.action === 'returnComparisonSets' ? { sets: [{ name: 'QQQI', startDate: '2026-04-22', endDate: '2026-10-19', rows: [{ name: 'QQQI', initialPrice: '36.61', periodDividend: '11.3836', latestPrice: '53.62', dividendFactor: '96.3' }] }] } : { name: 'saved' }; };
+    apiPostJson = async body => {
+      requests.push(body);
+      if (body.action === 'returnComparisonSets') return { sets: [{ id: 'existing-group', name: 'QQQI', startDate: '2026-04-22', endDate: '2026-10-19', rows: [{ name: 'QQQI', initialPrice: '36.61', periodDividend: '11.3836', latestPrice: '53.62', dividendFactor: '96.3' }] }] };
+      if (body.action === 'returnComparisonDelete') return { deleted: true };
+      return { id: body.setId || 'new-group', name: 'saved', startDate: body.startDate, endDate: body.endDate, savedAt: '2026-10-19T00:00:00.000Z' };
+    };
     window.__returnRequests = () => requests;
   });
   await expect(page.locator('#manual-return-end-date')).toHaveValue('2026-10-19');
@@ -559,9 +566,19 @@ test('manual return comparison stores and restores only on explicit user action'
   await expect(page.locator('#manual-return-start-date')).toHaveValue('2026-04-22');
   await expect(page.locator('#manual-return-0-name')).toHaveValue('QQQI');
   await expect(page.locator('#manual-return-0-result')).toHaveText('+76.41%');
-  await page.getByRole('button', { name: '存為比較組' }).click();
+  await expect(page.getByRole('button', { name: '更新比較組' })).toBeVisible();
+  await page.getByRole('button', { name: '更新比較組' }).click();
+  await expect.poll(async () => page.evaluate(() => window.__returnRequests().length)).toBe(2);
+  expect(await page.evaluate(() => window.__returnRequests()[1].setId)).toBe('existing-group');
+  await page.getByRole('button', { name: '另存新組' }).click();
+  await expect.poll(async () => page.evaluate(() => window.__returnRequests().length)).toBe(3);
+  expect(await page.evaluate(() => window.__returnRequests()[2].setId || '')).toBe('');
+  page.once('dialog', dialog => dialog.accept());
+  await page.locator('.manual-return-saved-row').nth(1).getByRole('button', { name: '刪除' }).click();
+  await expect.poll(async () => page.evaluate(() => window.__returnRequests().length)).toBe(4);
+  expect(await page.evaluate(() => window.__returnRequests()[3].setId)).toBe('existing-group');
   const actions = await page.evaluate(() => window.__returnRequests().map(request => request.action));
-  expect(actions).toEqual(['returnComparisonSets', 'returnComparisonSave']);
+  expect(actions).toEqual(['returnComparisonSets', 'returnComparisonSave', 'returnComparisonSave', 'returnComparisonDelete']);
 });
 
 test('Pangtong income dropdown builds a fixed Stock income command', async ({ page }) => {

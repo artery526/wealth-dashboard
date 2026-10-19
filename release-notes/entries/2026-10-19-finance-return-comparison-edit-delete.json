@@ -1,0 +1,9 @@
+{
+  "id": "2026-10-19-finance-return-comparison-edit-delete",
+  "status": "in_progress",
+  "date": null,
+  "area": "財政",
+  "summary": "報酬試算比較組支援覆存與刪除",
+  "details": "還原已存比較後可更新原組，並可明確另存新組或刪除既有比較組。",
+  "platforms": ["website", "app-script"]
+}

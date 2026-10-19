@@ -184,6 +184,7 @@ function doPost(e) {
     if (action === 'travelMemoAdd') return ok(writeTravelMemoCard(body));
     if (action === 'returnComparisonSets') return ok(listReturnComparisonSets_());
     if (action === 'returnComparisonSave') return ok(saveReturnComparisonSet_(body));
+    if (action === 'returnComparisonDelete') return ok(deleteReturnComparisonSet_(body));
 
     return err('未知的 action: ' + action);
   } catch(ex) {
@@ -217,6 +218,8 @@ function listReturnComparisonSets_() {
 function saveReturnComparisonSet_(body) {
   var startDate = String(body.startDate || '').trim();
   var endDate = String(body.endDate || '').trim();
+  var requestedSetId = String(body.setId || '').trim();
+  if (requestedSetId && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(requestedSetId)) throw new Error('比較組編號不正確');
   var rows = body.rows;
   if (!isReturnComparisonIsoDate_(startDate) || !isReturnComparisonIsoDate_(endDate) || startDate > endDate) throw new Error('請輸入有效的比較起訖日期');
   if (!Array.isArray(rows) || rows.length !== 5) throw new Error('比較組必須包含五筆資料');
@@ -236,15 +239,41 @@ function saveReturnComparisonSet_(body) {
   lock.waitLock(20000);
   try {
     var sheet = getReturnComparisonSheet_();
-    var groupId = Utilities.getUuid();
+    var groupId = requestedSetId || Utilities.getUuid();
     var savedAt = new Date().toISOString();
-    var firstRow = sheet.getLastRow() + 1;
+    var existing = requestedSetId ? findReturnComparisonGroupRows_(sheet, requestedSetId) : null;
+    var firstRow = existing ? existing.firstRow : sheet.getLastRow() + 1;
     sheet.getRange(firstRow, 1, 5, 4).setNumberFormat('@');
     sheet.getRange(firstRow, 6, 5, 1).setNumberFormat('@');
     sheet.getRange(firstRow, 11, 5, 1).setNumberFormat('@');
     sheet.getRange(firstRow, 1, 5, RETURN_COMPARISON_HEADERS.length).setValues(rows.map(function(row, index) { return [groupId, groupName, startDate, endDate, index + 1, row.name, row.initialPrice, row.periodDividend, row.latestPrice, row.dividendFactor, savedAt]; }));
     SpreadsheetApp.flush();
     return { id: groupId, name: groupName, startDate: startDate, endDate: endDate, savedAt: savedAt };
+  } finally { lock.releaseLock(); }
+}
+
+function findReturnComparisonGroupRows_(sheet, groupId) {
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) throw new Error('找不到要更新的比較組，請重新載入已存比較');
+  var ids = sheet.getRange(2, 1, lastRow - 1, 1).getDisplayValues();
+  var matches = [];
+  ids.forEach(function(row, index) { if (String(row[0] || '') === groupId) matches.push(index + 2); });
+  if (matches.length !== 5) throw new Error('比較組資料不完整或已不存在，請重新載入已存比較');
+  for (var i = 1; i < matches.length; i++) if (matches[i] !== matches[0] + i) throw new Error('比較組資料列不連續，已停止修改');
+  return { firstRow: matches[0], rowCount: matches.length };
+}
+
+function deleteReturnComparisonSet_(body) {
+  var groupId = String(body.setId || '').trim();
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(groupId)) throw new Error('比較組編號不正確');
+  var lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    var sheet = getReturnComparisonSheet_();
+    var group = findReturnComparisonGroupRows_(sheet, groupId);
+    sheet.deleteRows(group.firstRow, group.rowCount);
+    SpreadsheetApp.flush();
+    return { deleted: true, id: groupId };
   } finally { lock.releaseLock(); }
 }
 
