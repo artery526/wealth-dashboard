@@ -16,6 +16,9 @@ var ZIWEI_SHEET_NAME = '紫微星盤';
 var ZIWEI_HEADERS = ['啟用', '名稱', '出生年月日', '出生時辰', '性別', '雲端硬碟檔案ID', '圖片連結', '備註', '更新時間'];
 var EVENT_CHRONICLE_SHEET_NAME = '事件編年史';
 var TRAVEL_MEMO_SPREADSHEET_ID = '1hGTWtPniX9J6DX6I3WX0mQwkOcVNRXwMyf7Q17MQUP0';
+var RETURN_COMPARISON_SPREADSHEET_ID = '1bWCO_0iyJrZ22iI6Y9lGbDssPlbCwm5UC2we3Iem24c';
+var RETURN_COMPARISON_SHEET_NAME = '報酬試算存檔';
+var RETURN_COMPARISON_HEADERS = ['比較組 ID', '比較組名稱', '起始日', '結束日', '比較順序', '標的名稱', '初始股價', '期間總配息', '最新股價', '退稅實拿比例（%）', '存檔時間（UTC）'];
 
 // ── 月度戰情室座標（核心區已由 E18:O41 搬到 A1:K24）──
 var MOON_ACCOUNT_START_ROW = 3;  // A3:D11
@@ -179,11 +182,76 @@ function doPost(e) {
     if (action === 'macroWebhook') return ok(writeMacroWebhook(getExternalDbSpreadsheet_(), body));
     if (action === 'travelMemoHide') return ok(writeTravelMemoVisibility(body));
     if (action === 'travelMemoAdd') return ok(writeTravelMemoCard(body));
+    if (action === 'returnComparisonSets') return ok(listReturnComparisonSets_());
+    if (action === 'returnComparisonSave') return ok(saveReturnComparisonSet_(body));
 
     return err('未知的 action: ' + action);
   } catch(ex) {
     return err(ex.message);
   }
+}
+
+function getReturnComparisonSheet_() {
+  var sheet = SpreadsheetApp.openById(RETURN_COMPARISON_SPREADSHEET_ID).getSheetByName(RETURN_COMPARISON_SHEET_NAME);
+  if (!sheet) throw new Error('找不到報酬試算存檔工作表');
+  var headers = sheet.getRange(1, 1, 1, RETURN_COMPARISON_HEADERS.length).getDisplayValues()[0];
+  if (RETURN_COMPARISON_HEADERS.some(function(header, index) { return headers[index] !== header; })) throw new Error('報酬試算存檔欄位不符，已停止操作');
+  return sheet;
+}
+
+function listReturnComparisonSets_() {
+  var sheet = getReturnComparisonSheet_();
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) return { sets: [] };
+  var rows = sheet.getRange(2, 1, lastRow - 1, RETURN_COMPARISON_HEADERS.length).getValues();
+  var sets = {};
+  rows.forEach(function(row) {
+    var id = String(row[0] || '');
+    if (!id) return;
+    if (!sets[id]) sets[id] = { id: id, name: String(row[1] || ''), startDate: String(row[2] || ''), endDate: String(row[3] || ''), savedAt: String(row[10] || ''), rows: [] };
+    sets[id].rows.push({ name: String(row[5] || ''), initialPrice: row[6] === '' ? '' : String(row[6]), periodDividend: row[7] === '' ? '' : String(row[7]), latestPrice: row[8] === '' ? '' : String(row[8]), dividendFactor: row[9] === '' ? '100' : String(row[9]) });
+  });
+  return { sets: Object.keys(sets).map(function(id) { var set = sets[id]; while (set.rows.length < 5) set.rows.push({ name:'', initialPrice:'', periodDividend:'', latestPrice:'', dividendFactor:'100' }); set.rows = set.rows.slice(0, 5); return set; }).sort(function(a,b) { return b.savedAt.localeCompare(a.savedAt); }) };
+}
+
+function saveReturnComparisonSet_(body) {
+  var startDate = String(body.startDate || '').trim();
+  var endDate = String(body.endDate || '').trim();
+  var rows = body.rows;
+  if (!isReturnComparisonIsoDate_(startDate) || !isReturnComparisonIsoDate_(endDate) || startDate > endDate) throw new Error('請輸入有效的比較起訖日期');
+  if (!Array.isArray(rows) || rows.length !== 5) throw new Error('比較組必須包含五筆資料');
+  rows = rows.map(function(row) {
+    row = row || {};
+    var initial = row.initialPrice === '' ? '' : Number(row.initialPrice);
+    var dividend = row.periodDividend === '' ? '' : Number(row.periodDividend);
+    var latest = row.latestPrice === '' ? '' : Number(row.latestPrice);
+    var factor = row.dividendFactor === '' ? 100 : Number(row.dividendFactor);
+    if ((initial !== '' && (!isFinite(initial) || initial <= 0)) || (dividend !== '' && (!isFinite(dividend) || dividend < 0)) || (latest !== '' && (!isFinite(latest) || latest < 0)) || !isFinite(factor) || factor < 0 || factor > 100) throw new Error('比較資料含有無效數值');
+    var name = String(row.name || '').trim().slice(0, 60);
+    if (/^[=+\-@]/.test(name)) throw new Error('標的名稱不可使用試算表公式前綴');
+    return { name: name, initialPrice: initial, periodDividend: dividend, latestPrice: latest, dividendFactor: factor };
+  });
+  var groupName = (startDate + '–' + endDate + ' ' + rows.map(function(row){return row.name;}).filter(Boolean).slice(0,3).join(' ')).slice(0,160);
+  var lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    var sheet = getReturnComparisonSheet_();
+    var groupId = Utilities.getUuid();
+    var savedAt = new Date().toISOString();
+    var firstRow = sheet.getLastRow() + 1;
+    sheet.getRange(firstRow, 1, 5, 4).setNumberFormat('@');
+    sheet.getRange(firstRow, 6, 5, 1).setNumberFormat('@');
+    sheet.getRange(firstRow, 11, 5, 1).setNumberFormat('@');
+    sheet.getRange(firstRow, 1, 5, RETURN_COMPARISON_HEADERS.length).setValues(rows.map(function(row, index) { return [groupId, groupName, startDate, endDate, index + 1, row.name, row.initialPrice, row.periodDividend, row.latestPrice, row.dividendFactor, savedAt]; }));
+    SpreadsheetApp.flush();
+    return { id: groupId, name: groupName, startDate: startDate, endDate: endDate, savedAt: savedAt };
+  } finally { lock.releaseLock(); }
+}
+
+function isReturnComparisonIsoDate_(value) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  var date = new Date(value + 'T00:00:00Z');
+  return !isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
 }
 
 function writeTravelMemoVisibility(body) {

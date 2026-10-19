@@ -1,0 +1,9 @@
+{
+  "id": "2026-10-19-finance-return-comparison-storage",
+  "status": "in_progress",
+  "date": null,
+  "area": "財政",
+  "summary": "新增報酬試算期間與比較組存檔還原",
+  "details": "報酬試算新增比較起訖日與五筆輸入的存檔／還原；新比較預設迄日為台北當日，資料僅在明確按下存檔或載入時透過驗證後端存取獨立試算表。",
+  "platforms": ["website", "app-script"]
+}

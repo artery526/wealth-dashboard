@@ -537,6 +537,33 @@ test('manual return comparison uses aligned desktop columns and keeps mobile car
   expect(mobile.documentWidth).toBeLessThanOrEqual(mobile.viewport);
 });
 
+test('manual return comparison stores and restores only on explicit user action', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(dashboardUrl);
+  await page.evaluate(() => {
+    document.querySelectorAll('#web-login-overlay,.web-login-scroll').forEach(element => element.remove());
+    const host = document.createElement('div'); host.id = 'dividend-center-content'; document.body.appendChild(host);
+    dividendCenterCache = { pending: [], holdingTradePending: [] };
+    dividendCenterView = 'return-comparison';
+    manualReturnComparisonState = Array.from({ length: 5 }, () => ({ name: '', initialPrice: '', periodDividend: '', latestPrice: '', dividendFactor: '100' }));
+    manualReturnPeriodState = { startDate: '', endDate: '2026-10-19' };
+    host.innerHTML = renderDividendCenter(dividendCenterCache, true);
+    let requests = [];
+    apiPostJson = async body => { requests.push(body); return body.action === 'returnComparisonSets' ? { sets: [{ name: 'QQQI', startDate: '2026-04-22', endDate: '2026-10-19', rows: [{ name: 'QQQI', initialPrice: '36.61', periodDividend: '11.3836', latestPrice: '53.62', dividendFactor: '96.3' }] }] } : { name: 'saved' }; };
+    window.__returnRequests = () => requests;
+  });
+  await expect(page.locator('#manual-return-end-date')).toHaveValue('2026-10-19');
+  expect(await page.evaluate(() => window.__returnRequests().length)).toBe(0);
+  await page.getByRole('button', { name: '載入已存比較' }).click();
+  await page.getByRole('button', { name: '還原' }).click();
+  await expect(page.locator('#manual-return-start-date')).toHaveValue('2026-04-22');
+  await expect(page.locator('#manual-return-0-name')).toHaveValue('QQQI');
+  await expect(page.locator('#manual-return-0-result')).toHaveText('+76.41%');
+  await page.getByRole('button', { name: '存為比較組' }).click();
+  const actions = await page.evaluate(() => window.__returnRequests().map(request => request.action));
+  expect(actions).toEqual(['returnComparisonSets', 'returnComparisonSave']);
+});
+
 test('Pangtong income dropdown builds a fixed Stock income command', async ({ page }) => {
   await page.goto(dashboardUrl);
   const result = await page.evaluate(() => {

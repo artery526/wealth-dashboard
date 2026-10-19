@@ -2423,7 +2423,12 @@ html.war-room-standalone .panel-head{padding:12px 18px;border-bottom-color:rgba(
 .manual-return-method{margin:0 0 10px;color:#8ca9b7;font:11px/1.6 var(--sans)}
 .manual-return-actions{display:flex;justify-content:flex-end;margin-bottom:9px}
 .manual-return-reset{padding:6px 10px;border:1px solid rgba(124,111,192,.4);border-radius:6px;background:rgba(124,111,192,.1);color:#cbbcf0;font:800 10px var(--sans);cursor:pointer}
-@media(max-width:700px){.dividend-center-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}.dividend-center-tab:last-child{grid-column:1/-1}.manual-return-grid{min-width:0}.manual-return-table-head{display:none}.manual-return-card{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:12px}.manual-return-card-head{display:flex;grid-column:1/-1;margin:0}.manual-return-field label{position:static;display:block;width:auto;height:auto;padding:0;margin:0 0 4px;overflow:visible;clip:auto;white-space:normal;border:0;color:#9f8d69;font:700 10px var(--sans)}.manual-return-field.name{grid-column:1/-1}.manual-return-output{grid-column:1/-1;justify-content:space-between;margin-top:2px;padding-top:9px;border-top:1px solid rgba(232,192,80,.16)}.manual-return-output span{position:static;width:auto;height:auto;padding:0;margin:0;overflow:visible;clip:auto;white-space:normal;border:0}}
+.manual-return-period{display:grid;grid-template-columns:auto minmax(130px,1fr) auto minmax(130px,1fr);gap:8px;align-items:center;margin:10px 0;color:#9f8d69;font:700 11px var(--sans)}
+.manual-return-period input{min-width:0;box-sizing:border-box;padding:7px;border:1px solid rgba(124,111,192,.38);border-radius:6px;background:#0a0d16;color:#e8e5f2;font:700 12px var(--mono)}
+.manual-return-actions{justify-content:flex-start;flex-wrap:wrap;gap:7px}
+.manual-return-saved-list{display:grid;gap:6px;margin:0 0 10px}
+.manual-return-saved-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 10px;border:1px solid rgba(124,111,192,.25);border-radius:7px;color:#cbbcf0;font:700 11px var(--sans)}
+@media(max-width:700px){.dividend-center-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}.dividend-center-tab:last-child{grid-column:1/-1}.manual-return-grid{min-width:0}.manual-return-table-head{display:none}.manual-return-card{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:12px}.manual-return-card-head{display:flex;grid-column:1/-1;margin:0}.manual-return-field label{position:static;display:block;width:auto;height:auto;padding:0;margin:0 0 4px;overflow:visible;clip:auto;white-space:normal;border:0;color:#9f8d69;font:700 10px var(--sans)}.manual-return-field.name{grid-column:1/-1}.manual-return-output{grid-column:1/-1;justify-content:space-between;margin-top:2px;padding-top:9px;border-top:1px solid rgba(232,192,80,.16)}.manual-return-output span{position:static;width:auto;height:auto;padding:0;margin:0;overflow:visible;clip:auto;white-space:normal;border:0}.manual-return-period{grid-template-columns:1fr 1fr}.manual-return-period label{align-self:end}.manual-return-period input{width:100%}}
 .dividend-pending-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid #1e1408}
 .dividend-pending-name{font-family:var(--sans);font-size:12px;font-weight:800;color:var(--ink)}
 .dividend-pending-meta{font-family:var(--sans);font-size:12px;font-weight:800;color:#c09a50;margin-top:4px;line-height:1.5}
@@ -5187,6 +5192,8 @@ var bookingDividendPickerOpen = false;
 var bookingHoldingTradePickerOpen = false;
 var dividendCenterView = 'pending';
 var manualReturnComparisonState = Array.from({length:5},function(){return {name:'',initialPrice:'',periodDividend:'',latestPrice:'',dividendFactor:'100'};});
+var manualReturnPeriodState = { startDate: '', endDate: todayTaipeiIsoDate() };
+var manualReturnSavedSets = [];
 var DIVIDEND_CACHE_TTL = 5 * 60 * 1000;
 var DIVIDEND_AUTOFILL_SYMBOLS = ['CHPY','AIPI','QQQI','MLPI','00997A'];
 var heroCache = [];
@@ -5877,7 +5884,7 @@ async function apiPost(body){
   WRITE_TOKEN=cleanToken(WRITE_TOKEN);
   if(!WRITE_TOKEN)throw new Error('未設定記帳密鑰');
   if(/^(expense|income|transfer)$/.test(body.action||''))return submitLedgerPending(body);
-  if(body&&/^(advisorAiParse|advisorDividendMemo|expense|income|transfer|ziweiInterpretationSave|ziweiChartUpload|ziweiChartDelete)$/.test(body.action||'')){
+  if(body&&/^(advisorAiParse|advisorDividendMemo|expense|income|transfer|ziweiInterpretationSave|ziweiChartUpload|ziweiChartDelete|returnComparisonSets|returnComparisonSave)$/.test(body.action||'')){
     var jsonTimeout=((isApiWriteAction(body.action||'')||body.action==='advisorDividendMemo')?45000:undefined);
     return apiPostJson(body,jsonTimeout);
   }
@@ -13510,16 +13517,62 @@ function renderManualReturnComparisonPanel(){
       <div class="manual-return-output" role="cell" aria-label="比較 ${index+1}：總報酬率"><span>總報酬率</span><strong class="${resultClass}" id="manual-return-${index}-result" aria-live="polite">${resultText}</strong></div>
     </article>`;
   }).join('');
+  var savedSets=manualReturnSavedSets.map(function(set,index){return `<div class="manual-return-saved-row"><span>${esc(set.name||'未命名比較組')}</span><button type="button" class="manual-return-reset" onclick="restoreManualReturnComparison(${index})">還原</button></div>`;}).join('');
   return `<section class="advisor-div-calc-card dividend-center-calculator manual-return-panel" aria-labelledby="manual-return-title">
     <div class="advisor-shortcut-title" id="manual-return-title">📈 報酬試算</div>
-    <div class="advisor-shortcut-hint">五組標的自行輸入比較；資料只留在目前頁面記憶體，不會寫入試算表或儲存空間。</div>
+    <div class="advisor-shortcut-hint">五組標的自行輸入比較。資料不會自動儲存；只有按下存檔或載入時才會連線至專用試算表。</div>
     <p class="manual-return-method">公式：（最新股價 − 初始股價 + 每股稅前配息 × 退稅後實拿比例）÷ 初始股價。比例是實拿占比（例如 96.3% 乘上配息），不是額外加回的稅額；每組請使用同一幣別。</p>
-    <div class="manual-return-actions"><button class="manual-return-reset" type="button" onclick="resetManualReturnComparisons()">清空五組</button></div>
+    <div class="manual-return-period"><label for="manual-return-start-date">比較起日</label><input id="manual-return-start-date" type="date" value="${esc(manualReturnPeriodState.startDate)}" onchange="updateManualReturnPeriod(this)"><label for="manual-return-end-date">比較迄日</label><input id="manual-return-end-date" type="date" value="${esc(manualReturnPeriodState.endDate)}" onchange="updateManualReturnPeriod(this)"></div>
+    <div class="manual-return-actions"><button class="manual-return-reset" type="button" onclick="saveManualReturnComparison()">存為比較組</button><button class="manual-return-reset" type="button" onclick="loadManualReturnComparisons()">載入已存比較</button><button class="manual-return-reset" type="button" onclick="resetManualReturnComparisons()">清空五組</button></div>
+    <div id="manual-return-storage-status" class="advisor-shortcut-hint" aria-live="polite"></div><div id="manual-return-saved-list">${savedSets.length?'<div class="manual-return-saved-list">'+savedSets+'</div>':''}</div>
     <div class="manual-return-table-wrap"><div class="manual-return-grid" role="table" aria-label="五組標的總報酬比較">
       <div class="manual-return-table-head" role="row"><span role="columnheader">標的名稱</span><span role="columnheader">初始股價</span><span role="columnheader">期間總配息</span><span role="columnheader">最新股價</span><span role="columnheader">退稅實拿比例%</span><span role="columnheader">總報酬率</span></div>
       ${rows}
     </div></div>
   </section>`;
+}
+
+function todayTaipeiIsoDate(){
+  var parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+  var values={};parts.forEach(function(part){values[part.type]=part.value;});
+  return values.year+'-'+values.month+'-'+values.day;
+}
+function updateManualReturnPeriod(input){
+  if(!input)return;
+  if(input.id==='manual-return-start-date')manualReturnPeriodState.startDate=input.value;
+  if(input.id==='manual-return-end-date')manualReturnPeriodState.endDate=input.value;
+}
+function setManualReturnStorageStatus(message,isError){
+  var status=document.getElementById('manual-return-storage-status');
+  if(status){status.textContent=message||'';status.style.color=isError?'#ff8d91':'';}
+}
+async function saveManualReturnComparison(){
+  var start=manualReturnPeriodState.startDate,end=manualReturnPeriodState.endDate;
+  if(!start||!end||start>end){setManualReturnStorageStatus('請輸入有效的比較起訖日期。',true);return;}
+  setManualReturnStorageStatus('正在存檔…');
+  try{
+    var result=await apiPostJson({action:'returnComparisonSave',startDate:start,endDate:end,rows:manualReturnComparisonState});
+    setManualReturnStorageStatus('已存檔：'+(result.name||'比較組'));
+  }catch(error){setManualReturnStorageStatus(error.message||'存檔失敗',true);}
+}
+async function loadManualReturnComparisons(){
+  setManualReturnStorageStatus('正在讀取已存比較…');
+  try{
+    var result=await apiPostJson({action:'returnComparisonSets'});
+    manualReturnSavedSets=Array.isArray(result.sets)?result.sets:[];
+    var host=document.querySelector('#dividend-center-content .manual-return-panel');
+    var content=document.getElementById('dividend-center-content');
+    if(host&&content)content.innerHTML=renderDividendCenter(dividendCenterCache||{},true);
+    setManualReturnStorageStatus(manualReturnSavedSets.length?'選擇下方比較組即可還原。':'目前沒有已存比較組。');
+  }catch(error){setManualReturnStorageStatus(error.message||'載入失敗',true);}
+}
+function restoreManualReturnComparison(index){
+  var set=manualReturnSavedSets[index];if(!set)return;
+  manualReturnComparisonState=(set.rows||[]).slice(0,5).map(function(row){return {name:String(row.name||''),initialPrice:String(row.initialPrice==null?'':row.initialPrice),periodDividend:String(row.periodDividend==null?'':row.periodDividend),latestPrice:String(row.latestPrice==null?'':row.latestPrice),dividendFactor:String(row.dividendFactor==null?'100':row.dividendFactor)};});
+  while(manualReturnComparisonState.length<5)manualReturnComparisonState.push({name:'',initialPrice:'',periodDividend:'',latestPrice:'',dividendFactor:'100'});
+  manualReturnPeriodState={startDate:set.startDate||'',endDate:set.endDate||todayTaipeiIsoDate()};
+  var content=document.getElementById('dividend-center-content');if(content)content.innerHTML=renderDividendCenter(dividendCenterCache||{},true);
+  setManualReturnStorageStatus('已還原：'+(set.name||'比較組'));
 }
 
 function updateManualReturnComparison(input){
@@ -13558,6 +13611,7 @@ function manualReturnCalculation(row){
 
 function resetManualReturnComparisons(){
   manualReturnComparisonState=Array.from({length:5},function(){return {name:'',initialPrice:'',periodDividend:'',latestPrice:'',dividendFactor:'100'};});
+  manualReturnPeriodState={startDate:'',endDate:todayTaipeiIsoDate()};
   var host=document.querySelector('#dividend-center-content .manual-return-panel');
   if(host){
     var content=document.getElementById('dividend-center-content');
@@ -21126,7 +21180,7 @@ function mpmRender(records){
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('./sw.js?v=20261018-return-horizontal1', {updateViaCache:'none'}).then(function (registration) {
+    navigator.serviceWorker.register('./sw.js?v=20261019-return-comparison-storage1', {updateViaCache:'none'}).then(function (registration) {
       return registration.update();
     }).catch(function (error) {
       console.warn('Empire Service Worker registration failed', error);
