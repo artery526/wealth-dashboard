@@ -1,9 +1,9 @@
 {
   "id": "2026-10-21-finance-retire-mlpi",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-10-21",
   "area": "財政",
   "summary": "移除已結清 MLPI 的財政選項",
-  "details": "從財政標的下拉與配息補全清單移除 MLPI，保留歷史資料與舊交易的代號解析。",
+  "details": "從財政標的下拉與配息補全清單移除 MLPI，保留歷史資料與舊交易的代號解析；已部署並驗證正式網站選項及即時持股清單。",
   "platforms": ["website"]
 }
