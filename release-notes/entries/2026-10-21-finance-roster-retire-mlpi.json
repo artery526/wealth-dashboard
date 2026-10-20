@@ -1,9 +1,9 @@
 {
   "id": "2026-10-21-finance-roster-retire-mlpi",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-10-21",
   "area": "財政",
   "summary": "部隊陣容隱藏已退役 MLPI",
-  "details": "部隊陣容忽略已清空標的 MLPI，避免舊瀏覽器或 NAS 快取再次顯示；保留歷史資料解析。",
+  "details": "部隊陣容忽略已清空標的 MLPI，避免舊瀏覽器或 NAS 快取再次顯示；已部署並驗證正式網站過濾設定，保留歷史資料解析。",
   "platforms": ["website"]
 }
