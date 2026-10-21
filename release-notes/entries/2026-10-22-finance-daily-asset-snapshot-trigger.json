@@ -1,0 +1,9 @@
+{
+  "id": "2026-10-22-finance-daily-asset-snapshot-trigger",
+  "status": "released",
+  "date": "2026-10-22",
+  "area": "財政",
+  "summary": "恢復每日資產快照排程",
+  "details": "確認線上缺少每日資產快照觸發器，已恢復每日約 09:10 的排程。未回填來源無法驗證的歷史日期。",
+  "platforms": ["app-script", "website"]
+}
