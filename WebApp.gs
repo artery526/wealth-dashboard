@@ -2110,7 +2110,7 @@ function getLatestMacroJudgment_(ss) {
   };
 }
 
-function getLatestMacroData_(ss) {
+function getLatestMacroData_(ss, beforeDateText) {
   var sheet = ss.getSheetByName('總經資料庫');
   if (!sheet || sheet.getLastRow() < 2) return null;
 
@@ -2119,7 +2119,8 @@ function getLatestMacroData_(ss) {
   var rows = values.slice(1).map(function(row) {
     return macroObjectFromRow_(headers, row);
   }).filter(function(obj) {
-    return String(obj['日期'] || '').trim();
+    var dateText = String(obj['日期'] || '').trim();
+    return dateText && (!beforeDateText || dateText < beforeDateText);
   });
   if (!rows.length) return null;
 
@@ -2175,6 +2176,10 @@ function writeMacroWebhook(ss, body) {
   var todayText = Utilities.formatDate(now, tz, 'yyyy/MM/dd');
   var timeText = Utilities.formatDate(now, tz, 'HH:mm');
   var dateText = String(body.date || todayText).trim();
+  var previousMacroData = getLatestMacroData_(ss);
+  if (previousMacroData && String(previousMacroData.date) >= dateText) {
+    previousMacroData = getLatestMacroData_(ss, dateText);
+  }
 
   var macroData = {
     date: dateText,
@@ -2191,6 +2196,20 @@ function writeMacroWebhook(ss, body) {
     source: String(body.source || 'macroWebhook').trim(),
     updatedAt: String(body.updatedAt || timeText).trim()
   };
+
+  var previousValues = previousMacroData && previousMacroData.values ? previousMacroData.values : {};
+  var rejectedKeys = [];
+  var fallbackKeys = [];
+  ['yield10y', 'oil', 'cpi', 'ppi', 'unemployment', 'joltsOpenings', 'adpEmploymentChange', 'nfpPayrollChange', 'vix', 'dxy', 'creditSpread', 'consumerSentiment', 'yield2y', 'fedBalance', 'rrp', 'm2', 'liquidityScore', 'sofrIorbSpread', 'bankReserves', 'bankReservesChange'].forEach(function(key) {
+    if (isPlausibleMacroValue_(key, macroData[key], previousValues[key])) return;
+    rejectedKeys.push(key);
+    macroData[key] = previousValues[key] != null && isPlausibleMacroValue_(key, previousValues[key], null)
+      ? previousValues[key]
+      : null;
+    if (macroData[key] != null) fallbackKeys.push(key);
+  });
+  if (rejectedKeys.length) macroData.source += '；略過異常值：' + rejectedKeys.join(', ');
+  if (fallbackKeys.length) macroData.source += '；沿用前一個資料日：' + fallbackKeys.join(', ');
 
   var required = ['yield10y', 'oil', 'cpi', 'ppi', 'unemployment', 'joltsOpenings', 'vix', 'dxy', 'creditSpread', 'consumerSentiment'];
   var missing = required.filter(function(key) {
@@ -2238,6 +2257,11 @@ function dailyMacroBriefing() {
   var ss = getExternalDbSpreadsheet_();
   var payload = fetchDailyMacroPayload_(ss);
   return writeMacroWebhook(ss, payload);
+}
+
+function refreshMacroBriefingDataOnly_() {
+  var ss = getExternalDbSpreadsheet_();
+  return writeMacroWebhook(ss, fetchDailyMacroPayload_(ss));
 }
 
 function fetchDailyMacroPayload_(ss) {
@@ -2562,13 +2586,21 @@ function safeMacroFetch_(fn) {
 
 function fillMissingMacroPayload_(ss, payload) {
   var previous = getLatestMacroData_(ss);
+  if (previous && payload.date && String(previous.date) >= String(payload.date)) {
+    previous = getLatestMacroData_(ss, String(payload.date));
+  }
   var prevValues = previous && previous.values ? previous.values : {};
-  var keys = ['yield10y', 'oil', 'cpi', 'ppi', 'unemployment', 'joltsOpenings', 'vix', 'dxy', 'creditSpread'];
+  var keys = ['yield10y', 'oil', 'cpi', 'ppi', 'unemployment', 'joltsOpenings', 'vix', 'dxy', 'creditSpread', 'consumerSentiment'];
   var optionalKeys = [];
   var fallbackKeys = [];
+  var rejectedKeys = [];
   keys.concat(optionalKeys).forEach(function(key) {
+    if (!isPlausibleMacroValue_(key, payload[key], prevValues[key])) {
+      payload[key] = null;
+      rejectedKeys.push(key);
+    }
     if (payload[key] == null || isNaN(payload[key])) {
-      if (prevValues[key] != null && !isNaN(prevValues[key])) {
+      if (prevValues[key] != null && !isNaN(prevValues[key]) && isPlausibleMacroValue_(key, prevValues[key], null)) {
         payload[key] = prevValues[key];
         fallbackKeys.push(key);
       }
@@ -2581,9 +2613,34 @@ function fillMissingMacroPayload_(ss, payload) {
     throw new Error('每日總經資料抓取失敗，且無上一筆可沿用：' + missing.join(', '));
   }
   if (fallbackKeys.length) {
-    payload.source += '；沿用上一筆：' + fallbackKeys.join(', ');
+    payload.source += '；沿用前一個資料日：' + fallbackKeys.join(', ');
+  }
+  if (rejectedKeys.length) {
+    payload.source += '；略過異常值：' + rejectedKeys.join(', ');
   }
   return payload;
+}
+
+function isPlausibleMacroValue_(key, value, previousValue) {
+  if (value == null || value === '' || isNaN(value)) return true;
+  value = Number(value);
+  if (!isFinite(value)) return false;
+  var limits = {
+    yield10y: [0, 25], oil: [0, 1000], cpi: [-10, 100], ppi: [-20, 100],
+    unemployment: [0, 30], joltsOpenings: [1000, 50000], adpEmploymentChange: [-1000, 2000],
+    nfpPayrollChange: [-2000, 3000], vix: [0, 200], dxy: [50, 200],
+    creditSpread: [0, 30], consumerSentiment: [0, 200], yield2y: [0, 25],
+    fedBalance: [100000, 20000000], rrp: [0, 3000], m2: [1000, 100000],
+    liquidityScore: [0, 5], sofrIorbSpread: [-10, 10], bankReserves: [100000, 10000000],
+    bankReservesChange: [-5000000, 5000000]
+  };
+  var range = limits[key];
+  if (range && (value < range[0] || value > range[1])) return false;
+  if (key === 'rrp' && previousValue != null && !isNaN(previousValue)) {
+    var previous = Number(previousValue);
+    if (value - previous > 100 && value > Math.max(previous, 1) * 20) return false;
+  }
+  return true;
 }
 
 function fetchFredSeriesValues_(seriesId, limit) {
@@ -2597,14 +2654,22 @@ function fetchFredSeriesValues_(seriesId, limit) {
     throw new Error('FRED 讀取失敗：' + seriesId);
   }
   var lines = res.getContentText().split(/\r?\n/);
+  var header = String(lines[0] || '').replace(/^\uFEFF/, '').split(',');
+  if (header.length !== 2 || header[0] !== 'observation_date' || header[1] !== seriesId) {
+    throw new Error('FRED CSV 格式異常：' + seriesId);
+  }
   var rows = [];
   for (var i = 1; i < lines.length; i++) {
     var line = String(lines[i] || '').trim();
     if (!line) continue;
     var parts = line.split(',');
-    if (parts.length < 2 || parts[1] === '.') continue;
-    var value = parseFloat(parts[1]);
-    if (isNaN(value)) continue;
+    if (parts.length !== 2) throw new Error('FRED CSV 欄位數異常：' + seriesId);
+    if (parts[1] === '.') continue;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(parts[0]) || !/^-?(?:\d+(?:\.\d*)?|\.\d+)$/.test(parts[1])) {
+      throw new Error('FRED 資料列格式異常：' + seriesId);
+    }
+    var value = Number(parts[1]);
+    if (!isFinite(value)) throw new Error('FRED 資料值異常：' + seriesId);
     rows.push({ date: parts[0], value: value });
   }
   if (!rows.length) throw new Error('FRED 無有效資料：' + seriesId);

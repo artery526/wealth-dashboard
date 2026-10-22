@@ -1,0 +1,9 @@
+{
+  "id": "2026-10-22-empire-briefing-fred-anomaly-guard",
+  "status": "in_progress",
+  "date": null,
+  "area": "帝國晨報",
+  "summary": "阻止異常總經數值污染晨報",
+  "details": "驗證 FRED 回應格式與總經指標合理範圍；同日修正時改用前一個有效資料日補值，並標示異常欄位與沿用狀態。",
+  "platforms": ["app-script"]
+}
