@@ -1,0 +1,9 @@
+{
+  "id": "2026-10-22-daily-growth-dedicated-storage",
+  "status": "released",
+  "date": "2026-10-22",
+  "area": "每日成長",
+  "summary": "將每日成長後台記錄移至獨立試算表",
+  "details": "成就清單、完成紀錄、三餐自煮與日誌改由獨立資料庫讀寫，保留舊表作為回復備份，並更新快取版本以即時讀取新資料。",
+  "platforms": ["app-script"]
+}
