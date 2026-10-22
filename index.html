@@ -5198,6 +5198,7 @@ var manualReturnComparisonState = Array.from({length:5},function(){return {name:
 var manualReturnPeriodState = { startDate: '', endDate: todayTaipeiIsoDate() };
 var manualReturnSavedSets = [];
 var manualReturnActiveSetId = '';
+var manualReturnSavedListCollapsed = false;
 var DIVIDEND_CACHE_TTL = 5 * 60 * 1000;
 var DIVIDEND_AUTOFILL_SYMBOLS = ['CHPY','AIPI','QQQI','00997A'];
 var heroCache = [];
@@ -13522,13 +13523,14 @@ function renderManualReturnComparisonPanel(){
     </article>`;
   }).join('');
   var savedSets=manualReturnSavedSets.map(function(set,index){return `<div class="manual-return-saved-row"><span class="manual-return-saved-name">${esc(set.name||'未命名比較組')}${set.id===manualReturnActiveSetId?'（編輯中）':''}</span><span class="manual-return-saved-actions"><button type="button" class="manual-return-reset" onclick="restoreManualReturnComparison(${index})">還原</button><button type="button" class="manual-return-delete" onclick="deleteManualReturnComparison(${index})">刪除</button></span></div>`;}).join('');
+  var savedSetCount=manualReturnSavedSets.length;
   return `<section class="advisor-div-calc-card dividend-center-calculator manual-return-panel" aria-labelledby="manual-return-title">
     <div class="advisor-shortcut-title" id="manual-return-title">📈 報酬試算</div>
     <div class="advisor-shortcut-hint">五組標的自行輸入比較。資料不會自動儲存；只有按下存檔或載入時才會連線至專用試算表。</div>
     <p class="manual-return-method">公式：（最新股價 − 初始股價 + 每股稅前配息 × 退稅後實拿比例）÷ 初始股價。比例是實拿占比（例如 96.3% 乘上配息），不是額外加回的稅額；每組請使用同一幣別。</p>
     <div class="manual-return-period"><label for="manual-return-start-date">比較起日</label><input id="manual-return-start-date" type="date" value="${esc(manualReturnPeriodState.startDate)}" onchange="updateManualReturnPeriod(this)"><label for="manual-return-end-date">比較迄日</label><input id="manual-return-end-date" type="date" value="${esc(manualReturnPeriodState.endDate)}" onchange="updateManualReturnPeriod(this)"></div>
-    <div class="manual-return-actions"><button class="manual-return-reset" type="button" onclick="saveManualReturnComparison(false)">${manualReturnActiveSetId?'更新比較組':'存為比較組'}</button>${manualReturnActiveSetId?'<button class="manual-return-reset" type="button" onclick="saveManualReturnComparison(true)">另存新組</button>':''}<button class="manual-return-reset" type="button" onclick="loadManualReturnComparisons()">載入已存比較</button><button class="manual-return-reset" type="button" onclick="resetManualReturnComparisons()">清空五組</button></div>
-    <div id="manual-return-storage-status" class="advisor-shortcut-hint" aria-live="polite"></div><div id="manual-return-saved-list">${savedSets.length?'<div class="manual-return-saved-list">'+savedSets+'</div>':''}</div>
+    <div class="manual-return-actions"><button class="manual-return-reset" type="button" onclick="saveManualReturnComparison(false)">${manualReturnActiveSetId?'更新比較組':'存為比較組'}</button>${manualReturnActiveSetId?'<button class="manual-return-reset" type="button" onclick="saveManualReturnComparison(true)">另存新組</button>':''}<button class="manual-return-reset" type="button" onclick="loadManualReturnComparisons()">載入已存比較</button><button class="manual-return-reset" type="button" onclick="resetManualReturnComparisons()">清空五組</button><button id="manual-return-saved-toggle" class="manual-return-reset" type="button" onclick="toggleManualReturnSavedList()" aria-controls="manual-return-saved-list" aria-expanded="${!manualReturnSavedListCollapsed}"${savedSetCount?'':' disabled'}>${manualReturnSavedListCollapsed?'展開比較組':'收起比較組'}（${savedSetCount}）</button></div>
+    <div id="manual-return-storage-status" class="advisor-shortcut-hint" aria-live="polite"></div><div id="manual-return-saved-list" style="display:${manualReturnSavedListCollapsed?'none':'block'}">${savedSetCount?'<div class="manual-return-saved-list">'+savedSets+'</div>':''}</div>
     <div class="manual-return-table-wrap"><div class="manual-return-grid" role="table" aria-label="五組標的總報酬比較">
       <div class="manual-return-table-head" role="row"><span role="columnheader">標的名稱</span><span role="columnheader">初始股價</span><span role="columnheader">期間總配息</span><span role="columnheader">最新股價</span><span role="columnheader">退稅實拿比例%</span><span role="columnheader">總報酬率</span></div>
       ${rows}
@@ -13549,6 +13551,14 @@ function updateManualReturnPeriod(input){
 function setManualReturnStorageStatus(message,isError){
   var status=document.getElementById('manual-return-storage-status');
   if(status){status.textContent=message||'';status.style.color=isError?'#ff8d91':'';}
+}
+function toggleManualReturnSavedList(){
+  if(!manualReturnSavedSets.length)return;
+  manualReturnSavedListCollapsed=!manualReturnSavedListCollapsed;
+  var list=document.getElementById('manual-return-saved-list');
+  var button=document.getElementById('manual-return-saved-toggle');
+  if(list)list.style.display=manualReturnSavedListCollapsed?'none':'block';
+  if(button){button.textContent=(manualReturnSavedListCollapsed?'展開比較組':'收起比較組')+'（'+manualReturnSavedSets.length+'）';button.setAttribute('aria-expanded',String(!manualReturnSavedListCollapsed));}
 }
 function refreshManualReturnComparisonPanel(message,isError){
   var content=document.getElementById('dividend-center-content');
@@ -21211,7 +21221,7 @@ function mpmRender(records){
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('./sw.js?v=20261019-return-comparison-edit-delete1', {updateViaCache:'none'}).then(function (registration) {
+    navigator.serviceWorker.register('./sw.js?v=20261022-return-comparison-collapse1', {updateViaCache:'none'}).then(function (registration) {
       return registration.update();
     }).catch(function (error) {
       console.warn('Empire Service Worker registration failed', error);

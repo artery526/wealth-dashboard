@@ -1,0 +1,9 @@
+{
+  "id": "2026-10-22-finance-return-comparison-collapse",
+  "status": "in_progress",
+  "date": null,
+  "area": "財政",
+  "summary": "報酬試算已存比較組清單可收合",
+  "details": "在清空五組旁加入已存比較組清單的收合／展開控制，讓五組報酬比較表可更完整呈現與截圖。",
+  "platforms": ["website"]
+}

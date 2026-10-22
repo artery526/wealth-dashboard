@@ -562,6 +562,12 @@ test('manual return comparison stores and restores only on explicit user action'
   await expect(page.locator('#manual-return-end-date')).toHaveValue('2026-10-19');
   expect(await page.evaluate(() => window.__returnRequests().length)).toBe(0);
   await page.getByRole('button', { name: '載入已存比較' }).click();
+  await expect(page.locator('.manual-return-saved-row')).toHaveCount(1);
+  await page.getByRole('button', { name: '收起比較組（1）' }).click();
+  await expect(page.locator('#manual-return-saved-list')).toBeHidden();
+  await expect(page.locator('.manual-return-table-wrap')).toBeVisible();
+  await page.getByRole('button', { name: '展開比較組（1）' }).click();
+  await expect(page.locator('#manual-return-saved-list')).toBeVisible();
   await page.getByRole('button', { name: '還原' }).click();
   await expect(page.locator('#manual-return-start-date')).toHaveValue('2026-04-22');
   await expect(page.locator('#manual-return-0-name')).toHaveValue('QQQI');
