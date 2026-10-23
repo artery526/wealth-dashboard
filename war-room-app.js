@@ -9,8 +9,9 @@
     'war-sector-rotation':{title:'產業輪動',load:loadSector},
     'war-taiwan-macro':{title:'台灣總體經濟',load:loadTaiwan}
   };
-  var currentTab='war-briefing',lastLoaded={},taiwanRange='1Y',busy=false,foreignYtdPromise=null,foreignYtdLastAttempt=0,foreignYtdError='';
+  var currentTab='war-briefing',lastLoaded={},taiwanRange='1Y',busy=false,foreignYtdPromise=null,foreignYtdLastAttempt=0,foreignYtdError='',nasdaqValuationPromise=null;
   var FOREIGN_YTD_CACHE_KEY='wealth_twse_foreign_ytd_v1';
+  var NASDAQ_VALUATION_CACHE_KEY='wealth_nasdaq100_valuation_v1';
   var content=document.getElementById('content'),status=document.getElementById('connection-status');
   function normalizeApi(value){value=String(value||'').trim();return /script\.google\.com\/macros\/s\//i.test(value)?API_DEFAULT:value;}
   function esc(value){return String(value==null?'':value).replace(/[&<>"']/g,function(ch){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];});}
@@ -93,6 +94,28 @@
   function metric(label,value,sub){return '<div class="card"><h3>'+esc(label)+'</h3><div class="metric">'+esc(value==null||value===''?'資料暫缺':value)+'</div>'+(sub?'<div class="metric-label">'+esc(sub)+'</div>':'')+'</div>';}
   function genericRows(items,fields){if(!Array.isArray(items)||!items.length)return '<div class="empty">目前沒有可顯示資料</div>';return '<div class="rows">'+items.map(function(item){return '<article class="row"><div class="row-title">'+esc(item.name||item.title||item.code||item.label||'資料')+'<small>'+esc(item.code||item.date||item.sourceDate||item.quadrant||'')+'</small></div>'+fields.map(function(field){var value=item[field.key];var text=value==null?'--':(field.format?field.format(value):String(value));var cls=field.color&&Number(value)<0?'down':field.color&&Number(value)>0?'up':'';return '<div class="'+cls+'"><small>'+esc(field.label)+'</small>'+esc(text)+'</div>';}).join('')+'</article>';}).join('')+'</div>';}
   function rawDetails(title,data){return '<details class="details"><summary>'+esc(title)+'</summary><pre>'+esc(JSON.stringify(data,null,2))+'</pre></details>';}
+  function renderNasdaqValuation_(data,stale,error,loading){
+    var host=document.getElementById('nasdaq-valuation-host');if(!host)return;
+    var trailing=data&&data.trailingPE!=null&&isFinite(Number(data.trailingPE))?num(data.trailingPE,2)+'×':'資料暫缺';
+    var forward=data&&data.forwardPE!=null&&isFinite(Number(data.forwardPE))?num(data.forwardPE,2)+'×':'資料暫缺';
+    var status=loading?'顯示快照 · 背景更新中':(error?'來源暫時無法讀取':stale?'資料日期較舊，請留意日期':data?'資料已更新':'背景讀取中…');
+    host.innerHTML='<article class="nasdaq-valuation-card"><div class="nasdaq-valuation-head"><span>📊 NASDAQ-100 估值</span><span class="nasdaq-valuation-status">'+esc(status)+'</span></div><div class="nasdaq-valuation-values"><div><small>Trailing P/E</small><strong>'+esc(trailing)+'</strong><small>資料日期 '+esc(data&&data.trailingDataDate||'暫缺')+'</small></div><div><small>Forward P/E</small><strong>'+esc(forward)+'</strong><small>資料日期 '+esc(data&&data.forwardDataDate||'暫缺')+'</small></div></div><p>估值為歷史指標，不代表價格預測；Forward P/E 採來源自行計算的未來 12 個月估計。來源：<a href="https://historyofmarket.com/nasdaq/ndx-forward-pe/" target="_blank" rel="noopener noreferrer">History of Market — Nasdaq 100 Forward PE</a>（資料 CC BY 4.0）'+(error?' · '+esc(error):'')+'</p></article>';
+  }
+  function refreshNasdaqValuation_(){
+    var cached=readCache(NASDAQ_VALUATION_CACHE_KEY);
+    if(cached)renderNasdaqValuation_(cached,false,'',true);
+    if(nasdaqValuationPromise)return nasdaqValuationPromise;
+    if(!cached)renderNasdaqValuation_(null,false,'',true);
+    nasdaqValuationPromise=request({action:'nasdaq100Valuation'},20000).then(function(data){
+      writeCache(NASDAQ_VALUATION_CACHE_KEY,data);
+      renderNasdaqValuation_(data,!!data.stale,'',false);
+      return data;
+    }).catch(function(error){
+      renderNasdaqValuation_(cached,true,error&&error.message||'估值資料暫缺',false);
+      return null;
+    }).finally(function(){nasdaqValuationPromise=null;});
+    return nasdaqValuationPromise;
+  }
   function showError(error){if(error&&[401,403].includes(Number(error.status))){setStatus('城門驗證失效','err');renderLogin(error.message||'請重新驗證城門。');return;}setStatus('資料更新失敗','err');var old=content.querySelector('.notice.error');if(old)old.remove();content.insertAdjacentHTML('afterbegin','<div class="notice error">'+esc(error&&error.message||'讀取失敗')+'。若舊快照仍可用，會繼續保留於畫面。</div>');}
   function sectionTitle(text){return '<h2 class="section-title">'+esc(text)+'</h2>';}
   function dashboardCardGroup(title,object){if(!object||typeof object!=='object')return '';var entries=Object.entries(object).filter(function(entry){return entry[1]==null||typeof entry[1]!=='object';});if(!entries.length)return '';return sectionTitle(title)+'<div class="grid">'+entries.slice(0,12).map(function(entry){var val=entry[1];return metric(entry[0],typeof val==='number'?num(val):String(val==null?'資料暫缺':val));}).join('')+'</div>';}
@@ -129,6 +152,7 @@
     html+='</section>';
     function valuationCard(title,data,kind){if(!data)return '<article class="valuation-card"><h3>'+title+'</h3><p class="muted">估值資料暫缺</p></article>';var median=kind==='qqq'?(data.historicalMedian||{}).tenYear:(data.historicalPEMedian||{}).tenYear;var fields=kind==='qqq'?[['現價',data.price],['Forward P/E',data.forwardPE==null?null:num(data.forwardPE,2)+'×'],['Forward Earnings',data.forwardEarnings],['10年中位數',median==null?null:num(median,2)+'×']]:[['加權指數',data.index==null?data.price:data.index],['Trailing P/E',data.trailingPE==null?null:num(data.trailingPE,2)+'×'],['P/B',data.pb==null?null:num(data.pb,2)+'×'],['10年中位數',median==null?null:num(median,2)+'×']];return '<article class="valuation-card"><h3>'+title+'</h3><div class="valuation-values">'+fields.map(function(field){return '<div><small>'+esc(field[0])+'</small><strong>'+esc(field[1]==null?'資料暫缺':field[1])+'</strong></div>';}).join('')+'</div><p class="metric-label">'+esc(data.dataDate||data.priceDate||'資料日期暫缺')+' · '+esc(data.source||'來源未提供')+'</p><p class="valuation-judgment">'+esc(data.judgment||data.status||'以目前估值和歷史中位數比較，不是價格預測。')+'</p></article>';}
     if(valuations.qqq||valuations.taiex)html+=sectionTitle('估值觀察')+'<div class="brief-valuations">'+valuationCard('📡 QQQ 動態估值',valuations.qqq,'qqq')+valuationCard('🇹🇼 台股估值',valuations.taiex,'taiex')+'</div>';
+    html+=sectionTitle('NASDAQ-100 估值')+'<div id="nasdaq-valuation-host"></div>';
     var rows=market.rows||[];
     if(rows.length)html+=sectionTitle('核心市場')+'<div class="brief-market-list">'+rows.map(function(row){var change=Number(row.changePct),tone=isFinite(change)?change>=0?'up':'down':'';return '<article class="brief-market-row"><div><strong>'+esc(row.name||row.code||'市場')+'</strong><small>'+esc(row.code||'')+' · '+esc(row.dataDate||row.sourceDate||'資料日未提供')+'</small></div><div><small>現價</small><strong>'+esc(row.price==null?'--':num(row.price,2))+'</strong></div><div class="'+tone+'"><small>漲跌</small><strong>'+esc(row.changePct==null?'--':num(row.changePct,2)+'%')+'</strong></div><span class="pill">'+esc(row.signal||'觀望')+'</span></article>';}).join('')+'</div>';
     var indicators=Array.isArray(macro.indicators)?macro.indicators:[],values=macro.values||{};
@@ -137,7 +161,7 @@
     var groups=[['💧 流動性',[['SOFR–IORB','sofrIorbSpread'],['銀行準備金','bankReserves'],['隔夜逆回購','rrp'],['M2','m2']]],['👷 就業',[['JOLTS 職缺','joltsOpenings'],['ADP 就業','adpEmploymentChange'],['非農就業','nfpPayrollChange']]],['🔥 通膨',[['CPI','cpi'],['PPI','ppi'],['油價','oil']]],['💳 市場壓力',[['信用利差','creditSpread'],['VIX','vix'],['消費信心','consumerSentiment']]]];
     html+=sectionTitle('總經燈號')+'<div class="brief-macro-grid">'+groups.map(function(group){return '<article class="brief-macro-card"><h3>'+group[0]+'</h3>'+group[1].map(function(item){var row=findIndicator(item[1]),tone=/紅|警戒|防守|惡化/.test(String(row&&row.status||''))?'down':/綠|改善|充足/.test(String(row&&row.status||''))?'up':'';return '<div class="brief-indicator"><span>'+esc(item[0])+'</span><strong class="'+tone+'">'+esc(indicatorValue(row))+'</strong></div>';}).join('')+'</article>';}).join('')+'</div>';
     if(report.latest||report.summary)html+=sectionTitle('長期觀察')+'<div class="brief-report">'+esc((report.latest&&report.latest.summary)||report.summary||'')+'</div>';
-    html+=rawDetails('完整快照資料',payload);content.innerHTML=html;setFreshness(captured?'快照時間 '+dateText(captured):'以目前可取得的快照呈現');
+    html+=rawDetails('完整快照資料',payload);content.innerHTML=html;setFreshness(captured?'快照時間 '+dateText(captured):'以目前可取得的快照呈現');refreshNasdaqValuation_();
   }
   async function loadBriefing(force){
     var cacheKey='wealth_advisor_world_nas_v1',cached=readCache(cacheKey),cacheMarket=readCache('wealth_market_dashboard_v1'),cacheMacro=readCache('wealth_market_macro_v4');

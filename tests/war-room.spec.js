@@ -153,6 +153,38 @@ test('Imperial Morning Brief derives monitored market rise and fall counts from 
   expect(width.scroll).toBeLessThanOrEqual(width.client);
 });
 
+test('Standalone War Room shows sourced NASDAQ-100 valuations and dates on mobile', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.addInitScript(() => {
+    localStorage.setItem('wealth_api_url', 'https://example.test/exec');
+    localStorage.setItem('wealth_write_token', 'test-write-token');
+    localStorage.setItem('wealth_web_verify_status', 'ok');
+    localStorage.setItem('wealth_web_verify_checked_at', String(Date.now()));
+    sessionStorage.setItem('wealth_web_session_token', 'same-tab-session');
+  });
+  await page.route('https://example.test/**', route => {
+    const action = new URL(route.request().url()).searchParams.get('action');
+    const data = action === 'nasdaq100Valuation'
+      ? { trailingPE: 30.52, trailingDataDate: '2026-10-22', forwardPE: 19.61, forwardDataDate: '2026-10-21', stale: false }
+      : action === 'advisorWorldBriefSnapshotRefresh'
+        ? { snapshot: { market: { summary: {}, rows: [] }, macro: { judgment: {}, indicators: [] }, capturedAt: '2026-10-23T00:00:00Z' } }
+        : {};
+    return route.fulfill({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ ok: true, data }) });
+  });
+  await page.route('https://api.ark-os26.cc/**', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ records: [] }) }));
+
+  await page.goto(`${standaloneUrl}?tab=war-briefing`);
+  const card = page.locator('.nasdaq-valuation-card');
+  await expect(card).toBeVisible();
+  await expect(card.locator('.nasdaq-valuation-values > div').nth(0)).toContainText('30.52×');
+  await expect(card.locator('.nasdaq-valuation-values > div').nth(0)).toContainText('2026-10-22');
+  await expect(card.locator('.nasdaq-valuation-values > div').nth(1)).toContainText('19.61×');
+  await expect(card.locator('.nasdaq-valuation-values > div').nth(1)).toContainText('2026-10-21');
+  await expect(card.locator('a')).toHaveAttribute('href', 'https://historyofmarket.com/nasdaq/ndx-forward-pe/');
+  const dimensions = await card.evaluate(el => ({ scrollWidth: el.scrollWidth, clientWidth: el.clientWidth }));
+  expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
+});
+
 test('Battle Brief shows the year-to-date foreign net sell from TWSE monthly reports on mobile', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.clock.install({ time: new Date('2026-10-13T05:00:00.000Z') });
