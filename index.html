@@ -1159,6 +1159,15 @@ body::after{
 .advisor-brief-grid .advisor-brief-line{font-size:12px;gap:6px;line-height:1.45}
 .advisor-brief-grid .advisor-brief-one{font-size:12px;line-height:1.55}
 .advisor-brief-grid .advisor-brief-section.valuation{grid-column:auto;min-height:0}
+.advisor-nasdaq-valuation{position:relative;z-index:1;margin-top:9px;padding:10px;border:1px solid rgba(65,165,207,.22);border-radius:7px;background:rgba(0,0,0,.12)}
+.advisor-nasdaq-valuation-head{display:flex;align-items:center;justify-content:space-between;gap:8px;color:var(--gold);font-weight:700;font-size:13px}
+.advisor-nasdaq-valuation-values{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px}
+.advisor-nasdaq-valuation-item{min-width:0;padding:8px;border:1px solid rgba(65,165,207,.14);border-radius:6px;background:rgba(0,0,0,.12)}
+.advisor-nasdaq-valuation-item span,.advisor-nasdaq-valuation-item small{display:block;color:var(--muted);font-size:11px}
+.advisor-nasdaq-valuation-item strong{display:block;margin:3px 0;color:var(--text);font-size:18px}
+.advisor-nasdaq-valuation-source{margin-top:7px;color:var(--muted);font-size:10px;line-height:1.5}
+.advisor-nasdaq-valuation-source a{color:var(--cyan)}
+@media(max-width:420px){.advisor-nasdaq-valuation-values{grid-template-columns:1fr 1fr}.advisor-nasdaq-valuation-item{padding:7px}.advisor-nasdaq-valuation-item strong{font-size:16px}}
 .advisor-brief-section.valuation .advisor-brief-line{align-items:flex-start}
 .advisor-brief-section.valuation .advisor-brief-line span{white-space:normal;flex:0 1 45%}
 .advisor-brief-section.valuation .advisor-brief-line strong{min-width:0;overflow-wrap:anywhere;flex:1}
@@ -6038,6 +6047,7 @@ var BATTLE_PRICE_HISTORY_CACHE_TTL=6*60*60*1000;
 var marketDashboardPromise=null;
 var marketSectorRotationPromise=null;
 var macroOverviewPromise=null;
+var advisorWorldNasdaqValuationPromise=null;
 var taiwanMacroPromise=null;
 var taiwanMacroSyncPromise=null;
 var taiwanStockReviewPromise=null;
@@ -16641,6 +16651,14 @@ function advisorWorldHtml(view,snapshotAt){
     </div>
     <div class="advisor-brief-divider"></div>
     <div class="advisor-brief-grid">${view.sections.map(function(section){return advisorWorldSectionHtml(section);}).join('')}</div>
+    <div class="advisor-nasdaq-valuation" aria-live="polite">
+      <div class="advisor-nasdaq-valuation-head"><span>📊 NASDAQ-100 估值</span><span class="advisor-nasdaq-valuation-status">背景讀取中…</span></div>
+      <div class="advisor-nasdaq-valuation-values">
+        <div class="advisor-nasdaq-valuation-item"><span>Trailing P/E</span><strong class="advisor-nasdaq-trailing">--</strong><small class="advisor-nasdaq-trailing-date">資料日期讀取中</small></div>
+        <div class="advisor-nasdaq-valuation-item"><span>Forward P/E</span><strong class="advisor-nasdaq-forward">--</strong><small class="advisor-nasdaq-forward-date">資料日期讀取中</small></div>
+      </div>
+      <div class="advisor-nasdaq-valuation-source">估值為歷史指標，不代表價格預測。Forward P/E 使用來源自行計算的未來 12 個月估計。來源：<a href="https://historyofmarket.com/nasdaq/ndx-forward-pe/" target="_blank" rel="noopener noreferrer">History of Market — Nasdaq 100 Forward PE</a>（資料 CC BY 4.0）</div>
+    </div>
     <div class="advisor-long-report-slot">
       <div class="advisor-long-report">
         <div class="advisor-long-report-summary">正在調閱30日戰略報告...</div>
@@ -17632,9 +17650,36 @@ function advisorWorldCacheSnapshot(payload){
   if(payload.longReport)writeTimedMarketCache(MARKET_LONG_REPORT_CACHE_KEY,payload.longReport);
 }
 
+function advisorWorldLoadNasdaqValuation(panel){
+  if(!panel)return;
+  var card=panel.querySelector('.advisor-nasdaq-valuation');
+  if(!card)return;
+  if(!advisorWorldNasdaqValuationPromise){
+    advisorWorldNasdaqValuationPromise=apiGet({action:'nasdaq100Valuation'},20000).finally(function(){advisorWorldNasdaqValuationPromise=null;});
+  }
+  advisorWorldNasdaqValuationPromise.then(function(data){
+    if(!card.isConnected)return;
+    data=data||{};
+    var trailing=Number(data.trailingPE),forward=Number(data.forwardPE);
+    card.querySelector('.advisor-nasdaq-trailing').textContent=Number.isFinite(trailing)&&trailing>0?trailing.toFixed(2)+'×':'資料暫缺';
+    card.querySelector('.advisor-nasdaq-forward').textContent=Number.isFinite(forward)&&forward>0?forward.toFixed(2)+'×':'資料暫缺';
+    card.querySelector('.advisor-nasdaq-trailing-date').textContent=data.trailingDataDate?'資料日期 '+advisorWorldBriefDate(data.trailingDataDate):'資料日期暫缺';
+    card.querySelector('.advisor-nasdaq-forward-date').textContent=data.forwardDataDate?'資料日期 '+advisorWorldBriefDate(data.forwardDataDate):'資料日期暫缺';
+    card.querySelector('.advisor-nasdaq-valuation-status').textContent=data.stale?'來源資料較舊，請留意日期':'來源資料已取得';
+  }).catch(function(){
+    if(!card.isConnected)return;
+    card.querySelector('.advisor-nasdaq-trailing').textContent='資料暫缺';
+    card.querySelector('.advisor-nasdaq-forward').textContent='資料暫缺';
+    card.querySelector('.advisor-nasdaq-trailing-date').textContent='來源暫時無法讀取';
+    card.querySelector('.advisor-nasdaq-forward-date').textContent='來源暫時無法讀取';
+    card.querySelector('.advisor-nasdaq-valuation-status').textContent='讀取失敗';
+  });
+}
+
 function advisorWorldRenderSnapshot(panel,payload){
   if(!panel||!payload||!payload.market||!payload.macro)return false;
   panel.innerHTML=advisorWorldHtml(advisorWorldBuild(payload.market,payload.macro),payload.capturedAt);
+  advisorWorldLoadNasdaqValuation(panel);
   advisorWorldFillLongReport(payload.longReport||{hasReport:false,latest:null});
   return true;
 }
@@ -17662,6 +17707,7 @@ async function openAdvisorWorldSituation(event,auto,force){
     advisorWorldRenderSnapshot(panel,worldPayload);
   }else if(hasCachedWorld){
     panel.innerHTML=advisorWorldHtml(advisorWorldBuild(cachedMarket||{},cachedMacro||{}));
+    advisorWorldLoadNasdaqValuation(panel);
     advisorWorldLoadLongReport();
   }else{
     panel.innerHTML='<div class="advisor-world-card"><div class="advisor-world-title">🏛 帝國晨報</div><div class="advisor-world-text" style="position:relative;z-index:1;text-align:center">諸葛亮正在整理流動性、經濟、通膨與信用戰報…</div></div>';

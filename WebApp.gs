@@ -124,6 +124,10 @@ function doGet(e) {
     if (action === 'tradeOptions') return ok(getTradeOptions(ss));
     if (action === 'marketDashboard') return ok(getMarketDashboard(getExternalDbSpreadsheet_()));
     if (action === 'macroOverview') return ok(getMacroOverview(getExternalDbSpreadsheet_()));
+    if (action === 'nasdaq100Valuation') {
+      verifyWriteToken(p);
+      return ok(getNasdaq100Valuation_());
+    }
     if (action === 'pledgeLoans')  return ok(getPledgeLoans(getExternalDbSpreadsheet_()));
     if (action === 'assetSnapshot') return ok(getDailyAssetSnapshot(getExternalDbSpreadsheet_()));
     if (action === 'transactions') return ok(getTransactions(ss, p.ym));
@@ -2052,6 +2056,86 @@ function getMarketDashboard(ss) {
       updatedAt: updatedAt,
       counts: signalCounts
     }
+  };
+}
+
+var NASDAQ_100_VALUATION_URL_ = 'https://historyofmarket.com/api/ndx/forward-pe.json';
+var NASDAQ_100_VALUATION_CACHE_KEY_ = 'NASDAQ_100_VALUATION_V1';
+
+function getNasdaq100Valuation_() {
+  var cache = CacheService.getScriptCache();
+  var rawCached = cache.get(NASDAQ_100_VALUATION_CACHE_KEY_);
+  var cached = null;
+  try { cached = rawCached ? JSON.parse(rawCached) : null; } catch (ignore) {}
+  var now = Date.now();
+  if (cached && Number(cached.fetchedAt) && now - Number(cached.fetchedAt) < 15 * 60 * 1000) {
+    return nasdaq100ValuationResponse_(cached, false);
+  }
+
+  try {
+    var response = UrlFetchApp.fetch(NASDAQ_100_VALUATION_URL_, {
+      muteHttpExceptions: true,
+      followRedirects: true
+    });
+    if (response.getResponseCode() !== 200) throw new Error('估值來源回應 HTTP ' + response.getResponseCode());
+    var source = JSON.parse(response.getContentText());
+    var trailing = nasdaq100ValuationLastPoint_(source.trailing);
+    var forwardOwn = nasdaq100ValuationLastPoint_(source.forwardOwn);
+    if (!trailing || !forwardOwn) throw new Error('估值來源缺少有效資料點');
+    var payload = {
+      trailingPE: trailing.value,
+      trailingDataDate: trailing.date,
+      forwardPE: forwardOwn.value,
+      forwardDataDate: forwardOwn.date,
+      fetchedAt: now,
+      attribution: String(source._attribution || 'History of Market (historyofmarket.com)'),
+      canonical: String(source._canonical || 'https://historyofmarket.com/nasdaq/ndx-forward-pe/'),
+      license: String(source._license || 'Data CC BY 4.0; reuse with attribution'),
+      terms: String(source._terms || 'https://historyofmarket.com/license/')
+    };
+    cache.put(NASDAQ_100_VALUATION_CACHE_KEY_, JSON.stringify(payload), 21600);
+    return nasdaq100ValuationResponse_(payload, false);
+  } catch (error) {
+    if (cached && Number(cached.fetchedAt) && now - Number(cached.fetchedAt) < 6 * 60 * 60 * 1000) {
+      return nasdaq100ValuationResponse_(cached, true);
+    }
+    throw new Error('NASDAQ-100 估值來源暫時無法讀取');
+  }
+}
+
+function nasdaq100ValuationLastPoint_(series) {
+  if (!Array.isArray(series)) return null;
+  for (var i = series.length - 1; i >= 0; i--) {
+    var point = series[i] || {};
+    var value = Number(point.value);
+    var date = String(point.date || '');
+    if (isFinite(value) && value > 0 && value < 200 && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      var parsed = new Date(date + 'T00:00:00Z');
+      if (!isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === date && parsed.getTime() <= Date.now() + 86400000) {
+        return { value: value, date: date };
+      }
+    }
+  }
+  return null;
+}
+
+function nasdaq100ValuationResponse_(payload, cacheFallback) {
+  var now = new Date();
+  function olderThan_(date, days) {
+    var point = new Date(String(date || '') + 'T00:00:00Z');
+    if (isNaN(point.getTime())) return true;
+    return now.getTime() - point.getTime() > days * 86400000;
+  }
+  return {
+    trailingPE: payload.trailingPE,
+    trailingDataDate: payload.trailingDataDate,
+    forwardPE: payload.forwardPE,
+    forwardDataDate: payload.forwardDataDate,
+    stale: !!cacheFallback || olderThan_(payload.trailingDataDate, 7) || olderThan_(payload.forwardDataDate, 14),
+    attribution: payload.attribution,
+    canonical: payload.canonical,
+    license: payload.license,
+    terms: payload.terms
   };
 }
 

@@ -51,6 +51,27 @@ test('Imperial Morning Brief renders stale saved data before refresh and keeps i
   await expect(briefing.locator('.advisor-world-refresh-status')).toHaveText('背景更新失敗，先顯示上次保存的資料。');
 });
 
+test('Imperial Morning Brief shows sourced NASDAQ-100 P/E values with independent dates on mobile', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.evaluate(() => {
+    window.apiGet = ({ action }) => action === 'nasdaq100Valuation'
+      ? Promise.resolve({ trailingPE: 30.52, trailingDataDate: '2026-10-22', forwardPE: 19.61, forwardDataDate: '2026-10-21', stale: false })
+      : Promise.resolve({});
+    const panel = document.createElement('div');
+    panel.id = 'war-room-briefing-content';
+    document.body.appendChild(panel);
+    advisorWorldRenderSnapshot(panel, { market: {}, macro: {}, capturedAt: '2026-10-23T00:00:00Z' });
+  });
+  const valuation = page.locator('.advisor-nasdaq-valuation');
+  await expect(valuation.locator('.advisor-nasdaq-trailing')).toHaveText('30.52×');
+  await expect(valuation.locator('.advisor-nasdaq-forward')).toHaveText('19.61×');
+  await expect(valuation.locator('.advisor-nasdaq-trailing-date')).toContainText('2026/10/22');
+  await expect(valuation.locator('.advisor-nasdaq-forward-date')).toContainText('2026/10/21');
+  await expect(valuation.locator('a')).toHaveAttribute('href', 'https://historyofmarket.com/nasdaq/ndx-forward-pe/');
+  const dimensions = await page.locator('html').evaluate(el => ({ scrollWidth: el.scrollWidth, clientWidth: el.clientWidth }));
+  expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
+});
+
 test('Military panel exposes only the Troop Roster tab', async ({ page }) => {
   await page.evaluate(async () => {
     await ensureMilitaryModule(); window.hasMainApiCredentials = () => true; window.loadCouncilDashboard = () => {}; window.renderCouncilPanel('battle-brief');
