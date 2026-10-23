@@ -1,9 +1,9 @@
 {
   "id": "2026-10-23-war-room-nasdaq-valuation",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-10-23",
   "area": "帝國晨報",
   "summary": "新增 NASDAQ-100 估值指標",
-  "details": "晨報新增 NASDAQ-100 Trailing P/E 與 Forward P/E 顯示，附資料日期與來源連結。",
+  "details": "以 History of Market 公開 JSON 顯示 NASDAQ-100 Trailing P/E 與自行計算的 Forward P/E，分別標示資料日期及來源連結；估值不作價格預測，讀取採快取後背景更新。",
   "platforms": ["website", "app-script"]
 }
