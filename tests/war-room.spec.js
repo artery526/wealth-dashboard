@@ -133,10 +133,10 @@ test('Imperial Morning Brief derives monitored market rise and fall counts from 
     const action = new URL(route.request().url()).searchParams.get('action');
     const data = action === 'advisorWorldBriefSnapshotRefresh' ? { snapshot: {
       market: { summary: { stance: '觀望', counts: { 觀望: 4 } }, rows: [
-        { code: 'TAIEX', name: '加權指數', price: 23000, previous: 22900, changePct: 0.44 },
-        { code: 'SPX', name: 'S&P 500', price: 6000, previous: 6010, changePct: -0.17 },
+        { code: 'TAIEX', name: '加權指數', price: 23000, previous: 22900, changePct: 0.44, ma20: 22500, ma20Prev: 22400 },
+        { code: 'SPX', name: 'S&P 500', price: 6000, previous: 6010, changePct: -0.17, ma20: 6050, ma20Prev: 6060 },
         { code: 'VIX', name: 'VIX', price: 18, previous: 18, changePct: 0 },
-        { code: 'PLTR', name: 'Palantir Technologies', price: 150, previous: 140, changePct: 7.14 }
+        { code: 'NASDAQ:PLTR', name: 'Palantir Technologies', price: 150, previous: 140, changePct: 7.14 }
       ] },
       macro: { judgment: { summary: '維持觀察。' }, indicators: [], valuations: {} },
       capturedAt: '2026-10-15T12:00:00Z'
@@ -152,6 +152,9 @@ test('Imperial Morning Brief derives monitored market rise and fall counts from 
   await expect(breadth).toContainText('有效報價 3 項');
   await expect(page.locator('.brief-market-list')).not.toContainText(/Palantir|PLTR/i);
   await expect(page.locator('body')).not.toContainText(/Palantir Technologies|PLTR/);
+  await expect(page.locator('.brief-market-row').filter({ hasText: '加權指數' }).locator('.brief-ma-hint')).toHaveText('MA20 偏強');
+  await expect(page.locator('.brief-market-row').filter({ hasText: 'S&P 500' }).locator('.brief-ma-hint')).toHaveText('MA20 偏弱');
+  await expect(page.locator('.brief-market-row').filter({ hasText: 'VIX' }).locator('.brief-ma-hint')).toHaveCount(0);
   const width = await page.locator('html').evaluate(el => ({ scroll: el.scrollWidth, client: el.clientWidth }));
   expect(width.scroll).toBeLessThanOrEqual(width.client);
 });
