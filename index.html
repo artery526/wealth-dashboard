@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <link rel="manifest" href="./manifest.json">
-<link rel="stylesheet" href="./daily-growth.css?v=20261018.2">
 <meta name="theme-color" content="#06131d">
 <title>⚔️ 帝國指揮所</title>
 <script>
@@ -6730,7 +6729,6 @@ function openPanel(key,initialTab){
   document.getElementById('panel').classList.toggle('medical-wide',key==='medical');
   document.getElementById('panel').classList.toggle('stars-wide',key==='stars');
   document.getElementById('panel').classList.toggle('store-wide',key==='store');
-  document.getElementById('panel').classList.toggle('daily-growth-wide',key==='daily-growth');
   document.getElementById('overlay').classList.toggle('medical-overlay',key==='medical');
   currentPanel=key;
   if(key==='finance')renderFinancePanel(initialTab);
@@ -6741,7 +6739,6 @@ function openPanel(key,initialTab){
   else if(key==='medical'){setEmpireCardApiPendingStatus('medical');renderMedicalPanel();}
   else if(key==='stars'){setEmpireCardApiPendingStatus('stars');renderStarsPanel();}
   else if(key==='store'){setEmpireCardApiPendingStatus('store');renderStorePanel(initialTab);}
-  else if(key==='daily-growth')renderDailyGrowthPanel();
   document.getElementById('overlay').classList.add('open');
 }
 
@@ -6759,7 +6756,6 @@ function closePanel(){
   document.getElementById('panel').classList.remove('medical-wide');
   document.getElementById('panel').classList.remove('stars-wide');
   document.getElementById('panel').classList.remove('store-wide');
-  document.getElementById('panel').classList.remove('daily-growth-wide');
   document.querySelectorAll('.card').forEach(c=>c.classList.remove('active'));
   currentPanel=null;
 }
@@ -18105,7 +18101,6 @@ async function advisorAIRefreshGoldQuote(btn){
 
 function advisorAIQuickCommands(){
   return [
-    {label:'每日成長',command:'__daily_growth__'},
     {label:'配息試算',command:'__dividend_calculator__'},
     {label:'配息記錄',command:'__dividend_record__'},
     {label:'影片下載',command:'__video_download__'},
@@ -18391,11 +18386,6 @@ async function advisorAIRecordQuickDividend(btn){
 function advisorAIRunQuickCommand(select){
   var command=String(select&&select.value||'').trim();
   if(!command)return;
-  if(command==='__daily_growth__'){
-    if(select)select.value='';
-    openEmpireCardShortcut(null,'daily-growth');
-    return;
-  }
   if(command==='__dividend_calculator__'){
     if(select)select.value='';
     openDividendCalculatorInFinanceCenter();
@@ -21263,7 +21253,6 @@ function mpmRender(records){
   }
 })();
 </script>
-<script src="./daily-growth.js?v=20261018.2"></script>
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {

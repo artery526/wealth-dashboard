@@ -1,0 +1,9 @@
+{
+  "id": "2026-10-24-pangtong-remove-daily-growth-ui",
+  "status": "in_progress",
+  "date": null,
+  "area": "龐統軍師",
+  "summary": "移除每日成長與三餐自煮介面入口",
+  "details": "龐統軍師不再載入每日成長／三餐自煮頁面，並從常用查詢移除每日成長選項；保留底層資料與其他端支援。",
+  "platforms": ["website"]
+}
