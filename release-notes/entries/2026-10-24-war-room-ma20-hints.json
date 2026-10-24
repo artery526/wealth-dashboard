@@ -1,9 +1,9 @@
 {
   "id": "2026-10-24-war-room-ma20-hints",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-10-24",
   "area": "帝國晨報",
   "summary": "核心市場現價旁新增 MA20 趨勢提示",
-  "details": "依現價、MA20 與前一日 MA20 顯示偏強、偏弱或均線相對位置；必要資料不足時不顯示推測訊號。",
+  "details": "依現價、MA20 與前一日 MA20 顯示偏強、偏弱或均線相對位置；必要資料不足時不顯示推測訊號。已部署並確認正式戰情室載入新版資產。",
   "platforms": ["website"]
 }

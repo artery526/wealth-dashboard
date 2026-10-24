@@ -1,9 +1,9 @@
 {
   "id": "2026-10-24-war-room-palantir-cache-refresh",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-10-24",
   "area": "帝國晨報",
   "summary": "修正舊快取仍顯示 Palantir 的問題",
-  "details": "更新戰情室資產版本與 Service Worker 快取版本，確保正式入口取得已排除 Palantir 的晨報程式。",
+  "details": "更新戰情室資產版本與 Service Worker 快取版本，確保正式入口取得已排除 Palantir 的晨報程式；已部署並確認正式入口與資產版本。",
   "platforms": ["website"]
 }
