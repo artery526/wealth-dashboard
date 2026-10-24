@@ -1,9 +1,9 @@
 {
   "id": "2026-10-24-war-room-remove-palantir",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-10-24",
   "area": "帝國晨報",
   "summary": "移除晨報核心市場的 Palantir 監控",
-  "details": "晨報核心市場清單與漲跌家數排除 Palantir Technologies（PLTR），完整快照資料展開亦不再列出該標的。",
+  "details": "晨報核心市場清單與漲跌家數排除 Palantir Technologies（PLTR），完整快照資料展開亦不再列出該標的；已部署並確認正式戰情室載入篩除邏輯。",
   "platforms": ["website"]
 }
