@@ -120,10 +120,12 @@
   function sectionTitle(text){return '<h2 class="section-title">'+esc(text)+'</h2>';}
   function dashboardCardGroup(title,object){if(!object||typeof object!=='object')return '';var entries=Object.entries(object).filter(function(entry){return entry[1]==null||typeof entry[1]!=='object';});if(!entries.length)return '';return sectionTitle(title)+'<div class="grid">'+entries.slice(0,12).map(function(entry){var val=entry[1];return metric(entry[0],typeof val==='number'?num(val):String(val==null?'資料暫缺':val));}).join('')+'</div>';}
   function renderBrief(payload,stale){
-    var market=payload.market||payload.marketDashboard||{},macro=payload.macro||payload.macroOverview||{},report=payload.longReport||{};
+    function isPalantirMonitorRow_(row){if(!row||typeof row!=='object')return false;var code=String(row.code||row.symbol||row.ticker||'').trim().toUpperCase(),ticker=code.split(':').pop(),name=String(row.name||row.company||'');return ticker==='PLTR'||/palantir/i.test(name);}
+    var sourceMarket=payload.market||payload.marketDashboard||{},sourceRows=Array.isArray(sourceMarket.rows)?sourceMarket.rows:[],market=Object.assign({},sourceMarket,{rows:sourceRows.filter(function(row){return !isPalantirMonitorRow_(row);})}),displayPayload=Object.assign({},payload),macro=payload.macro||payload.macroOverview||{},report=payload.longReport||{};
+    if(payload.market)displayPayload.market=market;if(payload.marketDashboard)displayPayload.marketDashboard=market;
     var captured=payload.capturedAt||payload.sourceDate||'',summary=market.summary||{},judgment=macro.judgment||{},valuations=macro.valuations||{};
     function marketBreadth_(marketData,marketSummary){
-      var rows=Array.isArray(marketData.rows)?marketData.rows:[],counts={up:0,down:0,flat:0,total:0};
+      var originalRows=Array.isArray(marketData.rows)?marketData.rows:[],rows=originalRows.filter(function(row){return !isPalantirMonitorRow_(row);}),counts={up:0,down:0,flat:0,total:0};
       rows.forEach(function(row){
         if(!row||typeof row!=='object')return;
         var change=row.changePct;
@@ -133,7 +135,7 @@
         counts.total++;
         if(Number(change)>0)counts.up++;else if(Number(change)<0)counts.down++;else counts.flat++;
       });
-      if(counts.total)return counts;
+      if(counts.total||originalRows.some(isPalantirMonitorRow_))return counts;
       if(marketSummary.upCount!=null&&marketSummary.downCount!=null){
         var up=Number(marketSummary.upCount),down=Number(marketSummary.downCount),flat=Number(marketSummary.flatCount||0),total=Number(marketSummary.totalCount||marketSummary.symbolCount||up+down+flat);
         if(isFinite(up)&&isFinite(down)&&isFinite(flat)&&isFinite(total))return {up:up,down:down,flat:flat,total:total};
@@ -161,7 +163,7 @@
     var groups=[['💧 流動性',[['SOFR–IORB','sofrIorbSpread'],['銀行準備金','bankReserves'],['隔夜逆回購','rrp'],['M2','m2']]],['👷 就業',[['JOLTS 職缺','joltsOpenings'],['ADP 就業','adpEmploymentChange'],['非農就業','nfpPayrollChange']]],['🔥 通膨',[['CPI','cpi'],['PPI','ppi'],['油價','oil']]],['💳 市場壓力',[['信用利差','creditSpread'],['VIX','vix'],['消費信心','consumerSentiment']]]];
     html+=sectionTitle('總經燈號')+'<div class="brief-macro-grid">'+groups.map(function(group){return '<article class="brief-macro-card"><h3>'+group[0]+'</h3>'+group[1].map(function(item){var row=findIndicator(item[1]),tone=/紅|警戒|防守|惡化/.test(String(row&&row.status||''))?'down':/綠|改善|充足/.test(String(row&&row.status||''))?'up':'';return '<div class="brief-indicator"><span>'+esc(item[0])+'</span><strong class="'+tone+'">'+esc(indicatorValue(row))+'</strong></div>';}).join('')+'</article>';}).join('')+'</div>';
     if(report.latest||report.summary)html+=sectionTitle('長期觀察')+'<div class="brief-report">'+esc((report.latest&&report.latest.summary)||report.summary||'')+'</div>';
-    html+=rawDetails('完整快照資料',payload);content.innerHTML=html;setFreshness(captured?'快照時間 '+dateText(captured):'以目前可取得的快照呈現');refreshNasdaqValuation_();
+    html+=rawDetails('完整快照資料',displayPayload);content.innerHTML=html;setFreshness(captured?'快照時間 '+dateText(captured):'以目前可取得的快照呈現');refreshNasdaqValuation_();
   }
   async function loadBriefing(force){
     var cacheKey='wealth_advisor_world_nas_v1',cached=readCache(cacheKey),cacheMarket=readCache('wealth_market_dashboard_v1'),cacheMacro=readCache('wealth_market_macro_v4');

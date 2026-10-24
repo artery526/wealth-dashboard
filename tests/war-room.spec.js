@@ -135,7 +135,8 @@ test('Imperial Morning Brief derives monitored market rise and fall counts from 
       market: { summary: { stance: '觀望', counts: { 觀望: 4 } }, rows: [
         { code: 'TAIEX', name: '加權指數', price: 23000, previous: 22900, changePct: 0.44 },
         { code: 'SPX', name: 'S&P 500', price: 6000, previous: 6010, changePct: -0.17 },
-        { code: 'VIX', name: 'VIX', price: 18, previous: 18, changePct: 0 }
+        { code: 'VIX', name: 'VIX', price: 18, previous: 18, changePct: 0 },
+        { code: 'PLTR', name: 'Palantir Technologies', price: 150, previous: 140, changePct: 7.14 }
       ] },
       macro: { judgment: { summary: '維持觀察。' }, indicators: [], valuations: {} },
       capturedAt: '2026-10-15T12:00:00Z'
@@ -149,6 +150,8 @@ test('Imperial Morning Brief derives monitored market rise and fall counts from 
   await expect(breadth).toContainText('1 / 1');
   await expect(breadth).toContainText('平盤 1');
   await expect(breadth).toContainText('有效報價 3 項');
+  await expect(page.locator('.brief-market-list')).not.toContainText(/Palantir|PLTR/i);
+  await expect(page.locator('body')).not.toContainText(/Palantir Technologies|PLTR/);
   const width = await page.locator('html').evaluate(el => ({ scroll: el.scrollWidth, client: el.clientWidth }));
   expect(width.scroll).toBeLessThanOrEqual(width.client);
 });
