@@ -1,0 +1,9 @@
+{
+  "id": "2026-10-25-finance-compound-badge-cleanup",
+  "status": "in_progress",
+  "date": null,
+  "area": "財政",
+  "summary": "移除複利試算頁標題旁提示",
+  "details": "移除複利試算標題區的本頁計算與不保存資料提示，只保留頁面標題。",
+  "platforms": ["website"]
+}
