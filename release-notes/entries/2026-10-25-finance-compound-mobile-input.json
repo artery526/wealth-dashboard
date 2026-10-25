@@ -1,9 +1,11 @@
 {
   "id": "2026-10-25-finance-compound-mobile-input",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-10-25",
   "area": "財政",
   "summary": "修正手機複利試算年數確認時的輸入干擾",
-  "details": "調整試算年數欄位的提交時機，避免手機鍵盤確認期間重建年度輸入列。",
-  "platforms": ["website"]
+  "details": "年數欄位改為確認或離開時才更新年度列，並處理 Enter 確認以避免手機輸入法期間重建列。Pages 部署成功，已確認正式腳本與快取版本更新。",
+  "platforms": [
+    "website"
+  ]
 }
