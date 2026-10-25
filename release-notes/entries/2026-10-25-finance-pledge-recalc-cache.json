@@ -1,0 +1,9 @@
+{
+  "id": "2026-10-25-finance-pledge-recalc-cache",
+  "status": "in_progress",
+  "date": null,
+  "area": "財政",
+  "summary": "更新質押信貸本金利息快取",
+  "details": "清除公式修正前的信貸零值快取，讓國庫現況重新讀取最新本金、利息與經過月份。",
+  "platforms": ["website"]
+}

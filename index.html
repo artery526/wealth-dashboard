@@ -6007,7 +6007,7 @@ var advisorAIDailyUpdatesIndex=0;
 var FINANCE_TREASURY_CACHE_KEY='wealth_finance_treasury_v10';
 var FINANCE_TREASURY_CACHE_PREFIX='wealth_finance_treasury_v';
 var FINANCE_MONTH_CATEGORY_CACHE_KEY='wealth_finance_month_category_v1';
-var FINANCE_PLEDGE_CACHE_KEY='wealth_finance_pledge_v3';
+var FINANCE_PLEDGE_CACHE_KEY='wealth_finance_pledge_v4';
 var FINANCE_YEARLY_CACHE_PREFIX='wealth_finance_yearly_v3_';
 var FINANCE_YEARLY_REVALIDATE_GAP=60*1000;
 var FINANCE_MONTH_DETAIL_CACHE_PREFIX='wealth_finance_month_detail_v1_';
@@ -21263,7 +21263,7 @@ function mpmRender(records){
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('./sw.js?v=20261025-pledge-loan-cache1', {updateViaCache:'none'}).then(function (registration) {
+    navigator.serviceWorker.register('./sw.js?v=20261025-pledge-cache-refresh1', {updateViaCache:'none'}).then(function (registration) {
       return registration.update();
     }).catch(function (error) {
       console.warn('Empire Service Worker registration failed', error);
