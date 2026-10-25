@@ -1,0 +1,9 @@
+{
+  "id": "2026-10-25-windows-compound-inflation",
+  "status": "released",
+  "date": "2026-10-25",
+  "area": "監視面板",
+  "summary": "Windows 複利試算加入通膨率與購買力估算",
+  "details": "新增固定年通膨率輸入，逐年顯示折算今日幣值的期末購買力，總結比較名目金額與實質購買力；試算留在 Windows 本機。",
+  "platforms": ["windows"]
+}
