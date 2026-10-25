@@ -21,7 +21,7 @@ function ensureCompoundInterestRows(years,rows){
     var contributionCell=document.createElement('td');
     var contributionInput=document.createElement('input');
     contributionInput.className='row-input compound-interest-row-input compound-interest-contribution-input';
-    contributionInput.type='number';contributionInput.inputMode='decimal';contributionInput.min='0';contributionInput.step='10000';
+    contributionInput.type='text';contributionInput.inputMode='decimal';contributionInput.autocomplete='off';contributionInput.maxLength=18;contributionInput.spellcheck=false;
     var contributionValue=savedContributions[year-1];
     if(contributionValue===undefined)contributionValue=carryForwardEnabled&&year>1?lastContribution:'0';
     contributionInput.value=contributionValue;lastContribution=contributionInput.value;
