@@ -1,0 +1,9 @@
+{
+  "id": "2026-10-25-finance-compound-duplicate-title",
+  "status": "in_progress",
+  "date": null,
+  "area": "財政",
+  "summary": "移除複利試算頁重複標題",
+  "details": "移除頁面內容區重複的複利試算標題，保留左上品牌列標題。",
+  "platforms": ["website"]
+}

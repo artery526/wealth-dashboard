@@ -13,7 +13,6 @@
     .brand{display:flex;align-items:center;gap:12px}.brand-icon{font-size:28px}.brand-kicker{color:#65c9ed;font:800 10px/1.3 var(--sans);letter-spacing:2px}.brand-title{margin-top:2px;font:900 19px/1.3 "Noto Serif TC",serif}
     .back-link{padding:9px 13px;border:1px solid rgba(143,228,255,.45);border-radius:9px;background:#0a1a27;color:#bcefff;font:700 13px var(--sans);text-decoration:none;white-space:nowrap}.back-link:hover,.back-link:focus-visible{border-color:var(--cyan);outline:none}
     main{width:min(1240px,calc(100% - 32px));margin:24px auto 40px}
-    .page-heading{margin-bottom:17px}.page-heading h1{margin:0;font:900 clamp(24px,4vw,32px)/1.3 "Noto Serif TC",serif}
     .calculator-card{padding:clamp(16px,3vw,24px);border:1px solid rgba(98,201,232,.36);border-radius:16px;background:linear-gradient(155deg,rgba(16,38,58,.96),rgba(7,21,33,.98) 68%);box-shadow:0 20px 60px rgba(0,0,0,.28)}
     .input-grid{display:grid;grid-template-columns:1.2fr .75fr .75fr;gap:12px}.input-grid label{display:grid;gap:7px;color:#a5c2cf;font-size:13px;font-weight:700}.input-grid input{width:100%;min-width:0;padding:12px;border:1px solid #29495f;border-radius:9px;background:#071521;color:#e8f9ff;font:700 17px var(--mono);outline:none}.input-grid input:focus,.row-input:focus{border-color:#71d8f7;box-shadow:0 0 0 2px rgba(53,184,228,.14)}
     .carry-row{display:flex;align-items:center;gap:9px;margin:14px 0 17px;color:#a5c2cf;font-size:14px;cursor:pointer}.carry-row input{width:16px;height:16px;margin:0;accent-color:#52c7e8}
@@ -32,9 +31,6 @@
     <a class="back-link" href="./">← 返回指揮所</a>
   </header>
   <main>
-    <div class="page-heading">
-      <h1>🧮 複利試算</h1>
-    </div>
     <section class="calculator-card" aria-label="複利試算器">
       <div class="input-grid">
         <label>初始投入本金（元）<input id="compound-interest-principal" type="text" inputmode="decimal" enterkeyhint="done" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="18" value="1000000"></label>
