@@ -1,9 +1,11 @@
 {
   "id": "2026-10-25-finance-compound-principal-keyboard",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-10-25",
   "area": "財政",
   "summary": "修正手機複利試算本金欄位收鍵盤時的尾數異常",
-  "details": "調整本金與年度追加投入的手機數字輸入方式，避免原生數字欄位在鍵盤關閉時改動輸入內容。",
-  "platforms": ["website"]
+  "details": "本金與年度追加投入改用文字輸入搭配手機十進位數字鍵盤，避免原生 number 欄位的步進／瀏覽器處理干擾金額。Pages 部署成功，已確認正式頁面、腳本與 Service Worker 更新。",
+  "platforms": [
+    "website"
+  ]
 }
