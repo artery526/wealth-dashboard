@@ -1,9 +1,11 @@
 {
   "id": "2026-10-25-finance-compound-standalone",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-10-25",
   "area": "財政",
   "summary": "複利試算改為獨立網頁",
-  "details": "將複利試算提供為可直接開啟的獨立頁面，計算僅在目前頁面執行，不保存輸入資料。",
-  "platforms": ["website"]
+  "details": "將複利試算改為可直接開啟的獨立網頁；所有輸入僅在頁面記憶體中即時計算，不保存、不呼叫資料 API。GitHub Pages 部署成功，並已驗證正式頁面、腳本與 Service Worker。",
+  "platforms": [
+    "website"
+  ]
 }
