@@ -1,0 +1,9 @@
+{
+  "id": "2026-10-25-windows-compound-calculator",
+  "status": "released",
+  "date": "2026-10-25",
+  "area": "監視面板",
+  "summary": "Windows 監視面板新增本機複利試算",
+  "details": "提供初始本金、逐年追加投入、個別年化報酬率與 1–40 年試算；不呼叫網站或試算表 API。",
+  "platforms": ["windows"]
+}
