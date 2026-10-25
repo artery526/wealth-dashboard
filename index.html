@@ -4811,47 +4811,11 @@ html[data-theme="deep-blue"] .scene-task-details .home-agenda-global-refresh{bor
   .scene-task-toggle{min-height:74px;padding-left:9px;padding-right:9px}
   .scene-task-details{max-height:68vh}
 }
-.compound-interest-trigger{display:grid;place-items:center;width:clamp(38px,4vw,48px);height:clamp(38px,4vw,48px);padding:0;border:1px solid rgba(143,228,255,.82);border-radius:13px;background:linear-gradient(145deg,rgba(7,42,60,.96),rgba(4,20,33,.98));color:#dff7ff;font-size:22px;cursor:pointer;box-shadow:0 5px 18px rgba(0,0,0,.4),0 0 14px rgba(63,190,232,.2);transition:transform .16s,border-color .16s,box-shadow .16s}
+.compound-interest-trigger{display:grid;place-items:center;width:clamp(38px,4vw,48px);height:clamp(38px,4vw,48px);padding:0;border:1px solid rgba(143,228,255,.82);border-radius:13px;background:linear-gradient(145deg,rgba(7,42,60,.96),rgba(4,20,33,.98));color:#dff7ff;font-size:22px;text-decoration:none;cursor:pointer;box-shadow:0 5px 18px rgba(0,0,0,.4),0 0 14px rgba(63,190,232,.2);transition:transform .16s,border-color .16s,box-shadow .16s}
 .compound-interest-trigger:hover,.compound-interest-trigger:focus-visible{transform:translateY(-2px) scale(1.04);border-color:#bcefff;box-shadow:0 7px 22px rgba(0,0,0,.46),0 0 18px rgba(63,190,232,.34);outline:none}
 .panel-title-calculator{display:inline-grid;vertical-align:middle;width:34px;height:34px;margin-left:10px;border-radius:9px;font-size:18px}
-.compound-interest-overlay{position:fixed;inset:0;z-index:7000;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(1,8,13,.78);backdrop-filter:blur(5px);opacity:0;pointer-events:none;transition:opacity .18s}
-.compound-interest-overlay.open{opacity:1;pointer-events:auto}
-.compound-interest-dialog{display:flex;flex-direction:column;width:min(720px,100%);max-height:min(90vh,900px);overflow:hidden;border:1px solid rgba(98,201,232,.58);border-radius:16px;background:linear-gradient(155deg,#10263a,#071521 68%);box-shadow:0 22px 70px rgba(0,0,0,.6);color:#dff7ff;transform:translateY(12px);transition:transform .18s}
-.compound-interest-overlay.open .compound-interest-dialog{transform:translateY(0)}
-.compound-interest-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 20px 13px;border-bottom:1px solid rgba(98,201,232,.18)}
-.compound-interest-kicker{color:#65c9ed;font:800 12px/1.3 var(--sans);letter-spacing:2px}
-.compound-interest-head h2{margin:4px 0 0;color:#e8f9ff;font:900 24px/1.3 'Noto Serif TC',serif}
-.compound-interest-close{width:36px;height:36px;border:1px solid rgba(98,201,232,.34);border-radius:9px;background:#0a1a27;color:#bcefff;font-size:16px;cursor:pointer}
-.compound-interest-note{margin:12px 20px;color:#99bac8;font:14px/1.6 var(--sans)}
-.compound-interest-inputs{display:grid;grid-template-columns:1.2fr .75fr .75fr;gap:10px;padding:0 20px 14px}
-.compound-interest-inputs label{display:grid;gap:6px;color:#99bac8;font:700 13px/1.4 var(--sans)}
-.compound-interest-inputs input{width:100%;min-width:0;padding:10px;border:1px solid #29495f;border-radius:8px;background:#071521;color:#e8f9ff;font:700 16px var(--mono);outline:none}
-.compound-interest-inputs input:focus{border-color:#71d8f7;box-shadow:0 0 0 2px rgba(53,184,228,.14)}
-.compound-interest-carry{display:flex;align-items:center;gap:8px;margin:0 20px 12px;color:#9bbbc9;font:700 13px/1.5 var(--sans);cursor:pointer}
-.compound-interest-carry input{width:15px;height:15px;margin:0;accent-color:#52c7e8}
-.compound-interest-summary{margin:0 20px 12px;padding:11px 13px;border:1px solid rgba(98,201,232,.24);border-radius:9px;background:rgba(3,18,29,.65);color:#bcefff;font:800 15px/1.6 var(--sans)}
-.compound-interest-summary strong{color:#5de1a2}
-.compound-interest-purchasing-loss{color:#5de1a2}
-.compound-interest-purchasing-gain{color:#ff8b8b}
-.compound-interest-table-wrap{min-height:0;overflow:auto;margin:0 20px;border:1px solid rgba(98,201,232,.2);border-radius:9px}
-.compound-interest-table{width:100%;border-collapse:collapse;font:14px/1.45 var(--sans);font-variant-numeric:tabular-nums}
-.compound-interest-table th,.compound-interest-table td{padding:9px 11px;border-bottom:1px solid rgba(98,201,232,.13);text-align:right;white-space:nowrap}
-.compound-interest-table th{position:sticky;top:0;background:#0b2030;color:#8fc6d8;font-size:12px}
-.compound-interest-zero-rates{margin-left:6px;padding:4px 7px;border:1px solid rgba(98,201,232,.4);border-radius:6px;background:#102b3d;color:#bcefff;font:700 12px/1.2 var(--sans);cursor:pointer}
-.compound-interest-zero-rates:hover,.compound-interest-zero-rates:focus-visible{border-color:#71d8f7;background:#163b51;outline:none}
-.compound-interest-table th:first-child,.compound-interest-table td:first-child{text-align:left}
-.compound-interest-table tr:last-child td{border-bottom:0}
-.compound-interest-table{min-width:760px}
-.compound-interest-row-input{width:88px;max-width:100%;padding:6px 7px;border:1px solid #29495f;border-radius:7px;background:#071521;color:#bcefff;text-align:right;font:800 14px var(--mono);outline:none}
-.compound-interest-row-input:focus{border-color:#71d8f7;box-shadow:0 0 0 2px rgba(53,184,228,.14)}
-.compound-interest-table td:nth-child(4){color:#bcefff;font-weight:800}
-.compound-interest-table td:last-child{color:#5de1a2;font-weight:800}
-.compound-interest-table td.negative{color:#ff8b8b}
-.compound-interest-table small{display:block;margin-top:2px;color:#789aaa;font-size:12px;font-weight:400}
-.compound-interest-disclaimer{padding:11px 20px 15px;color:#789aaa;font:12px/1.6 var(--sans)}
 @media(max-width:768px){.panel-title-calculator{width:32px;height:32px;border-radius:8px;font-size:17px}}
-@media(max-width:560px){.compound-interest-overlay{align-items:flex-end;padding:0}.compound-interest-dialog{width:100%;max-height:92dvh;border-radius:16px 16px 0 0}.compound-interest-head{padding:14px 16px 10px}.compound-interest-head h2{font-size:21px}.compound-interest-note{margin:10px 16px}.compound-interest-inputs{grid-template-columns:1fr 1fr;gap:8px;padding:0 16px 11px}.compound-interest-inputs label:first-child{grid-column:1/-1}.compound-interest-summary{margin:0 16px 10px;padding:9px 10px;font-size:14px}.compound-interest-table-wrap{margin:0 16px}.compound-interest-table th,.compound-interest-table td{padding:8px 7px;font-size:12px}.compound-interest-disclaimer{padding:9px 16px 12px}}
-@media(prefers-reduced-motion:reduce){.npc-web-scene .character-art{transition:none}.npc-web-scene .animated-character:hover .character-art{transform:none}.compound-interest-dialog,.compound-interest-overlay,.compound-interest-trigger{transition:none}}
+@media(prefers-reduced-motion:reduce){.npc-web-scene .character-art{transition:none}.npc-web-scene .animated-character:hover .character-art{transform:none}.compound-interest-trigger{transition:none}}
 </style>
 <style>
 .council-review-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:16px 0 10px;font-family:var(--sans)}
@@ -4952,30 +4916,6 @@ html[data-theme="deep-blue"] .scene-task-details .home-agenda-global-refresh{bor
     </div>
   </div>
 </section>
-
-<div class="compound-interest-overlay" id="compound-interest-overlay" onclick="compoundInterestOverlayClick(event)" aria-hidden="true">
-  <section class="compound-interest-dialog" role="dialog" aria-modal="true" aria-labelledby="compound-interest-title">
-    <header class="compound-interest-head">
-      <div><div class="compound-interest-kicker">COMPOUND GROWTH</div><h2 id="compound-interest-title">📱 複利試算</h2></div>
-      <button class="compound-interest-close" type="button" onclick="closeCompoundInterestCalculator()" aria-label="關閉複利試算">✕</button>
-    </header>
-    <p class="compound-interest-note">輸入初始投入本金、年通膨率與試算年數；表格會同時顯示名目期末金額與折算為今日購買力的金額。</p>
-    <div class="compound-interest-inputs">
-      <label>初始投入本金（元）<input id="compound-interest-principal" type="number" inputmode="decimal" min="1" step="10000" value="1000000"></label>
-      <label>年通膨率（%）<input id="compound-interest-inflation" type="number" inputmode="decimal" min="-99.9" max="1000" step="0.1" value="2"></label>
-      <label>試算年數<input id="compound-interest-years" type="number" inputmode="numeric" min="1" max="40" step="1" value="20"></label>
-    </div>
-    <label class="compound-interest-carry"><input id="compound-interest-carry-forward" type="checkbox" checked>後續年度沿用上一年的追加投入金額</label>
-    <div class="compound-interest-summary" id="compound-interest-summary" aria-live="polite"></div>
-    <div class="compound-interest-table-wrap">
-      <table class="compound-interest-table">
-        <thead><tr><th>年度</th><th>本年追加投入</th><th>年化報酬率 <button class="compound-interest-zero-rates" type="button" onclick="zeroCompoundInterestRates(event)" aria-label="將所有年度年化報酬率設為 0%" title="將所有年度年化報酬率設為 0%">一鍵清零</button></th><th>期末金額</th><th>通膨後購買力</th><th>本年度報酬</th></tr></thead>
-        <tbody id="compound-interest-rows"></tbody>
-      </table>
-    </div>
-    <div class="compound-interest-disclaimer">各年追加投入於當年報酬計算前加入本金；通膨以固定年率逐年複利折算為今日幣值。未納入費用與稅金，實際報酬與通膨不保證固定。</div>
-  </section>
-</div>
 
 <!-- 保留既有解鎖狀態錨點；首頁舊影片卡片已移除。 -->
 <div id="empire-cards" class="cards empire-locked" hidden aria-hidden="true"></div>
@@ -6856,13 +6796,12 @@ function setPanelHead(icon,en,zh){
     var existingCalculator=titleWrap.querySelector('.panel-title-calculator');
     if(existingCalculator)existingCalculator.remove();
     if(en==='Finance · Treasury'){
-      var calculatorButton=document.createElement('button');
+      var calculatorButton=document.createElement('a');
       calculatorButton.className='compound-interest-trigger panel-title-calculator';
-      calculatorButton.type='button';
-      calculatorButton.textContent='📱';
-      calculatorButton.setAttribute('aria-label','開啟複利試算');
+      calculatorButton.href='./compound-calculator.html';
+      calculatorButton.textContent='🧮';
+      calculatorButton.setAttribute('aria-label','開啟獨立複利試算頁');
       calculatorButton.title='複利試算';
-      calculatorButton.onclick=openCompoundInterestCalculator;
       title.insertAdjacentElement('afterend',calculatorButton);
     }
   }
@@ -20268,207 +20207,6 @@ function lordOverlayClick(e){
   if(e.target===document.getElementById('lord-overlay'))closeLordPanel();
 }
 
-var compoundInterestReturnFocus=null;
-function formatCompoundCurrency(value){
-  return 'NT$'+Math.round(Number(value)||0).toLocaleString('zh-TW');
-}
-function formatCompoundWan(value){
-  return (Number(value||0)/10000).toLocaleString('zh-TW',{minimumFractionDigits:2,maximumFractionDigits:2})+' 萬';
-}
-function ensureCompoundInterestRows(years,rows){
-  var oldRateInputs=rows.querySelectorAll('.compound-interest-rate-input');
-  var oldContributionInputs=rows.querySelectorAll('.compound-interest-contribution-input');
-  if(oldRateInputs.length===years&&oldContributionInputs.length===years)return;
-  var savedRates=[];
-  var savedContributions=[];
-  var carryForward=document.getElementById('compound-interest-carry-forward');
-  var carryForwardEnabled=!!(carryForward&&carryForward.checked);
-  oldRateInputs.forEach(function(input){savedRates.push(input.value);});
-  oldContributionInputs.forEach(function(input){savedContributions.push(input.value);});
-  rows.innerHTML='';
-  var lastContribution='0';
-  for(var year=1;year<=years;year++){
-    var tr=document.createElement('tr');
-    var yearCell=document.createElement('td');
-    yearCell.textContent='第 '+year+' 年';
-    var contributionCell=document.createElement('td');
-    var contributionInput=document.createElement('input');
-    contributionInput.className='compound-interest-row-input compound-interest-contribution-input';
-    contributionInput.type='number';
-    contributionInput.inputMode='decimal';
-    contributionInput.min='0';
-    contributionInput.step='10000';
-    var contributionValue=savedContributions[year-1];
-    if(contributionValue===undefined)contributionValue=carryForwardEnabled&&year>1?lastContribution:'0';
-    contributionInput.value=contributionValue;
-    lastContribution=contributionInput.value;
-    contributionInput.setAttribute('aria-label','第 '+year+' 年追加投入金額（元）');
-    contributionCell.appendChild(contributionInput);
-    var rateCell=document.createElement('td');
-    var rateInput=document.createElement('input');
-    rateInput.className='compound-interest-row-input compound-interest-rate-input';
-    rateInput.type='number';
-    rateInput.inputMode='decimal';
-    rateInput.min='-100';
-    rateInput.max='1000';
-    rateInput.step='0.1';
-    rateInput.value=savedRates[year-1]===undefined?'6':savedRates[year-1];
-    rateInput.setAttribute('aria-label','第 '+year+' 年年化報酬率（%）');
-    rateCell.appendChild(rateInput);
-    var balanceCell=document.createElement('td');
-    balanceCell.id='compound-interest-balance-'+year;
-    balanceCell.textContent='--';
-    var realValueCell=document.createElement('td');
-    realValueCell.id='compound-interest-real-value-'+year;
-    realValueCell.textContent='--';
-    var returnCell=document.createElement('td');
-    returnCell.id='compound-interest-return-'+year;
-    returnCell.textContent='--';
-    tr.appendChild(yearCell);
-    tr.appendChild(contributionCell);
-    tr.appendChild(rateCell);
-    tr.appendChild(balanceCell);
-    tr.appendChild(realValueCell);
-    tr.appendChild(returnCell);
-    rows.appendChild(tr);
-  }
-}
-function clearCompoundInterestResults(rows){
-  rows.querySelectorAll('[id^="compound-interest-balance-"],[id^="compound-interest-real-value-"],[id^="compound-interest-return-"]').forEach(function(cell){
-    cell.textContent='--';
-    cell.classList.remove('negative');
-  });
-}
-function renderCompoundInterest(){
-  var principalInput=document.getElementById('compound-interest-principal');
-  var inflationInput=document.getElementById('compound-interest-inflation');
-  var yearsInput=document.getElementById('compound-interest-years');
-  var summary=document.getElementById('compound-interest-summary');
-  var rows=document.getElementById('compound-interest-rows');
-  if(!principalInput||!inflationInput||!yearsInput||!summary||!rows)return;
-  var principal=Number(principalInput.value);
-  var inflation=Number(inflationInput.value);
-  var years=Number(yearsInput.value);
-  if(!yearsInput.value.trim()||!isFinite(years)||Math.floor(years)!==years||years<1||years>40){
-    summary.textContent='試算年數請輸入 1 至 40 的整數。';clearCompoundInterestResults(rows);return;
-  }
-  ensureCompoundInterestRows(years,rows);
-  if(!principalInput.value.trim()||!isFinite(principal)||principal<=0){
-    summary.textContent='請輸入大於 0 的本金。';clearCompoundInterestResults(rows);return;
-  }
-  if(!inflationInput.value.trim()||!isFinite(inflation)||inflation< -99.9||inflation>1000){
-    summary.textContent='年通膨率請輸入 -99.9% 至 1000% 的數值。';clearCompoundInterestResults(rows);return;
-  }
-  var contributionInputs=rows.querySelectorAll('.compound-interest-contribution-input');
-  var rateInputs=rows.querySelectorAll('.compound-interest-rate-input');
-  var balance=principal;
-  var totalContributions=0;
-  for(var year=1;year<=years;year++){
-    var contributionInput=contributionInputs[year-1];
-    var contribution=Number(contributionInput.value);
-    if(!contributionInput.value.trim()||!isFinite(contribution)||contribution<0){
-      summary.textContent='第 '+year+' 年追加投入請輸入 0 或正數。';clearCompoundInterestResults(rows);return;
-    }
-    var rateInput=rateInputs[year-1];
-    var rate=Number(rateInput.value);
-    if(!rateInput.value.trim()||!isFinite(rate)||rate< -100||rate>1000){
-      summary.textContent='第 '+year+' 年報酬率請輸入 -100% 至 1000% 的數值。';clearCompoundInterestResults(rows);return;
-    }
-    var investedThisYear=balance+contribution;
-    balance=investedThisYear*(1+rate/100);
-    var annualReturn=balance-investedThisYear;
-    totalContributions+=contribution;
-    var balanceCell=document.getElementById('compound-interest-balance-'+year);
-    var realValueCell=document.getElementById('compound-interest-real-value-'+year);
-    var returnCell=document.getElementById('compound-interest-return-'+year);
-    if(balanceCell)balanceCell.innerHTML=formatCompoundCurrency(balance)+'<small>'+formatCompoundWan(balance)+'</small>';
-    var realValue=balance/Math.pow(1+inflation/100,year);
-    if(realValueCell)realValueCell.innerHTML=formatCompoundCurrency(realValue)+'<small>以今日幣值估算</small>';
-    if(returnCell){
-      returnCell.classList.toggle('negative',annualReturn<0);
-      var returnPrefix=annualReturn>0?'+':'';
-      returnCell.innerHTML=returnPrefix+formatCompoundCurrency(annualReturn)+'<small>'+returnPrefix+formatCompoundWan(annualReturn)+'</small>';
-    }
-  }
-  var totalInvested=principal+totalContributions;
-  var totalGain=balance-totalInvested;
-  var totalPrefix=totalGain>0?'+':'';
-  var finalRealValue=balance/Math.pow(1+inflation/100,years);
-  var purchasingDelta=finalRealValue-balance;
-  var purchasingDeltaText=purchasingDelta<0
-    ?'<span class="compound-interest-purchasing-loss">約減 '+formatCompoundCurrency(Math.abs(purchasingDelta))+'</span>'
-    :purchasingDelta>0
-      ?'<span class="compound-interest-purchasing-gain">約加 '+formatCompoundCurrency(purchasingDelta)+'</span>'
-      :'<span>與名目金額相同</span>';
-  summary.innerHTML=years+' 年後名目金額 <strong>'+formatCompoundCurrency(balance)+'（'+formatCompoundWan(balance)+'）</strong>；以年通膨 '+inflation+'% 折算，購買力約 <strong>'+formatCompoundCurrency(finalRealValue)+'（今日幣值）</strong> '+purchasingDeltaText+'。累計投入 '+formatCompoundCurrency(totalInvested)+'，投資損益 <strong>'+totalPrefix+formatCompoundCurrency(totalGain)+'（'+totalPrefix+formatCompoundWan(totalGain)+'）</strong>。';
-}
-function zeroCompoundInterestRates(event){
-  if(event&&event.stopPropagation)event.stopPropagation();
-  var rows=document.getElementById('compound-interest-rows');
-  if(!rows)return;
-  rows.querySelectorAll('.compound-interest-rate-input').forEach(function(input){input.value='0';});
-  renderCompoundInterest();
-}
-function openCompoundInterestCalculator(event){
-  if(event&&event.stopPropagation)event.stopPropagation();
-  var overlay=document.getElementById('compound-interest-overlay');
-  if(!overlay)return;
-  overlay.classList.add('open');
-  overlay.setAttribute('aria-hidden','false');
-  compoundInterestReturnFocus=document.activeElement;
-  ['compound-interest-principal','compound-interest-inflation','compound-interest-years'].forEach(function(id){
-    var input=document.getElementById(id);
-    if(input&&input.dataset.calculatorBound!=='1'){
-      input.addEventListener('input',renderCompoundInterest);
-      input.dataset.calculatorBound='1';
-    }
-  });
-  var rows=document.getElementById('compound-interest-rows');
-  if(rows&&rows.dataset.calculatorBound!=='1'){
-    rows.addEventListener('input',function(event){
-      var target=event.target;
-      if(!target||!target.classList.contains('compound-interest-row-input'))return;
-      if(target.classList.contains('compound-interest-contribution-input')){
-        var carryForward=document.getElementById('compound-interest-carry-forward');
-        var contributionInputs=rows.querySelectorAll('.compound-interest-contribution-input');
-        var targetIndex=Array.prototype.indexOf.call(contributionInputs,target);
-        if(carryForward&&carryForward.checked){
-          for(var i=targetIndex+1;i<contributionInputs.length;i++)contributionInputs[i].value=target.value;
-        }
-      }
-      renderCompoundInterest();
-    });
-    rows.dataset.calculatorBound='1';
-  }
-  var carryForward=document.getElementById('compound-interest-carry-forward');
-  if(carryForward&&carryForward.dataset.calculatorBound!=='1'){
-    carryForward.addEventListener('change',function(){
-      if(carryForward.checked){
-        var contributionInputs=document.querySelectorAll('#compound-interest-rows .compound-interest-contribution-input');
-        for(var i=1;i<contributionInputs.length;i++)contributionInputs[i].value=contributionInputs[i-1].value;
-      }
-      renderCompoundInterest();
-    });
-    carryForward.dataset.calculatorBound='1';
-  }
-  renderCompoundInterest();
-  var principalInput=document.getElementById('compound-interest-principal');
-  if(principalInput)principalInput.focus();
-}
-function closeCompoundInterestCalculator(){
-  var overlay=document.getElementById('compound-interest-overlay');
-  if(!overlay)return;
-  overlay.classList.remove('open');
-  overlay.setAttribute('aria-hidden','true');
-  if(compoundInterestReturnFocus&&typeof compoundInterestReturnFocus.focus==='function')compoundInterestReturnFocus.focus();
-}
-function compoundInterestOverlayClick(event){
-  if(event&&event.target===document.getElementById('compound-interest-overlay'))closeCompoundInterestCalculator();
-}
-document.addEventListener('keydown',function(event){
-  if(event.key==='Escape'&&document.getElementById('compound-interest-overlay')?.classList.contains('open'))closeCompoundInterestCalculator();
-});
-
 // ── Finance Card Video: click anywhere on card triggers openPanel via card onclick ──
 
 function renderLordPanel(d){
@@ -21263,7 +21001,7 @@ function mpmRender(records){
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('./sw.js?v=20261025-pledge-cache-refresh1', {updateViaCache:'none'}).then(function (registration) {
+    navigator.serviceWorker.register('./sw.js?v=20261025-compound-standalone1', {updateViaCache:'none'}).then(function (registration) {
       return registration.update();
     }).catch(function (error) {
       console.warn('Empire Service Worker registration failed', error);

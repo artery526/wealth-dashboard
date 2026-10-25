@@ -1,0 +1,9 @@
+{
+  "id": "2026-10-25-finance-compound-standalone",
+  "status": "in_progress",
+  "date": null,
+  "area": "財政",
+  "summary": "複利試算改為獨立網頁",
+  "details": "將複利試算提供為可直接開啟的獨立頁面，計算僅在目前頁面執行，不保存輸入資料。",
+  "platforms": ["website"]
+}

@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#071521">
+  <title>複利試算｜財政</title>
+  <style>
+    :root{color-scheme:dark;--bg:#06121b;--panel:#0b1e2c;--panel2:#071521;--line:rgba(98,201,232,.23);--cyan:#8fe4ff;--muted:#91afbe;--green:#5de1a2;--red:#ff8b8b;--sans:system-ui,-apple-system,"Segoe UI",sans-serif;--mono:ui-monospace,"Cascadia Mono",Consolas,monospace}
+    *{box-sizing:border-box}
+    body{min-height:100vh;margin:0;background:radial-gradient(ellipse at top,#12334a 0,#071521 55%,#040b11 100%);color:#e8f9ff;font-family:var(--sans)}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px max(18px,calc((100vw - 1240px)/2));border-bottom:1px solid var(--line);background:rgba(5,20,31,.88)}
+    .brand{display:flex;align-items:center;gap:12px}.brand-icon{font-size:28px}.brand-kicker{color:#65c9ed;font:800 10px/1.3 var(--sans);letter-spacing:2px}.brand-title{margin-top:2px;font:900 19px/1.3 "Noto Serif TC",serif}
+    .back-link{padding:9px 13px;border:1px solid rgba(143,228,255,.45);border-radius:9px;background:#0a1a27;color:#bcefff;font:700 13px var(--sans);text-decoration:none;white-space:nowrap}.back-link:hover,.back-link:focus-visible{border-color:var(--cyan);outline:none}
+    main{width:min(1240px,calc(100% - 32px));margin:24px auto 40px}
+    .page-heading{display:flex;align-items:end;justify-content:space-between;gap:16px;margin-bottom:17px}.page-heading h1{margin:0;font:900 clamp(24px,4vw,32px)/1.3 "Noto Serif TC",serif}.page-heading p{margin:6px 0 0;color:var(--muted);font-size:14px;line-height:1.6}.local-only{padding:7px 10px;border:1px solid rgba(93,225,162,.35);border-radius:99px;color:#8be7b9;font-size:12px;white-space:nowrap}
+    .calculator-card{padding:clamp(16px,3vw,24px);border:1px solid rgba(98,201,232,.36);border-radius:16px;background:linear-gradient(155deg,rgba(16,38,58,.96),rgba(7,21,33,.98) 68%);box-shadow:0 20px 60px rgba(0,0,0,.28)}
+    .input-grid{display:grid;grid-template-columns:1.2fr .75fr .75fr;gap:12px}.input-grid label{display:grid;gap:7px;color:#a5c2cf;font-size:13px;font-weight:700}.input-grid input{width:100%;min-width:0;padding:12px;border:1px solid #29495f;border-radius:9px;background:#071521;color:#e8f9ff;font:700 17px var(--mono);outline:none}.input-grid input:focus,.row-input:focus{border-color:#71d8f7;box-shadow:0 0 0 2px rgba(53,184,228,.14)}
+    .carry-row{display:flex;align-items:center;gap:9px;margin:14px 0 17px;color:#a5c2cf;font-size:14px;cursor:pointer}.carry-row input{width:16px;height:16px;margin:0;accent-color:#52c7e8}
+    .summary{margin:0 0 16px;padding:13px 15px;border:1px solid var(--line);border-radius:10px;background:rgba(3,18,29,.72);color:#bcefff;font-size:15px;font-weight:750;line-height:1.7}.summary strong{color:var(--green)}.purchasing-loss{color:var(--green)}.purchasing-gain{color:var(--red)}
+    .table-tools{display:flex;align-items:center;justify-content:flex-end;margin-bottom:8px}.zero-rates{padding:7px 10px;border:1px solid rgba(98,201,232,.4);border-radius:7px;background:#102b3d;color:#bcefff;font:700 13px var(--sans);cursor:pointer}.zero-rates:hover,.zero-rates:focus-visible{border-color:#71d8f7;background:#163b51;outline:none}
+    .table-wrap{max-width:100%;overflow:auto;border:1px solid var(--line);border-radius:10px}.result-table{width:100%;min-width:760px;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}.result-table th,.result-table td{padding:10px 12px;border-bottom:1px solid rgba(98,201,232,.13);text-align:right;white-space:nowrap}.result-table th{position:sticky;top:0;background:#0b2030;color:#8fc6d8;font-size:12px}.result-table th:first-child,.result-table td:first-child{text-align:left}.result-table tr:last-child td{border-bottom:0}.row-input{width:104px;max-width:100%;padding:7px;border:1px solid #29495f;border-radius:7px;background:#071521;color:#bcefff;text-align:right;font:750 14px var(--mono);outline:none}.result-table td:nth-child(4){color:#bcefff;font-weight:800}.result-table td:last-child{color:var(--green);font-weight:800}.result-table td.negative{color:var(--red)}.result-table small{display:block;margin-top:3px;color:#789aaa;font-size:12px;font-weight:400}
+    .disclaimer{margin:13px 0 0;color:#789aaa;font-size:12px;line-height:1.7}.footer-note{margin:16px 0 0;color:#7092a3;text-align:center;font-size:12px}
+    @media(max-width:700px){.topbar{padding:12px 16px}main{width:min(100% - 20px,640px);margin:16px auto 26px}.page-heading{align-items:flex-start;flex-direction:column;gap:9px}.input-grid{grid-template-columns:1fr 1fr;gap:9px}.input-grid label:first-child{grid-column:1/-1}.input-grid input{padding:10px;font-size:16px}.calculator-card{padding:14px}.summary{font-size:14px}.result-table th,.result-table td{padding:9px 8px;font-size:12px}}
+    @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+  </style>
+  <script src="./compound-calculator.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="brand-icon" aria-hidden="true">⚱️</span><div><div class="brand-kicker">FINANCE · TREASURY</div><div class="brand-title">複利試算</div></div></div>
+    <a class="back-link" href="./">← 返回指揮所</a>
+  </header>
+  <main>
+    <div class="page-heading">
+      <div><h1>🧮 複利試算</h1><p>逐年設定追加投入與年化報酬，估算名目金額及通膨後購買力。</p></div>
+      <span class="local-only">只在本頁計算 · 不保存資料</span>
+    </div>
+    <section class="calculator-card" aria-label="複利試算器">
+      <div class="input-grid">
+        <label>初始投入本金（元）<input id="compound-interest-principal" type="number" inputmode="decimal" min="1" step="10000" value="1000000"></label>
+        <label>年通膨率（%）<input id="compound-interest-inflation" type="number" inputmode="decimal" min="-99.9" max="1000" step="0.1" value="2"></label>
+        <label>試算年數（1–40 年）<input id="compound-interest-years" type="number" inputmode="numeric" min="1" max="40" step="1" value="20"></label>
+      </div>
+      <label class="carry-row"><input id="compound-interest-carry-forward" type="checkbox" checked>後續年度沿用上一年的追加投入金額</label>
+      <div class="summary" id="compound-interest-summary" aria-live="polite"></div>
+      <div class="table-tools"><button class="zero-rates" type="button" onclick="zeroCompoundInterestRates(event)" aria-label="將所有年度年化報酬率設為 0%">一鍵清零年化報酬率</button></div>
+      <div class="table-wrap">
+        <table class="result-table">
+          <thead><tr><th>年度</th><th>本年追加投入</th><th>年化報酬率（%）</th><th>期末金額</th><th>通膨後購買力</th><th>本年度報酬</th></tr></thead>
+          <tbody id="compound-interest-rows"></tbody>
+        </table>
+      </div>
+      <p class="disclaimer">各年追加投入於當年報酬計算前加入本金；通膨以固定年率逐年複利折算為今日幣值。未納入費用與稅金，實際報酬與通膨不保證固定。</p>
+    </section>
+    <p class="footer-note">輸入只留在目前頁面；重新整理或離開後不會保留。</p>
+  </main>
+</body>
+</html>

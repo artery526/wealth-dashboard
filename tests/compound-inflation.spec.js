@@ -1,10 +1,10 @@
 const { test, expect } = require('@playwright/test');
 const path = require('node:path');
 
-const dashboardUrl = 'file:///' + path.resolve(__dirname, '..', 'index.html').replace(/\\/g, '/');
+const calculatorUrl = 'file:///' + path.resolve(__dirname, '..', 'compound-calculator.html').replace(/\\/g, '/');
 
 test('compound calculator shows inflation-adjusted purchasing power', async ({ page }) => {
-  await page.goto(dashboardUrl);
+  await page.goto(calculatorUrl);
   const result = await page.evaluate(() => {
     document.getElementById('compound-interest-principal').value = '100000';
     document.getElementById('compound-interest-inflation').value = '2';
@@ -24,7 +24,7 @@ test('compound calculator shows inflation-adjusted purchasing power', async ({ p
 });
 
 test('deflation shows the purchasing power increase in red', async ({ page }) => {
-  await page.goto(dashboardUrl);
+  await page.goto(calculatorUrl);
   const result = await page.evaluate(() => {
     document.getElementById('compound-interest-principal').value = '100000';
     document.getElementById('compound-interest-inflation').value = '-2';
@@ -42,16 +42,14 @@ test('deflation shows the purchasing power increase in red', async ({ page }) =>
 
 test('compound calculator text is enlarged and remains usable on mobile', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto(dashboardUrl);
-  await page.evaluate(() => document.getElementById('compound-interest-overlay').classList.add('open'));
-  await page.waitForTimeout(250);
+  await page.goto(calculatorUrl);
   const result = await page.evaluate(() => {
-    const dialog = document.querySelector('.compound-interest-dialog').getBoundingClientRect();
+    const main = document.querySelector('main').getBoundingClientRect();
     return {
-      labelSize: getComputedStyle(document.querySelector('.compound-interest-inputs label')).fontSize,
+      labelSize: getComputedStyle(document.querySelector('.input-grid label')).fontSize,
       inputSize: getComputedStyle(document.getElementById('compound-interest-principal')).fontSize,
       summarySize: getComputedStyle(document.getElementById('compound-interest-summary')).fontSize,
-      dialogBottom: dialog.bottom,
+      mainRight: main.right,
       viewportHeight: window.innerHeight
     };
   });
@@ -59,11 +57,11 @@ test('compound calculator text is enlarged and remains usable on mobile', async 
   expect(result.labelSize).toBe('13px');
   expect(result.inputSize).toBe('16px');
   expect(result.summarySize).toBe('14px');
-  expect(result.dialogBottom).toBeLessThanOrEqual(result.viewportHeight);
+  expect(result.mainRight).toBeLessThanOrEqual(390);
 });
 
 test('one-click zero sets every annual return rate to zero and recalculates', async ({ page }) => {
-  await page.goto(dashboardUrl);
+  await page.goto(calculatorUrl);
   await page.evaluate(() => {
     document.getElementById('compound-interest-principal').value = '100000';
     document.getElementById('compound-interest-years').value = '3';
@@ -72,7 +70,6 @@ test('one-click zero sets every annual return rate to zero and recalculates', as
       input.value = String((index + 1) * 5);
     });
     renderCompoundInterest();
-    openCompoundInterestCalculator();
   });
 
   await page.getByRole('button', { name: '將所有年度年化報酬率設為 0%' }).click();
