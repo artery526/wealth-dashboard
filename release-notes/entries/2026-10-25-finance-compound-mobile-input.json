@@ -1,0 +1,9 @@
+{
+  "id": "2026-10-25-finance-compound-mobile-input",
+  "status": "in_progress",
+  "date": null,
+  "area": "財政",
+  "summary": "修正手機複利試算年數確認時的輸入干擾",
+  "details": "調整試算年數欄位的提交時機，避免手機鍵盤確認期間重建年度輸入列。",
+  "platforms": ["website"]
+}

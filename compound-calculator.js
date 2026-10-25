@@ -73,7 +73,9 @@ function renderCompoundInterest(){
   summary.innerHTML=years+' 年後名目金額 <strong>'+formatCompoundCurrency(balance)+'（'+formatCompoundWan(balance)+'）</strong>；以年通膨 '+inflation+'% 折算，購買力約 <strong>'+formatCompoundCurrency(finalRealValue)+'（今日幣值）</strong> '+purchasingDeltaText+'。累計投入 '+formatCompoundCurrency(totalInvested)+'，投資損益 <strong>'+totalPrefix+formatCompoundCurrency(totalGain)+'（'+totalPrefix+formatCompoundWan(totalGain)+'）</strong>。';
 }
 document.addEventListener('DOMContentLoaded',function(){
-  ['compound-interest-principal','compound-interest-inflation','compound-interest-years'].forEach(function(id){var input=document.getElementById(id);if(input)input.addEventListener('input',renderCompoundInterest);});
+  ['compound-interest-principal','compound-interest-inflation'].forEach(function(id){var input=document.getElementById(id);if(input)input.addEventListener('input',renderCompoundInterest);});
+  var yearsInput=document.getElementById('compound-interest-years');
+  if(yearsInput){yearsInput.addEventListener('change',renderCompoundInterest);yearsInput.addEventListener('keydown',function(event){if(event.key==='Enter'&&!event.isComposing){event.preventDefault();yearsInput.blur();}});}
   var rows=document.getElementById('compound-interest-rows'),carry=document.getElementById('compound-interest-carry-forward');
   var rateBatchToggle=document.getElementById('compound-interest-rate-batch-toggle');
   var rateBatchForm=document.getElementById('compound-interest-rate-batch-form');
