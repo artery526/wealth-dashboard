@@ -1,9 +1,11 @@
 {
   "id": "2026-10-25-finance-compound-rate-controls",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-10-25",
   "area": "財政",
   "summary": "複利試算新增年化報酬率批次操作",
-  "details": "在獨立複利試算頁提供清除所有年度報酬率，以及將指定報酬率套用到所有年度的操作。",
-  "platforms": ["website"]
+  "details": "獨立複利試算頁新增年化報酬率批次操作：可清除所有年度數值，或輸入指定百分比套用至全部年度。GitHub Pages 部署成功，並確認正式頁面、腳本與 Service Worker 已更新。",
+  "platforms": [
+    "website"
+  ]
 }
