@@ -1,0 +1,9 @@
+{
+  "id": "2026-10-25-finance-pledge-loan-fields",
+  "status": "in_progress",
+  "date": null,
+  "area": "財政",
+  "summary": "修正質押信貸欄位缺漏顯示",
+  "details": "避免使用缺少本金、利息或經過月數欄位的舊快照，並淘汰瀏覽器中的舊質押信貸快取。",
+  "platforms": ["website", "app-script"]
+}

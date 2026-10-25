@@ -6007,7 +6007,7 @@ var advisorAIDailyUpdatesIndex=0;
 var FINANCE_TREASURY_CACHE_KEY='wealth_finance_treasury_v10';
 var FINANCE_TREASURY_CACHE_PREFIX='wealth_finance_treasury_v';
 var FINANCE_MONTH_CATEGORY_CACHE_KEY='wealth_finance_month_category_v1';
-var FINANCE_PLEDGE_CACHE_KEY='wealth_finance_pledge_v2';
+var FINANCE_PLEDGE_CACHE_KEY='wealth_finance_pledge_v3';
 var FINANCE_YEARLY_CACHE_PREFIX='wealth_finance_yearly_v3_';
 var FINANCE_YEARLY_REVALIDATE_GAP=60*1000;
 var FINANCE_MONTH_DETAIL_CACHE_PREFIX='wealth_finance_month_detail_v1_';
@@ -16176,21 +16176,28 @@ async function loadPledgePanel(){
     renderPledgePanel(cached,el);
   }
   var shouldRevalidate=!financePledgePromise&&(!freshEntry||(Date.now()-financePledgeLastFetchAt)>=FINANCE_PLEDGE_REVALIDATE_GAP);
+  if(financePledgePromise){
+    setFinanceCardStatus('pending',cached?'質押信貸快照背景更新中':'質押信貸讀取中');
+    return financePledgePromise.then(function(data){
+      if(data){
+        setDataFreshness('finance-pledge-freshness',dataFreshnessMeta(data,false,false));
+        if(document.getElementById('pledge-content'))renderPledgePanel(data,document.getElementById('pledge-content'));
+        setFinanceCardStatus('ok','質押信貸已連線');
+      }else if(cached){
+        setFinanceCardStatus('pending','質押信貸快照可用 · 背景更新失敗');
+      }else{
+        var currentEl=document.getElementById('pledge-content');
+        if(currentEl)currentEl.innerHTML='<div style="color:var(--coral);font-family:var(--sans);font-size:12px;padding:12px 0">質押信貸更新失敗，請重新整理。</div>';
+        setFinanceCardStatus('err','質押信貸讀取失敗');
+      }
+      return data;
+    });
+  }
   if(!shouldRevalidate&&cached){
     setFinanceCardStatus('ok','質押信貸已載入快取');
     return Promise.resolve(cached);
   }
   setFinanceCardStatus('pending',cached?'質押信貸快照背景更新中':'質押信貸讀取中');
-  if(financePledgePromise){
-    return financePledgePromise.then(function(data){
-      if(data){
-        setDataFreshness('finance-pledge-freshness',dataFreshnessMeta(data,false,false));
-        if(document.getElementById('pledge-content'))renderPledgePanel(data,document.getElementById('pledge-content'));
-      }
-      if(data)setFinanceCardStatus('ok','質押信貸已連線');
-      return data;
-    });
-  }
   financePledgeLastFetchAt=Date.now();
   financePledgePromise=apiGet({action:'pledgeLoans'}).then(function(data){
     data=data||{pledges:[],loans:[]};
@@ -21256,7 +21263,7 @@ function mpmRender(records){
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('./sw.js?v=20261023-nasdaq-valuation1', {updateViaCache:'none'}).then(function (registration) {
+    navigator.serviceWorker.register('./sw.js?v=20261025-pledge-loan-cache1', {updateViaCache:'none'}).then(function (registration) {
       return registration.update();
     }).catch(function (error) {
       console.warn('Empire Service Worker registration failed', error);
