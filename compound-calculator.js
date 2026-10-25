@@ -72,14 +72,17 @@ function renderCompoundInterest(){
   var purchasingDeltaText=purchasingDelta<0?'<span class="purchasing-loss">約減 '+formatCompoundCurrency(Math.abs(purchasingDelta))+'</span>':purchasingDelta>0?'<span class="purchasing-gain">約加 '+formatCompoundCurrency(purchasingDelta)+'</span>':'<span>與名目金額相同</span>';
   summary.innerHTML=years+' 年後名目金額 <strong>'+formatCompoundCurrency(balance)+'（'+formatCompoundWan(balance)+'）</strong>；以年通膨 '+inflation+'% 折算，購買力約 <strong>'+formatCompoundCurrency(finalRealValue)+'（今日幣值）</strong> '+purchasingDeltaText+'。累計投入 '+formatCompoundCurrency(totalInvested)+'，投資損益 <strong>'+totalPrefix+formatCompoundCurrency(totalGain)+'（'+totalPrefix+formatCompoundWan(totalGain)+'）</strong>。';
 }
-function zeroCompoundInterestRates(event){
-  if(event&&event.stopPropagation)event.stopPropagation();
-  var rows=document.getElementById('compound-interest-rows');if(!rows)return;
-  rows.querySelectorAll('.compound-interest-rate-input').forEach(function(input){input.value='0';});renderCompoundInterest();
-}
 document.addEventListener('DOMContentLoaded',function(){
   ['compound-interest-principal','compound-interest-inflation','compound-interest-years'].forEach(function(id){var input=document.getElementById(id);if(input)input.addEventListener('input',renderCompoundInterest);});
   var rows=document.getElementById('compound-interest-rows'),carry=document.getElementById('compound-interest-carry-forward');
+  var rateBatchToggle=document.getElementById('compound-interest-rate-batch-toggle');
+  var rateBatchForm=document.getElementById('compound-interest-rate-batch-form');
+  var rateBatchValue=document.getElementById('compound-interest-rate-batch-value');
+  var rateClear=document.getElementById('compound-interest-rate-clear');
+  if(rateBatchToggle&&rateBatchForm)rateBatchToggle.addEventListener('click',function(){var isOpen=rateBatchForm.classList.toggle('open');rateBatchToggle.setAttribute('aria-expanded',String(isOpen));if(isOpen&&rateBatchValue)rateBatchValue.focus();});
+  if(rateBatchForm&&rateBatchValue)rateBatchForm.addEventListener('submit',function(event){event.preventDefault();var value=Number(rateBatchValue.value);if(!rateBatchValue.value.trim()||!isFinite(value)||value< -100||value>1000){rateBatchValue.setCustomValidity('請輸入 -100% 至 1000% 的年化報酬率。');rateBatchValue.reportValidity();return;}rateBatchValue.setCustomValidity('');rows.querySelectorAll('.compound-interest-rate-input').forEach(function(input){input.value=String(value);});rateBatchForm.classList.remove('open');rateBatchToggle.setAttribute('aria-expanded','false');renderCompoundInterest();});
+  if(rateBatchValue)rateBatchValue.addEventListener('input',function(){rateBatchValue.setCustomValidity('');});
+  if(rateClear)rateClear.addEventListener('click',function(){if(!rows)return;rows.querySelectorAll('.compound-interest-rate-input').forEach(function(input){input.value='';});renderCompoundInterest();});
   if(rows)rows.addEventListener('input',function(event){
     var target=event.target;if(!target||!target.classList.contains('compound-interest-row-input'))return;
     if(target.classList.contains('compound-interest-contribution-input')&&carry&&carry.checked){var inputs=rows.querySelectorAll('.compound-interest-contribution-input'),index=Array.prototype.indexOf.call(inputs,target);for(var i=index+1;i<inputs.length;i++)inputs[i].value=target.value;}

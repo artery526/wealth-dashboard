@@ -18,7 +18,7 @@
     .input-grid{display:grid;grid-template-columns:1.2fr .75fr .75fr;gap:12px}.input-grid label{display:grid;gap:7px;color:#a5c2cf;font-size:13px;font-weight:700}.input-grid input{width:100%;min-width:0;padding:12px;border:1px solid #29495f;border-radius:9px;background:#071521;color:#e8f9ff;font:700 17px var(--mono);outline:none}.input-grid input:focus,.row-input:focus{border-color:#71d8f7;box-shadow:0 0 0 2px rgba(53,184,228,.14)}
     .carry-row{display:flex;align-items:center;gap:9px;margin:14px 0 17px;color:#a5c2cf;font-size:14px;cursor:pointer}.carry-row input{width:16px;height:16px;margin:0;accent-color:#52c7e8}
     .summary{margin:0 0 16px;padding:13px 15px;border:1px solid var(--line);border-radius:10px;background:rgba(3,18,29,.72);color:#bcefff;font-size:15px;font-weight:750;line-height:1.7}.summary strong{color:var(--green)}.purchasing-loss{color:var(--green)}.purchasing-gain{color:var(--red)}
-    .table-tools{display:flex;align-items:center;justify-content:flex-end;margin-bottom:8px}.zero-rates{padding:7px 10px;border:1px solid rgba(98,201,232,.4);border-radius:7px;background:#102b3d;color:#bcefff;font:700 13px var(--sans);cursor:pointer}.zero-rates:hover,.zero-rates:focus-visible{border-color:#71d8f7;background:#163b51;outline:none}
+    .table-tools{display:flex;align-items:center;justify-content:flex-end;gap:7px;flex-wrap:wrap;margin-bottom:8px}.rate-tool{width:36px;height:34px;border:1px solid rgba(98,201,232,.4);border-radius:7px;background:#102b3d;color:#bcefff;font:800 17px var(--sans);cursor:pointer}.rate-tool:hover,.rate-tool:focus-visible{border-color:#71d8f7;background:#163b51;outline:none}.rate-tool.clear{color:#ffaaaa;border-color:rgba(255,139,139,.38)}.rate-batch-form{display:none;align-items:center;gap:7px}.rate-batch-form.open{display:flex}.rate-batch-form label{color:#a5c2cf;font-size:12px}.rate-batch-form input{width:88px;padding:7px;border:1px solid #29495f;border-radius:7px;background:#071521;color:#bcefff;text-align:right;font:700 14px var(--mono)}.rate-batch-apply{padding:7px 10px;border:1px solid rgba(98,201,232,.4);border-radius:7px;background:#102b3d;color:#bcefff;font:700 12px var(--sans);cursor:pointer}
     .table-wrap{max-width:100%;overflow:auto;border:1px solid var(--line);border-radius:10px}.result-table{width:100%;min-width:760px;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}.result-table th,.result-table td{padding:10px 12px;border-bottom:1px solid rgba(98,201,232,.13);text-align:right;white-space:nowrap}.result-table th{position:sticky;top:0;background:#0b2030;color:#8fc6d8;font-size:12px}.result-table th:first-child,.result-table td:first-child{text-align:left}.result-table tr:last-child td{border-bottom:0}.row-input{width:104px;max-width:100%;padding:7px;border:1px solid #29495f;border-radius:7px;background:#071521;color:#bcefff;text-align:right;font:750 14px var(--mono);outline:none}.result-table td:nth-child(4){color:#bcefff;font-weight:800}.result-table td:last-child{color:var(--green);font-weight:800}.result-table td.negative{color:var(--red)}.result-table small{display:block;margin-top:3px;color:#789aaa;font-size:12px;font-weight:400}
     .disclaimer{margin:13px 0 0;color:#789aaa;font-size:12px;line-height:1.7}.footer-note{margin:16px 0 0;color:#7092a3;text-align:center;font-size:12px}
     @media(max-width:700px){.topbar{padding:12px 16px}main{width:min(100% - 20px,640px);margin:16px auto 26px}.page-heading{align-items:flex-start;flex-direction:column;gap:9px}.input-grid{grid-template-columns:1fr 1fr;gap:9px}.input-grid label:first-child{grid-column:1/-1}.input-grid input{padding:10px;font-size:16px}.calculator-card{padding:14px}.summary{font-size:14px}.result-table th,.result-table td{padding:9px 8px;font-size:12px}}
@@ -44,7 +44,16 @@
       </div>
       <label class="carry-row"><input id="compound-interest-carry-forward" type="checkbox" checked>後續年度沿用上一年的追加投入金額</label>
       <div class="summary" id="compound-interest-summary" aria-live="polite"></div>
-      <div class="table-tools"><button class="zero-rates" type="button" onclick="zeroCompoundInterestRates(event)" aria-label="將所有年度年化報酬率設為 0%">一鍵清零年化報酬率</button></div>
+      <div class="table-tools" aria-label="年化報酬率批次操作">
+        <span class="rate-tools-title">年化報酬率：</span>
+        <button id="compound-interest-rate-batch-toggle" class="rate-tool" type="button" aria-label="設定所有年度年化報酬率" title="設定所有年度年化報酬率" aria-expanded="false">✎</button>
+        <button id="compound-interest-rate-clear" class="rate-tool clear" type="button" aria-label="清除所有年度年化報酬率" title="清除所有年度年化報酬率">×</button>
+        <form id="compound-interest-rate-batch-form" class="rate-batch-form">
+          <label for="compound-interest-rate-batch-value">套用至各年（%）</label>
+          <input id="compound-interest-rate-batch-value" type="number" inputmode="decimal" min="-100" max="1000" step="0.1" placeholder="例如 5" aria-label="要套用的年化報酬率百分比">
+          <button class="rate-batch-apply" type="submit">套用</button>
+        </form>
+      </div>
       <div class="table-wrap">
         <table class="result-table">
           <thead><tr><th>年度</th><th>本年追加投入</th><th>年化報酬率（%）</th><th>期末金額</th><th>通膨後購買力</th><th>本年度報酬</th></tr></thead>
