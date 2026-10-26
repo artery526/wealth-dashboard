@@ -30,13 +30,13 @@ test('Wangfu shortcuts always route to the standalone page, including before unl
   ]);
 });
 
-test('embedded Wangfu reader renders > and \\> lines as dashed quote blocks on desktop and mobile', async ({ page }) => {
+test('embedded Wangfu reader renders mixed > and \\> lines as dashed quote blocks on desktop and mobile', async ({ page }) => {
   await page.goto(dashboardUrl);
 
   for (const viewport of [{ width: 1280, height: 800 }, { width: 390, height: 844 }]) {
     await page.setViewportSize(viewport);
     const result = await page.evaluate(() => {
-      const html = arkWallMarkdownHtml('> 以瓦注者巧，以鉤注者憚，以黃金注者殙。\n> 其巧一也，而有所矜，則重外也。凡外重者內拙。\n\n\\> 第二段引用');
+      const html = arkWallMarkdownHtml('> 以瓦注者巧，以鉤注者憚，以黃金注者殙。\n> 其巧一也，而有所矜，則重外也。凡外重者內拙。\n白話翻譯\n接續說明\n\n\\> 第二段引用');
       const host = document.createElement('div');
       host.className = 'ark-wall-detail-text';
       host.innerHTML = html;
@@ -45,6 +45,7 @@ test('embedded Wangfu reader renders > and \\> lines as dashed quote blocks on d
       const output = {
         quoteCount: host.querySelectorAll('blockquote.ark-wall-quote').length,
         text: host.innerText,
+        html: host.innerHTML,
         borderStyle: quote ? getComputedStyle(quote).borderLeftStyle : null,
         borderWidth: quote ? getComputedStyle(quote).borderLeftWidth : null
       };
@@ -55,6 +56,7 @@ test('embedded Wangfu reader renders > and \\> lines as dashed quote blocks on d
     expect(result.quoteCount).toBe(2);
     expect(result.text).toContain('以瓦注者巧，以鉤注者憚，以黃金注者殙。');
     expect(result.text).toContain('其巧一也，而有所矜，則重外也。凡外重者內拙。');
+    expect(result.html).toContain('<p>白話翻譯<br>接續說明</p>');
     expect(result.text).not.toContain('>');
     expect(result.borderStyle).toBe('dashed');
     expect(result.borderWidth).toBe('3px');
