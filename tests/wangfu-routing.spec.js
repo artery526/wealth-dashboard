@@ -30,6 +30,37 @@ test('Wangfu shortcuts always route to the standalone page, including before unl
   ]);
 });
 
+test('embedded Wangfu reader renders > and \\> lines as dashed quote blocks on desktop and mobile', async ({ page }) => {
+  await page.goto(dashboardUrl);
+
+  for (const viewport of [{ width: 1280, height: 800 }, { width: 390, height: 844 }]) {
+    await page.setViewportSize(viewport);
+    const result = await page.evaluate(() => {
+      const html = arkWallMarkdownHtml('> 以瓦注者巧，以鉤注者憚，以黃金注者殙。\n> 其巧一也，而有所矜，則重外也。凡外重者內拙。\n\n\\> 第二段引用');
+      const host = document.createElement('div');
+      host.className = 'ark-wall-detail-text';
+      host.innerHTML = html;
+      document.body.appendChild(host);
+      const quote = host.querySelector('blockquote.ark-wall-quote');
+      const output = {
+        quoteCount: host.querySelectorAll('blockquote.ark-wall-quote').length,
+        text: host.innerText,
+        borderStyle: quote ? getComputedStyle(quote).borderLeftStyle : null,
+        borderWidth: quote ? getComputedStyle(quote).borderLeftWidth : null
+      };
+      host.remove();
+      return output;
+    });
+
+    expect(result.quoteCount).toBe(2);
+    expect(result.text).toContain('以瓦注者巧，以鉤注者憚，以黃金注者殙。');
+    expect(result.text).toContain('其巧一也，而有所矜，則重外也。凡外重者內拙。');
+    expect(result.text).not.toContain('>');
+    expect(result.borderStyle).toBe('dashed');
+    expect(result.borderWidth).toBe('3px');
+  }
+});
+
 test('service worker returns successful navigation responses before waiting for cache writes', () => {
   const sw = fs.readFileSync(path.join(projectRoot, 'sw.js'), 'utf8');
   const html = fs.readFileSync(path.join(projectRoot, 'index.html'), 'utf8');
