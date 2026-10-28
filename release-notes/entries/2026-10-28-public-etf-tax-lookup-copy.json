@@ -1,0 +1,9 @@
+{
+  "id": "2026-10-28-public-etf-tax-lookup-copy",
+  "status": "in_progress",
+  "date": null,
+  "area": "財政",
+  "summary": "更新公開 ETF 退稅查詢頁介紹文字",
+  "details": "將公開查詢頁介紹改為說明目前提供的歷史退稅資料，並邀請各界協助補充年份與證券資料。",
+  "platforms": ["website"]
+}
