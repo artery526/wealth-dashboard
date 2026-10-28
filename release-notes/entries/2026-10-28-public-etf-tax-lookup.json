@@ -1,7 +1,7 @@
 {
   "id": "2026-10-28-public-etf-tax-lookup",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-10-28",
   "area": "財政",
   "summary": "建立免登入的公開 ETF 退稅查詢頁",
   "details": "新增獨立公開頁面與唯讀 Apps Script 查詢服務，只提供彙整退稅比率，不回傳券商、交易日期、筆數、稅池或帳務資料。",
