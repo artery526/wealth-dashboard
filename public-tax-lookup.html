@@ -2,37 +2,13 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#071521">
-  <meta name="description" content="公開查詢 ETF 歷史退稅比率。">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="refresh" content="0; url=etf-tax/">
+  <link rel="canonical" href="https://command.ark-os26.cc/etf-tax/">
   <title>ETF 退稅查詢</title>
-  <style>
-    :root{color-scheme:dark;--bg:#06121b;--panel:#0b1e2c;--line:rgba(98,201,232,.28);--cyan:#8fe4ff;--muted:#91afbe;--green:#5de1a2;--red:#ffaaaa;--sans:system-ui,-apple-system,"Segoe UI",sans-serif;--mono:ui-monospace,"Cascadia Mono",Consolas,monospace}
-    *{box-sizing:border-box}body{min-height:100vh;margin:0;background:radial-gradient(ellipse at top,#12334a 0,#071521 55%,#040b11 100%);color:#e8f9ff;font-family:var(--sans)}
-    .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px max(18px,calc((100vw - 900px)/2));border-bottom:1px solid var(--line);background:rgba(5,20,31,.9)}.brand{display:flex;align-items:center;gap:10px}.brand-icon{font-size:27px}.brand-kicker{color:#65c9ed;font-size:10px;font-weight:800;letter-spacing:2px}.brand-title{font:900 19px/1.3 "Noto Serif TC",serif}.back-link{padding:9px 12px;border:1px solid rgba(143,228,255,.45);border-radius:9px;background:#0a1a27;color:#bcefff;font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap}
-    main{width:min(900px,calc(100% - 28px));margin:30px auto 50px}.card{padding:clamp(18px,4vw,30px);border:1px solid rgba(98,201,232,.36);border-radius:16px;background:linear-gradient(155deg,rgba(16,38,58,.96),rgba(7,21,33,.98) 68%);box-shadow:0 20px 60px rgba(0,0,0,.28)}h1{margin:0 0 8px;font:900 clamp(22px,5vw,30px) "Noto Serif TC",serif}.intro{margin:0 0 24px;color:var(--muted);font-size:14px;line-height:1.7}.search-form{display:flex;gap:10px}.search-form label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}.search-form input{flex:1;min-width:0;padding:13px 14px;border:1px solid #31546b;border-radius:10px;background:#071521;color:#e8f9ff;font:750 18px var(--mono);text-transform:uppercase;outline:none}.search-form input:focus{border-color:var(--cyan);box-shadow:0 0 0 2px rgba(53,184,228,.15)}.search-form button{min-width:100px;padding:12px 18px;border:1px solid #4f9ebb;border-radius:10px;background:#12364a;color:#c8f4ff;font:800 15px var(--sans);cursor:pointer}.search-form button:disabled{opacity:.6;cursor:wait}.status{min-height:25px;margin:13px 0;color:var(--cyan);font-size:13px}.status.error{color:var(--red)}.results{display:grid;gap:12px}.summary{padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:rgba(3,18,29,.72);color:#bcefff;font-weight:800}.result{padding:14px 15px;border:1px solid rgba(98,201,232,.2);border-radius:10px;background:rgba(4,17,27,.65)}.result h2{margin:0 0 8px;color:#9fe8ff;font-size:15px}.result p{margin:4px 0;color:#c6dce6;font-size:14px;line-height:1.6}.rate{color:var(--green);font:800 16px var(--mono)}.notice{margin:20px 0 0;padding-top:14px;border-top:1px solid rgba(98,201,232,.15);color:#839eab;font-size:12px;line-height:1.7}
-    @media(max-width:520px){.topbar{padding:12px 14px}.brand-kicker{font-size:9px}.brand-title{font-size:17px}.back-link{padding:8px 9px;font-size:12px}main{margin:18px auto 30px}.search-form{gap:7px}.search-form button{min-width:78px;padding-inline:12px}}
-  </style>
 </head>
 <body>
-  <header class="topbar">
-    <div class="brand"><span class="brand-icon" aria-hidden="true">🏺</span><div><div class="brand-kicker">ETF · TAX LOOKUP</div><div class="brand-title">退稅查詢</div></div></div>
-    <a class="back-link" href="compound-calculator.html">複利試算</a>
-  </header>
-  <main>
-    <section class="card" aria-labelledby="page-title">
-      <h1 id="page-title">💹 ETF 退稅查詢</h1>
-      <p class="intro">目前提供2024與2025富邦與國泰歷史退稅表格，歡迎各界人士給予資料完善更多年份與各大證券退稅表格</p>
-      <form id="public-tax-form" class="search-form">
-        <label for="public-tax-symbol">ETF 代號</label>
-        <input id="public-tax-symbol" name="symbol" type="text" maxlength="12" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="例如 QQQI" required>
-        <button id="public-tax-submit" type="submit">查詢</button>
-      </form>
-      <p id="public-tax-status" class="status" role="status" aria-live="polite"></p>
-      <div id="public-tax-results" class="results" aria-live="polite"></div>
-      <p class="notice">資料來自歷史彙整紀錄，券商比率四捨五入至小數 1 位，僅供參考，不構成稅務或投資建議。公開服務不提供券商、交易日期、筆數、稅池或私人帳務資料；服務設有流量上限。</p>
-    </section>
-  </main>
-  <script src="public-tax-lookup.js?v=1" defer></script>
+  <p>退稅查詢已移至 <a href="etf-tax/">獨立公開網址</a>。</p>
+  <script>window.location.replace(new URL('etf-tax/', window.location.href).href);</script>
 </body>
 </html>

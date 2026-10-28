@@ -1,4 +1,4 @@
-const CACHE_NAME = 'empire-shell-v61';
+const CACHE_NAME = 'empire-shell-v62';
 
 // Keep the first offline-capable version deliberately small. The dashboard
 // already owns API caching in index.html; this cache is for the page shell.
@@ -9,7 +9,8 @@ const PRECACHE_URLS = [
   './compound-calculator.js',
   './compound-etf-backtest.js',
   './compound-tax-lookup.js',
-  './public-tax-lookup.html',
+  './etf-tax/',
+  './etf-tax/index.html',
   './public-tax-lookup.js',
   './war-room.html',
   './war-room.css?v=20261024.1',

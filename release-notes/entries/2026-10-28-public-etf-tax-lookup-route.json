@@ -1,0 +1,9 @@
+{
+  "id": "2026-10-28-public-etf-tax-lookup-route",
+  "status": "in_progress",
+  "date": null,
+  "area": "財政",
+  "summary": "為公開 ETF 退稅查詢新增簡短獨立網址",
+  "details": "新增 /etf-tax/ 公開查詢路徑，保留舊網址並導向新頁面。",
+  "platforms": ["website"]
+}
