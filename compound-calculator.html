@@ -66,7 +66,7 @@
     </section>
     <section id="etf-backtest-panel" class="calculator-card backtest tab-panel" role="tabpanel" aria-labelledby="etf-backtest-tab" aria-label="台股 ETF 歷史回測" hidden>
       <h2 id="etf-backtest-title" class="section-title">📈 台股 ETF 歷史回測（上市 ETF）</h2>
-      <p class="disclaimer">輸入代碼與期間，依證交所歷史收盤價及收益分配資料比較三種策略。行情採未還原收盤價；若期間遇到分割、反分割或面額調整，結果可能需要另行校正。</p>
+      <p class="disclaimer">輸入代碼與期間，依證交所歷史收盤價及收益分配資料比較三種策略。依行情註記可辨識的整數分割會自動調整持有單位；其他面額調整仍請人工核對。</p>
       <form id="etf-backtest-form" class="backtest-form">
         <label>ETF 代碼<input id="etf-backtest-code" type="text" inputmode="numeric" maxlength="6" value="0050" autocomplete="off" aria-label="上市 ETF 代碼"></label>
         <label>開始日期<input id="etf-backtest-start" type="date" required></label>
