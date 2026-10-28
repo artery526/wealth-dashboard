@@ -2408,38 +2408,9 @@ html.war-room-standalone .panel-head{padding:12px 18px;border-bottom-color:rgba(
 }
 .dividend-use-btn:hover{box-shadow:0 0 14px rgba(124,111,192,.38)}
 .dividend-section-title{font-family:var(--sans);font-size:10px;letter-spacing:3px;color:#7a6030;text-transform:uppercase;border-bottom:1px solid #1e1408;padding-bottom:7px;margin:15px 0 9px}
-.dividend-center-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:0 0 12px}
+.dividend-center-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin:0 0 12px}
 .dividend-center-tab{min-width:0;padding:9px 8px;border:1px solid rgba(232,192,80,.28);border-radius:7px;background:rgba(232,192,80,.05);color:#9a7430;font-family:var(--sans);font-size:12px;font-weight:900;cursor:pointer}
 .dividend-center-tab.active{border-color:rgba(124,111,192,.7);background:linear-gradient(180deg,rgba(71,59,147,.72),rgba(43,33,92,.72));color:#fff}
-.manual-return-table-wrap{width:100%;overflow-x:auto;border:1px solid rgba(232,192,80,.25);border-radius:9px}
-.manual-return-grid{min-width:830px}
-.manual-return-table-head,.manual-return-card{display:grid;grid-template-columns:minmax(130px,1.15fr) minmax(100px,.9fr) minmax(145px,1.25fr) minmax(100px,.9fr) minmax(135px,1.15fr) minmax(112px,.95fr);gap:8px;align-items:center;padding:9px 10px}
-.manual-return-table-head{background:rgba(232,192,80,.08);color:#d2bb82;font:800 10px var(--sans)}
-.manual-return-card{border-top:1px solid rgba(232,192,80,.14);background:linear-gradient(145deg,rgba(15,20,30,.96),rgba(8,10,17,.98));min-width:0}
-.manual-return-card-head{display:none}
-.manual-return-card-title{margin:0;color:#e4cc91;font:800 13px var(--sans)}
-.manual-return-field{min-width:0}
-.manual-return-field label{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-.manual-return-field input{box-sizing:border-box;width:100%;min-width:0;height:36px;padding:6px 8px;border:1px solid rgba(124,111,192,.38);border-radius:6px;background:#0a0d16;color:#e8e5f2;font:700 13px var(--mono)}
-.manual-return-field input:focus{outline:2px solid rgba(124,111,192,.65);outline-offset:1px}
-.manual-return-output{display:flex;align-items:center;justify-content:center;min-width:0;color:#9f8d69;font:700 11px var(--sans)}
-.manual-return-output span{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-.manual-return-output strong{font:900 19px var(--mono);color:#86d8ec;white-space:nowrap}
-.manual-return-output strong.positive{color:#ff8d91}
-.manual-return-output strong.negative{color:#76d5a7}
-.manual-return-output strong.invalid{color:#b0a6c1;font-size:13px}
-.manual-return-method{margin:0 0 10px;color:#8ca9b7;font:11px/1.6 var(--sans)}
-.manual-return-actions{display:flex;justify-content:flex-end;margin-bottom:9px}
-.manual-return-reset{padding:6px 10px;border:1px solid rgba(124,111,192,.4);border-radius:6px;background:rgba(124,111,192,.1);color:#cbbcf0;font:800 10px var(--sans);cursor:pointer}
-.manual-return-period{display:grid;grid-template-columns:auto minmax(130px,1fr) auto minmax(130px,1fr);gap:8px;align-items:center;margin:10px 0;color:#9f8d69;font:700 11px var(--sans)}
-.manual-return-period input{min-width:0;box-sizing:border-box;padding:7px;border:1px solid rgba(124,111,192,.38);border-radius:6px;background:#0a0d16;color:#e8e5f2;font:700 12px var(--mono)}
-.manual-return-actions{justify-content:flex-start;flex-wrap:wrap;gap:7px}
-.manual-return-saved-name{min-width:0;overflow-wrap:anywhere}
-.manual-return-saved-actions{display:flex;flex:0 0 auto;gap:6px}
-.manual-return-delete{padding:6px 9px;border:1px solid rgba(255,112,112,.34);border-radius:6px;background:rgba(255,112,112,.08);color:#ff9a9a;font:800 10px var(--sans);cursor:pointer}
-.manual-return-saved-list{display:grid;gap:6px;margin:0 0 10px}
-.manual-return-saved-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 10px;border:1px solid rgba(124,111,192,.25);border-radius:7px;color:#cbbcf0;font:700 11px var(--sans)}
-@media(max-width:700px){.dividend-center-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}.dividend-center-tab:last-child{grid-column:1/-1}.manual-return-grid{min-width:0}.manual-return-table-head{display:none}.manual-return-card{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:12px}.manual-return-card-head{display:flex;grid-column:1/-1;margin:0}.manual-return-field label{position:static;display:block;width:auto;height:auto;padding:0;margin:0 0 4px;overflow:visible;clip:auto;white-space:normal;border:0;color:#9f8d69;font:700 10px var(--sans)}.manual-return-field.name{grid-column:1/-1}.manual-return-output{grid-column:1/-1;justify-content:space-between;margin-top:2px;padding-top:9px;border-top:1px solid rgba(232,192,80,.16)}.manual-return-output span{position:static;width:auto;height:auto;padding:0;margin:0;overflow:visible;clip:auto;white-space:normal;border:0}.manual-return-period{grid-template-columns:1fr 1fr}.manual-return-period label{align-self:end}.manual-return-period input{width:100%}}
 .dividend-pending-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid #1e1408}
 .dividend-pending-name{font-family:var(--sans);font-size:12px;font-weight:800;color:var(--ink)}
 .dividend-pending-meta{font-family:var(--sans);font-size:12px;font-weight:800;color:#c09a50;margin-top:4px;line-height:1.5}
@@ -5146,11 +5117,6 @@ var bookingDividendExpanded = false;
 var bookingDividendPickerOpen = false;
 var bookingHoldingTradePickerOpen = false;
 var dividendCenterView = 'pending';
-var manualReturnComparisonState = Array.from({length:5},function(){return {name:'',initialPrice:'',periodDividend:'',latestPrice:'',dividendFactor:'100'};});
-var manualReturnPeriodState = { startDate: '', endDate: todayTaipeiIsoDate() };
-var manualReturnSavedSets = [];
-var manualReturnActiveSetId = '';
-var manualReturnSavedListCollapsed = false;
 var DIVIDEND_CACHE_TTL = 5 * 60 * 1000;
 var DIVIDEND_AUTOFILL_SYMBOLS = ['CHPY','AIPI','QQQI','00997A'];
 var heroCache = [];
@@ -5841,7 +5807,7 @@ async function apiPost(body){
   WRITE_TOKEN=cleanToken(WRITE_TOKEN);
   if(!WRITE_TOKEN)throw new Error('未設定記帳密鑰');
   if(/^(expense|income|transfer)$/.test(body.action||''))return submitLedgerPending(body);
-  if(body&&/^(advisorAiParse|advisorDividendMemo|expense|income|transfer|ziweiInterpretationSave|ziweiChartUpload|ziweiChartDelete|returnComparisonSets|returnComparisonSave|returnComparisonDelete)$/.test(body.action||'')){
+  if(body&&/^(advisorAiParse|advisorDividendMemo|expense|income|transfer|ziweiInterpretationSave|ziweiChartUpload|ziweiChartDelete)$/.test(body.action||'')){
     var jsonTimeout=((isApiWriteAction(body.action||'')||body.action==='advisorDividendMemo')?45000:undefined);
     return apiPostJson(body,jsonTimeout);
   }
@@ -13403,7 +13369,7 @@ function renderBookingHoldingTradePicker(data){
 }
 
 function setDividendCenterView(view){
-  dividendCenterView=view==='calculator'?'calculator':(view==='return-comparison'?'return-comparison':'pending');
+  dividendCenterView=view==='calculator'?'calculator':'pending';
   var el=document.getElementById('dividend-center-content');
   if(!el)return;
   el.innerHTML=renderDividendCenter(dividendCenterCache||{},true);
@@ -13421,7 +13387,6 @@ function initDividendCenterView(data){
     advisorDividendCalcSetFrequency(advisorDividendCalcFrequency);
     return;
   }
-  if(dividendCenterView==='return-comparison')return;
   initDividendEntryForm(data);
 }
 
@@ -13459,170 +13424,6 @@ function renderDividendCalculatorPanel(){
     </div>`;
 }
 
-function renderManualReturnComparisonPanel(){
-  var fields=[
-    {key:'name',label:'標的名稱',type:'text',placeholder:'輸入名稱',className:'name'},
-    {key:'initialPrice',label:'初始股價',type:'number',placeholder:'例如 100'},
-    {key:'periodDividend',label:'期間總配息（每股稅前）',type:'number',placeholder:'沒有配息可填 0'},
-    {key:'latestPrice',label:'最新股價',type:'number',placeholder:'例如 105'},
-    {key:'dividendFactor',label:'退稅後實拿比例（%）',type:'number',placeholder:'例如 96.3'}
-  ];
-  var rows=manualReturnComparisonState.map(function(row,index){
-    var calculation=manualReturnCalculation(row);
-    var resultText=calculation.valid?(calculation.percent>0?'+':'')+calculation.percent.toFixed(2)+'%':'—';
-    var resultClass=calculation.valid?(calculation.percent>0?'positive':(calculation.percent<0?'negative':'')):'invalid';
-    var inputs=fields.map(function(field){
-      var value=String(row[field.key]==null?'':row[field.key]);
-      var numeric=field.type==='number';
-      return `<div class="manual-return-field ${field.className||''}" role="cell">
-        <label for="manual-return-${index}-${field.key}">${field.label}</label>
-        <input id="manual-return-${index}-${field.key}" aria-label="比較 ${index+1}：${field.label}" data-return-index="${index}" data-return-field="${field.key}" type="${field.type}" ${numeric?'min="0" step="any" inputmode="decimal"':''} ${field.key==='dividendFactor'?'max="100"':''} value="${esc(value)}" placeholder="${field.placeholder}" oninput="updateManualReturnComparison(this)">
-      </div>`;
-    }).join('');
-    return `<article class="manual-return-card" role="row" data-manual-return-card="${index}">
-      <div class="manual-return-card-head"><h3 class="manual-return-card-title">比較 ${index+1}</h3></div>
-      ${inputs}
-      <div class="manual-return-output" role="cell" aria-label="比較 ${index+1}：總報酬率"><span>總報酬率</span><strong class="${resultClass}" id="manual-return-${index}-result" aria-live="polite">${resultText}</strong></div>
-    </article>`;
-  }).join('');
-  var savedSets=manualReturnSavedSets.map(function(set,index){return `<div class="manual-return-saved-row"><span class="manual-return-saved-name">${esc(set.name||'未命名比較組')}${set.id===manualReturnActiveSetId?'（編輯中）':''}</span><span class="manual-return-saved-actions"><button type="button" class="manual-return-reset" onclick="restoreManualReturnComparison(${index})">還原</button><button type="button" class="manual-return-delete" onclick="deleteManualReturnComparison(${index})">刪除</button></span></div>`;}).join('');
-  var savedSetCount=manualReturnSavedSets.length;
-  return `<section class="advisor-div-calc-card dividend-center-calculator manual-return-panel" aria-labelledby="manual-return-title">
-    <div class="advisor-shortcut-title" id="manual-return-title">📈 報酬試算</div>
-    <div class="advisor-shortcut-hint">五組標的自行輸入比較。資料不會自動儲存；只有按下存檔或載入時才會連線至專用試算表。</div>
-    <p class="manual-return-method">公式：（最新股價 − 初始股價 + 每股稅前配息 × 退稅後實拿比例）÷ 初始股價。比例是實拿占比（例如 96.3% 乘上配息），不是額外加回的稅額；每組請使用同一幣別。</p>
-    <div class="manual-return-period"><label for="manual-return-start-date">比較起日</label><input id="manual-return-start-date" type="date" value="${esc(manualReturnPeriodState.startDate)}" onchange="updateManualReturnPeriod(this)"><label for="manual-return-end-date">比較迄日</label><input id="manual-return-end-date" type="date" value="${esc(manualReturnPeriodState.endDate)}" onchange="updateManualReturnPeriod(this)"></div>
-    <div class="manual-return-actions"><button class="manual-return-reset" type="button" onclick="saveManualReturnComparison(false)">${manualReturnActiveSetId?'更新比較組':'存為比較組'}</button>${manualReturnActiveSetId?'<button class="manual-return-reset" type="button" onclick="saveManualReturnComparison(true)">另存新組</button>':''}<button class="manual-return-reset" type="button" onclick="loadManualReturnComparisons()">載入已存比較</button><button class="manual-return-reset" type="button" onclick="resetManualReturnComparisons()">清空五組</button><button id="manual-return-saved-toggle" class="manual-return-reset" type="button" onclick="toggleManualReturnSavedList()" aria-controls="manual-return-saved-list" aria-expanded="${!manualReturnSavedListCollapsed}"${savedSetCount?'':' disabled'}>${manualReturnSavedListCollapsed?'展開比較組':'收起比較組'}（${savedSetCount}）</button></div>
-    <div id="manual-return-storage-status" class="advisor-shortcut-hint" aria-live="polite"></div><div id="manual-return-saved-list" style="display:${manualReturnSavedListCollapsed?'none':'block'}">${savedSetCount?'<div class="manual-return-saved-list">'+savedSets+'</div>':''}</div>
-    <div class="manual-return-table-wrap"><div class="manual-return-grid" role="table" aria-label="五組標的總報酬比較">
-      <div class="manual-return-table-head" role="row"><span role="columnheader">標的名稱</span><span role="columnheader">初始股價</span><span role="columnheader">期間總配息</span><span role="columnheader">最新股價</span><span role="columnheader">退稅實拿比例%</span><span role="columnheader">總報酬率</span></div>
-      ${rows}
-    </div></div>
-  </section>`;
-}
-
-function todayTaipeiIsoDate(){
-  var parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
-  var values={};parts.forEach(function(part){values[part.type]=part.value;});
-  return values.year+'-'+values.month+'-'+values.day;
-}
-function updateManualReturnPeriod(input){
-  if(!input)return;
-  if(input.id==='manual-return-start-date')manualReturnPeriodState.startDate=input.value;
-  if(input.id==='manual-return-end-date')manualReturnPeriodState.endDate=input.value;
-}
-function setManualReturnStorageStatus(message,isError){
-  var status=document.getElementById('manual-return-storage-status');
-  if(status){status.textContent=message||'';status.style.color=isError?'#ff8d91':'';}
-}
-function toggleManualReturnSavedList(){
-  if(!manualReturnSavedSets.length)return;
-  manualReturnSavedListCollapsed=!manualReturnSavedListCollapsed;
-  var list=document.getElementById('manual-return-saved-list');
-  var button=document.getElementById('manual-return-saved-toggle');
-  if(list)list.style.display=manualReturnSavedListCollapsed?'none':'block';
-  if(button){button.textContent=(manualReturnSavedListCollapsed?'展開比較組':'收起比較組')+'（'+manualReturnSavedSets.length+'）';button.setAttribute('aria-expanded',String(!manualReturnSavedListCollapsed));}
-}
-function refreshManualReturnComparisonPanel(message,isError){
-  var content=document.getElementById('dividend-center-content');
-  if(content)content.innerHTML=renderDividendCenter(dividendCenterCache||{},true);
-  setManualReturnStorageStatus(message,isError);
-}
-async function saveManualReturnComparison(saveAsNew){
-  var start=manualReturnPeriodState.startDate,end=manualReturnPeriodState.endDate;
-  if(!start||!end||start>end){setManualReturnStorageStatus('請輸入有效的比較起訖日期。',true);return;}
-  setManualReturnStorageStatus('正在存檔…');
-  try{
-    var savedId=saveAsNew?'':manualReturnActiveSetId;
-    var payload={action:'returnComparisonSave',startDate:start,endDate:end,rows:manualReturnComparisonState};
-    if(savedId)payload.setId=savedId;
-    var result=await apiPostJson(payload);
-    if(!result||!result.id)throw new Error('後端未回傳比較組編號，請重新載入確認結果。');
-    manualReturnActiveSetId=result.id;
-    var savedSet={id:result.id,name:result.name||'',startDate:result.startDate||start,endDate:result.endDate||end,savedAt:result.savedAt||'',rows:manualReturnComparisonState.map(function(row){return Object.assign({},row);})};
-    var existingIndex=manualReturnSavedSets.findIndex(function(set){return set.id===result.id;});
-    if(existingIndex>=0)manualReturnSavedSets[existingIndex]=savedSet;else manualReturnSavedSets.unshift(savedSet);
-    refreshManualReturnComparisonPanel((savedId?'已更新比較組：':'已存為比較組：')+(result.name||'比較組'));
-  }catch(error){setManualReturnStorageStatus(error.message||'存檔失敗',true);}
-}
-async function loadManualReturnComparisons(){
-  setManualReturnStorageStatus('正在讀取已存比較…');
-  try{
-    var result=await apiPostJson({action:'returnComparisonSets'});
-    manualReturnSavedSets=Array.isArray(result.sets)?result.sets:[];
-    if(manualReturnActiveSetId&&!manualReturnSavedSets.some(function(set){return set.id===manualReturnActiveSetId;}))manualReturnActiveSetId='';
-    var host=document.querySelector('#dividend-center-content .manual-return-panel');
-    var content=document.getElementById('dividend-center-content');
-    if(host&&content)content.innerHTML=renderDividendCenter(dividendCenterCache||{},true);
-    setManualReturnStorageStatus(manualReturnSavedSets.length?'選擇下方比較組即可還原。':'目前沒有已存比較組。');
-  }catch(error){setManualReturnStorageStatus(error.message||'載入失敗',true);}
-}
-function restoreManualReturnComparison(index){
-  var set=manualReturnSavedSets[index];if(!set)return;
-  manualReturnActiveSetId=set.id||'';
-  manualReturnComparisonState=(set.rows||[]).slice(0,5).map(function(row){return {name:String(row.name||''),initialPrice:String(row.initialPrice==null?'':row.initialPrice),periodDividend:String(row.periodDividend==null?'':row.periodDividend),latestPrice:String(row.latestPrice==null?'':row.latestPrice),dividendFactor:String(row.dividendFactor==null?'100':row.dividendFactor)};});
-  while(manualReturnComparisonState.length<5)manualReturnComparisonState.push({name:'',initialPrice:'',periodDividend:'',latestPrice:'',dividendFactor:'100'});
-  manualReturnPeriodState={startDate:set.startDate||'',endDate:set.endDate||todayTaipeiIsoDate()};
-  var content=document.getElementById('dividend-center-content');if(content)content.innerHTML=renderDividendCenter(dividendCenterCache||{},true);
-  setManualReturnStorageStatus('已還原：'+(set.name||'比較組'));
-}
-async function deleteManualReturnComparison(index){
-  var set=manualReturnSavedSets[index];if(!set||!set.id)return;
-  if(!window.confirm('確定刪除「'+(set.name||'未命名比較組')+'」？此操作會刪除這組五筆比較資料。'))return;
-  setManualReturnStorageStatus('正在刪除比較組…');
-  try{
-    await apiPostJson({action:'returnComparisonDelete',setId:set.id});
-    manualReturnSavedSets.splice(index,1);
-    if(manualReturnActiveSetId===set.id)manualReturnActiveSetId='';
-    refreshManualReturnComparisonPanel('已刪除比較組：'+(set.name||'未命名比較組'));
-  }catch(error){setManualReturnStorageStatus(error.message||'刪除失敗',true);}
-}
-
-function updateManualReturnComparison(input){
-  if(!input)return;
-  var index=Number(input.dataset.returnIndex);
-  var field=input.dataset.returnField;
-  var row=manualReturnComparisonState[index];
-  if(!row||['name','initialPrice','periodDividend','latestPrice','dividendFactor'].indexOf(field)<0)return;
-  row[field]=input.value;
-  var result=document.getElementById('manual-return-'+index+'-result');
-  if(!result)return;
-  var calculation=manualReturnCalculation(row);
-  if(!calculation.valid){
-    result.textContent='—';
-    result.className='invalid';
-    result.title=calculation.message;
-    return;
-  }
-  var totalReturn=calculation.percent;
-  result.textContent=(totalReturn>0?'+':'')+totalReturn.toFixed(2)+'%';
-  result.className=totalReturn>0?'positive':(totalReturn<0?'negative':'');
-  result.title='以初始股價為基準，計入折算後的每股配息';
-}
-
-function manualReturnCalculation(row){
-  row=row||{};
-  var initial=Number(row.initialPrice),latest=Number(row.latestPrice);
-  var dividends=row.periodDividend===''?0:Number(row.periodDividend);
-  var factor=Number(row.dividendFactor);
-  if(row.initialPrice===''||!isFinite(initial)||initial<=0)return {valid:false,message:'初始股價需大於 0'};
-  if(row.latestPrice===''||!isFinite(latest)||latest<0)return {valid:false,message:'請輸入有效的最新股價'};
-  if(row.periodDividend!==''&&(!isFinite(dividends)||dividends<0))return {valid:false,message:'期間配息不可小於 0'};
-  if(row.dividendFactor===''||!isFinite(factor)||factor<0||factor>100)return {valid:false,message:'退稅後實拿比例需介於 0% 至 100%'};
-  return {valid:true,percent:((latest-initial+dividends*factor/100)/initial)*100};
-}
-
-function resetManualReturnComparisons(){
-  manualReturnComparisonState=Array.from({length:5},function(){return {name:'',initialPrice:'',periodDividend:'',latestPrice:'',dividendFactor:'100'};});
-  manualReturnPeriodState={startDate:'',endDate:todayTaipeiIsoDate()};
-  manualReturnActiveSetId='';
-  var host=document.querySelector('#dividend-center-content .manual-return-panel');
-  if(host){
-    var content=document.getElementById('dividend-center-content');
-    content.innerHTML=renderDividendCenter(dividendCenterCache||{},true);
-  }
-}
-
 function renderDividendCenter(data,includeArchitecture){
   data=data||{};
   var pending=dividendPendingDisplayRows(data.pending||[]).filter(function(row){return !isDividendPendingHidden(row);});
@@ -13630,15 +13431,13 @@ function renderDividendCenter(data,includeArchitecture){
   var tradePending=dividendPendingDisplayRows(data.holdingTradePending||[]);
   var tradeRows=tradePending.map(renderHoldingTradePendingRow).join('')||'<div class="dividend-empty">目前沒有待入帳持股記錄。</div>';
   var calculator=dividendCenterView==='calculator';
-  var returnComparison=dividendCenterView==='return-comparison';
-  var pendingActive=!calculator&&!returnComparison;
+  var pendingActive=!calculator;
   return `
     <div class="dividend-center-tabs" role="tablist" aria-label="持股與配息功能">
       <button class="dividend-center-tab${pendingActive?' active':''}" type="button" role="tab" aria-selected="${pendingActive?'true':'false'}" onclick="setDividendCenterView('pending')">待入帳持股記錄</button>
       <button class="dividend-center-tab${calculator?' active':''}" type="button" role="tab" aria-selected="${calculator?'true':'false'}" onclick="setDividendCenterView('calculator')">🧮 配息試算</button>
-      <button class="dividend-center-tab${returnComparison?' active':''}" type="button" role="tab" aria-selected="${returnComparison?'true':'false'}" onclick="setDividendCenterView('return-comparison')">📈 報酬試算</button>
     </div>
-    ${returnComparison?renderManualReturnComparisonPanel():(calculator?renderDividendCalculatorPanel():`${includeArchitecture?renderHoldingTradeEntryForm():''}
+    ${calculator?renderDividendCalculatorPanel():`${includeArchitecture?renderHoldingTradeEntryForm():''}
       <div style="display:flex;gap:8px;margin-bottom:12px">
         <button class="dividend-use-btn" style="width:auto;margin:0" onclick="loadDividendCenterPanel(true)">重新整理</button>
         <span class="result-msg" id="dividend-center-msg"></span>
@@ -21019,7 +20818,7 @@ function mpmRender(records){
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('./sw.js?v=20261025-compound-standalone1', {updateViaCache:'none'}).then(function (registration) {
+    navigator.serviceWorker.register('./sw.js?v=20261028-remove-return-comparison1', {updateViaCache:'none'}).then(function (registration) {
       return registration.update();
     }).catch(function (error) {
       console.warn('Empire Service Worker registration failed', error);
