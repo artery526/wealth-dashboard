@@ -1,9 +1,9 @@
 {
   "id": "2026-10-28-finance-compound-tax-lookup",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-10-28",
   "area": "財政",
   "summary": "複利試算新增退稅查詢分頁",
-  "details": "將龐統軍師的 ETF 退稅查詢介面移至獨立複利試算頁，並從龐統常用查詢移除重複入口；沿用既有查詢 API 與本機授權設定。",
+  "details": "將龐統軍師的 ETF 退稅查詢介面移至獨立複利試算頁的頂部分頁，並從龐統常用查詢移除重複入口；沿用既有查詢 API 與本機授權設定。Pages 部署成功，正式網站已完成退稅查詢驗證。",
   "platforms": ["website"]
 }
