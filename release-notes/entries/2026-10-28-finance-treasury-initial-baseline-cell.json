@@ -1,0 +1,9 @@
+{
+  "id": "2026-10-28-finance-treasury-initial-baseline-cell",
+  "status": "released",
+  "date": "2026-10-28",
+  "area": "財政",
+  "summary": "修正國庫現況史記基準讀取位置",
+  "details": "修正 Apps Script 初始資產基準儲存格，讓帝國寶庫史記比較讀取月度戰情室 D1。已更新正式 Apps Script 部署。",
+  "platforms": ["app-script", "website"]
+}
