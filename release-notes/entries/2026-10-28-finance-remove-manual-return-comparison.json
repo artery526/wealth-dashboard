@@ -1,9 +1,9 @@
 {
   "id": "2026-10-28-finance-remove-manual-return-comparison",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-10-28",
   "area": "財政",
   "summary": "移除持股與配息中的報酬試算分頁",
-  "details": "移除財政持股與配息區內的手動報酬比較介面，保留配息試算與獨立複利試算頁。",
+  "details": "移除財政持股與配息區內的手動報酬比較介面與前端程式，保留配息試算與獨立複利試算頁。已部署並確認線上頁面，既有比較組資料未刪除。",
   "platforms": ["website"]
 }
