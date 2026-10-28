@@ -1,9 +1,9 @@
 {
   "id": "2026-10-28-finance-taiwan-etf-backtest",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-10-28",
   "area": "財政",
   "summary": "複利試算新增台股 ETF 歷史回測分頁",
-  "details": "獨立複利試算頁頂端新增複利與台股 ETF 歷史回測分頁；回測比較單筆領息、單筆配息再投入與定期投入，試算資料只留在目前頁面。",
+  "details": "獨立複利試算頁頂端新增複利與台股 ETF 歷史回測分頁；回測比較單筆領息、單筆配息再投入與定期投入，依證交所註記調整可辨識的整數分割。試算資料只留在目前頁面。Pages 部署成功，正式網站已確認分頁、行情與策略結果。",
   "platforms": ["website"]
 }
