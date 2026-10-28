@@ -1,0 +1,9 @@
+{
+  "id": "2026-10-28-website-panel-click-routing",
+  "status": "in_progress",
+  "date": null,
+  "area": "網站介面",
+  "summary": "修正首頁區塊無法開啟介面的腳本錯誤",
+  "details": "檢查主頁互動初始化與區塊開啟流程，修正阻止介面路由載入的語法問題。",
+  "platforms": ["website"]
+}
