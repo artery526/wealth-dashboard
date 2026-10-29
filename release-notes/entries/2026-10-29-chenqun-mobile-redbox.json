@@ -1,9 +1,11 @@
 {
   "id": "2026-10-29-chenqun-mobile-redbox",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-10-29",
   "area": "手機版指揮所人物配置",
-  "summary": "將陳群移至手機版紅框位置",
-  "details": "依手機截圖調整陳群至財政建築前階梯紅框內，縮小人物尺寸以配合框選範圍；桌機座標維持不變。",
-  "platforms": ["website"]
+  "summary": "依手機紅框調整陳群位置與尺寸",
+  "details": "將手機版陳群移至財政建築前階梯的紅框範圍，並縮小人物尺寸以配合框選區域；桌機位置維持原設定。已更新角色腳本與 Service Worker 快取版本，並確認正式手機頁座標。",
+  "platforms": [
+    "website"
+  ]
 }
