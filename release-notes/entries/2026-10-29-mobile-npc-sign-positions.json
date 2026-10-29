@@ -1,0 +1,9 @@
+{
+  "id": "2026-10-29-mobile-npc-sign-positions",
+  "status": "in_progress",
+  "date": null,
+  "area": "手機版指揮所人物配置",
+  "summary": "將三位人物移至手機地圖對應招牌下方",
+  "details": "手機版龐統移至軍師府邸招牌下中央階梯偏上，諸葛亮移至戰情室情字下方，劉備移至王府招牌下方中央；桌機座標不變。",
+  "platforms": ["website"]
+}
