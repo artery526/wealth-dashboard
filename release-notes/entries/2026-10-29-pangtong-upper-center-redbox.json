@@ -1,0 +1,9 @@
+{
+  "id": "2026-10-29-pangtong-upper-center-redbox",
+  "status": "in_progress",
+  "date": null,
+  "area": "指揮所人物配置",
+  "summary": "將龐統移至軍師府邸中央高處紅框",
+  "details": "修正桌機版龐統位置，移至軍師府邸正中央高處紅框；手機座標維持不變。",
+  "platforms": ["website"]
+}
