@@ -11,7 +11,7 @@ const characterMobilePositions = {
   pangtong: { top: '20.5%', left: '41.25%', width: '17.5%' },
   zhuge: { top: '61.5%', left: '11.75%', width: '17.5%' },
   liubei: { top: '38.5%', left: '69.5%', width: '15%' },
-  chenqun: { top: '42%', left: '14%', width: '17%' },
+  chenqun: { top: '39%', left: '12.5%', width: '15%' },
   manchong: { top: '62%', left: '67%', width: '17%' }
 };
 const pangtongAnimations = {
