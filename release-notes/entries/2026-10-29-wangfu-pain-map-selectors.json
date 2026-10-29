@@ -1,7 +1,7 @@
 {
   "id": "2026-10-29-wangfu-pain-map-selectors",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-10-29",
   "area": "王府",
   "summary": "疼痛地圖改用醫館快速記錄選項",
   "details": "疼痛部位改為可複選選單，藥物名稱與服用顆數改為下拉選單；藥物選項沿用 NAS 中醫館快速記錄的設定，新增記錄仍保存於王府疼痛地圖專用 NAS 檔案。",
