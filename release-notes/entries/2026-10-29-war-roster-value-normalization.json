@@ -1,0 +1,9 @@
+{
+  "id": "2026-10-29-war-roster-value-normalization",
+  "status": "in_progress",
+  "date": null,
+  "area": "諸葛軍師戰情室",
+  "summary": "修正部隊陣容持股數值與標的配對",
+  "details": "同步原軍機處的標的名稱正規化與數字格式解析，避免圖示前綴或格式差異令持股資料無法配對並顯示為零。",
+  "platforms": ["website"]
+}
