@@ -1,7 +1,7 @@
 {
   "id": "2026-10-29-medical-remove-tarot-tabs",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-10-29",
   "area": "醫館",
   "summary": "移除醫館抽牌記錄與牌卡統計介面",
   "details": "移除醫館內已合併至王府的抽牌記錄及牌卡統計分頁與畫面；保留醫館快速記錄、疼痛地圖、王府抽牌功能及原有資料。",
