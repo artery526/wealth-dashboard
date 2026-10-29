@@ -1,4 +1,4 @@
-const CACHE_NAME = 'empire-shell-v68';
+const CACHE_NAME = 'empire-shell-v70';
 
 // Keep the first offline-capable version deliberately small. The dashboard
 // already owns API caching in index.html; this cache is for the page shell.
@@ -19,10 +19,10 @@ const PRECACHE_URLS = [
   './manifest.json',
   './junshifu-map.jpg?v=20261029-war-room-map1',
   './junshifu-map.webp?v=20261029-war-room-map1',
-  './mobileBG.jpg?v=20261029-palace-map2',
-  './mobileBG.webp?v=20261029-palace-map2',
-  './mobileBG.avif?v=20261029-palace-map2',
-  './characterAnimations.js?v=20261029-chenqun-finance-stairs1',
+  './mobileBG.jpg?v=20261029-palace-map3',
+  './mobileBG.webp?v=20261029-palace-map3',
+  './mobileBG.avif?v=20261029-palace-map3',
+  './characterAnimations.js?v=20261029-zhuge-warroom-lantern1',
   './AnimatedCharacter.js?v=20261007-auto-loop-test1',
   './advisor-zhuge.png',
   './pangtong.png',
