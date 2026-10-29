@@ -1,0 +1,9 @@
+{
+  "id": "2026-10-29-war-roster-market-delta",
+  "status": "in_progress",
+  "date": null,
+  "area": "諸葛軍師戰情室",
+  "summary": "恢復部隊陣容投資市值的前次增減資訊",
+  "details": "投資市值摘要補上與前一筆可用資產快照的金額及百分比差異，並在背景讀取 NAS 快照、失敗時退回試算表。",
+  "platforms": ["website"]
+}
