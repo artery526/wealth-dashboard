@@ -1,0 +1,9 @@
+{
+  "id": "2026-10-29-war-room-roster-tab",
+  "status": "in_progress",
+  "date": null,
+  "area": "諸葛軍師戰情室",
+  "summary": "將部隊陣容整合至戰情室分頁",
+  "details": "在獨立戰情室新增延遲載入的部隊陣容分頁，沿用武將與持股資料來源；原軍機處入口導向新分頁。",
+  "platforms": ["website"]
+}

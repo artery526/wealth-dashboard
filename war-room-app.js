@@ -7,12 +7,14 @@
     'war-briefing':{title:'帝國晨報',load:loadBriefing},
     'war-battle-brief':{title:'戰情總匯報',load:loadBattle},
     'war-sector-rotation':{title:'產業輪動',load:loadSector},
-    'war-taiwan-macro':{title:'台灣總體經濟',load:loadTaiwan}
+    'war-taiwan-macro':{title:'台灣總體經濟',load:loadTaiwan},
+    'war-roster':{title:'部隊陣容',load:loadWarRoster}
   };
   var currentTab='war-briefing',lastLoaded={},taiwanRange='1Y',busy=false,foreignYtdPromise=null,foreignYtdLastAttempt=0,foreignYtdError='',nasdaqValuationPromise=null;
   var FOREIGN_YTD_CACHE_KEY='wealth_twse_foreign_ytd_v1';
   var NASDAQ_VALUATION_CACHE_KEY='wealth_nasdaq100_valuation_v1';
   var content=document.getElementById('content'),status=document.getElementById('connection-status');
+  function loadWarRoster(force){return window.warRosterModule.load(request,force,function(value){setFreshness(value);},function(text,kind){setStatus(text,kind);});}
   function normalizeApi(value){value=String(value||'').trim();return /script\.google\.com\/macros\/s\//i.test(value)?API_DEFAULT:value;}
   function esc(value){return String(value==null?'':value).replace(/[&<>"']/g,function(ch){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];});}
   function setStatus(text,kind){status.textContent=text;status.className='connection '+(kind||'pending');}

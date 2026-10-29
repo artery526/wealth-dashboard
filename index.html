@@ -6602,6 +6602,10 @@ async function saveCfg(){
 //  Panel open/close
 // ══════════════════════════════════════════
 function openPanel(key,initialTab){
+  if(key==='council'){
+    key='war-room';
+    initialTab='war-roster';
+  }
   if(key==='war-room'&&!isWarRoomStandalone()){
     window.location.href='./war-room.html?tab='+encodeURIComponent(initialTab||'war-briefing');
     return;
@@ -6706,7 +6710,8 @@ function openArkWallAdminShortcut(event){
 
 function openEmpireCardShortcut(event,panel,tab){
   if(event&&event.stopPropagation)event.stopPropagation();
-  if(panel==='council'&&tab==='battle-brief'){panel='war-room';tab='war-battle-brief';}
+  if(panel==='council'&&!tab){panel='war-room';tab='war-roster';}
+  else if(panel==='council'&&tab==='battle-brief'){panel='war-room';tab='war-battle-brief';}
   else if(panel==='council'&&tab==='market-watch'){panel='war-room';tab='war-sector-rotation';}
   else if(panel==='council'&&tab==='taiwan-macro'){panel='war-room';tab='war-taiwan-macro';}
   else if(panel==='council'&&tab&&tab.indexOf('war-')===0){panel='war-room';}
