@@ -1,7 +1,7 @@
 {
   "id": "2026-10-29-wangfu-pain-map-date-style",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-10-29",
   "area": "王府",
   "summary": "統一疼痛地圖新增記錄文案與日期欄位樣式",
   "details": "將新增記錄與新增疼痛記錄文案統一使用「記錄」，讓日期輸入框採用與程度、部位及藥物選項一致的深色欄位樣式，並將王府旁的疼痛地圖表情按鈕置中。",
