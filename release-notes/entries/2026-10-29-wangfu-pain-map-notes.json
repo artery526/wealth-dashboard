@@ -1,0 +1,9 @@
+{
+  "id": "2026-10-29-wangfu-pain-map-notes",
+  "status": "in_progress",
+  "date": null,
+  "area": "王府",
+  "summary": "疼痛地圖列表顯示備註與觀察",
+  "details": "月曆下方的疼痛記錄列表顯示來源資料中對應記錄的備註／觀察；新增記錄也可填寫備註，內容保存於 NAS 專用記錄檔。",
+  "platforms": ["website"]
+}
