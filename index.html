@@ -6924,8 +6924,6 @@ function switchTab(btn,key){
   else if(key==='council-roster')loadCouncilDashboard();
   else if(key==='external-intelligence')loadExternalIntelligence();
   else if(key==='council-task')resetRetiredTaskStatus();
-  else if(key==='medical-tarot')initMedicalTarotForm();
-  else if(key==='medical-stats')initMedicalCardStats();
   else if(key==='medical-painmap')initMedicalPainMap();
   else if(key==='store-chronicle')loadEventChronicle();
   else if(key==='stars-home')loadZiweiCharts();
@@ -8376,7 +8374,7 @@ function renderMedicalPanel(){
   setPanelHead('✚','Clinic · Recovery','醫館');
   var panelExtra=document.getElementById('p-extra');
   if(panelExtra)panelExtra.innerHTML='<span class="medical-header-time"><button class="medical-time-btn" id="medical-time-button" type="button" onclick="openMedicalTimePicker()" aria-label="選擇紀錄日期與時間">--/--/--</button><input class="medical-time-native" id="medical-time" type="datetime-local" aria-label="紀錄日期與時間"></span>';
-  setPanelMenuTabs([{key:'medical-quick',label:'快速記錄'},{key:'medical-tarot',label:'抽牌記錄'},{key:'medical-stats',label:'牌卡統計'},{key:'medical-painmap',label:'疼痛地圖'}]);
+  setPanelMenuTabs([{key:'medical-quick',label:'快速記錄'},{key:'medical-painmap',label:'疼痛地圖'}]);
   var el=document.getElementById('p-body');
   if(!hasMainApiCredentials()){
     el.innerHTML=`<div class="setup-notice">
@@ -8421,110 +8419,6 @@ function renderMedicalPanel(){
           <span class="medical-status" id="medical-status">讀取設定選項中…</span>
         </div>
       </form>
-    </div>
-    <div class="pane" id="pane-medical-tarot">
-      <div class="council-army-title">🃏 抽牌記錄</div>
-      <form class="tarot-form" id="medical-tarot-form">
-        <div class="tarot-form-grid">
-          <div class="medical-field" style="grid-column:1/-1">
-            <label>抽牌類型</label>
-            <div class="tarot-mode-switch">
-              <button class="tarot-mode-btn active" type="button" data-mode="single" onclick="setTarotDrawMode('single')">單張牌卡紀錄</button>
-              <button class="tarot-mode-btn" type="button" data-mode="three" onclick="setTarotDrawMode('three')">三張牌卡紀錄</button>
-            </div>
-          </div>
-          <div class="medical-field" id="tarot-single-set" style="grid-column:1/-1">
-            <label>🃏 塔羅牌</label>
-            <div class="tarot-card-row">
-              <div class="tarot-card-row-label">單張</div>
-              <div class="medical-card-preview">
-                <div class="medical-card-ph" id="tarot-card-ph">🃏</div>
-                <img class="medical-card-thumb" id="tarot-card-img" src="" alt="塔羅牌" style="display:none">
-                <div class="medical-card-name" id="tarot-card-name">單張</div>
-              </div>
-              <select class="medical-select" id="tarot-card"></select>
-              <select class="medical-select" id="tarot-pos"></select>
-            </div>
-          </div>
-          <div class="medical-field tarot-card-set hidden" id="tarot-three-set" style="grid-column:1/-1">
-            <label>🃏 三張塔羅牌</label>
-            <div class="tarot-card-row">
-              <div class="tarot-card-row-label">第一張</div>
-              <div class="medical-card-preview">
-                <div class="medical-card-ph" id="tarot-card-ph-1">🃏</div>
-                <img class="medical-card-thumb" id="tarot-card-img-1" src="" alt="第一張" style="display:none">
-                <div class="medical-card-name" id="tarot-card-name-1">第一張</div>
-              </div>
-              <select class="medical-select" id="tarot-card-1"></select>
-              <select class="medical-select" id="tarot-pos-1"></select>
-            </div>
-            <div class="tarot-card-row">
-              <div class="tarot-card-row-label">第二張</div>
-              <div class="medical-card-preview">
-                <div class="medical-card-ph" id="tarot-card-ph-2">🃏</div>
-                <img class="medical-card-thumb" id="tarot-card-img-2" src="" alt="第二張" style="display:none">
-                <div class="medical-card-name" id="tarot-card-name-2">第二張</div>
-              </div>
-              <select class="medical-select" id="tarot-card-2"></select>
-              <select class="medical-select" id="tarot-pos-2"></select>
-            </div>
-            <div class="tarot-card-row">
-              <div class="tarot-card-row-label">第三張</div>
-              <div class="medical-card-preview">
-                <div class="medical-card-ph" id="tarot-card-ph-3">🃏</div>
-                <img class="medical-card-thumb" id="tarot-card-img-3" src="" alt="第三張" style="display:none">
-                <div class="medical-card-name" id="tarot-card-name-3">第三張</div>
-              </div>
-              <select class="medical-select" id="tarot-card-3"></select>
-              <select class="medical-select" id="tarot-pos-3"></select>
-            </div>
-          </div>
-          <div class="medical-field" style="grid-column:1/-1">
-            <label for="tarot-oracle">✨ 奧修禪卡</label>
-            <div class="tarot-oracle-row">
-              <div class="medical-card-preview">
-                <div class="medical-card-ph" id="tarot-oracle-ph">✨</div>
-                <img class="medical-card-thumb" id="tarot-oracle-img" src="" alt="奧修禪卡" style="display:none">
-                <div class="medical-card-name" id="tarot-oracle-name">奧修牌</div>
-              </div>
-              <select class="medical-select" id="tarot-oracle"></select>
-            </div>
-          </div>
-        </div>
-        <div class="medical-field">
-          <label>🔑 關鍵字連結（可複選）</label>
-          <div class="tarot-kw-group" id="tarot-kw-group"></div>
-        </div>
-        <div class="medical-field">
-          <label for="tarot-notes">📝 牌卡訊息 / 今日啟示</label>
-          <textarea class="tarot-ta" id="tarot-notes" placeholder="記錄今日牌卡帶來的啟示、直覺感受或與生活的連結…"></textarea>
-        </div>
-        <div class="medical-field">
-          <label>今日牌卡摘要</label>
-          <div class="tarot-summary-box" id="tarot-summary">未抽取（❌）× ❌</div>
-        </div>
-        <div class="medical-actions">
-          <button class="medical-submit" id="tarot-submit" type="submit">送出抽牌記錄</button>
-          <span class="medical-status" id="tarot-status"></span>
-        </div>
-      </form>
-    </div>
-    <div class="pane" id="pane-medical-stats">
-      <div class="council-army-title">📊 牌卡統計</div>
-      <select class="mcs-month-sel" id="mcs-month-sel" onchange="onMcsMonthChange()">
-        <option value="">⏳ 載入中…</option>
-      </select>
-      <div class="mcs-stat-row">
-        <div class="mcs-stat-box"><div class="mcs-stat-num" id="mcs-osho-total">—</div><div class="mcs-stat-lbl" id="mcs-osho-lbl">奧修牌數</div></div>
-        <div class="mcs-stat-box"><div class="mcs-stat-num" id="mcs-tarot-total">—</div><div class="mcs-stat-lbl" id="mcs-tarot-lbl">塔羅牌數</div></div>
-        <div class="mcs-stat-box"><div class="mcs-stat-num" id="mcs-days-total">—</div><div class="mcs-stat-lbl" id="mcs-days-lbl">抽牌天數</div></div>
-      </div>
-      <div class="council-army-title" style="font-size:13px;margin-bottom:8px">禪｜奧修牌卡統計</div>
-      <div id="mcs-osho-chart"><div class="mcs-empty">⏳ 載入中…</div></div>
-      <div class="council-army-title" style="font-size:13px;margin:16px 0 8px">記｜奧修抽牌記錄</div>
-      <div id="mcs-osho-records"><div class="mcs-empty">⏳ 載入中…</div></div>
-      <div class="council-army-title" style="font-size:13px;margin:16px 0 8px">塔｜塔羅抽牌明細</div>
-      <div id="mcs-tarot-records"><div class="mcs-empty">⏳ 載入中…</div></div>
     </div>
     <div class="pane" id="pane-medical-painmap">
       <div class="council-army-title">🧍 疼痛地圖</div>
