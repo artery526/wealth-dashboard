@@ -1,0 +1,9 @@
+{
+  "id": "2026-10-29-pangtong-remove-video-download",
+  "status": "in_progress",
+  "date": null,
+  "area": "龐統軍師",
+  "summary": "移除龐統軍師影片下載功能",
+  "details": "移除龐統常用查詢中的影片下載選項、連結辨識與下載面板；保留首頁及其他板塊的影片播放功能。",
+  "platforms": ["website"]
+}

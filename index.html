@@ -17725,7 +17725,6 @@ function advisorAIQuickCommands(){
   return [
     {label:'配息試算',command:'__dividend_calculator__'},
     {label:'配息記錄',command:'__dividend_record__'},
-    {label:'影片下載',command:'__video_download__'},
     {label:'載具超商',command:'__member_cards__'},
     {label:'複製載具',command:'複製載具'}
   ];
@@ -18015,11 +18014,6 @@ function advisorAIRunQuickCommand(select){
   if(command==='__dividend_record__'){
     if(select)select.value='';
     advisorAIOpenDividendRecord();
-    return;
-  }
-  if(command==='__video_download__'){
-    if(select)select.value='';
-    advisorAIOpenVideoDownload();
     return;
   }
   if(command==='__member_cards__'){
@@ -18573,73 +18567,6 @@ function advisorAISetMessage(text,type){
 
 function advisorAIResultHtml(title,lines){
   return `<div class="advisor-ai-result"><strong>${esc(title)}</strong><br>${(lines||[]).map(esc).join('<br>')}</div>`;
-}
-
-function advisorAIVideoDownloaderUrl(sourceUrl){
-  var value=String(sourceUrl||'').trim().toLowerCase();
-  if(value.indexOf('tiktok.com')>=0)return 'https://tiksave.io/zh-tw';
-  if(value.indexOf('threads.net')>=0||value.indexOf('threads.com')>=0)return 'https://www.threadsdownloader.com/';
-  if(value.indexOf('facebook.com')>=0||value.indexOf('fb.watch')>=0||value.indexOf('fb.com')>=0)return 'https://fdownloader.net/zh-tw';
-  return '';
-}
-
-function advisorAIOpenVideoDownload(){
-  var panel=advisorAIActivePanel();
-  if(!panel)return;
-  var isStandalone=panel===advisorAIStandalonePanel();
-  advisorShortcutOpenKind='ai-video-download';
-  advisorDividendSelection=null;
-  advisorDividendMemoPending=null;
-  advisorAIScheduleOpen=false;
-  panel.innerHTML=`${advisorAIHeaderHtml()}
-     ${isStandalone?'<div class="advisor-ai-portrait"><img class="advisor-ai-portrait-img" src="pangtong.png?v=20260906-advisor1" alt="龐統軍師"></div>':''}
-    <div class="advisor-shortcut-hint">貼上 TikTok、Threads 或 Facebook 影片連結；軍師會複製原連結，並開啟對應下載頁。</div>
-    <div class="advisor-shortcut-field">
-      <label>影片連結</label>
-      <input class="advisor-shortcut-input" id="advisor-ai-video-url" type="url" placeholder="https://..." onkeydown="advisorAIVideoDownloadKey(event)">
-    </div>
-    <div class="advisor-dividend-actions">
-      <button class="advisor-shortcut-secondary" type="button" onclick="openAdvisorAI()">返回</button>
-      <button class="advisor-shortcut-submit" id="advisor-ai-video-submit" type="button" onclick="advisorAISubmitVideoDownload(this)">開啟下載頁</button>
-    </div>
-    <div class="advisor-shortcut-msg" id="advisor-ai-msg"></div>`;
-  setTimeout(function(){
-    var input=document.getElementById('advisor-ai-video-url');
-    if(input)input.focus();
-  },0);
-}
-
-function advisorAIVideoDownloadKey(e){
-  if(e&&e.key==='Enter'){
-    e.preventDefault();
-    advisorAISubmitVideoDownload(document.getElementById('advisor-ai-video-submit'));
-  }
-}
-
-async function advisorAISubmitVideoDownload(btn){
-  var input=document.getElementById('advisor-ai-video-url');
-  var msg=document.getElementById('advisor-ai-msg');
-  var sourceUrl=String(input&&input.value||'').trim();
-  var downloaderUrl=advisorAIVideoDownloaderUrl(sourceUrl);
-  if(!downloaderUrl){
-    if(msg){msg.textContent='請貼上 TikTok、Threads 或 Facebook 連結。';msg.className='advisor-shortcut-msg err';}
-    return;
-  }
-  if(btn&&btn.disabled)return;
-  if(btn){btn.disabled=true;btn.textContent='開啟中…';}
-  try{
-    if(navigator.clipboard&&navigator.clipboard.writeText){
-      await navigator.clipboard.writeText(sourceUrl);
-      if(msg){msg.textContent='✓ 已複製連結，下載頁開啟後可直接貼上。';msg.className='advisor-shortcut-msg ok';}
-    }else{
-      if(msg){msg.textContent='下載頁已開啟；若未自動複製，請手動複製上方連結。';msg.className='advisor-shortcut-msg';}
-    }
-  }catch(err){
-    if(msg){msg.textContent='下載頁已開啟；瀏覽器未允許自動複製，請手動複製上方連結。';msg.className='advisor-shortcut-msg';}
-  }finally{
-    window.open(downloaderUrl,'_blank','noopener,noreferrer');
-    if(btn){btn.disabled=false;btn.textContent='開啟下載頁';}
-  }
 }
 
 function advisorAISavingRateNumber(value){
