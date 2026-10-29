@@ -1,9 +1,11 @@
 {
   "id": "2026-10-29-pangtong-upper-center-redbox",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-10-29",
   "area": "指揮所人物配置",
   "summary": "將龐統移至軍師府邸中央高處紅框",
-  "details": "修正桌機版龐統位置，移至軍師府邸正中央高處紅框；手機座標維持不變。",
-  "platforms": ["website"]
+  "details": "依最新標註，將桌機版龐統移至軍師府邸正中央高處紅框，並更新角色腳本與 Service Worker 快取版本。已確認正式網站載入新位置，手機座標維持不變。",
+  "platforms": [
+    "website"
+  ]
 }
