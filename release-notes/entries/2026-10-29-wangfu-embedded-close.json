@@ -1,0 +1,9 @@
+{
+  "id": "2026-10-29-wangfu-embedded-close",
+  "status": "released",
+  "date": "2026-10-29",
+  "area": "王府",
+  "summary": "修正王府內嵌文章視窗的重複關閉按鈕",
+  "details": "在王府新增或編輯文章的內嵌視窗中隱藏表單內層關閉按鈕，保留外層視窗的單一關閉入口與未儲存提醒。獨立後台仍保留原有表單控制。",
+  "platforms": ["website"]
+}
