@@ -1,9 +1,11 @@
 {
   "id": "2026-10-29-mobile-command-center-wallpaper",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-10-29",
   "area": "手機版指揮所桌布",
   "summary": "更新手機網頁端指揮所桌布",
-  "details": "以新版手機地圖替換桌布，重新產生 PNG、JPG、WebP 與 AVIF 資產並更新快取版本。",
-  "platforms": ["website"]
+  "details": "以新版手機地圖替換桌布，更新 PNG、JPG、WebP、AVIF 資產與快取版本。已確認正式手機版載入新版圖片，線上 AVIF 與發布檔案一致。",
+  "platforms": [
+    "website"
+  ]
 }

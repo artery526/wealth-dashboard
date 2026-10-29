@@ -1,9 +1,11 @@
 {
   "id": "2026-10-29-zhuge-warroom-lantern-position",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-10-29",
   "area": "指揮所人物配置",
   "summary": "將諸葛亮移至戰情室下方燈的位置",
-  "details": "調整桌機版諸葛亮至戰情室下方走道的立燈位置，遮住燈飾圖案；手機座標維持不變。",
-  "platforms": ["website"]
+  "details": "諸葛亮已移到戰情室正下方走道的立燈位置，遮住燈飾圖案；已確認正式桌機版位置，手機角色座標維持原樣。",
+  "platforms": [
+    "website"
+  ]
 }
