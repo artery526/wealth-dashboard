@@ -1,8 +1,8 @@
 // All timing values are milliseconds. Original PNG files remain untouched.
 window.DEBUG_CHARACTERS = false;
 const characterPositions = {
-  pangtong: { top: '30%', left: '42%', width: '8%' },
-  zhuge: { top: '30%', left: '51%', width: '8%' },
+  pangtong: { top: '11%', left: '37%', width: '9%' },
+  zhuge: { top: '11%', left: '58%', width: '9%' },
   chenqun: { top: '29%', left: '21%', width: '8.5%' },
   liubei: { top: '44%', left: '47%', width: '8.5%' },
   simayi: { top: '61%', left: '17%', width: '11%' },

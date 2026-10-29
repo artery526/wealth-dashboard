@@ -1,0 +1,9 @@
+{
+  "id": "2026-10-29-war-counselors-upper-sides",
+  "status": "in_progress",
+  "date": null,
+  "area": "指揮所人物配置",
+  "summary": "將桌機版龐統與諸葛亮移至軍師府邸上方兩側",
+  "details": "依使用者標示位置調整桌機版兩位軍師的座標與間距；手機版位置保持不變。",
+  "platforms": ["website"]
+}

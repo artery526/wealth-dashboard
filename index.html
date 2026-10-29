@@ -20596,7 +20596,7 @@ function mpmRender(records){
   }
   function start(){
     if(status)status.textContent='角色資料載入中…';
-    Promise.resolve(window.AnimatedCharacter?null:loadScript('./characterAnimations.js?v=20261029-palace-positions1'))
+    Promise.resolve(window.AnimatedCharacter?null:loadScript('./characterAnimations.js?v=20261029-war-counselors-upper1'))
       .then(function(){return window.AnimatedCharacter?null:loadScript('./AnimatedCharacter.js?v=20261007-auto-loop-test1');})
       .then(initCharacters)
       .catch(function(){if(status)status.textContent='角色資料載入失敗，請重新整理。';});
