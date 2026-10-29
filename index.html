@@ -4872,8 +4872,8 @@ html[data-theme="deep-blue"] .scene-task-details .home-agenda-global-refresh{bor
       <source media="(max-width:768px)" type="image/avif" srcset="./mobileBG.avif?v=20261029-palace-map2">
       <source media="(max-width:768px)" type="image/webp" srcset="./mobileBG.webp?v=20261029-palace-map2">
       <source media="(max-width:768px)" srcset="./mobileBG.jpg?v=20261029-palace-map2">
-      <source type="image/webp" srcset="./junshifu-map.webp?v=20261029-palace-map2">
-      <img class="npc-web-scene-map" src="./junshifu-map.jpg?v=20261029-palace-map2" alt="帝國指揮所場景：財政、王府、軍機處與太倉" decoding="async" fetchpriority="high">
+      <source type="image/webp" srcset="./junshifu-map.webp?v=20261029-war-room-map1">
+      <img class="npc-web-scene-map" src="./junshifu-map.jpg?v=20261029-war-room-map1" alt="帝國指揮所場景：財政、王府、戰情室與太倉" decoding="async" fetchpriority="high">
     </picture>
     <div class="scene-widget-dock" id="scene-widget-dock">
     </div>
@@ -5005,7 +5005,7 @@ html[data-theme="deep-blue"] .scene-task-details .home-agenda-global-refresh{bor
   <div class="web-login-box">
     <div class="web-login-scroll" aria-hidden="true">📜</div>
     <div class="web-login-title" id="web-login-title">帝國指揮所登入</div>
-    <div class="web-login-sub">請先通過城門驗證，成功後本次瀏覽期間各軍機處、財政與王府共用同一個 Session。</div>
+    <div class="web-login-sub">請先通過城門驗證，成功後本次瀏覽期間戰情室、財政與王府共用同一個 Session。</div>
     <form onsubmit="submitWebLogin(event)">
       <input class="web-login-input" id="web-login-token" type="password" autocomplete="current-password" placeholder="輸入帝國通行密鑰" aria-label="帝國通行密鑰">
       <button class="web-login-button" id="web-login-button" type="submit">登入帝國</button>
@@ -16642,42 +16642,16 @@ function setupNotice(){
   </div>`;
 }
 
-var councilRosterPreloadPromise=null;
-function preloadCouncilRosterOnIdle(){
-  if(isWarRoomStandalone())return Promise.resolve(false);
-  if(!API_URL||!webVerifyIsAuthorized())return Promise.resolve(false);
-  if(councilRosterPreloadPromise)return councilRosterPreloadPromise;
-  var run=function(){
-    if(!API_URL||!webVerifyIsAuthorized())return Promise.resolve(false);
-    return ensureMilitaryModule().then(function(){
-      if(typeof window.preloadCouncilDashboard!=='function')return false;
-      return window.preloadCouncilDashboard();
-    }).catch(function(error){
-      console.warn('部隊陣容背景預載失敗',error);
-      return false;
-    });
-  };
-  councilRosterPreloadPromise=new Promise(function(resolve){
-    var start=function(){run().then(resolve).finally(function(){councilRosterPreloadPromise=null;});};
-    if(window.requestIdleCallback)window.requestIdleCallback(start,{timeout:7000});
-    else window.setTimeout(start,1500);
-  });
-  return councilRosterPreloadPromise;
-}
-
 function preloadQuickBookingAndPangTong(){
   if(isWarRoomStandalone())return Promise.resolve(false);
   if(!API_URL||!webVerifyIsAuthorized())return Promise.resolve(false);
   var run=function(){
-    var councilFallbackTimer=window.setTimeout(preloadCouncilRosterOnIdle,6500);
     return Promise.allSettled([
       loadBookingConfig(),
       loadDividendCenter(false)
     ]).then(function(results){
-      window.clearTimeout(councilFallbackTimer);
       if(results[0].status==='rejected')console.warn('快速記帳設定預載失敗',results[0].reason);
       if(results[1].status==='rejected')console.warn('龐統配息資料預載失敗',results[1].reason);
-      window.setTimeout(preloadCouncilRosterOnIdle,900);
       return results;
     });
   };
@@ -16997,12 +16971,6 @@ initAdvisorDuoVideoPlayback();
             <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'finance','booking-form')"><span class="advisor-btn-tag">記</span>快速記帳</button>
             <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'finance','domestic-yearly')"><span class="advisor-btn-tag">年</span>年度財報</button>
             <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'finance','dividend-center')"><span class="advisor-btn-tag">股</span>持股與配息</button>
-          </div>
-        </section>
-        <section class="advisor-menu-section">
-          <button class="advisor-menu-toggle" type="button" onclick="toggleAdvisorMenuGroup(this)" aria-expanded="false"><span class="advisor-menu-mark">軍</span>軍機處<span class="advisor-menu-caret">▼</span></button>
-          <div class="advisor-btn-group">
-            <button class="advisor-btn" type="button" onclick="openEmpireCardShortcut(event,'council','council-roster')"><span class="advisor-btn-tag">隊</span>部隊陣容</button>
           </div>
         </section>
         <section class="advisor-menu-section">
@@ -18361,12 +18329,11 @@ function advisorAIOpenTarget(text){
   if(key==='market')return {intent:'open',panel:'war-room',tab:'war-sector-rotation',label:'產業輪動'};
   if(key==='finance')return {intent:'open',panel:'finance',tab:'finance-accs',label:'財政'};
   if(key==='domestic')return {intent:'open',panel:'domestic',tab:'booking-form',label:'快速記帳'};
-  if(key==='council')return {intent:'open',panel:'council',label:'軍機處'};
   if(key==='stars')return {intent:'open',panel:'stars',label:'司天監'};
   if(key.indexOf('國庫')>=0)return {intent:'open',panel:'finance',tab:'finance-accs',label:'國庫現況'};
   if(key.indexOf('糧')>=0)return {intent:'open',panel:'finance',tab:'finance-accs',label:'國庫現況'};
   if(key.indexOf('年度財報')>=0||key.indexOf('財報')>=0)return {intent:'open',panel:'finance',tab:'domestic-yearly',label:'年度財報'};
-  if(key.indexOf('部隊陣容')>=0||key.indexOf('陣容')>=0)return {intent:'open',panel:'council',tab:'council-roster',label:'部隊陣容'};
+  if(key.indexOf('部隊陣容')>=0||key.indexOf('陣容')>=0)return {intent:'open',panel:'war-room',tab:'war-roster',label:'部隊陣容'};
   if(key.indexOf('戰情總匯報')>=0||key.indexOf('總匯報')>=0)return {intent:'open',panel:'war-room',tab:'war-battle-brief',label:'戰情總匯報'};
   if(key.indexOf('台灣總體經濟')>=0||key.indexOf('台灣總經')>=0)return {intent:'open',panel:'war-room',tab:'war-taiwan-macro',label:'台灣總體經濟'};
   if(key.indexOf('市集')>=0||key.indexOf('市場')>=0)return {intent:'open',panel:'war-room',tab:'war-sector-rotation',label:'產業輪動'};
@@ -18384,7 +18351,7 @@ function advisorAIDeepSeekSystemPrompt(){
     'dividend 欄位: symbol, amount。',
     'advisorDividendMemo 欄位: market, symbol, dividendPerShare。可省略 market；只輸入「ETF關鍵字 配息比率」也可回 advisorDividendMemo，例如「台灣5G 0.12」或「AIPI 0.234」。美股包含 XQQI, QQQI, AIPI, MLPI, PLTY, CHPY, GDXW, GLDW, AVGW；其餘為台股；施羅德收益成長A2 是美股但免先扣 30%。',
     'stockBuy/stockSell 欄位: symbol, shares, amount。',
-    'open 欄位: panel, tab, label。panel 只能 finance, foodhouse, market, domestic, council, stars。',
+    'open 欄位: panel, tab, label。panel 只能 finance, foodhouse, market, domestic, stars, war-room。',
     'member 欄位: type，只能 seven, family 或 hilife。',
     '帳戶/標的請盡量用使用者原文，例如 國泰s, 現金, 玉山, 連線, LINE, 將來, cube, AIPI；前端會再轉換成正式名稱。',
     '如果金額不明或意圖不明，回 {"intent":"unknown"}。'
@@ -18572,7 +18539,7 @@ function advisorAICommand(raw){
   if(compact.indexOf('提款')>=0&&amount>0)return {intent:'withdraw',amount:amount};
   if(compact.indexOf('年度財報')>=0)return {intent:'open',panel:'finance',tab:'domestic-yearly',label:'年度財報'};
   if(compact==='糧'||compact.indexOf('糧倉')>=0)return {intent:'open',panel:'finance',tab:'finance-accs',label:'國庫現況'};
-  if(compact.indexOf('部隊陣容')>=0||compact.indexOf('陣容')>=0)return {intent:'open',panel:'council',tab:'council-roster',label:'部隊陣容'};
+  if(compact.indexOf('部隊陣容')>=0||compact.indexOf('陣容')>=0)return {intent:'open',panel:'war-room',tab:'war-roster',label:'部隊陣容'};
   if(compact.indexOf('戰情總匯報')>=0||compact.indexOf('總匯報')>=0)return {intent:'open',panel:'war-room',tab:'war-battle-brief',label:'戰情總匯報'};
   if(compact.indexOf('台灣總體經濟')>=0||compact.indexOf('台灣總經')>=0)return {intent:'open',panel:'war-room',tab:'war-taiwan-macro',label:'台灣總體經濟'};
   if(compact.indexOf('維持率')>=0)return {intent:'maintenance'};
@@ -20563,7 +20530,6 @@ function mpmRender(records){
       zhuge:window.zhugeAnimations,
       chenqun:window.chenqunAnimations,
       liubei:window.liubeiAnimations,
-      simayi:window.simayiAnimations,
       manchong:window.manchongAnimations
     };
     var routes={
@@ -20571,7 +20537,6 @@ function mpmRender(records){
       zhuge:function(event){openWarRoomPanel(event);},
       chenqun:function(){openPanel('finance');},
       liubei:function(){openArkWall();},
-      simayi:function(){openPanel('council');},
       manchong:function(){openPanel('store');}
     };
     var npcs={};
@@ -20593,7 +20558,7 @@ function mpmRender(records){
       }
     });
     Promise.all(Object.values(npcs).map(function(npc){return npc.loaded;})).then(function(){
-      if(status)status.textContent='龐統、諸葛亮、陳群、劉備、司馬懿與滿寵已入駐';
+      if(status)status.textContent='龐統、諸葛亮、陳群、劉備與滿寵已入駐';
     }).catch(function(){
       if(status)status.textContent='部分角色影格載入失敗，請重新整理。';
     });
@@ -20601,7 +20566,7 @@ function mpmRender(records){
   }
   function start(){
     if(status)status.textContent='角色資料載入中…';
-    Promise.resolve(window.AnimatedCharacter?null:loadScript('./characterAnimations.js?v=20261029-war-counselors-redbox2'))
+    Promise.resolve(window.AnimatedCharacter?null:loadScript('./characterAnimations.js?v=20261029-war-room-map1'))
       .then(function(){return window.AnimatedCharacter?null:loadScript('./AnimatedCharacter.js?v=20261007-auto-loop-test1');})
       .then(initCharacters)
       .catch(function(){if(status)status.textContent='角色資料載入失敗，請重新整理。';});

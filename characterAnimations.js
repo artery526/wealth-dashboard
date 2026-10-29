@@ -2,10 +2,9 @@
 window.DEBUG_CHARACTERS = false;
 const characterPositions = {
   pangtong: { top: '11%', left: '37%', width: '9%' },
-  zhuge: { top: '11%', left: '58%', width: '9%' },
+  zhuge: { top: '54%', left: '16.5%', width: '9%' },
   chenqun: { top: '29%', left: '21%', width: '8.5%' },
   liubei: { top: '44%', left: '47%', width: '8.5%' },
-  simayi: { top: '51%', left: '12%', width: '10%' },
   manchong: { top: '56%', left: '75.5%', width: '10%' }
 };
 const characterMobilePositions = {
@@ -13,7 +12,6 @@ const characterMobilePositions = {
   zhuge: { top: '10%', left: '58%', width: '17.5%' },
   liubei: { top: '43%', left: '69%', width: '15%' },
   chenqun: { top: '42%', left: '14%', width: '17%' },
-  simayi: { top: '64%', left: '13%', width: '18%' },
   manchong: { top: '62%', left: '67%', width: '17%' }
 };
 const pangtongAnimations = {
@@ -181,41 +179,6 @@ const liubeiAnimations = {
     idle: [800, 1800]
   }
 };
-const simayiAnimations = {
-  name: '司馬懿',
-  frames: {
-    '01': './司馬懿/思考01.webp',
-    '02': './司馬懿/書寫計畫02.webp',
-    '03': './司馬懿/坐在桌子前分析情報03.webp',
-    '04': './司馬懿/坐在桌子前繪製地圖04.webp',
-    '05': './司馬懿/偵查出行05.webp',
-    '06': './司馬懿/打開地圖06.webp',
-    '07': './司馬懿/靜觀等待07.webp',
-    '08': './司馬懿/站立08.webp'
-  },
-  breathing: [
-    { frame: '01', duration: [800, 1600] },
-    { frame: '07', duration: [1200, 2400] },
-    { frame: '01', state: 'idle', duration: [800, 1800] }
-  ],
-  events: {
-    secondaryIdle: { interval: [7000, 14000], sequence: [
-      { frame: '02', state: 'planning', duration: [700, 1400] },
-      { frame: '03', state: 'analyzing', duration: [1200, 2400] },
-      { frame: '01', state: 'idle', duration: [800, 1800] }
-    ] },
-    specialAction: { interval: [18000, 36000], sequence: [
-      { frame: '06', state: 'map-open', duration: [600, 1000] },
-      { frame: '04', state: 'map-drawing', duration: [1600, 3000] },
-      { frame: '05', state: 'scouting', duration: [1200, 2200] },
-      { frame: '08', state: 'stand', duration: [900, 1600] },
-      { frame: '01', state: 'idle', duration: [1000, 1800] }
-    ] }
-  },
-  timing: {
-    idle: [800, 1800]
-  }
-};
 const manchongAssetVersion = '20260920-manchong-webp1';
 const manchongAsset = file => `./滿寵/${file}?v=${manchongAssetVersion}`;
 const manchongAnimations = {
@@ -265,5 +228,4 @@ window.pangtongAnimations = pangtongAnimations;
 window.zhugeAnimations = zhugeAnimations;
 window.chenqunAnimations = chenqunAnimations;
 window.liubeiAnimations = liubeiAnimations;
-window.simayiAnimations = simayiAnimations;
 window.manchongAnimations = manchongAnimations;

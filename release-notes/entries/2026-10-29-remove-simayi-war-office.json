@@ -1,0 +1,9 @@
+{
+  "id": "2026-10-29-remove-simayi-war-office",
+  "status": "in_progress",
+  "date": null,
+  "area": "指揮所／戰情室",
+  "summary": "移除主城軍機處入口與司馬懿人物並更新桌機地圖",
+  "details": "移除主城軍機處捷徑和司馬懿 NPC，更新桌機地圖並將諸葛亮移至戰情室招牌下方；保留戰情室及其部隊陣容功能。",
+  "platforms": ["website"]
+}
