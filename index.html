@@ -20588,7 +20588,7 @@ function mpmRender(records){
       }
     });
     Promise.all(Object.values(npcs).map(function(npc){return npc.loaded;})).then(function(){
-      if(status)status.textContent='龐統、諸葛亮、陳群、華佗、劉備、司馬懿與滿寵已入駐';
+      if(status)status.textContent='龐統、諸葛亮、陳群、劉備、司馬懿與滿寵已入駐';
     }).catch(function(){
       if(status)status.textContent='部分角色影格載入失敗，請重新整理。';
     });
@@ -20596,7 +20596,7 @@ function mpmRender(records){
   }
   function start(){
     if(status)status.textContent='角色資料載入中…';
-    Promise.resolve(window.AnimatedCharacter?null:loadScript('./characterAnimations.js?v=20261003-no-xunyu'))
+    Promise.resolve(window.AnimatedCharacter?null:loadScript('./characterAnimations.js?v=20261029-palace-positions1'))
       .then(function(){return window.AnimatedCharacter?null:loadScript('./AnimatedCharacter.js?v=20261007-auto-loop-test1');})
       .then(initCharacters)
       .catch(function(){if(status)status.textContent='角色資料載入失敗，請重新整理。';});

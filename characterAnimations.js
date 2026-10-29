@@ -1,19 +1,19 @@
 // All timing values are milliseconds. Original PNG files remain untouched.
 window.DEBUG_CHARACTERS = false;
 const characterPositions = {
-  pangtong: { top: '10%', left: '39%', width: '8.8%' },
-  zhuge: { top: '10%', left: '52%', width: '8.8%' },
-  chenqun: { top: '25.5%', left: '20%', width: '7.8%' },
-  liubei: { top: 'calc(30% + 40px)', left: '46%', width: '8%' },
-  simayi: { top: '47%', left: '16%', width: '11%' },
+  pangtong: { top: '30%', left: '42%', width: '8%' },
+  zhuge: { top: '30%', left: '51%', width: '8%' },
+  chenqun: { top: '29%', left: '21%', width: '8.5%' },
+  liubei: { top: '44%', left: '47%', width: '8.5%' },
+  simayi: { top: '61%', left: '17%', width: '11%' },
   manchong: { top: '47%', left: '76%', width: '10%' }
 };
 const characterMobilePositions = {
-  pangtong: { top: 'calc(27.5% - 24px)', left: '19.5%', width: '13%' },
-  zhuge: { top: 'calc(27.5% - 24px)', left: '68.5%', width: '13%' },
-  liubei: { top: 'calc(23.5% - 36px)', left: '43%', width: '14%' },
-  chenqun: { top: '43%', left: '16%', width: '16%' },
-  simayi: { top: '62%', left: '16%', width: '17%' },
+  pangtong: { top: '35%', left: '37%', width: '12.5%' },
+  zhuge: { top: '35%', left: '50.5%', width: '12.5%' },
+  liubei: { top: '43%', left: '69%', width: '15%' },
+  chenqun: { top: '42%', left: '14%', width: '17%' },
+  simayi: { top: '64%', left: '13%', width: '18%' },
   manchong: { top: '62%', left: '67%', width: '17%' }
 };
 const pangtongAnimations = {
