@@ -9,8 +9,8 @@ const characterPositions = {
   manchong: { top: '56%', left: '75.5%', width: '10%' }
 };
 const characterMobilePositions = {
-  pangtong: { top: '35%', left: '37%', width: '12.5%' },
-  zhuge: { top: '35%', left: '50.5%', width: '12.5%' },
+  pangtong: { top: '10%', left: '25%', width: '17.5%' },
+  zhuge: { top: '10%', left: '58%', width: '17.5%' },
   liubei: { top: '43%', left: '69%', width: '15%' },
   chenqun: { top: '42%', left: '14%', width: '17%' },
   simayi: { top: '64%', left: '13%', width: '18%' },
