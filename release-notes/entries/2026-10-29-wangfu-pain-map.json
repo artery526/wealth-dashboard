@@ -1,7 +1,7 @@
 {
   "id": "2026-10-29-wangfu-pain-map",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-10-29",
   "area": "王府",
   "summary": "新增王府疼痛地圖與 NAS 紀錄入口",
   "details": "疼痛地圖月曆依每日最高疼痛程度著色並顯示服藥顆數，下方列出當月紀錄；可在頁面新增紀錄，並統一保存在 NAS。王府標題旁新增表情按鈕進入疼痛地圖。",
