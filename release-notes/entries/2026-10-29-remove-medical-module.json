@@ -1,0 +1,9 @@
+{
+  "id": "2026-10-29-remove-medical-module",
+  "status": "in_progress",
+  "date": null,
+  "area": "醫館／王府介面",
+  "summary": "移除醫館人物與獨立介面並更換指揮所桌布",
+  "details": "移除網站醫館入口、華佗人物與獨立面板；以新版無醫館場景素材更新手機及桌機桌布，保留既有資料與王府整合介面。",
+  "platforms": ["website"]
+}

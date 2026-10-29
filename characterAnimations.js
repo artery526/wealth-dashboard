@@ -4,7 +4,6 @@ const characterPositions = {
   pangtong: { top: '10%', left: '39%', width: '8.8%' },
   zhuge: { top: '10%', left: '52%', width: '8.8%' },
   chenqun: { top: '25.5%', left: '20%', width: '7.8%' },
-  huatuo: { top: '27%', left: '69%', width: '8%' },
   liubei: { top: 'calc(30% + 40px)', left: '46%', width: '8%' },
   simayi: { top: '47%', left: '16%', width: '11%' },
   manchong: { top: '47%', left: '76%', width: '10%' }
@@ -14,7 +13,6 @@ const characterMobilePositions = {
   zhuge: { top: 'calc(27.5% - 24px)', left: '68.5%', width: '13%' },
   liubei: { top: 'calc(23.5% - 36px)', left: '43%', width: '14%' },
   chenqun: { top: '43%', left: '16%', width: '16%' },
-  huatuo: { top: '43%', left: '69%', width: '16%' },
   simayi: { top: '62%', left: '16%', width: '17%' },
   manchong: { top: '62%', left: '67%', width: '17%' }
 };
@@ -114,43 +112,6 @@ const chenqunAnimations = {
       { frame: '15', state: 'grain', duration: [700, 1100] },
       { frame: '16', state: 'grain', duration: [700, 1100] },
       { frame: '17', state: 'grain', duration: [700, 1100] },
-      { frame: '01', state: 'idle', duration: [800, 1800] }
-    ] }
-  },
-  timing: {
-    idle: [800, 1800]
-  }
-};
-const huatuoAnimations = {
-  name: '華佗',
-  frames: {
-    '01': './華佗/站立01.webp',
-    '02': './華佗/呼吸下沉02.webp',
-    '03': './華佗/鬍鬚微動03.webp',
-    '04': './華佗/眨眼04.webp',
-    '05': './華佗/呼吸上升05.webp',
-    '06': './華佗/站立左手背到後面06.webp',
-    '07': './華佗/拿起藥瓶07.webp',
-    '08': './華佗/打開藥瓶08.webp',
-    '09': './華佗/打開藥瓶喝一口09.webp',
-    '10': './華佗/放下藥瓶10.webp',
-    '11': './華佗/回復站立11.webp'
-  },
-  breathing: [
-    { frame: '02', duration: [250, 400] },
-    { frame: '05', duration: [250, 400] },
-    { frame: '11', duration: [500, 1000] },
-    { frame: '01', state: 'idle', duration: [800, 1800] }
-  ],
-  events: {
-    blink: { interval: [3000, 7000], sequence: [{ frame: '04', duration: [120, 180] }, { frame: '01', state: 'idle', duration: [800, 1800] }] },
-    secondaryIdle: { interval: [6000, 12000], sequence: [{ frame: '03', state: 'beard', duration: [250, 500] }, { frame: '01', state: 'idle', duration: [800, 1800] }] },
-    specialAction: { interval: [12000, 30000], sequence: [
-      { frame: '07', state: 'medicine', duration: [400, 650] },
-      { frame: '08', state: 'medicine', duration: [350, 600] },
-      { frame: '09', state: 'medicine-hold', duration: [2000, 5000] },
-      { frame: '10', state: 'medicine', duration: [450, 700] },
-      { frame: '11', state: 'medicine-return', duration: [500, 1000] },
       { frame: '01', state: 'idle', duration: [800, 1800] }
     ] }
   },
@@ -303,7 +264,6 @@ window.characterMobilePositions = characterMobilePositions;
 window.pangtongAnimations = pangtongAnimations;
 window.zhugeAnimations = zhugeAnimations;
 window.chenqunAnimations = chenqunAnimations;
-window.huatuoAnimations = huatuoAnimations;
 window.liubeiAnimations = liubeiAnimations;
 window.simayiAnimations = simayiAnimations;
 window.manchongAnimations = manchongAnimations;
