@@ -1,0 +1,9 @@
+{
+  "id": "2026-10-29-wangfu-pain-map",
+  "status": "in_progress",
+  "date": null,
+  "area": "王府",
+  "summary": "新增疼痛地圖月曆與當月紀錄列表",
+  "details": "新增唯讀疼痛地圖頁面，月曆依每日最高疼痛程度著色並顯示服藥顆數，下方列出當月疼痛部位與用藥紀錄。",
+  "platforms": ["website"]
+}
