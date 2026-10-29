@@ -1,9 +1,11 @@
 {
   "id": "2026-10-29-chenqun-finance-stairs",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-10-29",
   "area": "指揮所人物配置",
-  "summary": "將陳群移至財政招牌下方階梯、靠近財字圖案",
-  "details": "調整桌機版陳群位置，使人物站在財政建築前階梯並靠近招牌下方的財字圖案；手機座標維持不變。",
-  "platforms": ["website"]
+  "summary": "將陳群移至財政招牌下階梯、靠近財字圖案",
+  "details": "調整桌機版陳群至財政建築前的階梯，靠近招牌下方財字圖案，並更新角色腳本與 Service Worker 快取版本。已確認正式網站載入新位置，手機座標維持不變。",
+  "platforms": [
+    "website"
+  ]
 }
