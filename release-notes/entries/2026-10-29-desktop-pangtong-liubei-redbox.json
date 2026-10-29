@@ -1,9 +1,11 @@
 {
   "id": "2026-10-29-desktop-pangtong-liubei-redbox",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-10-29",
   "area": "指揮所人物配置",
-  "summary": "依新紅框調整桌機版龐統與劉備位置",
-  "details": "將龐統移至軍師府邸中央紅框，並將劉備移至王府右上方紅框；手機人物位置維持現況。",
-  "platforms": ["website"]
+  "summary": "依紅框調整桌機版龐統與劉備位置",
+  "details": "龐統已移至軍師府邸中央紅框，劉備已移至王府右上方紅框；手機人物配置維持不變。Pages 部署成功，並確認正式網站已提供更新後的桌機座標。",
+  "platforms": [
+    "website"
+  ]
 }
