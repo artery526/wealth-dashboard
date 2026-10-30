@@ -1,0 +1,9 @@
+{
+  "id": "2026-10-30-finance-compound-link-investment-tools",
+  "status": "in_progress",
+  "date": null,
+  "area": "財政",
+  "summary": "將財政複利工具入口改連獨立財商工具庫",
+  "details": "將財政標題列的複利試算按鈕改為開啟社群版投資工具網站。",
+  "platforms": ["website"]
+}

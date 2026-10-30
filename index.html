@@ -6768,10 +6768,12 @@ function setPanelHead(icon,en,zh){
     if(en==='Finance · Treasury'){
       var calculatorButton=document.createElement('a');
       calculatorButton.className='compound-interest-trigger panel-title-calculator';
-      calculatorButton.href='./compound-calculator.html';
+      calculatorButton.href='https://artery526.github.io/investment-tools/';
+      calculatorButton.target='_blank';
+      calculatorButton.rel='noopener noreferrer';
       calculatorButton.textContent='🧮';
-      calculatorButton.setAttribute('aria-label','開啟獨立複利試算頁');
-      calculatorButton.title='複利試算';
+      calculatorButton.setAttribute('aria-label','開啟財商工具庫');
+      calculatorButton.title='財商工具庫';
       title.insertAdjacentElement('afterend',calculatorButton);
     }
   }
