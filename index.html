@@ -17887,8 +17887,12 @@ function advisorAILoadDividendQuickOptions(force,silentError){
   if(!force&&dividendCenterCache&&(Date.now()-dividendCenterFetchedAt)<DIVIDEND_CACHE_TTL){
     return Promise.resolve(dividendCenterCache);
   }
-  if(advisorDividendQuickPromise)return advisorDividendQuickPromise;
-  advisorDividendQuickPromise=loadDividendCenter(false).then(function(data){
+  if(advisorDividendQuickPromise){
+    if(!force)return advisorDividendQuickPromise;
+    // 若寫入前已有讀取請求，先等它結束，再發出真正的新資料請求。
+    return advisorDividendQuickPromise.then(function(){return advisorAILoadDividendQuickOptions(true,silentError);});
+  }
+  advisorDividendQuickPromise=loadDividendCenter(!!force).then(function(data){
     advisorAIRefreshDividendQuickSelect(data);
     return data;
   }).catch(function(err){
@@ -17986,7 +17990,8 @@ async function advisorAIRecordQuickDividend(btn){
       shares:holding.shares||0,
       note:holding.displaySymbol||holding.symbol
     });
-    invalidateDividendCenter();
+    // 持股股數不會因新增配息備忘而改變；保留現有快取，讓主公可立即選下一個標的試算。
+    // 強制背景重載仍會更新待入帳配息資料。
     advisorDividendQuickSelection=null;
     advisorDividendQuickHolding=null;
     if(rateEl)rateEl.value='';

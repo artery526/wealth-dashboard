@@ -1,0 +1,9 @@
+{
+  "id": "2026-10-30-pangtong-dividend-estimate-refresh",
+  "status": "in_progress",
+  "date": null,
+  "area": "龐統配息記錄",
+  "summary": "修正記錄配息後的即時預估金額",
+  "details": "新增配息記錄後保留可用持股資料供下一筆即時試算，並在背景更新配息中心資料。",
+  "platforms": ["website"]
+}
