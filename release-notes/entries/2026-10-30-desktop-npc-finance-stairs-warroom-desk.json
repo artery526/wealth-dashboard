@@ -1,7 +1,7 @@
 {
   "id": "2026-10-30-desktop-npc-finance-stairs-warroom-desk",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-10-30",
   "area": "指揮所人物配置",
   "summary": "調整陳群與諸葛亮的桌機站位",
   "details": "將陳群移至財政區塊台階，並將諸葛亮移到戰情室內桌子前方；手機人物位置不變。",
