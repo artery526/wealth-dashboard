@@ -30,8 +30,8 @@ test('desktop command-center wallpaper matches the existing character districts'
 
   expect(positions).toEqual([
     { character: '龐統，開啟角色面板', top: '13%', left: '45.5%', width: '9%' },
-    { character: '諸葛亮，開啟角色面板', top: '63%', left: '15.5%', width: '9%' },
-    { character: '陳群，開啟角色面板', top: '25%', left: '15%', width: '8.5%' },
+    { character: '諸葛亮，開啟角色面板', top: '49%', left: '18.5%', width: '9%' },
+    { character: '陳群，開啟角色面板', top: '18%', left: '15%', width: '8.5%' },
     { character: '劉備，開啟角色面板', top: '26%', left: '74%', width: '8.5%' },
     { character: '滿寵，開啟角色面板', top: '56%', left: '75.5%', width: '10%' }
   ]);

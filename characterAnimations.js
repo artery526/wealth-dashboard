@@ -2,8 +2,8 @@
 window.DEBUG_CHARACTERS = false;
 const characterPositions = {
   pangtong: { top: '13%', left: '45.5%', width: '9%' },
-  zhuge: { top: '63%', left: '15.5%', width: '9%' },
-  chenqun: { top: '25%', left: '15%', width: '8.5%' },
+  zhuge: { top: '49%', left: '18.5%', width: '9%' },
+  chenqun: { top: '18%', left: '15%', width: '8.5%' },
   liubei: { top: '26%', left: '74%', width: '8.5%' },
   manchong: { top: '56%', left: '75.5%', width: '10%' }
 };
