@@ -1,0 +1,11 @@
+{
+  "id": "2026-10-31-wangfu-photo-lightbox-switch",
+  "status": "released",
+  "date": "2026-10-31",
+  "area": "王府時光長廊",
+  "summary": "改善時光長廊照片切換等待",
+  "details": "開啟照片先顯示縮圖，再於背景載入原圖；切換或關閉時會忽略過期的載入結果，避免上一張照片殘留或覆蓋新照片。已在 Chrome 驗證連續切換不同照片。",
+  "platforms": [
+    "website"
+  ]
+}
