@@ -1,0 +1,11 @@
+{
+  "id": "2026-11-03-link-pocket-auto-preview",
+  "status": "in_progress",
+  "date": null,
+  "area": "太倉連結便貼",
+  "summary": "連結便貼新增網址預覽與標籤快速收藏",
+  "details": "貼上文章、Threads、YouTube 或 Instagram 網址後，自動擷取可公開讀取的標題、摘要與縮圖，選擇標籤即可快速儲存。",
+  "platforms": [
+    "website"
+  ]
+}

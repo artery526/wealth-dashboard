@@ -19,7 +19,8 @@ test.beforeEach(async ({ page }) => {
       createdAt: '2026-11-03T00:00:00.000Z'
     }];
     window.linkPocketRequest = async (method, requestPath, body) => {
-      if (method === 'GET') return { entries: window.linkPocketFixture, tags: [{ tag: 'AI', count: 1 }, { tag: '研究', count: 1 }] };
+      if (method === 'GET' && requestPath.startsWith('/api/link-pocket/preview?')) return { sourceUrl: new URLSearchParams(requestPath.split('?')[1]).get('url'), title: '台南餐廳分享', summary: '巷弄裡的定食店，附上菜單與店家資訊。', thumbnailUrl: 'https://cdn.example.test/food.jpg', platform: 'instagram' };
+      if (method === 'GET') return { entries: window.linkPocketFixture, tags: [{ tag: 'AI', count: 1 }, { tag: '研究', count: 1 }, { tag: '美食', count: 1 }] };
       if (method === 'POST') {
         const entry = { ...body, id: 'link-test-2', platform: 'instagram', createdAt: '2026-11-03T00:00:00.000Z' };
         window.linkPocketFixture.unshift(entry);
@@ -48,7 +49,7 @@ test('Store link pocket loads NAS-backed records into searchable tag cards', asy
   await expect(page.locator('#link-pocket-tags')).toContainText('AI');
   await expect(page.getByRole('link', { name: 'AI 影片收藏' })).toHaveAttribute('target', '_blank');
 
-  await page.getByRole('button', { name: /研究/ }).click();
+  await page.locator('#link-pocket-tags').getByRole('button', { name: /研究/ }).click();
   await expect(page.locator('#link-pocket-count')).toHaveText('顯示 1 / 1 筆');
   await page.locator('#link-pocket-search').fill('不存在的內容');
   await expect(page.locator('#link-pocket-list')).toContainText('沒有符合標籤');
@@ -57,14 +58,16 @@ test('Store link pocket loads NAS-backed records into searchable tag cards', asy
 test('link pocket form saves tags and summary and remains usable on a phone viewport', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.locator('#link-pocket-url').fill('https://www.instagram.com/p/example/');
-  await page.locator('#link-pocket-title').fill('台南餐廳分享');
+  await expect(page.locator('#link-pocket-preview-copy')).toContainText('台南餐廳分享');
+  await page.getByRole('button', { name: '#美食' }).click();
   await page.locator('#link-pocket-tags-input').fill('#美食 台南');
-  await page.locator('#link-pocket-summary').fill('收藏這篇店家介紹。');
-  await page.getByRole('button', { name: '儲存便貼' }).click();
+  await page.getByRole('button', { name: '快速儲存' }).click();
 
+  await expect.poll(() => page.evaluate(() => window.linkPocketFixture[0].thumbnailUrl)).toBe('https://cdn.example.test/food.jpg');
   await expect(page.locator('#link-pocket-list .link-pocket-card')).toHaveCount(2);
   await expect(page.locator('#link-pocket-list')).toContainText('台南餐廳分享');
   await expect(page.locator('#link-pocket-list')).toContainText('#美食');
+  await expect(page.locator('#link-pocket-list img').first()).toHaveAttribute('src', 'https://cdn.example.test/food.jpg');
   await expect(page.locator('#link-pocket-status')).toHaveText('已儲存便貼');
   const layout = await page.locator('#link-pocket-list').evaluate((el) => ({ columns: getComputedStyle(el).gridTemplateColumns, scrollWidth: document.documentElement.scrollWidth, clientWidth: document.documentElement.clientWidth }));
   expect(layout.columns.trim().split(/\s+/)).toHaveLength(1);

@@ -1070,9 +1070,10 @@ body::after{
 .link-pocket-count{margin:0 0 9px;color:#8aa7b6;font:800 12px var(--sans)}.link-pocket-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
 .link-pocket-card{display:grid;align-content:start;gap:8px;min-width:0;padding:12px;border:1px solid rgba(65,157,194,.3);border-radius:9px;background:linear-gradient(160deg,rgba(8,35,51,.78),rgba(4,14,23,.78))}
 .link-pocket-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}.link-pocket-card-title{color:#dff7ff;font:900 16px/1.4 var(--font);overflow-wrap:anywhere}.link-pocket-platform{flex:0 0 auto;color:#fff3bf;font:900 10px var(--sans)}
+.link-pocket-preview{display:grid;grid-template-columns:112px minmax(0,1fr);gap:10px;align-items:center;padding:8px;border:1px solid rgba(65,157,194,.3);border-radius:8px;background:rgba(3,16,26,.62)}.link-pocket-preview[hidden]{display:none}.link-pocket-preview img{width:112px;height:72px;object-fit:cover;border-radius:6px;background:#061b2b}.link-pocket-preview-copy{min-width:0;color:#8aa7b6;font:800 12px/1.55 var(--sans)}.link-pocket-preview-copy strong{display:block;margin-bottom:3px;color:#bcefff;font-size:13px}.link-pocket-select-tags{display:flex;gap:6px;flex-wrap:wrap}.link-pocket-select-tags button{border:1px solid rgba(65,157,194,.38);border-radius:999px;background:rgba(6,27,43,.7);color:#a9d9e7;padding:5px 9px;font:800 11px var(--sans);cursor:pointer}.link-pocket-select-tags button[aria-pressed="true"]{border-color:#48c9a0;background:rgba(29,158,117,.18);color:#a8f1d6}.link-pocket-hint{color:#8aa7b6;font:700 11px/1.5 var(--sans)}
 .link-pocket-summary{color:#bcefff;font:700 13px/1.7 var(--sans);white-space:pre-wrap;overflow-wrap:anywhere}.link-pocket-url{display:block;max-width:100%;overflow:hidden;color:#6fc9e5;font:700 11px/1.5 var(--sans);text-overflow:ellipsis;white-space:nowrap}.link-pocket-card-tags{display:flex;gap:6px;flex-wrap:wrap}.link-pocket-card-tag{border:1px solid rgba(65,157,194,.32);border-radius:999px;background:rgba(6,27,43,.62);color:#9fd6e8;padding:3px 8px;font:800 10px var(--sans)}
 .link-pocket-card-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;color:#7899a8;font:700 10px var(--sans)}.link-pocket-card-actions{display:flex;gap:6px}.link-pocket-card-actions button{height:28px;border:1px solid rgba(65,157,194,.42);border-radius:7px;background:rgba(6,27,43,.76);color:#aeefff;font:900 10px var(--sans);padding:0 8px;cursor:pointer}.link-pocket-card-actions button.danger{border-color:rgba(216,90,48,.46);color:#ef9a77}
-@media(max-width:650px){.link-pocket-fields,.link-pocket-grid{grid-template-columns:1fr}.link-pocket-fields .full{grid-column:auto}.link-pocket-toolbar{grid-template-columns:1fr}.link-pocket-card{padding:10px}}
+@media(max-width:650px){.link-pocket-fields,.link-pocket-grid{grid-template-columns:1fr}.link-pocket-fields .full{grid-column:auto}.link-pocket-toolbar{grid-template-columns:1fr}.link-pocket-card{padding:10px}.link-pocket-preview{grid-template-columns:84px minmax(0,1fr)}.link-pocket-preview img{width:84px;height:64px}}
 @media(max-width:650px){.store-grid{grid-template-columns:1fr}.store-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.store-form-group.full{grid-column:1/-1}.store-toolbar,.store-date-filters{grid-template-columns:1fr}.store-add-button{width:100%}.store-count-row{flex-wrap:wrap}.store-search-inline{order:3;flex:1 1 100%;width:100%}.store-item-card{padding:10px}.store-item-card-head{align-items:center;padding-right:84px}.store-item-heading{gap:6px}.store-item-name{min-width:0;flex:1;font-size:16px}.store-item-date-button{top:10px;right:43px;font-size:11px}.store-item-menu{top:8px;right:8px}.store-header-date-button{font-size:11px;padding:4px 5px}}
 .market-lord{
   position:absolute;
@@ -6983,15 +6984,17 @@ function renderStorePanel(initialTab){
       <div id="chronicle-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:72%"></div></div>
     </div>
     <div class="pane" id="pane-store-link-pocket">
-      <div class="link-pocket-intro"><div class="link-pocket-title">連結便貼</div><div class="link-pocket-sub">貼上文章、YouTube 或 Instagram 連結，整理短文與標籤；內容儲存在 NAS。</div></div>
+      <div class="link-pocket-intro"><div class="link-pocket-title">連結便貼</div><div class="link-pocket-sub">貼上文章、Threads、YouTube 或 Instagram 連結，讀取預覽後選標籤即可快速收藏。</div></div>
       <form class="link-pocket-form" id="link-pocket-form" onsubmit="saveLinkPocketEntry(event)">
         <div class="link-pocket-fields">
-          <input class="link-pocket-input full" id="link-pocket-url" type="url" maxlength="2048" placeholder="貼上文章或社群連結（https://…）" aria-label="收藏連結" required>
-          <input class="link-pocket-input" id="link-pocket-title" type="text" maxlength="200" placeholder="標題" aria-label="標題" required>
+          <input class="link-pocket-input full" id="link-pocket-url" type="url" maxlength="2048" placeholder="貼上文章或社群連結（https://…）" aria-label="收藏連結" required oninput="scheduleLinkPocketPreview()" onpaste="setTimeout(scheduleLinkPocketPreview,0)" onblur="loadLinkPocketPreview()">
+          <div class="link-pocket-preview full" id="link-pocket-preview" hidden><img id="link-pocket-preview-image" alt="連結縮圖" hidden><div class="link-pocket-preview-copy" id="link-pocket-preview-copy" aria-live="polite"></div></div>
+          <input class="link-pocket-input" id="link-pocket-title" type="text" maxlength="200" placeholder="讀取到標題後可自行修改" aria-label="標題">
           <input class="link-pocket-input" id="link-pocket-tags-input" type="text" maxlength="400" placeholder="標籤：AI 美食（可用空格或逗號分隔）" aria-label="標籤">
-          <textarea class="link-pocket-textarea full" id="link-pocket-summary" maxlength="2000" placeholder="簡短內文（可留空）" aria-label="簡短內文"></textarea>
+          <div class="link-pocket-select-tags full" id="link-pocket-select-tags" aria-label="快速選擇標籤"></div>
+          <textarea class="link-pocket-textarea full" id="link-pocket-summary" maxlength="2000" placeholder="自動擷取簡短內文，可自行修改" aria-label="簡短內文"></textarea>
         </div>
-        <div class="link-pocket-actions"><button class="store-add-button" id="link-pocket-save" type="submit">儲存便貼</button><button class="store-secondary-button" id="link-pocket-cancel" type="button" onclick="cancelLinkPocketEdit()" hidden>取消編輯</button><div class="link-pocket-status" id="link-pocket-status" role="status" aria-live="polite"></div></div>
+        <div class="link-pocket-actions"><button class="store-add-button" id="link-pocket-save" type="submit">快速儲存</button><button class="store-secondary-button" id="link-pocket-cancel" type="button" onclick="cancelLinkPocketEdit()" hidden>取消編輯</button><div class="link-pocket-status" id="link-pocket-status" role="status" aria-live="polite"></div></div>
       </form>
       <div class="link-pocket-toolbar"><input class="link-pocket-search" id="link-pocket-search" type="search" placeholder="搜尋標題、內文或標籤" aria-label="搜尋連結便貼" oninput="storeLinkPocketSearch=this.value;renderLinkPocket()"><div class="link-pocket-count" id="link-pocket-count"></div></div>
       <div class="link-pocket-tags" id="link-pocket-tags" aria-label="標籤總覽"></div>
@@ -7305,12 +7308,17 @@ var storeLinkPocketLoaded=false;
 var storeLinkPocketLoading=null;
 var storeLinkPocketEditingId='';
 var storeLinkPocketEventsBound=false;
+var storeLinkPocketPreviewTimer=null;
+var storeLinkPocketPreviewSequence=0;
+var storeLinkPocketPreviewData=null;
 
 function bindLinkPocketActions(){
   if(storeLinkPocketEventsBound)return;
   var pane=document.getElementById('pane-store-link-pocket');
   if(!pane)return;
   pane.addEventListener('click',function(event){
+    var pickTag=event.target.closest('[data-link-pocket-pick-tag]');
+    if(pickTag){var input=document.getElementById('link-pocket-tags-input');var tags=linkPocketParsedTags(input.value);var picked=pickTag.dataset.linkPocketPickTag;var idx=tags.indexOf(picked);if(idx>=0)tags.splice(idx,1);else tags.push(picked);input.value=tags.map(function(tag){return '#'+tag;}).join(' ');renderLinkPocketQuickTags();return;}
     var tagButton=event.target.closest('[data-link-pocket-tag]');
     if(tagButton){setLinkPocketTag(tagButton.dataset.linkPocketTag);return;}
     var editButton=event.target.closest('[data-link-pocket-edit]');
@@ -7318,6 +7326,8 @@ function bindLinkPocketActions(){
     var deleteButton=event.target.closest('[data-link-pocket-delete]');
     if(deleteButton)deleteLinkPocketEntry(deleteButton.dataset.linkPocketDelete);
   });
+  var tagsInput=document.getElementById('link-pocket-tags-input');if(tagsInput)tagsInput.addEventListener('input',renderLinkPocketQuickTags);
+  ['link-pocket-title','link-pocket-summary'].forEach(function(id){var field=document.getElementById(id);if(field)field.addEventListener('input',function(){field.dataset.userEdited='true';});});
   storeLinkPocketEventsBound=true;
 }
 
@@ -7369,6 +7379,7 @@ function renderLinkPocket(){
     return '<button class="link-pocket-tag '+(storeLinkPocketTag===tag?'active':'')+'" type="button" data-link-pocket-tag="'+esc(tag)+'">'+esc(tag)+'<span class="link-pocket-tag-count">'+count+'</span></button>';
   }).join('');
   tagHost.innerHTML=tagButtons;
+  renderLinkPocketQuickTags();
   var query=String(storeLinkPocketSearch||'').trim().toLocaleLowerCase();
   var entries=storeLinkPocketEntries.filter(function(entry){
     var tags=Array.isArray(entry.tags)?entry.tags:[];
@@ -7381,9 +7392,10 @@ function renderLinkPocket(){
   list.innerHTML=entries.map(function(entry){
     var tags=(Array.isArray(entry.tags)?entry.tags:[]).map(function(tag){return '<span class="link-pocket-card-tag">#'+esc(tag)+'</span>';}).join('');
     var date=String(entry.createdAt||'').slice(0,10);
-    var platform=entry.platform==='youtube'?'YouTube':entry.platform==='instagram'?'Instagram':'網頁';
+    var platform=entry.platform==='youtube'?'YouTube':entry.platform==='instagram'?'Instagram':entry.platform==='threads'?'Threads':'網頁';
     var id=esc(entry.id||'');
     return '<article class="link-pocket-card">'
+      +(entry.thumbnailUrl?'<a href="'+esc(entry.url||'')+'" target="_blank" rel="noopener noreferrer"><img src="'+esc(entry.thumbnailUrl)+'" alt="連結縮圖" loading="lazy" referrerpolicy="no-referrer" style="display:block;width:100%;max-height:210px;object-fit:cover;border-radius:7px" onerror="this.hidden=true"></a>':'')
       +'<div class="link-pocket-card-head"><a class="link-pocket-card-title" href="'+esc(entry.url||'')+'" target="_blank" rel="noopener noreferrer">'+esc(entry.title||'未命名連結')+'</a><span class="link-pocket-platform">'+platform+'</span></div>'
       +(entry.summary?'<div class="link-pocket-summary">'+esc(entry.summary)+'</div>':'')
       +'<a class="link-pocket-url" href="'+esc(entry.url||'')+'" target="_blank" rel="noopener noreferrer" title="'+esc(entry.url||'')+'">'+esc(entry.url||'')+'</a>'
@@ -7403,6 +7415,51 @@ function linkPocketParsedTags(value){
   }).slice(0,20);
 }
 
+function renderLinkPocketQuickTags(){
+  var host=document.getElementById('link-pocket-select-tags');
+  if(!host)return;
+  var selected=linkPocketParsedTags(document.getElementById('link-pocket-tags-input').value);
+  host.innerHTML=storeLinkPocketTags.map(function(item){
+    var tag=typeof item==='string'?item:item.tag;
+    return '<button type="button" aria-pressed="'+(selected.indexOf(tag)>=0?'true':'false')+'" data-link-pocket-pick-tag="'+esc(tag)+'">#'+esc(tag)+'</button>';
+  }).join('');
+}
+
+function scheduleLinkPocketPreview(){
+  if(storeLinkPocketPreviewTimer)clearTimeout(storeLinkPocketPreviewTimer);
+  storeLinkPocketPreviewTimer=setTimeout(loadLinkPocketPreview,550);
+}
+
+async function loadLinkPocketPreview(){
+  var url=String((document.getElementById('link-pocket-url')||{}).value||'').trim();
+  if(!/^https?:\/\//i.test(url))return;
+  if(storeLinkPocketPreviewData&&storeLinkPocketPreviewData.sourceUrl===url)return;
+  var sequence=++storeLinkPocketPreviewSequence;
+  var box=document.getElementById('link-pocket-preview');
+  var copy=document.getElementById('link-pocket-preview-copy');
+  var image=document.getElementById('link-pocket-preview-image');
+  if(box)box.hidden=false;
+  if(copy)copy.textContent='正在讀取標題與縮圖…';
+  if(image){image.hidden=true;image.removeAttribute('src');}
+  try{
+    var data=await linkPocketRequest('GET','/api/link-pocket/preview?url='+encodeURIComponent(url));
+    if(sequence!==storeLinkPocketPreviewSequence||url!==String(document.getElementById('link-pocket-url').value||'').trim())return;
+    storeLinkPocketPreviewData=data;
+    var title=document.getElementById('link-pocket-title');
+    var summary=document.getElementById('link-pocket-summary');
+    if(title&&!title.dataset.userEdited)title.value=data.title||'';
+    if(summary&&!summary.dataset.userEdited)summary.value=data.summary||'';
+    if(copy){copy.textContent='';var heading=document.createElement('strong');heading.textContent=data.title||'已取得連結資訊';copy.appendChild(heading);var excerpt=document.createElement('span');excerpt.textContent=data.summary||'來源沒有提供簡短內文';copy.appendChild(excerpt);}
+    if(image&&data.thumbnailUrl){image.src=data.thumbnailUrl;image.hidden=false;}
+    var status=document.getElementById('link-pocket-status');
+    if(status)status.textContent=data.title?'已取得預覽，選擇標籤即可快速儲存':'可手動補標題，選標籤後儲存';
+  }catch(error){
+    if(sequence!==storeLinkPocketPreviewSequence)return;
+    storeLinkPocketPreviewData=null;
+    if(copy)copy.textContent='這個網址暫時無法自動讀取；仍可手動填標題與內文後儲存。';
+  }
+}
+
 function resetLinkPocketForm(){
   var form=document.getElementById('link-pocket-form');
   if(form)form.reset();
@@ -7411,6 +7468,11 @@ function resetLinkPocketForm(){
   var cancel=document.getElementById('link-pocket-cancel');
   if(save)save.textContent='儲存便貼';
   if(cancel)cancel.hidden=true;
+  storeLinkPocketPreviewData=null;
+  var preview=document.getElementById('link-pocket-preview');if(preview)preview.hidden=true;
+  var title=document.getElementById('link-pocket-title');var summary=document.getElementById('link-pocket-summary');
+  if(title)delete title.dataset.userEdited;if(summary)delete summary.dataset.userEdited;
+  renderLinkPocketQuickTags();
 }
 
 function cancelLinkPocketEdit(){
@@ -7427,6 +7489,7 @@ function editLinkPocketEntry(id){
   document.getElementById('link-pocket-title').value=entry.title||'';
   document.getElementById('link-pocket-tags-input').value=(entry.tags||[]).map(function(tag){return '#'+tag;}).join(' ');
   document.getElementById('link-pocket-summary').value=entry.summary||'';
+  storeLinkPocketPreviewData=entry.thumbnailUrl?{sourceUrl:entry.url,thumbnailUrl:entry.thumbnailUrl,title:entry.title,summary:entry.summary}:null;
   document.getElementById('link-pocket-save').textContent='更新便貼';
   document.getElementById('link-pocket-cancel').hidden=false;
   document.getElementById('link-pocket-url').focus();
@@ -7440,14 +7503,16 @@ async function saveLinkPocketEntry(event){
   var title=String(document.getElementById('link-pocket-title').value||'').trim();
   var tags=linkPocketParsedTags(document.getElementById('link-pocket-tags-input').value);
   var summary=String(document.getElementById('link-pocket-summary').value||'').trim();
+  var thumbnailUrl=storeLinkPocketPreviewData&&storeLinkPocketPreviewData.sourceUrl===url?storeLinkPocketPreviewData.thumbnailUrl||'':'';
   if(!/^https?:\/\//i.test(url))url='https://'+url;
-  if(!title){if(status)status.textContent='請填寫標題';return;}
+  if(!title){try{title=new URL(url).hostname.replace(/^www\./,'');}catch(_){title='未命名連結';}}
+  if(!tags.length){if(status)status.textContent='請選擇或輸入至少一個標籤';return;}
   if(button)button.disabled=true;
   if(status)status.textContent='正在儲存到 NAS…';
   try{
     var editing=storeLinkPocketEditingId;
     var path='/api/admin/link-pocket'+(editing?'/'+encodeURIComponent(editing):'');
-    var data=await linkPocketRequest(editing?'PUT':'POST',path,{url:url,title:title,summary:summary,tags:tags});
+    var data=await linkPocketRequest(editing?'PUT':'POST',path,{url:url,title:title,summary:summary,tags:tags,thumbnailUrl:thumbnailUrl});
     var saved=data.entry;
     var existingIndex=storeLinkPocketEntries.findIndex(function(entry){return entry.id===saved.id;});
     if(existingIndex>=0)storeLinkPocketEntries[existingIndex]=saved;else storeLinkPocketEntries.unshift(saved);
@@ -20733,7 +20798,7 @@ function mpmRender(records){
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('./sw.js?v=20261103-link-pocket1', {updateViaCache:'none'}).then(function (registration) {
+    navigator.serviceWorker.register('./sw.js?v=20261103-link-pocket-preview1', {updateViaCache:'none'}).then(function (registration) {
       return registration.update();
     }).catch(function (error) {
       console.warn('Empire Service Worker registration failed', error);
