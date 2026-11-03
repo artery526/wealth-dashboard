@@ -1,10 +1,10 @@
 {
   "id": "2026-11-03-link-pocket-default-first",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-11-03",
   "area": "太倉連結便貼",
-  "summary": "將連結便貼移至太倉第一個分頁並設為預設畫面",
-  "details": "調整太倉分頁順序，連結便貼列在第一位；未指定分頁進入太倉時預設開啟連結便貼。",
+  "summary": "11/03　連結便貼成為太倉第一個分頁與預設畫面",
+  "details": "太倉分頁順序改為連結便貼、事件編年、物品總覽、命盤總覽；未指定分頁進入太倉時會直接開啟連結便貼。",
   "platforms": [
     "website"
   ]
