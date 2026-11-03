@@ -1,0 +1,11 @@
+{
+  "id": "2026-11-03-link-pocket-default-first",
+  "status": "in_progress",
+  "date": null,
+  "area": "太倉連結便貼",
+  "summary": "將連結便貼移至太倉第一個分頁並設為預設畫面",
+  "details": "調整太倉分頁順序，連結便貼列在第一位；未指定分頁進入太倉時預設開啟連結便貼。",
+  "platforms": [
+    "website"
+  ]
+}

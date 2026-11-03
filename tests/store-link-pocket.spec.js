@@ -55,6 +55,13 @@ test('Store link pocket loads NAS-backed records into searchable tag cards', asy
   await expect(page.locator('#link-pocket-list')).toContainText('沒有符合標籤');
 });
 
+test('link pocket is the first Store tab and the default Store page', async ({ page }) => {
+  await page.evaluate(() => openPanel('store'));
+  await expect(page.locator('#pane-store-link-pocket')).toHaveClass(/active/);
+  await expect(page.locator('#panel-title-menu .panel-menu-item').first()).toContainText('連結便貼');
+  await expect(page.locator('#panel-title-menu .panel-menu-item')).toHaveText(['連結便貼', '事件編年', '物品總覽', '命盤總覽']);
+});
+
 test('link pocket form saves tags and summary and remains usable on a phone viewport', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.locator('#link-pocket-url').fill('https://www.instagram.com/p/example/');

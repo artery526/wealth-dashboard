@@ -6969,7 +6969,7 @@ function renderStorePanel(initialTab){
   setPanelHead('庫','Store · Warehouse','太倉');
   var panelExtra=document.getElementById('p-extra');
   if(panelExtra)panelExtra.innerHTML='<button class="store-header-date-button" id="store-header-date-button" type="button" title="修改記錄日期" onclick="chooseStoreFormDate(event)">'+formatStoreShortDate(getStoreTodayInputValue())+'</button><input class="store-header-date-input" id="store-record-date" type="date" value="'+getStoreTodayInputValue()+'" required onchange="syncStoreHeaderDate()">';
-  setPanelMenuTabs([{key:'store-chronicle',label:'事件編年'},{key:'store-link-pocket',label:'連結便貼'},{key:'store-list',label:'物品總覽'},{key:'stars-home',label:'命盤總覽'}]);
+  setPanelMenuTabs([{key:'store-link-pocket',label:'連結便貼'},{key:'store-chronicle',label:'事件編年'},{key:'store-list',label:'物品總覽'},{key:'stars-home',label:'命盤總覽'}]);
   document.getElementById('p-body').innerHTML=`
     <div class="pane" id="pane-store-list">
       <div class="store-panel-intro"><div class="store-panel-title">Store｜太倉物品</div><div class="store-panel-sub">搜尋物品名稱、所在地點或編號，快速找到收納位置。</div></div>
@@ -7010,7 +7010,7 @@ function renderStorePanel(initialTab){
     renderStoreDateFilters();
     renderStoreList();
   }
-  var initialStoreTab=initialTab==='store-add'?'store-list':(initialTab||'store-chronicle');
+  var initialStoreTab=initialTab==='store-add'?'store-list':(initialTab||'store-link-pocket');
   if(API_URL){
     if(initialStoreTab==='store-list')loadStoreRecords(false);
   }else{
