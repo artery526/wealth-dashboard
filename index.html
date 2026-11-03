@@ -1058,6 +1058,21 @@ body::after{
 .store-header-date-button{border:1px solid rgba(232,192,80,.55);border-radius:7px;background:rgba(232,192,80,.1);color:#fff3bf;font:900 12px var(--sans);padding:5px 7px;cursor:pointer;white-space:nowrap}
 .store-header-date-button:hover{border-color:#fff3bf;background:rgba(232,192,80,.2)}
 .store-header-date-input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.link-pocket-intro{display:grid;gap:5px;margin-bottom:12px;padding:12px 13px;border:1px solid rgba(78,217,255,.22);border-radius:9px;background:linear-gradient(145deg,rgba(8,36,52,.72),rgba(5,14,23,.7))}
+.link-pocket-title{font:900 20px var(--font);color:#bcefff;letter-spacing:1px}.link-pocket-sub{font:800 12px/1.65 var(--sans);color:#8aa7b6}
+.link-pocket-form{display:grid;gap:9px;margin:0 0 12px;padding:12px;border:1px solid rgba(65,157,194,.28);border-radius:9px;background:rgba(6,27,43,.58)}
+.link-pocket-fields{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:9px}.link-pocket-fields .full{grid-column:1/-1}
+.link-pocket-input,.link-pocket-textarea{width:100%;box-sizing:border-box;border:1px solid rgba(65,157,194,.52);border-radius:8px;background:#061b2b;color:#dff7ff;padding:9px 10px;font:800 13px/1.5 var(--sans);outline:none}
+.link-pocket-input{height:39px}.link-pocket-textarea{min-height:72px;resize:vertical}.link-pocket-input:focus,.link-pocket-textarea:focus{border-color:#71d8f7;box-shadow:0 0 0 2px rgba(53,184,228,.14)}
+.link-pocket-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.link-pocket-status{flex:1;min-width:140px;color:#a8f1d6;font:800 12px/1.5 var(--sans)}
+.link-pocket-toolbar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;align-items:center;margin:0 0 9px}.link-pocket-search{width:100%;height:38px;box-sizing:border-box;border:1px solid rgba(65,157,194,.52);border-radius:8px;background:#061b2b;color:#dff7ff;padding:0 11px;font:800 13px var(--sans);outline:none}
+.link-pocket-tags{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:11px}.link-pocket-tag{display:inline-flex;align-items:center;gap:6px;min-height:32px;border:1px solid rgba(29,158,117,.34);border-radius:999px;background:rgba(29,158,117,.09);color:#a8f1d6;padding:5px 10px;font:900 12px var(--sans);cursor:pointer}.link-pocket-tag.active{border-color:rgba(78,217,255,.64);background:rgba(78,217,255,.13);color:#d9fbff}.link-pocket-tag-count{opacity:.72;font-size:10px}
+.link-pocket-count{margin:0 0 9px;color:#8aa7b6;font:800 12px var(--sans)}.link-pocket-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.link-pocket-card{display:grid;align-content:start;gap:8px;min-width:0;padding:12px;border:1px solid rgba(65,157,194,.3);border-radius:9px;background:linear-gradient(160deg,rgba(8,35,51,.78),rgba(4,14,23,.78))}
+.link-pocket-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}.link-pocket-card-title{color:#dff7ff;font:900 16px/1.4 var(--font);overflow-wrap:anywhere}.link-pocket-platform{flex:0 0 auto;color:#fff3bf;font:900 10px var(--sans)}
+.link-pocket-summary{color:#bcefff;font:700 13px/1.7 var(--sans);white-space:pre-wrap;overflow-wrap:anywhere}.link-pocket-url{display:block;max-width:100%;overflow:hidden;color:#6fc9e5;font:700 11px/1.5 var(--sans);text-overflow:ellipsis;white-space:nowrap}.link-pocket-card-tags{display:flex;gap:6px;flex-wrap:wrap}.link-pocket-card-tag{border:1px solid rgba(65,157,194,.32);border-radius:999px;background:rgba(6,27,43,.62);color:#9fd6e8;padding:3px 8px;font:800 10px var(--sans)}
+.link-pocket-card-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;color:#7899a8;font:700 10px var(--sans)}.link-pocket-card-actions{display:flex;gap:6px}.link-pocket-card-actions button{height:28px;border:1px solid rgba(65,157,194,.42);border-radius:7px;background:rgba(6,27,43,.76);color:#aeefff;font:900 10px var(--sans);padding:0 8px;cursor:pointer}.link-pocket-card-actions button.danger{border-color:rgba(216,90,48,.46);color:#ef9a77}
+@media(max-width:650px){.link-pocket-fields,.link-pocket-grid{grid-template-columns:1fr}.link-pocket-fields .full{grid-column:auto}.link-pocket-toolbar{grid-template-columns:1fr}.link-pocket-card{padding:10px}}
 @media(max-width:650px){.store-grid{grid-template-columns:1fr}.store-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.store-form-group.full{grid-column:1/-1}.store-toolbar,.store-date-filters{grid-template-columns:1fr}.store-add-button{width:100%}.store-count-row{flex-wrap:wrap}.store-search-inline{order:3;flex:1 1 100%;width:100%}.store-item-card{padding:10px}.store-item-card-head{align-items:center;padding-right:84px}.store-item-heading{gap:6px}.store-item-name{min-width:0;flex:1;font-size:16px}.store-item-date-button{top:10px;right:43px;font-size:11px}.store-item-menu{top:8px;right:8px}.store-header-date-button{font-size:11px;padding:4px 5px}}
 .market-lord{
   position:absolute;
@@ -6927,6 +6942,7 @@ function switchTab(btn,key){
   else if(key==='external-intelligence')loadExternalIntelligence();
   else if(key==='council-task')resetRetiredTaskStatus();
   else if(key==='store-chronicle')loadEventChronicle();
+  else if(key==='store-link-pocket')loadLinkPocket();
   else if(key==='stars-home')loadZiweiCharts();
   else if(key==='store-list')loadStoreRecords();
 }
@@ -6952,7 +6968,7 @@ function renderStorePanel(initialTab){
   setPanelHead('庫','Store · Warehouse','太倉');
   var panelExtra=document.getElementById('p-extra');
   if(panelExtra)panelExtra.innerHTML='<button class="store-header-date-button" id="store-header-date-button" type="button" title="修改記錄日期" onclick="chooseStoreFormDate(event)">'+formatStoreShortDate(getStoreTodayInputValue())+'</button><input class="store-header-date-input" id="store-record-date" type="date" value="'+getStoreTodayInputValue()+'" required onchange="syncStoreHeaderDate()">';
-  setPanelMenuTabs([{key:'store-chronicle',label:'事件編年'},{key:'store-list',label:'物品總覽'},{key:'stars-home',label:'命盤總覽'}]);
+  setPanelMenuTabs([{key:'store-chronicle',label:'事件編年'},{key:'store-link-pocket',label:'連結便貼'},{key:'store-list',label:'物品總覽'},{key:'stars-home',label:'命盤總覽'}]);
   document.getElementById('p-body').innerHTML=`
     <div class="pane" id="pane-store-list">
       <div class="store-panel-intro"><div class="store-panel-title">Store｜太倉物品</div><div class="store-panel-sub">搜尋物品名稱、所在地點或編號，快速找到收納位置。</div></div>
@@ -6965,6 +6981,21 @@ function renderStorePanel(initialTab){
     <div class="pane" id="pane-store-chronicle">
       <div id="chronicle-freshness">${dataFreshnessHtml()}</div>
       <div id="chronicle-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:72%"></div></div>
+    </div>
+    <div class="pane" id="pane-store-link-pocket">
+      <div class="link-pocket-intro"><div class="link-pocket-title">連結便貼</div><div class="link-pocket-sub">貼上文章、YouTube 或 Instagram 連結，整理短文與標籤；內容儲存在 NAS。</div></div>
+      <form class="link-pocket-form" id="link-pocket-form" onsubmit="saveLinkPocketEntry(event)">
+        <div class="link-pocket-fields">
+          <input class="link-pocket-input full" id="link-pocket-url" type="url" maxlength="2048" placeholder="貼上文章或社群連結（https://…）" aria-label="收藏連結" required>
+          <input class="link-pocket-input" id="link-pocket-title" type="text" maxlength="200" placeholder="標題" aria-label="標題" required>
+          <input class="link-pocket-input" id="link-pocket-tags-input" type="text" maxlength="400" placeholder="標籤：AI 美食（可用空格或逗號分隔）" aria-label="標籤">
+          <textarea class="link-pocket-textarea full" id="link-pocket-summary" maxlength="2000" placeholder="簡短內文（可留空）" aria-label="簡短內文"></textarea>
+        </div>
+        <div class="link-pocket-actions"><button class="store-add-button" id="link-pocket-save" type="submit">儲存便貼</button><button class="store-secondary-button" id="link-pocket-cancel" type="button" onclick="cancelLinkPocketEdit()" hidden>取消編輯</button><div class="link-pocket-status" id="link-pocket-status" role="status" aria-live="polite"></div></div>
+      </form>
+      <div class="link-pocket-toolbar"><input class="link-pocket-search" id="link-pocket-search" type="search" placeholder="搜尋標題、內文或標籤" aria-label="搜尋連結便貼" oninput="storeLinkPocketSearch=this.value;renderLinkPocket()"><div class="link-pocket-count" id="link-pocket-count"></div></div>
+      <div class="link-pocket-tags" id="link-pocket-tags" aria-label="標籤總覽"></div>
+      <div class="link-pocket-grid" id="link-pocket-list"><div class="store-empty">連結便貼載入中…</div></div>
     </div>
     <div class="pane" id="pane-stars-home">
       <div id="stars-freshness">${dataFreshnessHtml()}</div>
@@ -7264,6 +7295,193 @@ function loadStoreRecords(force){
     throw e;
   }).finally(function(){storeRecordsPromise=null;});
   return storeRecordsPromise;
+}
+
+var storeLinkPocketEntries=[];
+var storeLinkPocketTags=[];
+var storeLinkPocketTag='全部';
+var storeLinkPocketSearch='';
+var storeLinkPocketLoaded=false;
+var storeLinkPocketLoading=null;
+var storeLinkPocketEditingId='';
+var storeLinkPocketEventsBound=false;
+
+function bindLinkPocketActions(){
+  if(storeLinkPocketEventsBound)return;
+  var pane=document.getElementById('pane-store-link-pocket');
+  if(!pane)return;
+  pane.addEventListener('click',function(event){
+    var tagButton=event.target.closest('[data-link-pocket-tag]');
+    if(tagButton){setLinkPocketTag(tagButton.dataset.linkPocketTag);return;}
+    var editButton=event.target.closest('[data-link-pocket-edit]');
+    if(editButton){editLinkPocketEntry(editButton.dataset.linkPocketEdit);return;}
+    var deleteButton=event.target.closest('[data-link-pocket-delete]');
+    if(deleteButton)deleteLinkPocketEntry(deleteButton.dataset.linkPocketDelete);
+  });
+  storeLinkPocketEventsBound=true;
+}
+
+async function linkPocketRequest(method,path,payload){
+  var token=arkWallReadToken();
+  if(!token)throw new Error('請先設定太倉／王府 NAS 通行令。');
+  var headers=new Headers({'Authorization':'Bearer '+token});
+  var options={method:method,headers:headers,cache:'no-store'};
+  if(payload!==undefined){headers.set('Content-Type','application/json');options.body=JSON.stringify(payload);}
+  var response=await fetchWithTimeout(ARK_WALL_API_BASE+path,options,12000);
+  var result=await response.json().catch(function(){return {};});
+  if(!response.ok)throw new Error(result.error||('連結便貼讀取失敗 '+response.status));
+  return result;
+}
+
+function loadLinkPocket(force){
+  if(storeLinkPocketLoading)return storeLinkPocketLoading;
+  if(storeLinkPocketLoaded&&!force){renderLinkPocket();return Promise.resolve(storeLinkPocketEntries);}
+  var list=document.getElementById('link-pocket-list');
+  if(list)list.innerHTML='<div class="store-empty">連結便貼載入中…</div>';
+  storeLinkPocketLoading=linkPocketRequest('GET','/api/link-pocket').then(function(data){
+    storeLinkPocketEntries=Array.isArray(data.entries)?data.entries:[];
+    storeLinkPocketTags=Array.isArray(data.tags)?data.tags:[];
+    storeLinkPocketLoaded=true;
+    renderLinkPocket();
+    return storeLinkPocketEntries;
+  }).catch(function(error){
+    console.error(error);
+    if(list)list.innerHTML='<div class="store-empty">'+esc(error.message||'連結便貼載入失敗')+'</div>';
+    return [];
+  }).finally(function(){storeLinkPocketLoading=null;});
+  return storeLinkPocketLoading;
+}
+
+function setLinkPocketTag(tag){
+  storeLinkPocketTag=String(tag||'全部');
+  renderLinkPocket();
+}
+
+function renderLinkPocket(){
+  var list=document.getElementById('link-pocket-list');
+  var tagHost=document.getElementById('link-pocket-tags');
+  var countHost=document.getElementById('link-pocket-count');
+  if(!list||!tagHost)return;
+  bindLinkPocketActions();
+  var tagButtons=[{tag:'全部',count:storeLinkPocketEntries.length}].concat(storeLinkPocketTags).map(function(item){
+    var tag=typeof item==='string'?item:item.tag;
+    var count=typeof item==='string'?storeLinkPocketEntries.filter(function(entry){return (entry.tags||[]).indexOf(tag)>=0;}).length:Number(item.count)||0;
+    return '<button class="link-pocket-tag '+(storeLinkPocketTag===tag?'active':'')+'" type="button" data-link-pocket-tag="'+esc(tag)+'">'+esc(tag)+'<span class="link-pocket-tag-count">'+count+'</span></button>';
+  }).join('');
+  tagHost.innerHTML=tagButtons;
+  var query=String(storeLinkPocketSearch||'').trim().toLocaleLowerCase();
+  var entries=storeLinkPocketEntries.filter(function(entry){
+    var tags=Array.isArray(entry.tags)?entry.tags:[];
+    if(storeLinkPocketTag!=='全部'&&tags.indexOf(storeLinkPocketTag)<0)return false;
+    if(!query)return true;
+    return [entry.title,entry.summary,entry.url].concat(tags).join(' ').toLocaleLowerCase().indexOf(query)>=0;
+  });
+  if(countHost)countHost.textContent='顯示 '+entries.length+' / '+storeLinkPocketEntries.length+' 筆';
+  if(!entries.length){list.innerHTML='<div class="store-empty">'+(storeLinkPocketEntries.length?'沒有符合標籤或搜尋條件的便貼。':'目前沒有連結便貼，貼上連結即可開始收藏。')+'</div>';return;}
+  list.innerHTML=entries.map(function(entry){
+    var tags=(Array.isArray(entry.tags)?entry.tags:[]).map(function(tag){return '<span class="link-pocket-card-tag">#'+esc(tag)+'</span>';}).join('');
+    var date=String(entry.createdAt||'').slice(0,10);
+    var platform=entry.platform==='youtube'?'YouTube':entry.platform==='instagram'?'Instagram':'網頁';
+    var id=esc(entry.id||'');
+    return '<article class="link-pocket-card">'
+      +'<div class="link-pocket-card-head"><a class="link-pocket-card-title" href="'+esc(entry.url||'')+'" target="_blank" rel="noopener noreferrer">'+esc(entry.title||'未命名連結')+'</a><span class="link-pocket-platform">'+platform+'</span></div>'
+      +(entry.summary?'<div class="link-pocket-summary">'+esc(entry.summary)+'</div>':'')
+      +'<a class="link-pocket-url" href="'+esc(entry.url||'')+'" target="_blank" rel="noopener noreferrer" title="'+esc(entry.url||'')+'">'+esc(entry.url||'')+'</a>'
+      +(tags?'<div class="link-pocket-card-tags">'+tags+'</div>':'')
+      +'<div class="link-pocket-card-footer"><span>'+esc(date)+'</span><span class="link-pocket-card-actions"><button type="button" data-link-pocket-edit="'+id+'">編輯</button><button class="danger" type="button" data-link-pocket-delete="'+id+'">刪除</button></span></div>'
+      +'</article>';
+  }).join('');
+}
+
+function linkPocketParsedTags(value){
+  var seen={};
+  return String(value||'').split(/[\s,，、;；]+/).map(function(tag){return tag.trim().replace(/^#+/,'').slice(0,40);}).filter(function(tag){
+    var key=tag.toLocaleLowerCase();
+    if(!tag||seen[key])return false;
+    seen[key]=true;
+    return true;
+  }).slice(0,20);
+}
+
+function resetLinkPocketForm(){
+  var form=document.getElementById('link-pocket-form');
+  if(form)form.reset();
+  storeLinkPocketEditingId='';
+  var save=document.getElementById('link-pocket-save');
+  var cancel=document.getElementById('link-pocket-cancel');
+  if(save)save.textContent='儲存便貼';
+  if(cancel)cancel.hidden=true;
+}
+
+function cancelLinkPocketEdit(){
+  resetLinkPocketForm();
+  var status=document.getElementById('link-pocket-status');
+  if(status)status.textContent='已取消編輯';
+}
+
+function editLinkPocketEntry(id){
+  var entry=storeLinkPocketEntries.find(function(item){return String(item.id)===String(id);});
+  if(!entry)return;
+  storeLinkPocketEditingId=String(entry.id);
+  document.getElementById('link-pocket-url').value=entry.url||'';
+  document.getElementById('link-pocket-title').value=entry.title||'';
+  document.getElementById('link-pocket-tags-input').value=(entry.tags||[]).map(function(tag){return '#'+tag;}).join(' ');
+  document.getElementById('link-pocket-summary').value=entry.summary||'';
+  document.getElementById('link-pocket-save').textContent='更新便貼';
+  document.getElementById('link-pocket-cancel').hidden=false;
+  document.getElementById('link-pocket-url').focus();
+}
+
+async function saveLinkPocketEntry(event){
+  if(event)event.preventDefault();
+  var status=document.getElementById('link-pocket-status');
+  var button=document.getElementById('link-pocket-save');
+  var url=String(document.getElementById('link-pocket-url').value||'').trim();
+  var title=String(document.getElementById('link-pocket-title').value||'').trim();
+  var tags=linkPocketParsedTags(document.getElementById('link-pocket-tags-input').value);
+  var summary=String(document.getElementById('link-pocket-summary').value||'').trim();
+  if(!/^https?:\/\//i.test(url))url='https://'+url;
+  if(!title){if(status)status.textContent='請填寫標題';return;}
+  if(button)button.disabled=true;
+  if(status)status.textContent='正在儲存到 NAS…';
+  try{
+    var editing=storeLinkPocketEditingId;
+    var path='/api/admin/link-pocket'+(editing?'/'+encodeURIComponent(editing):'');
+    var data=await linkPocketRequest(editing?'PUT':'POST',path,{url:url,title:title,summary:summary,tags:tags});
+    var saved=data.entry;
+    var existingIndex=storeLinkPocketEntries.findIndex(function(entry){return entry.id===saved.id;});
+    if(existingIndex>=0)storeLinkPocketEntries[existingIndex]=saved;else storeLinkPocketEntries.unshift(saved);
+    storeLinkPocketTags=buildLinkPocketTagSummary(storeLinkPocketEntries);
+    resetLinkPocketForm();
+    if(status)status.textContent=editing?'已更新便貼':'已儲存便貼';
+    renderLinkPocket();
+  }catch(error){
+    console.error(error);
+    if(status)status.textContent=error.message||'儲存失敗';
+  }finally{if(button)button.disabled=false;}
+}
+
+function buildLinkPocketTagSummary(entries){
+  var counts={};
+  (entries||[]).forEach(function(entry){(entry.tags||[]).forEach(function(tag){counts[tag]=(counts[tag]||0)+1;});});
+  return Object.keys(counts).map(function(tag){return {tag:tag,count:counts[tag]};}).sort(function(a,b){return b.count-a.count||a.tag.localeCompare(b.tag);});
+}
+
+async function deleteLinkPocketEntry(id){
+  var entry=storeLinkPocketEntries.find(function(item){return String(item.id)===String(id);});
+  if(!entry||!window.confirm('確定刪除「'+entry.title+'」這則連結便貼？'))return;
+  var status=document.getElementById('link-pocket-status');
+  if(status)status.textContent='正在刪除…';
+  try{
+    await linkPocketRequest('DELETE','/api/admin/link-pocket/'+encodeURIComponent(String(id)));
+    storeLinkPocketEntries=storeLinkPocketEntries.filter(function(item){return String(item.id)!==String(id);});
+    storeLinkPocketTags=buildLinkPocketTagSummary(storeLinkPocketEntries);
+    renderLinkPocket();
+    if(status)status.textContent='便貼已刪除';
+  }catch(error){
+    console.error(error);
+    if(status)status.textContent=error.message||'刪除失敗';
+  }
 }
 
 function editStoreRecord(row){
@@ -20515,7 +20733,7 @@ function mpmRender(records){
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('./sw.js?v=20261028-remove-return-comparison1', {updateViaCache:'none'}).then(function (registration) {
+    navigator.serviceWorker.register('./sw.js?v=20261103-link-pocket1', {updateViaCache:'none'}).then(function (registration) {
       return registration.update();
     }).catch(function (error) {
       console.warn('Empire Service Worker registration failed', error);

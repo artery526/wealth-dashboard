@@ -1,0 +1,11 @@
+{
+  "id": "2026-11-03-store-link-pocket",
+  "status": "in_progress",
+  "date": null,
+  "area": "太倉連結便貼",
+  "summary": "新增太倉連結便貼第一版",
+  "details": "提供連結收藏、標題與短文編輯、標籤分類總覽及搜尋；資料儲存於 NAS。",
+  "platforms": [
+    "website"
+  ]
+}
