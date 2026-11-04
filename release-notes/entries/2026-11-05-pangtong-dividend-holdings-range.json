@@ -1,7 +1,7 @@
 {
   "id": "2026-11-05-pangtong-dividend-holdings-range",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-11-05",
   "area": "龐統配息記錄",
   "summary": "修正較後列持股的配息預估金額",
   "details": "配息中心改為依持股清單動態讀取標的與股數，並補齊 XQQI 的標的辨識。",
