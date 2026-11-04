@@ -1,0 +1,11 @@
+{
+  "id": "2026-11-04-wangfu-local-attachments",
+  "status": "released",
+  "date": "2026-11-04",
+  "area": "王府附件",
+  "summary": "王府新附件改存文章附件目錄",
+  "details": "王府圖片與影片新上傳改存於 AI_CommandCenter 的文章附件目錄，不再複製到 Photos。既有 Photos 媒體保留，時光長廊仍可讀取。",
+  "platforms": [
+    "website"
+  ]
+}
