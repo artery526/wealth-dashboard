@@ -3564,7 +3564,7 @@ function stripIncomeStockNotePrefix_(note) {
 function normalizeInvestmentSymbol_(value) {
   var s = String(value || '').toUpperCase();
   if (s.indexOf('00988A') >= 0) return 'GDXW';
-  var symbols = ['AIPI', 'CHPY', 'PLTY', 'QQQI', 'SPYI', 'MLPI', 'IAU', 'GDXW', 'GLDW', '00985B'];
+  var symbols = ['AIPI', 'CHPY', 'PLTY', 'XQQI', 'QQQI', 'SPYI', 'MLPI', 'IAU', 'GDXW', 'GLDW', '00985B'];
   for (var i = 0; i < symbols.length; i++) {
     if (s.indexOf(symbols[i]) >= 0) return symbols[i];
   }
@@ -3832,7 +3832,10 @@ function getDividendSettingFx_(ss) {
 function getDividendHoldingOptions_(ss) {
   var moon = ss.getSheetByName('月度戰情室');
   if (!moon) return [];
-  var values = moon.getRange('A13:N23').getValues();
+  var holdingStart = getMoonHoldingStartRow_(moon);
+  var maxRows = Math.max(0, Math.min(moon.getLastRow() - holdingStart + 1, MOON_HOLDING_ROWS));
+  if (maxRows <= 0) return [];
+  var values = moon.getRange(holdingStart, MOON_HOLDING_COL, maxRows, MOON_HOLDING_COLS).getValues();
   return values.map(function(row) {
     var display = String(row[0] || '').trim();
     var symbol = normalizeInvestmentSymbol_(display) || display;
