@@ -10,9 +10,10 @@
     'war-taiwan-macro':{title:'台灣總體經濟',load:loadTaiwan},
     'war-roster':{title:'部隊陣容',load:loadWarRoster}
   };
-  var currentTab='war-briefing',lastLoaded={},taiwanRange='1Y',busy=false,foreignYtdPromise=null,foreignYtdLastAttempt=0,foreignYtdError='',nasdaqValuationPromise=null;
+  var currentTab='war-briefing',lastLoaded={},taiwanRange='1Y',busy=false,foreignYtdPromise=null,foreignYtdLastAttempt=0,foreignYtdError='',nasdaqValuationPromise=null,warRoomYtdDrawdownPromise=null;
   var FOREIGN_YTD_CACHE_KEY='wealth_twse_foreign_ytd_v1';
   var NASDAQ_VALUATION_CACHE_KEY='wealth_nasdaq100_valuation_v1';
+  var WAR_ROOM_YTD_DRAWDOWN_CACHE_KEY='wealth_war_room_ytd_drawdown_v1';
   var content=document.getElementById('content'),status=document.getElementById('connection-status');
   function loadWarRoster(force){return window.warRosterModule.load(request,force,function(value){setFreshness(value);},function(text,kind){setStatus(text,kind);});}
   function normalizeApi(value){value=String(value||'').trim();return /script\.google\.com\/macros\/s\//i.test(value)?API_DEFAULT:value;}
@@ -102,6 +103,7 @@
     var forward=data&&data.forwardPE!=null&&isFinite(Number(data.forwardPE))?num(data.forwardPE,2)+'×':'資料暫缺';
     var status=loading?'顯示快照 · 背景更新中':(error?'來源暫時無法讀取':stale?'資料日期較舊，請留意日期':data?'資料已更新':'背景讀取中…');
     host.innerHTML='<article class="nasdaq-valuation-card"><div class="nasdaq-valuation-head"><span>📊 NASDAQ-100 估值</span><span class="nasdaq-valuation-status">'+esc(status)+'</span></div><div class="nasdaq-valuation-values"><div><small>Trailing P/E</small><strong>'+esc(trailing)+'</strong><small>資料日期 '+esc(data&&data.trailingDataDate||'暫缺')+'</small></div><div><small>Forward P/E</small><strong>'+esc(forward)+'</strong><small>資料日期 '+esc(data&&data.forwardDataDate||'暫缺')+'</small></div></div><p>估值為歷史指標，不代表價格預測；Forward P/E 採來源自行計算的未來 12 個月估計。來源：<a href="https://historyofmarket.com/nasdaq/ndx-forward-pe/" target="_blank" rel="noopener noreferrer">History of Market — Nasdaq 100 Forward PE</a>（資料 CC BY 4.0）'+(error?' · '+esc(error):'')+'</p></article>';
+    var values=host.querySelector('.nasdaq-valuation-values');if(values)values.insertAdjacentHTML('afterend','<div id="nasdaq-ytd-drawdown" class="war-ytd-drawdown"></div>');
   }
   function refreshNasdaqValuation_(){
     var cached=readCache(NASDAQ_VALUATION_CACHE_KEY);
@@ -117,6 +119,23 @@
       return null;
     }).finally(function(){nasdaqValuationPromise=null;});
     return nasdaqValuationPromise;
+  }
+  function marketYtdDrawdownKey_(row){var code=String(row&&row.code||'').trim().toUpperCase(),name=String(row&&row.name||'');if(code==='^TWII'||/台灣加權|加權指數|TAIEX/i.test(name))return 'taiex';if(code==='NYSEARCA:SPY'||code==='SPY'||/標普500|S&P\s*500/i.test(name))return 'sp500';return '';}
+  function warRoomYtdMetric_(data,key){return data&&data.indices&&data.indices[key]||null;}
+  function warRoomYtdMetricText_(metric){return metric&&isFinite(Number(metric.maxDrawdownPct))?num(metric.maxDrawdownPct,2)+'%':'資料暫缺';}
+  function warRoomYtdDetails_(metric,stale){return metric?'年內收盤高點 '+esc(metric.peakDate||'日期未提供')+' → 後續低點 '+esc(metric.troughDate||'日期未提供')+' · 資料截至 '+esc(metric.dataDate||'日期未提供')+(stale?' · 顯示快照':''):'';}
+  function applyWarRoomYtdDrawdown_(data,stale,error){
+    var nasdaq=warRoomYtdMetric_(data,'nasdaq100'),host=document.getElementById('nasdaq-ytd-drawdown');
+    if(host){host.innerHTML=nasdaq?'<div class="war-ytd-drawdown-value"><span>📉 '+esc(data.year||nasdaq.year||'今年')+' 年最大回撤（收盤）</span><strong>'+esc(warRoomYtdMetricText_(nasdaq))+'</strong></div><small>'+warRoomYtdDetails_(nasdaq,stale)+' · <a href="'+esc(nasdaq.sourceUrl||'https://fred.stlouisfed.org/data/NASDAQ100')+'" target="_blank" rel="noopener noreferrer">'+esc(nasdaq.sourceName||'資料來源')+'</a></small>':'<div class="war-ytd-drawdown-value"><span>📉 今年最大回撤（收盤）</span><strong>資料暫缺</strong></div><small>'+esc(error?'來源暫時無法讀取':'等待資料')+'</small>';}
+    document.querySelectorAll('.brief-ytd-drawdown-slot').forEach(function(slot){var metric=warRoomYtdMetric_(data,slot.getAttribute('data-ytd-drawdown'));slot.innerHTML=metric?'<a href="'+esc(metric.sourceUrl||'#')+'" target="_blank" rel="noopener noreferrer" title="'+esc(warRoomYtdDetails_(metric,stale)+' · '+(metric.sourceName||''))+'">今年最大回撤 '+esc(warRoomYtdMetricText_(metric))+'</a>':'<span title="'+esc(error||'年度回撤資料暫缺')+'">今年最大回撤暫缺</span>';});
+  }
+  function refreshWarRoomYtdDrawdown_(){
+    var cached=readCache(WAR_ROOM_YTD_DRAWDOWN_CACHE_KEY);
+    if(cached)applyWarRoomYtdDrawdown_(cached,true,'');
+    else applyWarRoomYtdDrawdown_(null,false,'');
+    if(warRoomYtdDrawdownPromise)return warRoomYtdDrawdownPromise;
+    warRoomYtdDrawdownPromise=request({action:'warRoomYtdDrawdown'},25000).then(function(data){writeCache(WAR_ROOM_YTD_DRAWDOWN_CACHE_KEY,data);applyWarRoomYtdDrawdown_(data,!!data.stale,'');return data;}).catch(function(error){applyWarRoomYtdDrawdown_(cached,true,error&&error.message||'年度回撤資料暫缺');return null;}).finally(function(){warRoomYtdDrawdownPromise=null;});
+    return warRoomYtdDrawdownPromise;
   }
   function showError(error){if(error&&[401,403].includes(Number(error.status))){setStatus('城門驗證失效','err');renderLogin(error.message||'請重新驗證城門。');return;}setStatus('資料更新失敗','err');var old=content.querySelector('.notice.error');if(old)old.remove();content.insertAdjacentHTML('afterbegin','<div class="notice error">'+esc(error&&error.message||'讀取失敗')+'。若舊快照仍可用，會繼續保留於畫面。</div>');}
   function sectionTitle(text){return '<h2 class="section-title">'+esc(text)+'</h2>';}
@@ -166,7 +185,7 @@
     var groups=[['💧 流動性',[['SOFR–IORB','sofrIorbSpread'],['銀行準備金','bankReserves'],['隔夜逆回購','rrp'],['M2','m2']]],['👷 就業',[['JOLTS 職缺','joltsOpenings'],['ADP 就業','adpEmploymentChange'],['非農就業','nfpPayrollChange']]],['🔥 通膨',[['CPI','cpi'],['PPI','ppi'],['油價','oil']]],['💳 市場壓力',[['信用利差','creditSpread'],['VIX','vix'],['消費信心','consumerSentiment']]]];
     html+=sectionTitle('總經燈號')+'<div class="brief-macro-grid">'+groups.map(function(group){return '<article class="brief-macro-card"><h3>'+group[0]+'</h3>'+group[1].map(function(item){var row=findIndicator(item[1]),tone=/紅|警戒|防守|惡化/.test(String(row&&row.status||''))?'down':/綠|改善|充足/.test(String(row&&row.status||''))?'up':'';return '<div class="brief-indicator"><span>'+esc(item[0])+'</span><strong class="'+tone+'">'+esc(indicatorValue(row))+'</strong></div>';}).join('')+'</article>';}).join('')+'</div>';
     if(report.latest||report.summary)html+=sectionTitle('長期觀察')+'<div class="brief-report">'+esc((report.latest&&report.latest.summary)||report.summary||'')+'</div>';
-    html+=rawDetails('完整快照資料',displayPayload);content.innerHTML=html;setFreshness(captured?'快照時間 '+dateText(captured):'以目前可取得的快照呈現');refreshNasdaqValuation_();
+    html+=rawDetails('完整快照資料',displayPayload);content.innerHTML=html;Array.prototype.forEach.call(document.querySelectorAll('.brief-market-row'),function(marketRow,index){var drawdownKey=marketYtdDrawdownKey_(rows[index]);if(!drawdownKey)return;var priceCell=marketRow.children[1];if(!priceCell)return;var slot=document.createElement('small');slot.className='brief-ytd-drawdown-slot';slot.setAttribute('data-ytd-drawdown',drawdownKey);slot.textContent='今年最大回撤載入中';priceCell.appendChild(slot);});setFreshness(captured?'快照時間 '+dateText(captured):'以目前可取得的快照呈現');refreshNasdaqValuation_();refreshWarRoomYtdDrawdown_();
   }
   async function loadBriefing(force){
     var cacheKey='wealth_advisor_world_nas_v1',cached=readCache(cacheKey),cacheMarket=readCache('wealth_market_dashboard_v1'),cacheMacro=readCache('wealth_market_macro_v4');

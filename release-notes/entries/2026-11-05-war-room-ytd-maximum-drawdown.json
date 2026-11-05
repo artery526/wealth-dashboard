@@ -1,0 +1,9 @@
+{
+  "id": "2026-11-05-war-room-ytd-maximum-drawdown",
+  "status": "in_progress",
+  "date": null,
+  "area": "帝國晨報",
+  "summary": "新增三大指數今年最大回撤",
+  "details": "在 NASDAQ-100 估值與核心市場的標普 500、台灣加權指數旁顯示年內收盤高點至後續低點的最大回撤、資料日期及來源；載入先顯示本機快照，再於背景更新。",
+  "platforms": ["website", "app-script"]
+}

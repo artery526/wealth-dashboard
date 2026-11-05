@@ -128,6 +128,10 @@ function doGet(e) {
       verifyWriteToken(p);
       return ok(getNasdaq100Valuation_());
     }
+    if (action === 'warRoomYtdDrawdown') {
+      verifyWriteToken(p);
+      return ok(getWarRoomYtdDrawdown_());
+    }
     if (action === 'pledgeLoans')  return ok(getPledgeLoans(getExternalDbSpreadsheet_()));
     if (action === 'assetSnapshot') return ok(getDailyAssetSnapshot(getExternalDbSpreadsheet_()));
     if (action === 'transactions') return ok(getTransactions(ss, p.ym));
@@ -2136,6 +2140,143 @@ function nasdaq100ValuationResponse_(payload, cacheFallback) {
     canonical: payload.canonical,
     license: payload.license,
     terms: payload.terms
+  };
+}
+
+var WAR_ROOM_YTD_DRAWDOWN_CACHE_KEY_ = 'WAR_ROOM_YTD_DRAWDOWN_V1';
+var WAR_ROOM_YTD_DRAWDOWN_CACHE_SECONDS_ = 21600;
+
+function getWarRoomYtdDrawdown_() {
+  var cache = CacheService.getScriptCache();
+  var rawCached = cache.get(WAR_ROOM_YTD_DRAWDOWN_CACHE_KEY_);
+  var cached = null;
+  try { cached = rawCached ? JSON.parse(rawCached) : null; } catch (ignore) {}
+  var now = Date.now();
+  var dateText = Utilities.formatDate(new Date(now), 'Asia/Taipei', 'yyyy-MM-dd');
+  var year = dateText.slice(0, 4);
+  if (cached && cached.year === year && Number(cached.fetchedAt) && now - Number(cached.fetchedAt) < 15 * 60 * 1000) {
+    return warRoomYtdDrawdownResponse_(cached, false, []);
+  }
+
+  var requests = [];
+  var requestKeys = [];
+  function addRequest_(key, url) {
+    requestKeys.push(key);
+    requests.push({ url: url, muteHttpExceptions: true, followRedirects: true });
+  }
+  addRequest_('nasdaq100', 'https://fred.stlouisfed.org/graph/fredgraph.csv?id=NASDAQ100&cosd=' + year + '-01-01&coed=' + dateText);
+  addRequest_('sp500', 'https://fred.stlouisfed.org/graph/fredgraph.csv?id=SP500&cosd=' + year + '-01-01&coed=' + dateText);
+  var month = Number(dateText.slice(5, 7));
+  for (var monthNumber = 1; monthNumber <= month; monthNumber++) {
+    addRequest_('taiex:' + monthNumber, 'https://www.twse.com.tw/rwd/en/TAIEX/MI_5MINS_HIST?date=' + year + String(monthNumber).padStart(2, '0') + '01&response=json');
+  }
+
+  var indices = {};
+  var errors = [];
+  try {
+    var responses = UrlFetchApp.fetchAll(requests);
+    var taiwanPoints = [];
+    for (var i = 0; i < responses.length; i++) {
+      var response = responses[i];
+      var key = requestKeys[i];
+      if (response.getResponseCode() !== 200) {
+        errors.push(key + ' 來源回應 HTTP ' + response.getResponseCode());
+        continue;
+      }
+      try {
+        if (key === 'nasdaq100' || key === 'sp500') {
+          var points = warRoomYtdParseFredCsv_(response.getContentText(), year, dateText);
+          if (!points.length) throw new Error('沒有有效日收盤資料');
+          indices[key] = warRoomYtdMaxDrawdown_(points, key, year);
+        } else {
+          var report = JSON.parse(response.getContentText());
+          if (!report || report.stat !== 'OK' || !Array.isArray(report.data)) throw new Error('證交所回傳沒有有效資料');
+          Array.prototype.push.apply(taiwanPoints, warRoomYtdParseTaiexRows_(report, year, dateText));
+        }
+      } catch (parseError) {
+        errors.push(key + ' 資料格式無效');
+      }
+    }
+    if (taiwanPoints.length) indices.taiex = warRoomYtdMaxDrawdown_(taiwanPoints, 'taiex', year);
+    else errors.push('taiex 沒有有效日收盤資料');
+  } catch (fetchError) {
+    errors.push('來源暫時無法連線');
+  }
+
+  if (cached && cached.year === year && now - Number(cached.fetchedAt || 0) < 7 * 24 * 60 * 60 * 1000) {
+    ['nasdaq100', 'sp500', 'taiex'].forEach(function(key) {
+      if (!indices[key] && cached.indices && cached.indices[key]) indices[key] = cached.indices[key];
+    });
+  }
+  var payload = { year: year, fetchedAt: now, indices: indices };
+  if (Object.keys(indices).length && !errors.length) cache.put(WAR_ROOM_YTD_DRAWDOWN_CACHE_KEY_, JSON.stringify(payload), WAR_ROOM_YTD_DRAWDOWN_CACHE_SECONDS_);
+  return warRoomYtdDrawdownResponse_(payload, errors.length > 0, errors);
+}
+
+function warRoomYtdParseFredCsv_(csv, year, throughDate) {
+  var rows = Utilities.parseCsv(String(csv || ''));
+  var points = [];
+  for (var i = 1; i < rows.length; i++) {
+    var row = rows[i] || [];
+    var date = String(row[0] || '').trim();
+    var close = Number(String(row[1] || '').replace(/,/g, '').trim());
+    if (/^\d{4}-\d{2}-\d{2}$/.test(date) && date.slice(0, 4) === year && date <= throughDate && isFinite(close) && close > 0) {
+      points.push({ date: date, close: close });
+    }
+  }
+  return points;
+}
+
+function warRoomYtdParseTaiexRows_(report, year, throughDate) {
+  var dateIndex = Array.isArray(report.fields) ? report.fields.indexOf('Date') : 0;
+  var closeIndex = Array.isArray(report.fields) ? report.fields.indexOf('Closing Index') : 4;
+  if (dateIndex < 0) dateIndex = 0;
+  if (closeIndex < 0) closeIndex = 4;
+  return report.data.reduce(function(points, row) {
+    if (!Array.isArray(row)) return points;
+    var sourceDate = String(row[dateIndex] || '').trim();
+    var match = sourceDate.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
+    if (!match) return points;
+    var date = match[1] + '-' + String(match[2]).padStart(2, '0') + '-' + String(match[3]).padStart(2, '0');
+    var close = Number(String(row[closeIndex] || '').replace(/,/g, '').trim());
+    if (date.slice(0, 4) === year && date <= throughDate && isFinite(close) && close > 0) points.push({ date: date, close: close });
+    return points;
+  }, []);
+}
+
+function warRoomYtdMaxDrawdown_(points, key, year) {
+  points.sort(function(a, b) { return a.date.localeCompare(b.date); });
+  var peak = points[0];
+  var worst = { pct: 0, peak: peak, trough: peak };
+  points.forEach(function(point) {
+    if (point.close > peak.close) peak = point;
+    var pct = (point.close / peak.close - 1) * 100;
+    if (pct < worst.pct) worst = { pct: pct, peak: peak, trough: point };
+  });
+  var sources = {
+    nasdaq100: { name: 'FRED（來源：Nasdaq）', url: 'https://fred.stlouisfed.org/data/NASDAQ100' },
+    sp500: { name: 'FRED（來源：S&P Dow Jones Indices）', url: 'https://fred.stlouisfed.org/data/SP500' },
+    taiex: { name: '臺灣證券交易所（TWSE）', url: 'https://www.twse.com.tw/en/indices/taiex/mi-5min-hist.html' }
+  };
+  return {
+    key: key,
+    year: year,
+    maxDrawdownPct: Math.round(worst.pct * 100) / 100,
+    peakDate: worst.peak.date,
+    troughDate: worst.trough.date,
+    dataDate: points[points.length - 1].date,
+    sourceName: sources[key].name,
+    sourceUrl: sources[key].url
+  };
+}
+
+function warRoomYtdDrawdownResponse_(payload, stale, errors) {
+  return {
+    year: payload.year,
+    fetchedAt: payload.fetchedAt,
+    indices: payload.indices || {},
+    stale: !!stale,
+    errors: errors || []
   };
 }
 

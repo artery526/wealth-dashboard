@@ -191,6 +191,59 @@ test('Standalone War Room shows sourced NASDAQ-100 valuations and dates on mobil
   expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
 });
 
+test('Imperial Morning Brief shows sourced YTD maximum drawdowns for Nasdaq, S&P 500, and TAIEX on mobile', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.addInitScript(() => {
+    localStorage.setItem('wealth_api_url', 'https://example.test/exec');
+    localStorage.setItem('wealth_write_token', 'test-write-token');
+    localStorage.setItem('wealth_web_verify_status', 'ok');
+    localStorage.setItem('wealth_web_verify_checked_at', String(Date.now()));
+    sessionStorage.setItem('wealth_web_session_token', 'same-tab-session');
+    localStorage.setItem('wealth_war_room_ytd_drawdown_v1', JSON.stringify({ savedAt: Date.now(), data: {
+      year: '2026', indices: {
+        nasdaq100: { year: '2026', maxDrawdownPct: -12.34, peakDate: '2026-01-15', troughDate: '2026-03-02', dataDate: '2026-11-03', sourceName: 'FRED（來源：Nasdaq）', sourceUrl: 'https://fred.stlouisfed.org/data/NASDAQ100' },
+        sp500: { year: '2026', maxDrawdownPct: -13.34, peakDate: '2026-02-01', troughDate: '2026-03-03', dataDate: '2026-11-03', sourceName: 'FRED（來源：S&P Dow Jones Indices）', sourceUrl: 'https://fred.stlouisfed.org/data/SP500' },
+        taiex: { year: '2026', maxDrawdownPct: -14.34, peakDate: '2026-04-01', troughDate: '2026-05-03', dataDate: '2026-11-04', sourceName: '臺灣證券交易所（TWSE）', sourceUrl: 'https://www.twse.com.tw/en/indices/taiex/mi-5min-hist.html' }
+      }
+    } }));
+  });
+  await page.route('https://example.test/**', async route => {
+    const action = new URL(route.request().url()).searchParams.get('action');
+    if (action === 'warRoomYtdDrawdown') {
+      await new Promise(resolve => setTimeout(resolve, 350));
+      return route.fulfill({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ ok: true, data: {
+        year: '2026', stale: false, indices: {
+          nasdaq100: { year: '2026', maxDrawdownPct: -10.25, peakDate: '2026-01-15', troughDate: '2026-03-02', dataDate: '2026-11-04', sourceName: 'FRED（來源：Nasdaq）', sourceUrl: 'https://fred.stlouisfed.org/data/NASDAQ100' },
+          sp500: { year: '2026', maxDrawdownPct: -8.25, peakDate: '2026-02-01', troughDate: '2026-03-03', dataDate: '2026-11-04', sourceName: 'FRED（來源：S&P Dow Jones Indices）', sourceUrl: 'https://fred.stlouisfed.org/data/SP500' },
+          taiex: { year: '2026', maxDrawdownPct: -7.25, peakDate: '2026-04-01', troughDate: '2026-05-03', dataDate: '2026-11-04', sourceName: '臺灣證券交易所（TWSE）', sourceUrl: 'https://www.twse.com.tw/en/indices/taiex/mi-5min-hist.html' }
+        }
+      } }) });
+    }
+    const data = action === 'nasdaq100Valuation'
+      ? { trailingPE: 30.52, trailingDataDate: '2026-11-04', forwardPE: 19.61, forwardDataDate: '2026-11-04', stale: false }
+      : action === 'advisorWorldBriefSnapshotRefresh'
+        ? { snapshot: { market: { summary: {}, rows: [
+          { code: 'NYSEARCA:SPY', name: '標普500 ETF', price: 6000, changePct: 0.2 },
+          { code: '^TWII', name: '🇹🇼 台灣加權指數', price: 27000, changePct: -0.1 }
+        ] }, macro: { judgment: {}, indicators: [] }, capturedAt: '2026-11-04T12:00:00Z' } }
+        : {};
+    return route.fulfill({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ ok: true, data }) });
+  });
+  await page.route('https://api.ark-os26.cc/**', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ records: [] }) }));
+
+  await page.goto(`${standaloneUrl}?tab=war-briefing`);
+  await expect(page.locator('#nasdaq-ytd-drawdown')).toContainText('-12.34%');
+  await expect(page.locator('.brief-market-row').filter({ hasText: '標普500 ETF' }).locator('.brief-ytd-drawdown-slot')).toContainText('-13.34%');
+  await expect(page.locator('.brief-market-row').filter({ hasText: '台灣加權指數' }).locator('.brief-ytd-drawdown-slot')).toContainText('-14.34%');
+  await expect(page.locator('#nasdaq-ytd-drawdown')).toContainText('2026-11-04');
+  await expect(page.locator('#nasdaq-ytd-drawdown a')).toHaveAttribute('href', 'https://fred.stlouisfed.org/data/NASDAQ100');
+  await expect(page.locator('#nasdaq-ytd-drawdown')).toContainText('-10.25%');
+  await expect(page.locator('.brief-market-row').filter({ hasText: '標普500 ETF' }).locator('.brief-ytd-drawdown-slot')).toContainText('-8.25%');
+  await expect(page.locator('.brief-market-row').filter({ hasText: '台灣加權指數' }).locator('.brief-ytd-drawdown-slot')).toContainText('-7.25%');
+  const width = await page.locator('html').evaluate(el => ({ scroll: el.scrollWidth, client: el.clientWidth }));
+  expect(width.scroll).toBeLessThanOrEqual(width.client);
+});
+
 test('Battle Brief shows the year-to-date foreign net sell from TWSE monthly reports on mobile', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.clock.install({ time: new Date('2026-10-13T05:00:00.000Z') });
