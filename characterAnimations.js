@@ -117,16 +117,11 @@ const chenqunAnimations = {
     idle: [800, 1800]
   }
 };
-const liubeiAssetVersion = '20260920-liubei-webp1';
+const liubeiAssetVersion = '20261105-liubei-sword-gif1';
 const liubeiAsset = file => `./劉備/${file}?v=${liubeiAssetVersion}`;
 const liubeiAnimations = {
   name: '劉備',
   frameScale: {
-    '12': 1.65,
-    '13': 1.65,
-    '14': 1.65,
-    '15': 1.65,
-    '16': 1.65,
     '17': 1.2
   },
   frames: {
@@ -140,12 +135,7 @@ const liubeiAnimations = {
     '08': liubeiAsset('放下書卷08.webp'),
     '09': liubeiAsset('撰寫回憶09.webp'),
     '10': liubeiAsset('放下卷軸苦思10.webp'),
-    '11': liubeiAsset('放下卷軸揮劍出擊11.webp'),
-    '12': liubeiAsset('放下卷軸揮劍出擊出兵12.webp'),
-    '13': liubeiAsset('放下卷軸揮劍出擊出兵13.webp'),
-    '14': liubeiAsset('放下卷軸揮劍出擊出兵廝殺14.webp'),
-    '15': liubeiAsset('放下卷軸揮劍出擊出兵廝殺15.webp'),
-    '16': liubeiAsset('放下卷軸揮劍出擊出兵廝殺16.webp'),
+    '11': liubeiAsset('Q版武士拔劍連續動作.gif'),
     '17': liubeiAsset('王府前站立17.webp')
   },
   breathing: [
@@ -165,12 +155,7 @@ const liubeiAnimations = {
       { frame: '08', state: 'book-lower', duration: [500, 800] },
       { frame: '09', state: 'write-memory', duration: [2200, 5000] },
       { frame: '10', state: 'think-scroll', duration: [800, 1400] },
-      { frame: '11', state: 'sword-strike', duration: [900, 1600] },
-      { frame: '12', state: 'march-to-battle', duration: [900, 1500] },
-      { frame: '13', state: 'lead-the-army', duration: [900, 1500] },
-      { frame: '14', state: 'battle-clash', duration: [1000, 1700] },
-      { frame: '15', state: 'battle-victory', duration: [1200, 2200] },
-      { frame: '16', state: 'return-to-palace', duration: [1200, 2200] },
+      { frame: '11', state: 'sword-strike', duration: [1800, 2600] },
       { frame: '17', state: 'palace-stand', duration: [1000, 1800] },
       { frame: '01', state: 'idle', duration: [1000, 1800] }
     ] }
