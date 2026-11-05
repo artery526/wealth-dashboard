@@ -172,8 +172,10 @@ test('Standalone War Room shows sourced NASDAQ-100 valuations and dates on mobil
     const action = new URL(route.request().url()).searchParams.get('action');
     const data = action === 'nasdaq100Valuation'
       ? { trailingPE: 30.52, trailingDataDate: '2026-10-22', forwardPE: 19.61, forwardDataDate: '2026-10-21', stale: false }
+      : action === 'macroOverview'
+        ? { valuations: { taiex: { trailingPE: 22.48, pb: 2.61, historicalPEMedian: { tenYear: 18.32 }, historicalPBMedian: { tenYear: 1.74 }, dataDate: '2026-10-22', source: 'MoneyDJ PE/PB河流圖反算；TWSE同日收盤指數核對通過', status: '已更新' } } }
       : action === 'advisorWorldBriefSnapshotRefresh'
-      ? { snapshot: { market: { summary: {}, rows: [] }, macro: { judgment: {}, indicators: [], valuations: { taiex: { trailingPE: 22.48, pb: 2.61, historicalPEMedian: { tenYear: 18.32 }, historicalPBMedian: { tenYear: 1.74 }, dataDate: '2026-10-22', source: 'MoneyDJ PE/PB河流圖反算；TWSE同日收盤指數核對通過', status: '已更新' } } }, capturedAt: '2026-10-23T00:00:00Z' } }
+        ? { snapshot: { market: { summary: {}, rows: [] }, macro: { judgment: {}, indicators: [] }, capturedAt: '2026-10-23T00:00:00Z' } }
         : {};
     return route.fulfill({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ ok: true, data }) });
   });
@@ -388,13 +390,14 @@ test('standalone page loads only its own package and does not request unrelated 
   await page.route('https://example.test/**', route => route.fulfill({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ ok: true, data: { snapshot: { market: { summary: {}, rows: [] }, macro: {}, capturedAt: '2026-10-03' } } }) }));
   await page.route('https://api.ark-os26.cc/**', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ records: [] }) }));
   const requests = [];
-  page.on('request', request => requests.push(request.url()));
+  page.on('request', request => { try { requests.push({ url: request.url(), type: request.resourceType(), frame: request.frame().url() }); } catch (error) { /* Ignore service worker precache fetches; this test checks page initiated requests. */ } });
   await page.goto(`${standaloneUrl}?tab=war-briefing`);
   await expect(page.locator('h1')).toHaveText('諸葛軍師・戰情室');
   await page.waitForTimeout(300);
-  expect(requests.some(request => /(?:^|\/)index\.html(?:\?|$)/.test(request))).toBe(false);
-  expect(requests.some(request => /(?:^|\/)war-room-app\.js(?:\?|$)/.test(request))).toBe(true);
-  expect(requests.some(request => /(?:^|\/)war-room\.css(?:\?|$)/.test(request))).toBe(true);
-  expect(requests.some(request => /api\.open-meteo\.com|characterAnimations\.js|AnimatedCharacter\.js|junshifu-map|mobileBG/.test(request))).toBe(false);
-  expect(requests.some(request => /[?&]action=(?:config|dividendCenter|holdingsOverview|assetSnapshot)(?:&|$)/.test(request))).toBe(false);
+  const pageRequests = requests.map(request => request.url);
+  expect(pageRequests.some(request => /(?:^|\/)index\.html(?:\?|$)/.test(request))).toBe(false);
+  expect(pageRequests.some(request => /(?:^|\/)war-room-app\.js(?:\?|$)/.test(request))).toBe(true);
+  expect(pageRequests.some(request => /(?:^|\/)war-room\.css(?:\?|$)/.test(request))).toBe(true);
+  expect(pageRequests.some(request => /api\.open-meteo\.com|characterAnimations\.js|AnimatedCharacter\.js|junshifu-map|mobileBG/.test(request))).toBe(false);
+  expect(pageRequests.some(request => /[?&]action=(?:config|dividendCenter|holdingsOverview|assetSnapshot)(?:&|$)/.test(request))).toBe(false);
 });

@@ -10,9 +10,10 @@
     'war-taiwan-macro':{title:'台灣總體經濟',load:loadTaiwan},
     'war-roster':{title:'部隊陣容',load:loadWarRoster}
   };
-  var currentTab='war-briefing',lastLoaded={},taiwanRange='1Y',busy=false,foreignYtdPromise=null,foreignYtdLastAttempt=0,foreignYtdError='',nasdaqValuationPromise=null,warRoomYtdDrawdownPromise=null;
+  var currentTab='war-briefing',lastLoaded={},taiwanRange='1Y',busy=false,foreignYtdPromise=null,foreignYtdLastAttempt=0,foreignYtdError='',nasdaqValuationPromise=null,taiwanValuationPromise=null,taiwanValuationLastAttempt=0,warRoomYtdDrawdownPromise=null;
   var FOREIGN_YTD_CACHE_KEY='wealth_twse_foreign_ytd_v1';
   var NASDAQ_VALUATION_CACHE_KEY='wealth_nasdaq100_valuation_v1';
+  var TAIWAN_VALUATION_CACHE_KEY='wealth_taiwan_valuation_v1';
   var WAR_ROOM_YTD_DRAWDOWN_CACHE_KEY='wealth_war_room_ytd_drawdown_v1';
   var content=document.getElementById('content'),status=document.getElementById('connection-status');
   function loadWarRoster(force){return window.warRosterModule.load(request,force,function(value){setFreshness(value);},function(text,kind){setStatus(text,kind);});}
@@ -120,6 +121,26 @@
     }).finally(function(){nasdaqValuationPromise=null;});
     return nasdaqValuationPromise;
   }
+  function renderTaiwanValuation_(data,stale,error,loading){
+    var host=document.getElementById('taiwan-valuation-host');if(!host)return;
+    data=data||{};
+    function value(number){return number!=null&&number!==''&&isFinite(Number(number))&&Number(number)>0?num(number,2)+'×':'資料暫缺';}
+    var pe=data.trailingPE,pb=data.pb,peMedian=data.historicalPEMedian&&data.historicalPEMedian.tenYear,pbMedian=data.historicalPBMedian&&data.historicalPBMedian.tenYear;
+    var status=loading?(data.dataDate||data.source?'顯示快照 · 背景更新中':'背景讀取中…'):(error?'來源暫時無法讀取':(data.status||((data.dataDate||data.source)?'資料已更新':'資料暫缺')));
+    host.innerHTML='<article class="nasdaq-valuation-card taiex-valuation-card"><div class="nasdaq-valuation-head"><span>📊 台灣加權指數估值</span><span class="nasdaq-valuation-status">'+esc(status)+'</span></div><div class="nasdaq-valuation-values"><div><small>近四季 Trailing P/E</small><strong>'+esc(value(pe))+'</strong><small>資料日期 '+esc(data.dataDate||'暫缺')+'</small></div><div><small>股價淨值比 P/B</small><strong>'+esc(value(pb))+'</strong><small>資料日期 '+esc(data.dataDate||'暫缺')+'</small></div><div><small>10 年中位數 P/E</small><strong>'+esc(value(peMedian))+'</strong><small>歷史比較基準</small></div><div><small>10 年中位數 P/B</small><strong>'+esc(value(pbMedian))+'</strong><small>歷史比較基準</small></div></div><p>估值為歷史比較，不代表價格預測或買賣訊號。來源：'+esc(data.source||'來源未提供')+(error?' · '+esc(error):'')+'</p></article>';
+  }
+  function refreshTaiwanValuation_(snapshotValue,snapshotStale){
+    var cached=readCache(TAIWAN_VALUATION_CACHE_KEY),initial=snapshotValue||cached;
+    renderTaiwanValuation_(initial,!!snapshotStale,'',true);
+    if(taiwanValuationPromise||Date.now()-taiwanValuationLastAttempt<60000)return taiwanValuationPromise;
+    taiwanValuationLastAttempt=Date.now();
+    taiwanValuationPromise=request({action:'macroOverview'},20000).then(function(macro){
+      var value=macro&&macro.valuations&&macro.valuations.taiex;
+      if(!value)throw new Error('總經來源未提供台股估值欄位');
+      writeCache(TAIWAN_VALUATION_CACHE_KEY,value);renderTaiwanValuation_(value,false,'',false);return value;
+    }).catch(function(error){renderTaiwanValuation_(initial,true,error&&error.message||'估值資料暫缺',false);return null;}).finally(function(){taiwanValuationPromise=null;});
+    return taiwanValuationPromise;
+  }
   function marketYtdDrawdownKey_(row){var code=String(row&&row.code||'').trim().toUpperCase(),name=String(row&&row.name||'');if(code==='^TWII'||/台灣加權|加權指數|TAIEX/i.test(name))return 'taiex';if(code==='NYSEARCA:SPY'||code==='SPY'||/標普500|S&P\s*500/i.test(name))return 'sp500';return '';}
   function warRoomYtdMetric_(data,key){return data&&data.indices&&data.indices[key]||null;}
   function warRoomYtdMetricText_(metric){return metric&&isFinite(Number(metric.maxDrawdownPct))?num(metric.maxDrawdownPct,2)+'%':'資料暫缺';}
@@ -176,7 +197,7 @@
     function valuationCard(title,data,kind){if(!data)return '<article class="valuation-card"><h3>'+title+'</h3><p class="muted">估值資料暫缺</p></article>';var median=kind==='qqq'?(data.historicalMedian||{}).tenYear:(data.historicalPEMedian||{}).tenYear;var fields=kind==='qqq'?[['現價',data.price],['Forward P/E',data.forwardPE==null?null:num(data.forwardPE,2)+'×'],['Forward Earnings',data.forwardEarnings],['10年中位數',median==null?null:num(median,2)+'×']]:[['加權指數',data.index==null?data.price:data.index],['Trailing P/E',data.trailingPE==null?null:num(data.trailingPE,2)+'×'],['P/B',data.pb==null?null:num(data.pb,2)+'×'],['10年中位數',median==null?null:num(median,2)+'×']];return '<article class="valuation-card"><h3>'+title+'</h3><div class="valuation-values">'+fields.map(function(field){return '<div><small>'+esc(field[0])+'</small><strong>'+esc(field[1]==null?'資料暫缺':field[1])+'</strong></div>';}).join('')+'</div><p class="metric-label">'+esc(data.dataDate||data.priceDate||'資料日期暫缺')+' · '+esc(data.source||'來源未提供')+'</p><p class="valuation-judgment">'+esc(data.judgment||data.status||'以目前估值和歷史中位數比較，不是價格預測。')+'</p></article>';}
     if(valuations.qqq)html+=sectionTitle('估值觀察')+'<div class="brief-valuations">'+valuationCard('📡 QQQ 動態估值',valuations.qqq,'qqq')+'</div>';
     html+=sectionTitle('NASDAQ-100 估值')+'<div id="nasdaq-valuation-host"></div>';
-    {var taiwan=valuations.taiex||{},pe=taiwan.trailingPE,pb=taiwan.pb,peMedian=taiwan.historicalPEMedian&&taiwan.historicalPEMedian.tenYear,pbMedian=taiwan.historicalPBMedian&&taiwan.historicalPBMedian.tenYear,taiwanStatus=stale?'顯示快照 · 背景更新中':(taiwan.status||((taiwan.dataDate||taiwan.source)?'快照資料':'資料暫缺'));function valuationValue(value){return value!=null&&value!==''&&isFinite(Number(value))&&Number(value)>0?num(value,2)+'×':'資料暫缺';}html+=sectionTitle('台股估值')+'<article class="nasdaq-valuation-card taiex-valuation-card"><div class="nasdaq-valuation-head"><span>📊 台灣加權指數估值</span><span class="nasdaq-valuation-status">'+esc(taiwanStatus)+'</span></div><div class="nasdaq-valuation-values"><div><small>近四季 Trailing P/E</small><strong>'+esc(valuationValue(pe))+'</strong><small>資料日期 '+esc(taiwan.dataDate||'暫缺')+'</small></div><div><small>股價淨值比 P/B</small><strong>'+esc(valuationValue(pb))+'</strong><small>資料日期 '+esc(taiwan.dataDate||'暫缺')+'</small></div><div><small>10 年中位數 P/E</small><strong>'+esc(valuationValue(peMedian))+'</strong><small>歷史比較基準</small></div><div><small>10 年中位數 P/B</small><strong>'+esc(valuationValue(pbMedian))+'</strong><small>歷史比較基準</small></div></div><p>估值為歷史比較，不代表價格預測或買賣訊號。來源：'+esc(taiwan.source||'來源未提供')+'</p></article>';}
+    html+=sectionTitle('台股估值')+'<div id="taiwan-valuation-host"></div>';
     var rows=market.rows||[];
     function marketMaHint_(row){var price=row&&row.price!=null&&row.price!==''?Number(row.price):NaN,ma20=row&&row.ma20!=null&&row.ma20!==''?Number(row.ma20):NaN,ma20Prev=row&&row.ma20Prev!=null&&row.ma20Prev!==''?Number(row.ma20Prev):NaN;if(!isFinite(price)||!isFinite(ma20)||ma20<=0)return null;if(price>ma20&&isFinite(ma20Prev)&&ma20Prev>0&&ma20>ma20Prev)return {text:'MA20 偏強',tone:'up',title:'現價高於 MA20，且 MA20 高於前一日 MA20。'};if(price<ma20&&isFinite(ma20Prev)&&ma20Prev>0&&ma20<ma20Prev)return {text:'MA20 偏弱',tone:'down',title:'現價低於 MA20，且 MA20 低於前一日 MA20。'};if(price>ma20)return {text:'站上 MA20',tone:'up',title:'現價高於 MA20；均線方向未同時確認。'};if(price<ma20)return {text:'跌破 MA20',tone:'down',title:'現價低於 MA20；均線方向未同時確認。'};return {text:'貼近 MA20',tone:'',title:'現價與 MA20 相同。'};}
     if(rows.length)html+=sectionTitle('核心市場')+'<div class="brief-market-list">'+rows.map(function(row){var change=Number(row.changePct),tone=isFinite(change)?change>=0?'up':'down':'',maHint=marketMaHint_(row);return '<article class="brief-market-row"><div><strong>'+esc(row.name||row.code||'市場')+'</strong><small>'+esc(row.code||'')+' · '+esc(row.dataDate||row.sourceDate||'資料日未提供')+'</small></div><div><small>現價</small><div class="brief-market-price-line"><strong>'+esc(row.price==null?'--':num(row.price,2))+'</strong>'+(maHint?'<small class="brief-ma-hint '+maHint.tone+'" title="'+esc(maHint.title)+'">'+esc(maHint.text)+'</small>':'')+'</div></div><div class="'+tone+'"><small>漲跌</small><strong>'+esc(row.changePct==null?'--':num(row.changePct,2)+'%')+'</strong></div><span class="pill">'+esc(row.signal||'觀望')+'</span></article>';}).join('')+'</div>';
@@ -186,7 +207,7 @@
     var groups=[['💧 流動性',[['SOFR–IORB','sofrIorbSpread'],['銀行準備金','bankReserves'],['隔夜逆回購','rrp'],['M2','m2']]],['👷 就業',[['JOLTS 職缺','joltsOpenings'],['ADP 就業','adpEmploymentChange'],['非農就業','nfpPayrollChange']]],['🔥 通膨',[['CPI','cpi'],['PPI','ppi'],['油價','oil']]],['💳 市場壓力',[['信用利差','creditSpread'],['VIX','vix'],['消費信心','consumerSentiment']]]];
     html+=sectionTitle('總經燈號')+'<div class="brief-macro-grid">'+groups.map(function(group){return '<article class="brief-macro-card"><h3>'+group[0]+'</h3>'+group[1].map(function(item){var row=findIndicator(item[1]),tone=/紅|警戒|防守|惡化/.test(String(row&&row.status||''))?'down':/綠|改善|充足/.test(String(row&&row.status||''))?'up':'';return '<div class="brief-indicator"><span>'+esc(item[0])+'</span><strong class="'+tone+'">'+esc(indicatorValue(row))+'</strong></div>';}).join('')+'</article>';}).join('')+'</div>';
     if(report.latest||report.summary)html+=sectionTitle('長期觀察')+'<div class="brief-report">'+esc((report.latest&&report.latest.summary)||report.summary||'')+'</div>';
-    html+=rawDetails('完整快照資料',displayPayload);content.innerHTML=html;Array.prototype.forEach.call(document.querySelectorAll('.brief-market-row'),function(marketRow,index){var drawdownKey=marketYtdDrawdownKey_(rows[index]);if(!drawdownKey)return;var priceCell=marketRow.children[1];if(!priceCell)return;var slot=document.createElement('small');slot.className='brief-ytd-drawdown-slot';slot.setAttribute('data-ytd-drawdown',drawdownKey);slot.textContent='今年最大回撤載入中';priceCell.appendChild(slot);});setFreshness(captured?'快照時間 '+dateText(captured):'以目前可取得的快照呈現');refreshNasdaqValuation_();refreshWarRoomYtdDrawdown_();
+    html+=rawDetails('完整快照資料',displayPayload);content.innerHTML=html;Array.prototype.forEach.call(document.querySelectorAll('.brief-market-row'),function(marketRow,index){var drawdownKey=marketYtdDrawdownKey_(rows[index]);if(!drawdownKey)return;var priceCell=marketRow.children[1];if(!priceCell)return;var slot=document.createElement('small');slot.className='brief-ytd-drawdown-slot';slot.setAttribute('data-ytd-drawdown',drawdownKey);slot.textContent='今年最大回撤載入中';priceCell.appendChild(slot);});setFreshness(captured?'快照時間 '+dateText(captured):'以目前可取得的快照呈現');refreshNasdaqValuation_();refreshTaiwanValuation_(valuations.taiex,stale);refreshWarRoomYtdDrawdown_();
   }
   async function loadBriefing(force){
     var cacheKey='wealth_advisor_world_nas_v1',cached=readCache(cacheKey),cacheMarket=readCache('wealth_market_dashboard_v1'),cacheMacro=readCache('wealth_market_macro_v4');
