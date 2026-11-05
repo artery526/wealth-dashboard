@@ -47,17 +47,16 @@ const pangtongAnimations = {
     idle: [900, 1800]
   }
 };
+const zhugeAssetVersion = '20261105-zhuge-guanyu-gif1';
+const zhugeAsset = file => `./諸葛亮/${file}?v=${zhugeAssetVersion}`;
 const zhugeAnimations = {
   name: '諸葛亮',
   frames: {
-    '01': './諸葛亮/待機站立01.webp',
-    '02': './諸葛亮/輕搖羽扇02.webp',
-    '03': './諸葛亮/輕搖羽扇03.webp',
-    '04': './諸葛亮/輕搖羽扇04.webp',
-    '05': './諸葛亮/揮扇指揮05.webp',
-    '06': './諸葛亮/提出計策06.webp',
-    '07': './諸葛亮/提出計策電燈泡07.webp',
-    '08': './諸葛亮/運籌帷幄08.webp'
+    '01': zhugeAsset('待機站立01.webp'),
+    '02': zhugeAsset('輕搖羽扇02.webp'),
+    '03': zhugeAsset('輕搖羽扇03.webp'),
+    '04': zhugeAsset('輕搖羽扇04.webp'),
+    '09': zhugeAsset('關羽.gif')
   },
   breathing: [
     { frame: '02', duration: [250, 400] },
@@ -71,10 +70,7 @@ const zhugeAnimations = {
       { frame: '01', state: 'idle', duration: [800, 1800] }
     ] },
     specialAction: { interval: [18000, 36000], sequence: [
-      { frame: '05', state: 'command', duration: [550, 900] },
-      { frame: '06', state: 'strategy', duration: [700, 1200] },
-      { frame: '07', state: 'strategy-light', duration: [1600, 3000] },
-      { frame: '08', state: 'planning', duration: [1800, 4200] },
+      { frame: '09', state: 'guanyu-action', duration: [1800, 2600] },
       { frame: '01', state: 'idle', duration: [1000, 1800] }
     ] }
   },
