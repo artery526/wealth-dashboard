@@ -1,9 +1,9 @@
 {
   "id": "2026-11-05-war-room-taiwan-valuation",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-11-05",
   "area": "帝國晨報",
   "summary": "新增獨立台股估值卡片",
-  "details": "在戰情室帝國晨報以 NASDAQ-100 估值卡片的版型呈現台灣加權指數本益比、本淨比、十年中位數、資料日期與來源；優先顯示本機快取，再背景讀取戰情室專用唯讀估值 API。",
+  "details": "在戰情室帝國晨報以 NASDAQ-100 估值卡片的版型呈現台灣加權指數本益比、本淨比、十年中位數、資料日期與來源；優先顯示本機快取，再背景讀取戰情室專用唯讀估值 API。資料由 MoneyDJ 河流圖反算並以 TWSE 同日收盤指數核對，來源失敗時保留可辨識錯誤並明確標示。",
   "platforms": ["website", "app-script"]
 }

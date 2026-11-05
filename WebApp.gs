@@ -2307,7 +2307,8 @@ function getWarRoomTaiwanValuation_() {
     if (cached && Number(cached.fetchedAt) && now - Number(cached.fetchedAt) < WAR_ROOM_TAIWAN_VALUATION_CACHE_SECONDS_) {
       return warRoomTaiwanValuationResponse_(cached, true, '台股估值來源暫時無法更新，保留上次成功資料。');
     }
-    throw new Error('台股估值來源暫時無法讀取');
+    var reason = String(error && error.message || error || '未知錯誤').replace(/[\r\n]+/g, ' ').slice(0, 180);
+    throw new Error('台股估值來源暫時無法讀取：' + reason);
   }
 }
 
