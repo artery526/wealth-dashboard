@@ -1,0 +1,11 @@
+{
+  "id": "2026-11-05-wangfu-pain-map-restore",
+  "status": "released",
+  "date": "2026-11-05",
+  "area": "王府",
+  "summary": "恢復王府疼痛地圖入口與頁面",
+  "details": "修正 NAS 管理網域清單的分隔符，並將疼痛地圖頁面、選項及記錄 API 恢復上線；保留 NAS 專用既有功能與王府附件本機儲存設定。",
+  "platforms": [
+    "website"
+  ]
+}
