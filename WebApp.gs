@@ -132,6 +132,10 @@ function doGet(e) {
       verifyWriteToken(p);
       return ok(getWarRoomYtdDrawdown_());
     }
+    if (action === 'warRoomTaiwanValuation') {
+      verifyWriteToken(p);
+      return ok(getWarRoomTaiwanValuation_());
+    }
     if (action === 'pledgeLoans')  return ok(getPledgeLoans(getExternalDbSpreadsheet_()));
     if (action === 'assetSnapshot') return ok(getDailyAssetSnapshot(getExternalDbSpreadsheet_()));
     if (action === 'transactions') return ok(getTransactions(ss, p.ym));
@@ -2278,6 +2282,165 @@ function warRoomYtdDrawdownResponse_(payload, stale, errors) {
     stale: !!stale,
     errors: errors || []
   };
+}
+
+var WAR_ROOM_TAIWAN_VALUATION_CACHE_KEY_ = 'WAR_ROOM_TAIWAN_VALUATION_V1';
+var WAR_ROOM_TAIWAN_VALUATION_CACHE_SECONDS_ = 21600;
+var WAR_ROOM_TAIWAN_VALUATION_PER_URL_ = 'https://www.moneydj.com/Z/ZB/ZBL/ZBLB/ZBLB.djhtm';
+var WAR_ROOM_TAIWAN_VALUATION_PB_URL_ = 'https://www.moneydj.com/Z/ZB/ZBL/ZBLA/ZBLA.djhtm';
+
+function getWarRoomTaiwanValuation_() {
+  var cache = CacheService.getScriptCache();
+  var raw = cache.get(WAR_ROOM_TAIWAN_VALUATION_CACHE_KEY_);
+  var cached = null;
+  try { cached = raw ? JSON.parse(raw) : null; } catch (ignore) {}
+  var now = Date.now();
+  if (cached && Number(cached.fetchedAt) && now - Number(cached.fetchedAt) < 15 * 60 * 1000) {
+    return warRoomTaiwanValuationResponse_(cached, false, '');
+  }
+  try {
+    var payload = fetchWarRoomTaiwanValuation_();
+    payload.fetchedAt = now;
+    cache.put(WAR_ROOM_TAIWAN_VALUATION_CACHE_KEY_, JSON.stringify(payload), WAR_ROOM_TAIWAN_VALUATION_CACHE_SECONDS_);
+    return warRoomTaiwanValuationResponse_(payload, false, '');
+  } catch (error) {
+    if (cached && Number(cached.fetchedAt) && now - Number(cached.fetchedAt) < WAR_ROOM_TAIWAN_VALUATION_CACHE_SECONDS_) {
+      return warRoomTaiwanValuationResponse_(cached, true, '台股估值來源暫時無法更新，保留上次成功資料。');
+    }
+    throw new Error('台股估值來源暫時無法讀取');
+  }
+}
+
+function warRoomTaiwanValuationResponse_(payload, stale, error) {
+  return {
+    indexValue: payload.indexValue,
+    trailingPE: payload.trailingPE,
+    pb: payload.pb,
+    historicalPEMedian: { tenYear: payload.peMedian10y },
+    historicalPBMedian: { tenYear: payload.pbMedian10y },
+    dataDate: payload.dataDate,
+    source: payload.source,
+    peSourceUrl: WAR_ROOM_TAIWAN_VALUATION_PER_URL_,
+    pbSourceUrl: WAR_ROOM_TAIWAN_VALUATION_PB_URL_,
+    status: stale ? '顯示上次成功資料' : payload.status,
+    historyStatus: payload.historyStatus,
+    stale: !!stale,
+    error: error || ''
+  };
+}
+
+function fetchWarRoomTaiwanValuation_() {
+  var dailyPeUrl = warRoomTaiwanValuationUrl_('PE', 'D', 10);
+  var dailyPbUrl = warRoomTaiwanValuationUrl_('PB', 'D', 10);
+  var dailyPeResponse = UrlFetchApp.fetch(dailyPeUrl, warRoomTaiwanValuationRequest_(dailyPeUrl));
+  var dailyPbResponse = UrlFetchApp.fetch(dailyPbUrl, warRoomTaiwanValuationRequest_(dailyPbUrl));
+  var pePoints = warRoomTaiwanValuationParseRows_(dailyPeResponse, 'PE');
+  var pbPoints = warRoomTaiwanValuationParseRows_(dailyPbResponse, 'PB');
+  var current = pePoints[pePoints.length - 1];
+  var book = pbPoints[pbPoints.length - 1];
+  if (current.date !== book.date || Math.abs(current.indexValue - book.indexValue) > 0.02) {
+    throw new Error('MoneyDJ P/E、P/B 日期或指數不一致');
+  }
+  var date = current.date;
+  var ageDays = (Date.now() - Date.parse(date + 'T00:00:00+08:00')) / 86400000;
+  if (ageDays < -1 || ageDays > 10) throw new Error('MoneyDJ 估值日期超出可接受範圍');
+  var twseUrl = 'https://www.twse.com.tw/rwd/zh/afterTrading/MI_INDEX?response=json&type=IND&date=' + date.replace(/-/g, '');
+  var twseResponse = UrlFetchApp.fetch(twseUrl, { muteHttpExceptions: true });
+  if (twseResponse.getResponseCode() !== 200) throw new Error('TWSE 指數核對失敗');
+  var official = JSON.parse(twseResponse.getContentText('UTF-8'));
+  if (String(official.date || '') !== date.replace(/-/g, '')) throw new Error('TWSE 指數日期不一致');
+  var officialIndex = null;
+  (official.tables || []).forEach(function(table) {
+    (table.data || []).forEach(function(row) {
+      if (row[0] === '發行量加權股價指數' && table.fields && table.fields[1] === '收盤指數') {
+        officialIndex = warRoomTaiwanValuationNumber_(row[1]);
+      }
+    });
+  });
+  if (!(officialIndex > 0) || Math.abs(officialIndex - current.indexValue) > 0.02) {
+    throw new Error('MoneyDJ 與 TWSE 同日收盤指數不一致');
+  }
+  var peMedian = null, pbMedian = null, historyStatus = '歷史十年中位數暫缺';
+  try {
+    var monthlyPeUrl = warRoomTaiwanValuationUrl_('PE', 'M', 241);
+    var monthlyPbUrl = warRoomTaiwanValuationUrl_('PB', 'M', 241);
+    var monthlyPe = warRoomTaiwanValuationParseRows_(UrlFetchApp.fetch(monthlyPeUrl, warRoomTaiwanValuationRequest_(monthlyPeUrl)), 'PE');
+    var monthlyPb = warRoomTaiwanValuationParseRows_(UrlFetchApp.fetch(monthlyPbUrl, warRoomTaiwanValuationRequest_(monthlyPbUrl)), 'PB');
+    peMedian = warRoomTaiwanValuationMonthlyMedian_(monthlyPe, 10, date);
+    pbMedian = warRoomTaiwanValuationMonthlyMedian_(monthlyPb, 10, date);
+    if (peMedian != null && pbMedian != null) historyStatus = '十年中位數按已完成月份樣本計算';
+  } catch (historyError) {
+    historyStatus = '歷史十年中位數暫缺';
+  }
+  return {
+    indexValue: officialIndex,
+    trailingPE: current.value,
+    pb: book.value,
+    peMedian10y: peMedian,
+    pbMedian10y: pbMedian,
+    dataDate: date,
+    source: 'MoneyDJ 上市大盤 P/E、P/B 河流圖反算；TWSE 同日收盤指數核對',
+    status: peMedian != null && pbMedian != null ? '已更新' : '目前估值已更新；歷史中位數資料暫缺',
+    historyStatus: historyStatus
+  };
+}
+
+function warRoomTaiwanValuationUrl_(kind, period, count) {
+  return 'https://www.moneydj.com/z/mda.xdjxml?x=' + (kind === 'PE' ? 'combo_m2' : 'combo_m1') +
+    '&KindID=EB09999&Period=' + period + '&Count=' + count;
+}
+
+function warRoomTaiwanValuationRequest_(url) {
+  return {
+    muteHttpExceptions: true,
+    followRedirects: true,
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (compatible; ArkOS26-War-Room-Valuation/1.0)',
+      'Referer': WAR_ROOM_TAIWAN_VALUATION_PER_URL_,
+      'Accept': 'application/xml,text/xml,*/*'
+    }
+  };
+}
+
+function warRoomTaiwanValuationParseRows_(response, kind) {
+  if (response.getResponseCode() !== 200) throw new Error('MoneyDJ 回應異常');
+  var points = [], seen = {};
+  var rows = String(response.getContentText('Big5') || '').match(/<Row\b[^>]*\/>/g) || [];
+  rows.forEach(function(row) {
+    var attrs = {};
+    row.replace(/(V\d+)\s*=\s*['"]([^'"]*)['"]/g, function(_, key, value) { attrs[key] = value; });
+    var date = String(attrs.V1 || '').replace(/\//g, '-'), index = warRoomTaiwanValuationNumber_(attrs.V2), firstBand = warRoomTaiwanValuationNumber_(attrs.V3);
+    var step = kind === 'PE' ? 5 : 0.5;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date || '') || !(index > 0) || !(firstBand > 0) || seen[date]) return;
+    for (var i = 4; i <= 9; i++) {
+      var band = warRoomTaiwanValuationNumber_(attrs['V' + i]);
+      if (!(band > 0) || Math.abs(band / firstBand - (i - 2)) > 0.001) throw new Error('MoneyDJ 河流圖格式變更');
+    }
+    points.push({ date: date, indexValue: index, value: index / (firstBand / step) });
+    seen[date] = true;
+  });
+  points.sort(function(a, b) { return a.date.localeCompare(b.date); });
+  if (!points.length) throw new Error('MoneyDJ 沒有有效估值資料');
+  return points;
+}
+
+function warRoomTaiwanValuationMonthlyMedian_(points, years, date) {
+  var currentMonth = Number(date.slice(0, 4)) * 12 + Number(date.slice(5, 7)) - 1;
+  var values = points.filter(function(point) {
+    var month = Number(point.date.slice(0, 4)) * 12 + Number(point.date.slice(5, 7)) - 1;
+    return month >= currentMonth - years * 12 && month < currentMonth;
+  }).map(function(point) { return point.value; });
+  if (values.length !== years * 12) return null;
+  values.sort(function(a, b) { return a - b; });
+  var middle = Math.floor(values.length / 2);
+  return values.length % 2 ? values[middle] : (values[middle - 1] + values[middle]) / 2;
+}
+
+function warRoomTaiwanValuationNumber_(value) {
+  var text = String(value == null ? '' : value).replace(/[,$%\s]/g, '');
+  if (!text || text === '-' || text === '—' || /^#(?:NUM|N\/A|VALUE|DIV\/0|REF)!?$/i.test(text)) return null;
+  var number = Number(text);
+  return isFinite(number) ? number : null;
 }
 
 function getMacroOverview(ss) {

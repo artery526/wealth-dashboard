@@ -127,16 +127,15 @@
     function value(number){return number!=null&&number!==''&&isFinite(Number(number))&&Number(number)>0?num(number,2)+'×':'資料暫缺';}
     var pe=data.trailingPE,pb=data.pb,peMedian=data.historicalPEMedian&&data.historicalPEMedian.tenYear,pbMedian=data.historicalPBMedian&&data.historicalPBMedian.tenYear;
     var status=loading?(data.dataDate||data.source?'顯示快照 · 背景更新中':'背景讀取中…'):(error?'來源暫時無法讀取':(data.status||((data.dataDate||data.source)?'資料已更新':'資料暫缺')));
-    host.innerHTML='<article class="nasdaq-valuation-card taiex-valuation-card"><div class="nasdaq-valuation-head"><span>📊 台灣加權指數估值</span><span class="nasdaq-valuation-status">'+esc(status)+'</span></div><div class="nasdaq-valuation-values"><div><small>近四季 Trailing P/E</small><strong>'+esc(value(pe))+'</strong><small>資料日期 '+esc(data.dataDate||'暫缺')+'</small></div><div><small>股價淨值比 P/B</small><strong>'+esc(value(pb))+'</strong><small>資料日期 '+esc(data.dataDate||'暫缺')+'</small></div><div><small>10 年中位數 P/E</small><strong>'+esc(value(peMedian))+'</strong><small>歷史比較基準</small></div><div><small>10 年中位數 P/B</small><strong>'+esc(value(pbMedian))+'</strong><small>歷史比較基準</small></div></div><p>估值為歷史比較，不代表價格預測或買賣訊號。來源：'+esc(data.source||'來源未提供')+(error?' · '+esc(error):'')+'</p></article>';
+    host.innerHTML='<article class="nasdaq-valuation-card taiex-valuation-card"><div class="nasdaq-valuation-head"><span>📊 台灣加權指數估值</span><span class="nasdaq-valuation-status">'+esc(status)+'</span></div><div class="nasdaq-valuation-values"><div><small>近四季 Trailing P/E</small><strong>'+esc(value(pe))+'</strong><small>資料日期 '+esc(data.dataDate||'暫缺')+'</small></div><div><small>股價淨值比 P/B</small><strong>'+esc(value(pb))+'</strong><small>資料日期 '+esc(data.dataDate||'暫缺')+'</small></div><div><small>10 年中位數 P/E</small><strong>'+esc(value(peMedian))+'</strong><small>歷史比較基準</small></div><div><small>10 年中位數 P/B</small><strong>'+esc(value(pbMedian))+'</strong><small>歷史比較基準</small></div></div><p>估值為歷史比較，不代表價格預測或買賣訊號。來源：'+esc(data.source||'來源未提供')+' · <a href="https://www.moneydj.com/Z/ZB/ZBL/ZBLB/ZBLB.djhtm" target="_blank" rel="noopener noreferrer">MoneyDJ P/E</a> · <a href="https://www.moneydj.com/Z/ZB/ZBL/ZBLA/ZBLA.djhtm" target="_blank" rel="noopener noreferrer">MoneyDJ P/B</a> · <a href="https://www.twse.com.tw/zh/indices/taiex/mi-5min-hist.html" target="_blank" rel="noopener noreferrer">TWSE</a>'+(data.historyStatus?' · '+esc(data.historyStatus):'')+(data.error?' · '+esc(data.error):'')+(error?' · '+esc(error):'')+'</p></article>';
   }
   function refreshTaiwanValuation_(snapshotValue,snapshotStale){
     var cached=readCache(TAIWAN_VALUATION_CACHE_KEY),initial=snapshotValue||cached;
     renderTaiwanValuation_(initial,!!snapshotStale,'',true);
     if(taiwanValuationPromise||Date.now()-taiwanValuationLastAttempt<60000)return taiwanValuationPromise;
     taiwanValuationLastAttempt=Date.now();
-    taiwanValuationPromise=request({action:'macroOverview'},20000).then(function(macro){
-      var value=macro&&macro.valuations&&macro.valuations.taiex;
-      if(!value)throw new Error('總經來源未提供台股估值欄位');
+    taiwanValuationPromise=request({action:'warRoomTaiwanValuation'},45000).then(function(value){
+      if(!value||!value.dataDate)throw new Error('台股估值來源未提供有效資料');
       writeCache(TAIWAN_VALUATION_CACHE_KEY,value);renderTaiwanValuation_(value,false,'',false);return value;
     }).catch(function(error){renderTaiwanValuation_(initial,true,error&&error.message||'估值資料暫缺',false);return null;}).finally(function(){taiwanValuationPromise=null;});
     return taiwanValuationPromise;

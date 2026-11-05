@@ -172,8 +172,8 @@ test('Standalone War Room shows sourced NASDAQ-100 valuations and dates on mobil
     const action = new URL(route.request().url()).searchParams.get('action');
     const data = action === 'nasdaq100Valuation'
       ? { trailingPE: 30.52, trailingDataDate: '2026-10-22', forwardPE: 19.61, forwardDataDate: '2026-10-21', stale: false }
-      : action === 'macroOverview'
-        ? { valuations: { taiex: { trailingPE: 22.48, pb: 2.61, historicalPEMedian: { tenYear: 18.32 }, historicalPBMedian: { tenYear: 1.74 }, dataDate: '2026-10-22', source: 'MoneyDJ PE/PB河流圖反算；TWSE同日收盤指數核對通過', status: '已更新' } } }
+      : action === 'warRoomTaiwanValuation'
+        ? { trailingPE: 22.48, pb: 2.61, historicalPEMedian: { tenYear: 18.32 }, historicalPBMedian: { tenYear: 1.74 }, dataDate: '2026-10-22', source: 'MoneyDJ PE/PB河流圖反算；TWSE同日收盤指數核對通過', status: '已更新' }
       : action === 'advisorWorldBriefSnapshotRefresh'
         ? { snapshot: { market: { summary: {}, rows: [] }, macro: { judgment: {}, indicators: [] }, capturedAt: '2026-10-23T00:00:00Z' } }
         : {};
@@ -198,6 +198,9 @@ test('Standalone War Room shows sourced NASDAQ-100 valuations and dates on mobil
   await expect(taiwanCard).toContainText('1.74×');
   await expect(taiwanCard).toContainText('2026-10-22');
   await expect(taiwanCard).toContainText('MoneyDJ PE/PB河流圖反算');
+  await expect(taiwanCard.getByRole('link', { name: 'MoneyDJ P/E' })).toHaveAttribute('href', 'https://www.moneydj.com/Z/ZB/ZBL/ZBLB/ZBLB.djhtm');
+  await expect(taiwanCard.getByRole('link', { name: 'MoneyDJ P/B' })).toHaveAttribute('href', 'https://www.moneydj.com/Z/ZB/ZBL/ZBLA/ZBLA.djhtm');
+  await expect(taiwanCard.getByRole('link', { name: 'TWSE' })).toHaveAttribute('href', 'https://www.twse.com.tw/zh/indices/taiex/mi-5min-hist.html');
   const taiwanDimensions = await taiwanCard.evaluate(el => ({ scrollWidth: el.scrollWidth, clientWidth: el.clientWidth }));
   expect(taiwanDimensions.scrollWidth).toBeLessThanOrEqual(taiwanDimensions.clientWidth);
   const dimensions = await card.evaluate(el => ({ scrollWidth: el.scrollWidth, clientWidth: el.clientWidth }));
