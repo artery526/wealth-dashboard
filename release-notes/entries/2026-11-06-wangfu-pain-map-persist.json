@@ -1,0 +1,11 @@
+{
+  "id": "2026-11-06-wangfu-pain-map-persist",
+  "status": "released",
+  "date": "2026-11-06",
+  "area": "王府",
+  "summary": "固定疼痛地圖部署版本避免舊檔覆蓋",
+  "details": "移除 NAS 容器對主機 server.js 目錄的即時掛載，程式改由 Docker 映像提供，避免舊工作目錄覆蓋疼痛地圖路由；保留 NAS 資料與照片腳本掛載。",
+  "platforms": [
+    "website"
+  ]
+}
