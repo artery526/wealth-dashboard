@@ -1,10 +1,10 @@
 {
   "id": "2026-11-08-link-pocket-preview-api-repair",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-11-08",
   "area": "太倉連結便貼",
-  "summary": "修復 Threads 連結預覽 API 並提高頁面讀取上限",
-  "details": "恢復 NAS 端連結預覽路由，支援 Threads 公開標題、摘要和縮圖擷取，並調整大型頁面的讀取限制。",
+  "summary": "11/08　修復太倉 Threads 連結預覽失敗",
+  "details": "恢復 NAS 端預覽路由並提高頁面讀取上限，Threads 公開標題、摘要和縮圖可正常擷取；限制內網位址，並保存縮圖連結供便貼使用。",
   "platforms": [
     "website"
   ]
