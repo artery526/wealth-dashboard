@@ -1,0 +1,9 @@
+{
+  "id": "2026-11-08-wangfu-pain-map-edit-icon",
+  "status": "released",
+  "date": "2026-11-08",
+  "area": "王府",
+  "summary": "疼痛地圖以筆圖示編輯紀錄",
+  "details": "將每筆紀錄的文字編輯按鈕改為疼痛部位前方的筆圖示，保留原有編輯功能並方便手機點選。",
+  "platforms": ["website"]
+}
