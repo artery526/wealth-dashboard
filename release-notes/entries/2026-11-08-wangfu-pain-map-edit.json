@@ -1,0 +1,9 @@
+{
+  "id": "2026-11-08-wangfu-pain-map-edit",
+  "status": "released",
+  "date": "2026-11-08",
+  "area": "王府",
+  "summary": "疼痛地圖既有紀錄可直接編輯",
+  "details": "在每筆疼痛紀錄加入編輯入口，可修改日期、疼痛部位、程度、藥物與備註，並更新 NAS 中原有紀錄。",
+  "platforms": ["website"]
+}
