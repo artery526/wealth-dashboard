@@ -1,9 +1,11 @@
 {
   "id": "2026-11-09-finance-treasury-total-from-h2",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-11-09",
   "area": "財政",
   "summary": "國庫現況帝國寶庫改讀月度戰情室 H2",
-  "details": "帝國寶庫主要數值改以國庫現況帳戶資料中的 H2 為準；舊快照僅在 H2 資料不可用時備援。",
-  "platforms": ["website"]
+  "details": "帝國寶庫數值改由國庫現況帳戶 API 回傳的月度戰情室 H2 優先顯示；舊快照保留作 H2 資料不可用時的備援與歷史比較。Pages 部署成功，正式頁面已確認新版取值邏輯。",
+  "platforms": [
+    "website"
+  ]
 }
