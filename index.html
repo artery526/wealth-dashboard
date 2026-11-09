@@ -10277,15 +10277,18 @@ function renderTreasuryAccountTotalAssetCard(assetSnapshot,totalAssetAccount,mon
   if(!hasSheetTotal)total=Number(assetSnapshot&&assetSnapshot.latestTotalAssetValue);
   if(!hasSheetTotal&&(isNaN(total)||!isFinite(total)||total<=0))total=Number(latest&&latest.totalAssetValue);
   if(!hasSheetTotal&&(isNaN(total)||!isFinite(total)||total<=0))return '';
-  // 比較最近一筆可用舊快照，不要求日期一定是前一天。
+  // H2 是目前總資產；用最近保存的總資產值作為較舊值比較基準。
   var latestCompareValue=Number(latest&&latest.totalAssetValue);
   var previousCompareValue=Number(assetSnapshot&&assetSnapshot.previousTotalAssetValue);
-  if(!(previousCompareValue>0))previousCompareValue=Number(previous&&previous.totalAssetValue);
-  if(!(previousCompareValue>0)&&assetSnapshot&&assetSnapshot.totalAssetTrend30d){
+  if(hasSheetTotal){
+    previousCompareValue=latestCompareValue;
+  }else if(!(previousCompareValue>0))previousCompareValue=Number(previous&&previous.totalAssetValue);
+  if(!hasSheetTotal&&!(previousCompareValue>0)&&assetSnapshot&&assetSnapshot.totalAssetTrend30d){
     previousCompareValue=Number(assetSnapshot.totalAssetTrend30d.baseValue);
   }
-  var historicalCompareOk=isFinite(latestCompareValue)&&latestCompareValue>0&&isFinite(previousCompareValue)&&previousCompareValue>0;
-  var historicalDelta=historicalCompareOk?latestCompareValue-previousCompareValue:null;
+  var comparisonCurrentValue=hasSheetTotal?total:latestCompareValue;
+  var historicalCompareOk=isFinite(comparisonCurrentValue)&&comparisonCurrentValue>0&&isFinite(previousCompareValue)&&previousCompareValue>0;
+  var historicalDelta=historicalCompareOk?comparisonCurrentValue-previousCompareValue:null;
   var historicalPct=historicalCompareOk&&previousCompareValue!==0?historicalDelta/previousCompareValue*100:null;
   var delta=historicalCompareOk?historicalDelta:null;
   var deltaOk=delta!==null&&delta!==undefined&&!isNaN(Number(delta))&&isFinite(Number(delta));
@@ -10294,9 +10297,10 @@ function renderTreasuryAccountTotalAssetCard(assetSnapshot,totalAssetAccount,mon
   var initialChangeRaw=assetSnapshot&&assetSnapshot.initialAssetChangeAmount;
   var initialPctRaw=assetSnapshot&&assetSnapshot.initialAssetChangePct;
   var initialBaseline=Number(assetSnapshot&&assetSnapshot.initialAssetValue);
-  var initialOk=initialBaseline>0&&initialChangeRaw!==null&&initialChangeRaw!==undefined&&initialPctRaw!==null&&initialPctRaw!==undefined&&isFinite(Number(initialChangeRaw))&&isFinite(Number(initialPctRaw));
-  var initialChange=initialOk?Number(initialChangeRaw):null;
-  var initialPct=initialOk?Number(initialPctRaw):null;
+  var storedInitialOk=initialChangeRaw!==null&&initialChangeRaw!==undefined&&initialPctRaw!==null&&initialPctRaw!==undefined&&isFinite(Number(initialChangeRaw))&&isFinite(Number(initialPctRaw));
+  var initialOk=initialBaseline>0&&isFinite(initialBaseline)&&(hasSheetTotal||storedInitialOk);
+  var initialChange=initialOk?(hasSheetTotal?total-initialBaseline:Number(initialChangeRaw)):null;
+  var initialPct=initialOk?(hasSheetTotal?initialChange/initialBaseline*100:Number(initialPctRaw)):null;
   var trendChange=initialOk?initialChange:historicalCompareOk?historicalDelta:null;
   var trendPct=initialOk?initialPct:historicalPct;
   var trendOk=trendChange!==null&&isFinite(Number(trendChange));

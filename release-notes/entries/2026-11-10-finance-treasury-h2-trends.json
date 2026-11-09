@@ -1,0 +1,9 @@
+{
+  "id": "2026-11-10-finance-treasury-h2-trends",
+  "status": "in_progress",
+  "date": null,
+  "area": "財政",
+  "summary": "讓帝國寶庫史記與較舊值跟隨 H2 總資產",
+  "details": "較舊值改以 H2 對最近快照比較；史記改以 H2 對月度戰情室 D1 初始基準計算。",
+  "platforms": ["website"]
+}
