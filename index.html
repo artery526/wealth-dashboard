@@ -10272,10 +10272,11 @@ function renderTreasuryAccountTotalAssetCard(assetSnapshot,totalAssetAccount,mon
   monthly=monthly||{};
   var latest=assetSnapshot&&assetSnapshot.latest;
   var previous=assetSnapshot&&assetSnapshot.previous;
-  var total=Number(assetSnapshot&&assetSnapshot.latestTotalAssetValue);
-  if(isNaN(total)||!isFinite(total)||total<=0)total=Number(latest&&latest.totalAssetValue);
-  if(isNaN(total)||!isFinite(total)||total<=0)total=Number(totalAssetAccount&&totalAssetAccount.value);
-  if(isNaN(total)||!isFinite(total)||total<=0)return '';
+  var total=Number(totalAssetAccount&&totalAssetAccount.value);
+  var hasSheetTotal=!!totalAssetAccount&&isFinite(total);
+  if(!hasSheetTotal)total=Number(assetSnapshot&&assetSnapshot.latestTotalAssetValue);
+  if(!hasSheetTotal&&(isNaN(total)||!isFinite(total)||total<=0))total=Number(latest&&latest.totalAssetValue);
+  if(!hasSheetTotal&&(isNaN(total)||!isFinite(total)||total<=0))return '';
   // 比較最近一筆可用舊快照，不要求日期一定是前一天。
   var latestCompareValue=Number(latest&&latest.totalAssetValue);
   var previousCompareValue=Number(assetSnapshot&&assetSnapshot.previousTotalAssetValue);
