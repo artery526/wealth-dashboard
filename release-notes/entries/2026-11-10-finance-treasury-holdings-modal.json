@@ -1,0 +1,9 @@
+{
+  "id": "2026-11-10-finance-treasury-holdings-modal",
+  "status": "in_progress",
+  "date": null,
+  "area": "財政",
+  "summary": "帝國寶庫持股戰報改為獨立視窗",
+  "details": "帝國寶庫標題旁新增眼睛按鈕，點擊開啟持股含息報酬視窗。",
+  "platforms": ["website"]
+}

@@ -2132,8 +2132,10 @@ html.war-room-standalone .panel-head{padding:12px 18px;border-bottom-color:rgba(
 .finance-accounts-collapse.is-masked .treasury-saving-rate::after{content:'🪙月儲蓄率 ***';font-family:var(--sans);font-size:13px;color:#8d6a2a}
 .finance-accounts-collapse.is-masked .treasury-class-equivalent{font-size:0;color:transparent}
 .finance-accounts-collapse.is-masked .treasury-class-equivalent::after{content:'堂課換算 ***';font-family:var(--sans);font-size:12px;color:#8d6a2a}
-.treasury-holdings-report{margin-top:12px;padding-top:10px;border-top:1px solid rgba(232,192,80,.18);font:12px/1.5 var(--sans)}
-.treasury-holdings-report summary{cursor:pointer;color:var(--gold);font-weight:900}.treasury-holdings-report summary small{color:#8aaebb;font-size:10px;font-weight:600}
+.treasury-holdings-open{margin-left:8px;border:1px solid rgba(232,192,80,.45);border-radius:9px;background:rgba(232,192,80,.08);color:var(--gold);font-size:16px;padding:2px 9px;cursor:pointer;vertical-align:middle}
+.treasury-holdings-modal{position:fixed;inset:0;z-index:10020;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(0,8,15,.78);backdrop-filter:blur(5px)}.treasury-holdings-modal.is-open{display:flex}
+.treasury-holdings-dialog{width:min(620px,100%);max-height:min(82vh,760px);overflow:auto;border:1px solid rgba(83,174,205,.5);border-radius:16px;background:linear-gradient(160deg,#092433,#07131f 65%);box-shadow:0 20px 70px #000b;padding:18px;color:#dce9ef}
+.treasury-holdings-dialog-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}.treasury-holdings-dialog-head h3{margin:0;color:var(--gold);font-size:17px}.treasury-holdings-close{border:1px solid #426476;border-radius:9px;background:#0b1c29;color:#b8dce7;font-size:20px;padding:2px 10px;cursor:pointer}
 .treasury-holdings-list{display:grid;gap:6px;max-height:260px;overflow-y:auto;margin-top:9px}.treasury-holding-row{display:flex;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px solid rgba(232,192,80,.1)}
 .treasury-holding-name{min-width:0;overflow-wrap:anywhere;color:#dce9ef;font-weight:800}.treasury-holding-result{text-align:right;white-space:nowrap}.treasury-holding-result.gain{color:var(--coral)}.treasury-holding-result.loss{color:var(--teal)}
 .treasury-holdings-meta{margin:7px 0 0;color:#8aaebb;font-size:10px}.finance-accounts-collapse.is-masked .treasury-holding-value{font-size:0;color:transparent}.finance-accounts-collapse.is-masked .treasury-holding-value::after{content:'***';font-size:12px;color:var(--gold)}
@@ -5940,7 +5942,6 @@ var FINANCE_TREASURY_CACHE_KEY='wealth_finance_treasury_v10';
 var FINANCE_TREASURY_HOLDINGS_CACHE_KEY='wealth_finance_treasury_holdings_v1';
 var FINANCE_TREASURY_HOLDINGS_REFRESH_GAP=10*60*1000;
 var financeTreasuryHoldingsPromise=null;
-var financeTreasuryHoldingsOpen=true;
 var FINANCE_TREASURY_CACHE_PREFIX='wealth_finance_treasury_v';
 var FINANCE_MONTH_CATEGORY_CACHE_KEY='wealth_finance_month_category_v1';
 var FINANCE_PLEDGE_CACHE_KEY='wealth_finance_pledge_v4';
@@ -10304,12 +10305,12 @@ function loadTreasuryHoldingsReport(){
     var data={rows:Array.isArray(rows)?rows:[]};
     writeTimedFinanceCache(FINANCE_TREASURY_HOLDINGS_CACHE_KEY,data);
     holdingsCache=data.rows;
-    var body=document.getElementById('treasury-holdings-report-body');
+    var body=document.getElementById('treasury-holdings-dialog-body');
     if(body)body.innerHTML=renderTreasuryHoldingsReportBody(readFinanceCacheEntry(FINANCE_TREASURY_HOLDINGS_CACHE_KEY,true));
     return data;
   }).catch(function(error){
     console.warn('持股戰報背景讀取失敗',error);
-    var body=document.getElementById('treasury-holdings-report-body');
+    var body=document.getElementById('treasury-holdings-dialog-body');
     if(body&&!cached)body.textContent='持股戰報暫時無法取得。';
     return null;
   }).finally(function(){financeTreasuryHoldingsPromise=null;});
@@ -10364,16 +10365,24 @@ function renderTreasuryAccountTotalAssetCard(assetSnapshot,totalAssetAccount,mon
     if(trendPct!==null&&isFinite(Number(trendPct)))trendText+=' ('+(Number(trendPct)>=0?'+':'')+Number(trendPct).toFixed(1)+'%)';
   }
   return `<div class="acc-item treasury-total-card">
-    <div class="acc-name">帝國寶庫</div>
+    <div class="acc-name">帝國寶庫<button class="treasury-holdings-open" type="button" aria-label="開啟持股戰報" title="持股戰報" onclick="openTreasuryHoldingsModal()">👁️</button></div>
     <div class="acc-val">${fmtFull(total)}</div>
     <div class="treasury-total-delta ${deltaClass}">較舊值 ${deltaText}</div>
     <div class="treasury-total-trend ${trendClass}">${esc(trendText)}</div>
     <div class="treasury-monthly-title"><span>月收／支</span></div>
     <div class="treasury-monthly-row"><span>收入</span><strong class="treasury-monthly-income">${financeMonthlySummaryAvailable(monthly)?fmtFull(monthly.income):'—'}</strong></div>
     <div class="treasury-monthly-row"><span>支出</span><strong class="treasury-monthly-expense">${financeMonthlySummaryAvailable(monthly)?fmtFull(monthly.expense):'—'}</strong></div>
-    <details class="treasury-holdings-report" ${financeTreasuryHoldingsOpen?'open':''} ontoggle="financeTreasuryHoldingsOpen=this.open"><summary>⚔️ 持股戰報 <small>各標的含息報酬</small></summary><div id="treasury-holdings-report-body">${renderTreasuryHoldingsReportBody(readFinanceCacheEntry(FINANCE_TREASURY_HOLDINGS_CACHE_KEY,true))}</div></details>
   </div>`;
 }
+
+function openTreasuryHoldingsModal(){
+  var modal=document.getElementById('treasury-holdings-modal');
+  if(!modal){modal=document.createElement('div');modal.id='treasury-holdings-modal';modal.className='treasury-holdings-modal';modal.setAttribute('role','dialog');modal.setAttribute('aria-modal','true');modal.setAttribute('aria-labelledby','treasury-holdings-title');modal.innerHTML='<div class="treasury-holdings-dialog"><div class="treasury-holdings-dialog-head"><h3 id="treasury-holdings-title">⚔️ 持股戰報</h3><button type="button" class="treasury-holdings-close" aria-label="關閉" onclick="closeTreasuryHoldingsModal()">×</button></div><div id="treasury-holdings-dialog-body"></div></div>';modal.addEventListener('click',function(event){if(event.target===modal)closeTreasuryHoldingsModal();});document.body.appendChild(modal);}
+  modal.classList.add('is-open');document.body.style.overflow='hidden';
+  var cached=readFinanceCacheEntry(FINANCE_TREASURY_HOLDINGS_CACHE_KEY,true);var body=document.getElementById('treasury-holdings-dialog-body');if(body)body.innerHTML=renderTreasuryHoldingsReportBody(cached);
+  loadTreasuryHoldingsReport();
+}
+function closeTreasuryHoldingsModal(){var modal=document.getElementById('treasury-holdings-modal');if(modal)modal.classList.remove('is-open');document.body.style.overflow='';}
 
 function renderTreasuryCategoryDetails(summary,expanded){
   if(!summary)return `<details class="treasury-category-details"><summary>📊 本月收支細項</summary><div class="treasury-category-empty">分類資料暫不可用</div></details>`;
