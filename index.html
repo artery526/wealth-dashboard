@@ -2132,6 +2132,12 @@ html.war-room-standalone .panel-head{padding:12px 18px;border-bottom-color:rgba(
 .finance-accounts-collapse.is-masked .treasury-saving-rate::after{content:'🪙月儲蓄率 ***';font-family:var(--sans);font-size:13px;color:#8d6a2a}
 .finance-accounts-collapse.is-masked .treasury-class-equivalent{font-size:0;color:transparent}
 .finance-accounts-collapse.is-masked .treasury-class-equivalent::after{content:'堂課換算 ***';font-family:var(--sans);font-size:12px;color:#8d6a2a}
+.treasury-holdings-report{margin-top:12px;padding-top:10px;border-top:1px solid rgba(232,192,80,.18);font:12px/1.5 var(--sans)}
+.treasury-holdings-report summary{cursor:pointer;color:var(--gold);font-weight:900}.treasury-holdings-report summary small{color:#8aaebb;font-size:10px;font-weight:600}
+.treasury-holdings-list{display:grid;gap:6px;max-height:260px;overflow-y:auto;margin-top:9px}.treasury-holding-row{display:flex;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px solid rgba(232,192,80,.1)}
+.treasury-holding-name{min-width:0;overflow-wrap:anywhere;color:#dce9ef;font-weight:800}.treasury-holding-result{text-align:right;white-space:nowrap}.treasury-holding-result.gain{color:var(--coral)}.treasury-holding-result.loss{color:var(--teal)}
+.treasury-holdings-meta{margin:7px 0 0;color:#8aaebb;font-size:10px}.finance-accounts-collapse.is-masked .treasury-holding-value{font-size:0;color:transparent}.finance-accounts-collapse.is-masked .treasury-holding-value::after{content:'***';font-size:12px;color:var(--gold)}
+@media(max-width:680px){.treasury-holding-row{flex-wrap:wrap}.treasury-holding-result{margin-left:auto}}
 .finance-accounts-collapse.is-masked .res-details{font-size:0;color:transparent}
 .finance-accounts-collapse.is-masked .res-details::after{content:'***';font-family:var(--mono);font-size:15px;color:var(--gold)}
 .finance-collapse .res-section-title,.finance-collapse .pledge-section-title{display:none}
@@ -5931,6 +5937,10 @@ var advisorAIDailyUpdatesData=null;
 var advisorAIDailyUpdatesIndex=0;
 // v10: 月收支只採用完整月摘要；捨棄曾由最近 50 筆交易拼成的錯誤快取。
 var FINANCE_TREASURY_CACHE_KEY='wealth_finance_treasury_v10';
+var FINANCE_TREASURY_HOLDINGS_CACHE_KEY='wealth_finance_treasury_holdings_v1';
+var FINANCE_TREASURY_HOLDINGS_REFRESH_GAP=10*60*1000;
+var financeTreasuryHoldingsPromise=null;
+var financeTreasuryHoldingsOpen=true;
 var FINANCE_TREASURY_CACHE_PREFIX='wealth_finance_treasury_v';
 var FINANCE_MONTH_CATEGORY_CACHE_KEY='wealth_finance_month_category_v1';
 var FINANCE_PLEDGE_CACHE_KEY='wealth_finance_pledge_v4';
@@ -9999,6 +10009,7 @@ async function loadAccounts(){
   if(freshEntry&&cached&&!shouldRevalidate){
     setFinanceCardStatus('ok','國庫現況已載入');
     refreshFinanceTreasuryDetails(cached);
+    loadTreasuryHoldingsReport();
     return Promise.resolve(cached);
   }
   setFinanceCardStatus('pending',cached?'背景更新中':'讀取中');
@@ -10019,6 +10030,7 @@ async function loadAccounts(){
     if(document.getElementById('acc-content'))renderAccounts(data.accs,data.monthly,document.getElementById('acc-content'),data.assetSnapshot,data.bills,false);
     setFinanceCardStatus('ok',financeTreasuryLoadedMessage(data));
     refreshFinanceTreasuryDetails(data);
+    loadTreasuryHoldingsReport();
     return data;
   }).catch(function(e){
     setFinanceCardStatus('err',e.message||'讀取失敗');
@@ -10268,6 +10280,47 @@ function renderAccounts(accs,monthly,el,assetSnapshot,bills,stale){
   });
 }
 
+function renderTreasuryHoldingsReportBody(entry){
+  if(!entry)return '<p class="treasury-holdings-meta">持股戰報背景讀取中…</p>';
+  var rows=Array.isArray(entry.data&&entry.data.rows)?entry.data.rows:[];
+  var holdings=rows.filter(function(row){return row&&String(row.symbol||row.name||'').trim()&&(Number(row.shares)>0||Number(row.marketValue)>0);});
+  if(!holdings.length)return '<p class="treasury-holdings-meta">目前沒有持股資料。</p>';
+  var list=holdings.map(function(row){
+    var result=Number(row.totalReturn)||0;
+    var label=result>0?'帶回':result<0?'軍團傷亡':'戰況持平';
+    var suffix=result>0?' 金銀財寶':'';
+    return '<div class="treasury-holding-row"><span class="treasury-holding-name">'+esc(row.symbol||row.name)+'</span><span class="treasury-holding-result '+(result>0?'gain':result<0?'loss':'')+'">'+label+(result===0?'':' <strong class="treasury-holding-value">'+fmtFull(Math.abs(result))+'</strong>'+suffix)+'</span></div>';
+  }).join('');
+  var stale=Date.now()-Number(entry.savedAt||0)>=FINANCE_TREASURY_HOLDINGS_REFRESH_GAP;
+  return '<div class="treasury-holdings-list">'+list+'</div><p class="treasury-holdings-meta">含息報酬包含未實現損益 · '+(stale?'顯示快取':'最近取得')+'</p>';
+}
+
+function loadTreasuryHoldingsReport(){
+  if(!API_URL)return Promise.resolve(null);
+  var cached=readFinanceCacheEntry(FINANCE_TREASURY_HOLDINGS_CACHE_KEY,true);
+  if(cached&&Date.now()-Number(cached.savedAt||0)<FINANCE_TREASURY_HOLDINGS_REFRESH_GAP)return Promise.resolve(cached.data);
+  if(financeTreasuryHoldingsPromise)return financeTreasuryHoldingsPromise;
+  financeTreasuryHoldingsPromise=apiGet({action:'holdingsOverview'}).then(function(rows){
+    var data={rows:Array.isArray(rows)?rows:[]};
+    writeTimedFinanceCache(FINANCE_TREASURY_HOLDINGS_CACHE_KEY,data);
+    holdingsCache=data.rows;
+    var body=document.getElementById('treasury-holdings-report-body');
+    if(body)body.innerHTML=renderTreasuryHoldingsReportBody(readFinanceCacheEntry(FINANCE_TREASURY_HOLDINGS_CACHE_KEY,true));
+    return data;
+  }).catch(function(error){
+    console.warn('持股戰報背景讀取失敗',error);
+    var body=document.getElementById('treasury-holdings-report-body');
+    if(body&&!cached)body.textContent='持股戰報暫時無法取得。';
+    return null;
+  }).finally(function(){financeTreasuryHoldingsPromise=null;});
+  return financeTreasuryHoldingsPromise;
+}
+
+function invalidateTreasuryHoldingsReport(){
+  try{localStorage.removeItem(FINANCE_TREASURY_HOLDINGS_CACHE_KEY);}catch(e){}
+  holdingsCache=[];
+}
+
 function renderTreasuryAccountTotalAssetCard(assetSnapshot,totalAssetAccount,monthly){
   monthly=monthly||{};
   var latest=assetSnapshot&&assetSnapshot.latest;
@@ -10318,6 +10371,7 @@ function renderTreasuryAccountTotalAssetCard(assetSnapshot,totalAssetAccount,mon
     <div class="treasury-monthly-title"><span>月收／支</span></div>
     <div class="treasury-monthly-row"><span>收入</span><strong class="treasury-monthly-income">${financeMonthlySummaryAvailable(monthly)?fmtFull(monthly.income):'—'}</strong></div>
     <div class="treasury-monthly-row"><span>支出</span><strong class="treasury-monthly-expense">${financeMonthlySummaryAvailable(monthly)?fmtFull(monthly.expense):'—'}</strong></div>
+    <details class="treasury-holdings-report" ${financeTreasuryHoldingsOpen?'open':''} ontoggle="financeTreasuryHoldingsOpen=this.open"><summary>⚔️ 持股戰報 <small>各標的含息報酬</small></summary><div id="treasury-holdings-report-body">${renderTreasuryHoldingsReportBody(readFinanceCacheEntry(FINANCE_TREASURY_HOLDINGS_CACHE_KEY,true))}</div></details>
   </div>`;
 }
 
@@ -13131,6 +13185,7 @@ async function submitStockTransfer(e){
       stockAmount:stockAmt,dividendRowId,holdingTradeRowId});
     bookingQueueUpdate(queueId,'success',result&&result.duplicate?'已確認入帳，未重複寫入':'');
     if(dividendRowId||holdingTradeRowId)invalidateDividendCenter();
+    invalidateTreasuryHoldingsReport();
     showMsg('msg-transfer','✓ 已記錄股票交易！','ok');
     invalidateBookingAccountBalances();
     document.getElementById('a-note').value='';
@@ -13433,6 +13488,7 @@ async function voidStockTrade(rowId,btn){
   try{
     if(btn){btn.disabled=true;btn.textContent='...';}
     await apiPost({action:'stockTradeVoid',rowId:rowId});
+    invalidateTreasuryHoldingsReport();
     await loadRecentBooking();
   }catch(err){
     var recent=document.getElementById('recent-content');
@@ -19764,6 +19820,7 @@ async function advisorAIConfirmHoldingTrade(btn){
   var isSell=pending.direction==='賣出';
   try{
     await apiPost({action:'transfer',date:today().replace(/-/g,'/'),from:isSell?ledgerSymbol:'💵國泰Stock',to:isSell?'💵國泰Stock':ledgerSymbol,amount:pending.amount,label:ledgerSymbol,note:'龐統持股入帳',stockMode:'1',stockType:isSell?'sell':'buy',stockSymbol:symbol,stockShares:pending.shares,stockAmount:pending.amount,holdingTradeRowId:row.rowId||''});
+    invalidateTreasuryHoldingsReport();
     invalidateDividendCenter();
     advisorHoldingTradeSelection=null;
     advisorHoldingTradeRecordPending=null;

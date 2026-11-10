@@ -1,0 +1,9 @@
+{
+  "id": "2026-11-10-finance-treasury-holdings-report",
+  "status": "in_progress",
+  "date": null,
+  "area": "財政",
+  "summary": "帝國寶庫新增持股含息戰報",
+  "details": "在帝國寶庫加入可展開的各標的含息報酬戰報，使用既有持股資料背景更新。",
+  "platforms": ["website"]
+}
