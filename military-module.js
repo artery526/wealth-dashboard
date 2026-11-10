@@ -932,8 +932,7 @@ var HOLDING_VIDEO_FILES={
   '路博邁台灣5G':'路博邁台灣5G.mp4'
 };
 function holdingVideoUrl(symbol,name){
-  var key=normalizeKey(symbol||name),file=HOLDING_VIDEO_FILES[key];
-  return file?'./部隊陣容/'+encodeURIComponent(file)+'?v=20260920-roster-video1':'';
+  return '';
 }
 
 +async function loadExternalIntelligence(force){

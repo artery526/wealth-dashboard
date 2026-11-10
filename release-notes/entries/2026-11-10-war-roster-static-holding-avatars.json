@@ -1,0 +1,9 @@
+{
+  "id": "2026-11-10-war-roster-static-holding-avatars",
+  "status": "in_progress",
+  "date": null,
+  "area": "軍機處",
+  "summary": "部隊陣容持股標的改用靜態頭像",
+  "details": "停用持股標的動態影片，沿用武將資料中的靜態頭像並移除陣容專用影片檔。",
+  "platforms": ["website"]
+}
