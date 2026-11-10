@@ -916,21 +916,6 @@ function staticHoldingAvatarUrl(symbol,name){
   return file?'./武將資料/'+encodeURIComponent(file)+'?v=20260919-roster-webp1':'';
 }
 
-var HOLDING_VIDEO_FILES={
-  '00985B':'985B.mp4',
-  '00997A':'997A.mp4',
-  '00998A':'998A.mp4',
-  'AIPI':'AIPI.mp4',
-  'CHPY':'CHPY.mp4',
-  'GDXW':'GDXW.mp4',
-  'GLDW':'GLDW.mp4',
-  'MLPI':'MLPI.mp4',
-  'PLTY':'PLTY.mp4',
-  'QQQI':'QQQI.mp4',
-  '國泰高股息B':'國泰高股息B.mp4',
-  '施羅德收益成長A2':'施羅德收益成長A2.mp4',
-  '路博邁台灣5G':'路博邁台灣5G.mp4'
-};
 function holdingVideoUrl(symbol,name){
   return '';
 }
