@@ -1,0 +1,9 @@
+{
+  "id": "2026-11-10-remove-legacy-card-videos",
+  "status": "in_progress",
+  "date": null,
+  "area": "網站介面",
+  "summary": "移除未使用的舊版卡片影片",
+  "details": "刪除四支未被目前頁面引用的 v2 卡片影片，保留 v3 影片與靜態海報。",
+  "platforms": ["website"]
+}
