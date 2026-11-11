@@ -1,9 +1,11 @@
 {
   "id": "2026-11-11-finance-treasury-holding-benchmarks",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-11-11",
   "area": "財政",
   "summary": "持股戰報顯示對應基準點位",
   "details": "在指定持股標的名稱下方顯示台股或 QQQM 對應基準點位。",
-  "platforms": ["website"]
+  "platforms": [
+    "website"
+  ]
 }
