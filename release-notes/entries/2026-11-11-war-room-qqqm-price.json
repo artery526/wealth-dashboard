@@ -1,7 +1,7 @@
 {
   "id": "2026-11-11-war-room-qqqm-price",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-11-11",
   "area": "帝國晨報",
   "summary": "納斯達克100 ETF 改用 QQQM 行情",
   "details": "戰情室專用唯讀 API 讀取 QQQM 日線收盤與 MA20，晨報核心市場同步顯示 NASDAQ:QQQM、資料日期及來源；不改共用市場儀表板、Google Sheet 結構或 NAS API。",
