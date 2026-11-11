@@ -358,6 +358,32 @@ test('standalone route renews an expired shared session before loading its selec
   expect(await page.evaluate(() => sessionStorage.getItem('wealth_web_session_token'))).toBe('renewed-session');
 });
 
+test('Troop Roster calendar lists XQQI on the fourth day of every month', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.addInitScript(() => {
+    localStorage.setItem('wealth_api_url', 'https://example.test/exec');
+    localStorage.setItem('wealth_write_token', 'test-write-token');
+    localStorage.setItem('wealth_web_verify_status', 'ok');
+    localStorage.setItem('wealth_web_verify_checked_at', String(Date.now()));
+    sessionStorage.setItem('wealth_web_session_token', 'same-tab-session');
+  });
+  await page.route('https://example.test/**', route => {
+    const action = new URL(route.request().url()).searchParams.get('action');
+    const data = action === 'heroes' || action === 'holdingsOverview' ? [] : {};
+    return route.fulfill({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ ok: true, data }) });
+  });
+  await page.route('https://api.ark-os26.cc/**', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ records: [] }) }));
+
+  await page.goto(`${standaloneUrl}?tab=war-roster`);
+  await expect(page.locator('.roster-stats')).toBeVisible();
+  for (let month = 0; month < 12; month += 1) {
+    await expect(page.locator('[data-day="4"]')).toHaveAttribute('aria-label', /XQQI/);
+    if (month < 11) await page.locator('[data-month="1"]').click();
+  }
+  const width = await page.locator('html').evaluate(el => ({ scrollWidth: el.scrollWidth, clientWidth: el.clientWidth }));
+  expect(width.scrollWidth).toBeLessThanOrEqual(width.clientWidth);
+});
+
 test('standalone tabs remain switchable from Taiwan macro back to Imperial Morning Brief', async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem('wealth_api_url', 'https://example.test/exec'); localStorage.setItem('wealth_write_token', 'test-write-token');
