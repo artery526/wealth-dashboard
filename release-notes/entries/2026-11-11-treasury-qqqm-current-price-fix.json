@@ -1,0 +1,9 @@
+{
+  "id": "2026-11-11-treasury-qqqm-current-price-fix",
+  "status": "in_progress",
+  "date": null,
+  "area": "財政",
+  "summary": "修正持股戰報 QQQM 現價暫缺",
+  "details": "讓 QQQM 報價優先讀取、完成即更新，並使用帝國晨報中已確認為 QQQM 的行情作快取備援。",
+  "platforms": ["website"]
+}

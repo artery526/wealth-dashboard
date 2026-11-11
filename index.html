@@ -5567,6 +5567,7 @@ function wealthApiRequestPriority(action){
   // 國庫現況是進入財政頁面的主資料；不可被戰情／行情／星象的背景預抓堵在佇列中。
   if(/^(accounts|monthly|transactions|financeCalendarSummary|assetSnapshot|bills)$/.test(action))return 7;
   if(action==='pledgeLoans')return 7;
+  if(action==='warRoomQQQMQuote')return 7;
   return 0;
 }
 function wealthApiQueueTimeoutMessage(action){
@@ -5943,6 +5944,7 @@ var FINANCE_TREASURY_HOLDINGS_CACHE_KEY='wealth_finance_treasury_holdings_v1';
 var FINANCE_TREASURY_HOLDINGS_REFRESH_GAP=10*60*1000;
 var financeTreasuryHoldingsPromise=null;
 var financeTreasuryBenchmarkPromise=null;
+var financeTreasuryQqqmLoading=false;
 var FINANCE_TREASURY_QQQM_QUOTE_KEY='wealth_war_room_qqqm_quote_v1';
 var FINANCE_TREASURY_CACHE_PREFIX='wealth_finance_treasury_v';
 var FINANCE_MONTH_CATEGORY_CACHE_KEY='wealth_finance_month_category_v1';
@@ -10341,13 +10343,20 @@ function treasuryBenchmarkQuote(key){
     }
     return null;
   }
-  var entry=readFinanceCacheEntry(FINANCE_TREASURY_QQQM_QUOTE_KEY,true);
-  return entry&&entry.data||null;
+  var entry=readFinanceCacheEntry(FINANCE_TREASURY_QQQM_QUOTE_KEY,true),quote=entry&&entry.data;
+  if(quote&&String(quote.symbol||'').toUpperCase()==='QQQM'&&Number(quote.price)>0)return quote;
+  var sources=[readMarketCacheEntry('wealth_advisor_world_nas_v1',true),readMarketCacheEntry(MARKET_DASHBOARD_CACHE_KEY,true)].filter(Boolean).sort(function(a,b){return Number(b.savedAt||0)-Number(a.savedAt||0);});
+  for(var i=0;i<sources.length;i++){
+    var market=sources[i].data&&sources[i].data.market||sources[i].data;
+    var row=((market&&market.rows)||[]).find(function(item){return item&&String(item.code||item.symbol||'').toUpperCase().split(':').pop()==='QQQM'&&Number(item.price)>0;});
+    if(row)return {symbol:'QQQM',price:Number(row.price),dataDate:row.dataDate||row.updatedAt||''};
+  }
+  return null;
 }
 function updateTreasuryBenchmarkQuoteLabels(){
   document.querySelectorAll('#treasury-holdings-dialog-body [data-treasury-benchmark-quote]').forEach(function(el){
     var key=el.getAttribute('data-treasury-benchmark-quote'),quote=treasuryBenchmarkQuote(key),price=Number(quote&&quote.price);
-    el.textContent=price>0?'(現價 '+price.toLocaleString('zh-TW',{minimumFractionDigits:key==='TAIEX'?1:2,maximumFractionDigits:key==='TAIEX'?1:2})+')':'(現價暫缺)';
+    el.textContent=price>0?'(現價 '+price.toLocaleString('zh-TW',{minimumFractionDigits:key==='TAIEX'?1:2,maximumFractionDigits:key==='TAIEX'?1:2})+')':key==='QQQM'&&financeTreasuryQqqmLoading?'(現價讀取中)':'(現價暫缺)';
     if(quote&&quote.dataDate)el.title='資料日期 '+quote.dataDate;
   });
 }
@@ -10366,7 +10375,11 @@ function loadTreasuryBenchmarkQuotes(){
   if(!readTimedMarketCache(MARKET_DASHBOARD_CACHE_KEY))jobs.push(advisorWorldMarketRequest());
   var cached=readFinanceCacheEntry(FINANCE_TREASURY_QQQM_QUOTE_KEY,true);
   if(!cached||Date.now()-Number(cached.savedAt||0)>=5*60*1000){
-    jobs.push(apiGet({action:'warRoomQQQMQuote'},25000).then(function(quote){if(quote&&String(quote.symbol).toUpperCase()==='QQQM'&&Number(quote.price)>0)writeTimedFinanceCache(FINANCE_TREASURY_QQQM_QUOTE_KEY,quote);}).catch(function(error){console.warn('QQQM 基準報價讀取失敗',error);}));
+    financeTreasuryQqqmLoading=true;
+    updateTreasuryBenchmarkQuoteLabels();
+    jobs.push(apiGet({action:'warRoomQQQMQuote'},25000).then(function(quote){
+      if(quote&&String(quote.symbol||'').toUpperCase()==='QQQM'&&Number(quote.price)>0)writeTimedFinanceCache(FINANCE_TREASURY_QQQM_QUOTE_KEY,quote);
+    }).catch(function(error){console.warn('QQQM 基準報價讀取失敗',error);}).finally(function(){financeTreasuryQqqmLoading=false;updateTreasuryBenchmarkQuoteLabels();}));
   }
   financeTreasuryBenchmarkPromise=Promise.allSettled(jobs).then(function(){updateTreasuryBenchmarkQuoteLabels();}).finally(function(){financeTreasuryBenchmarkPromise=null;});
   return financeTreasuryBenchmarkPromise;
