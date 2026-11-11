@@ -1,9 +1,11 @@
 {
   "id": "2026-11-11-treasury-benchmark-core-market-link",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-11-11",
   "area": "財政",
   "summary": "持股戰報現價對齊帝國晨報核心市場",
   "details": "台股與 SOXX 現價沿用晨報核心市場資料，QQQM 沿用晨報專用報價及共用快取。",
-  "platforms": ["website"]
+  "platforms": [
+    "website"
+  ]
 }
