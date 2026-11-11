@@ -10,11 +10,12 @@
     'war-taiwan-macro':{title:'台灣總體經濟',load:loadTaiwan},
     'war-roster':{title:'部隊陣容',load:loadWarRoster}
   };
-  var currentTab='war-briefing',lastLoaded={},taiwanRange='1Y',busy=false,foreignYtdPromise=null,foreignYtdLastAttempt=0,foreignYtdError='',nasdaqValuationPromise=null,taiwanValuationPromise=null,taiwanValuationLastAttempt=0,warRoomYtdDrawdownPromise=null;
+  var currentTab='war-briefing',lastLoaded={},taiwanRange='1Y',busy=false,foreignYtdPromise=null,foreignYtdLastAttempt=0,foreignYtdError='',nasdaqValuationPromise=null,taiwanValuationPromise=null,taiwanValuationLastAttempt=0,warRoomYtdDrawdownPromise=null,warRoomQQQMQuotePromise=null,warRoomQQQMQuoteLastAttempt=0,lastBriefPayload=null,lastBriefStale=false;
   var FOREIGN_YTD_CACHE_KEY='wealth_twse_foreign_ytd_v1';
   var NASDAQ_VALUATION_CACHE_KEY='wealth_nasdaq100_valuation_v1';
   var TAIWAN_VALUATION_CACHE_KEY='wealth_taiwan_valuation_v1';
   var WAR_ROOM_YTD_DRAWDOWN_CACHE_KEY='wealth_war_room_ytd_drawdown_v1';
+  var WAR_ROOM_QQQM_CACHE_KEY='wealth_war_room_qqqm_quote_v1';
   var content=document.getElementById('content'),status=document.getElementById('connection-status');
   function loadWarRoster(force){return window.warRosterModule.load(request,force,function(value){setFreshness(value);},function(text,kind){setStatus(text,kind);});}
   function normalizeApi(value){value=String(value||'').trim();return /script\.google\.com\/macros\/s\//i.test(value)?API_DEFAULT:value;}
@@ -157,12 +158,39 @@
     warRoomYtdDrawdownPromise=request({action:'warRoomYtdDrawdown'},25000).then(function(data){writeCache(WAR_ROOM_YTD_DRAWDOWN_CACHE_KEY,data);applyWarRoomYtdDrawdown_(data,!!data.stale,'');return data;}).catch(function(error){applyWarRoomYtdDrawdown_(cached,true,error&&error.message||'年度回撤資料暫缺');return null;}).finally(function(){warRoomYtdDrawdownPromise=null;});
     return warRoomYtdDrawdownPromise;
   }
+  function isWarRoomQQQMRow_(row){if(!row||typeof row!=='object')return false;var code=String(row.code||row.symbol||row.ticker||'').trim().toUpperCase(),ticker=code.split(':').pop(),name=String(row.name||row.company||'');return ticker==='QQQ'||ticker==='QQQM'||/納斯達克\s*100\s*ETF/i.test(name);}
+  function updateWarRoomQQQMInPayload_(payload,quote,error){
+    if(!payload||typeof payload!=='object')return null;
+    var updated=JSON.parse(JSON.stringify(payload)),market=updated.market||updated.marketDashboard||{},rows=Array.isArray(market.rows)?market.rows:[];
+    var found=false;
+    rows.forEach(function(row){if(!isWarRoomQQQMRow_(row))return;found=true;if(quote&&Number(quote.price)>0)Object.assign(row,quote);else{row.code='NASDAQ:QQQM';row.price=null;row.previous=null;row.change=null;row.changePct=null;row.ma20=null;row.ma20Prev=null;row.dataDate='';row.sourceName='Yahoo Finance';row.quoteStatus=error?'報價暫缺':'報價載入中';}});
+    return found?updated:null;
+  }
+  function refreshWarRoomQQQMQuote_(){
+    var cached=readCache(WAR_ROOM_QQQM_CACHE_KEY);
+    if(warRoomQQQMQuotePromise)return warRoomQQQMQuotePromise;
+    if(Date.now()-warRoomQQQMQuoteLastAttempt<60000)return Promise.resolve(cached);
+    warRoomQQQMQuoteLastAttempt=Date.now();
+    warRoomQQQMQuotePromise=request({action:'warRoomQQQMQuote'},25000).then(function(data){
+      if(!data||String(data.symbol||'').toUpperCase()!=='QQQM'||!(Number(data.price)>0)||!data.dataDate)throw new Error('QQQM 行情回傳資料不完整');
+      writeCache(WAR_ROOM_QQQM_CACHE_KEY,data);
+      var updated=updateWarRoomQQQMInPayload_(lastBriefPayload,data,'');
+      if(updated){lastBriefPayload=updated;renderBrief(updated,lastBriefStale,true);}
+      return data;
+    }).catch(function(error){
+      if(!cached){var updated=updateWarRoomQQQMInPayload_(lastBriefPayload,null,error&&error.message);if(updated){lastBriefPayload=updated;renderBrief(updated,lastBriefStale,true);}}
+      return cached||null;
+    }).finally(function(){warRoomQQQMQuotePromise=null;});
+    return warRoomQQQMQuotePromise;
+  }
   function showError(error){if(error&&[401,403].includes(Number(error.status))){setStatus('城門驗證失效','err');renderLogin(error.message||'請重新驗證城門。');return;}setStatus('資料更新失敗','err');var old=content.querySelector('.notice.error');if(old)old.remove();content.insertAdjacentHTML('afterbegin','<div class="notice error">'+esc(error&&error.message||'讀取失敗')+'。若舊快照仍可用，會繼續保留於畫面。</div>');}
   function sectionTitle(text){return '<h2 class="section-title">'+esc(text)+'</h2>';}
   function dashboardCardGroup(title,object){if(!object||typeof object!=='object')return '';var entries=Object.entries(object).filter(function(entry){return entry[1]==null||typeof entry[1]!=='object';});if(!entries.length)return '';return sectionTitle(title)+'<div class="grid">'+entries.slice(0,12).map(function(entry){var val=entry[1];return metric(entry[0],typeof val==='number'?num(val):String(val==null?'資料暫缺':val));}).join('')+'</div>';}
-  function renderBrief(payload,stale){
+  function renderBrief(payload,stale,skipBackgroundRefresh){
     function isPalantirMonitorRow_(row){if(!row||typeof row!=='object')return false;var code=String(row.code||row.symbol||row.ticker||'').trim().toUpperCase(),ticker=code.split(':').pop(),name=String(row.name||row.company||'');return ticker==='PLTR'||/palantir/i.test(name);}
-    var sourceMarket=payload.market||payload.marketDashboard||{},sourceRows=Array.isArray(sourceMarket.rows)?sourceMarket.rows:[],market=Object.assign({},sourceMarket,{rows:sourceRows.filter(function(row){return !isPalantirMonitorRow_(row);})}),displayPayload=Object.assign({},payload),macro=payload.macro||payload.macroOverview||{},report=payload.longReport||{};
+    lastBriefPayload=payload;lastBriefStale=!!stale;
+    var sourceMarket=payload.market||payload.marketDashboard||{},sourceRows=Array.isArray(sourceMarket.rows)?sourceMarket.rows:[],market=Object.assign({},sourceMarket,{rows:sourceRows.filter(function(row){return !isPalantirMonitorRow_(row);}).map(function(row){return Object.assign({},row);})}),displayPayload=Object.assign({},payload),macro=payload.macro||payload.macroOverview||{},report=payload.longReport||{},qqqmCached=readCache(WAR_ROOM_QQQM_CACHE_KEY);
+    market.rows.forEach(function(row){if(!isWarRoomQQQMRow_(row))return;if(qqqmCached&&String(qqqmCached.symbol||'').toUpperCase()==='QQQM'&&Number(qqqmCached.price)>0)Object.assign(row,qqqmCached);else if(String(row.code||'').trim().toUpperCase()!=='NASDAQ:QQQM'){row.code='NASDAQ:QQQM';row.price=null;row.previous=null;row.change=null;row.changePct=null;row.ma20=null;row.ma20Prev=null;row.dataDate='';row.sourceName='Yahoo Finance';row.quoteStatus='報價載入中';}});
     if(payload.market)displayPayload.market=market;if(payload.marketDashboard)displayPayload.marketDashboard=market;
     var captured=payload.capturedAt||payload.sourceDate||'',summary=market.summary||{},judgment=macro.judgment||{},valuations=macro.valuations||{};
     function marketBreadth_(marketData,marketSummary){
@@ -199,14 +227,14 @@
     html+=sectionTitle('台股估值')+'<div id="taiwan-valuation-host"></div>';
     var rows=market.rows||[];
     function marketMaHint_(row){var price=row&&row.price!=null&&row.price!==''?Number(row.price):NaN,ma20=row&&row.ma20!=null&&row.ma20!==''?Number(row.ma20):NaN,ma20Prev=row&&row.ma20Prev!=null&&row.ma20Prev!==''?Number(row.ma20Prev):NaN;if(!isFinite(price)||!isFinite(ma20)||ma20<=0)return null;if(price>ma20&&isFinite(ma20Prev)&&ma20Prev>0&&ma20>ma20Prev)return {text:'MA20 偏強',tone:'up',title:'現價高於 MA20，且 MA20 高於前一日 MA20。'};if(price<ma20&&isFinite(ma20Prev)&&ma20Prev>0&&ma20<ma20Prev)return {text:'MA20 偏弱',tone:'down',title:'現價低於 MA20，且 MA20 低於前一日 MA20。'};if(price>ma20)return {text:'站上 MA20',tone:'up',title:'現價高於 MA20；均線方向未同時確認。'};if(price<ma20)return {text:'跌破 MA20',tone:'down',title:'現價低於 MA20；均線方向未同時確認。'};return {text:'貼近 MA20',tone:'',title:'現價與 MA20 相同。'};}
-    if(rows.length)html+=sectionTitle('核心市場')+'<div class="brief-market-list">'+rows.map(function(row){var change=Number(row.changePct),tone=isFinite(change)?change>=0?'up':'down':'',maHint=marketMaHint_(row);return '<article class="brief-market-row"><div><strong>'+esc(row.name||row.code||'市場')+'</strong><small>'+esc(row.code||'')+' · '+esc(row.dataDate||row.sourceDate||'資料日未提供')+'</small></div><div><small>現價</small><div class="brief-market-price-line"><strong>'+esc(row.price==null?'--':num(row.price,2))+'</strong>'+(maHint?'<small class="brief-ma-hint '+maHint.tone+'" title="'+esc(maHint.title)+'">'+esc(maHint.text)+'</small>':'')+'</div></div><div class="'+tone+'"><small>漲跌</small><strong>'+esc(row.changePct==null?'--':num(row.changePct,2)+'%')+'</strong></div><span class="pill">'+esc(row.signal||'觀望')+'</span></article>';}).join('')+'</div>';
+    if(rows.length)html+=sectionTitle('核心市場')+'<div class="brief-market-list">'+rows.map(function(row){var change=Number(row.changePct),tone=isFinite(change)?change>=0?'up':'down':'',maHint=marketMaHint_(row),details=[row.code||'',row.dataDate||row.sourceDate||'資料日未提供',row.sourceName||'',row.quoteStatus||''].filter(Boolean).join(' · ');return '<article class="brief-market-row"><div><strong>'+esc(row.name||row.code||'市場')+'</strong><small>'+esc(details)+'</small></div><div><small>現價</small><div class="brief-market-price-line"><strong>'+esc(row.price==null?'--':num(row.price,2))+'</strong>'+(maHint?'<small class="brief-ma-hint '+maHint.tone+'" title="'+esc(maHint.title)+'">'+esc(maHint.text)+'</small>':'')+'</div></div><div class="'+tone+'"><small>漲跌</small><strong>'+esc(row.changePct==null?'--':num(row.changePct,2)+'%')+'</strong></div><span class="pill">'+esc(row.signal||'觀望')+'</span></article>';}).join('')+'</div>';
     var indicators=Array.isArray(macro.indicators)?macro.indicators:[],values=macro.values||{};
     function findIndicator(code){return indicators.find(function(item){return item&&item.code===code;})||(values[code]!=null?{code:code,value:values[code],displayValue:String(values[code])}:null);}
     function indicatorValue(row){if(!row)return '資料暫缺';var value=row.displayValue||(row.value==null?'':num(row.value));return (row.status&&row.status!=='資料'?String(row.status)+' · ':'')+(value||'資料暫缺');}
     var groups=[['💧 流動性',[['SOFR–IORB','sofrIorbSpread'],['銀行準備金','bankReserves'],['隔夜逆回購','rrp'],['M2','m2']]],['👷 就業',[['JOLTS 職缺','joltsOpenings'],['ADP 就業','adpEmploymentChange'],['非農就業','nfpPayrollChange']]],['🔥 通膨',[['CPI','cpi'],['PPI','ppi'],['油價','oil']]],['💳 市場壓力',[['信用利差','creditSpread'],['VIX','vix'],['消費信心','consumerSentiment']]]];
     html+=sectionTitle('總經燈號')+'<div class="brief-macro-grid">'+groups.map(function(group){return '<article class="brief-macro-card"><h3>'+group[0]+'</h3>'+group[1].map(function(item){var row=findIndicator(item[1]),tone=/紅|警戒|防守|惡化/.test(String(row&&row.status||''))?'down':/綠|改善|充足/.test(String(row&&row.status||''))?'up':'';return '<div class="brief-indicator"><span>'+esc(item[0])+'</span><strong class="'+tone+'">'+esc(indicatorValue(row))+'</strong></div>';}).join('')+'</article>';}).join('')+'</div>';
     if(report.latest||report.summary)html+=sectionTitle('長期觀察')+'<div class="brief-report">'+esc((report.latest&&report.latest.summary)||report.summary||'')+'</div>';
-    html+=rawDetails('完整快照資料',displayPayload);content.innerHTML=html;Array.prototype.forEach.call(document.querySelectorAll('.brief-market-row'),function(marketRow,index){var drawdownKey=marketYtdDrawdownKey_(rows[index]);if(!drawdownKey)return;var priceCell=marketRow.children[1];if(!priceCell)return;var slot=document.createElement('small');slot.className='brief-ytd-drawdown-slot';slot.setAttribute('data-ytd-drawdown',drawdownKey);slot.textContent='今年最大回撤載入中';priceCell.appendChild(slot);});setFreshness(captured?'快照時間 '+dateText(captured):'以目前可取得的快照呈現');refreshNasdaqValuation_();refreshTaiwanValuation_(valuations.taiex,stale);refreshWarRoomYtdDrawdown_();
+    html+=rawDetails('完整快照資料',displayPayload);content.innerHTML=html;Array.prototype.forEach.call(document.querySelectorAll('.brief-market-row'),function(marketRow,index){var drawdownKey=marketYtdDrawdownKey_(rows[index]);if(!drawdownKey)return;var priceCell=marketRow.children[1];if(!priceCell)return;var slot=document.createElement('small');slot.className='brief-ytd-drawdown-slot';slot.setAttribute('data-ytd-drawdown',drawdownKey);slot.textContent='今年最大回撤載入中';priceCell.appendChild(slot);});setFreshness(captured?'快照時間 '+dateText(captured):'以目前可取得的快照呈現');if(!skipBackgroundRefresh){refreshNasdaqValuation_();refreshTaiwanValuation_(valuations.taiex,stale);refreshWarRoomYtdDrawdown_();if(rows.some(isWarRoomQQQMRow_))refreshWarRoomQQQMQuote_();}
   }
   async function loadBriefing(force){
     var cacheKey='wealth_advisor_world_nas_v1',cached=readCache(cacheKey),cacheMarket=readCache('wealth_market_dashboard_v1'),cacheMacro=readCache('wealth_market_macro_v4');

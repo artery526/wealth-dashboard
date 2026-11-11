@@ -120,6 +120,44 @@ test('standalone route is a direct page and reuses the same-origin session', asy
   expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
 });
 
+test('Imperial Morning Brief displays the QQQM quote from its War Room API on mobile', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.addInitScript(() => {
+    localStorage.setItem('wealth_api_url', 'https://example.test/exec');
+    localStorage.setItem('wealth_write_token', 'test-write-token');
+    localStorage.setItem('wealth_web_verify_status', 'ok');
+    localStorage.setItem('wealth_web_verify_checked_at', String(Date.now()));
+    sessionStorage.setItem('wealth_web_session_token', 'same-tab-session');
+  });
+  const actions = [];
+  await page.route('https://example.test/**', route => {
+    const action = new URL(route.request().url()).searchParams.get('action');
+    actions.push(action);
+    let data = {};
+    if (action === 'createWebSession') data = { sessionToken: 'same-tab-session' };
+    if (action === 'advisorWorldBriefSnapshotRefresh') data = { snapshot: {
+      market: { summary: { stance: '觀望' }, rows: [
+        { code: 'NASDAQ:QQQ', name: '納斯達克100 ETF', price: 600, previous: 590, changePct: 1.69, ma20: 580, ma20Prev: 575, signal: '觀望', dataDate: '2026-11-10' }
+      ] },
+      macro: { judgment: {}, indicators: [], valuations: {} },
+      capturedAt: '2026-11-11T00:00:00Z'
+    } };
+    if (action === 'warRoomQQQMQuote') data = { symbol: 'QQQM', code: 'NASDAQ:QQQM', name: '納斯達克100 ETF', price: 278.45, previous: 277.25, changePct: 0.43, ma20: 270.10, ma20Prev: 268.80, dataDate: '2026-11-11', sourceName: 'Yahoo Finance', stale: false };
+    return route.fulfill({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ ok: true, data }) });
+  });
+  await page.route('https://api.ark-os26.cc/**', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ records: [] }) }));
+
+  await page.goto(`${standaloneUrl}?tab=war-briefing`);
+  const row = page.locator('.brief-market-row').filter({ hasText: '納斯達克100 ETF' });
+  await expect(row.locator('small').first()).toContainText('NASDAQ:QQQM · 2026-11-11 · Yahoo Finance');
+  await expect(row.locator('.brief-market-price-line > strong')).toHaveText('278.45');
+  await expect(row.locator('.brief-market-price-line .brief-ma-hint')).toHaveText('MA20 偏強');
+  await expect(row.locator('.down strong, .up strong')).toHaveText('0.43%');
+  expect(actions).toContain('warRoomQQQMQuote');
+  const dimensions = await page.locator('html').evaluate(el => ({ scrollWidth: el.scrollWidth, clientWidth: el.clientWidth }));
+  expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
+});
+
 test('Imperial Morning Brief derives monitored market rise and fall counts from quote rows', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.addInitScript(() => {

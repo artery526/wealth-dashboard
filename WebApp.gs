@@ -136,6 +136,10 @@ function doGet(e) {
       verifyWriteToken(p);
       return ok(getWarRoomTaiwanValuation_());
     }
+    if (action === 'warRoomQQQMQuote') {
+      verifyWriteToken(p);
+      return ok(getWarRoomQQQMQuote_());
+    }
     if (action === 'pledgeLoans')  return ok(getPledgeLoans(getExternalDbSpreadsheet_()));
     if (action === 'assetSnapshot') return ok(getDailyAssetSnapshot(getExternalDbSpreadsheet_()));
     if (action === 'transactions') return ok(getTransactions(ss, p.ym));
@@ -2282,6 +2286,63 @@ function warRoomYtdDrawdownResponse_(payload, stale, errors) {
     stale: !!stale,
     errors: errors || []
   };
+}
+
+var WAR_ROOM_QQQM_CACHE_KEY_ = 'WAR_ROOM_QQQM_QUOTE_V1';
+var WAR_ROOM_QQQM_CACHE_SECONDS_ = 21600;
+var WAR_ROOM_QQQM_CHART_URL_ = 'https://query1.finance.yahoo.com/v8/finance/chart/QQQM?range=3mo&interval=1d';
+
+function getWarRoomQQQMQuote_() {
+  var cache = CacheService.getScriptCache(), raw = cache.get(WAR_ROOM_QQQM_CACHE_KEY_), cached = null;
+  try { cached = raw ? JSON.parse(raw) : null; } catch (ignore) {}
+  var now = Date.now();
+  if (cached && Number(cached.fetchedAt) && now - Number(cached.fetchedAt) < 5 * 60 * 1000) {
+    cached.stale = false;
+    return cached;
+  }
+  try {
+    var response = UrlFetchApp.fetch(WAR_ROOM_QQQM_CHART_URL_, {
+      muteHttpExceptions: true,
+      followRedirects: true,
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; ArkOS26-War-Room/1.0)', 'Accept': 'application/json' }
+    });
+    if (response.getResponseCode() !== 200) throw new Error('Yahoo Finance 回應 HTTP ' + response.getResponseCode());
+    var body = JSON.parse(response.getContentText()), chart = body.chart || {}, result = chart.result && chart.result[0];
+    if (!result || String(result.meta && result.meta.symbol || '').toUpperCase() !== 'QQQM') throw new Error('Yahoo Finance 未回傳 QQQM 行情');
+    var timestamps = result.timestamp || [], quote = result.indicators && result.indicators.quote && result.indicators.quote[0] || {}, closes = quote.close || [], points = [];
+    for (var i = 0; i < timestamps.length && i < closes.length; i++) {
+      var close = Number(closes[i]);
+      if (isFinite(close) && close > 0) points.push({ date: Utilities.formatDate(new Date(Number(timestamps[i]) * 1000), 'UTC', 'yyyy-MM-dd'), close: close });
+    }
+    if (points.length < 22) throw new Error('Yahoo Finance 歷史行情不足 22 個交易日');
+    var latest = points[points.length - 1], previous = points[points.length - 2];
+    var ageDays = (Date.now() - Date.parse(latest.date + 'T00:00:00Z')) / 86400000;
+    if (ageDays < -1 || ageDays > 10) throw new Error('Yahoo Finance 行情日期過舊');
+    var recent = points.slice(-20), before = points.slice(-21, -1);
+    var sum = function(items) { return items.reduce(function(total, point) { return total + point.close; }, 0); };
+    var payload = {
+      code: 'NASDAQ:QQQM', symbol: 'QQQM', name: '納斯達克100 ETF',
+      price: Math.round(latest.close * 100) / 100,
+      previous: Math.round(previous.close * 100) / 100,
+      changePct: Math.round((latest.close - previous.close) / previous.close * 10000) / 100,
+      ma20: Math.round(sum(recent) / recent.length * 100) / 100,
+      ma20Prev: Math.round(sum(before) / before.length * 100) / 100,
+      dataDate: latest.date,
+      sourceName: 'Yahoo Finance',
+      fetchedAt: now,
+      stale: false
+    };
+    cache.put(WAR_ROOM_QQQM_CACHE_KEY_, JSON.stringify(payload), WAR_ROOM_QQQM_CACHE_SECONDS_);
+    return payload;
+  } catch (error) {
+    if (cached && Number(cached.fetchedAt) && now - Number(cached.fetchedAt) < WAR_ROOM_QQQM_CACHE_SECONDS_) {
+      cached.stale = true;
+      cached.status = '行情來源暫時無法更新，顯示最近成功資料';
+      return cached;
+    }
+    var reason = String(error && error.message || error || '未知錯誤').replace(/[\r\n]+/g, ' ').slice(0, 180);
+    throw new Error('QQQM 行情暫時無法讀取：' + reason);
+  }
 }
 
 var WAR_ROOM_TAIWAN_VALUATION_CACHE_KEY_ = 'WAR_ROOM_TAIWAN_VALUATION_V1';
