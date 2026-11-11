@@ -5942,6 +5942,9 @@ var FINANCE_TREASURY_CACHE_KEY='wealth_finance_treasury_v10';
 var FINANCE_TREASURY_HOLDINGS_CACHE_KEY='wealth_finance_treasury_holdings_v1';
 var FINANCE_TREASURY_HOLDINGS_REFRESH_GAP=10*60*1000;
 var financeTreasuryHoldingsPromise=null;
+var financeTreasuryBenchmarkPromise=null;
+var FINANCE_TREASURY_QQQM_QUOTE_KEY='wealth_finance_treasury_qqqm_quote_v1';
+var FINANCE_TREASURY_SOXX_QUOTE_KEY='wealth_finance_treasury_soxx_quote_v1';
 var FINANCE_TREASURY_CACHE_PREFIX='wealth_finance_treasury_v';
 var FINANCE_MONTH_CATEGORY_CACHE_KEY='wealth_finance_month_category_v1';
 var FINANCE_PLEDGE_CACHE_KEY='wealth_finance_pledge_v4';
@@ -10292,7 +10295,8 @@ function renderTreasuryHoldingsReportBody(entry){
     var label=result>0?'帶回':result<0?'軍團傷亡':'戰況持平';
     var suffix=result>0?' 金銀財寶':'';
     var name=String(row.symbol||row.name||'');var benchmark=benchmarks[normalizeKey(name)];
-    return '<div class="treasury-holding-row"><span class="treasury-holding-name">'+esc(name)+(benchmark?'<small class="treasury-holding-benchmark">對應基準 '+esc(benchmark)+'</small>':'')+'</span><span class="treasury-holding-result '+(result>0?'gain':result<0?'loss':'')+'">'+label+(result===0?'':' <strong class="treasury-holding-value">'+fmtFull(Math.abs(result))+'</strong>'+suffix)+'</span></div>';
+    var quoteKey=benchmark?(benchmark.indexOf('台股')===0?'TAIEX':benchmark.indexOf('QQQM')===0?'QQQM':'SOXX'):'';
+    return '<div class="treasury-holding-row"><span class="treasury-holding-name">'+esc(name)+(benchmark?'<small class="treasury-holding-benchmark">對應基準 '+esc(benchmark)+' <span data-treasury-benchmark-quote="'+quoteKey+'">(現價讀取中)</span></small>':'')+'</span><span class="treasury-holding-result '+(result>0?'gain':result<0?'loss':'')+'">'+label+(result===0?'':' <strong class="treasury-holding-value">'+fmtFull(Math.abs(result))+'</strong>'+suffix)+'</span></div>';
   }).join('');
   var stale=Date.now()-Number(entry.savedAt||0)>=FINANCE_TREASURY_HOLDINGS_REFRESH_GAP;
   return '<div class="treasury-holdings-list">'+list+'</div><p class="treasury-holdings-meta">含息報酬包含未實現損益 · '+(stale?'顯示快取':'最近取得')+'</p>';
@@ -10308,7 +10312,7 @@ function loadTreasuryHoldingsReport(){
     writeTimedFinanceCache(FINANCE_TREASURY_HOLDINGS_CACHE_KEY,data);
     holdingsCache=data.rows;
     var body=document.getElementById('treasury-holdings-dialog-body');
-    if(body)body.innerHTML=renderTreasuryHoldingsReportBody(readFinanceCacheEntry(FINANCE_TREASURY_HOLDINGS_CACHE_KEY,true));
+    if(body){body.innerHTML=renderTreasuryHoldingsReportBody(readFinanceCacheEntry(FINANCE_TREASURY_HOLDINGS_CACHE_KEY,true));updateTreasuryBenchmarkQuoteLabels();}
     return data;
   }).catch(function(error){
     console.warn('持股戰報背景讀取失敗',error);
@@ -10322,6 +10326,36 @@ function loadTreasuryHoldingsReport(){
 function invalidateTreasuryHoldingsReport(){
   try{localStorage.removeItem(FINANCE_TREASURY_HOLDINGS_CACHE_KEY);}catch(e){}
   holdingsCache=[];
+}
+
+function treasuryBenchmarkQuote(key){
+  if(key==='TAIEX'){
+    var market=readMarketCacheEntry(MARKET_DASHBOARD_CACHE_KEY,true)?.data;
+    var row=((market&&market.rows)||[]).find(function(item){return item&&(/\^TWII/i.test(String(item.code||''))||/台灣加權|台股加權|TAIEX/i.test(String(item.name||'')));});
+    return row&&Number(row.price)>0?{price:Number(row.price),dataDate:row.updatedAt||market.summary&&market.summary.updatedAt||''}:null;
+  }
+  var entry=readFinanceCacheEntry(key==='QQQM'?FINANCE_TREASURY_QQQM_QUOTE_KEY:FINANCE_TREASURY_SOXX_QUOTE_KEY,true);
+  return entry&&entry.data||null;
+}
+function updateTreasuryBenchmarkQuoteLabels(){
+  document.querySelectorAll('#treasury-holdings-dialog-body [data-treasury-benchmark-quote]').forEach(function(el){
+    var key=el.getAttribute('data-treasury-benchmark-quote'),quote=treasuryBenchmarkQuote(key),price=Number(quote&&quote.price);
+    el.textContent=price>0?'(現價 '+price.toLocaleString('zh-TW',{minimumFractionDigits:key==='TAIEX'?1:2,maximumFractionDigits:key==='TAIEX'?1:2})+')':'(現價暫缺)';
+    if(quote&&quote.dataDate)el.title='資料日期 '+quote.dataDate;
+  });
+}
+function loadTreasuryBenchmarkQuotes(){
+  updateTreasuryBenchmarkQuoteLabels();
+  if(financeTreasuryBenchmarkPromise)return financeTreasuryBenchmarkPromise;
+  var jobs=[];
+  if(!readTimedMarketCache(MARKET_DASHBOARD_CACHE_KEY))jobs.push(advisorWorldMarketRequest());
+  [['QQQM','warRoomQQQMQuote',FINANCE_TREASURY_QQQM_QUOTE_KEY],['SOXX','treasurySOXXQuote',FINANCE_TREASURY_SOXX_QUOTE_KEY]].forEach(function(item){
+    var cached=readFinanceCacheEntry(item[2],true);
+    if(cached&&Date.now()-Number(cached.savedAt||0)<5*60*1000)return;
+    jobs.push(apiGet({action:item[1]},25000).then(function(quote){if(quote&&String(quote.symbol).toUpperCase()===item[0]&&Number(quote.price)>0)writeTimedFinanceCache(item[2],quote);}).catch(function(error){console.warn(item[0]+' 基準報價讀取失敗',error);}));
+  });
+  financeTreasuryBenchmarkPromise=Promise.allSettled(jobs).then(function(){updateTreasuryBenchmarkQuoteLabels();}).finally(function(){financeTreasuryBenchmarkPromise=null;});
+  return financeTreasuryBenchmarkPromise;
 }
 
 function renderTreasuryAccountTotalAssetCard(assetSnapshot,totalAssetAccount,monthly){
@@ -10383,6 +10417,7 @@ function openTreasuryHoldingsModal(){
   modal.classList.add('is-open');document.body.style.overflow='hidden';
   var cached=readFinanceCacheEntry(FINANCE_TREASURY_HOLDINGS_CACHE_KEY,true);var body=document.getElementById('treasury-holdings-dialog-body');if(body)body.innerHTML=renderTreasuryHoldingsReportBody(cached);
   loadTreasuryHoldingsReport();
+  loadTreasuryBenchmarkQuotes();
 }
 function closeTreasuryHoldingsModal(){var modal=document.getElementById('treasury-holdings-modal');if(modal)modal.classList.remove('is-open');document.body.style.overflow='';}
 

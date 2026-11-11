@@ -1,0 +1,9 @@
+{
+  "id": "2026-11-11-treasury-benchmark-current-prices",
+  "status": "in_progress",
+  "date": null,
+  "area": "財政",
+  "summary": "持股戰報顯示基準現價",
+  "details": "台股加權指數沿用晨報市場資料，QQQM 沿用晨報報價，SOXX 由唯讀報價端點取得；在既有基準旁顯示現價與資料日期。",
+  "platforms": ["website", "app-script"]
+}

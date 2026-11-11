@@ -140,6 +140,10 @@ function doGet(e) {
       verifyWriteToken(p);
       return ok(getWarRoomQQQMQuote_());
     }
+    if (action === 'treasurySOXXQuote') {
+      verifyWriteToken(p);
+      return ok(getTreasurySOXXQuote_());
+    }
     if (action === 'pledgeLoans')  return ok(getPledgeLoans(getExternalDbSpreadsheet_()));
     if (action === 'assetSnapshot') return ok(getDailyAssetSnapshot(getExternalDbSpreadsheet_()));
     if (action === 'transactions') return ok(getTransactions(ss, p.ym));
@@ -2342,6 +2346,35 @@ function getWarRoomQQQMQuote_() {
     }
     var reason = String(error && error.message || error || '未知錯誤').replace(/[\r\n]+/g, ' ').slice(0, 180);
     throw new Error('QQQM 行情暫時無法讀取：' + reason);
+  }
+}
+
+function getTreasurySOXXQuote_() {
+  var cache = CacheService.getScriptCache(), key = 'TREASURY_SOXX_QUOTE_V1';
+  var raw = cache.get(key), cached = null;
+  try { cached = raw ? JSON.parse(raw) : null; } catch (ignore) {}
+  if (cached && Date.now() - Number(cached.fetchedAt || 0) < 5 * 60 * 1000) return cached;
+  try {
+    var response = UrlFetchApp.fetch('https://query1.finance.yahoo.com/v8/finance/chart/SOXX?range=5d&interval=1d', {
+      muteHttpExceptions: true,
+      headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' }
+    });
+    if (response.getResponseCode() !== 200) throw new Error('SOXX 報價 HTTP ' + response.getResponseCode());
+    var body = JSON.parse(response.getContentText()), result = body.chart && body.chart.result && body.chart.result[0];
+    if (!result || String(result.meta && result.meta.symbol || '').toUpperCase() !== 'SOXX') throw new Error('SOXX 報價來源不符');
+    var closes = result.indicators && result.indicators.quote && result.indicators.quote[0] && result.indicators.quote[0].close || [];
+    var timestamps = result.timestamp || [], latest = null;
+    for (var i = 0; i < closes.length && i < timestamps.length; i++) {
+      var value = Number(closes[i]);
+      if (isFinite(value) && value > 0) latest = { price: Math.round(value * 100) / 100, dataDate: Utilities.formatDate(new Date(Number(timestamps[i]) * 1000), 'UTC', 'yyyy-MM-dd') };
+    }
+    if (!latest || (Date.now() - Date.parse(latest.dataDate + 'T00:00:00Z')) / 86400000 > 10) throw new Error('SOXX 報價日期過舊');
+    var quote = { symbol: 'SOXX', price: latest.price, dataDate: latest.dataDate, fetchedAt: Date.now(), sourceName: 'Yahoo Finance' };
+    cache.put(key, JSON.stringify(quote), 21600);
+    return quote;
+  } catch (error) {
+    if (cached && Date.now() - Number(cached.fetchedAt || 0) < 21600000) return cached;
+    throw error;
   }
 }
 
