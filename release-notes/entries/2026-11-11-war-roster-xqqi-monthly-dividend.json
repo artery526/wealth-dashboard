@@ -1,9 +1,11 @@
 {
   "id": "2026-11-11-war-roster-xqqi-monthly-dividend",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-11-11",
   "area": "諸葛軍師戰情室",
   "summary": "部隊陣容配息月曆新增 XQQI 每月 4 日",
   "details": "在每個月份的 4 日標示 XQQI 配息，週配息金額沿用目前月估配息資料計算。",
-  "platforms": ["website"]
+  "platforms": [
+    "website"
+  ]
 }
