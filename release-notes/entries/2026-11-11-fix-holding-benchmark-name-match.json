@@ -1,0 +1,9 @@
+{
+  "id": "2026-11-11-fix-holding-benchmark-name-match",
+  "status": "in_progress",
+  "date": null,
+  "area": "財政",
+  "summary": "修正持股戰報基準點位名稱比對",
+  "details": "以既有標的標準化規則比對持股名稱，修正含圖示或別名時未顯示對應點位的問題。",
+  "platforms": ["website"]
+}

@@ -10286,12 +10286,12 @@ function renderTreasuryHoldingsReportBody(entry){
   var rows=Array.isArray(entry.data&&entry.data.rows)?entry.data.rows:[];
   var holdings=rows.filter(function(row){return row&&String(row.symbol||row.name||'').trim()&&(Number(row.shares)>0||Number(row.marketValue)>0);});
   if(!holdings.length)return '<p class="treasury-holdings-meta">目前沒有持股資料。</p>';
-  var benchmarks={'路博邁台灣5G':'台股 39,701 點','國泰高股息B':'台股 42,711 點','施羅德中小基金A':'台股 43,827 點','施羅德台灣樂活中小基金 - A類型':'台股 43,827 點','QQQI':'QQQM $219.74','XQQI':'QQQM $297.64','CHPY':'SOXX $98.94'};
+  var benchmarks={'路博邁台灣5G':'台股 39,701 點','國泰高股息B':'台股 42,711 點','施羅德台灣樂活中小基金 - A類型':'台股 43,827 點','QQQI':'QQQM $219.74','XQQI':'QQQM $297.64','CHPY':'SOXX $98.94'};
   var list=holdings.map(function(row){
     var result=Number(row.totalReturn)||0;
     var label=result>0?'帶回':result<0?'軍團傷亡':'戰況持平';
     var suffix=result>0?' 金銀財寶':'';
-    var name=String(row.symbol||row.name||'');var benchmark=benchmarks[name];
+    var name=String(row.symbol||row.name||'');var benchmark=benchmarks[normalizeKey(name)];
     return '<div class="treasury-holding-row"><span class="treasury-holding-name">'+esc(name)+(benchmark?'<small class="treasury-holding-benchmark">對應基準 '+esc(benchmark)+'</small>':'')+'</span><span class="treasury-holding-result '+(result>0?'gain':result<0?'loss':'')+'">'+label+(result===0?'':' <strong class="treasury-holding-value">'+fmtFull(Math.abs(result))+'</strong>'+suffix)+'</span></div>';
   }).join('');
   var stale=Date.now()-Number(entry.savedAt||0)>=FINANCE_TREASURY_HOLDINGS_REFRESH_GAP;
