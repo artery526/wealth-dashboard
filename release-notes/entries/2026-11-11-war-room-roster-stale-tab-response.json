@@ -1,0 +1,9 @@
+{
+  "id": "2026-11-11-war-room-roster-stale-tab-response",
+  "status": "in_progress",
+  "date": null,
+  "area": "諸葛軍師戰情室",
+  "summary": "修正切換分頁後舊請求覆蓋部隊陣容",
+  "details": "加入分頁載入狀態檢查，避免較晚完成的晨報、台灣總經或部隊陣容背景請求覆蓋目前選取的分頁。",
+  "platforms": ["website"]
+}
