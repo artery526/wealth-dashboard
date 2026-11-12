@@ -1,0 +1,9 @@
+{
+  "id": "2026-11-12-finance-cathay-high-dividend-benchmark",
+  "status": "in_progress",
+  "date": null,
+  "area": "財政",
+  "summary": "更新國泰高股息B持股戰報基準點位",
+  "details": "將持股戰報中國泰高股息B的台股對應基準點位更新為指定數值。",
+  "platforms": ["website"]
+}
