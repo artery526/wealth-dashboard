@@ -2612,8 +2612,17 @@ function getLatestMacroData_(ss, beforeDateText) {
       String(b['更新時間'] || '').localeCompare(String(a['更新時間'] || ''));
   });
 
-  var latest = rows[0];
-  var values = normalizeMacroDataValues_(latest);
+  var latest = null;
+  var values = null;
+  for (var i = 0; i < rows.length; i++) {
+    var candidateValues = normalizeMacroDataValues_(rows[i]);
+    if (Object.keys(candidateValues).some(function(key) { return candidateValues[key] != null; })) {
+      latest = rows[i];
+      values = candidateValues;
+      break;
+    }
+  }
+  if (!latest) return null;
   return {
     date: latest['日期'] || '',
     updatedAt: latest['更新時間'] || '',

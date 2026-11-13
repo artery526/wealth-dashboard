@@ -1,0 +1,9 @@
+{
+  "id": "2026-11-13-war-room-macro-indicators",
+  "status": "in_progress",
+  "date": null,
+  "area": "戰情室",
+  "summary": "修正帝國晨報總經燈號空白資料顯示",
+  "details": "忽略總經欄位全空的最新日期列，並在晨報遇到無指標快照時直接讀取有效總經資料。",
+  "platforms": ["website", "app-script"]
+}

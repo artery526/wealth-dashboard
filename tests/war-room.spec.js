@@ -395,6 +395,7 @@ test('standalone tabs remain switchable from Taiwan macro back to Imperial Morni
     let data = {};
     if (action === 'taiwanMacroOverview') data = { hasData: true, latest: { month: '2026/09', overall_state: '穩定' } };
     if (action === 'taiwanMacroHistory') data = { rows: [] };
+    if (action === 'macroOverview') data = { judgment: { summary: '市場資料已更新，維持觀察。', date: '2026-10-03' }, indicators: [] };
     if (action === 'advisorWorldBriefSnapshotRefresh') data = { snapshot: { market: { summary: { stance: '觀望', upCount: 2, downCount: 1 }, rows: [] }, macro: { judgment: { summary: '市場資料已更新，維持觀察。', date: '2026-10-03' }, indicators: [], valuations: {} }, capturedAt: '2026-10-03T12:00:00Z' } };
     return route.fulfill({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ ok: true, data }) });
   });
@@ -481,6 +482,35 @@ test('a late Imperial Morning Brief response cannot replace the selected Troop R
   await expect(page.getByText('遲到的帝國晨報')).toHaveCount(0);
   await expect(page.locator('.roster-stats')).toBeVisible();
   await expect(page.locator('#page-title')).toHaveText('部隊陣容');
+  const width = await page.locator('html').evaluate(el => ({ scrollWidth: el.scrollWidth, clientWidth: el.clientWidth }));
+  expect(width.scrollWidth).toBeLessThanOrEqual(width.clientWidth);
+});
+
+test('Imperial Morning Brief bypasses an empty macro snapshot and reads valid indicators directly', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.addInitScript(() => {
+    localStorage.setItem('wealth_api_url', 'https://example.test/exec');
+    localStorage.setItem('wealth_write_token', 'test-write-token');
+    localStorage.setItem('wealth_web_verify_status', 'ok');
+    localStorage.setItem('wealth_web_verify_checked_at', String(Date.now()));
+    sessionStorage.setItem('wealth_web_session_token', 'same-tab-session');
+  });
+  const actions = [];
+  await page.route('https://example.test/**', route => {
+    const action = new URL(route.request().url()).searchParams.get('action');
+    actions.push(action);
+    let data = {};
+    if (action === 'macroOverview') data = { hasData: true, sourceDate: '2026/11/10', indicators: [{ code: 'cpi', name: 'CPI', value: 3.2, displayValue: '3.2%', status: '觀察' }] };
+    if (action === 'marketDashboard') data = { summary: {}, rows: [] };
+    return route.fulfill({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ ok: true, data }) });
+  });
+  await page.route('https://api.ark-os26.cc/**', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ records: [{ capturedAt: new Date().toISOString(), metadata: { marketDashboard: { summary: {}, rows: [] }, macroOverview: { hasData: true, sourceDate: '2026/11/12', indicators: [{ code: 'cpi', value: null, displayValue: '--', status: '無資料' }] } } }] }) }));
+
+  await page.goto(`${standaloneUrl}?tab=war-briefing`);
+  await expect(page.locator('.brief-macro-grid')).toContainText('3.2%');
+  await expect(page.locator('#content')).toContainText('指標資料日 2026/11/10');
+  expect(actions).toContain('macroOverview');
+  expect(actions).not.toContain('advisorWorldBriefSnapshotRefresh');
   const width = await page.locator('html').evaluate(el => ({ scrollWidth: el.scrollWidth, clientWidth: el.clientWidth }));
   expect(width.scrollWidth).toBeLessThanOrEqual(width.clientWidth);
 });
