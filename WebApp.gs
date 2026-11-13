@@ -2614,9 +2614,10 @@ function getLatestMacroData_(ss, beforeDateText) {
 
   var latest = null;
   var values = null;
+  var macroMetricKeys = ['yield10y', 'oil', 'cpi', 'cpiMoM', 'ppi', 'unemployment', 'joltsOpenings', 'adpEmploymentChange', 'nfpPayrollChange', 'vix', 'dxy', 'yield2y', 'fedBalance', 'rrp', 'm2', 'liquidityScore', 'sofrIorbSpread', 'bankReserves', 'bankReservesChange', 'creditSpread', 'consumerSentiment'];
   for (var i = 0; i < rows.length; i++) {
     var candidateValues = normalizeMacroDataValues_(rows[i]);
-    if (Object.keys(candidateValues).some(function(key) { return candidateValues[key] != null; })) {
+    if (macroMetricKeys.some(function(key) { return candidateValues[key] != null; })) {
       latest = rows[i];
       values = candidateValues;
       break;

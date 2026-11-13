@@ -239,7 +239,7 @@
   }
   async function loadBriefing(force){
     var cacheKey='wealth_advisor_world_nas_v1',cached=readCache(cacheKey),cacheMarket=readCache('wealth_market_dashboard_v1'),cacheMacro=readCache('wealth_market_macro_v4');
-    function hasMacroLightData(macro){return !!((macro&&macro.indicators||[]).some(function(item){return item&&((item.value!=null&&item.value!=='')||(item.displayValue&&item.displayValue!=='--'));})||Object.keys(macro&&macro.values||{}).some(function(key){return macro.values[key]!=null&&macro.values[key]!=='';}));}
+    function hasMacroLightData(macro){var indicators=macro&&Array.isArray(macro.indicators)?macro.indicators:[];if(indicators.length)return indicators.some(function(item){return item&&((item.value!=null&&item.value!=='')||(item.displayValue&&item.displayValue!=='--'));});return Object.keys(macro&&macro.values||{}).some(function(key){return macro.values[key]!=null&&macro.values[key]!=='';});}
     var unusableMacroCache=!!((cached&&!hasMacroLightData(cached.macro||cached.macroOverview))||(cacheMacro&&!hasMacroLightData(cacheMacro)));
     if(!force&&cached){renderBrief(cached,true);setFreshness('顯示保存快照 · '+dateText(cached.capturedAt));}
     else if(!force&&(cacheMarket||cacheMacro)){renderBrief({market:cacheMarket||{},macro:cacheMacro||{},capturedAt:new Date().toISOString()},true);}
