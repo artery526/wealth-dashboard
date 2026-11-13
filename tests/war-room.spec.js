@@ -504,7 +504,7 @@ test('Imperial Morning Brief bypasses an empty macro snapshot and reads valid in
     if (action === 'marketDashboard') data = { summary: {}, rows: [] };
     return route.fulfill({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ ok: true, data }) });
   });
-  await page.route('https://api.ark-os26.cc/**', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ records: [{ capturedAt: new Date().toISOString(), metadata: { marketDashboard: { summary: {}, rows: [] }, macroOverview: { hasData: true, sourceDate: '2026/11/12', values: { cpi: 99 }, indicators: [{ code: 'cpi', value: null, displayValue: '--', status: '無資料' }] } } }] }) }));
+  await page.route('https://api.ark-os26.cc/**', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ records: [{ capturedAt: new Date().toISOString(), metadata: { marketDashboard: { summary: {}, rows: [] }, macroOverview: { hasData: true, sourceDate: '2026/11/12', values: { cpi: 99 }, indicators: [{ code: 'cpi', value: null, displayValue: '--', status: '無資料' }, { code: 'twseMarginBalance', value: 999, displayValue: '999', status: '有資料' }] } } }] }) }));
 
   await page.goto(`${standaloneUrl}?tab=war-briefing`);
   await expect(page.locator('.brief-macro-grid')).toContainText('3.2%');
