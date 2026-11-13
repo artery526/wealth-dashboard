@@ -515,6 +515,26 @@ test('Imperial Morning Brief bypasses an empty macro snapshot and reads valid in
   expect(width.scrollWidth).toBeLessThanOrEqual(width.clientWidth);
 });
 
+test('Imperial Morning Brief reports a partial macro API failure instead of silently calling empty cache updated', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('wealth_api_url', 'https://example.test/exec');
+    localStorage.setItem('wealth_write_token', 'test-write-token');
+    localStorage.setItem('wealth_web_verify_status', 'ok');
+    localStorage.setItem('wealth_web_verify_checked_at', String(Date.now()));
+    sessionStorage.setItem('wealth_web_session_token', 'same-tab-session');
+  });
+  await page.route('https://example.test/**', route => {
+    const action = new URL(route.request().url()).searchParams.get('action');
+    if (action === 'macroOverview') return route.fulfill({ status: 403, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ ok: false, error: 'read denied' }) });
+    const data = action === 'marketDashboard' ? { summary: {}, rows: [] } : {};
+    return route.fulfill({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ ok: true, data }) });
+  });
+  await page.route('https://api.ark-os26.cc/**', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ records: [] }) }));
+
+  await page.goto(`${standaloneUrl}?tab=war-briefing`);
+  await expect(page.locator('#content')).toContainText('總經燈號尚未取得有效指標：HTTP 403');
+});
+
 test('sector rotation uses a ranked, responsive layout with source-backed metrics', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.addInitScript(() => {
