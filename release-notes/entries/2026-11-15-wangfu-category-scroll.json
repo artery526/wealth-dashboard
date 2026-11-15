@@ -1,0 +1,9 @@
+{
+  "id": "2026-11-15-wangfu-category-scroll",
+  "status": "in_progress",
+  "date": null,
+  "area": "王府",
+  "summary": "點選文章分類後自動捲動至文章區塊",
+  "details": "選擇王府上方分類後，畫面自動移至該分類的星號文章區塊；若該分類沒有置頂文章，則移至一般文章列表。",
+  "platforms": ["website"]
+}
