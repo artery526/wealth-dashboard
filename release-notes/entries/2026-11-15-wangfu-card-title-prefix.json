@@ -1,0 +1,11 @@
+{
+  "id": "2026-11-15-wangfu-card-title-prefix",
+  "status": "released",
+  "date": "2026-11-15",
+  "area": "王府",
+  "summary": "抽牌文章標題預填可直接續寫的前綴",
+  "details": "切換至抽牌文章時，標題預填「🔮抽牌紀錄 | 」並將游標放在分隔符後；抽牌問題不再自動覆蓋標題。",
+  "platforms": [
+    "website"
+  ]
+}
