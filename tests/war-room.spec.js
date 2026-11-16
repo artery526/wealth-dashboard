@@ -92,6 +92,21 @@ test('legacy military shortcuts and voice routing open the matching War Room tab
   expect(results.parsed).toMatchObject({ panel: 'war-room', tab: 'war-battle-brief' });
 });
 
+test('Advisor menu opens the War Room in a new tab and preserves the Command Center page', async ({ page }) => {
+  const originalUrl = page.url();
+  await page.evaluate(() => {
+    window.openedWarRoomTabs = [];
+    window.open = (...args) => { window.openedWarRoomTabs.push(args); return null; };
+    const section = Array.from(document.querySelectorAll('.advisor-menu-section')).find(item => item.querySelector('.advisor-menu-toggle')?.textContent.includes('戰情室'));
+    const button = section && section.querySelector('.advisor-btn');
+    if (!button) throw new Error('Advisor War Room shortcut was not found');
+    button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+  });
+
+  expect(await page.evaluate(() => window.openedWarRoomTabs)).toEqual([['./war-room.html?tab=war-briefing', '_blank', 'noopener']]);
+  await expect(page).toHaveURL(originalUrl);
+});
+
 test('standalone route is a direct page and reuses the same-origin session', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.addInitScript(() => {

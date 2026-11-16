@@ -6746,6 +6746,15 @@ function openWarRoomPanel(event,tab){
   openPanel('war-room',tab||'war-briefing');
 }
 
+function openWarRoomInNewTab(event,tab){
+  if(event&&event.stopPropagation)event.stopPropagation();
+  if(isWarRoomStandalone()){
+    openWarRoomPanel(null,tab);
+    return;
+  }
+  window.open('./war-room.html?tab='+encodeURIComponent(tab||'war-briefing'),'_blank','noopener');
+}
+
 function isWarRoomStandalone(){
   try{return new URLSearchParams(location.search).get('war-room')==='1';}catch(e){return false;}
 }
@@ -17429,7 +17438,7 @@ initAdvisorDuoVideoPlayback();
         <section class="advisor-menu-section">
           <button class="advisor-menu-toggle" type="button" onclick="toggleAdvisorMenuGroup(this)" aria-expanded="false"><span class="advisor-menu-mark">戰</span>戰情室<span class="advisor-menu-caret">▼</span></button>
           <div class="advisor-btn-group">
-            <button class="advisor-btn" type="button" onclick="openWarRoomPanel(event)"><span class="advisor-btn-tag">戰</span>戰情室</button>
+            <button class="advisor-btn" type="button" onclick="openWarRoomInNewTab(event)"><span class="advisor-btn-tag">戰</span>戰情室</button>
           </div>
         </section>
         <section class="advisor-menu-section">

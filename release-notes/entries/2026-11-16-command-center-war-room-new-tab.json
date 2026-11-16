@@ -1,0 +1,9 @@
+{
+  "id": "2026-11-16-command-center-war-room-new-tab",
+  "status": "in_progress",
+  "date": null,
+  "area": "帝國指揮所",
+  "summary": "點擊諸葛軍師戰情室改為新分頁開啟",
+  "details": "從帝國指揮所選擇戰情室後，在新分頁開啟戰情室獨立頁，保留原指揮所分頁。",
+  "platforms": ["website"]
+}
