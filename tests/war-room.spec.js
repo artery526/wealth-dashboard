@@ -107,6 +107,20 @@ test('Advisor menu opens the War Room in a new tab and preserves the Command Cen
   await expect(page).toHaveURL(originalUrl);
 });
 
+test('Clicking Zhuge in the Command Center opens the War Room in a new tab', async ({ page }) => {
+  const originalUrl = page.url();
+  await page.evaluate(() => {
+    window.openedWarRoomTabs = [];
+    window.open = (...args) => { window.openedWarRoomTabs.push(args); return null; };
+  });
+  const zhuge = page.locator('.animated-character[aria-label="諸葛亮，開啟角色面板"]');
+  await expect(zhuge).toBeVisible();
+  await zhuge.click();
+
+  expect(await page.evaluate(() => window.openedWarRoomTabs)).toEqual([['./war-room.html?tab=war-briefing', '_blank', 'noopener']]);
+  await expect(page).toHaveURL(originalUrl);
+});
+
 test('standalone route is a direct page and reuses the same-origin session', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.addInitScript(() => {

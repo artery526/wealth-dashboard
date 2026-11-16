@@ -1,0 +1,9 @@
+{
+  "id": "2026-11-16-command-center-zhuge-entry-new-tab",
+  "status": "in_progress",
+  "date": null,
+  "area": "帝國指揮所",
+  "summary": "修正諸葛亮角色入口另開戰情室分頁",
+  "details": "點擊主城中的諸葛亮角色時，在新分頁開啟戰情室，保留原本帝國指揮所分頁。",
+  "platforms": ["website"]
+}
