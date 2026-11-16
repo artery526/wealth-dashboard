@@ -5591,6 +5591,8 @@ var WEALTH_API_QUEUE_WAIT_TIMEOUT_MS=20000;
 function wealthApiRequestPriority(action){
   action=String(action||'');
   if(action==='verifyWriteToken'||action==='createWebSession')return 10;
+  if(/^(quickNoteUpsert|quickNoteDelete)$/.test(action))return 10;
+  if(action==='quickNotes')return 8;
   if(/^(dailyGrowth|dailyGrowthSetCompletion|dailyGrowthTaskCreate|dailyMeals|dailyMealsSetCompletion)$/.test(action))return 10;
   if(/^(expense|income|transfer|transactionUndo|stockTradeVoid|dividendEntry|dividendDelete|holdingTradeEntry|holdingTradeDelete)$/.test(action))return 9;
    if(action==='storeRecords')return 8;
@@ -20976,7 +20978,7 @@ function mpmRender(records){
       return ok?Promise.resolve():Promise.reject(new Error('瀏覽器不允許複製，請檢查剪貼簿權限'));
     }
     function makeCard(note){
-      var card=document.createElement('article');card.className='quick-note-card';
+      var card=document.createElement('article');card.className='quick-note-card';card.dataset.noteId=note.id;
       var row=document.createElement('div');row.className='quick-note-row';
       var titleToggle=makeButton(note.title||'新便簽','note-title-toggle');titleToggle.className='quick-note-title-toggle';titleToggle.setAttribute('aria-expanded','false');
       var copy=makeButton('📋','icon');copy.setAttribute('aria-label','複製便簽內容');copy.title='複製';
@@ -21042,7 +21044,17 @@ function mpmRender(records){
       return cardApi;
     }
     var cards=[];
-    function render(){list.replaceChildren();cards=notes.map(makeCard);}
+    function render(){
+      var active=document.activeElement,activeCard=active&&active.closest?active.closest('.quick-note-card'):null;
+      var activeId=activeCard&&activeCard.dataset.noteId,activeField=active&&active.classList&&active.classList.contains('quick-note-title')?'quick-note-title':active&&active.classList&&active.classList.contains('quick-note-text')?'quick-note-text':'';
+      var selectionStart=active&&typeof active.selectionStart==='number'?active.selectionStart:null,selectionEnd=active&&typeof active.selectionEnd==='number'?active.selectionEnd:null;
+      list.replaceChildren();cards=notes.map(makeCard);
+      if(activeId&&activeField){
+        var targetCard=Array.from(list.children).find(function(item){return item.dataset.noteId===activeId;});
+        var target=targetCard&&targetCard.querySelector('.'+activeField);
+        if(target){target.focus();if(selectionStart!==null&&target.setSelectionRange)try{target.setSelectionRange(selectionStart,selectionEnd);}catch(e){}}
+      }
+    }
     function close(){
       Promise.all(cards.map(function(card){return card.flush();})).then(function(){notes=notes.filter(function(note){return note._persisted;});overlay.remove();overlay=null;}).catch(function(){setOverall('有便簽尚未同步成功，請確認網路後重試。',true);});
     }
@@ -21052,13 +21064,19 @@ function mpmRender(records){
       var dialog=document.createElement('section');dialog.className='quick-notes-dialog';dialog.tabIndex=-1;dialog.setAttribute('role','dialog');dialog.setAttribute('aria-modal','true');dialog.setAttribute('aria-labelledby','quick-notes-heading');
       var head=document.createElement('div');head.className='quick-notes-head';var heading=document.createElement('h2');heading.id='quick-notes-heading';heading.textContent='📝 常用便簽';var closeButton=makeButton('✖️','icon');closeButton.setAttribute('aria-label','關閉便簽');closeButton.title='關閉';closeButton.addEventListener('click',close);head.append(heading,closeButton);
       list=document.createElement('div');list.className='quick-notes-list';
-      var foot=document.createElement('div');foot.className='quick-notes-foot';overall=document.createElement('span');overall.textContent='正在讀取指揮所試算表…';var add=makeButton('➕','icon');add.setAttribute('aria-label','新增便簽');add.title='新增便簽';add.disabled=true;add.addEventListener('click',function(){
-        var draftIndex=notes.findIndex(function(note){return !note._persisted;});
+      var foot=document.createElement('div');foot.className='quick-notes-foot';overall=document.createElement('span');overall.textContent='正在背景讀取便簽…';var add=makeButton('➕','icon');add.setAttribute('aria-label','新增便簽');add.title='新增便簽';add.addEventListener('click',function(){
+        var draftIndex=notes.findIndex(function(note){return !note._persisted&&!String(note.text||'').trim();});
         if(draftIndex>=0){cards[draftIndex].focusEditor();setOverall('先完成目前草稿，輸入內容後自動儲存。');return;}
         var id=window.crypto&&crypto.randomUUID?crypto.randomUUID():'note-'+Date.now()+'-'+Math.random().toString(36).slice(2);var note={id:id,title:'新便簽',text:'',_persisted:false,_editing:true};notes.push(note);render();setOverall('輸入便簽內容後會自動儲存到試算表');cards[cards.length-1].focusEditor();
       });foot.append(overall,add);
       dialog.append(head,list,foot);overlay.appendChild(dialog);overlay.addEventListener('click',function(event){if(event.target===overlay)close();});document.body.appendChild(overlay);dialog.focus();
-      apiGet({action:'quickNotes'}).then(function(result){notes=(Array.isArray(result)?result:[]).filter(function(note){return !(String(note.title||'').trim()==='新便簽'&&!String(note.text||'').trim());}).map(function(note){note._persisted=true;return note;});render();add.disabled=false;setOverall(notes.length?'便簽已從指揮所試算表載入':'尚無常用便簽，按「➕」建立第一則。');}).catch(function(error){add.disabled=false;setOverall('讀取試算表失敗：'+(error.message||'請稍後重試'),true);});
+      apiGet({action:'quickNotes'}).then(function(result){
+        var serverNotes=(Array.isArray(result)?result:[]).filter(function(note){return !(String(note.title||'').trim()==='新便簽'&&!String(note.text||'').trim());}).map(function(note){note._persisted=true;return note;});
+        var localNotes=notes.slice(),localById={};localNotes.forEach(function(note){localById[note.id]=note;});
+        var merged=serverNotes.map(function(note){return localById[note.id]||note;}),seen={};merged.forEach(function(note){seen[note.id]=true;});
+        localNotes.forEach(function(note){if(!seen[note.id]){merged.push(note);seen[note.id]=true;}});
+        notes=merged;render();setOverall(notes.some(function(note){return note._persisted;})?'便簽已從試算表載入':'尚無已儲存便簽；可立即新增記錄。');
+      }).catch(function(error){setOverall('便簽讀取較慢，可先新增記錄；同步讀取失敗：'+(error.message||'稍後重試'),true);});
       dialog.addEventListener('keydown',function(event){if(event.key==='Escape'){event.preventDefault();close();}});
     }
     trigger.addEventListener('click',open);
@@ -21080,7 +21098,7 @@ function mpmRender(records){
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('./sw.js?v=20261116-quick-notes2', {updateViaCache:'none'}).then(function (registration) {
+    navigator.serviceWorker.register('./sw.js?v=20261116-quick-notes3', {updateViaCache:'none'}).then(function (registration) {
       return registration.update();
     }).catch(function (error) {
       console.warn('Empire Service Worker registration failed', error);
