@@ -1,7 +1,7 @@
 {
   "id": "2026-11-16-pangtong-remove-carrier-shortcut",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-11-16",
   "area": "龐統軍師",
   "summary": "移除龐統常用查詢的複製載具選項",
   "details": "從龐統常用查詢下拉選單移除複製載具入口；保留其他載具與會員卡功能。",
