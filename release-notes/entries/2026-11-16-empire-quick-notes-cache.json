@@ -1,9 +1,11 @@
 {
   "id": "2026-11-16-empire-quick-notes-cache",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-11-16",
   "area": "帝國指揮所",
   "summary": "便簽先顯示快取清單並背景同步",
   "details": "在瀏覽器快取最近一次成功同步的便簽清單，開啟時先立即顯示，再於背景更新試算表資料並合併新增、修改與刪除。",
-  "platforms": ["website"]
+  "platforms": [
+    "website"
+  ]
 }
