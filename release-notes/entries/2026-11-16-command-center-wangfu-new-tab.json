@@ -1,7 +1,7 @@
 {
   "id": "2026-11-16-command-center-wangfu-new-tab",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-11-16",
   "area": "帝國指揮所",
   "summary": "點擊王府人物改為新分頁開啟王府網頁",
   "details": "點擊指揮所場景中的王府入口後，在新分頁開啟王府網頁，並保留原指揮所頁面。",
