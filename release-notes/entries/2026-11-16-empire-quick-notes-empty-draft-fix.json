@@ -1,0 +1,9 @@
+{
+  "id": "2026-11-16-empire-quick-notes-empty-draft-fix",
+  "status": "in_progress",
+  "date": null,
+  "area": "帝國指揮所",
+  "summary": "修正常用便簽空白草稿並改為表情符號操作列",
+  "details": "空白草稿不再寫入試算表，歷史空白預設便簽不再顯示；便簽改為標題點開內容，並以表情符號按鈕複製、編輯與管理。",
+  "platforms": ["website"]
+}
