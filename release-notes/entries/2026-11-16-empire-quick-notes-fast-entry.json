@@ -1,9 +1,11 @@
 {
   "id": "2026-11-16-empire-quick-notes-fast-entry",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-11-16",
   "area": "帝國指揮所",
   "summary": "便簽讀取期間仍可立即新增記錄",
   "details": "便簽載入改為背景執行，新增草稿不再等待試算表讀取；便簽讀寫請求提高優先度，載入完成時保留使用者正在輸入的內容。",
-  "platforms": ["website"]
+  "platforms": [
+    "website"
+  ]
 }
