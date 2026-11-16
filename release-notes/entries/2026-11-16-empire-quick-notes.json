@@ -1,0 +1,9 @@
+{
+  "id": "2026-11-16-empire-quick-notes",
+  "status": "in_progress",
+  "date": null,
+  "area": "帝國指揮所",
+  "summary": "龐統旁新增可同步試算表的常用便簽",
+  "details": "在龐統旁新增便簽按鈕，可建立、編輯、複製與刪除常用文字，並同步至指揮所試算表的獨立分頁。",
+  "platforms": ["website"]
+}
