@@ -1,0 +1,11 @@
+{
+  "id": "2026-11-19-mindloom-font-render-scale",
+  "status": "in_progress",
+  "date": null,
+  "area": "王府",
+  "summary": "修正 Mindloom 畫布縮放後節點字仍偏小",
+  "details": "配合 SVG 畫布縮放提高節點與 SVG 匯出字級，讓實際顯示尺寸更易閱讀。",
+  "platforms": [
+    "website"
+  ]
+}

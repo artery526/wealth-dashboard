@@ -58,7 +58,7 @@ export default function App() {
     clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg'); clone.setAttribute('viewBox', '0 0 1200 760'); clone.setAttribute('width', '1200'); clone.setAttribute('height', '760')
     clone.querySelectorAll('.selection-ring,.resize-handle,.connector-anchor').forEach(el => el.remove())
     clone.querySelectorAll('.node-text').forEach(el => el.removeAttribute('tabindex'))
-    const style = document.createElementNS('http://www.w3.org/2000/svg', 'style'); style.textContent = '.edge{stroke:#aaa99f;stroke-width:2}.node-box{stroke:#d4d4ca;stroke-width:1.5}.node-text{font:600 17px sans-serif;fill:#292b28}'; clone.prepend(style)
+    const style = document.createElementNS('http://www.w3.org/2000/svg', 'style'); style.textContent = '.edge{stroke:#aaa99f;stroke-width:2}.node-box{stroke:#d4d4ca;stroke-width:1.5}.node-text{font:600 24px sans-serif;fill:#292b28}'; clone.prepend(style)
     download(`${map?.title || 'mindloom'}.svg`, new Blob([new XMLSerializer().serializeToString(clone)], { type: 'image/svg+xml' })); setMessage('SVG 圖檔已開始下載。')
   }
   const exportPng = () => {
