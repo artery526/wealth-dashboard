@@ -56,6 +56,11 @@ export function removeNode(map: MindMap, nodeId: string): MindMap {
   return { ...map, nodes: map.nodes.filter((n) => n.id !== nodeId), edges: map.edges.filter((e) => e.from !== nodeId && e.to !== nodeId), updatedAt: Date.now() }
 }
 
+export function disconnectNode(map: MindMap, nodeId: string): MindMap {
+  const edges = map.edges.filter((e) => e.from !== nodeId && e.to !== nodeId)
+  return edges.length === map.edges.length ? map : { ...map, edges, updatedAt: Date.now() }
+}
+
 export function connectNodes(map: MindMap, from: string, to: string): MindMap {
   if (from === to || map.edges.some((e) => (e.from === from && e.to === to) || (e.from === to && e.to === from))) return map
   if (!map.nodes.some((n) => n.id === from) || !map.nodes.some((n) => n.id === to)) return map
