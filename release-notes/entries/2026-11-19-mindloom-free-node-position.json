@@ -1,0 +1,11 @@
+{
+  "id": "2026-11-19-mindloom-free-node-position",
+  "status": "in_progress",
+  "date": null,
+  "area": "王府",
+  "summary": "Mindloom 主題可移動至畫布原點以外",
+  "details": "移除卡片位置不得小於零的限制，讓主題可以繼續往上或往左拖曳，並可透過平移畫布查看。",
+  "platforms": [
+    "website"
+  ]
+}

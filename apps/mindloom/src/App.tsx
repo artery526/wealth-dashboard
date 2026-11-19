@@ -162,7 +162,7 @@ export default function App() {
     const rect = svgRef.current!.getBoundingClientRect(); const x = ((event.clientX - rect.left) * 1200 / rect.width - viewport.x) / viewport.scale; const y = ((event.clientY - rect.top) * 760 / rect.height - viewport.y) / viewport.scale
     const node = nodeAt(drag.id); if (!node) return
     if (drag.resize) updateNode(drag.id, { width: Math.max(100, Math.min(600, x - node.x)), height: Math.max(56, Math.min(300, y - node.y)) })
-    else updateNode(drag.id, { x: Math.max(0, x - drag.dx), y: Math.max(0, y - drag.dy) })
+    else updateNode(drag.id, { x: x - drag.dx, y: y - drag.dy })
   }
   const beginDrag = (event: React.PointerEvent, node: MindNode, resize = false) => {
     if (connectFrom) return
