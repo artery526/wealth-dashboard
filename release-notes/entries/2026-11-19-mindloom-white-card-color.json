@@ -1,0 +1,11 @@
+{
+  "id": "2026-11-19-mindloom-white-card-color",
+  "status": "in_progress",
+  "date": null,
+  "area": "王府",
+  "summary": "Mindloom 卡片顏色新增白色",
+  "details": "在主題卡片的顏色選項中加入白色，可套用至既有或新建主題。",
+  "platforms": [
+    "website"
+  ]
+}

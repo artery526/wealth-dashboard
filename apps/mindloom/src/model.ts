@@ -3,7 +3,7 @@ export type MindEdge = { id: string; from: string; to: string }
 export type MindMap = { id: string; title: string; nodes: MindNode[]; edges: MindEdge[]; updatedAt: number }
 export type MapFile = { format: 'mindloom'; version: 1; map: MindMap }
 
-export const palette = ['#e8f2eb', '#f5eadb', '#e8edf8', '#f5e6e6', '#f1edda']
+export const palette = ['#e8f2eb', '#f5eadb', '#e8edf8', '#f5e6e6', '#f1edda', '#ffffff']
 const id = () => crypto.randomUUID()
 
 export function createMap(title = '未命名心智圖'): MindMap {
