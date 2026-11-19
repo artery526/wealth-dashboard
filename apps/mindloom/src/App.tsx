@@ -20,8 +20,11 @@ export default function App() {
   const [message, setMessage] = useState('')
   const [showHelp, setShowHelp] = useState(false)
   const [viewport, setViewport] = useState(initialViewport)
+  const [isPanning, setIsPanning] = useState(false)
   const svgRef = useRef<SVGSVGElement>(null)
   const dragRef = useRef<{ id: string; dx: number; dy: number; resize?: boolean } | null>(null)
+  const panRef = useRef<{ pointerId: number; clientX: number; clientY: number; x: number; y: number } | null>(null)
+  const didPanRef = useRef(false)
   const selectedNode = useMemo(() => map?.nodes.find(n => n.id === selected) ?? null, [map, selected])
 
   useEffect(() => {
@@ -51,6 +54,21 @@ export default function App() {
   const updateNode = (id: string, patch: Partial<MindNode>) => changeMap(current => ({ ...current, nodes: current.nodes.map(node => node.id === id ? { ...node, ...patch } : node), updatedAt: Date.now() }))
 
   const nodeAt = (id: string) => map?.nodes.find(n => n.id === id)
+  const beginPan = (event: React.PointerEvent<SVGSVGElement>) => {
+    if (event.button !== 0 || connectFrom || !svgRef.current) return
+    event.preventDefault()
+    panRef.current = { pointerId: event.pointerId, clientX: event.clientX, clientY: event.clientY, x: viewport.x, y: viewport.y }
+    didPanRef.current = false
+    event.currentTarget.setPointerCapture(event.pointerId)
+    setIsPanning(true)
+  }
+  const endPan = (event: React.PointerEvent<SVGSVGElement>) => {
+    if (panRef.current?.pointerId === event.pointerId) {
+      panRef.current = null
+      setIsPanning(false)
+    }
+    dragRef.current = null
+  }
   const exportSvg = () => {
     const source = svgRef.current
     if (!source) return
@@ -126,6 +144,19 @@ export default function App() {
   })
 
   const handlePointerMove = (event: React.PointerEvent<SVGSVGElement>) => {
+    const pan = panRef.current
+    if (pan) {
+      const svg = svgRef.current
+      const matrix = svg?.getScreenCTM()
+      const rect = svg?.getBoundingClientRect()
+      const scaleX = matrix?.a || (rect ? rect.width / 1200 : 1)
+      const scaleY = matrix?.d || (rect ? rect.height / 760 : 1)
+      const dx = event.clientX - pan.clientX
+      const dy = event.clientY - pan.clientY
+      if (Math.abs(dx) + Math.abs(dy) > 3) didPanRef.current = true
+      setViewport(current => ({ ...current, x: pan.x + dx / scaleX, y: pan.y + dy / scaleY }))
+      return
+    }
     const drag = dragRef.current; if (!drag || !map) return
     const rect = svgRef.current!.getBoundingClientRect(); const x = ((event.clientX - rect.left) * 1200 / rect.width - viewport.x) / viewport.scale; const y = ((event.clientY - rect.top) * 760 / rect.height - viewport.y) / viewport.scale
     const node = nodeAt(drag.id); if (!node) return
@@ -159,7 +190,7 @@ export default function App() {
       </aside>
       <section className="editor" aria-label="心智圖編輯器">
         <div className="toolbar"><div className="tool-group"><button className="tool-button primary-tool" onClick={addTopic} disabled={!map} title="新增子主題（N）"><Plus size={16} /><span>新增子主題</span></button><span className="tool-divider" /><button className={`tool-button ${connectFrom ? 'pressed' : ''}`} onClick={() => { setConnectFrom(selected); setMessage(selected ? '選取另一個主題以建立連線。' : '請先選取起點主題。') }} disabled={!selected} title="連線"><Link2 size={16} /><span>{connectFrom ? '選擇終點…' : '連線'}</span></button><button className="tool-button" disabled={!selected} onClick={removeSelected} title="刪除主題"><Trash2 size={16} /></button></div><div className="tool-group"><button className="tool-button" aria-label="縮小畫布" onClick={() => setViewport(v => ({ ...v, scale: Math.max(.5, v.scale - .1) }))}><Minus size={16} /></button><span className="zoom-label">{Math.round(viewport.scale * 100)}%</span><button className="tool-button" aria-label="放大畫布" onClick={() => setViewport(v => ({ ...v, scale: Math.min(1.5, v.scale + .1) }))}><Plus size={16} /></button><span className="tool-divider"/><div className="menu-wrap"><button className="tool-button" aria-label="匯出 JSON" onClick={exportJson} title="匯出 JSON"><ArrowDownToLine size={16} /><span>匯出</span><ChevronDown size={13}/></button><div className="export-menu"><button onClick={exportJson}>JSON 備份</button><button onClick={exportSvg}>SVG 圖檔</button><button onClick={exportPng}>PNG 圖檔</button><label tabIndex={0} role="button" onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (e.currentTarget.querySelector('input') as HTMLInputElement).click() } }}>匯入 JSON<input type="file" accept="application/json,.json" onChange={e => { void importJson(e.target.files?.[0]); e.target.value = '' }} /></label></div></div></div></div>
-        {map ? <div className="canvas-frame"><div className="canvas-caption"><span><MousePointer2 size={14}/>選取主題以編輯・拖曳以排列</span><button onClick={() => setViewport(initialViewport)}>重設視圖</button></div><svg ref={svgRef} className="mind-canvas" viewBox="0 0 1200 760" role="application" aria-label="心智圖畫布" onPointerMove={handlePointerMove} onPointerUp={() => { dragRef.current = null }} onClick={() => { setSelected(null); setConnectFrom(null) }}>
+        {map ? <div className="canvas-frame"><div className="canvas-caption"><span><MousePointer2 size={14}/>拖曳空白處移動畫布・拖曳主題以排列</span><button onClick={() => setViewport(initialViewport)}>重設視圖</button></div><svg ref={svgRef} className={`mind-canvas${isPanning ? ' panning' : ''}`} viewBox="0 0 1200 760" role="application" aria-label="心智圖畫布；拖曳空白處可移動畫布" onPointerDown={beginPan} onPointerMove={handlePointerMove} onPointerUp={endPan} onPointerCancel={endPan} onClick={() => { if (didPanRef.current) { didPanRef.current = false; return }; setSelected(null); setConnectFrom(null) }}>
           <defs><pattern id="dots" width="24" height="24" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="1" fill="#e5e5de"/></pattern></defs><rect width="1200" height="760" fill="url(#dots)" />
           <g transform={`translate(${viewport.x} ${viewport.y}) scale(${viewport.scale})`}>
             {map.edges.map(edge => { const from = nodeAt(edge.from), to = nodeAt(edge.to); if (!from || !to) return null; return <path key={edge.id} className="edge" d={`M ${from.x + from.width/2} ${from.y + from.height/2} C ${(from.x + to.x + to.width)/2} ${from.y + from.height/2}, ${(from.x + to.x)/2} ${to.y + to.height/2}, ${to.x + to.width/2} ${to.y + to.height/2}`} /> })}

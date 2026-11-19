@@ -1,0 +1,11 @@
+{
+  "id": "2026-11-19-mindloom-canvas-pan",
+  "status": "in_progress",
+  "date": null,
+  "area": "王府",
+  "summary": "Mindloom 可拖動畫布查看範圍外的主題",
+  "details": "拖曳畫布空白處可上下左右平移，拖曳主題仍可調整節點位置。",
+  "platforms": [
+    "website"
+  ]
+}
