@@ -1,7 +1,7 @@
 {
   "id": "2026-11-19-mindloom-pangtong-shortcut-layout",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-11-19",
   "area": "王府",
   "summary": "龐統旁的便簽與心智圖按鈕改為上下排列",
   "details": "快捷按鈕改為垂直排列在龐統右側，上方是便簽、下方是 Mindloom 心智圖。",
