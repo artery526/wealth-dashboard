@@ -30,12 +30,13 @@ test('Wangfu shortcuts always route to the standalone page, including before unl
   ]);
 });
 
-test('Wangfu exposes Mindloom in a safe new tab', async ({ page }) => {
+test('Mindloom is available beside Pangtong as a safe emoji shortcut', async ({ page }) => {
   await page.goto(dashboardUrl);
-  const link = page.locator('.ark-wall-mindloom-link');
+  const link = page.locator('.pangtong-shortcut-dock .mindloom-shortcut-link');
   await expect(link).toHaveAttribute('href', './mindloom/');
   await expect(link).toHaveAttribute('target', '_blank');
   await expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+  await expect(link).toHaveText('🧠');
 });
 
 test('embedded Wangfu reader renders mixed > and \\> lines as dashed quote blocks on desktop and mobile', async ({ page }) => {
