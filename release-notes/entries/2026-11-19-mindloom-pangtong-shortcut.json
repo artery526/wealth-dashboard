@@ -1,0 +1,11 @@
+{
+  "id": "2026-11-19-mindloom-pangtong-shortcut",
+  "status": "in_progress",
+  "date": null,
+  "area": "王府",
+  "summary": "龐統軍師旁新增 Mindloom 表情入口",
+  "details": "將 Mindloom 心智圖入口改為龐統旁的腦袋表情按鈕，並移除王府標題列的文字連結。",
+  "platforms": [
+    "website"
+  ]
+}
