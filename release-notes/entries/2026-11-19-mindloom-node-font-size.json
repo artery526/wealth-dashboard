@@ -1,7 +1,7 @@
 {
   "id": "2026-11-19-mindloom-node-font-size",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-11-19",
   "area": "王府",
   "summary": "放大 Mindloom 心智圖節點預設字體",
   "details": "提高畫布節點與 SVG 匯出文字的預設字級，改善閱讀清晰度。",
