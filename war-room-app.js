@@ -188,6 +188,11 @@
   function dashboardCardGroup(title,object){if(!object||typeof object!=='object')return '';var entries=Object.entries(object).filter(function(entry){return entry[1]==null||typeof entry[1]!=='object';});if(!entries.length)return '';return sectionTitle(title)+'<div class="grid">'+entries.slice(0,12).map(function(entry){var val=entry[1];return metric(entry[0],typeof val==='number'?num(val):String(val==null?'資料暫缺':val));}).join('')+'</div>';}
   function renderBrief(payload,stale,skipBackgroundRefresh){
     if(currentTab!=='war-briefing')return;
+    var preservedAsyncMarkup=skipBackgroundRefresh?{
+      nasdaq:(document.getElementById('nasdaq-valuation-host')||{}).innerHTML||'',
+      taiwan:(document.getElementById('taiwan-valuation-host')||{}).innerHTML||'',
+      drawdowns:Array.prototype.map.call(document.querySelectorAll('.brief-ytd-drawdown-slot[data-ytd-drawdown]'),function(slot){return {key:slot.getAttribute('data-ytd-drawdown'),text:slot.textContent,title:slot.title};})
+    }:null;
     function isPalantirMonitorRow_(row){if(!row||typeof row!=='object')return false;var code=String(row.code||row.symbol||row.ticker||'').trim().toUpperCase(),ticker=code.split(':').pop(),name=String(row.name||row.company||'');return ticker==='PLTR'||/palantir/i.test(name);}
     lastBriefPayload=payload;lastBriefStale=!!stale;
     var sourceMarket=payload.market||payload.marketDashboard||{},sourceRows=Array.isArray(sourceMarket.rows)?sourceMarket.rows:[],market=Object.assign({},sourceMarket,{rows:sourceRows.filter(function(row){return !isPalantirMonitorRow_(row);}).map(function(row){return Object.assign({},row);})}),displayPayload=Object.assign({},payload),macro=payload.macro||payload.macroOverview||{},report=payload.longReport||{},qqqmCached=readCache(WAR_ROOM_QQQM_CACHE_KEY);
@@ -235,7 +240,17 @@
     var groups=[['💧 流動性',[['SOFR–IORB','sofrIorbSpread'],['銀行準備金','bankReserves'],['隔夜逆回購','rrp'],['M2','m2']]],['👷 就業',[['JOLTS 職缺','joltsOpenings'],['ADP 就業','adpEmploymentChange'],['非農就業','nfpPayrollChange']]],['🔥 通膨',[['CPI','cpi'],['PPI','ppi'],['油價','oil']]],['💳 市場壓力',[['信用利差','creditSpread'],['VIX','vix'],['消費信心','consumerSentiment']]]];
     html+=sectionTitle('總經燈號')+'<p class="metric-label">指標資料日 '+esc(macro.sourceDate||'資料日期未提供')+'</p><div class="brief-macro-grid">'+groups.map(function(group){return '<article class="brief-macro-card"><h3>'+group[0]+'</h3>'+group[1].map(function(item){var row=findIndicator(item[1]),tone=/紅|警戒|防守|惡化/.test(String(row&&row.status||''))?'down':/綠|改善|充足/.test(String(row&&row.status||''))?'up':'';return '<div class="brief-indicator"><span>'+esc(item[0])+'</span><strong class="'+tone+'">'+esc(indicatorValue(row))+'</strong></div>';}).join('')+'</article>';}).join('')+'</div>';
     if(report.latest||report.summary)html+=sectionTitle('長期觀察')+'<div class="brief-report">'+esc((report.latest&&report.latest.summary)||report.summary||'')+'</div>';
-    html+=rawDetails('完整快照資料',displayPayload);content.innerHTML=html;Array.prototype.forEach.call(document.querySelectorAll('.brief-market-row'),function(marketRow,index){var drawdownKey=marketYtdDrawdownKey_(rows[index]);if(!drawdownKey)return;var priceCell=marketRow.children[1];if(!priceCell)return;var slot=document.createElement('small');slot.className='brief-ytd-drawdown-slot';slot.setAttribute('data-ytd-drawdown',drawdownKey);slot.textContent='今年最大回撤載入中';priceCell.appendChild(slot);});setFreshness(captured?'快照時間 '+dateText(captured):'以目前可取得的快照呈現');if(!skipBackgroundRefresh){refreshNasdaqValuation_();refreshTaiwanValuation_(valuations.taiex,stale);refreshWarRoomYtdDrawdown_();if(rows.some(isWarRoomQQQMRow_))refreshWarRoomQQQMQuote_();}
+    html+=rawDetails('完整快照資料',displayPayload);
+    content.innerHTML=html;
+    Array.prototype.forEach.call(document.querySelectorAll('.brief-market-row'),function(marketRow,index){var drawdownKey=marketYtdDrawdownKey_(rows[index]);if(!drawdownKey)return;var priceCell=marketRow.children[1];if(!priceCell)return;var slot=document.createElement('small');slot.className='brief-ytd-drawdown-slot';slot.setAttribute('data-ytd-drawdown',drawdownKey);slot.textContent='今年最大回撤載入中';priceCell.appendChild(slot);});
+    if(preservedAsyncMarkup){
+      var nasdaqHost=document.getElementById('nasdaq-valuation-host'),taiwanHost=document.getElementById('taiwan-valuation-host');
+      if(nasdaqHost&&preservedAsyncMarkup.nasdaq)nasdaqHost.innerHTML=preservedAsyncMarkup.nasdaq;
+      if(taiwanHost&&preservedAsyncMarkup.taiwan)taiwanHost.innerHTML=preservedAsyncMarkup.taiwan;
+      preservedAsyncMarkup.drawdowns.forEach(function(saved){var slot=document.querySelector('.brief-ytd-drawdown-slot[data-ytd-drawdown="'+saved.key+'"]');if(slot){slot.textContent=saved.text;slot.title=saved.title;}});
+    }
+    setFreshness(captured?'快照時間 '+dateText(captured):'以目前可取得的快照呈現');
+    if(!skipBackgroundRefresh){refreshNasdaqValuation_();refreshTaiwanValuation_(valuations.taiex,stale);refreshWarRoomYtdDrawdown_();if(rows.some(isWarRoomQQQMRow_))refreshWarRoomQQQMQuote_();}
   }
   async function loadBriefing(force){
     var cacheKey='wealth_advisor_world_nas_v1',cached=readCache(cacheKey),cacheMarket=readCache('wealth_market_dashboard_v1'),cacheMacro=readCache('wealth_market_macro_v4');

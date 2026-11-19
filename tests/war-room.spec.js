@@ -187,6 +187,46 @@ test('Imperial Morning Brief displays the QQQM quote from its War Room API on mo
   expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
 });
 
+test('QQQM quote refresh does not remove a NASDAQ valuation card that has already loaded', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.addInitScript(() => {
+    localStorage.setItem('wealth_api_url', 'https://example.test/exec');
+    localStorage.setItem('wealth_write_token', 'test-write-token');
+    localStorage.setItem('wealth_web_verify_status', 'ok');
+    localStorage.setItem('wealth_web_verify_checked_at', String(Date.now()));
+    sessionStorage.setItem('wealth_web_session_token', 'same-tab-session');
+  });
+  let releaseQuote;
+  const quoteGate = new Promise(resolve => { releaseQuote = resolve; });
+  await page.route('https://example.test/**', async route => {
+    const action = new URL(route.request().url()).searchParams.get('action');
+    let data = {};
+    if (action === 'advisorWorldBriefSnapshotRefresh') data = { snapshot: {
+      market: { summary: {}, rows: [{ code: 'NASDAQ:QQQM', name: '納斯達克100 ETF', price: 270, previous: 269, changePct: 0.37 }] },
+      macro: { judgment: {}, indicators: [], valuations: {} }, capturedAt: '2026-11-19T00:00:00Z'
+    } };
+    if (action === 'nasdaq100Valuation') data = { trailingPE: 30.52, trailingDataDate: '2026-11-18', forwardPE: 19.61, forwardDataDate: '2026-11-18', stale: false };
+    if (action === 'warRoomQQQMQuote') {
+      await quoteGate;
+      data = { symbol: 'QQQM', code: 'NASDAQ:QQQM', name: '納斯達克100 ETF', price: 278.45, previous: 277.25, changePct: 0.43, ma20: 270.10, ma20Prev: 268.80, dataDate: '2026-11-19', sourceName: 'Yahoo Finance', stale: false };
+    }
+    if (action === 'warRoomTaiwanValuation') {
+      await new Promise(resolve => setTimeout(resolve, 300));
+      data = { trailingPE: 19.54, pb: 3.31, historicalPEMedian: { tenYear: 16.88 }, historicalPBMedian: { tenYear: 1.92 }, dataDate: '2026-11-18', source: 'MoneyDJ / TWSE' };
+    }
+    return route.fulfill({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ ok: true, data }) });
+  });
+  await page.route('https://api.ark-os26.cc/**', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ records: [] }) }));
+
+  await page.goto(`${standaloneUrl}?tab=war-briefing`);
+  const nasdaqCard = page.locator('.nasdaq-valuation-card:not(.taiex-valuation-card)');
+  await expect(nasdaqCard).toContainText('30.52×');
+  releaseQuote();
+  await expect(page.locator('.brief-market-row').filter({ hasText: '納斯達克100 ETF' }).locator('.brief-market-price-line > strong')).toHaveText('278.45');
+  await expect(nasdaqCard).toContainText('30.52×');
+  await expect(page.locator('.taiex-valuation-card')).toContainText('19.54×');
+});
+
 test('Imperial Morning Brief derives monitored market rise and fall counts from quote rows', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.addInitScript(() => {

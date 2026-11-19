@@ -1,0 +1,11 @@
+{
+  "id": "2026-11-19-war-room-nasdaq-valuation-card-persistence",
+  "status": "in_progress",
+  "date": null,
+  "area": "帝國晨報",
+  "summary": "修正 QQQM 行情背景更新移除 NASDAQ-100 估值卡",
+  "details": "修正晨報行情更新重繪時清空已載入估值內容的競速問題，保留 NASDAQ-100、台股估值卡與已載入的年內回撤資訊。",
+  "platforms": [
+    "website"
+  ]
+}
