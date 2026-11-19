@@ -1,7 +1,7 @@
 {
   "id": "2026-11-19-wangfu-mindloom-nas",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-11-19",
   "area": "王府",
   "summary": "整合 Mindloom 心智圖與 NAS JSON 儲存",
   "details": "在王府新增線上心智圖入口，透過 ArkOS 專用心智圖 API 將 JSON 存入 NAS。",
