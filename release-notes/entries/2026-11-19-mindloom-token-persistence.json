@@ -1,0 +1,11 @@
+{
+  "id": "2026-11-19-mindloom-token-persistence",
+  "status": "in_progress",
+  "date": null,
+  "area": "王府",
+  "summary": "Mindloom 連線後可記住 NAS 令牌",
+  "details": "驗證成功後將 Mindloom 專用令牌保存在目前瀏覽器，並提供清除方式。",
+  "platforms": [
+    "website"
+  ]
+}

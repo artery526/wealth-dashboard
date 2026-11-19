@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowDownToLine, ChevronDown, CircleHelp, FilePlus2, FolderOpen, Keyboard, Link2, Minus, MousePointer2, Plus, Share2, Trash2, X } from 'lucide-react'
 import { addChild, connectNodes, createMap, MindMap, MindNode, palette, removeNode, sampleMap, serializeMap, validateMap } from './model'
-import { connectNas, deleteMap, getMaps, isNasWriteConnected, saveMap } from './db'
+import { connectNas, deleteMap, forgetNasWriteToken, getMaps, isNasWriteConnected, saveMap } from './db'
 
 type SaveState = 'loading' | 'saved' | 'saving' | 'error'
 const initialViewport = { x: 0, y: 0, scale: 1 }
@@ -92,7 +92,7 @@ export default function App() {
   }
 
   const handleNasConnect = async () => {
-    const token = window.prompt('輸入 ArkOS 心智圖專用寫入令牌。令牌只暫存在目前分頁的工作階段中。')
+    const token = window.prompt('輸入 ArkOS 心智圖專用寫入令牌。驗證成功後會儲存在此瀏覽器，之後開啟 Mindloom 時可沿用。')
     if (!token?.trim()) return
     try {
       const stored = await connectNas(token.trim())
@@ -101,8 +101,15 @@ export default function App() {
       setMap(current); setSelected(current?.nodes[0]?.id ?? null)
       setMessage(`NAS 已連線；已同步本機新增的心智圖，共 ${stored.length} 張。`)
     } catch (error) {
+      setNasConnected(isNasWriteConnected())
       setMessage(error instanceof Error ? error.message : 'NAS 連線失敗。')
     }
+  }
+
+  const handleForgetNasToken = () => {
+    forgetNasWriteToken()
+    setNasConnected(false)
+    setMessage('已清除此瀏覽器的 NAS 令牌；NAS 上的心智圖檔案沒有刪除。')
   }
 
   useEffect(() => {
@@ -140,7 +147,7 @@ export default function App() {
     <header className="topbar">
       <a className="brand" href="#" aria-label="Mindloom 首頁"><span className="brand-mark">m</span><span>mindloom</span></a>
       <div className="doc-title"><input aria-label="心智圖名稱" value={map?.title ?? ''} disabled={!map} onChange={e => changeMap(m => ({ ...m, title: e.target.value.slice(0, 160), updatedAt: Date.now() }))} /><span className={`save-indicator ${saveState}`}><i />{saveState === 'loading' ? '載入中' : saveState === 'saving' ? '儲存中' : saveState === 'error' ? '儲存異常' : nasConnected ? '已存 NAS' : '僅存本機'}</span></div>
-      <div className="top-actions"><button className="tool-button" onClick={handleNasConnect} title="使用心智圖專用令牌連線到 NAS">{nasConnected ? 'NAS 已連線' : '連接 NAS'}</button><button className="icon-button" aria-label="快捷鍵說明" title="快捷鍵" onClick={() => setShowHelp(true)}><CircleHelp size={19} /></button><button className="avatar" aria-label={nasConnected ? 'NAS 私人工作區' : '本機私人工作區'}>M</button></div>
+      <div className="top-actions"><button className="tool-button" onClick={handleNasConnect} title="使用心智圖專用令牌連線到 NAS">{nasConnected ? '重新連線 NAS' : '連接 NAS'}</button>{nasConnected && <button className="icon-button" aria-label="忘記此瀏覽器的 NAS 令牌" title="忘記此瀏覽器的 NAS 令牌" onClick={handleForgetNasToken}><X size={17}/></button>}<button className="icon-button" aria-label="快捷鍵說明" title="快捷鍵" onClick={() => setShowHelp(true)}><CircleHelp size={19} /></button><button className="avatar" aria-label={nasConnected ? 'NAS 私人工作區' : '本機私人工作區'}>M</button></div>
     </header>
     <main className="workspace">
       <aside className="sidebar">
