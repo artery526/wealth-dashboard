@@ -37,6 +37,7 @@ test('Mindloom is available beside Pangtong as a safe emoji shortcut', async ({ 
   await expect(link).toHaveAttribute('target', '_blank');
   await expect(link).toHaveAttribute('rel', 'noopener noreferrer');
   await expect(link).toHaveText('🧠');
+  await expect(page.locator('.pangtong-shortcut-dock .quick-notes-trigger')).toHaveText(['📝', '🧠']);
 });
 
 test('embedded Wangfu reader renders mixed > and \\> lines as dashed quote blocks on desktop and mobile', async ({ page }) => {
