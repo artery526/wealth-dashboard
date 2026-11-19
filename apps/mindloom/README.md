@@ -33,7 +33,7 @@ For a production-style local run: `npm run start:local`.
 
 ## Permissions and privacy
 
-- The app requests no browser permissions. Reads use the Wangfu read token; a separate Mindloom write token is requested when connecting and kept in `sessionStorage` for the current tab session.
+- The app requests no browser permissions. Reads use the Wangfu read token; a separate Mindloom write token is requested when connecting and, after successful verification, kept in this browser's `localStorage` so it works across tabs and browser restarts. Use the X button beside the NAS control to forget it. Browser storage is not encrypted; anyone with access to this browser profile or same-origin scripts can access it.
 - Maps are mirrored in IndexedDB (`mindloom-local`, `maps`) and stored on NAS as one `data/mindmaps/<id>.json` file per map. The server validates the JSON shape and atomically replaces each file.
 - The app makes no analytics or telemetry requests. Map contents are sent only to the configured ArkOS API.
 - Browser storage is not an encrypted vault. Device access, browser profile access, and operating-system protections remain the user's responsibility.

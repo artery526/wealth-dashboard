@@ -50,10 +50,22 @@ function browserReadToken(): string {
 }
 
 function browserWriteToken(): string {
-  try { return sessionStorage.getItem(WRITE_TOKEN_KEY) || '' } catch { return '' }
+  try {
+    const persistent = localStorage.getItem(WRITE_TOKEN_KEY)
+    if (persistent) return persistent
+    const legacy = sessionStorage.getItem(WRITE_TOKEN_KEY) || ''
+    if (legacy) {
+      localStorage.setItem(WRITE_TOKEN_KEY, legacy)
+      sessionStorage.removeItem(WRITE_TOKEN_KEY)
+    }
+    return legacy
+  } catch {
+    try { return sessionStorage.getItem(WRITE_TOKEN_KEY) || '' } catch { return '' }
+  }
 }
 
 function clearBrowserWriteToken(): void {
+  try { localStorage.removeItem(WRITE_TOKEN_KEY) } catch { /* Ignore unavailable storage. */ }
   try { sessionStorage.removeItem(WRITE_TOKEN_KEY) } catch { /* Ignore unavailable storage. */ }
 }
 
@@ -78,13 +90,9 @@ async function writeNasMap(map: MindMap, token = browserWriteToken()): Promise<v
 
 export async function getMaps(): Promise<MindMap[]> {
   if (!browserReadToken()) {
-    clearBrowserWriteToken()
     return getLocalMaps()
   }
-  try { return await readNasMaps() } catch {
-    clearBrowserWriteToken()
-    return getLocalMaps()
-  }
+  try { return await readNasMaps() } catch { return getLocalMaps() }
 }
 
 export async function saveMap(map: MindMap): Promise<void> {
@@ -106,18 +114,16 @@ export async function connectNas(token: string): Promise<MindMap[]> {
   const response = await fetch(`${API_BASE}/api/mindmaps/verify`, { method: 'POST', headers: { 'x-mindmap-write-token': token }, cache: 'no-store' })
   const result = await response.json().catch(() => ({})) as { error?: string }
   if (!response.ok) throw new Error(result.error || `NAS 驗證失敗（HTTP ${response.status}）`)
-  try { sessionStorage.setItem(WRITE_TOKEN_KEY, token) } catch { throw new Error('瀏覽器無法暫存 NAS 寫入令牌。') }
-  try {
-    const remote = await readNasMaps()
-    const remoteIds = new Set(remote.map(map => map.id))
-    const local = await getLocalMaps()
-    const localOnly = local.filter(map => !remoteIds.has(map.id))
-    await Promise.all(localOnly.map(map => writeNasMap(map, token)))
-    return [...remote, ...localOnly].sort((a, b) => b.updatedAt - a.updatedAt)
-  } catch (error) {
-    clearBrowserWriteToken()
-    throw error
-  }
+  try { localStorage.setItem(WRITE_TOKEN_KEY, token) } catch { throw new Error('瀏覽器無法儲存 NAS 寫入令牌。') }
+  try { sessionStorage.removeItem(WRITE_TOKEN_KEY) } catch { /* Ignore unavailable legacy storage. */ }
+  const remote = await readNasMaps()
+  const remoteIds = new Set(remote.map(map => map.id))
+  const local = await getLocalMaps()
+  const localOnly = local.filter(map => !remoteIds.has(map.id))
+  await Promise.all(localOnly.map(map => writeNasMap(map, token)))
+  return [...remote, ...localOnly].sort((a, b) => b.updatedAt - a.updatedAt)
 }
 
 export function isNasWriteConnected(): boolean { return Boolean(browserWriteToken()) }
+
+export function forgetNasWriteToken(): void { clearBrowserWriteToken() }
