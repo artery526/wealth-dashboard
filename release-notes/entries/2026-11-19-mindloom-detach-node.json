@@ -1,7 +1,7 @@
 {
   "id": "2026-11-19-mindloom-detach-node",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-11-19",
   "area": "王府",
   "summary": "Mindloom 可將主題取消連線並保留節點",
   "details": "選取主題後可移除該主題的所有關係線，不會刪除主題或移動位置。",
