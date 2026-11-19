@@ -27,6 +27,16 @@ jobs:
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v6
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.14.0
+
+      - name: Build Mindloom
+        run: |
+          npm ci --prefix apps/mindloom
+          npm run build --prefix apps/mindloom
+
       - name: Validate and build release notes feed
         run: node scripts/build-release-feed.js
 
