@@ -1,0 +1,9 @@
+{
+  "id": "2026-11-20-pangtong-dividend-write-status",
+  "status": "in_progress",
+  "date": null,
+  "area": "龐統配息記錄",
+  "summary": "顯示龐統配息入帳的即時寫入狀態",
+  "details": "送出配息入帳後立即加入記帳佇列，並依後端結果顯示寫入中、已記錄、等待確認或失敗。",
+  "platforms": ["website"]
+}

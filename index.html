@@ -5770,7 +5770,7 @@ function renderBookingWriteQueue(){
     Array.prototype.forEach.call(els,function(el){el.innerHTML=emptyHtml;});
     return;
   }
-  var labels={processing:'待同步／送出中',success:'已記錄',confirm:'待確認',failed:'記錄失敗'};
+  var labels={processing:'寫入中',success:'已記錄',confirm:'等待確認',failed:'記錄失敗'};
   var html=bookingWriteQueue.slice().reverse().map(function(item){
     var label=labels[item.status]||'處理中';
     var detail=[item.cat,item.account,fmtFull(item.amount)].filter(Boolean).join(' · ');
@@ -13035,24 +13035,31 @@ async function advisorAIConfirmDividendIncome(btn){
   if(btn&&btn.disabled)return;
   if(btn){btn.disabled=true;btn.textContent='記錄中…';}
   var pending=advisorDividendIncomeDraftPending;
+  var body={
+    action:'income',
+    date:today().replace(/-/g,'/'),
+    source:'💰投資理財',
+    account:'💵國泰Stock',
+    amount:pending.amount,
+    note:pending.displaySymbol,
+    divSymbol:pending.symbol,
+    dividendIncome:'1',
+    dividendRowId:pending.dividendRowId||''
+  };
+  var queueId=bookingQueueAdd(Object.assign({},body,{cat:'配息入帳 · '+pending.displaySymbol}),true);
+  advisorAISetMessage('⏳ 寫入中，已送出後端。');
   try{
-    await apiPost({
-      action:'income',
-      date:today().replace(/-/g,'/'),
-      source:'💰投資理財',
-      account:'💵國泰Stock',
-      amount:pending.amount,
-      note:pending.displaySymbol,
-      divSymbol:pending.symbol,
-      dividendIncome:'1',
-      dividendRowId:pending.dividendRowId||''
-    });
+    await apiPost(body);
     invalidateDividendCenter();
     advisorDividendIncomeDraftPending=null;
     var panel=advisorAIActivePanel();
     if(panel)panel.innerHTML=`${advisorAIHeaderHtml()}${advisorAIResultHtml('已記錄配息入帳',['標的：'+pending.displaySymbol,'金額：'+fmtFull(pending.amount),'配息比例：'+pending.divRate])}`;
+    bookingQueueUpdate(queueId,'success','');
   }catch(err){
-    advisorAISetMessage('✗ '+(err&&err.message?err.message:'寫入失敗'),'err');
+    var message=err&&err.message?err.message:'寫入失敗';
+    var status=/結果待確認|可能已記錄|正在確認/.test(message)?'confirm':'failed';
+    bookingQueueUpdate(queueId,status,message);
+    advisorAISetMessage((status==='confirm'?'⏳ ':'✗ ')+message,status==='confirm'?'':'err');
   }finally{
     if(btn){btn.disabled=false;btn.textContent='記錄配息';}
   }
