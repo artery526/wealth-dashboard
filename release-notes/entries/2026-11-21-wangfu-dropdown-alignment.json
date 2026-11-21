@@ -1,9 +1,9 @@
 {
   "id": "2026-11-21-wangfu-dropdown-alignment",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-11-21",
   "area": "王府",
   "summary": "調整王府分類下拉選單的對齊與長條外觀",
-  "details": "讓分類選單與疼痛地圖按鈕在同一列垂直置中，並將選單按鈕調整為較寬、較矮的圓角長方形。",
+  "details": "讓王府頁首標題、疼痛地圖按鈕與分類選單水平排列並垂直置中；分類選單改為較寬、較矮的圓角長方形，保留原分類顏色與篩選互動。已部署 NAS arkos-api，王府頁面與疼痛地圖路由回應 200。",
   "platforms": ["website"]
 }
