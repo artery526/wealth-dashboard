@@ -1,0 +1,9 @@
+{
+  "id": "2026-11-21-wangfu-category-dropdown",
+  "status": "in_progress",
+  "date": null,
+  "area": "王府",
+  "summary": "王府分類標籤改為保留配色的下拉選單",
+  "details": "將頁首分類標籤收合為下拉選單；目前選取與展開選項均保留生活、待辦、抽牌、股市及爸媽分類原有顏色。",
+  "platforms": ["website"]
+}
