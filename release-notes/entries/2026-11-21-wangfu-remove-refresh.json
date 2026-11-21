@@ -1,0 +1,9 @@
+{
+  "id": "2026-11-21-wangfu-remove-refresh",
+  "status": "in_progress",
+  "date": null,
+  "area": "王府",
+  "summary": "移除王府頁面上方重新整理按鈕",
+  "details": "移除王府獨立網頁標題列的重新整理按鈕，保留其他搜尋、新增文章與日期操作。",
+  "platforms": ["website"]
+}
