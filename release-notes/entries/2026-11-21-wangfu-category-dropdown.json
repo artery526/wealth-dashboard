@@ -1,9 +1,9 @@
 {
   "id": "2026-11-21-wangfu-category-dropdown",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-11-21",
   "area": "王府",
   "summary": "王府分類標籤改為保留配色的下拉選單",
-  "details": "將頁首分類標籤收合為下拉選單；目前選取與展開選項均保留生活、待辦、抽牌、股市及爸媽分類原有顏色。",
+  "details": "將王府獨立網頁頁首分類標籤收合為下拉選單；目前選取與展開選項均保留生活、待辦、抽牌、股市及爸媽分類原有顏色，並支援點擊篩選、點選外部或按 Escape 關閉，以及選取後定位至文章區。已部署 NAS arkos-api，頁面及疼痛地圖路由回應 200。",
   "platforms": ["website"]
 }
