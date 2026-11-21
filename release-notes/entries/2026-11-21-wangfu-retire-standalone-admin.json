@@ -1,0 +1,9 @@
+{
+  "id": "2026-11-21-wangfu-retire-standalone-admin",
+  "status": "in_progress",
+  "date": null,
+  "area": "王府",
+  "summary": "停用王府獨立後台入口",
+  "details": "直接開啟王府 /admin 會導回王府文章頁；保留新增與編輯文章視窗使用的內嵌表單。",
+  "platforms": ["website"]
+}
