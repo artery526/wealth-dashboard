@@ -1,0 +1,9 @@
+{
+  "id": "2026-11-21-wangfu-dropdown-alignment",
+  "status": "in_progress",
+  "date": null,
+  "area": "王府",
+  "summary": "調整王府分類下拉選單的對齊與長條外觀",
+  "details": "讓分類選單與疼痛地圖按鈕在同一列垂直置中，並將選單按鈕調整為較寬、較矮的圓角長方形。",
+  "platforms": ["website"]
+}
