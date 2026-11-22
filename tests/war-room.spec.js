@@ -16,20 +16,18 @@ test.beforeEach(async ({ page }) => {
     window.openAdvisorWorldSituation = () => warRoomLoads.push('briefing');
     window.openAdvisorWorldSituation.__warRoomOriginal = originalBriefingLoader;
     window.loadBattleBrief = () => warRoomLoads.push('battle');
-    window.loadMarketSectorRotation = () => warRoomLoads.push('sector');
     window.loadTaiwanMacro = () => warRoomLoads.push('taiwan');
   });
 });
 
-test('War Room opens on the briefing and fetches each other area only when selected', async ({ page }) => {
+test('War Room opens on the briefing and fetches its remaining areas only when selected', async ({ page }) => {
   await page.evaluate(() => { window.isWarRoomStandalone = () => true; openPanel('war-room'); });
   await expect(page.locator('#p-zh')).toHaveText('戰情室');
-  await expect(page.locator('#p-tabs .ptab')).toHaveText(['帝國晨報', '戰情總匯報', '產業輪動', '台灣總體經濟']);
+  await expect(page.locator('#p-tabs .ptab')).toHaveText(['帝國晨報', '戰情總匯報', '台灣總體經濟']);
   expect(await page.evaluate(() => warRoomLoads)).toEqual(['briefing']);
   await page.getByRole('button', { name: '戰情總匯報' }).click();
-  await page.getByRole('button', { name: '產業輪動' }).click();
   await page.getByRole('button', { name: '台灣總體經濟' }).click();
-  expect(await page.evaluate(() => warRoomLoads)).toEqual(['briefing', 'battle', 'sector', 'taiwan']);
+  expect(await page.evaluate(() => warRoomLoads)).toEqual(['briefing', 'battle', 'taiwan']);
   await expect(page.locator('#pane-war-taiwan-macro')).toHaveClass(/active/);
 });
 
@@ -424,7 +422,7 @@ test('standalone route renews an expired shared session before loading its selec
   await page.route('https://api.ark-os26.cc/**', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ records: [] }) }));
   await page.goto(`${standaloneUrl}?tab=war-taiwan-macro`);
   await expect(page).toHaveURL(/tab=war-briefing$/);
-  await expect(page.locator('.tabs button')).toHaveText(['帝國晨報', '戰情總匯報', '產業輪動', '部隊陣容']);
+  await expect(page.locator('.tabs button')).toHaveText(['帝國晨報', '戰情總匯報', '部隊陣容']);
   expect(actions).not.toContain('taiwanMacroOverview');
   expect(actions).not.toContain('taiwanMacroHistory');
   expect(actions).not.toContain('taiwanMacroUpdate');
@@ -475,8 +473,8 @@ test('standalone tabs remain switchable among the active War Room areas', async 
   await page.route('https://api.ark-os26.cc/**', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ records: [] }) }));
   await page.goto(`${standaloneUrl}?tab=war-briefing`);
   await expect(page.locator('.brief-hero h2')).toContainText('帝國晨報');
-  await page.getByRole('button', { name: '產業輪動' }).click();
-  await expect(page.locator('.tabs button.active')).toHaveText('產業輪動');
+  await page.getByRole('button', { name: '戰情總匯報' }).click();
+  await expect(page.locator('.tabs button.active')).toHaveText('戰情總匯報');
   await page.getByRole('button', { name: '帝國晨報' }).click();
   await expect(page.locator('.tabs button.active')).toHaveText('帝國晨報');
   await expect(page.locator('.brief-insight')).toContainText('市場資料已更新');
@@ -569,21 +567,49 @@ test('Imperial Morning Brief reports a partial macro API failure instead of sile
   await expect(page.locator('#content')).toContainText('總經燈號尚未取得有效指標：HTTP 403');
 });
 
-test('sector rotation uses a ranked, responsive layout with source-backed metrics', async ({ page }) => {
+test('standalone pauses sector rotation and redirects its old link without requesting sector data', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.addInitScript(() => {
     localStorage.setItem('wealth_api_url', 'https://example.test/exec'); localStorage.setItem('wealth_write_token', 'test-write-token');
     localStorage.setItem('wealth_web_verify_status', 'ok'); localStorage.setItem('wealth_web_verify_checked_at', String(Date.now()));
     sessionStorage.setItem('wealth_web_session_token', 'same-tab-session');
   });
-  await page.route('https://example.test/**', route => route.fulfill({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ ok: true, data: {
-    sourceDate: '2026-10-03', source: 'NAS 快照', commentary: { summary: '半導體與工業類股相對動能較強。' },
-    rows: [{ name: '半導體', code: 'SOXX', status: '強勢', quadrant: '領先', rotationScore: 82.5, return5d: 2.4, relative20d: 1.8, relative60d: 4.2 }, { name: '公用事業', code: 'XLU', status: '降溫', quadrant: '落後', rotationScore: 25, return5d: -1.2, relative20d: -2, relative60d: -3.1 }]
-  } }) }));
+  const actions = [];
+  await page.route('https://example.test/**', route => {
+    actions.push(new URL(route.request().url()).searchParams.get('action'));
+    return route.fulfill({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ ok: true, data: {} }) });
+  });
   await page.goto(`${standaloneUrl}?tab=war-sector-rotation`);
-  await expect(page.locator('.sector-card')).toHaveCount(2);
-  await expect(page.locator('.sector-insight')).toContainText('半導體與工業類股');
-  await expect(page.locator('.sector-summary')).toContainText('相對強勢');
+  await expect(page).toHaveURL(/tab=war-briefing/);
+  await expect(page.locator('.tabs button')).toHaveText(['帝國晨報', '戰情總匯報', '部隊陣容']);
+  await expect(page.locator('#content')).not.toContainText('產業輪動');
+  expect(actions).not.toContain('marketSectorRotation');
+  const width = await page.locator('html').evaluate(el => ({ scroll: el.scrollWidth, client: el.clientWidth }));
+  expect(width.scroll).toBeLessThanOrEqual(width.client);
+});
+
+test('Imperial Morning Brief shows Taiwan close and listed financing values with source dates on mobile', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.addInitScript(() => {
+    localStorage.setItem('wealth_api_url', 'https://example.test/exec'); localStorage.setItem('wealth_write_token', 'test-write-token');
+    localStorage.setItem('wealth_web_verify_status', 'ok'); localStorage.setItem('wealth_web_verify_checked_at', String(Date.now()));
+    sessionStorage.setItem('wealth_web_session_token', 'same-tab-session');
+  });
+  await page.route('https://example.test/**', route => {
+    const action = new URL(route.request().url()).searchParams.get('action');
+    const data = action === 'warRoomTwseAfterHoursOverview' ? {
+      source: 'TWSE 臺灣證券交易所', checkedAt: '2026-11-20T22:00:00+08:00',
+      index: { close: 23999.12, changePoints: -123.45, changePct: -0.51, sourceDate: '2026-11-20' },
+      margin: { previousBalanceTWD: 561230000000, balanceTWD: 560000000000, changeTWD: -1230000000, sourceDate: '2026-11-20' }
+    } : {};
+    return route.fulfill({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ ok: true, data }) });
+  });
+  await page.goto(`${standaloneUrl}?tab=war-briefing`);
+  await expect(page.locator('.twse-after-hours-card')).toContainText('23,999.12');
+  await expect(page.locator('.twse-after-hours-card')).toContainText('-123.45 點（-0.51%）');
+  await expect(page.locator('.twse-after-hours-card')).toContainText('-12.3 億');
+  await expect(page.locator('.twse-after-hours-card')).toContainText('5,600 億元');
+  await expect(page.locator('.twse-after-hours-card')).toContainText('2026/11/20');
   const width = await page.locator('html').evaluate(el => ({ scroll: el.scrollWidth, client: el.clientWidth }));
   expect(width.scroll).toBeLessThanOrEqual(width.client);
 });

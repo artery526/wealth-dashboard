@@ -16,7 +16,7 @@ test.beforeEach(async ({ page }) => {
     loadBattleFinanceSnapshots = () => Promise.resolve(null);
     document.getElementById('overlay').classList.add('open');
     document.getElementById('panel').classList.add('council-wide');
-    document.getElementById('p-body').innerHTML = '<div id="battle-freshness"></div><div id="battle-brief-content"></div><div id="taiwan-macro-content"></div><div id="market-sector-rotation-body"></div>';
+    document.getElementById('p-body').innerHTML = '<div id="battle-freshness"></div><div id="battle-brief-content"></div><div id="taiwan-macro-content"></div>';
   });
 });
 
@@ -45,19 +45,6 @@ test('battle brief shows even expired cached report while refreshing in the back
   await page.evaluate(() => finishBattleRefresh({ date: '2026-10-03', summary: { marketStance: '新資料' }, holdings: [], funds: [], etfHoldingChange: {} }));
   await page.evaluate(() => battleRefresh);
   await expect(page.locator('.battle-report-date')).toContainText('2026-10-03');
-});
-
-test('sector rotation shows expired snapshot while refreshing in the background', async ({ page }) => {
-  await page.evaluate(() => {
-    localStorage.setItem(MARKET_SECTOR_ROTATION_CACHE_KEY, JSON.stringify({ savedAt: Date.now() - MARKET_CACHE_TTL - 1000, data: { sourceDate: '2026-10-01', source: 'test cache', rows: [{ name: '舊快取產業', code: 'OLD', rotationScore: 1 }] } }));
-    apiGet = () => new Promise(resolve => { window.finishSectorRefresh = resolve; });
-    window.sectorRefresh = loadMarketSectorRotation();
-  });
-  await expect(page.locator('#market-sector-rotation-body')).toContainText('舊快取產業');
-  await expect(page.locator('#market-sector-rotation-body [role="status"]')).toContainText('背景更新中');
-  await page.evaluate(() => finishSectorRefresh({ sourceDate: '2026-10-03', source: 'test refresh', rows: [{ name: '新資料產業', code: 'NEW', rotationScore: 2 }] }));
-  await page.evaluate(() => sectorRefresh);
-  await expect(page.locator('#market-sector-rotation-body')).toContainText('新資料產業');
 });
 
 test('Taiwan macro renders its saved overview and history before refreshing both', async ({ page }) => {

@@ -1,0 +1,11 @@
+{
+  "id": "2026-11-22-war-room-tw-after-hours-and-remove-sector",
+  "status": "in_progress",
+  "date": null,
+  "area": "戰情室",
+  "summary": "晨報新增台股盤後數據並移除產業輪動擷取",
+  "details": "帝國晨報新增台灣加權指數收盤變化及上市市場融資餘額增減，標示來源與資料日；移除產業輪動畫面與定時快照擷取，保留質押信貸快照流程。",
+  "platforms": [
+    "website"
+  ]
+}
