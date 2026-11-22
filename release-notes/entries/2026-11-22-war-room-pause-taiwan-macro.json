@@ -1,9 +1,11 @@
 {
   "id": "2026-11-22-war-room-pause-taiwan-macro",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-11-22",
   "area": "戰情室",
-  "summary": "暫停戰情室台灣總體經濟分頁與資料讀取",
-  "details": "從獨立戰情室導覽移除台灣總體經濟，並移除該分頁在前端的讀取與同步操作；共用後端及外部擷取流程不變。",
-  "platforms": ["website"]
+  "summary": "戰情室移除台灣總體經濟分頁並暫停前端讀取",
+  "details": "從獨立戰情室移除台灣總體經濟導覽、讀取與同步操作；共用後端 API 與外部擷取流程維持不變。舊分頁網址會回到帝國晨報。",
+  "platforms": [
+    "website"
+  ]
 }
