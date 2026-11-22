@@ -15,7 +15,6 @@ test.beforeEach(async ({ page }) => {
     document.getElementById('panel').classList.add('council-wide');
     document.getElementById('p-body').innerHTML = '<div id="council-content"></div><div id="battle-brief-content"></div><div id="market-content"></div>';
     loadBattleFinanceSnapshots = () => Promise.resolve(null);
-    loadMarketSectorRotation = () => {};
     window.reviewRows = [
       {symbol:'AAA',heroName:'甲軍',holding:{symbol:'AAA',cost:100,marketValue:300,totalReturn:20,monthlyDiv:8,dataDate:'2026-09-08'}},
       {symbol:'BBB',heroName:'乙軍',holding:{symbol:'BBB',cost:100,marketValue:100,totalReturn:50,monthlyDiv:0}},

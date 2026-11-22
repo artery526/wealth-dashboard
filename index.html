@@ -4867,6 +4867,19 @@ html[data-theme="deep-blue"] .scene-task-details .home-agenda-global-refresh{bor
 .battle-review-summary small{display:block;color:var(--muted);font-size:11px}
 @media(max-width:600px){.council-review-toolbar label{width:100%;font-size:12px}.council-review-table th,.council-review-table td{padding:8px}.council-review-toolbar button{min-height:40px}}
 </style>
+<style>
+.advisor-twse-after-hours{margin-top:12px;padding:12px 14px;border:1px solid rgba(120,216,244,.24);border-radius:10px;background:rgba(4,20,29,.8)}
+.advisor-twse-after-hours-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:9px}
+.advisor-twse-after-hours-head strong{color:var(--gold2);font-size:13px}
+.advisor-twse-after-hours-head span,.advisor-twse-after-hours-note{color:var(--muted);font:10px/1.6 var(--sans)}
+.advisor-twse-after-hours-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.advisor-twse-after-hours-grid>div{display:grid;gap:4px;min-width:0;padding:9px;border:1px solid rgba(120,216,244,.16);border-radius:8px;background:rgba(0,0,0,.16)}
+.advisor-twse-after-hours-grid small{color:var(--muted);font:10px/1.55 var(--sans)}
+.advisor-twse-after-hours-grid strong{color:var(--cyan);font:700 18px/1.2 var(--mono);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.advisor-twse-after-hours-grid strong.up{color:var(--teal)}.advisor-twse-after-hours-grid strong.down{color:var(--coral)}
+.advisor-twse-after-hours-note{margin:8px 0 0}
+@media(max-width:540px){.advisor-twse-after-hours-grid{grid-template-columns:1fr}.advisor-twse-after-hours-grid strong{font-size:17px}}
+</style>
 </head>
 <body>
 
@@ -6009,10 +6022,10 @@ var financeYearlyActiveRequest=0;
 var financeYearlySelectedYear='';
 var financeMonthDetailPromises={};
 var MARKET_DASHBOARD_CACHE_KEY='wealth_market_dashboard_v1';
-var MARKET_SECTOR_ROTATION_CACHE_KEY='wealth_market_sector_rotation_v1';
 var MARKET_MACRO_CACHE_KEY='wealth_market_macro_v4';
 var MARKET_LONG_REPORT_CACHE_KEY='wealth_market_long_report_v1';
 var MARKET_ADVISOR_WORLD_CACHE_KEY='wealth_advisor_world_nas_v1';
+var MARKET_TWSE_AFTER_HOURS_CACHE_KEY='wealth_war_room_twse_after_hours_v1';
 // 均價欄位加入後升級快取版本，避免舊版 battleBrief 長時間保留 referenceValue 缺漏。
 // 台股估值資料填入後升級快取版本，確保瀏覽器取得最新 P/E／P/B。
 var BATTLE_BRIEF_CACHE_KEY='wealth_battle_brief_v5';
@@ -6020,9 +6033,9 @@ var MARKET_CACHE_TTL=2*60*60*1000;
 var BATTLE_PRICE_HISTORY_CACHE_KEY='wealth_battle_price_history_v4';
 var BATTLE_PRICE_HISTORY_CACHE_TTL=6*60*60*1000;
 var marketDashboardPromise=null;
-var marketSectorRotationPromise=null;
 var macroOverviewPromise=null;
 var advisorWorldNasdaqValuationPromise=null;
+var advisorWorldTwseAfterHoursPromise=null;
 var taiwanMacroPromise=null;
 var taiwanMacroSyncPromise=null;
 var taiwanStockReviewPromise=null;
@@ -6787,7 +6800,7 @@ function openEmpireCardShortcut(event,panel,tab){
   if(event&&event.stopPropagation)event.stopPropagation();
   if(panel==='council'&&!tab){panel='war-room';tab='war-roster';}
   else if(panel==='council'&&tab==='battle-brief'){panel='war-room';tab='war-battle-brief';}
-  else if(panel==='council'&&tab==='market-watch'){panel='war-room';tab='war-sector-rotation';}
+  else if(panel==='council'&&tab==='market-watch'){panel='war-room';tab='war-briefing';}
   else if(panel==='council'&&tab==='taiwan-macro'){panel='war-room';tab='war-taiwan-macro';}
   else if(panel==='council'&&tab&&tab.indexOf('war-')===0){panel='war-room';}
   if(panel==='wall'){
@@ -6993,9 +7006,8 @@ function switchTab(btn,key){
   else if(key==='battle-brief')loadBattleBrief();
   else if(key==='war-briefing')openAdvisorWorldSituation(null,true);
   else if(key==='war-battle-brief')loadBattleBrief();
-  else if(key==='war-sector-rotation')loadMarketSectorRotation();
   else if(key==='war-taiwan-macro')loadTaiwanMacro();
-  else if(key==='market-watch'){if(currentPanel==='council')loadMarketSectorRotation();else loadMarketDashboard();}
+  else if(key==='market-watch')loadMarketDashboard();
   else if(key==='macro-overview')loadMacroOverview();
   else if(key==='taiwan-macro')loadTaiwanMacro();
   else if(key==='council-roster')loadCouncilDashboard();
@@ -15769,7 +15781,6 @@ function renderWarRoomPanel(initialTab){
   var tabs=[
     {key:'war-briefing',label:'帝國晨報'},
     {key:'war-battle-brief',label:'戰情總匯報'},
-    {key:'war-sector-rotation',label:'產業輪動'},
     {key:'war-taiwan-macro',label:'台灣總體經濟'}
   ];
   setTabs(tabs);
@@ -15787,15 +15798,11 @@ function renderWarRoomPanel(initialTab){
       <div id="battle-freshness">${dataFreshnessHtml()}</div>
       <div id="battle-brief-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:82%"></div><div class="skel-line skel" style="width:68%"></div></div>
     </div>
-    <div class="pane ${targetTab==='war-sector-rotation'?'active':''}" id="pane-war-sector-rotation">
-      <div class="market-sector-rotation"><div class="sec-title">產業輪動</div><div id="market-sector-rotation-body"><div class="market-sector-meta">選擇此分頁後讀取產業輪動快照。</div></div></div>
-    </div>
     <div class="pane ${targetTab==='war-taiwan-macro'?'active':''}" id="pane-war-taiwan-macro">
       <div id="taiwan-macro-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:82%"></div><div class="skel-line skel" style="width:68%"></div></div>
     </div>`;
   if(targetTab==='war-briefing')openAdvisorWorldSituation(null,true);
   else if(targetTab==='war-battle-brief')loadBattleBrief();
-  else if(targetTab==='war-sector-rotation')loadMarketSectorRotation();
   else if(targetTab==='war-taiwan-macro')loadTaiwanMacro();
 }
 
@@ -16761,7 +16768,6 @@ function advisorWorldBuild(market,macro){
 }
 function advisorWorldHtml(view,snapshotAt){
   return `<div class="advisor-world-card">
-    <div class="advisor-world-title-row"><div class="advisor-world-title">🏛 帝國晨報</div><div class="advisor-world-tabs"><button class="home-agenda-refresh advisor-world-refresh" type="button" onclick="refreshAdvisorWorldData(event)" title="清除快取並重新取得晨報資料" aria-label="重整帝國晨報資料">重整資料</button><button class="advisor-world-tab-btn" type="button" onclick="openAdvisorTaiwanStockReview(event)">📈 台股</button><button class="advisor-world-tab-btn" type="button" onclick="openAdvisorSectorRotation(event)">📊 產業</button></div></div>
     <div class="advisor-brief-date">${esc(view.date)}</div>
     <div class="advisor-brief-divider"></div>
     <div class="advisor-world-stance ${esc(view.empireTone)}"><span>⚔ 帝國狀態</span><strong>${esc(advisorWorldBriefStatus(view.empireTone,view.empireStatus))}</strong></div>
@@ -16779,6 +16785,7 @@ function advisorWorldHtml(view,snapshotAt){
       </div>
       <div class="advisor-nasdaq-valuation-source">估值為歷史指標，不代表價格預測。Forward P/E 使用來源自行計算的未來 12 個月估計。來源：<a href="https://historyofmarket.com/nasdaq/ndx-forward-pe/" target="_blank" rel="noopener noreferrer">History of Market — Nasdaq 100 Forward PE</a>（資料 CC BY 4.0）</div>
     </div>
+    <div class="advisor-twse-after-hours" aria-live="polite"><div class="advisor-twse-after-hours-head"><strong>🇹🇼 台股盤後</strong><span>背景讀取中…</span></div><div class="advisor-twse-after-hours-grid"><div><small>加權指數收盤</small><strong>--</strong><small>資料日讀取中</small></div><div><small>上市融資餘額增減</small><strong>--</strong><small>資料日讀取中</small></div></div><p class="advisor-twse-after-hours-note">來源：TWSE 臺灣證券交易所。</p></div>
     <div class="advisor-long-report-slot">
       <div class="advisor-long-report">
         <div class="advisor-long-report-summary">正在調閱30日戰略報告...</div>
@@ -16800,7 +16807,7 @@ function advisorWorldTaiwanStockReviewList(items){
 function advisorWorldTaiwanStockReviewHtml(data){
   data=data||{};
   var report=data.latest||null;
-  var head='<div class="advisor-world-title-row"><div class="advisor-world-title">📈 台股</div><div class="advisor-world-tabs"><button class="advisor-world-tab-btn" type="button" onclick="openAdvisorWorldSituation(event,false)">🏛 帝國晨報</button><button class="advisor-world-tab-btn" type="button" onclick="openAdvisorSectorRotation(event)">📊 產業</button></div></div>';
+  var head='<div class="advisor-world-title-row"><div class="advisor-world-title">📈 台股</div><div class="advisor-world-tabs"><button class="advisor-world-tab-btn" type="button" onclick="openAdvisorWorldSituation(event,false)">🏛 帝國晨報</button></div></div>';
   if(!report){
     return '<div class="advisor-world-card advisor-tw-review">'+head+''+
       '<div class="advisor-tw-review-text" style="margin-top:10px">目前尚未建立月評。待最新台灣總體經濟資料完成後，可產生本月分析。</div>'+
@@ -16829,50 +16836,12 @@ async function openAdvisorTaiwanStockReview(event){
   if(event&&event.stopPropagation)event.stopPropagation();
   var panel=advisorWorldContentTarget();
   if(!panel)return;
-  panel.innerHTML='<div class="advisor-world-card advisor-tw-review"><div class="advisor-world-title-row"><div class="advisor-world-title">📈 台股</div><div class="advisor-world-tabs"><button class="advisor-world-tab-btn" type="button" onclick="openAdvisorWorldSituation(event,false)">🏛 帝國晨報</button><button class="advisor-world-tab-btn" type="button" onclick="openAdvisorSectorRotation(event)">📊 產業</button></div></div><div class="advisor-tw-review-text" style="margin-top:12px;text-align:center">正在調閱台股月評…</div></div>';
+  panel.innerHTML='<div class="advisor-world-card advisor-tw-review"><div class="advisor-world-title-row"><div class="advisor-world-title">📈 台股</div><div class="advisor-world-tabs"><button class="advisor-world-tab-btn" type="button" onclick="openAdvisorWorldSituation(event,false)">🏛 帝國晨報</button></div></div><div class="advisor-tw-review-text" style="margin-top:12px;text-align:center">正在調閱台股月評…</div></div>';
   if(!API_URL){panel.innerHTML=advisorWorldTaiwanStockReviewHtml({latest:null,message:'尚未設定 API URL'});return;}
   try{var data=await advisorWorldTaiwanStockReviewRequest();panel.innerHTML=advisorWorldTaiwanStockReviewHtml(data);if(panel.scrollIntoView)panel.scrollIntoView({block:'nearest',behavior:'smooth'});}
-  catch(err){panel.innerHTML='<div class="advisor-world-card advisor-tw-review"><div class="advisor-world-title-row"><div class="advisor-world-title">📈 台股</div><div class="advisor-world-tabs"><button class="advisor-world-tab-btn" type="button" onclick="openAdvisorWorldSituation(event,false)">🏛 帝國晨報</button><button class="advisor-world-tab-btn" type="button" onclick="openAdvisorSectorRotation(event)">📊 產業</button></div></div><div class="advisor-tw-review-missing">月評讀取失敗：'+esc(err&&err.message?err.message:'請稍後再試')+'</div></div>';}
+  catch(err){panel.innerHTML='<div class="advisor-world-card advisor-tw-review"><div class="advisor-world-title-row"><div class="advisor-world-title">📈 台股</div><div class="advisor-world-tabs"><button class="advisor-world-tab-btn" type="button" onclick="openAdvisorWorldSituation(event,false)">🏛 帝國晨報</button></div></div><div class="advisor-tw-review-missing">月評讀取失敗：'+esc(err&&err.message?err.message:'請稍後再試')+'</div></div>';}
 }
 
-function advisorWorldSectorItemText(item){
-  if(item==null)return '';
-  if(typeof item==='string'||typeof item==='number')return String(item);
-  if(typeof item==='object'){
-    var label=item.name||item.sector||item.theme||item.title||item.label||item.code;
-    if(label)return String(label);
-    try{return JSON.stringify(item)}catch(error){return ''}
-  }
-  return String(item);
-}
-function advisorWorldSectorListHtml(title,items){
-  items=Array.isArray(items)?items:[];
-  var labels=items.map(advisorWorldSectorItemText).filter(Boolean);
-  return '<div class="advisor-sector-list"><strong>'+esc(title)+'</strong><span>'+esc(labels.length?labels.join('、'):'資料不足')+'</span></div>';
-}
-function advisorWorldSectorHtml(data){
-  data=data||{};
-  var rows=(data.rows||[]).slice().sort(function(a,b){return Number(b.rotationScore||0)-Number(a.rotationScore||0);});
-  var commentary=data.commentary||{};
-  var head='<div class="advisor-world-title-row"><div class="advisor-world-title">📊 產業</div><div class="advisor-world-tabs"><button class="advisor-world-tab-btn" type="button" onclick="openAdvisorWorldSituation(event,false)">🏛 帝國晨報</button><button class="advisor-world-tab-btn" type="button" onclick="openAdvisorTaiwanStockReview(event)">📈 台股</button></div></div>';
-  if(!rows.length)return '<div class="advisor-world-card advisor-sector-card">'+head+'<div class="advisor-tw-review-text" style="margin-top:12px;text-align:center">尚未有產業輪動快照</div></div>';
-  var top=rows.slice(0,6);
-  var cards=top.map(function(row){var cls=marketSectorStatusClass(row.status);return '<div class="market-sector-row"><div class="market-sector-head"><div><div class="market-sector-name">'+esc(row.name)+'</div><div class="market-sector-code">'+esc(row.code)+' · '+esc(row.quadrant||'資料不足')+'</div></div><div><div class="market-sector-status '+cls+'">'+esc(row.status||'資料不足')+'</div><div class="market-sector-score">'+(row.rotationScore==null?'--':Number(row.rotationScore).toFixed(1))+' <small>分</small></div></div></div><div class="market-sector-metrics"><div class="market-sector-metric"><span>5日</span><strong>'+marketSectorPctText(row.return5d)+'</strong></div><div class="market-sector-metric"><span>20日相對SPY</span><strong>'+marketSectorPctText(row.relative20d)+'</strong></div><div class="market-sector-metric"><span>60日相對SPY</span><strong>'+marketSectorPctText(row.relative60d)+'</strong></div></div></div>';}).join('');
-  var lists='<div class="advisor-sector-lists">'+advisorWorldSectorListHtml('最強勢',commentary.strongest)+advisorWorldSectorListHtml('正在改善',commentary.improving)+advisorWorldSectorListHtml('開始降溫',commentary.weakening)+'</div>';
-  var brief=commentary.summary?'<div class="market-sector-commentary"><strong>🧠 DeepSeek 產業輪動短評</strong>'+esc(commentary.summary)+'</div>':'<div class="market-sector-meta" style="margin-top:9px">目前尚未產生 DeepSeek 短評</div>';
-  return '<div class="advisor-world-card advisor-sector-card">'+head+'<div class="market-sector-meta">快照 '+esc(data.sourceDate||data.updatedAt||'--')+' · '+esc(data.source||'資料來源未知')+'</div><div class="market-sector-grid">'+cards+'</div>'+lists+brief+'</div>';
-}
-var advisorSectorRotationPromise=null;
-async function openAdvisorSectorRotation(event){
-  if(event&&event.stopPropagation)event.stopPropagation();
-  var panel=advisorWorldContentTarget();
-  if(!panel)return;
-  panel.innerHTML='<div class="advisor-world-card advisor-sector-card"><div class="advisor-world-title-row"><div class="advisor-world-title">📊 產業</div><div class="advisor-world-tabs"><button class="advisor-world-tab-btn" type="button" onclick="openAdvisorWorldSituation(event,false)">🏛 帝國晨報</button><button class="advisor-world-tab-btn" type="button" onclick="openAdvisorTaiwanStockReview(event)">📈 台股</button></div></div><div class="advisor-tw-review-text" style="margin-top:12px;text-align:center">正在調閱產業輪動短評…</div></div>';
-  if(!API_URL){panel.innerHTML=advisorWorldSectorHtml({status:'尚未設定 API URL，無法調閱產業輪動'});return;}
-  if(advisorSectorRotationPromise)return advisorSectorRotationPromise;
-  advisorSectorRotationPromise=apiGet({action:'marketSectorRotation'},45000).then(function(data){panel.innerHTML=advisorWorldSectorHtml(data);if(panel.scrollIntoView)panel.scrollIntoView({block:'nearest',behavior:'smooth'});return data;}).catch(function(err){panel.innerHTML=advisorWorldSectorHtml({status:'產業輪動讀取失敗：'+(err&&err.message?err.message:'請稍後再試')});return null;}).finally(function(){advisorSectorRotationPromise=null;});
-  return advisorSectorRotationPromise;
-}
 async function advisorWorldGenerateTaiwanStockReview(event){
   if(event&&event.stopPropagation)event.stopPropagation();
   var panel=advisorWorldContentTarget();
@@ -16940,47 +16909,6 @@ function marketSectorPctText(value){
   return n==null||isNaN(n)||!isFinite(n)?'--':(n>=0?'+':'')+n.toFixed(2)+'%';
 }
 
-function marketSectorStatusClass(status){
-  status=String(status||'');
-  return /強勢/.test(status)?'up':/弱勢|降溫/.test(status)?'down':/改善|初期/.test(status)?'improving':'';
-}
-
-function renderMarketSectorRotation(data,el,refreshNote){
-  if(!el)return;
-  data=data||{};
-  var rows=(data.rows||[]).slice().sort(function(a,b){return Number(b.rotationScore||0)-Number(a.rotationScore||0);});
-  if(!rows.length){el.innerHTML='<div class="market-sector-meta">'+esc(data.status||'尚未有產業輪動快照')+'</div>';return;}
-  var commentary=data.commentary&&data.commentary.summary?'<div class="market-sector-commentary"><strong>🧠 DeepSeek 產業輪動短評</strong>'+esc(data.commentary.summary)+'</div>':'';
-  el.innerHTML='<div class="market-sector-meta">快照 '+esc(data.sourceDate||data.updatedAt||'--')+' · '+esc(data.source||'資料來源未知')+(data.commentaryError?' · 短評尚未產生':'')+'</div>'+(refreshNote?'<div class="market-sector-meta" role="status">'+esc(refreshNote)+'</div>':'')+'<div class="market-sector-grid">'+rows.map(function(row){
-    var cls=marketSectorStatusClass(row.status);
-    return '<div class="market-sector-row"><div class="market-sector-head"><div><div class="market-sector-name">'+esc(row.name)+'</div><div class="market-sector-code">'+esc(row.code)+' · '+esc(row.quadrant||'資料不足')+'</div></div><div><div class="market-sector-status '+cls+'">'+esc(row.status||'資料不足')+'</div><div class="market-sector-score">'+(row.rotationScore==null?'--':Number(row.rotationScore).toFixed(1))+' <small>分</small></div></div></div><div class="market-sector-metrics"><div class="market-sector-metric"><span>5日</span><strong>'+marketSectorPctText(row.return5d)+'</strong></div><div class="market-sector-metric"><span>20日相對SPY</span><strong>'+marketSectorPctText(row.relative20d)+'</strong></div><div class="market-sector-metric"><span>60日相對SPY</span><strong>'+marketSectorPctText(row.relative60d)+'</strong></div></div></div>';
-  }).join('')+'</div>'+commentary;
-}
-
-function loadMarketSectorRotation(){
-  var host=document.getElementById('market-sector-rotation-body');
-  if(!host)return Promise.resolve(null);
-  if(!API_URL){host.innerHTML=setupNotice();setCouncilPanelStatusIfActive('err','尚未設定 API');return Promise.resolve(null);}
-  var cachedEntry=readMarketCacheEntry(MARKET_SECTOR_ROTATION_CACHE_KEY,true);
-  var cached=cachedEntry&&cachedEntry.data;
-  if(cached)renderMarketSectorRotation(cached,host,'已顯示上次成功快照，背景更新中…');
-  setCouncilPanelStatusIfActive('pending',cached?'產業輪動快取已載入，背景更新中':'產業輪動快照讀取中');
-  if(marketSectorRotationPromise)return marketSectorRotationPromise;
-  marketSectorRotationPromise=apiGet({action:'marketSectorRotation'},45000).then(function(data){
-    writeTimedMarketCache(MARKET_SECTOR_ROTATION_CACHE_KEY,data);
-    var current=document.getElementById('market-sector-rotation-body');
-    if(current)renderMarketSectorRotation(data,current);
-    setCouncilPanelStatusIfActive('ok','產業輪動已更新');
-    return data;
-  }).catch(function(error){
-    if(cached)renderMarketSectorRotation(cached,host,'背景更新失敗，保留上次成功快照。');
-    else host.innerHTML='<div class="market-sector-meta">產業輪動快照讀取失敗：'+esc(error&&error.message?error.message:'請稍後再試')+'</div>';
-    setCouncilPanelStatusIfActive(cached?'pending':'err',cached?'產業輪動快取仍可使用':'產業輪動讀取失敗');
-    return null;
-  }).finally(function(){marketSectorRotationPromise=null;});
-  return marketSectorRotationPromise;
-}
-
 function renderMarketDashboard(data,el){
   var rows=(data&&data.rows)||[];
   var summary=(data&&data.summary)||{};
@@ -17044,9 +16972,7 @@ function renderMarketDashboard(data,el){
       </div>
       <div class="market-counts">${chips||`<span class="market-chip ${stanceTone}">${esc(summary.stance||'觀望')}</span>`}</div>
     </div>
-    ${twseHtml}${otherHtml}
-    <div class="market-sector-rotation"><div class="sec-title">產業輪動快照</div><div id="market-sector-rotation-body"><div class="market-sector-meta">背景讀取產業快照中…</div></div></div>`;
-  loadMarketSectorRotation();
+    ${twseHtml}${otherHtml}`;
 }
 
 function renderMacroOverview(data,el){
@@ -17764,10 +17690,34 @@ function advisorWorldLoadNasdaqValuation(panel){
   });
 }
 
+function advisorWorldRenderTwseAfterHours_(panel,data,stale,error,loading){
+  var card=panel&&panel.querySelector('.advisor-twse-after-hours');if(!card)return;
+  data=data||{};var index=data.index||{},margin=data.margin||{};
+  function dateLabel(value){var text=String(value||'').replace(/-/g,'').slice(0,8);return /^\d{8}$/.test(text)?text.slice(0,4)+'/'+text.slice(4,6)+'/'+text.slice(6,8):'資料日未提供';}
+  function money(value){var n=Number(value);return Number.isFinite(n)?(n>0?'+':'')+(n/100000000).toFixed(2)+' 億':'資料暫缺';}
+  function missingStatus(value,cutoff){var parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Taipei',weekday:'short',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date()),p={};parts.forEach(function(x){p[x.type]=x.value;});var today=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date()).replace(/-/g,''),minute=Number(p.hour)*60+Number(p.minute),weekday=/^(Mon|Tue|Wed|Thu|Fri)$/.test(p.weekday||'');return weekday&&minute>=cutoff&&value&&String(value).replace(/-/g,'')<today?'當日資料尚未取得，顯示最近可用資料':'';}
+  var close=Number(index.close),points=Number(index.changePoints),pct=Number(index.changePct),finance=Number(margin.changeTWD),financeBalance=Number(margin.balanceTWD);
+  card.querySelector('.advisor-twse-after-hours-head span').textContent=loading?(index.sourceDate||margin.sourceDate?'顯示最近資料 · 背景更新中':'背景讀取中…'):(error?'更新失敗，保留最近資料':stale?'顯示最近成功資料':'官方資料');
+  var cells=card.querySelectorAll('.advisor-twse-after-hours-grid>div');
+  cells[0].innerHTML='<small>加權指數收盤</small><strong class="'+(Number.isFinite(points)?points>0?'up':points<0?'down':'':'')+'">'+(Number.isFinite(close)?close.toLocaleString('zh-TW',{minimumFractionDigits:2,maximumFractionDigits:2}):'資料暫缺')+'</strong><small>'+((Number.isFinite(points)?(points>0?'+':'')+points.toFixed(2)+' 點（'+(Number.isFinite(pct)?(pct>0?'+':'')+pct.toFixed(2)+'%':'資料暫缺')+'）':'資料暫缺'))+' · 資料日 '+dateLabel(index.sourceDate)+(missingStatus(index.sourceDate,840)?' · '+missingStatus(index.sourceDate,840):'')+'</small>';
+  cells[1].innerHTML='<small>上市融資餘額增減</small><strong class="'+(Number.isFinite(finance)?finance>0?'up':finance<0?'down':'':'')+'">'+money(margin.changeTWD)+'</strong><small>融資餘額 '+(Number.isFinite(financeBalance)?(financeBalance/100000000).toFixed(2)+' 億元':'資料暫缺')+' · 資料日 '+dateLabel(margin.sourceDate)+(missingStatus(margin.sourceDate,1290)?' · '+missingStatus(margin.sourceDate,1290):'')+'</small>';
+  var note=card.querySelector('.advisor-twse-after-hours-note');if(note)note.textContent=(error?String(error)+'。':'')+'來源：TWSE 臺灣證券交易所。融資增減依報表今日餘額減前日餘額；前日餘額可能於後續調整。';
+}
+
+function advisorWorldLoadTwseAfterHours(panel){
+  var card=panel&&panel.querySelector('.advisor-twse-after-hours');if(!card)return Promise.resolve(null);
+  var cached=null;try{var saved=JSON.parse(localStorage.getItem(MARKET_TWSE_AFTER_HOURS_CACHE_KEY)||'null');cached=saved&&saved.data||null;}catch(error){}
+  advisorWorldRenderTwseAfterHours_(panel,cached,true,'',true);
+  if(advisorWorldTwseAfterHoursPromise)return advisorWorldTwseAfterHoursPromise;
+  advisorWorldTwseAfterHoursPromise=apiGet({action:'warRoomTwseAfterHoursOverview'},30000).then(function(data){if(!data||(!data.index&&!data.margin))throw new Error('證交所資料暫缺');try{localStorage.setItem(MARKET_TWSE_AFTER_HOURS_CACHE_KEY,JSON.stringify({savedAt:Date.now(),data:data}));}catch(error){}advisorWorldRenderTwseAfterHours_(panel,data,false,'',false);return data;}).catch(function(error){advisorWorldRenderTwseAfterHours_(panel,cached,true,error&&error.message||'來源暫時無法讀取',false);return null;}).finally(function(){advisorWorldTwseAfterHoursPromise=null;});
+  return advisorWorldTwseAfterHoursPromise;
+}
+
 function advisorWorldRenderSnapshot(panel,payload){
   if(!panel||!payload||!payload.market||!payload.macro)return false;
   panel.innerHTML=advisorWorldHtml(advisorWorldBuild(payload.market,payload.macro),payload.capturedAt);
   advisorWorldLoadNasdaqValuation(panel);
+  advisorWorldLoadTwseAfterHours(panel);
   advisorWorldFillLongReport(payload.longReport||{hasReport:false,latest:null});
   return true;
 }
@@ -17796,6 +17746,7 @@ async function openAdvisorWorldSituation(event,auto,force){
   }else if(hasCachedWorld){
     panel.innerHTML=advisorWorldHtml(advisorWorldBuild(cachedMarket||{},cachedMacro||{}));
     advisorWorldLoadNasdaqValuation(panel);
+    advisorWorldLoadTwseAfterHours(panel);
     advisorWorldLoadLongReport();
   }else{
     panel.innerHTML='<div class="advisor-world-card"><div class="advisor-world-title">🏛 帝國晨報</div><div class="advisor-world-text" style="position:relative;z-index:1;text-align:center">諸葛亮正在整理流動性、經濟、通膨與信用戰報…</div></div>';
@@ -18794,7 +18745,7 @@ function advisorAIResolveAccount(text){
 function advisorAIOpenTarget(text){
   var key=advisorAICompact(text);
   if(key==='foodhouse')return {intent:'open',panel:'finance',tab:'finance-accs',label:'國庫現況'};
-  if(key==='market')return {intent:'open',panel:'war-room',tab:'war-sector-rotation',label:'產業輪動'};
+  if(key==='market')return {intent:'open',panel:'war-room',tab:'war-briefing',label:'帝國晨報'};
   if(key==='finance')return {intent:'open',panel:'finance',tab:'finance-accs',label:'財政'};
   if(key==='domestic')return {intent:'open',panel:'domestic',tab:'booking-form',label:'快速記帳'};
   if(key==='stars')return {intent:'open',panel:'stars',label:'司天監'};
@@ -18804,7 +18755,7 @@ function advisorAIOpenTarget(text){
   if(key.indexOf('部隊陣容')>=0||key.indexOf('陣容')>=0)return {intent:'open',panel:'war-room',tab:'war-roster',label:'部隊陣容'};
   if(key.indexOf('戰情總匯報')>=0||key.indexOf('總匯報')>=0)return {intent:'open',panel:'war-room',tab:'war-battle-brief',label:'戰情總匯報'};
   if(key.indexOf('台灣總體經濟')>=0||key.indexOf('台灣總經')>=0)return {intent:'open',panel:'war-room',tab:'war-taiwan-macro',label:'台灣總體經濟'};
-  if(key.indexOf('市集')>=0||key.indexOf('市場')>=0)return {intent:'open',panel:'war-room',tab:'war-sector-rotation',label:'產業輪動'};
+  if(key.indexOf('市集')>=0||key.indexOf('市場')>=0)return {intent:'open',panel:'war-room',tab:'war-briefing',label:'帝國晨報'};
   if(key.indexOf('內政')>=0||key.indexOf('記帳')>=0)return {intent:'open',panel:'domestic',tab:'booking-form',label:'快速記帳'};
   return null;
 }

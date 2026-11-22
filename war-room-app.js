@@ -6,15 +6,15 @@
   var tabs={
     'war-briefing':{title:'帝國晨報',load:loadBriefing},
     'war-battle-brief':{title:'戰情總匯報',load:loadBattle},
-    'war-sector-rotation':{title:'產業輪動',load:loadSector},
     'war-roster':{title:'部隊陣容',load:loadWarRoster}
   };
-  var currentTab='war-briefing',lastLoaded={},busy=false,foreignYtdPromise=null,foreignYtdLastAttempt=0,foreignYtdError='',nasdaqValuationPromise=null,taiwanValuationPromise=null,taiwanValuationLastAttempt=0,warRoomYtdDrawdownPromise=null,warRoomQQQMQuotePromise=null,warRoomQQQMQuoteLastAttempt=0,lastBriefPayload=null,lastBriefStale=false;
+  var currentTab='war-briefing',lastLoaded={},busy=false,foreignYtdPromise=null,foreignYtdLastAttempt=0,foreignYtdError='',nasdaqValuationPromise=null,taiwanValuationPromise=null,taiwanValuationLastAttempt=0,warRoomYtdDrawdownPromise=null,warRoomQQQMQuotePromise=null,warRoomQQQMQuoteLastAttempt=0,lastBriefPayload=null,lastBriefStale=false,twseAfterHoursPromise=null,twseAfterHoursTimer=null;
   var FOREIGN_YTD_CACHE_KEY='wealth_twse_foreign_ytd_v1';
   var NASDAQ_VALUATION_CACHE_KEY='wealth_nasdaq100_valuation_v1';
   var TAIWAN_VALUATION_CACHE_KEY='wealth_taiwan_valuation_v1';
   var WAR_ROOM_YTD_DRAWDOWN_CACHE_KEY='wealth_war_room_ytd_drawdown_v1';
   var WAR_ROOM_QQQM_CACHE_KEY='wealth_war_room_qqqm_quote_v1';
+  var TWSE_AFTER_HOURS_CACHE_KEY='wealth_war_room_twse_after_hours_v1';
   var content=document.getElementById('content'),status=document.getElementById('connection-status');
   function loadWarRoster(force){return window.warRosterModule.load(request,force,function(value){if(currentTab==='war-roster')setFreshness(value);},function(text,kind){if(currentTab==='war-roster')setStatus(text,kind);},function(){return currentTab==='war-roster';});}
   function normalizeApi(value){value=String(value||'').trim();return /script\.google\.com\/macros\/s\//i.test(value)?API_DEFAULT:value;}
@@ -140,6 +140,35 @@
     }).catch(function(error){renderTaiwanValuation_(initial,true,error&&error.message||'估值資料暫缺',false);return null;}).finally(function(){taiwanValuationPromise=null;});
     return taiwanValuationPromise;
   }
+  function twseAfterHoursDate_(value){var text=String(value||'').replace(/-/g,'').slice(0,8);return /^\d{8}$/.test(text)?text.slice(0,4)+'/'+text.slice(4,6)+'/'+text.slice(6,8):'資料日未提供';}
+  function twseAfterHoursAmount_(value){var n=Number(value);if(!isFinite(n))return '--';return (n>0?'+':'')+num(n/100000000,2)+' 億';}
+  function renderTwseAfterHours_(data,stale,error,loading){
+    var host=document.getElementById('twse-after-hours-host');if(!host)return;data=data||{};
+    var index=data.index||{},margin=data.margin||{},indexDate=index.sourceDate||'',marginDate=margin.sourceDate||'';
+    var status=loading?(indexDate||marginDate?'顯示最近資料 · 背景更新中':'背景讀取中…'):(error?'更新失敗，保留最近資料':(stale?'顯示最近成功資料':'官方資料'));
+    function missingStatus(sourceDate,cutoff){var parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Taipei',weekday:'short',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date()),p={};parts.forEach(function(x){p[x.type]=x.value;});var minute=Number(p.hour)*60+Number(p.minute),weekday=/^(Mon|Tue|Wed|Thu|Fri)$/.test(p.weekday||'');return weekday&&minute>=cutoff&&sourceDate&&sourceDate.replace(/-/g,'')<new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date()).replace(/-/g,'')?'當日資料尚未取得，顯示最近可用資料':'';}
+    var indexMissing=missingStatus(indexDate,14*60),marginMissing=missingStatus(marginDate,21*60+30);
+    var change=Number(index.changePoints),pct=Number(index.changePct),finance=Number(margin.changeTWD);
+    var indexTone=isFinite(change)?(change>0?'up':change<0?'down':''):'',financeTone=isFinite(finance)?(finance>0?'up':finance<0?'down':''):'';
+    var html='<article class="twse-after-hours-card"><div class="twse-after-hours-head"><strong>🇹🇼 台股盤後</strong><span>'+esc(status)+'</span></div><div class="twse-after-hours-grid"><section><small>加權指數收盤</small><strong>'+esc(index.close==null?'資料暫缺':num(index.close,2))+'</strong><span class="'+indexTone+'">'+(isFinite(change)?esc((change>0?'+':'')+num(change,2)+' 點')+'（'+esc((pct>0?'+':'')+num(pct,2)+'%')+'）':'資料暫缺')+'</span><small>資料日 '+esc(twseAfterHoursDate_(indexDate))+(indexMissing?' · '+indexMissing:'')+'</small></section><section><small>上市融資餘額增減</small><strong class="'+financeTone+'">'+esc(twseAfterHoursAmount_(margin.changeTWD))+'</strong><span>融資餘額 '+esc(margin.balanceTWD==null?'資料暫缺':num(Number(margin.balanceTWD)/100000000,2)+' 億元')+'</span><small>資料日 '+esc(twseAfterHoursDate_(marginDate))+(marginMissing?' · '+marginMissing:'')+'</small></section></div><p>來源：<a href="https://www.twse.com.tw/zh/trading/historical/mi-index.html" target="_blank" rel="noopener noreferrer">證交所收盤行情</a> · <a href="https://www.twse.com.tw/zh/trading/margin/mi-margn.html" target="_blank" rel="noopener noreferrer">證交所上市融資融券報表</a>。融資增減依報表今日餘額減前日餘額；前日餘額可能於後續調整。'+(error?' '+esc(error):'')+'</p></article>';
+    host.innerHTML=html;
+  }
+  function refreshTwseAfterHours_(){
+    var cached=readCache(TWSE_AFTER_HOURS_CACHE_KEY);renderTwseAfterHours_(cached,true,'',true);
+    if(twseAfterHoursPromise)return twseAfterHoursPromise;
+    twseAfterHoursPromise=request({action:'warRoomTwseAfterHoursOverview'},30000).then(function(data){if(!data||(!data.index&&!data.margin))throw new Error('官方來源尚未回傳有效資料');writeCache(TWSE_AFTER_HOURS_CACHE_KEY,data);renderTwseAfterHours_(data,false,'',false);return data;}).catch(function(error){renderTwseAfterHours_(cached,true,error&&error.message||'證交所資料暫時無法讀取',false);return null;}).finally(function(){twseAfterHoursPromise=null;scheduleTwseAfterHoursRefresh_();});
+    return twseAfterHoursPromise;
+  }
+  function taiwanClock_(){var parts=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Taipei',weekday:'short',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).formatToParts(new Date()),p={};parts.forEach(function(x){p[x.type]=x.value;});return {weekday:p.weekday,year:Number(p.year),month:Number(p.month),day:Number(p.day),hour:Number(p.hour),minute:Number(p.minute),second:Number(p.second)};}
+  function scheduleTwseAfterHoursRefresh_(){
+    if(twseAfterHoursTimer)clearTimeout(twseAfterHoursTimer);if(currentTab!=='war-briefing')return;
+    var c=taiwanClock_(),weekday=/^(Mon|Tue|Wed|Thu|Fri)$/.test(c.weekday),minute=c.hour*60+c.minute,windowNow=weekday&&((minute>=14*60&&minute<16*60+30)||(minute>=21*60+30&&minute<22*60+30)),target;
+    if(windowNow)target=Date.UTC(c.year,c.month-1,c.day,c.hour-8,c.minute+15,0);
+    else if(weekday&&minute<14*60+5)target=Date.UTC(c.year,c.month-1,c.day,6,5,0);
+    else if(weekday&&minute<21*60+35)target=Date.UTC(c.year,c.month-1,c.day,13,35,0);
+    else{var add=1,day=new Date(Date.UTC(c.year,c.month-1,c.day+add));while([0,6].includes(day.getUTCDay())){add++;day=new Date(Date.UTC(c.year,c.month-1,c.day+add));}target=Date.UTC(day.getUTCFullYear(),day.getUTCMonth(),day.getUTCDate(),6,5,0);}
+    var taiwanAsUtc=Date.UTC(c.year,c.month-1,c.day,c.hour-8,c.minute,c.second);twseAfterHoursTimer=setTimeout(function(){if(currentTab==='war-briefing'&&!document.hidden)refreshTwseAfterHours_();else scheduleTwseAfterHoursRefresh_();},Math.max(60000,target-taiwanAsUtc));
+  }
   function marketYtdDrawdownKey_(row){var code=String(row&&row.code||'').trim().toUpperCase(),name=String(row&&row.name||'');if(code==='^TWII'||/台灣加權|加權指數|TAIEX/i.test(name))return 'taiex';if(code==='NYSEARCA:SPY'||code==='SPY'||/標普500|S&P\s*500/i.test(name))return 'sp500';return '';}
   function warRoomYtdMetric_(data,key){return data&&data.indices&&data.indices[key]||null;}
   function warRoomYtdMetricText_(metric){return metric&&isFinite(Number(metric.maxDrawdownPct))?num(metric.maxDrawdownPct,2)+'%':'資料暫缺';}
@@ -190,6 +219,7 @@
     var preservedAsyncMarkup=skipBackgroundRefresh?{
       nasdaq:(document.getElementById('nasdaq-valuation-host')||{}).innerHTML||'',
       taiwan:(document.getElementById('taiwan-valuation-host')||{}).innerHTML||'',
+      twse:(document.getElementById('twse-after-hours-host')||{}).innerHTML||'',
       drawdowns:Array.prototype.map.call(document.querySelectorAll('.brief-ytd-drawdown-slot[data-ytd-drawdown]'),function(slot){return {key:slot.getAttribute('data-ytd-drawdown'),text:slot.textContent,title:slot.title};})
     }:null;
     function isPalantirMonitorRow_(row){if(!row||typeof row!=='object')return false;var code=String(row.code||row.symbol||row.ticker||'').trim().toUpperCase(),ticker=code.split(':').pop(),name=String(row.name||row.company||'');return ticker==='PLTR'||/palantir/i.test(name);}
@@ -230,6 +260,7 @@
     if(valuations.qqq)html+=sectionTitle('估值觀察')+'<div class="brief-valuations">'+valuationCard('📡 QQQ 動態估值',valuations.qqq,'qqq')+'</div>';
     html+=sectionTitle('NASDAQ-100 估值')+'<div id="nasdaq-valuation-host"></div>';
     html+=sectionTitle('台股估值')+'<div id="taiwan-valuation-host"></div>';
+    html+='<div id="twse-after-hours-host"></div>';
     var rows=market.rows||[];
     function marketMaHint_(row){var price=row&&row.price!=null&&row.price!==''?Number(row.price):NaN,ma20=row&&row.ma20!=null&&row.ma20!==''?Number(row.ma20):NaN,ma20Prev=row&&row.ma20Prev!=null&&row.ma20Prev!==''?Number(row.ma20Prev):NaN;if(!isFinite(price)||!isFinite(ma20)||ma20<=0)return null;if(price>ma20&&isFinite(ma20Prev)&&ma20Prev>0&&ma20>ma20Prev)return {text:'MA20 偏強',tone:'up',title:'現價高於 MA20，且 MA20 高於前一日 MA20。'};if(price<ma20&&isFinite(ma20Prev)&&ma20Prev>0&&ma20<ma20Prev)return {text:'MA20 偏弱',tone:'down',title:'現價低於 MA20，且 MA20 低於前一日 MA20。'};if(price>ma20)return {text:'站上 MA20',tone:'up',title:'現價高於 MA20；均線方向未同時確認。'};if(price<ma20)return {text:'跌破 MA20',tone:'down',title:'現價低於 MA20；均線方向未同時確認。'};return {text:'貼近 MA20',tone:'',title:'現價與 MA20 相同。'};}
     if(rows.length)html+=sectionTitle('核心市場')+'<div class="brief-market-list">'+rows.map(function(row){var change=Number(row.changePct),tone=isFinite(change)?change>=0?'up':'down':'',maHint=marketMaHint_(row),details=[row.code||'',row.dataDate||row.sourceDate||'資料日未提供',row.sourceName||'',row.quoteStatus||''].filter(Boolean).join(' · ');return '<article class="brief-market-row"><div><strong>'+esc(row.name||row.code||'市場')+'</strong><small>'+esc(details)+'</small></div><div><small>現價</small><div class="brief-market-price-line"><strong>'+esc(row.price==null?'--':num(row.price,2))+'</strong>'+(maHint?'<small class="brief-ma-hint '+maHint.tone+'" title="'+esc(maHint.title)+'">'+esc(maHint.text)+'</small>':'')+'</div></div><div class="'+tone+'"><small>漲跌</small><strong>'+esc(row.changePct==null?'--':num(row.changePct,2)+'%')+'</strong></div><span class="pill">'+esc(row.signal||'觀望')+'</span></article>';}).join('')+'</div>';
@@ -246,10 +277,11 @@
       var nasdaqHost=document.getElementById('nasdaq-valuation-host'),taiwanHost=document.getElementById('taiwan-valuation-host');
       if(nasdaqHost&&preservedAsyncMarkup.nasdaq)nasdaqHost.innerHTML=preservedAsyncMarkup.nasdaq;
       if(taiwanHost&&preservedAsyncMarkup.taiwan)taiwanHost.innerHTML=preservedAsyncMarkup.taiwan;
+      var twseHost=document.getElementById('twse-after-hours-host');if(twseHost&&preservedAsyncMarkup.twse)twseHost.innerHTML=preservedAsyncMarkup.twse;
       preservedAsyncMarkup.drawdowns.forEach(function(saved){var slot=document.querySelector('.brief-ytd-drawdown-slot[data-ytd-drawdown="'+saved.key+'"]');if(slot){slot.textContent=saved.text;slot.title=saved.title;}});
     }
     setFreshness(captured?'快照時間 '+dateText(captured):'以目前可取得的快照呈現');
-    if(!skipBackgroundRefresh){refreshNasdaqValuation_();refreshTaiwanValuation_(valuations.taiex,stale);refreshWarRoomYtdDrawdown_();if(rows.some(isWarRoomQQQMRow_))refreshWarRoomQQQMQuote_();}
+    if(!skipBackgroundRefresh){refreshNasdaqValuation_();refreshTaiwanValuation_(valuations.taiex,stale);refreshTwseAfterHours_();refreshWarRoomYtdDrawdown_();if(rows.some(isWarRoomQQQMRow_))refreshWarRoomQQQMQuote_();}
   }
   async function loadBriefing(force){
     var cacheKey='wealth_advisor_world_nas_v1',cached=readCache(cacheKey),cacheMarket=readCache('wealth_market_dashboard_v1'),cacheMacro=readCache('wealth_market_macro_v4');
@@ -283,24 +315,10 @@
     renderForeignYtd_(readCache(FOREIGN_YTD_CACHE_KEY),false,foreignYtdError);
     refreshForeignYtd_();
   }
-  async function loadSector(force){var key='wealth_market_sector_rotation_v1',cached=readCache(key);if(!force&&cached)renderSector(cached,true);else content.innerHTML='<div class="loading"><span class="spinner"></span> 正在整理產業輪動…</div>';try{var data=await request({action:'marketSectorRotation'},45000);writeCache(key,data);if(currentTab!=='war-sector-rotation')return;renderSector(data,false);setFreshness('資料 '+dateText(data.sourceDate||data.updatedAt));setStatus('產業輪動已更新','ok');}catch(error){if(currentTab!=='war-sector-rotation')return;if(cached){renderSector(cached,true);showError(error);}else{content.innerHTML='<div class="empty">產業輪動讀取失敗</div>';showError(error);}}}
-  function renderSector(data,stale){
-    if(currentTab!=='war-sector-rotation')return;
-    var rows=(data.rows||[]).slice().sort(function(a,b){return Number(b.rotationScore||0)-Number(a.rotationScore||0);});
-    function statusClass(status){return /強勢/.test(status||'')?'up':/弱勢|降溫/.test(status||'')?'down':/改善|初期/.test(status||'')?'improving':'';}
-    var strong=rows.filter(function(row){return /強勢|領先/.test(row.status||'');}).length,weak=rows.filter(function(row){return /弱勢|降溫/.test(row.status||'');}).length;
-    var html='<div class="brief-hero sector-hero"><div><div class="brief-kicker">MARKET · SECTOR ROTATION</div><h2>🔄 產業輪動</h2><p>依相對市場動能觀察產業變化；輪動分數不是報酬預測。</p></div><span class="pill">'+(stale?'上次成功快照':'最新資料')+'</span></div>';
-    if(stale)html+='<div class="notice">背景更新尚未完成，先保留上次成功資料。</div>';
-    html+='<div class="sector-summary"><div><small>追蹤產業</small><strong>'+rows.length+'</strong></div><div><small>相對強勢</small><strong class="up">'+strong+'</strong></div><div><small>相對偏弱</small><strong class="down">'+weak+'</strong></div><div><small>資料日期</small><strong class="sector-date">'+esc(data.sourceDate||data.updatedAt||'--')+'</strong></div></div>';
-    if(data.commentary&&data.commentary.summary)html+='<section class="brief-insight sector-insight"><div class="brief-insight-heading"><span>🧠 軍師輪動觀察</span><small>'+esc(data.source||'來源未提供')+'</small></div><p>'+esc(data.commentary.summary)+'</p></section>';
-    html+=sectionTitle('產業動能排行');
-    html+=rows.length?'<div class="sector-list">'+rows.map(function(row,index){var score=Math.max(0,Math.min(100,Number(row.rotationScore)||0));var cls=statusClass(row.status);return '<article class="sector-card"><div class="sector-rank">'+String(index+1).padStart(2,'0')+'</div><div class="sector-main"><div class="sector-name-line"><div><h3>'+esc(row.name||'產業')+'</h3><small>'+esc(row.code||'')+' · '+esc(row.quadrant||'資料不足')+'</small></div><span class="sector-status '+cls+'">'+esc(row.status||'資料不足')+'</span></div><div class="sector-score-line"><span>輪動分數</span><strong>'+esc(num(row.rotationScore,1))+'</strong><div class="sector-score-track"><i style="width:'+score+'%"></i></div></div><div class="sector-returns"><div><small>近 5 日</small><strong class="'+(Number(row.return5d)>=0?'up':'down')+'">'+esc(row.return5d==null?'--':num(row.return5d,2)+'%')+'</strong></div><div><small>20 日相對 SPY</small><strong class="'+(Number(row.relative20d)>=0?'up':'down')+'">'+esc(row.relative20d==null?'--':num(row.relative20d,2)+'%')+'</strong></div><div><small>60 日相對 SPY</small><strong class="'+(Number(row.relative60d)>=0?'up':'down')+'">'+esc(row.relative60d==null?'--':num(row.relative60d,2)+'%')+'</strong></div></div></div></article>';}).join('')+'</div>':'<div class="battle-empty">目前沒有產業輪動資料。</div>';
-    html+='<p class="sector-footnote">快照 '+esc(dateText(data.sourceDate||data.updatedAt||''))+' · '+esc(data.source||'資料來源未提供')+(data.commentaryError?' · 短評尚未產生':'')+'</p>'+rawDetails('產業輪動原始資料',data);content.innerHTML=html;
-  }
   function selectTab(tab,force){if(!tabs[tab])tab='war-briefing';var previousTab=currentTab;currentTab=tab;document.querySelectorAll('.tabs button').forEach(function(button){button.classList.toggle('active',button.dataset.tab===tab);});document.getElementById('page-title').textContent=tabs[tab].title;history.replaceState(null,'','?tab='+encodeURIComponent(tab));if(!force&&previousTab===tab&&lastLoaded[tab])return;lastLoaded[tab]=true;tabs[tab].load(!!force).catch(function(error){if(currentTab===tab)showError(error);});}
   document.querySelector('.tabs').addEventListener('click',function(event){var button=event.target.closest('button[data-tab]');if(button&&this.contains(button))selectTab(button.dataset.tab,false);});
   document.getElementById('refresh-button').onclick=async function(){if(busy)return;busy=true;this.disabled=true;try{if(await authorize())selectTab(currentTab,true);}finally{busy=false;this.disabled=false;}};
   window.addEventListener('storage',function(event){if(event.key==='wealth_write_token'||event.key==='wealth_api_url'){API_URL=normalizeApi(localStorage.getItem('wealth_api_url'))||API_DEFAULT;setStatus('設定已更新','ok');}});
-  var selected=new URLSearchParams(location.search).get('tab')||'war-briefing';if(!tabs[selected])selected='war-briefing';currentTab=selected;document.querySelector('[data-tab="'+selected+'"]').classList.add('active');document.getElementById('page-title').textContent=tabs[selected].title;
+  var selected=new URLSearchParams(location.search).get('tab')||'war-briefing';if(!tabs[selected]){selected='war-briefing';history.replaceState(null,'','?tab=war-briefing');}currentTab=selected;document.querySelector('[data-tab="'+selected+'"]').classList.add('active');document.getElementById('page-title').textContent=tabs[selected].title;
   authorize().then(function(ok){if(ok){setStatus('城門已連線','ok');startSessionRefresh();selectTab(selected,true);}});
 })();
