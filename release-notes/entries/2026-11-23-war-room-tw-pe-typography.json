@@ -1,7 +1,7 @@
 {
   "id": "2026-11-23-war-room-tw-pe-typography",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-11-23",
   "area": "帝國晨報",
   "summary": "統一台股估值區塊字體並簡化標題",
   "details": "移除「台股估值」標題旁的更新狀態文字，並統一台股估值小區塊的字體家族，保留數值層級、資料日期及來源。",
