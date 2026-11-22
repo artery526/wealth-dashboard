@@ -49,7 +49,7 @@ test('Imperial Morning Brief renders stale saved data before refresh and keeps i
   await expect(briefing.locator('.advisor-world-refresh-status')).toHaveText('背景更新失敗，先顯示上次保存的資料。');
 });
 
-test('Imperial Morning Brief shows sourced NASDAQ-100 P/E values with independent dates on mobile', async ({ page }) => {
+test('Imperial Morning Brief combines Taiwan P/E values into the Taiwan after-hours card on mobile', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.evaluate(() => {
     window.apiGet = ({ action }) => action === 'nasdaq100Valuation'
@@ -58,7 +58,10 @@ test('Imperial Morning Brief shows sourced NASDAQ-100 P/E values with independen
     const panel = document.createElement('div');
     panel.id = 'war-room-briefing-content';
     document.body.appendChild(panel);
-    advisorWorldRenderSnapshot(panel, { market: {}, macro: {}, capturedAt: '2026-10-23T00:00:00Z' });
+    advisorWorldRenderSnapshot(panel, { market: {}, macro: { valuations: { taiex: {
+      trailingPE: 19.54, historicalPEMedian: { tenYear: 16.88 }, pb: 3.31, historicalPBMedian: { tenYear: 1.92 },
+      dataDate: '2026-10-22', source: 'MoneyDJ PE/PB河流圖反算；TWSE同日收盤指數核對通過', status: '已更新'
+    } } }, capturedAt: '2026-10-23T00:00:00Z' });
   });
   const valuation = page.locator('.advisor-nasdaq-valuation');
   await expect(valuation.locator('.advisor-nasdaq-trailing')).toHaveText('30.52×');
@@ -66,6 +69,15 @@ test('Imperial Morning Brief shows sourced NASDAQ-100 P/E values with independen
   await expect(valuation.locator('.advisor-nasdaq-trailing-date')).toContainText('2026/10/22');
   await expect(valuation.locator('.advisor-nasdaq-forward-date')).toContainText('2026/10/21');
   await expect(valuation.locator('a')).toHaveAttribute('href', 'https://historyofmarket.com/nasdaq/ndx-forward-pe/');
+  const afterHours = page.locator('.advisor-twse-after-hours');
+  await expect(afterHours).toContainText('近四季 Trailing P/E');
+  await expect(afterHours).toContainText('19.54×');
+  await expect(afterHours).toContainText('10 年中位數 P/E');
+  await expect(afterHours).toContainText('16.88×');
+  await expect(afterHours).toContainText('2026/10/22');
+  await expect(afterHours).toContainText('MoneyDJ PE/PB河流圖反算');
+  await expect(afterHours).not.toContainText('3.31×');
+  await expect(page.locator('.advisor-brief-grid')).not.toContainText('台股估值');
   const dimensions = await page.locator('html').evaluate(el => ({ scrollWidth: el.scrollWidth, clientWidth: el.clientWidth }));
   expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
 });
@@ -226,7 +238,7 @@ test('QQQM quote refresh does not remove a NASDAQ valuation card that has alread
   releaseQuote();
   await expect(page.locator('.brief-market-row').filter({ hasText: '納斯達克100 ETF' }).locator('.brief-market-price-line > strong')).toHaveText('278.45');
   await expect(nasdaqCard).toContainText('30.52×');
-  await expect(page.locator('.taiex-valuation-card')).toContainText('19.54×');
+  await expect(page.locator('.twse-valuation')).toContainText('19.54×');
 });
 
 test('Imperial Morning Brief derives monitored market rise and fall counts from quote rows', async ({ page }) => {
@@ -298,19 +310,21 @@ test('Standalone War Room shows sourced NASDAQ-100 valuations and dates on mobil
   await expect(card.locator('.nasdaq-valuation-values > div').nth(1)).toContainText('19.61×');
   await expect(card.locator('.nasdaq-valuation-values > div').nth(1)).toContainText('2026-10-21');
   await expect(card.locator('a')).toHaveAttribute('href', 'https://historyofmarket.com/nasdaq/ndx-forward-pe/');
-  const taiwanCard = page.locator('.taiex-valuation-card');
-  await expect(taiwanCard).toBeVisible();
-  await expect(taiwanCard).toContainText('台灣加權指數估值');
-  await expect(taiwanCard).toContainText('22.48×');
-  await expect(taiwanCard).toContainText('2.61×');
-  await expect(taiwanCard).toContainText('18.32×');
-  await expect(taiwanCard).toContainText('1.74×');
-  await expect(taiwanCard).toContainText('2026-10-22');
-  await expect(taiwanCard).toContainText('MoneyDJ PE/PB河流圖反算');
-  await expect(taiwanCard.getByRole('link', { name: 'MoneyDJ P/E' })).toHaveAttribute('href', 'https://www.moneydj.com/Z/ZB/ZBL/ZBLB/ZBLB.djhtm');
-  await expect(taiwanCard.getByRole('link', { name: 'MoneyDJ P/B' })).toHaveAttribute('href', 'https://www.moneydj.com/Z/ZB/ZBL/ZBLA/ZBLA.djhtm');
-  await expect(taiwanCard.getByRole('link', { name: 'TWSE' })).toHaveAttribute('href', 'https://www.twse.com.tw/zh/indices/taiex/mi-5min-hist.html');
-  const taiwanDimensions = await taiwanCard.evaluate(el => ({ scrollWidth: el.scrollWidth, clientWidth: el.clientWidth }));
+  const afterHours = page.locator('.twse-after-hours-card');
+  const taiwanValuation = afterHours.locator('.twse-valuation');
+  await expect(taiwanValuation).toBeVisible();
+  await expect(afterHours).toContainText('近四季 Trailing P/E');
+  await expect(afterHours).toContainText('22.48×');
+  await expect(afterHours).toContainText('10 年中位數 P/E');
+  await expect(afterHours).toContainText('18.32×');
+  await expect(afterHours).toContainText('2026-10-22');
+  await expect(afterHours).toContainText('MoneyDJ PE/PB河流圖反算');
+  await expect(afterHours).not.toContainText('2.61×');
+  await expect(afterHours).not.toContainText('1.74×');
+  await expect(page.locator('.taiex-valuation-card')).toHaveCount(0);
+  await expect(page.locator('h2.section-title', { hasText: '台股估值' })).toHaveCount(0);
+  await expect(taiwanValuation.getByRole('link', { name: 'MoneyDJ P/E' })).toHaveAttribute('href', 'https://www.moneydj.com/Z/ZB/ZBL/ZBLB/ZBLB.djhtm');
+  const taiwanDimensions = await afterHours.evaluate(el => ({ scrollWidth: el.scrollWidth, clientWidth: el.clientWidth }));
   expect(taiwanDimensions.scrollWidth).toBeLessThanOrEqual(taiwanDimensions.clientWidth);
   const dimensions = await card.evaluate(el => ({ scrollWidth: el.scrollWidth, clientWidth: el.clientWidth }));
   expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
