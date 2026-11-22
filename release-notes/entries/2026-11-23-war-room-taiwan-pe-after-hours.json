@@ -1,7 +1,7 @@
 {
   "id": "2026-11-23-war-room-taiwan-pe-after-hours",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-11-23",
   "area": "帝國晨報",
   "summary": "將台股本益比指標整合至台股盤後卡片",
   "details": "帝國晨報移除獨立的台灣加權指數估值區塊，將近四季 Trailing P/E 與十年中位數 P/E 放入台股盤後卡片；保留資料日期、來源與估值比較說明。",
