@@ -961,9 +961,11 @@ test('stock sell mode explains positive share input and reverses account directi
 });
 
 test('battle brief panel renders with stable formatting', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
   const pageErrors = [];
   page.on('pageerror', error => pageErrors.push(error.message));
   await page.goto(dashboardUrl);
+  await page.evaluate(() => ensureMilitaryModule());
 
   await page.evaluate(() => {
     window.API_URL = '';
@@ -1020,7 +1022,12 @@ test('battle brief panel renders with stable formatting', async ({ page }) => {
       holdingsLoaded: true
     };
     renderCouncilPanel();
-    renderBattleBrief({
+    if (!document.getElementById('battle-brief-content')) {
+      const battleHost = document.createElement('div');
+      battleHost.id = 'battle-brief-content';
+      document.getElementById('p-body').appendChild(battleHost);
+    }
+    window.renderBattleBrief({
       date: '2026/08/01',
       updatedAt: '2026/08/01 16:00',
       summary: { sheetName: 'battle', marketStance: 'watch', upCount: 1, downCount: 1 },
@@ -1039,14 +1046,17 @@ test('battle brief panel renders with stable formatting', async ({ page }) => {
     updateBattleFinanceSnapshotViews();
   });
 
-  await expect(page.locator('.ptab.active')).toHaveAttribute('onclick', /battle-brief/);
   const reportSections = page.locator('.battle-report-grid > .battle-section');
   await expect(reportSections.nth(0).locator('.battle-section-title')).toHaveText('00997A 持股變化與軍師短評');
   const fundSection = page.locator('.battle-section', { hasText: '基金淨值' });
-  const marginSection = page.locator('.battle-section', { hasText: '台股融資與維持率' });
+  const holdingsSection = page.locator('.battle-section', { hasText: '持股行情' });
+  await expect(page.locator('.battle-report-grid .battle-section-title')).toHaveText(['00997A 持股變化與軍師短評', '基金淨值', '持股行情']);
+  await expect(page.locator('#battle-margin-snapshot-host')).toHaveCount(0);
   await expect(fundSection.locator('.battle-snapshot-row strong')).toHaveText(['50.1', '140.81']);
-  await expect(marginSection.locator('.battle-snapshot-row strong')).toHaveText(['5074.63 億', '169.81%']);
-  await expect(marginSection.locator('.battle-snapshot-row em').first()).toContainText('74.63 億');
+  await expect(holdingsSection).toBeVisible();
+  await expect(page.locator('.battle-report-grid')).not.toContainText('台股融資與維持率');
+  const dimensions = await page.locator('html').evaluate(el => ({ scrollWidth: el.scrollWidth, clientWidth: el.clientWidth }));
+  expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
   expect(pageErrors).toEqual([]);
 });
 

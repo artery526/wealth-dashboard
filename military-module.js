@@ -23,21 +23,20 @@ function renderBattleBrief(data,el){
     <div class="battle-section">
       <div class="battle-section-title">基金淨值</div>
       <div id="battle-fund-snapshot-host"></div>
-      <div id="battle-holdings-left-snapshot-host"></div>
     </div>
-    <div class="battle-section">
-      <div class="battle-section-title">台股融資與維持率</div>
-      <div id="battle-margin-snapshot-host"></div>
-      <div id="battle-holdings-right-snapshot-host"></div>
+    <div class="battle-section wide">
+      <div class="battle-section-title">持股行情</div>
+      <div class="battle-holdings-snapshot-grid">
+        <div id="battle-holdings-left-snapshot-host"></div>
+        <div id="battle-holdings-right-snapshot-host"></div>
+      </div>
     </div>
   </div>`;
   // 戰情只讀固定排程更新的最新值，不再於開啟頁面時讀取 NAS 歷史快照。
   var fundHost=document.getElementById('battle-fund-snapshot-host');
-  var marginHost=document.getElementById('battle-margin-snapshot-host');
   var holdingsLeftHost=document.getElementById('battle-holdings-left-snapshot-host');
   var holdingsRightHost=document.getElementById('battle-holdings-right-snapshot-host');
   if(fundHost)fundHost.innerHTML=battleLiveFundSnapshotHtml(data.funds);
-  if(marginHost)marginHost.innerHTML=battleLiveMarketSnapshotHtml(data.market);
   if(holdingsLeftHost)holdingsLeftHost.innerHTML=battleLiveHoldingSnapshotHtml(data.holdings,'left');
   if(holdingsRightHost)holdingsRightHost.innerHTML=battleLiveHoldingSnapshotHtml(data.holdings,'right');
 }

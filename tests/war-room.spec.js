@@ -130,7 +130,10 @@ test('standalone route is a direct page and reuses the same-origin session', asy
   });
   await page.route('https://example.test/**', route => route.fulfill({
     status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' },
-    body: JSON.stringify({ ok: true, data: { summary: { marketStance: '觀望', upCount: 1, downCount: 2 }, holdings: [], funds: [], market: [] } })
+    body: JSON.stringify({ ok: true, data: { summary: { marketStance: '觀望', upCount: 1, downCount: 2 }, holdings: [], funds: [], market: [
+      { name: '台股融資餘額', current: 507462771000, previous: 500000000000 },
+      { name: '台股維持率', current: 169.81, previous: 168 }
+    ] } })
   }));
   await page.route('https://api.ark-os26.cc/**', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ records: [] }) }));
   const requests = [];
@@ -139,6 +142,7 @@ test('standalone route is a direct page and reuses the same-origin session', asy
   await expect(page.locator('h1')).toHaveText('諸葛軍師・戰情室');
   await expect(page.locator('.tabs button.active')).toHaveText('戰情總匯報');
   await expect(page.locator('#content .battle-hero h2')).toContainText('戰情總匯報');
+  await expect(page.getByRole('heading', { name: '台股融資與維持率', exact: true })).toHaveCount(0);
   expect(await page.evaluate(() => sessionStorage.getItem('wealth_web_session_token'))).toBe('same-tab-session');
   await expect(page.locator('iframe')).toHaveCount(0);
   expect(requests.some(path => path.endsWith('/index.html'))).toBe(false);
