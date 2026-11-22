@@ -84,5 +84,5 @@ test('service worker returns successful navigation responses before waiting for 
   expect(sw).toContain('event.respondWith(networkResponse.then(response => {');
   expect(sw).toContain("url.pathname.endsWith('/war-room.html') ? null : caches.match('./index.html')");
   expect(html).toMatch(/\.\/sw\.js\?v=\d{8}-[a-z0-9-]+/);
-  expect(warRoom).toContain('data-tab="war-taiwan-macro"');
+  expect(warRoom).not.toContain('data-tab="war-taiwan-macro"');
 });
