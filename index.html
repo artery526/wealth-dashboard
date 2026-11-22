@@ -2852,6 +2852,7 @@ html.war-room-standalone .panel-head{padding:12px 18px;border-bottom-color:rgba(
   padding:12px;min-height:108px;
 }
 .battle-section.wide{grid-column:1/-1}
+.battle-holdings-snapshot-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .battle-section.quote{border-color:rgba(232,192,80,.45);background:linear-gradient(135deg,rgba(184,137,46,.18),rgba(10,8,4,.72))}
 .battle-section-title{font-family:var(--sans);font-size:15px;font-weight:900;color:var(--gold2);letter-spacing:1px;margin-bottom:10px}
 .battle-section-body{font-family:var(--sans);font-size:15px;color:var(--ink);line-height:1.75;white-space:pre-wrap}
@@ -3038,7 +3039,7 @@ html.war-room-standalone .panel-head{padding:12px 18px;border-bottom-color:rgba(
 @media(max-width:540px){.market-command{grid-template-columns:1fr}.market-counts{justify-content:flex-start}.market-metrics{grid-template-columns:1fr 1fr}.market-card-grid{grid-template-columns:1fr}.macro-actions,.macro-grid{grid-template-columns:1fr}.macro-scenario{font-size:24px}}
 @media(max-width:540px){.market-sector-grid{grid-template-columns:1fr}.market-sector-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:540px){.taiwan-macro-hero{flex-direction:column}.taiwan-macro-hero .battle-report-refresh{width:100%}.taiwan-macro-grid{grid-template-columns:1fr}.taiwan-macro-history-head{align-items:flex-start;flex-direction:column}}
-@media(max-width:640px){.battle-report-grid{grid-template-columns:1fr}.battle-report-head{flex-direction:column}.battle-report-refresh{width:100%}}
+@media(max-width:640px){.battle-report-grid,.battle-holdings-snapshot-grid{grid-template-columns:1fr}.battle-report-head{flex-direction:column}.battle-report-refresh{width:100%}}
 @media(max-width:640px){.battle-etf-head{flex-direction:column}.battle-etf-link{width:100%}.battle-etf-grid{grid-template-columns:1fr}}
 @media(max-width:560px){.battle-kpis{justify-content:flex-start}.battle-table-row{grid-template-columns:1fr 1fr}.battle-table-row.head{display:none}.battle-cell.num{text-align:left}.battle-cell[data-label]:before{content:attr(data-label);display:block;font-family:var(--sans);font-size:9px;color:#5a4018;letter-spacing:1px;margin-bottom:2px}}
 
@@ -15299,26 +15300,12 @@ function battleLiveHoldingSnapshotHtml(holdings,holdingColumn){
   return rows||'<div class="battle-price-loading">尚未取得持股價格</div>';
 }
 
-function battleLiveMarketSnapshotHtml(market){
-  var rows=(market||[]).filter(function(item){return item&&item.name&&item.current!==''&&item.current!=null&&isFinite(Number(item.current));}).map(function(item){
-    var current=Number(item.current),reference=item.previous===''||item.previous==null?null:Number(item.previous),delta=reference==null?null:current-reference;
-    var changeText=delta==null?'--':(delta>=0?'+':'')+delta.toFixed(2);
-    if(String(item.name).indexOf('融資')>=0){current=(current/100000000).toFixed(2)+' 億';reference=reference==null?'--':(reference/100000000).toFixed(2)+' 億';changeText=delta==null?'--':(delta>=0?'+':'')+(delta/100000000).toFixed(2)+' 億';}
-    else if(String(item.name).indexOf('維持率')>=0){current=current.toFixed(2)+'%';reference=reference==null?'--':reference.toFixed(2)+'%';changeText=delta==null?'--':(delta>=0?'+':'')+delta.toFixed(2)+' pt';}
-    else if(String(item.name).indexOf('淨空單')>=0){current=current.toLocaleString('zh-TW')+' 口';reference=reference==null?'--':reference.toLocaleString('zh-TW')+' 口';changeText=delta==null?'--':(delta>=0?'+':'')+delta.toLocaleString('zh-TW')+' 口';}
-    return `<div class="battle-snapshot-row"><span>${esc(item.name)}<small class="battle-snapshot-yesterday">前次 ${esc(String(reference))}</small></span><strong>${esc(String(current))}</strong><em>${esc(changeText)}</em><small>${esc(battleUpdatedAtText(item.updatedAt||item.dataTime||item.fetchedAt))}</small></div>`;
-  }).join('');
-  return `<div class="battle-snapshot-panel"><div class="battle-snapshot-toolbar"><span>最新／前次數值對比</span><small>不建立歷史快照</small></div>${rows||'<div class="battle-price-loading">尚未取得台股融資資料</div>'}</div>`;
-}
-
 function updateBattleFinanceSnapshotViews(){
   var fundHost=document.getElementById('battle-fund-snapshot-host');
-  var marginHost=document.getElementById('battle-margin-snapshot-host');
   var holdingsLeftHost=document.getElementById('battle-holdings-left-snapshot-host');
   var holdingsRightHost=document.getElementById('battle-holdings-right-snapshot-host');
   var fundRecords=((battleFinanceSnapshotState.data&&battleFinanceSnapshotState.data.records)||[]).some(function(record){return record.snapshotType==='fund-nav'&&(record.items||[]).length;});
   if(fundHost)fundHost.innerHTML=fundRecords?battleFinanceSnapshotHtml('fund-nav'):battleLiveFundSnapshotHtml(battleFinanceSnapshotState.liveFunds);
-  if(marginHost)marginHost.innerHTML=battleFinanceSnapshotHtml('twse-margin');
   if(holdingsLeftHost)holdingsLeftHost.innerHTML=battleFinanceSnapshotHtml('holdings','left');
   if(holdingsRightHost)holdingsRightHost.innerHTML=battleFinanceSnapshotHtml('holdings','right');
 }
