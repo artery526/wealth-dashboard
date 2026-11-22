@@ -408,23 +408,29 @@ test('Battle Brief shows the year-to-date foreign net sell from TWSE monthly rep
 });
 
 test('standalone route renews an expired shared session before loading its selected tab', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.addInitScript(() => {
     localStorage.setItem('wealth_api_url', 'https://example.test/exec'); localStorage.setItem('wealth_write_token', 'test-write-token');
     localStorage.setItem('wealth_web_verify_status', 'ok'); localStorage.setItem('wealth_web_verify_checked_at', String(Date.now() - 8 * 86400000));
     sessionStorage.removeItem('wealth_web_session_token');
   });
+  const actions = [];
   await page.route('https://example.test/**', route => {
     const action = new URL(route.request().url()).searchParams.get('action');
-    let data = { sessionToken: 'renewed-session' };
-    if (action === 'taiwanMacroOverview') data = { hasData: true, latest: { month: '2026/09', overall_state: '穩定' } };
-    if (action === 'taiwanMacroHistory') data = { rows: [] };
+    actions.push(action);
+    const data = { sessionToken: 'renewed-session' };
     return route.fulfill({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ ok: true, data }) });
   });
   await page.route('https://api.ark-os26.cc/**', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ records: [] }) }));
   await page.goto(`${standaloneUrl}?tab=war-taiwan-macro`);
-  await expect(page.locator('.tabs button.active')).toHaveText('台灣總體經濟');
-  await expect(page.locator('#content')).toContainText('2026/09');
+  await expect(page).toHaveURL(/tab=war-briefing$/);
+  await expect(page.locator('.tabs button')).toHaveText(['帝國晨報', '戰情總匯報', '產業輪動', '部隊陣容']);
+  expect(actions).not.toContain('taiwanMacroOverview');
+  expect(actions).not.toContain('taiwanMacroHistory');
+  expect(actions).not.toContain('taiwanMacroUpdate');
   expect(await page.evaluate(() => sessionStorage.getItem('wealth_web_session_token'))).toBe('renewed-session');
+  const width = await page.locator('html').evaluate(el => ({ scroll: el.scrollWidth, client: el.clientWidth }));
+  expect(width.scroll).toBeLessThanOrEqual(width.client);
 });
 
 test('Troop Roster calendar lists XQQI on the fourth day of every month', async ({ page }) => {
@@ -453,7 +459,7 @@ test('Troop Roster calendar lists XQQI on the fourth day of every month', async 
   expect(width.scrollWidth).toBeLessThanOrEqual(width.clientWidth);
 });
 
-test('standalone tabs remain switchable from Taiwan macro back to Imperial Morning Brief', async ({ page }) => {
+test('standalone tabs remain switchable among the active War Room areas', async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem('wealth_api_url', 'https://example.test/exec'); localStorage.setItem('wealth_write_token', 'test-write-token');
     localStorage.setItem('wealth_web_verify_status', 'ok'); localStorage.setItem('wealth_web_verify_checked_at', String(Date.now()));
@@ -462,8 +468,6 @@ test('standalone tabs remain switchable from Taiwan macro back to Imperial Morni
   await page.route('https://example.test/**', route => {
     const action = new URL(route.request().url()).searchParams.get('action');
     let data = {};
-    if (action === 'taiwanMacroOverview') data = { hasData: true, latest: { month: '2026/09', overall_state: '穩定' } };
-    if (action === 'taiwanMacroHistory') data = { rows: [] };
     if (action === 'macroOverview') data = { judgment: { summary: '市場資料已更新，維持觀察。', date: '2026-10-03' }, indicators: [] };
     if (action === 'advisorWorldBriefSnapshotRefresh') data = { snapshot: { market: { summary: { stance: '觀望', upCount: 2, downCount: 1 }, rows: [] }, macro: { judgment: { summary: '市場資料已更新，維持觀察。', date: '2026-10-03' }, indicators: [], valuations: {} }, capturedAt: '2026-10-03T12:00:00Z' } };
     return route.fulfill({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ ok: true, data }) });
@@ -471,50 +475,11 @@ test('standalone tabs remain switchable from Taiwan macro back to Imperial Morni
   await page.route('https://api.ark-os26.cc/**', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ records: [] }) }));
   await page.goto(`${standaloneUrl}?tab=war-briefing`);
   await expect(page.locator('.brief-hero h2')).toContainText('帝國晨報');
-  await page.getByRole('button', { name: '台灣總體經濟' }).click();
-  await expect(page.locator('.tabs button.active')).toHaveText('台灣總體經濟');
-  await expect(page.locator('#content')).toContainText('2026/09');
+  await page.getByRole('button', { name: '產業輪動' }).click();
+  await expect(page.locator('.tabs button.active')).toHaveText('產業輪動');
   await page.getByRole('button', { name: '帝國晨報' }).click();
   await expect(page.locator('.tabs button.active')).toHaveText('帝國晨報');
   await expect(page.locator('.brief-insight')).toContainText('市場資料已更新');
-});
-
-test('a late Taiwan macro response cannot replace the selected Troop Roster tab', async ({ page }) => {
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.addInitScript(() => {
-    localStorage.setItem('wealth_api_url', 'https://example.test/exec');
-    localStorage.setItem('wealth_write_token', 'test-write-token');
-    localStorage.setItem('wealth_web_verify_status', 'ok');
-    localStorage.setItem('wealth_web_verify_checked_at', String(Date.now()));
-    sessionStorage.setItem('wealth_web_session_token', 'same-tab-session');
-  });
-  let releaseMacro;
-  let macroStarted;
-  const macroGate = new Promise(resolve => { releaseMacro = resolve; });
-  const started = new Promise(resolve => { macroStarted = resolve; });
-  await page.route('https://example.test/**', async route => {
-    const action = new URL(route.request().url()).searchParams.get('action');
-    let data = {};
-    if (action === 'taiwanMacroOverview') {
-      macroStarted();
-      await macroGate;
-      data = { hasData: true, latest: { month: '2026/10', overall_state: '遲到的台灣總經資料' } };
-    } else if (action === 'taiwanMacroHistory') data = { rows: [] };
-    else if (action === 'holdingsOverview' || action === 'heroes') data = [];
-    return route.fulfill({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ ok: true, data }) });
-  });
-  await page.route('https://api.ark-os26.cc/**', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ records: [] }) }));
-
-  await page.goto(`${standaloneUrl}?tab=war-taiwan-macro`);
-  await started;
-  await page.getByRole('button', { name: '部隊陣容' }).click();
-  await expect(page).toHaveURL(/tab=war-roster$/);
-  await expect(page.locator('.roster-stats')).toBeVisible();
-  releaseMacro();
-  await expect(page.locator('.taiwan-hero')).toHaveCount(0);
-  await expect(page.locator('#page-title')).toHaveText('部隊陣容');
-  const width = await page.locator('html').evaluate(el => ({ scrollWidth: el.scrollWidth, clientWidth: el.clientWidth }));
-  expect(width.scrollWidth).toBeLessThanOrEqual(width.clientWidth);
 });
 
 test('a late Imperial Morning Brief response cannot replace the selected Troop Roster tab', async ({ page }) => {
@@ -619,26 +584,6 @@ test('sector rotation uses a ranked, responsive layout with source-backed metric
   await expect(page.locator('.sector-card')).toHaveCount(2);
   await expect(page.locator('.sector-insight')).toContainText('半導體與工業類股');
   await expect(page.locator('.sector-summary')).toContainText('相對強勢');
-  const width = await page.locator('html').evaluate(el => ({ scroll: el.scrollWidth, client: el.clientWidth }));
-  expect(width.scroll).toBeLessThanOrEqual(width.client);
-});
-
-test('Taiwan macro has grouped indicators, visible history controls, and mobile-safe charts', async ({ page }) => {
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.addInitScript(() => {
-    localStorage.setItem('wealth_api_url', 'https://example.test/exec'); localStorage.setItem('wealth_write_token', 'test-write-token');
-    localStorage.setItem('wealth_web_verify_status', 'ok'); localStorage.setItem('wealth_web_verify_checked_at', String(Date.now()));
-    sessionStorage.setItem('wealth_web_session_token', 'same-tab-session');
-  });
-  await page.route('https://example.test/**', route => {
-    const action = new URL(route.request().url()).searchParams.get('action');
-    const data = action === 'taiwanMacroOverview' ? { hasData: true, latest: { month: '2026/09', updated_at: '2026-10-03T12:00:00Z', overall_state: '景氣平穩', business_cycle_light: '綠燈', leading_index_without_trend: 102.4, pmi: 52.1, exports_yoy: 18.5, export_orders_yoy: 12.3, industrial_production_yoy: 9.8, usdtwd: 31.2, usdtwd_trend: '台幣升值', m2_yoy: 4.1, directions: { score: { key: 'improve', label: '改善' }, exports: { key: 'improve', label: '回升' } } } } : { rows: [{ month: '2026/07', business_cycle_score: 31, exports_yoy: 12 }, { month: '2026/08', business_cycle_score: 34, exports_yoy: 15 }, { month: '2026/09', business_cycle_score: 38, exports_yoy: 18.5 }] };
-    return route.fulfill({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ ok: true, data }) });
-  });
-  await page.goto(`${standaloneUrl}?tab=war-taiwan-macro`);
-  await expect(page.locator('.taiwan-indicator')).toHaveCount(8);
-  await expect(page.locator('.taiwan-summary')).toContainText('景氣平穩');
-  await expect(page.locator('.taiwan-chart-grid')).toContainText('3 筆歷史資料');
   const width = await page.locator('html').evaluate(el => ({ scroll: el.scrollWidth, client: el.clientWidth }));
   expect(width.scroll).toBeLessThanOrEqual(width.client);
 });
