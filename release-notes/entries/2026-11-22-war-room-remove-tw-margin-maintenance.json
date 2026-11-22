@@ -1,9 +1,11 @@
 {
   "id": "2026-11-22-war-room-remove-tw-margin-maintenance",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-11-22",
   "area": "戰情室",
   "summary": "移除戰情總匯報的台股融資與維持率區塊",
   "details": "從戰情總匯報移除台股融資餘額與維持率呈現，並保留基金淨值、外資買賣超及持股行情資訊。",
-  "platforms": ["website"]
+  "platforms": [
+    "website"
+  ]
 }
