@@ -1,0 +1,9 @@
+{
+  "id": "2026-11-22-wangfu-searchable-article-tags",
+  "status": "in_progress",
+  "date": null,
+  "area": "王府",
+  "summary": "王府文章表單統一使用四大分類與可搜尋主題標籤",
+  "details": "新增與編輯文章只顯示生活隨筆、待辦記錄、爸媽相關、股市教室四大主軸；細項主題使用文末 ## 標籤，並提示可由王府標籤選單搜尋。舊文章中既有標籤資料維持保留。",
+  "platforms": ["website"]
+}
