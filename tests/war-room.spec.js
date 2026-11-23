@@ -251,7 +251,7 @@ test('Imperial Morning Brief hides market payload from the expandable snapshot o
   expect(width.scroll).toBeLessThanOrEqual(width.client);
 });
 
-test('Imperial Morning Brief shows sourced DeepSeek Taiwan close report on mobile', async ({ page }) => {
+test('Imperial Morning Brief shows TWSE verified Taiwan close data with DeepSeek summary on mobile', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.addInitScript(() => {
     localStorage.setItem('wealth_api_url', 'https://example.test/exec');
@@ -271,7 +271,7 @@ test('Imperial Morning Brief shows sourced DeepSeek Taiwan close report on mobil
         headline: '大盤震盪收低', summary: '加權指數收跌，報告僅整理當日已公布行情，不推論未來價格。',
         observations: ['上市市場成交集中於電子類股。'], mainRisk: '媒體來源對類股解讀不同，請以原始市場資料為準。',
         generatedAt: '2026-11-23T08:20:00.000Z',
-        sources: [{ title: 'TWSE 官方收盤行情', url: 'https://www.twse.com.tw/zh/trading/historical/mi-index.html' }]
+        sources: [{ title: 'TWSE 每日收盤行情（價格指數）', url: 'https://www.twse.com.tw/exchangeReport/MI_INDEX?date=20261123&response=html&type=IND' }]
       }, status: 'published', stale: false
     } : {};
     return route.fulfill({ status:  200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ ok: true, data: report }) });
@@ -285,8 +285,44 @@ test('Imperial Morning Brief shows sourced DeepSeek Taiwan close report on mobil
   await expect(closeReport).toContainText('-120.50 點');
   await expect(closeReport).toContainText('-0.45%');
   await expect(closeReport).toContainText('資料日 2026-11-23');
-  await expect(closeReport.locator('a')).toHaveAttribute('href', 'https://www.twse.com.tw/zh/trading/historical/mi-index.html');
+  await expect(closeReport).toContainText('TWSE 官方資料 · DeepSeek 摘要');
+  await expect(closeReport.locator('a')).toHaveAttribute('href', 'https://www.twse.com.tw/exchangeReport/MI_INDEX?date=20261123&response=html&type=IND');
   expect(actions).toContain('warRoomTaiwanCloseReport');
+  const dimensions = await page.locator('html').evaluate(el => ({ scrollWidth: el.scrollWidth, clientWidth: el.clientWidth }));
+  expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
+});
+
+test('Taiwan close report keeps its last successful day and displays a pending official-data retry', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.addInitScript(() => {
+    localStorage.setItem('wealth_api_url', 'https://example.test/exec');
+    localStorage.setItem('wealth_write_token', 'test-write-token');
+    localStorage.setItem('wealth_web_verify_status', 'ok');
+    localStorage.setItem('wealth_web_verify_checked_at', String(Date.now()));
+    sessionStorage.setItem('wealth_web_session_token', 'same-tab-session');
+  });
+  await page.route('https://example.test/**', route => {
+    const action = new URL(route.request().url()).searchParams.get('action');
+    const data = action === 'warRoomTaiwanCloseReport' ? {
+      report: {
+        status: 'published', marketDate: '2026-11-20',
+        index: { name: '加權指數', close: 36033.29, changePoints: -2393.6, changePercent: -6.23 },
+        headline: '保留最近一次成功報告', summary: '只顯示已核實資料，不補造今日行情。',
+        generatedAt: '2026-11-20T08:20:00.000Z',
+        sources: [{ title: 'TWSE 官方收盤行情', url: 'https://www.twse.com.tw/exchangeReport/MI_INDEX?date=20261120&response=html&type=IND' }]
+      },
+      status: 'published', stale: true,
+      attempt: { status: 'insufficient_data', message: 'TWSE 官方收盤資料尚未就緒，稍後會再確認。' }
+    } : {};
+    return route.fulfill({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ ok: true, data }) });
+  });
+  await page.route('https://api.ark-os26.cc/**', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ records: [] }) }));
+  await page.goto(`${standaloneUrl}?tab=war-briefing`);
+  const closeReport = page.locator('.taiwan-close-report');
+  await expect(closeReport).toContainText('保留最近一次成功報告');
+  await expect(closeReport).toContainText('等待更新 · 顯示上次報告');
+  await expect(closeReport).toContainText('TWSE 官方收盤資料尚未就緒，稍後會再確認。');
+  await expect(closeReport).toContainText('36,033.29');
   const dimensions = await page.locator('html').evaluate(el => ({ scrollWidth: el.scrollWidth, clientWidth: el.clientWidth }));
   expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
 });

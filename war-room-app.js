@@ -136,10 +136,10 @@
   function renderTaiwanCloseReport_(result,stale,error,loading){
     var host=document.getElementById('taiwan-close-report-host');if(!host)return;
     var report=result&&result.report,status=report&&report.status||result&&result.status||'pending';
-    if(!report){var waiting=status==='insufficient_data'?'資料不足':status==='market_closed'?'今日休市':(loading?'讀取中':'尚未產生');host.innerHTML='<article class="taiwan-close-report"><div class="taiwan-close-report-head"><strong>🇹🇼 台股盤後報告</strong><span>'+esc(waiting)+'</span></div><p>'+(error?esc(error):result&&result.attempt&&result.attempt.message?esc(result.attempt.message):'平日約 16:15 由 DeepSeek 搜尋整理；等待當日報告。')+'</p></article>';return;}
+    if(!report){var waiting=status==='insufficient_data'?'資料不足':status==='market_closed'?'今日休市':(loading?'讀取中':'尚未產生');host.innerHTML='<article class="taiwan-close-report"><div class="taiwan-close-report-head"><strong>🇹🇼 台股盤後報告</strong><span>'+esc(waiting)+'</span></div><p>'+(error?esc(error):result&&result.attempt&&result.attempt.message?esc(result.attempt.message):'每日約 16:15 先核對 TWSE 官方收盤資料；未就緒時約 18:15 重試，成功後再由 DeepSeek 摘要。')+'</p></article>';return;}
     var index=report.index||{},hasIndex=status==='published'&&index.close!=null;
     var stamp=report.generatedAt?dateText(report.generatedAt):'生成時間未提供';
-    var badge=error?'更新失敗 · 顯示上次報告':(stale?'資料日期較舊':status==='market_closed'?'今日休市':status==='insufficient_data'?'資料不足':'DeepSeek 網路搜尋');
+    var badge=error?'等待更新 · 顯示上次報告':(stale?'資料日期較舊':status==='market_closed'?'今日休市':status==='insufficient_data'?'資料不足':'TWSE 官方資料 · DeepSeek 摘要');
     function number(value,digits){var n=Number(value);return isFinite(n)?n.toLocaleString('zh-TW',{minimumFractionDigits:digits,maximumFractionDigits:digits}):'資料暫缺';}
     var change=Number(index.changePoints),pct=Number(index.changePercent),changeClass=isFinite(change)?(change>0?'up':change<0?'down':''):'';
     var html='<article class="taiwan-close-report"><div class="taiwan-close-report-head"><strong>🇹🇼 台股盤後報告</strong><span>'+esc(badge)+'</span></div>';
@@ -147,7 +147,7 @@
     html+='<h3>'+esc(report.headline||'當日市場觀察')+'</h3><p>'+esc(report.summary||report.mainRisk||'資料暫缺')+'</p>';
     if(Array.isArray(report.observations)&&report.observations.length)html+='<ul>'+report.observations.slice(0,3).map(function(item){return '<li>'+esc(item)+'</li>';}).join('')+'</ul>';
     if(report.mainRisk)html+='<div class="taiwan-close-report-risk"><small>風險與資料限制</small><span>'+esc(report.mainRisk)+'</span></div>';
-    if(result&&result.attempt&&result.attempt.status==='insufficient_data')html+='<div class="taiwan-close-report-risk"><small>今日背景更新狀態</small><span>'+esc(result.attempt.message||'尚未找到可核對的當日資料；保留上次成功報告。')+'</span></div>';
+    if(result&&result.attempt&&result.attempt.message)html+='<div class="taiwan-close-report-risk"><small>今日背景更新狀態</small><span>'+esc(result.attempt.message)+'</span></div>';
     html+='<div class="taiwan-close-report-meta">資料日 '+esc(report.marketDate||'未提供')+' · '+esc(stamp)+'</div>';
     if(Array.isArray(report.sources)&&report.sources.length)html+='<div class="taiwan-close-report-sources">來源：'+report.sources.slice(0,5).map(function(source,index){var url=String(source&&source.url||'');if(!/^https:\/\//i.test(url))return '';return (index?' · ':'')+'<a href="'+esc(url)+'" target="_blank" rel="noopener noreferrer">'+esc(source.title||'來源 '+(index+1))+'</a>';}).join('')+'</div>';
     html+='</article>';host.innerHTML=html;
@@ -158,7 +158,7 @@
     else renderTaiwanCloseReport_(null,false,'',true);
     if(taiwanCloseReportPromise)return taiwanCloseReportPromise;
     taiwanCloseReportPromise=request({action:'warRoomTaiwanCloseReport'},25000).then(function(result){
-      if(result&&result.report){writeCache(TAIWAN_CLOSE_REPORT_CACHE_KEY,result);renderTaiwanCloseReport_(result,!!result.stale,result.attempt&&result.attempt.status==='insufficient_data'?result.attempt.message:'',false);}
+      if(result&&result.report){writeCache(TAIWAN_CLOSE_REPORT_CACHE_KEY,result);renderTaiwanCloseReport_(result,!!result.stale,result.attempt&&result.attempt.message||'',false);}
       else renderTaiwanCloseReport_(result||null,true,result&&result.attempt&&result.attempt.message||'',false);
       return result;
     }).catch(function(error){renderTaiwanCloseReport_(cached,cached?true:false,error&&error.message||'盤後報告暫時無法讀取',false);return null;}).finally(function(){taiwanCloseReportPromise=null;});
