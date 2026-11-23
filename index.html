@@ -4871,24 +4871,19 @@ html[data-theme="deep-blue"] .scene-task-details .home-agenda-global-refresh{bor
 <style>
 .advisor-twse-after-hours{margin-top:12px;padding:12px 14px;border:1px solid rgba(120,216,244,.24);border-radius:10px;background:rgba(4,20,29,.8)}
 .advisor-twse-after-hours-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:9px}
-.advisor-twse-after-hours-head strong{color:var(--gold2);font-size:13px}
+.advisor-twse-after-hours-head strong,.advisor-twse-valuation-head{color:var(--gold2);font:700 13px/1.5 var(--sans)}
 .advisor-twse-after-hours-head span,.advisor-twse-after-hours-note{color:var(--muted);font:10px/1.6 var(--sans)}
-.advisor-twse-after-hours-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-.advisor-twse-after-hours-grid>div{display:grid;gap:4px;min-width:0;padding:9px;border:1px solid rgba(120,216,244,.16);border-radius:8px;background:rgba(0,0,0,.16)}
-.advisor-twse-after-hours-grid small{color:var(--muted);font:10px/1.55 var(--sans)}
-.advisor-twse-after-hours-grid strong{color:var(--cyan);font:700 18px/1.2 var(--mono);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.advisor-twse-after-hours-grid,.advisor-twse-valuation-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.advisor-twse-after-hours-grid>div,.advisor-twse-valuation-grid>div{display:grid;gap:4px;min-width:0;padding:9px;border:1px solid rgba(120,216,244,.16);border-radius:8px;background:rgba(0,0,0,.16)}
+.advisor-twse-after-hours-grid small,.advisor-twse-valuation-grid small{color:var(--muted);font:10px/1.55 var(--sans);overflow-wrap:anywhere}
+.advisor-twse-after-hours-grid strong,.advisor-twse-valuation-grid strong{color:var(--cyan);font:700 18px/1.2 var(--sans);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .advisor-twse-after-hours-grid strong.up{color:var(--teal)}.advisor-twse-after-hours-grid strong.down{color:var(--coral)}
 .advisor-twse-after-hours-note{margin:8px 0 0}
 .advisor-twse-valuation{margin-top:10px;padding-top:9px;border-top:1px solid rgba(120,216,244,.16);font-family:var(--sans)}
-.advisor-twse-valuation-head{display:flex;justify-content:space-between;align-items:center;gap:8px;color:var(--gold2);font:700 11px/1.5 var(--sans)}
-.advisor-twse-valuation-head span{color:var(--muted);font:10px/1.5 var(--sans)}
-.advisor-twse-valuation-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:7px}
-.advisor-twse-valuation-grid>div{display:grid;gap:3px;min-width:0;padding:8px;border:1px solid rgba(120,216,244,.16);border-radius:8px;background:rgba(0,0,0,.12)}
-.advisor-twse-valuation-grid small{color:var(--muted);font:10px/1.5 var(--sans);overflow-wrap:anywhere}
-.advisor-twse-valuation-grid strong{color:var(--cyan);font:700 16px/1.2 var(--sans);font-variant-numeric:tabular-nums}
+.advisor-twse-valuation-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:7px}
 .advisor-twse-valuation-source{margin:6px 0 0;color:var(--muted);font:10px/1.5 var(--sans);overflow-wrap:anywhere}
 .advisor-twse-valuation-source a{color:var(--cyan)}
-@media(max-width:540px){.advisor-twse-after-hours-grid{grid-template-columns:1fr}.advisor-twse-after-hours-grid strong{font-size:17px}}
+@media(max-width:540px){.advisor-twse-after-hours-grid,.advisor-twse-valuation-grid{grid-template-columns:1fr}}
 .advisor-brief-light-overview{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin:10px 0}
 .advisor-brief-light-chip{display:flex;justify-content:space-between;align-items:center;gap:7px;min-width:0;padding:8px 10px;border:1px solid rgba(120,216,244,.18);border-radius:8px;background:rgba(0,0,0,.13);font:10px/1.4 var(--sans)}
 .advisor-brief-light-chip b{min-width:0;color:var(--muted);font-weight:500;overflow-wrap:anywhere}
@@ -16805,7 +16800,7 @@ function advisorWorldTaiwanValuationHtml_(data){
   data=data||{};
   function metric(value){var number=Number(value);return value!=null&&value!==''&&Number.isFinite(number)&&number>0?number.toFixed(2)+'×':'資料暫缺';}
   var median=data.historicalPEMedian&&data.historicalPEMedian.tenYear;
-  return '<section class="advisor-twse-valuation"><div class="advisor-twse-valuation-head"><strong>📊 台股估值</strong></div><div class="advisor-twse-valuation-grid"><div><small>近四季 Trailing P/E · 資料日 '+esc(data.dataDate?advisorWorldBriefDate(data.dataDate):'資料日期暫缺')+'</small><strong>'+esc(metric(data.trailingPE))+'</strong></div><div><small>10 年中位數 P/E · 歷史比較基準</small><strong>'+esc(metric(median))+'</strong></div></div><details class="advisor-brief-inline-details"><summary>來源與估值說明</summary><p class="advisor-twse-valuation-source">估值為歷史比較，不代表價格預測或買賣訊號。來源：'+esc(data.source||'來源未提供')+' · <a href="https://www.moneydj.com/Z/ZB/ZBL/ZBLB/ZBLB.djhtm" target="_blank" rel="noopener noreferrer">MoneyDJ P/E</a></p></details></section>';
+  return '<section class="advisor-twse-valuation"><div class="advisor-twse-valuation-head"><strong>📊 台股估值</strong></div><div class="advisor-twse-valuation-grid"><div><small>近四季 Trailing P/E</small><strong>'+esc(metric(data.trailingPE))+'</strong><small>資料日 '+esc(data.dataDate?advisorWorldBriefDate(data.dataDate):'資料日期暫缺')+'</small></div><div><small>10 年中位數 P/E</small><strong>'+esc(metric(median))+'</strong><small>歷史比較基準</small></div></div><details class="advisor-brief-inline-details"><summary>來源與估值說明</summary><p class="advisor-twse-valuation-source">估值為歷史比較，不代表價格預測或買賣訊號。來源：'+esc(data.source||'來源未提供')+' · <a href="https://www.moneydj.com/Z/ZB/ZBL/ZBLB/ZBLB.djhtm" target="_blank" rel="noopener noreferrer">MoneyDJ P/E</a></p></details></section>';
 }
 
 function advisorWorldTaiwanStockReviewRequest(){
