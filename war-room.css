@@ -41,3 +41,4 @@
 .brief-top-grid .brief-state>strong{margin:5px 0 0;font-size:17px}
 .brief-insight{padding:14px 16px}
 @media(max-width:650px){.brief-top-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:9px 0}.brief-top-grid .brief-state{padding:9px 8px}.brief-top-grid .brief-state>span{font-size:9px}.brief-top-grid .brief-state>strong{font-size:13px;line-height:1.35;overflow-wrap:anywhere}.brief-insight{padding:12px}.brief-insight p{font-size:12px;line-height:1.6}.brief-guidance{gap:7px}.brief-guidance>div{padding:9px}.brief-market-row{gap:6px 8px}.brief-compact-inner{padding:7px}.brief-compact-details>summary{padding:8px 9px;font-size:10px}.brief-macro-overview{gap:5px}.brief-macro-overview>span{font-size:9px}}
+.brief-top-grid.brief-top-grid-single{grid-template-columns:minmax(0,1fr)}.brief-top-grid.brief-top-grid-single .brief-state{grid-column:auto}

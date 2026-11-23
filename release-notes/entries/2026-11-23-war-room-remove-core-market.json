@@ -1,0 +1,9 @@
+{
+  "id": "2026-11-23-war-room-remove-core-market",
+  "status": "in_progress",
+  "date": null,
+  "area": "帝國晨報",
+  "summary": "移除核心市場並停止行情更新",
+  "details": "移除晨報核心市場顯示及其前端行情讀取。停用共用行情擷取後，Windows 市場快報與戰情總匯報也不再更新；新 NAS 快照不再寫入行情欄位，既有歷史快照與試算表資料保留。",
+  "platforms": ["website", "app-script"]
+}
