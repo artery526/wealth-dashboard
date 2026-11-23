@@ -1,10 +1,10 @@
 {
   "id": "2026-11-23-finance-expense-category-rename",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-11-23",
   "area": "財政",
   "summary": "更名支出分類並同步資料庫與介面",
-  "details": "將舊支出分類名稱更新為新名稱，涵蓋快速記帳備援選項、試算表分類設定及既有資料列；國庫現況與年度財報沿用更新後分類顯示。",
+  "details": "將支出分類名稱同步更新至快速記帳選項、試算表設定與既有資料，國庫現況及年度財報以新名稱顯示。",
   "platforms": [
     "website"
   ]
