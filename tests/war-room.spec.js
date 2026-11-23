@@ -171,7 +171,7 @@ test('standalone route is a direct page and reuses the same-origin session', asy
   expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
 });
 
-test('Imperial Morning Brief displays the QQQM quote from its War Room API on mobile', async ({ page }) => {
+test('Imperial Morning Brief removes core markets and does not request market quotes on mobile', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.addInitScript(() => {
     localStorage.setItem('wealth_api_url', 'https://example.test/exec');
@@ -181,57 +181,19 @@ test('Imperial Morning Brief displays the QQQM quote from its War Room API on mo
     sessionStorage.setItem('wealth_web_session_token', 'same-tab-session');
   });
   const actions = [];
-  await page.route('https://example.test/**', route => {
+  await page.route('https://example.test/**', async route => {
     const action = new URL(route.request().url()).searchParams.get('action');
     actions.push(action);
     let data = {};
-    if (action === 'createWebSession') data = { sessionToken: 'same-tab-session' };
     if (action === 'advisorWorldBriefSnapshotRefresh') data = { snapshot: {
-      market: { summary: { stance: '觀望' }, rows: [
-        { code: 'NASDAQ:QQQ', name: '納斯達克100 ETF', price: 600, previous: 590, changePct: 1.69, ma20: 580, ma20Prev: 575, signal: '觀望', dataDate: '2026-11-10' }
+      market: { summary: { stance: '舊市場燈號' }, rows: [
+        { code: 'NASDAQ:QQQM', name: '納斯達克100 ETF', price: 278.45, changePct: 0.43 },
+        { code: 'NYSEARCA:SPY', name: '標普500 ETF', price: 6000, changePct: -0.2 },
+        { code: '^TWII', name: '台灣加權指數', price: 27000, changePct: 0.1 }
       ] },
-      macro: { judgment: {}, indicators: [], valuations: {} },
-      capturedAt: '2026-11-11T00:00:00Z'
-    } };
-    if (action === 'warRoomQQQMQuote') data = { symbol: 'QQQM', code: 'NASDAQ:QQQM', name: '納斯達克100 ETF', price: 278.45, previous: 277.25, changePct: 0.43, ma20: 270.10, ma20Prev: 268.80, dataDate: '2026-11-11', sourceName: 'Yahoo Finance', stale: false };
-    return route.fulfill({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ ok: true, data }) });
-  });
-  await page.route('https://api.ark-os26.cc/**', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ records: [] }) }));
-
-  await page.goto(`${standaloneUrl}?tab=war-briefing`);
-  const row = page.locator('.brief-market-row').filter({ hasText: '納斯達克100 ETF' });
-  await expect(row.locator('small').first()).toContainText('NASDAQ:QQQM · 2026-11-11 · Yahoo Finance');
-  await expect(row.locator('.brief-market-price-line > strong')).toHaveText('278.45');
-  await expect(row.locator('.brief-market-price-line .brief-ma-hint')).toHaveText('MA20 偏強');
-  await expect(row.locator('.down strong, .up strong')).toHaveText('0.43%');
-  expect(actions).toContain('warRoomQQQMQuote');
-  const dimensions = await page.locator('html').evaluate(el => ({ scrollWidth: el.scrollWidth, clientWidth: el.clientWidth }));
-  expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
-});
-
-test('QQQM quote refresh does not remove a NASDAQ valuation card that has already loaded', async ({ page }) => {
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.addInitScript(() => {
-    localStorage.setItem('wealth_api_url', 'https://example.test/exec');
-    localStorage.setItem('wealth_write_token', 'test-write-token');
-    localStorage.setItem('wealth_web_verify_status', 'ok');
-    localStorage.setItem('wealth_web_verify_checked_at', String(Date.now()));
-    sessionStorage.setItem('wealth_web_session_token', 'same-tab-session');
-  });
-  let releaseQuote;
-  const quoteGate = new Promise(resolve => { releaseQuote = resolve; });
-  await page.route('https://example.test/**', async route => {
-    const action = new URL(route.request().url()).searchParams.get('action');
-    let data = {};
-    if (action === 'advisorWorldBriefSnapshotRefresh') data = { snapshot: {
-      market: { summary: {}, rows: [{ code: 'NASDAQ:QQQM', name: '納斯達克100 ETF', price: 270, previous: 269, changePct: 0.37 }] },
-      macro: { judgment: {}, indicators: [], valuations: {} }, capturedAt: '2026-11-19T00:00:00Z'
+      macro: { judgment: { signal: '觀察', summary: '依總經資料觀察。' }, indicators: [], valuations: {} }, capturedAt: '2026-11-19T00:00:00Z'
     } };
     if (action === 'nasdaq100Valuation') data = { trailingPE: 30.52, trailingDataDate: '2026-11-18', forwardPE: 19.61, forwardDataDate: '2026-11-18', stale: false };
-    if (action === 'warRoomQQQMQuote') {
-      await quoteGate;
-      data = { symbol: 'QQQM', code: 'NASDAQ:QQQM', name: '納斯達克100 ETF', price: 278.45, previous: 277.25, changePct: 0.43, ma20: 270.10, ma20Prev: 268.80, dataDate: '2026-11-19', sourceName: 'Yahoo Finance', stale: false };
-    }
     if (action === 'warRoomTaiwanValuation') {
       await new Promise(resolve => setTimeout(resolve, 300));
       data = { trailingPE: 19.54, pb: 3.31, historicalPEMedian: { tenYear: 16.88 }, historicalPBMedian: { tenYear: 1.92 }, dataDate: '2026-11-18', source: 'MoneyDJ / TWSE' };
@@ -241,15 +203,22 @@ test('QQQM quote refresh does not remove a NASDAQ valuation card that has alread
   await page.route('https://api.ark-os26.cc/**', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ records: [] }) }));
 
   await page.goto(`${standaloneUrl}?tab=war-briefing`);
+  await expect(page.locator('h2.section-title', { hasText: '核心市場' })).toHaveCount(0);
+  await expect(page.locator('.brief-market-row')).toHaveCount(0);
+  await expect(page.locator('.brief-state')).toHaveCount(1);
+  await expect(page.locator('.brief-state')).toContainText('總經風險');
+  await expect(page.locator('body')).not.toContainText(/納斯達克100 ETF|標普500 ETF|台灣加權指數|漲 \/ 跌|舊市場燈號/);
   const nasdaqCard = page.locator('.nasdaq-valuation-card:not(.taiex-valuation-card)');
   await expect(nasdaqCard).toContainText('30.52×');
-  releaseQuote();
-  await expect(page.locator('.brief-market-row').filter({ hasText: '納斯達克100 ETF' }).locator('.brief-market-price-line > strong')).toHaveText('278.45');
-  await expect(nasdaqCard).toContainText('30.52×');
   await expect(page.locator('.twse-valuation')).toContainText('19.54×');
+  expect(actions).not.toContain('marketDashboard');
+  expect(actions).not.toContain('warRoomQQQMQuote');
+  expect(actions).toContain('advisorWorldBriefSnapshotRefresh');
+  const dimensions = await page.locator('html').evaluate(el => ({ scrollWidth: el.scrollWidth, clientWidth: el.clientWidth }));
+  expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
 });
 
-test('Imperial Morning Brief derives monitored market rise and fall counts from quote rows', async ({ page }) => {
+test('Imperial Morning Brief hides market payload from the expandable snapshot on mobile', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.addInitScript(() => {
     localStorage.setItem('wealth_api_url', 'https://example.test/exec');
@@ -261,14 +230,7 @@ test('Imperial Morning Brief derives monitored market rise and fall counts from 
   await page.route('https://example.test/**', route => {
     const action = new URL(route.request().url()).searchParams.get('action');
     const data = action === 'advisorWorldBriefSnapshotRefresh' ? { snapshot: {
-      market: { summary: { stance: '觀望', counts: { 觀望: 4 } }, rows: [
-        { code: 'TAIEX', name: '加權指數', price: 23000, previous: 22900, changePct: 0.44, ma20: 22500, ma20Prev: 22400 },
-        { code: 'SPX', name: 'S&P 500', price: 6000, previous: 6010, changePct: -0.17, ma20: 6050, ma20Prev: 6060 },
-        { code: 'VIX', name: 'VIX', price: 18, previous: 18, changePct: 0 },
-        { code: 'NASDAQ:PLTR', name: 'Palantir Technologies', price: 150, previous: 140, changePct: 7.14 },
-        { code: 'NYSEARCA:GLD', name: '黃金 ETF', price: 250, previous: 251, changePct: -0.4 },
-        { code: 'NASDAQ:SOXX', name: '半導體 ETF', price: 600, previous: 602, changePct: -0.33 }
-      ] },
+      market: { summary: { stance: '歷史市場資料' }, rows: [{ code: 'NASDAQ:QQQM', name: '隱藏行情測試標的', price: 123.45 }] },
       macro: { judgment: { summary: '維持觀察。' }, indicators: [], valuations: {} },
       capturedAt: '2026-10-15T12:00:00Z'
     } } : {};
@@ -277,19 +239,10 @@ test('Imperial Morning Brief derives monitored market rise and fall counts from 
   await page.route('https://api.ark-os26.cc/**', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ records: [] }) }));
 
   await page.goto(`${standaloneUrl}?tab=war-briefing`);
-  const breadth = page.locator('.brief-state').filter({ hasText: '漲 / 跌' });
-  await expect(breadth).toContainText('1 / 1');
-  await expect(breadth).toContainText('平盤 0');
-  await expect(breadth).toContainText('報價 2 項');
-  await expect(page.locator('.brief-market-list').first()).not.toContainText(/Palantir|PLTR/i);
-  await expect(page.locator('body')).not.toContainText(/Palantir Technologies|PLTR/);
-  await expect(page.locator('.brief-market-row').filter({ hasText: '加權指數' }).locator('.brief-ma-hint')).toHaveText('MA20 偏強');
-  await expect(page.locator('.brief-market-row').filter({ hasText: 'S&P 500' }).locator('.brief-ma-hint')).toHaveText('MA20 偏弱');
-  await expect(page.locator('.brief-market-row')).toHaveCount(2);
-  await expect(page.locator('.brief-market-row').filter({ hasText: '黃金 ETF' })).toHaveCount(0);
-  await expect(page.locator('.brief-market-row').filter({ hasText: '半導體 ETF' })).toHaveCount(0);
-  await expect(page.locator('body')).not.toContainText('其他市場');
-  await expect(page.locator('.brief-market-row').filter({ hasText: 'VIX' }).locator('.brief-ma-hint')).toHaveCount(0);
+  await expect(page.locator('details.details summary', { hasText: '完整快照資料' })).toBeVisible();
+  await page.locator('details.details summary', { hasText: '完整快照資料' }).click();
+  await expect(page.locator('details.details pre')).not.toContainText(/marketDashboard|NASDAQ:QQQM|隱藏行情測試標的|歷史市場資料/);
+  await expect(page.locator('.brief-market-row')).toHaveCount(0);
   const width = await page.locator('html').evaluate(el => ({ scroll: el.scrollWidth, client: el.clientWidth }));
   expect(width.scroll).toBeLessThanOrEqual(width.client);
 });
@@ -351,7 +304,7 @@ test('Standalone War Room shows sourced NASDAQ-100 valuations and dates on mobil
   expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
 });
 
-test('Imperial Morning Brief shows sourced YTD maximum drawdowns for Nasdaq, S&P 500, and TAIEX on mobile', async ({ page }) => {
+test('Imperial Morning Brief keeps Nasdaq valuation drawdown while removing all core market rows on mobile', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.addInitScript(() => {
     localStorage.setItem('wealth_api_url', 'https://example.test/exec');
@@ -393,14 +346,11 @@ test('Imperial Morning Brief shows sourced YTD maximum drawdowns for Nasdaq, S&P
 
   await page.goto(`${standaloneUrl}?tab=war-briefing`);
   await expect(page.locator('.brief-macro-grid')).toBeHidden();
-  await expect(page.locator('#nasdaq-ytd-drawdown')).toContainText('-12.34%');
-  await expect(page.locator('.brief-market-row').filter({ hasText: '標普500 ETF' }).locator('.brief-ytd-drawdown-slot')).toContainText('-13.34%');
-  await expect(page.locator('.brief-market-row').filter({ hasText: '台灣加權指數' }).locator('.brief-ytd-drawdown-slot')).toContainText('-14.34%');
+  await expect(page.locator('h2.section-title', { hasText: '核心市場' })).toHaveCount(0);
+  await expect(page.locator('.brief-market-row')).toHaveCount(0);
   await expect(page.locator('#nasdaq-ytd-drawdown')).toContainText('2026-11-04');
   await expect(page.locator('#nasdaq-ytd-drawdown a')).toHaveAttribute('href', 'https://fred.stlouisfed.org/data/NASDAQ100');
   await expect(page.locator('#nasdaq-ytd-drawdown')).toContainText('-10.25%');
-  await expect(page.locator('.brief-market-row').filter({ hasText: '標普500 ETF' }).locator('.brief-ytd-drawdown-slot')).toContainText('-8.25%');
-  await expect(page.locator('.brief-market-row').filter({ hasText: '台灣加權指數' }).locator('.brief-ytd-drawdown-slot')).toContainText('-7.25%');
   const width = await page.locator('html').evaluate(el => ({ scroll: el.scrollWidth, client: el.clientWidth }));
   expect(width.scroll).toBeLessThanOrEqual(width.client);
 });
