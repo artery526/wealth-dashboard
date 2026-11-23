@@ -1,4 +1,4 @@
-const CACHE_NAME = 'empire-shell-v99';
+const CACHE_NAME = 'empire-shell-v100';
 
 // Keep the first offline-capable version deliberately small. The dashboard
 // already owns API caching in index.html; this cache is for the page shell.
@@ -16,7 +16,7 @@ const PRECACHE_URLS = [
   './mindloom/',
   './war-room.css?v=20261123.4',
   './war-roster-module.js?v=20261111.3',
-  './war-room-app.js?v=20261123.5',
+  './war-room-app.js?v=20261123.6',
   './manifest.json',
   './junshifu-map.jpg?v=20261030-desktop-map1',
   './junshifu-map.webp?v=20261030-desktop-map1',
