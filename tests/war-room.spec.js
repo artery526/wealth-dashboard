@@ -270,6 +270,21 @@ test('Imperial Morning Brief shows TWSE verified Taiwan close data with DeepSeek
         index: { name: '加權指數', close: 26800.25, changePoints: -120.5, changePercent: -0.45 },
         headline: '大盤震盪收低', summary: '加權指數收跌，報告僅整理當日已公布行情，不推論未來價格。',
         observations: ['上市市場成交集中於電子類股。'], mainRisk: '媒體來源對類股解讀不同，請以原始市場資料為準。',
+        analysis: {
+          technical: {
+            dataDate: '2026-11-23', sessions: 80,
+            returns: { fiveSession: 1.25, twentySession: 3.4, sixtySession: -2.1 },
+            movingAverages: { five: 26700, twenty: 26500, sixty: 27000 },
+            closeVsMovingAveragePercent: { five: 0.37, twenty: 1.13, sixty: -0.74 }, rsi14: 58.4
+          },
+          sectors: {
+            advancing: 28, declining: 9,
+            leaders: [{ name: '半導體類指數', changePercent: 2.8 }, { name: '電子零組件類指數', changePercent: 2.1 }],
+            laggards: [{ name: '金融保險類指數', changePercent: -1.2 }, { name: '運動休閒類指數', changePercent: -0.8 }],
+            note: '僅列單日產業指數強弱，不能據此判定持續輪動。'
+          }
+        },
+        source: 'TWSE 官方行情與技術計算；DeepSeek 摘要',
         generatedAt: '2026-11-23T08:20:00.000Z',
         sources: [{ title: 'TWSE 每日收盤行情（價格指數）', url: 'https://www.twse.com.tw/exchangeReport/MI_INDEX?date=20261123&response=html&type=IND' }]
       }, status: 'published', stale: false
@@ -286,6 +301,12 @@ test('Imperial Morning Brief shows TWSE verified Taiwan close data with DeepSeek
   await expect(closeReport).toContainText('-0.45%');
   await expect(closeReport).toContainText('資料日 2026-11-23');
   await expect(closeReport).toContainText('TWSE 官方資料 · DeepSeek 摘要');
+  await expect(closeReport).toContainText('技術觀察');
+  await expect(closeReport).toContainText('短線 · 5 日');
+  await expect(closeReport).toContainText('RSI · 14 日');
+  await expect(closeReport).toContainText('今日產業強弱');
+  await expect(closeReport).toContainText('半導體');
+  await expect(closeReport).toContainText('單日產業指數強弱');
   await expect(closeReport.locator('a')).toHaveAttribute('href', 'https://www.twse.com.tw/exchangeReport/MI_INDEX?date=20261123&response=html&type=IND');
   expect(actions).toContain('warRoomTaiwanCloseReport');
   const dimensions = await page.locator('html').evaluate(el => ({ scrollWidth: el.scrollWidth, clientWidth: el.clientWidth }));

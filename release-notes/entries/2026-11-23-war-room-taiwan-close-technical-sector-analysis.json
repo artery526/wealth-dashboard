@@ -1,0 +1,9 @@
+{
+  "id": "2026-11-23-war-room-taiwan-close-technical-sector-analysis",
+  "status": "in_progress",
+  "date": null,
+  "area": "帝國晨報",
+  "summary": "新增台股盤後技術趨勢與單日產業強弱分析",
+  "details": "以 TWSE 官方日線計算短中長期報酬、均線與 RSI，並列出當日領先及落後的產業類指數；產業數據僅供盤後報告，不恢復原產業輪動頁或 NAS 快照擷取。",
+  "platforms": ["website", "app-script"]
+}
