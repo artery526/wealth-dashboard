@@ -1,9 +1,12 @@
 {
   "id": "2026-11-23-war-room-twse-verified-close-report",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-11-23",
   "area": "帝國晨報",
-  "summary": "改由證交所官方收盤資料供應台股盤後報告",
-  "details": "後端直接核對 TWSE 當日加權指數收盤價與漲跌，DeepSeek 僅負責整理摘要；官方資料尚未就緒時保留已成功報告並於晚間重試。",
-  "platforms": ["website", "app-script"]
+  "summary": "使用 TWSE 官方當日收盤資料產出台股盤後報告，未就緒時保留舊報告並安排晚間重試",
+  "details": "Apps Script 直接核對 TWSE 當日加權指數收盤價與漲跌，DeepSeek 僅整理文字摘要。官方資料尚未就緒時保留最近一次成功報告，並於台北時間 18:15 左右重試。手機版戰情室顯示資料來源與更新狀態。",
+  "platforms": [
+    "website",
+    "app-script"
+  ]
 }
