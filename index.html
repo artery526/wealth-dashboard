@@ -18039,7 +18039,11 @@ function advisorAICompactDate(){
 }
 
 function advisorAIQuickExpenseCategoriesHtml(){
-  var categories=uniqueBookingOptions((cfg&&cfg.categories&&cfg.categories.length)?cfg.categories:BOOKING_FALLBACK_CATEGORIES);
+  var source=(cfg&&cfg.categories&&cfg.categories.length)?cfg.categories:BOOKING_FALLBACK_CATEGORIES;
+  var categories=uniqueBookingOptions(source.map(function(category){
+    var label=String(category||'').trim();
+    return label.indexOf('租屋管理費')>=0?'⭐貸款還款':label;
+  }));
   return categories.map(function(category){return `<option value="${esc(category)}">${esc(category)}</option>`;}).join('');
 }
 

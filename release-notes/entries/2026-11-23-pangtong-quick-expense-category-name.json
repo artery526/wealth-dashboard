@@ -1,0 +1,9 @@
+{
+  "id": "2026-11-23-pangtong-quick-expense-category-name",
+  "status": "in_progress",
+  "date": null,
+  "area": "龐統快速記帳",
+  "summary": "統一龐統快速記帳的貸款分類名稱",
+  "details": "龐統消費項目遇到舊的租屋管理費名稱時，改顯示並送出貸款還款名稱，並避免新舊名稱重複；同步更新 Service Worker 快取版本。",
+  "platforms": ["website"]
+}
