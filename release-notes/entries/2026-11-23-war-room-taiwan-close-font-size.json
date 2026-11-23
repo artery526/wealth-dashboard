@@ -1,0 +1,9 @@
+{
+  "id": "2026-11-23-war-room-taiwan-close-font-size",
+  "status": "in_progress",
+  "date": null,
+  "area": "帝國晨報",
+  "summary": "台股盤後報告字體整體放大 1px",
+  "details": "僅調整台股盤後報告卡片內各層級字體，桌面與手機版同步放大 1px。",
+  "platforms": ["website"]
+}
