@@ -308,6 +308,27 @@ test('Imperial Morning Brief shows TWSE verified Taiwan close data with DeepSeek
   await expect(closeReport).toContainText('半導體');
   await expect(closeReport).toContainText('單日產業指數強弱');
   await expect(closeReport.locator('a')).toHaveAttribute('href', 'https://www.twse.com.tw/exchangeReport/MI_INDEX?date=20261123&response=html&type=IND');
+  const reportFontSizes = await closeReport.evaluate(el => {
+    const size = selector => getComputedStyle(el.querySelector(selector)).fontSize;
+    return {
+      title: size('.taiwan-close-report-head'),
+      summary: size('.taiwan-close-report>p'),
+      analysisTitle: size('.taiwan-close-report-analysis h4'),
+      technicalValue: size('.taiwan-close-report-tech-grid strong'),
+      sector: size('.taiwan-close-report-sector-grid li'),
+      source: size('.taiwan-close-report-sources')
+    };
+  });
+  expect(reportFontSizes).toEqual({ title: '14px', summary: '13px', analysisTitle: '13px', technicalValue: '14px', sector: '12px', source: '11px' });
+  const mobileDimensions = await page.locator('html').evaluate(el => ({ scrollWidth: el.scrollWidth, clientWidth: el.clientWidth }));
+  expect(mobileDimensions.scrollWidth).toBeLessThanOrEqual(mobileDimensions.clientWidth);
+  await page.setViewportSize({ width: 1280, height: 900 });
+  const desktopFontSizes = await closeReport.evaluate(el => ({
+    title: getComputedStyle(el.querySelector('.taiwan-close-report-head')).fontSize,
+    summary: getComputedStyle(el.querySelector('.taiwan-close-report>p')).fontSize,
+    analysisTitle: getComputedStyle(el.querySelector('.taiwan-close-report-analysis h4')).fontSize
+  }));
+  expect(desktopFontSizes).toEqual({ title: '14px', summary: '13px', analysisTitle: '13px' });
   expect(actions).toContain('warRoomTaiwanCloseReport');
   const dimensions = await page.locator('html').evaluate(el => ({ scrollWidth: el.scrollWidth, clientWidth: el.clientWidth }));
   expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
