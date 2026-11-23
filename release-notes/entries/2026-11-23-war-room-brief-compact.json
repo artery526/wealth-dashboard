@@ -1,0 +1,9 @@
+{
+  "id": "2026-11-23-war-room-brief-compact",
+  "status": "in_progress",
+  "date": null,
+  "area": "帝國晨報",
+  "summary": "帝國晨報改為精簡首屏並保留完整資料展開查看",
+  "details": "精簡首頁與獨立戰情室晨報的摘要、主要市場及估值呈現；總經明細、次要市場、來源說明與長期觀察改為可展開內容。",
+  "platforms": ["website"]
+}
