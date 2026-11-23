@@ -1,9 +1,12 @@
 {
   "id": "2026-11-23-war-room-remove-battle-report",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-11-23",
   "area": "戰情室",
-  "summary": "移除戰情總匯報區塊並停用相關資料更新",
-  "details": "移除戰情室與 Windows 軍機處的戰情總匯報入口，停止專屬背景資料擷取；保留既有歷史資料。",
-  "platforms": ["website", "windows", "app-script"]
+  "summary": "移除戰情室戰情總匯報分頁並停用專屬資料讀取",
+  "details": "移除正式戰情室中的戰情總匯報分頁與呈現，舊分頁網址導回帝國晨報；停用專屬 API 讀取，保留歷史資料。",
+  "platforms": [
+    "website",
+    "app-script"
+  ]
 }
