@@ -8,12 +8,13 @@
     'war-battle-brief':{title:'戰情總匯報',load:loadBattle},
     'war-roster':{title:'部隊陣容',load:loadWarRoster}
   };
-  var currentTab='war-briefing',lastLoaded={},busy=false,foreignYtdPromise=null,foreignYtdLastAttempt=0,foreignYtdError='',nasdaqValuationPromise=null,taiwanValuationPromise=null,taiwanValuationLastAttempt=0,warRoomYtdDrawdownPromise=null,twseAfterHoursPromise=null,twseAfterHoursTimer=null;
+  var currentTab='war-briefing',lastLoaded={},busy=false,foreignYtdPromise=null,foreignYtdLastAttempt=0,foreignYtdError='',nasdaqValuationPromise=null,taiwanValuationPromise=null,taiwanValuationLastAttempt=0,warRoomYtdDrawdownPromise=null,twseAfterHoursPromise=null,twseAfterHoursTimer=null,taiwanCloseReportPromise=null;
   var FOREIGN_YTD_CACHE_KEY='wealth_twse_foreign_ytd_v1';
   var NASDAQ_VALUATION_CACHE_KEY='wealth_nasdaq100_valuation_v1';
   var TAIWAN_VALUATION_CACHE_KEY='wealth_taiwan_valuation_v1';
   var WAR_ROOM_YTD_DRAWDOWN_CACHE_KEY='wealth_war_room_ytd_drawdown_v1';
   var TWSE_AFTER_HOURS_CACHE_KEY='wealth_war_room_twse_after_hours_v1';
+  var TAIWAN_CLOSE_REPORT_CACHE_KEY='wealth_war_room_taiwan_close_report_v1';
   var content=document.getElementById('content'),status=document.getElementById('connection-status');
   function loadWarRoster(force){return window.warRosterModule.load(request,force,function(value){if(currentTab==='war-roster')setFreshness(value);},function(text,kind){if(currentTab==='war-roster')setStatus(text,kind);},function(){return currentTab==='war-roster';});}
   function normalizeApi(value){value=String(value||'').trim();return /script\.google\.com\/macros\/s\//i.test(value)?API_DEFAULT:value;}
@@ -168,6 +169,38 @@
     else{var add=1,day=new Date(Date.UTC(c.year,c.month-1,c.day+add));while([0,6].includes(day.getUTCDay())){add++;day=new Date(Date.UTC(c.year,c.month-1,c.day+add));}target=Date.UTC(day.getUTCFullYear(),day.getUTCMonth(),day.getUTCDate(),6,5,0);}
     var taiwanAsUtc=Date.UTC(c.year,c.month-1,c.day,c.hour-8,c.minute,c.second);twseAfterHoursTimer=setTimeout(function(){if(currentTab==='war-briefing'&&!document.hidden)refreshTwseAfterHours_();else scheduleTwseAfterHoursRefresh_();},Math.max(60000,target-taiwanAsUtc));
   }
+  function taiwanDateToday_(){return new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());}
+  function renderTaiwanCloseReport_(result,stale,error,loading){
+    var host=document.getElementById('taiwan-close-report-host');if(!host)return;
+    var report=result&&result.report,status=report&&report.status||result&&result.status||'pending';
+    if(!report){var waiting=status==='insufficient_data'?'資料不足':status==='market_closed'?'今日休市':(loading?'讀取中':'尚未產生');host.innerHTML='<article class="taiwan-close-report"><div class="taiwan-close-report-head"><strong>🇹🇼 台股盤後報告</strong><span>'+esc(waiting)+'</span></div><p>'+(error?esc(error):result&&result.attempt&&result.attempt.message?esc(result.attempt.message):'平日約 16:15 由 DeepSeek 搜尋整理；等待當日報告。')+'</p></article>';return;}
+    var index=report.index||{},hasIndex=status==='published'&&index.close!=null;
+    var stamp=report.generatedAt?dateText(report.generatedAt):'生成時間未提供';
+    var badge=error?'更新失敗 · 顯示上次報告':(stale?'資料日期較舊':status==='market_closed'?'今日休市':status==='insufficient_data'?'資料不足':'DeepSeek 網路搜尋');
+    function number(value,digits){var n=Number(value);return isFinite(n)?n.toLocaleString('zh-TW',{minimumFractionDigits:digits,maximumFractionDigits:digits}):'資料暫缺';}
+    var change=Number(index.changePoints),pct=Number(index.changePercent),changeClass=isFinite(change)?(change>0?'up':change<0?'down':''):'';
+    var html='<article class="taiwan-close-report"><div class="taiwan-close-report-head"><strong>🇹🇼 台股盤後報告</strong><span>'+esc(badge)+'</span></div>';
+    if(hasIndex)html+='<div class="taiwan-close-report-index"><div><small>'+esc(index.name||'加權指數')+' 收盤</small><strong>'+esc(number(index.close,2))+'</strong></div><div><small>漲跌</small><strong class="'+changeClass+'">'+esc((change>0?'+':'')+number(change,2))+' 點</strong></div><div><small>漲跌幅</small><strong class="'+changeClass+'">'+esc((pct>0?'+':'')+number(pct,2))+'%</strong></div></div>';
+    html+='<h3>'+esc(report.headline||'當日市場觀察')+'</h3><p>'+esc(report.summary||report.mainRisk||'資料暫缺')+'</p>';
+    if(Array.isArray(report.observations)&&report.observations.length)html+='<ul>'+report.observations.slice(0,3).map(function(item){return '<li>'+esc(item)+'</li>';}).join('')+'</ul>';
+    if(report.mainRisk)html+='<div class="taiwan-close-report-risk"><small>風險與資料限制</small><span>'+esc(report.mainRisk)+'</span></div>';
+    if(result&&result.attempt&&result.attempt.status==='insufficient_data')html+='<div class="taiwan-close-report-risk"><small>今日背景更新狀態</small><span>'+esc(result.attempt.message||'尚未找到可核對的當日資料；保留上次成功報告。')+'</span></div>';
+    html+='<div class="taiwan-close-report-meta">資料日 '+esc(report.marketDate||'未提供')+' · '+esc(stamp)+'</div>';
+    if(Array.isArray(report.sources)&&report.sources.length)html+='<div class="taiwan-close-report-sources">來源：'+report.sources.slice(0,5).map(function(source,index){var url=String(source&&source.url||'');if(!/^https:\/\//i.test(url))return '';return (index?' · ':'')+'<a href="'+esc(url)+'" target="_blank" rel="noopener noreferrer">'+esc(source.title||'來源 '+(index+1))+'</a>';}).join('')+'</div>';
+    html+='</article>';host.innerHTML=html;
+  }
+  function refreshTaiwanCloseReport_(){
+    var cached=readCache(TAIWAN_CLOSE_REPORT_CACHE_KEY);
+    if(cached){var cachedReport=cached.report||{},generated=Date.parse(cachedReport.generatedAt||'');renderTaiwanCloseReport_(cached,cachedReport.marketDate!==taiwanDateToday_()||!isFinite(generated)||Date.now()-generated>24*60*60*1000,'',true);}
+    else renderTaiwanCloseReport_(null,false,'',true);
+    if(taiwanCloseReportPromise)return taiwanCloseReportPromise;
+    taiwanCloseReportPromise=request({action:'warRoomTaiwanCloseReport'},25000).then(function(result){
+      if(result&&result.report){writeCache(TAIWAN_CLOSE_REPORT_CACHE_KEY,result);renderTaiwanCloseReport_(result,!!result.stale,result.attempt&&result.attempt.status==='insufficient_data'?result.attempt.message:'',false);}
+      else renderTaiwanCloseReport_(result||null,true,result&&result.attempt&&result.attempt.message||'',false);
+      return result;
+    }).catch(function(error){renderTaiwanCloseReport_(cached,cached?true:false,error&&error.message||'盤後報告暫時無法讀取',false);return null;}).finally(function(){taiwanCloseReportPromise=null;});
+    return taiwanCloseReportPromise;
+  }
   function warRoomYtdMetric_(data,key){return data&&data.indices&&data.indices[key]||null;}
   function warRoomYtdMetricText_(metric){return metric&&isFinite(Number(metric.maxDrawdownPct))?num(metric.maxDrawdownPct,2)+'%':'資料暫缺';}
   function warRoomYtdDetails_(metric,stale){return metric?'年內收盤高點 '+esc(metric.peakDate||'日期未提供')+' → 後續低點 '+esc(metric.troughDate||'日期未提供')+' · 資料截至 '+esc(metric.dataDate||'日期未提供')+(stale?' · 顯示快照':''):'';}
@@ -193,7 +226,8 @@
     payload=withoutMarketPayload_(payload);
     var preservedAsyncMarkup=skipBackgroundRefresh?{
       nasdaq:(document.getElementById('nasdaq-valuation-host')||{}).innerHTML||'',
-      twse:(document.getElementById('twse-after-hours-host')||{}).innerHTML||''
+      twse:(document.getElementById('twse-after-hours-host')||{}).innerHTML||'',
+      taiwanClose:(document.getElementById('taiwan-close-report-host')||{}).innerHTML||''
     }:null;
     var displayPayload=payload,macro=payload.macro||payload.macroOverview||{},report=payload.longReport||{};
     var captured=payload.capturedAt||payload.sourceDate||'',judgment=macro.judgment||{},valuations=macro.valuations||{};
@@ -205,6 +239,7 @@
     html+='<section class="brief-insight"><div class="brief-insight-heading"><span>📌 今日一句話戰情</span><small>快照 '+esc(dateText(captured))+'</small></div><p>'+esc(oneLine)+'</p>';
     if(judgment.mainRisk||judgment.suggestion)html+='<div class="brief-guidance">'+(judgment.mainRisk?'<div><small>主要風險</small><strong>'+esc(judgment.mainRisk)+'</strong></div>':'')+(judgment.suggestion?'<div><small>注意事項</small><strong>'+esc(judgment.suggestion)+'</strong></div>':'')+'</div>';
     html+='</section>';
+    html+=sectionTitle('🇹🇼 台股盤後報告')+'<div id="taiwan-close-report-host"></div>';
     function valuationCard(title,data,kind){if(!data)return '<article class="valuation-card"><h3>'+title+'</h3><p class="muted">估值資料暫缺</p></article>';var median=kind==='qqq'?(data.historicalMedian||{}).tenYear:(data.historicalPEMedian||{}).tenYear;var fields=kind==='qqq'?[['現價',data.price],['Forward P/E',data.forwardPE==null?null:num(data.forwardPE,2)+'×'],['Forward Earnings',data.forwardEarnings],['10年中位數',median==null?null:num(median,2)+'×']]:[['加權指數',data.index==null?data.price:data.index],['Trailing P/E',data.trailingPE==null?null:num(data.trailingPE,2)+'×'],['P/B',data.pb==null?null:num(data.pb,2)+'×'],['10年中位數',median==null?null:num(median,2)+'×']];return '<article class="valuation-card"><h3>'+title+'</h3><div class="valuation-values">'+fields.map(function(field){return '<div><small>'+esc(field[0])+'</small><strong>'+esc(field[1]==null?'資料暫缺':field[1])+'</strong></div>';}).join('')+'</div><p class="metric-label">'+esc(data.dataDate||data.priceDate||'資料日期暫缺')+' · '+esc(data.source||'來源未提供')+'</p><p class="valuation-judgment">'+esc(data.judgment||data.status||'以目前估值和歷史中位數比較，不是價格預測。')+'</p></article>';}
     if(valuations.qqq)html+='<details class="brief-compact-details"><summary>其他估值參考：QQQ</summary><div class="brief-compact-inner"><div class="brief-valuations">'+valuationCard('📡 QQQ 動態估值',valuations.qqq,'qqq')+'</div></div></details>';
     html+=sectionTitle('NASDAQ-100 估值')+'<div id="nasdaq-valuation-host"></div>';
@@ -222,9 +257,10 @@
       var nasdaqHost=document.getElementById('nasdaq-valuation-host');
       if(nasdaqHost&&preservedAsyncMarkup.nasdaq)nasdaqHost.innerHTML=preservedAsyncMarkup.nasdaq;
       var twseHost=document.getElementById('twse-after-hours-host');if(twseHost&&preservedAsyncMarkup.twse)twseHost.innerHTML=preservedAsyncMarkup.twse;
+      var closeReportHost=document.getElementById('taiwan-close-report-host');if(closeReportHost&&preservedAsyncMarkup.taiwanClose)closeReportHost.innerHTML=preservedAsyncMarkup.taiwanClose;
     }
     setFreshness(captured?'快照時間 '+dateText(captured):'以目前可取得的快照呈現');
-    if(!skipBackgroundRefresh){refreshNasdaqValuation_();refreshTwseAfterHours_();refreshTaiwanValuation_(valuations.taiex,stale);refreshWarRoomYtdDrawdown_();}
+    if(!skipBackgroundRefresh){refreshNasdaqValuation_();refreshTwseAfterHours_();refreshTaiwanValuation_(valuations.taiex,stale);refreshWarRoomYtdDrawdown_();refreshTaiwanCloseReport_();}
   }
   async function loadBriefing(force){
     var cacheKey='wealth_advisor_world_nas_v1',cached=readCache(cacheKey),cacheMacro=readCache('wealth_market_macro_v4');
