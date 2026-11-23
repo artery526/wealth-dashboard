@@ -77,6 +77,31 @@ test('Imperial Morning Brief combines Taiwan P/E values into the Taiwan after-ho
   await expect(taiwanValuation).toContainText('10 年中位數 P/E');
   await expect(taiwanValuation).toContainText('16.88×');
   await expect(taiwanValuation).toContainText('2026/10/22');
+  await expect(taiwanValuation.locator('.advisor-twse-valuation-grid > div').nth(0).locator('small')).toHaveText(['近四季 Trailing P/E', '資料日 2026/10/22']);
+  await expect(taiwanValuation.locator('.advisor-twse-valuation-grid > div').nth(1).locator('small')).toHaveText(['10 年中位數 P/E', '歷史比較基準']);
+  const matchingTaiwanTypography = await afterHours.evaluate(card => {
+    const styles = selector => getComputedStyle(card.querySelector(selector));
+    return {
+      headings: [styles('.advisor-twse-after-hours-head strong').fontSize, styles('.advisor-twse-valuation-head').fontSize],
+      labels: [styles('.advisor-twse-after-hours-grid small').fontSize, styles('.advisor-twse-valuation-grid small').fontSize],
+      values: [styles('.advisor-twse-after-hours-grid strong').fontSize, styles('.advisor-twse-valuation-grid strong').fontSize],
+      columns: [styles('.advisor-twse-after-hours-grid').gridTemplateColumns.split(' ').length, styles('.advisor-twse-valuation-grid').gridTemplateColumns.split(' ').length]
+    };
+  });
+  expect(matchingTaiwanTypography).toEqual({ headings: ['13px', '13px'], labels: ['10px', '10px'], values: ['18px', '18px'], columns: [1, 1] });
+  const mobileDimensions = await page.locator('html').evaluate(el => ({ scrollWidth: el.scrollWidth, clientWidth: el.clientWidth }));
+  expect(mobileDimensions.scrollWidth).toBeLessThanOrEqual(mobileDimensions.clientWidth);
+  await page.setViewportSize({ width: 1280, height: 900 });
+  const desktopTaiwanTypography = await afterHours.evaluate(card => {
+    const styles = selector => getComputedStyle(card.querySelector(selector));
+    return {
+      headings: [styles('.advisor-twse-after-hours-head strong').fontSize, styles('.advisor-twse-valuation-head').fontSize],
+      labels: [styles('.advisor-twse-after-hours-grid small').fontSize, styles('.advisor-twse-valuation-grid small').fontSize],
+      values: [styles('.advisor-twse-after-hours-grid strong').fontSize, styles('.advisor-twse-valuation-grid strong').fontSize],
+      columns: [styles('.advisor-twse-after-hours-grid').gridTemplateColumns.split(' ').length, styles('.advisor-twse-valuation-grid').gridTemplateColumns.split(' ').length]
+    };
+  });
+  expect(desktopTaiwanTypography).toEqual({ headings: ['13px', '13px'], labels: ['10px', '10px'], values: ['18px', '18px'], columns: [2, 2] });
   await expect(taiwanValuation.locator('.advisor-twse-valuation-source')).toBeHidden();
   await taiwanValuation.locator('details > summary').click();
   await expect(taiwanValuation).toContainText('MoneyDJ PE/PB河流圖反算');
@@ -439,6 +464,29 @@ test('Standalone War Room shows sourced NASDAQ-100 valuations and dates on mobil
   await expect(taiwanValuation).toContainText('10 年中位數 P/E');
   await expect(taiwanValuation).toContainText('18.32×');
   await expect(taiwanValuation).toContainText('2026-10-22');
+  const matchingTaiwanTypography = await afterHours.evaluate(card => {
+    const styles = selector => getComputedStyle(card.querySelector(selector));
+    return {
+      headings: [styles('.twse-after-hours-head strong').fontSize, styles('.twse-valuation-head').fontSize],
+      labels: [styles('.twse-after-hours-grid small').fontSize, styles('.twse-valuation .nasdaq-valuation-values small').fontSize],
+      values: [styles('.twse-after-hours-grid strong').fontSize, styles('.twse-valuation .nasdaq-valuation-values strong').fontSize],
+      columns: [styles('.twse-after-hours-grid').gridTemplateColumns.split(' ').length, styles('.twse-valuation .nasdaq-valuation-values').gridTemplateColumns.split(' ').length]
+    };
+  });
+  expect(matchingTaiwanTypography).toEqual({ headings: ['15px', '15px'], labels: ['11px', '11px'], values: ['20px', '20px'], columns: [1, 1] });
+  const mobileDimensions = await page.locator('html').evaluate(el => ({ scrollWidth: el.scrollWidth, clientWidth: el.clientWidth }));
+  expect(mobileDimensions.scrollWidth).toBeLessThanOrEqual(mobileDimensions.clientWidth);
+  await page.setViewportSize({ width: 1280, height: 900 });
+  const desktopTaiwanTypography = await afterHours.evaluate(card => {
+    const styles = selector => getComputedStyle(card.querySelector(selector));
+    return {
+      headings: [styles('.twse-after-hours-head strong').fontSize, styles('.twse-valuation-head').fontSize],
+      labels: [styles('.twse-after-hours-grid small').fontSize, styles('.twse-valuation .nasdaq-valuation-values small').fontSize],
+      values: [styles('.twse-after-hours-grid strong').fontSize, styles('.twse-valuation .nasdaq-valuation-values strong').fontSize],
+      columns: [styles('.twse-after-hours-grid').gridTemplateColumns.split(' ').length, styles('.twse-valuation .nasdaq-valuation-values').gridTemplateColumns.split(' ').length]
+    };
+  });
+  expect(desktopTaiwanTypography).toEqual({ headings: ['15px', '15px'], labels: ['11px', '11px'], values: ['22px', '22px'], columns: [2, 2] });
   await expect(taiwanValuation.locator('.twse-valuation details p')).toBeHidden();
   await taiwanValuation.locator('details > summary').click();
   await expect(taiwanValuation).toContainText('MoneyDJ PE/PB河流圖反算');

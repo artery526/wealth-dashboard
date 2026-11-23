@@ -1,0 +1,9 @@
+{
+  "id": "2026-11-23-war-room-tw-close-valuation-layout",
+  "status": "in_progress",
+  "date": null,
+  "area": "帝國晨報",
+  "summary": "統一台股盤後與台股估值的字級及卡片排版",
+  "details": "統一兩區的標題、指標標籤、數值與資料日字級，並對齊卡片間距與手機版欄位排列。",
+  "platforms": ["website"]
+}
