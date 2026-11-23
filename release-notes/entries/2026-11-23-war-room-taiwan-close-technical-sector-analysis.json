@@ -1,9 +1,12 @@
 {
   "id": "2026-11-23-war-room-taiwan-close-technical-sector-analysis",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-11-23",
   "area": "帝國晨報",
-  "summary": "新增台股盤後技術趨勢與單日產業強弱分析",
-  "details": "以 TWSE 官方日線計算短中長期報酬、均線與 RSI，並列出當日領先及落後的產業類指數；產業數據僅供盤後報告，不恢復原產業輪動頁或 NAS 快照擷取。",
-  "platforms": ["website", "app-script"]
+  "summary": "台股盤後加入技術趨勢與當日產業強弱摘要",
+  "details": "以 TWSE 官方日線收盤資料計算 5/20/60 日趨勢、均線位置與 RSI，並列出當日領先及落後的產業類指數。若 DeepSeek 無法提供摘要，仍以可驗證數據產生簡短說明；產業數據只用於盤後報告，不恢復原產業輪動頁或 NAS 快照擷取。",
+  "platforms": [
+    "website",
+    "app-script"
+  ]
 }
