@@ -1,0 +1,12 @@
+{
+  "id": "2026-11-23-war-room-deepseek-tw-close-report",
+  "status": "in_progress",
+  "date": null,
+  "area": "帝國晨報",
+  "summary": "新增 DeepSeek 網路搜尋台股盤後報告",
+  "details": "平日盤後由後端呼叫 DeepSeek 網路搜尋並產生附來源的台股收盤摘要，帝國晨報顯示報告及資料日期；不透過試算表或恢復共用行情擷取。",
+  "platforms": [
+    "website",
+    "app-script"
+  ]
+}
