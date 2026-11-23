@@ -132,12 +132,14 @@ var ETF_HOLDING_CHANGE_HEADERS = ['日期', '標的代號', '本次資料日', '
 var MARKET_DASHBOARD_INSTRUMENTS = [
   { row: 2, code: 'NASDAQ:QQQ', symbol: 'QQQ', name: '納斯達克100 ETF', note: '核心科技風向；20MA向上且站上均線偏多' },
   { row: 3, code: 'NYSEARCA:SPY', symbol: 'SPY', name: '標普500 ETF', note: '大盤廣度參考；用來確認 QQQ 訊號' },
-  { row: 4, code: 'NYSEARCA:GLD', symbol: 'GLD', name: '黃金指數代理 ETF', note: '黃金風向參考；GLD 追蹤黃金現貨價格，適合作為市場避險情緒觀察' },
-  { row: 5, code: 'CURRENCY:BTCUSD', symbol: 'BTC-USD', name: '比特幣指數', note: 'BTC/USD 風險胃納參考；站上20MA且20MA向上偏多，跌破20MA偏防守' },
-  { row: 6, code: 'NASDAQ:PLTR', symbol: 'PLTR', name: 'Palantir Technologies', note: '高波動成長股觀察；搭配 QQQ/SOXX 判斷科技風險胃納' },
-  { row: 7, code: 'NASDAQ:SOXX', symbol: 'SOXX', name: '半導體 ETF', note: '半導體景氣風向；用來觀察 AI/晶片族群強弱' },
   { row: 11, code: '^TWII', symbol: '^TWII', name: '🇹🇼 台灣加權指數', note: 'Yahoo Finance 台股加權指數；融資餘額與維持率由 TWSE 補充' }
 ];
+function isTrackedMarketDashboardCode_(code) {
+  var normalized = String(code || '').trim().toUpperCase();
+  return MARKET_DASHBOARD_INSTRUMENTS.some(function(item) {
+    return String(item.code || '').trim().toUpperCase() === normalized;
+  });
+}
 // 產業輪動雷達：FMP 提供產業日變化，Yahoo 提供各產業 ETF 的歷史 OHLCV 備援與多週期計算。
 var MARKET_SECTOR_INSTRUMENTS = [
   { code: 'SOXX', symbol: 'SOXX', name: '半導體', fmpSector: '' },
@@ -5618,6 +5620,7 @@ function getMarketDashboard(ss, skipLiveMargin) {
     var code = String(row[0] || '').trim();
     var name = String(row[1] || '').trim();
     if (!code || !name) return;
+    if (!isTrackedMarketDashboardCode_(code)) return;
     // 支援含冒號格式（如 INDEXSP:.INX）以及 ^TWII 格式
     if (code.indexOf(':') < 0 && code.indexOf('^') < 0) return;
 
