@@ -1,0 +1,9 @@
+{
+  "id": "2026-11-23-war-room-remove-battle-report",
+  "status": "in_progress",
+  "date": null,
+  "area": "戰情室",
+  "summary": "移除戰情總匯報區塊並停用相關資料更新",
+  "details": "移除戰情室與 Windows 軍機處的戰情總匯報入口，停止專屬背景資料擷取；保留既有歷史資料。",
+  "platforms": ["website", "windows", "app-script"]
+}

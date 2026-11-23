@@ -23,11 +23,10 @@ test.beforeEach(async ({ page }) => {
 test('War Room opens on the briefing and fetches its remaining areas only when selected', async ({ page }) => {
   await page.evaluate(() => { window.isWarRoomStandalone = () => true; openPanel('war-room'); });
   await expect(page.locator('#p-zh')).toHaveText('戰情室');
-  await expect(page.locator('#p-tabs .ptab')).toHaveText(['帝國晨報', '戰情總匯報', '台灣總體經濟']);
+  await expect(page.locator('#p-tabs .ptab')).toHaveText(['帝國晨報', '台灣總體經濟']);
   expect(await page.evaluate(() => warRoomLoads)).toEqual(['briefing']);
-  await page.getByRole('button', { name: '戰情總匯報' }).click();
   await page.getByRole('button', { name: '台灣總體經濟' }).click();
-  expect(await page.evaluate(() => warRoomLoads)).toEqual(['briefing', 'battle', 'taiwan']);
+  expect(await page.evaluate(() => warRoomLoads)).toEqual(['briefing', 'taiwan']);
   await expect(page.locator('#pane-war-taiwan-macro')).toHaveClass(/active/);
 });
 
@@ -106,8 +105,8 @@ test('legacy military shortcuts and voice routing open the matching War Room tab
     shortcut: (() => { let opened; const original = window.openPanel, originalStandalone = window.isWarRoomStandalone; window.openPanel = (panel, tab) => { opened = { panel, tab }; }; window.isWarRoomStandalone = () => true; openEmpireCardShortcut({ stopPropagation() {} }, 'council', 'battle-brief'); window.openPanel = original; window.isWarRoomStandalone = originalStandalone; return opened; })(),
     parsed: advisorAIOpenTarget('戰情總匯報')
   }));
-  expect(results.shortcut).toEqual({ panel: 'war-room', tab: 'war-battle-brief' });
-  expect(results.parsed).toMatchObject({ panel: 'war-room', tab: 'war-battle-brief' });
+  expect(results.shortcut).toEqual({ panel: 'war-room', tab: 'war-briefing' });
+  expect(results.parsed).toMatchObject({ panel: 'war-room', tab: 'war-briefing' });
 });
 
 test('Advisor menu opens the War Room in a new tab and preserves the Command Center page', async ({ page }) => {
@@ -139,7 +138,7 @@ test('Clicking Zhuge in the Command Center opens the War Room in a new tab', asy
   await expect(page).toHaveURL(originalUrl);
 });
 
-test('standalone route is a direct page and reuses the same-origin session', async ({ page }) => {
+test('legacy battle report route redirects to the briefing without requesting battle data', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.addInitScript(() => {
     localStorage.setItem('wealth_api_url', 'https://example.test/exec');
@@ -148,21 +147,26 @@ test('standalone route is a direct page and reuses the same-origin session', asy
     localStorage.setItem('wealth_web_verify_checked_at', String(Date.now()));
     sessionStorage.setItem('wealth_web_session_token', 'same-tab-session');
   });
-  await page.route('https://example.test/**', route => route.fulfill({
+  const actions = [];
+  await page.route('https://example.test/**', route => {
+    actions.push(new URL(route.request().url()).searchParams.get('action'));
+    return route.fulfill({
     status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' },
     body: JSON.stringify({ ok: true, data: { summary: { marketStance: '觀望', upCount: 1, downCount: 2 }, holdings: [], funds: [], market: [
       { name: '台股融資餘額', current: 507462771000, previous: 500000000000 },
       { name: '台股維持率', current: 169.81, previous: 168 }
     ] } })
-  }));
+    });
+  });
   await page.route('https://api.ark-os26.cc/**', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ records: [] }) }));
   const requests = [];
   page.on('request', request => requests.push(new URL(request.url()).pathname));
   await page.goto(`${standaloneUrl}?tab=war-battle-brief`);
   await expect(page.locator('h1')).toHaveText('諸葛軍師・戰情室');
-  await expect(page.locator('.tabs button.active')).toHaveText('戰情總匯報');
-  await expect(page.locator('#content .battle-hero h2')).toContainText('戰情總匯報');
-  await expect(page.getByRole('heading', { name: '台股融資與維持率', exact: true })).toHaveCount(0);
+  await expect(page).toHaveURL(/tab=war-briefing$/);
+  await expect(page.locator('.tabs button.active')).toHaveText('帝國晨報');
+  await expect(page.locator('#content')).not.toContainText('戰情總匯報');
+  expect(actions).not.toContain('battleBrief');
   expect(await page.evaluate(() => sessionStorage.getItem('wealth_web_session_token'))).toBe('same-tab-session');
   await expect(page.locator('iframe')).toHaveCount(0);
   expect(requests.some(path => path.endsWith('/index.html'))).toBe(false);
@@ -171,7 +175,7 @@ test('standalone route is a direct page and reuses the same-origin session', asy
   expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
 });
 
-test('Imperial Morning Brief removes core markets and does not request market quotes on mobile', async ({ page }) => {
+test('legacy battle report link redirects without collecting foreign YTD data', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.addInitScript(() => {
     localStorage.setItem('wealth_api_url', 'https://example.test/exec');
@@ -425,7 +429,7 @@ test('Imperial Morning Brief keeps Nasdaq valuation drawdown while removing all 
   expect(width.scroll).toBeLessThanOrEqual(width.client);
 });
 
-test('Battle Brief shows the year-to-date foreign net sell from TWSE monthly reports on mobile', async ({ page }) => {
+test('legacy battle report link does not fetch battle or TWSE foreign YTD data', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.clock.install({ time: new Date('2026-10-13T05:00:00.000Z') });
   await page.addInitScript(() => {
@@ -435,32 +439,23 @@ test('Battle Brief shows the year-to-date foreign net sell from TWSE monthly rep
     localStorage.setItem('wealth_web_verify_checked_at', String(Date.now()));
     sessionStorage.setItem('wealth_web_session_token', 'same-tab-session');
   });
-  await page.route('https://example.test/**', route => route.fulfill({
+  const actions = [];
+  const externalRequests = [];
+  page.on('request', request => externalRequests.push(request.url()));
+  await page.route('https://example.test/**', route => {
+    actions.push(new URL(route.request().url()).searchParams.get('action'));
+    return route.fulfill({
     status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' },
     body: JSON.stringify({ ok: true, data: { summary: {}, holdings: [], funds: [], market: [] } })
-  }));
-  const requestedMonths = [];
-  await page.route('https://www.twse.com.tw/**', route => {
-    const monthDate = new URL(route.request().url()).searchParams.get('monthDate');
-    requestedMonths.push(monthDate);
-    const month = Number(monthDate.slice(4, 6));
-    const lastDay = month === 10 ? 12 : new Date(2026, month, 0).getDate();
-    return route.fulfill({
-      status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' },
-      body: JSON.stringify({
-        stat: 'OK',
-        title: `115年${month}月01日至115年${month}月${lastDay}日 三大法人買賣金額統計表`,
-        data: [['外資及陸資(不含外資自營商)', '100,000,000', '200,000,000', `${-month * 100000000}`]]
-      })
     });
   });
-
   await page.goto(`${standaloneUrl}?tab=war-battle-brief`);
-  const ytd = page.locator('.battle-foreign-ytd');
-  await expect(ytd).toContainText('賣超 55.00 億');
-  await expect(ytd).toContainText('資料截至 2026/10/12');
-  await expect(ytd).toContainText('不含外資自營商');
-  expect(requestedMonths).toHaveLength(10);
+  await expect(page).toHaveURL(/tab=war-briefing$/);
+  await expect(page.locator('.tabs button')).toHaveText(['帝國晨報', '部隊陣容']);
+  await expect(page.locator('#content')).not.toContainText('戰情總匯報');
+  await expect(page.locator('#content')).not.toContainText('外資及陸資今年累計買賣超');
+  expect(actions).not.toContain('battleBrief');
+  expect(externalRequests.some(url => url.includes('twse.com.tw/rwd/zh/fund/BFI82U'))).toBe(false);
   const width = await page.locator('html').evaluate(el => ({ scroll: el.scrollWidth, client: el.clientWidth }));
   expect(width.scroll).toBeLessThanOrEqual(width.client);
 });
@@ -482,7 +477,7 @@ test('standalone route renews an expired shared session before loading its selec
   await page.route('https://api.ark-os26.cc/**', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ records: [] }) }));
   await page.goto(`${standaloneUrl}?tab=war-taiwan-macro`);
   await expect(page).toHaveURL(/tab=war-briefing$/);
-  await expect(page.locator('.tabs button')).toHaveText(['帝國晨報', '戰情總匯報', '部隊陣容']);
+  await expect(page.locator('.tabs button')).toHaveText(['帝國晨報', '部隊陣容']);
   expect(actions).not.toContain('taiwanMacroOverview');
   expect(actions).not.toContain('taiwanMacroHistory');
   expect(actions).not.toContain('taiwanMacroUpdate');
@@ -533,8 +528,8 @@ test('standalone tabs remain switchable among the active War Room areas', async 
   await page.route('https://api.ark-os26.cc/**', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ records: [] }) }));
   await page.goto(`${standaloneUrl}?tab=war-briefing`);
   await expect(page.locator('.brief-hero h2')).toContainText('帝國晨報');
-  await page.getByRole('button', { name: '戰情總匯報' }).click();
-  await expect(page.locator('.tabs button.active')).toHaveText('戰情總匯報');
+  await page.getByRole('button', { name: '部隊陣容' }).click();
+  await expect(page.locator('.tabs button.active')).toHaveText('部隊陣容');
   await page.getByRole('button', { name: '帝國晨報' }).click();
   await expect(page.locator('.tabs button.active')).toHaveText('帝國晨報');
   await expect(page.locator('.brief-insight')).toContainText('市場資料已更新');
@@ -643,7 +638,7 @@ test('standalone pauses sector rotation and redirects its old link without reque
   });
   await page.goto(`${standaloneUrl}?tab=war-sector-rotation`);
   await expect(page).toHaveURL(/tab=war-briefing/);
-  await expect(page.locator('.tabs button')).toHaveText(['帝國晨報', '戰情總匯報', '部隊陣容']);
+  await expect(page.locator('.tabs button')).toHaveText(['帝國晨報', '部隊陣容']);
   await expect(page.locator('#content')).not.toContainText('產業輪動');
   expect(actions).not.toContain('marketSectorRotation');
   const width = await page.locator('html').evaluate(el => ({ scroll: el.scrollWidth, client: el.clientWidth }));

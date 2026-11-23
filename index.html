@@ -6822,7 +6822,7 @@ function openArkWallAdminShortcut(event){
 function openEmpireCardShortcut(event,panel,tab){
   if(event&&event.stopPropagation)event.stopPropagation();
   if(panel==='council'&&!tab){panel='war-room';tab='war-roster';}
-  else if(panel==='council'&&tab==='battle-brief'){panel='war-room';tab='war-battle-brief';}
+  else if(panel==='council'&&tab==='battle-brief'){panel='war-room';tab='war-briefing';}
   else if(panel==='council'&&tab==='market-watch'){panel='war-room';tab='war-briefing';}
   else if(panel==='council'&&tab==='taiwan-macro'){panel='war-room';tab='war-taiwan-macro';}
   else if(panel==='council'&&tab&&tab.indexOf('war-')===0){panel='war-room';}
@@ -7028,7 +7028,6 @@ function switchTab(btn,key){
   else if(key==='domestic-yearly'){loadFinanceYearlyCategorySummary();loadDomesticYearly();}
   else if(key==='battle-brief')loadBattleBrief();
   else if(key==='war-briefing')openAdvisorWorldSituation(null,true);
-  else if(key==='war-battle-brief')loadBattleBrief();
   else if(key==='war-taiwan-macro')loadTaiwanMacro();
   else if(key==='market-watch')loadMarketDashboard();
   else if(key==='macro-overview')loadMacroOverview();
@@ -15789,7 +15788,6 @@ function renderWarRoomPanel(initialTab){
   if(panelExtra)panelExtra.innerHTML=isWarRoomStandalone()?'<button class="war-room-home-btn" type="button" onclick="closePanel()" aria-label="返回主城">🔙 返回主城</button>':'';
   var tabs=[
     {key:'war-briefing',label:'帝國晨報'},
-    {key:'war-battle-brief',label:'戰情總匯報'},
     {key:'war-taiwan-macro',label:'台灣總體經濟'}
   ];
   setTabs(tabs);
@@ -15803,15 +15801,10 @@ function renderWarRoomPanel(initialTab){
     <div class="pane ${targetTab==='war-briefing'?'active':''}" id="pane-war-briefing">
       <div class="advisor-world-slot war-room-briefing" id="war-room-briefing-content"><div class="advisor-world-card"><div class="advisor-world-title">🏛 帝國晨報</div><div class="advisor-world-text" style="position:relative;z-index:1;text-align:center">諸葛亮正在整理戰報…</div></div></div>
     </div>
-    <div class="pane ${targetTab==='war-battle-brief'?'active':''}" id="pane-war-battle-brief">
-      <div id="battle-freshness">${dataFreshnessHtml()}</div>
-      <div id="battle-brief-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:82%"></div><div class="skel-line skel" style="width:68%"></div></div>
-    </div>
     <div class="pane ${targetTab==='war-taiwan-macro'?'active':''}" id="pane-war-taiwan-macro">
       <div id="taiwan-macro-content"><div class="skel-line skel"></div><div class="skel-line skel" style="width:82%"></div><div class="skel-line skel" style="width:68%"></div></div>
     </div>`;
   if(targetTab==='war-briefing')openAdvisorWorldSituation(null,true);
-  else if(targetTab==='war-battle-brief')loadBattleBrief();
   else if(targetTab==='war-taiwan-macro')loadTaiwanMacro();
 }
 
@@ -18773,7 +18766,7 @@ function advisorAIOpenTarget(text){
   if(key.indexOf('糧')>=0)return {intent:'open',panel:'finance',tab:'finance-accs',label:'國庫現況'};
   if(key.indexOf('年度財報')>=0||key.indexOf('財報')>=0)return {intent:'open',panel:'finance',tab:'domestic-yearly',label:'年度財報'};
   if(key.indexOf('部隊陣容')>=0||key.indexOf('陣容')>=0)return {intent:'open',panel:'war-room',tab:'war-roster',label:'部隊陣容'};
-  if(key.indexOf('戰情總匯報')>=0||key.indexOf('總匯報')>=0)return {intent:'open',panel:'war-room',tab:'war-battle-brief',label:'戰情總匯報'};
+  if(key.indexOf('戰情總匯報')>=0||key.indexOf('總匯報')>=0)return {intent:'open',panel:'war-room',tab:'war-briefing',label:'帝國晨報'};
   if(key.indexOf('台灣總體經濟')>=0||key.indexOf('台灣總經')>=0)return {intent:'open',panel:'war-room',tab:'war-taiwan-macro',label:'台灣總體經濟'};
   if(key.indexOf('市集')>=0||key.indexOf('市場')>=0)return {intent:'open',panel:'war-room',tab:'war-briefing',label:'帝國晨報'};
   if(key.indexOf('內政')>=0||key.indexOf('記帳')>=0)return {intent:'open',panel:'domestic',tab:'booking-form',label:'快速記帳'};
@@ -18979,7 +18972,7 @@ function advisorAICommand(raw){
   if(compact.indexOf('年度財報')>=0)return {intent:'open',panel:'finance',tab:'domestic-yearly',label:'年度財報'};
   if(compact==='糧'||compact.indexOf('糧倉')>=0)return {intent:'open',panel:'finance',tab:'finance-accs',label:'國庫現況'};
   if(compact.indexOf('部隊陣容')>=0||compact.indexOf('陣容')>=0)return {intent:'open',panel:'war-room',tab:'war-roster',label:'部隊陣容'};
-  if(compact.indexOf('戰情總匯報')>=0||compact.indexOf('總匯報')>=0)return {intent:'open',panel:'war-room',tab:'war-battle-brief',label:'戰情總匯報'};
+  if(compact.indexOf('戰情總匯報')>=0||compact.indexOf('總匯報')>=0)return {intent:'open',panel:'war-room',tab:'war-briefing',label:'帝國晨報'};
   if(compact.indexOf('台灣總體經濟')>=0||compact.indexOf('台灣總經')>=0)return {intent:'open',panel:'war-room',tab:'war-taiwan-macro',label:'台灣總體經濟'};
   if(compact.indexOf('維持率')>=0)return {intent:'maintenance'};
   if(compact.indexOf('複製載具')>=0)return {intent:'copyCarrier'};
