@@ -68,6 +68,7 @@ test('Imperial Morning Brief combines Taiwan P/E values into the Taiwan after-ho
   await expect(valuation.locator('.advisor-nasdaq-forward')).toHaveText('19.61×');
   await expect(valuation.locator('.advisor-nasdaq-trailing-date')).toContainText('2026/10/22');
   await expect(valuation.locator('.advisor-nasdaq-forward-date')).toContainText('2026/10/21');
+  await valuation.locator('details > summary').click();
   await expect(valuation.locator('a')).toHaveAttribute('href', 'https://historyofmarket.com/nasdaq/ndx-forward-pe/');
   const afterHours = page.locator('.advisor-twse-after-hours');
   const taiwanValuation = afterHours.locator('.advisor-twse-valuation');
@@ -77,6 +78,8 @@ test('Imperial Morning Brief combines Taiwan P/E values into the Taiwan after-ho
   await expect(taiwanValuation).toContainText('10 年中位數 P/E');
   await expect(taiwanValuation).toContainText('16.88×');
   await expect(taiwanValuation).toContainText('2026/10/22');
+  await expect(taiwanValuation.locator('.advisor-twse-valuation-source')).toBeHidden();
+  await taiwanValuation.locator('details > summary').click();
   await expect(taiwanValuation).toContainText('MoneyDJ PE/PB河流圖反算');
   await expect(taiwanValuation).not.toContainText('3.31×');
   await expect(taiwanValuation).not.toContainText('已更新');
@@ -262,7 +265,8 @@ test('Imperial Morning Brief derives monitored market rise and fall counts from 
         { code: 'TAIEX', name: '加權指數', price: 23000, previous: 22900, changePct: 0.44, ma20: 22500, ma20Prev: 22400 },
         { code: 'SPX', name: 'S&P 500', price: 6000, previous: 6010, changePct: -0.17, ma20: 6050, ma20Prev: 6060 },
         { code: 'VIX', name: 'VIX', price: 18, previous: 18, changePct: 0 },
-        { code: 'NASDAQ:PLTR', name: 'Palantir Technologies', price: 150, previous: 140, changePct: 7.14 }
+        { code: 'NASDAQ:PLTR', name: 'Palantir Technologies', price: 150, previous: 140, changePct: 7.14 },
+        { code: 'NYSEARCA:GLD', name: '黃金 ETF', price: 250, previous: 251, changePct: -0.4 }
       ] },
       macro: { judgment: { summary: '維持觀察。' }, indicators: [], valuations: {} },
       capturedAt: '2026-10-15T12:00:00Z'
@@ -272,14 +276,18 @@ test('Imperial Morning Brief derives monitored market rise and fall counts from 
   await page.route('https://api.ark-os26.cc/**', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ records: [] }) }));
 
   await page.goto(`${standaloneUrl}?tab=war-briefing`);
-  const breadth = page.locator('.brief-state').filter({ hasText: '監控市場漲跌' });
-  await expect(breadth).toContainText('1 / 1');
+  const breadth = page.locator('.brief-state').filter({ hasText: '漲 / 跌' });
+  await expect(breadth).toContainText('1 / 2');
   await expect(breadth).toContainText('平盤 1');
-  await expect(breadth).toContainText('有效報價 3 項');
-  await expect(page.locator('.brief-market-list')).not.toContainText(/Palantir|PLTR/i);
+  await expect(breadth).toContainText('報價 4 項');
+  await expect(page.locator('.brief-market-list').first()).not.toContainText(/Palantir|PLTR/i);
   await expect(page.locator('body')).not.toContainText(/Palantir Technologies|PLTR/);
   await expect(page.locator('.brief-market-row').filter({ hasText: '加權指數' }).locator('.brief-ma-hint')).toHaveText('MA20 偏強');
   await expect(page.locator('.brief-market-row').filter({ hasText: 'S&P 500' }).locator('.brief-ma-hint')).toHaveText('MA20 偏弱');
+  const otherRow = page.locator('.brief-market-row').filter({ hasText: '黃金 ETF' });
+  await expect(otherRow).toBeHidden();
+  await page.locator('.brief-more-markets > summary').click();
+  await expect(otherRow).toBeVisible();
   await expect(page.locator('.brief-market-row').filter({ hasText: 'VIX' }).locator('.brief-ma-hint')).toHaveCount(0);
   const width = await page.locator('html').evaluate(el => ({ scroll: el.scrollWidth, client: el.clientWidth }));
   expect(width.scroll).toBeLessThanOrEqual(width.client);
@@ -314,6 +322,7 @@ test('Standalone War Room shows sourced NASDAQ-100 valuations and dates on mobil
   await expect(card.locator('.nasdaq-valuation-values > div').nth(0)).toContainText('2026-10-22');
   await expect(card.locator('.nasdaq-valuation-values > div').nth(1)).toContainText('19.61×');
   await expect(card.locator('.nasdaq-valuation-values > div').nth(1)).toContainText('2026-10-21');
+  await card.locator('details > summary').click();
   await expect(card.locator('a')).toHaveAttribute('href', 'https://historyofmarket.com/nasdaq/ndx-forward-pe/');
   const afterHours = page.locator('.twse-after-hours-card');
   const taiwanValuation = afterHours.locator('.twse-valuation');
@@ -324,6 +333,8 @@ test('Standalone War Room shows sourced NASDAQ-100 valuations and dates on mobil
   await expect(taiwanValuation).toContainText('10 年中位數 P/E');
   await expect(taiwanValuation).toContainText('18.32×');
   await expect(taiwanValuation).toContainText('2026-10-22');
+  await expect(taiwanValuation.locator('.twse-valuation details p')).toBeHidden();
+  await taiwanValuation.locator('details > summary').click();
   await expect(taiwanValuation).toContainText('MoneyDJ PE/PB河流圖反算');
   await expect(taiwanValuation).not.toContainText('2.61×');
   await expect(taiwanValuation).not.toContainText('1.74×');
@@ -380,6 +391,7 @@ test('Imperial Morning Brief shows sourced YTD maximum drawdowns for Nasdaq, S&P
   await page.route('https://api.ark-os26.cc/**', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ records: [] }) }));
 
   await page.goto(`${standaloneUrl}?tab=war-briefing`);
+  await expect(page.locator('.brief-macro-grid')).toBeHidden();
   await expect(page.locator('#nasdaq-ytd-drawdown')).toContainText('-12.34%');
   await expect(page.locator('.brief-market-row').filter({ hasText: '標普500 ETF' }).locator('.brief-ytd-drawdown-slot')).toContainText('-13.34%');
   await expect(page.locator('.brief-market-row').filter({ hasText: '台灣加權指數' }).locator('.brief-ytd-drawdown-slot')).toContainText('-14.34%');
@@ -566,6 +578,8 @@ test('Imperial Morning Brief bypasses an empty macro snapshot and reads valid in
   await page.route('https://api.ark-os26.cc/**', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ records: [{ capturedAt: new Date().toISOString(), metadata: { marketDashboard: { summary: {}, rows: [] }, macroOverview: { hasData: true, sourceDate: '2026/11/12', values: { cpi: 99 }, indicators: [{ code: 'cpi', value: null, displayValue: '--', status: '無資料' }, { code: 'twseMarginBalance', value: 999, displayValue: '999', status: '有資料' }] } } }] }) }));
 
   await page.goto(`${standaloneUrl}?tab=war-briefing`);
+  await expect(page.locator('.brief-macro-grid')).toBeHidden();
+  await page.locator('.brief-compact-details').filter({ hasText: '完整總經指標' }).locator('summary').click();
   await expect(page.locator('.brief-macro-grid')).toContainText('3.2%');
   await expect(page.locator('#content')).toContainText('指標資料日 2026/11/10');
   expect(actions).toContain('macroOverview');
