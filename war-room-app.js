@@ -221,14 +221,22 @@
       twse:(document.getElementById('twse-after-hours-host')||{}).innerHTML||'',
       drawdowns:Array.prototype.map.call(document.querySelectorAll('.brief-ytd-drawdown-slot[data-ytd-drawdown]'),function(slot){return {key:slot.getAttribute('data-ytd-drawdown'),text:slot.textContent,title:slot.title};})
     }:null;
-    function isPalantirMonitorRow_(row){if(!row||typeof row!=='object')return false;var code=String(row.code||row.symbol||row.ticker||'').trim().toUpperCase(),ticker=code.split(':').pop(),name=String(row.name||row.company||'');return ticker==='PLTR'||/palantir/i.test(name);}
+    function isTaiexCoreRow_(row){if(!row||typeof row!=='object')return false;var code=String(row.code||row.symbol||row.ticker||'').trim().toUpperCase(),name=String(row.name||row.company||'');return code==='^TWII'||code==='TWII'||code==='TAIEX'||/台灣加權|加權指數|TAIEX/i.test(name);}
+    function isWarRoomCoreMarketRow_(row){return isWarRoomQQQMRow_(row)||marketYtdDrawdownKey_(row)==='sp500'||isTaiexCoreRow_(row);}
     lastBriefPayload=payload;lastBriefStale=!!stale;
-    var sourceMarket=payload.market||payload.marketDashboard||{},sourceRows=Array.isArray(sourceMarket.rows)?sourceMarket.rows:[],market=Object.assign({},sourceMarket,{rows:sourceRows.filter(function(row){return !isPalantirMonitorRow_(row);}).map(function(row){return Object.assign({},row);})}),displayPayload=Object.assign({},payload),macro=payload.macro||payload.macroOverview||{},report=payload.longReport||{},qqqmCached=readCache(WAR_ROOM_QQQM_CACHE_KEY);
+    var sourceMarket=payload.market||payload.marketDashboard||{},sourceRows=Array.isArray(sourceMarket.rows)?sourceMarket.rows:[],market=Object.assign({},sourceMarket,{rows:sourceRows.filter(isWarRoomCoreMarketRow_).map(function(row){return Object.assign({},row);})}),displayPayload=Object.assign({},payload),macro=payload.macro||payload.macroOverview||{},report=payload.longReport||{},qqqmCached=readCache(WAR_ROOM_QQQM_CACHE_KEY);
+    var orderedCoreRows=[];
+    function addCoreRow_(predicate){var found=market.rows.find(predicate);if(found&&orderedCoreRows.indexOf(found)<0)orderedCoreRows.push(found);}
+    addCoreRow_(isWarRoomQQQMRow_);
+    addCoreRow_(function(row){return marketYtdDrawdownKey_(row)==='sp500';});
+    addCoreRow_(isTaiexCoreRow_);
+    market.rows.forEach(function(row){if(orderedCoreRows.indexOf(row)<0)orderedCoreRows.push(row);});
+    market.rows=orderedCoreRows;
     market.rows.forEach(function(row){if(!isWarRoomQQQMRow_(row))return;if(qqqmCached&&String(qqqmCached.symbol||'').toUpperCase()==='QQQM'&&Number(qqqmCached.price)>0)Object.assign(row,qqqmCached);else if(String(row.code||'').trim().toUpperCase()!=='NASDAQ:QQQM'){row.code='NASDAQ:QQQM';row.price=null;row.previous=null;row.change=null;row.changePct=null;row.ma20=null;row.ma20Prev=null;row.dataDate='';row.sourceName='Yahoo Finance';row.quoteStatus='報價載入中';}});
     if(payload.market)displayPayload.market=market;if(payload.marketDashboard)displayPayload.marketDashboard=market;
     var captured=payload.capturedAt||payload.sourceDate||'',summary=market.summary||{},judgment=macro.judgment||{},valuations=macro.valuations||{};
     function marketBreadth_(marketData,marketSummary){
-      var originalRows=Array.isArray(marketData.rows)?marketData.rows:[],rows=originalRows.filter(function(row){return !isPalantirMonitorRow_(row);}),counts={up:0,down:0,flat:0,total:0};
+      var originalRows=Array.isArray(marketData.rows)?marketData.rows:[],rows=originalRows.filter(isWarRoomCoreMarketRow_),counts={up:0,down:0,flat:0,total:0};
       rows.forEach(function(row){
         if(!row||typeof row!=='object')return;
         var change=row.changePct;
@@ -238,7 +246,7 @@
         counts.total++;
         if(Number(change)>0)counts.up++;else if(Number(change)<0)counts.down++;else counts.flat++;
       });
-      if(counts.total||originalRows.some(isPalantirMonitorRow_))return counts;
+      if(counts.total||originalRows.some(isWarRoomCoreMarketRow_))return counts;
       if(marketSummary.upCount!=null&&marketSummary.downCount!=null){
         var up=Number(marketSummary.upCount),down=Number(marketSummary.downCount),flat=Number(marketSummary.flatCount||0),total=Number(marketSummary.totalCount||marketSummary.symbolCount||up+down+flat);
         if(isFinite(up)&&isFinite(down)&&isFinite(flat)&&isFinite(total))return {up:up,down:down,flat:flat,total:total};
@@ -270,7 +278,7 @@
     rows.forEach(function(row){if(orderedRows.indexOf(row)<0)orderedRows.push(row);});
     rows=orderedRows;
     function marketRowHtml_(row){var change=Number(row.changePct),tone=isFinite(change)?change>=0?'up':'down':'',maHint=marketMaHint_(row),details=[row.code||'',row.dataDate||row.sourceDate||'資料日未提供',row.sourceName||'',row.quoteStatus||''].filter(Boolean).join(' · ');return '<article class="brief-market-row"><div><strong>'+esc(row.name||row.code||'市場')+'</strong><small>'+esc(details)+'</small></div><div><small>現價</small><div class="brief-market-price-line"><strong>'+esc(row.price==null?'--':num(row.price,2))+'</strong>'+(maHint?'<small class="brief-ma-hint '+maHint.tone+'" title="'+esc(maHint.title)+'">'+esc(maHint.text)+'</small>':'')+'</div></div><div class="'+tone+'"><small>漲跌</small><strong>'+esc(row.changePct==null?'--':num(row.changePct,2)+'%')+'</strong></div><span class="pill">'+esc(row.signal||'觀望')+'</span></article>';}
-    if(rows.length){var primaryRows=rows.slice(0,3),otherRows=rows.slice(3);html+=sectionTitle('核心市場')+'<div class="brief-market-list">'+primaryRows.map(marketRowHtml_).join('')+'</div>';if(otherRows.length)html+='<details class="brief-compact-details brief-more-markets"><summary>其他市場（'+otherRows.length+'）</summary><div class="brief-compact-inner brief-market-list">'+otherRows.map(marketRowHtml_).join('')+'</div></details>';}
+    if(rows.length)html+=sectionTitle('核心市場')+'<div class="brief-market-list">'+rows.map(marketRowHtml_).join('')+'</div>';
     var indicators=Array.isArray(macro.indicators)?macro.indicators:[],values=macro.values||{};
     function findIndicator(code){return indicators.find(function(item){return item&&item.code===code;})||(values[code]!=null?{code:code,value:values[code],displayValue:String(values[code])}:null);}
     function indicatorValue(row){if(!row)return '資料暫缺';var value=row.displayValue||(row.value==null?'':num(row.value));return (row.status&&row.status!=='資料'?String(row.status)+' · ':'')+(value||'資料暫缺');}

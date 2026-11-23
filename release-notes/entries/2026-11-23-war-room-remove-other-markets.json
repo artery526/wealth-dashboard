@@ -1,0 +1,9 @@
+{
+  "id": "2026-11-23-war-room-remove-other-markets",
+  "status": "in_progress",
+  "date": null,
+  "area": "帝國晨報",
+  "summary": "移除其他市場顯示並停止額外行情擷取",
+  "details": "核心市場僅保留納斯達克、標普 500 與台灣加權指數；停止 GLD、BTC、PLTR、SOXX 的後續行情更新與回傳，不刪除既有試算表資料。",
+  "platforms": ["website", "app-script"]
+}

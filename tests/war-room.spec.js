@@ -266,7 +266,8 @@ test('Imperial Morning Brief derives monitored market rise and fall counts from 
         { code: 'SPX', name: 'S&P 500', price: 6000, previous: 6010, changePct: -0.17, ma20: 6050, ma20Prev: 6060 },
         { code: 'VIX', name: 'VIX', price: 18, previous: 18, changePct: 0 },
         { code: 'NASDAQ:PLTR', name: 'Palantir Technologies', price: 150, previous: 140, changePct: 7.14 },
-        { code: 'NYSEARCA:GLD', name: '黃金 ETF', price: 250, previous: 251, changePct: -0.4 }
+        { code: 'NYSEARCA:GLD', name: '黃金 ETF', price: 250, previous: 251, changePct: -0.4 },
+        { code: 'NASDAQ:SOXX', name: '半導體 ETF', price: 600, previous: 602, changePct: -0.33 }
       ] },
       macro: { judgment: { summary: '維持觀察。' }, indicators: [], valuations: {} },
       capturedAt: '2026-10-15T12:00:00Z'
@@ -277,17 +278,17 @@ test('Imperial Morning Brief derives monitored market rise and fall counts from 
 
   await page.goto(`${standaloneUrl}?tab=war-briefing`);
   const breadth = page.locator('.brief-state').filter({ hasText: '漲 / 跌' });
-  await expect(breadth).toContainText('1 / 2');
-  await expect(breadth).toContainText('平盤 1');
-  await expect(breadth).toContainText('報價 4 項');
+  await expect(breadth).toContainText('1 / 1');
+  await expect(breadth).toContainText('平盤 0');
+  await expect(breadth).toContainText('報價 2 項');
   await expect(page.locator('.brief-market-list').first()).not.toContainText(/Palantir|PLTR/i);
   await expect(page.locator('body')).not.toContainText(/Palantir Technologies|PLTR/);
   await expect(page.locator('.brief-market-row').filter({ hasText: '加權指數' }).locator('.brief-ma-hint')).toHaveText('MA20 偏強');
   await expect(page.locator('.brief-market-row').filter({ hasText: 'S&P 500' }).locator('.brief-ma-hint')).toHaveText('MA20 偏弱');
-  const otherRow = page.locator('.brief-market-row').filter({ hasText: '黃金 ETF' });
-  await expect(otherRow).toBeHidden();
-  await page.locator('.brief-more-markets > summary').click();
-  await expect(otherRow).toBeVisible();
+  await expect(page.locator('.brief-market-row')).toHaveCount(2);
+  await expect(page.locator('.brief-market-row').filter({ hasText: '黃金 ETF' })).toHaveCount(0);
+  await expect(page.locator('.brief-market-row').filter({ hasText: '半導體 ETF' })).toHaveCount(0);
+  await expect(page.locator('body')).not.toContainText('其他市場');
   await expect(page.locator('.brief-market-row').filter({ hasText: 'VIX' }).locator('.brief-ma-hint')).toHaveCount(0);
   const width = await page.locator('html').evaluate(el => ({ scroll: el.scrollWidth, client: el.clientWidth }));
   expect(width.scroll).toBeLessThanOrEqual(width.client);
