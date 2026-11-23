@@ -5,11 +5,9 @@
   var API_URL=normalizeApi(localStorage.getItem('wealth_api_url')||'')||API_DEFAULT;
   var tabs={
     'war-briefing':{title:'帝國晨報',load:loadBriefing},
-    'war-battle-brief':{title:'戰情總匯報',load:loadBattle},
     'war-roster':{title:'部隊陣容',load:loadWarRoster}
   };
-  var currentTab='war-briefing',lastLoaded={},busy=false,foreignYtdPromise=null,foreignYtdLastAttempt=0,foreignYtdError='',nasdaqValuationPromise=null,taiwanValuationPromise=null,taiwanValuationLastAttempt=0,warRoomYtdDrawdownPromise=null,twseAfterHoursPromise=null,twseAfterHoursTimer=null,taiwanCloseReportPromise=null;
-  var FOREIGN_YTD_CACHE_KEY='wealth_twse_foreign_ytd_v1';
+  var currentTab='war-briefing',lastLoaded={},busy=false,nasdaqValuationPromise=null,taiwanValuationPromise=null,taiwanValuationLastAttempt=0,warRoomYtdDrawdownPromise=null,twseAfterHoursPromise=null,twseAfterHoursTimer=null,taiwanCloseReportPromise=null;
   var NASDAQ_VALUATION_CACHE_KEY='wealth_nasdaq100_valuation_v1';
   var TAIWAN_VALUATION_CACHE_KEY='wealth_taiwan_valuation_v1';
   var WAR_ROOM_YTD_DRAWDOWN_CACHE_KEY='wealth_war_room_ytd_drawdown_v1';
@@ -60,41 +58,6 @@
   }
   function renderLogin(message){content.innerHTML='<div class="auth-box"><h2>🔐 城門驗證</h2><p>'+esc(message||'請輸入與主網站相同的 API 網址與城門密碼。資料只保存在此瀏覽器，不會送到其他服務。')+'</p><label>Web App API 網址<input id="api-url" type="url" autocomplete="url" placeholder="https://script.google.com/macros/s/.../exec" value="'+esc(localStorage.getItem('wealth_api_url')||API_DEFAULT)+'"></label><label>城門密碼（WRITE_TOKEN）<input id="write-token" type="password" autocomplete="current-password" value="'+esc(localStorage.getItem('wealth_write_token')||'')+'"></label><button class="action" id="login-submit" type="button">驗證並進入</button><p class="sub">若主網站已登入，請確認兩個頁面位於相同網域；本頁會沿用既有瀏覽器 Session。</p></div>';document.getElementById('login-submit').onclick=async function(){localStorage.setItem('wealth_api_url',normalizeApi(document.getElementById('api-url').value)||API_DEFAULT);localStorage.setItem('wealth_write_token',document.getElementById('write-token').value.trim());API_URL=normalizeApi(localStorage.getItem('wealth_api_url'))||API_DEFAULT;this.disabled=true;var ok=await authorize();if(ok)selectTab(currentTab,true);};}
   function num(value,digits){if(value==null||value===''||!isFinite(Number(value)))return '--';return Number(value).toLocaleString('zh-TW',{maximumFractionDigits:digits==null?2:digits});}
-  function twseDatePart(part){var parts=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Taipei',year:'numeric',month:'2-digit'}).formatToParts(new Date());return Number(parts.filter(function(item){return item.type===part;})[0].value);}
-  function parseTwseMonthlyNet_(report){
-    if(!report||report.stat!=='OK'||!Array.isArray(report.data))throw new Error('證交所月報沒有可用資料');
-    var row=report.data.filter(function(item){return Array.isArray(item)&&/^外資及陸資[\(（]?不含外資自營商/.test(String(item[0]||''));})[0];
-    if(!row)throw new Error('證交所月報未提供外資買賣差額');
-    var net=Number(String(row[3]||'').replace(/,/g,''));
-    if(!isFinite(net))throw new Error('證交所月報買賣差額格式無法辨識');
-    var dates=String(report.title||'').match(/至\s*(\d{2,4})年(\d{1,2})月(\d{1,2})日/);
-    if(!dates)throw new Error('證交所月報未提供資料日期');
-    var sourceYear=Number(dates[1]);if(sourceYear<1911)sourceYear+=1911;
-    return {netAmount:net,sourceDate:sourceYear+'/'+String(Number(dates[2])).padStart(2,'0')+'/'+String(Number(dates[3])).padStart(2,'0')};
-  }
-  async function fetchTwseForeignYtd_(){
-    var year=twseDatePart('year'),lastMonth=twseDatePart('month'),months=[];
-    for(var month=1;month<=lastMonth;month++)months.push(month);
-    var reports=await Promise.all(months.map(async function(month){
-      var monthDate=String(year)+String(month).padStart(2,'0')+'01',url='https://www.twse.com.tw/rwd/zh/fund/BFI82U?dayDate=&monthDate='+monthDate+'&response=json&type=month';
-      var controller=new AbortController(),timer=setTimeout(function(){controller.abort();},15000);
-      try{var response=await fetch(url,{cache:'no-store',signal:controller.signal});if(!response.ok)throw new Error('證交所月報讀取失敗（HTTP '+response.status+'）');return parseTwseMonthlyNet_(await response.json());}
-      finally{clearTimeout(timer);}
-    }));
-    return {year:year,netAmount:reports.reduce(function(sum,report){return sum+report.netAmount;},0),sourceDate:reports[reports.length-1].sourceDate,source:'TWSE 三大法人買賣金額月報'};
-  }
-  function renderForeignYtd_(data,stale,error){
-    var host=document.getElementById('battle-foreign-ytd-host');if(!host)return;
-    if(!data){host.innerHTML='<div class="battle-foreign-ytd" role="status"><div><small>外資及陸資今年累計買賣超</small><strong class="pending">'+(error?'資料暫缺':'正在讀取證交所月報…')+'</strong><span>'+(error?esc(error):'按今年各月官方買賣差額加總')+'</span></div><a href="https://www.twse.com.tw/zh/trading/foreign/bfi82u.html" target="_blank" rel="noopener noreferrer">官方來源</a></div>';return;}
-    var net=Number(data.netAmount),direction=net<0?'賣超':net>0?'買超':'買賣平衡',tone=net<0?'down':net>0?'up':'',amount=(Math.abs(net)/100000000).toLocaleString('zh-TW',{minimumFractionDigits:2,maximumFractionDigits:2});
-    host.innerHTML='<div class="battle-foreign-ytd" role="status"><div><small>'+esc(data.year)+' 年外資及陸資累計買賣超</small><strong class="'+tone+'">'+direction+' '+amount+' 億</strong><span>資料截至 '+esc(data.sourceDate)+' · '+esc(data.source)+(stale?' · 背景更新失敗，先顯示上次成功資料':'')+'</span><span class="battle-foreign-ytd-note">買賣差額為買進減賣出；負值代表賣超。統計不含外資自營商。</span></div><a href="https://www.twse.com.tw/zh/trading/foreign/bfi82u.html" target="_blank" rel="noopener noreferrer">官方來源</a></div>';
-  }
-  function refreshForeignYtd_(){
-    if(foreignYtdPromise||Date.now()-foreignYtdLastAttempt<60000)return foreignYtdPromise;
-    foreignYtdLastAttempt=Date.now();
-    foreignYtdPromise=fetchTwseForeignYtd_().then(function(data){writeCache(FOREIGN_YTD_CACHE_KEY,data);foreignYtdError='';renderForeignYtd_(data,false,'');return data;}).catch(function(error){foreignYtdError=error&&error.message||'證交所月報暫時無法讀取';renderForeignYtd_(readCache(FOREIGN_YTD_CACHE_KEY),true,foreignYtdError);return null;}).finally(function(){foreignYtdPromise=null;});
-    return foreignYtdPromise;
-  }
   function metric(label,value,sub){return '<div class="card"><h3>'+esc(label)+'</h3><div class="metric">'+esc(value==null||value===''?'資料暫缺':value)+'</div>'+(sub?'<div class="metric-label">'+esc(sub)+'</div>':'')+'</div>';}
   function genericRows(items,fields){if(!Array.isArray(items)||!items.length)return '<div class="empty">目前沒有可顯示資料</div>';return '<div class="rows">'+items.map(function(item){return '<article class="row"><div class="row-title">'+esc(item.name||item.title||item.code||item.label||'資料')+'<small>'+esc(item.code||item.date||item.sourceDate||item.quadrant||'')+'</small></div>'+fields.map(function(field){var value=item[field.key];var text=value==null?'--':(field.format?field.format(value):String(value));var cls=field.color&&Number(value)<0?'down':field.color&&Number(value)>0?'up':'';return '<div class="'+cls+'"><small>'+esc(field.label)+'</small>'+esc(text)+'</div>';}).join('')+'</article>';}).join('')+'</div>';}
   function rawDetails(title,data){return '<details class="details"><summary>'+esc(title)+'</summary><pre>'+esc(JSON.stringify(data,null,2))+'</pre></details>';}
@@ -277,21 +240,6 @@
     if(!unusableMacroCache)try{var fresh=await request({action:'advisorWorldBriefSnapshotRefresh'},60000);if(fresh&&fresh.snapshot){var cleanSnapshot=withoutMarketPayload_(fresh.snapshot);writeCache(cacheKey,cleanSnapshot);renderBrief(cleanSnapshot,false);return;}}catch(e){/* Direct source fallback below */}
     try{var results=await Promise.allSettled([request({action:'macroOverview'}),request({action:'macroLongReport'})]);if(results[0].status==='rejected'&&results[1].status==='rejected')throw new Error('總經資料讀取失敗');var payload={macro:results[0].status==='fulfilled'?results[0].value:cacheMacro||{},longReport:results[1].status==='fulfilled'?results[1].value:null,capturedAt:new Date().toISOString()};writeCache(cacheKey,payload);renderBrief(payload,false);if(!hasMacroLightData(payload.macro)){var macroError=results[0].status==='rejected'?results[0].reason:null,macroStatus=macroError&&macroError.status?'HTTP '+macroError.status:'來源未回傳有效數值';content.insertAdjacentHTML('afterbegin','<div class="notice error">總經燈號尚未取得有效指標：'+esc(macroStatus)+' · 資料日 '+esc(payload.macro&&payload.macro.sourceDate||'未提供')+'。畫面保留來源日期，請勿視為最新指標。</div>');}}
     catch(error){if(currentTab!=='war-briefing')return;if(cached||cacheMacro){renderBrief(cached||{macro:cacheMacro||{}},true);showError(error);}else{content.innerHTML='<div class="empty">帝國晨報讀取失敗：'+esc(error.message)+'</div>';showError(error);}}
-  }
-  async function loadBattle(force){var key='wealth_battle_brief_v5',cached=readCache(key);if(!force&&cached)renderBattle(cached,true);else content.innerHTML='<div class="loading"><span class="spinner"></span> 正在讀取戰情總匯報…</div>';try{var data=await request({action:'battleBrief'},45000);writeCache(key,data);if(currentTab!=='war-battle-brief')return;renderBattle(data,false);setStatus('戰情資料已更新','ok');setFreshness('資料 '+dateText(data.updatedAt||data.date));}catch(error){if(currentTab!=='war-battle-brief')return;if(cached){renderBattle(cached,true);showError(error);}else{content.innerHTML='<div class="empty">戰情總匯報讀取失敗</div>';showError(error);}}}
-  function renderBattle(data,stale){
-    if(currentTab!=='war-battle-brief')return;
-    var summary=data.summary||{},etf=data.etfHoldingChange||{},latest=etf.latest||{};
-    var html='<div class="brief-hero battle-hero"><div><div class="brief-kicker">WAR ROOM · DAILY REPORT</div><h2>⚔️ 戰情總匯報</h2><p>資料日 '+esc(data.date||'--')+' · 更新 '+esc(dateText(data.updatedAt||''))+'</p></div><span class="pill">'+esc(summary.storageMode||'最新戰情快照')+'</span></div>'+(stale?'<div class="notice">目前保留上次成功資料。</div>':'');
-    html+='<div class="battle-kpis"><article><small>市場態勢</small><strong>'+esc(summary.marketStance||'觀望')+'</strong></article><article><small>上漲</small><strong class="up">'+esc(num(summary.upCount,0))+'</strong></article><article><small>下跌</small><strong class="down">'+esc(num(summary.downCount,0))+'</strong></article><article><small>持股標的</small><strong>'+esc(num((data.holdings||[]).length,0))+'</strong></article></div>';
-    html+=sectionTitle('00997A 持股變化')+'<article class="battle-etf-card"><div class="battle-etf-meta">資料日 '+esc(latest.sourceDate||latest.date||'--')+' <span>比較 '+esc(latest.previousDate||'首筆快照')+'</span> <span>股票合計 '+esc(num(latest.totalWeight))+'%</span></div><p class="battle-etf-comment">'+esc(latest.commentary||etf.status||'尚未建立持股異動資料。')+'</p><div class="battle-etf-changes">'+[['加碼前五',latest.topAddsText||'暫無加碼'],['減碼前五',latest.topReducesText||'暫無減碼'],['主題變化',latest.themesText==='待累積第二筆快照'?'等待第二筆快照':latest.themesText||'尚無變化'],['新增／移除',[latest.addedText,latest.removedText].filter(Boolean).join('；')||'無新增或移除']].map(function(pair){return '<div><small>'+esc(pair[0])+'</small><strong>'+esc(pair[1])+'</strong></div>';}).join('')+'</div></article>';
-    function dataList(items,caption,fields){if(!Array.isArray(items)||!items.length)return '<div class="battle-empty">目前沒有資料</div>';return '<div class="battle-data-list">'+items.map(function(item){return '<article class="battle-data-row"><div class="battle-data-name"><strong>'+esc(item.name||item.code||item.title||caption)+'</strong><small>'+esc(item.code&&item.name?item.code:item.dataDate||item.sourceDate||item.updatedAt||'')+'</small></div>'+fields.map(function(field){var value=item[field.key],text=value==null?'--':field.format?field.format(value):String(value);var tone=field.color&&Number(value)>0?'up':field.color&&Number(value)<0?'down':'';return '<div class="battle-data-value '+tone+'"><small>'+esc(field.label)+'</small><strong>'+esc(text)+'</strong></div>';}).join('')+'</article>';}).join('')+'</div>';}
-    html+=sectionTitle('基金淨值')+dataList(data.funds||[],'基金',[{key:'current',label:'目前淨值',format:function(v){return num(v,4);}},{key:'referenceValue',label:'參考均價',format:function(v){return num(v,4);}},{key:'updatedAt',label:'更新時間'}]);
-    html+=sectionTitle('外資今年累計買賣超')+'<div id="battle-foreign-ytd-host"></div>';
-    html+=sectionTitle('持股行情')+dataList(data.holdings||[],'持股',[{key:'current',label:'現價',format:function(v){return num(v,4);}},{key:'referenceValue',label:'成本／均價',format:function(v){return num(v,4);}},{key:'changePct',label:'報酬變化',format:function(v){return num(v)+'%';},color:true}]);
-    html+=rawDetails('戰情原始資料',data);content.innerHTML=html;
-    renderForeignYtd_(readCache(FOREIGN_YTD_CACHE_KEY),false,foreignYtdError);
-    refreshForeignYtd_();
   }
   function selectTab(tab,force){if(!tabs[tab])tab='war-briefing';var previousTab=currentTab;currentTab=tab;document.querySelectorAll('.tabs button').forEach(function(button){button.classList.toggle('active',button.dataset.tab===tab);});document.getElementById('page-title').textContent=tabs[tab].title;history.replaceState(null,'','?tab='+encodeURIComponent(tab));if(!force&&previousTab===tab&&lastLoaded[tab])return;lastLoaded[tab]=true;tabs[tab].load(!!force).catch(function(error){if(currentTab===tab)showError(error);});}
   document.querySelector('.tabs').addEventListener('click',function(event){var button=event.target.closest('button[data-tab]');if(button&&this.contains(button))selectTab(button.dataset.tab,false);});
