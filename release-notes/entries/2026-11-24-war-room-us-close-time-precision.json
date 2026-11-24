@@ -1,0 +1,9 @@
+{
+  "id": "2026-11-24-war-room-us-close-time-precision",
+  "status": "in_progress",
+  "date": null,
+  "area": "帝國晨報",
+  "summary": "將美股盤後排程調整為八點附近觸發",
+  "details": "將美股報告排程指定為台北時間週二至週六 08:00 附近觸發（Apps Script 時間可能前後 15 分鐘）；僅重建美股報告自己的觸發器。",
+  "platforms": ["app-script"]
+}

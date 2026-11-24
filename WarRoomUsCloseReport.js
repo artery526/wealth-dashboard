@@ -217,10 +217,10 @@ function installWarRoomUsCloseReportSchedule_() {
     ScriptApp.WeekDay.FRIDAY,
     ScriptApp.WeekDay.SATURDAY
   ].forEach(function(day) {
-    ScriptApp.newTrigger(handler).timeBased().onWeekDay(day).atHour(8).everyWeeks(1).create();
+    ScriptApp.newTrigger(handler).timeBased().onWeekDay(day).atHour(8).nearMinute(0).inTimezone('Asia/Taipei').everyWeeks(1).create();
   });
 
-  return { installed: true, days: ['Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'], hour: 8, timeZone: Session.getScriptTimeZone() };
+  return { installed: true, days: ['Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'], hour: 8, nearMinute: 0, minuteTolerance: 15, timeZone: 'Asia/Taipei' };
 }
 
 function installWarRoomUsCloseReportSchedule() {
