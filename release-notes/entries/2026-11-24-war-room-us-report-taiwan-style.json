@@ -1,0 +1,9 @@
+{
+  "id": "2026-11-24-war-room-us-report-taiwan-style",
+  "status": "in_progress",
+  "date": null,
+  "area": "帝國晨報",
+  "summary": "統一美股與台股盤後報告版面風格",
+  "details": "調整美股報告資訊層次、字級、技術卡片與手機版欄位，使其沿用台股盤後報告的呈現方式；保留美股指數、技術資料及來源。",
+  "platforms": ["website"]
+}
