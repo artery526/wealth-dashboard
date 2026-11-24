@@ -198,16 +198,27 @@
     function number(value,digits){var n=Number(value);return isFinite(n)?n.toLocaleString('zh-TW',{minimumFractionDigits:digits,maximumFractionDigits:digits}):'資料不足';}
     function signed(value,digits,suffix){var n=Number(value);return value==null||value===''||!isFinite(n)?'資料不足':(n>0?'+':'')+number(n,digits)+(suffix||'');}
     var badge=loading?(report?'背景更新中 · 顯示上次報告':'讀取中'):error?(report?'更新失敗 · 顯示上次報告':'更新失敗'):stale?'資料日期較舊':status==='published'?'最近交易日資料':'尚未產生';
-    var html='<article class="taiwan-close-report us-close-report"><div class="taiwan-close-report-head"><strong>🇺🇸 美股盤後報告</strong><span>'+esc(badge)+'</span></div>';
-    html+='<div class="us-close-report-actions"><span>依 FRED 公開指數資料整理；只描述已公布資料，不作價格預測。</span><button type="button" data-us-close-report-refresh'+(loading?' disabled':'')+'>重新整理</button></div>';
+    var html='<article class="taiwan-close-report us-close-report"><div class="taiwan-close-report-head"><strong>🇺🇸 美股盤後報告</strong><div class="us-close-report-head-actions"><span>'+esc(badge)+'</span><button type="button" data-us-close-report-refresh'+(loading?' disabled':'')+'>重新整理</button></div></div>';
+    html+='<p class="us-close-report-source-note">依 FRED 公開指數日收盤整理；僅描述已公布資料，不作價格預測。</p>';
     if(!report){html+='<p>'+(error?esc(error):loading?'正在讀取最近報告並檢查最新可得資料…':'開啟此頁籤後會讀取最近交易日；首次整理可能需要稍候。')+'</p></article>';setCloseReportMarkup_('us',html);return;}
     var indices=Array.isArray(report.indices)?report.indices:[];
     if(indices.length)html+='<div class="taiwan-close-report-index us-close-report-index">'+indices.map(function(item){var change=Number(item.change),tone=isFinite(change)?(change>0?'up':change<0?'down':''):'';return '<div><small>'+esc(item.name||'美股指數')+' 收盤 · '+esc(item.dataDate||report.marketDate||'資料日未提供')+'</small><strong>'+esc(number(item.close,2))+'</strong><small class="'+tone+'">'+esc(signed(item.change,2,' 點'))+' · '+esc(signed(item.changePercent,2,'%'))+'</small></div>';}).join('')+'</div>';
     html+='<h3>'+esc(report.headline||'美股收盤與趨勢整理')+'</h3><p>'+esc(report.summary||'資料不足，暫無摘要。')+'</p>';
     if(report.aiNote)html+='<p class="us-close-report-ai-note">'+esc(report.aiNote)+'</p>';
-    if(Array.isArray(report.observations)&&report.observations.length)html+='<ul>'+report.observations.slice(0,4).map(function(item){return '<li>'+esc(item)+'</li>';}).join('')+'</ul>';
+    if(Array.isArray(report.observations)&&report.observations.length)html+='<h4 class="us-close-report-section-title">主要觀察</h4><ul>'+report.observations.slice(0,4).map(function(item){return '<li>'+esc(item)+'</li>';}).join('')+'</ul>';
     var technical=indices.filter(function(item){return item&&item.technical;});
-    if(technical.length){html+='<section class="taiwan-close-report-analysis"><h4>📈 指數技術觀察 <small>依 FRED 日收盤資料計算</small></h4><div class="us-close-report-tech-grid">'+technical.map(function(item){var tech=item.technical||{},ma=tech.closeVsMovingAveragePercent||{};return '<div><strong>'+esc(item.name||'指數')+'</strong><span>短線 5 日 '+esc(signed(tech.fiveSessionReturn,2,'%'))+' · '+esc(ma.twenty==null?'20 日均線資料不足':'收盤'+(Number(ma.twenty)>=0?'高於':'低於')+'20 日均線 '+number(Math.abs(ma.twenty),2)+'%')+'</span><span>中期 20 日 '+esc(signed(tech.twentySessionReturn,2,'%'))+' · 長期 60 日 '+esc(signed(tech.sixtySessionReturn,2,'%'))+'</span></div>';}).join('')+'</div><p class="taiwan-close-report-analysis-note">技術數值僅描述歷史收盤變化，不代表未來方向。</p></section>';}
+    if(technical.length){
+      function relation(value,period){if(value==null||value===''||!isFinite(Number(value)))return '均線資料不足';return '收盤'+(Number(value)>=0?'高於':'低於')+period+' 日均線 '+number(Math.abs(Number(value)),2)+'%';}
+      function rsiLabel(value){var n=Number(value);return value==null||value===''||!isFinite(n)?'資料不足':n>=70?'偏高區':n<=30?'偏低區':'中性區';}
+      html+='<section class="taiwan-close-report-analysis"><h4>📈 技術觀察 <small>依 FRED 日收盤資料計算</small></h4><div class="taiwan-close-report-tech-grid us-close-report-tech-grid">';
+      technical.forEach(function(item){var tech=item.technical||{},ma=tech.closeVsMovingAveragePercent||{},name=item.name||'指數';
+        html+='<div><small>'+esc(name+' · 短線 5 日')+'</small><strong>'+esc(signed(tech.fiveSessionReturn,2,'%'))+'</strong><span>近 5 個交易日累積報酬</span></div>';
+        html+='<div><small>'+esc(name+' · 中期 20 日')+'</small><strong>'+esc(signed(tech.twentySessionReturn,2,'%'))+'</strong><span>'+esc(relation(ma.twenty,20))+'</span></div>';
+        html+='<div><small>'+esc(name+' · 較長期 60 日')+'</small><strong>'+esc(signed(tech.sixtySessionReturn,2,'%'))+'</strong><span>'+esc(relation(ma.sixty,60))+'</span></div>';
+        html+='<div><small>'+esc(name+' · RSI 14 日')+'</small><strong>'+esc(tech.rsi14==null?'資料不足':number(tech.rsi14,1))+'</strong><span>'+esc(rsiLabel(tech.rsi14))+' · 歷史技術觀察</span></div>';
+      });
+      html+='</div><p class="taiwan-close-report-analysis-note">技術數值僅描述歷史收盤變化，不代表未來方向。</p></section>';
+    }
     if(report.mainRisk)html+='<div class="taiwan-close-report-risk"><small>風險與資料限制</small><span>'+esc(report.mainRisk)+'</span></div>';
     if(error)html+='<div class="taiwan-close-report-risk"><small>更新狀態</small><span>'+esc(error)+'</span></div>';
     html+='<div class="taiwan-close-report-meta">資料日 '+esc(report.marketDate||'未提供')+' · 整理時間 '+esc(report.generatedAt?dateText(report.generatedAt):'未提供')+'</div>';

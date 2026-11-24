@@ -817,8 +817,8 @@ test('War Room close report includes a US tab that loads the OpenAI-backed sourc
       observations: ['NASDAQ-100 近 5 日上漲，20 日與 60 日狀態請依卡片觀察。'],
       mainRisk: '本報整理歷史資料，不是價格預測或投資建議。',
       indices: [
-        { key: 'nasdaq100', name: 'NASDAQ-100', close: 25123.45, change: 125.67, changePercent: 0.5, dataDate: '2026-11-23', technical: { fiveSessionReturn: 1.25, twentySessionReturn: 2.5, sixtySessionReturn: 4.2, closeVsMovingAveragePercent: { twenty: 1.1 } } },
-        { key: 'sp500', name: 'S&P 500', close: 6754.32, change: -12.34, changePercent: -0.18, dataDate: '2026-11-23', technical: { fiveSessionReturn: 0.2, twentySessionReturn: 1.3, sixtySessionReturn: 3.4, closeVsMovingAveragePercent: { twenty: -0.3 } } }
+        { key: 'nasdaq100', name: 'NASDAQ-100', close: 25123.45, change: 125.67, changePercent: 0.5, dataDate: '2026-11-23', technical: { fiveSessionReturn: 1.25, twentySessionReturn: 2.5, sixtySessionReturn: 4.2, closeVsMovingAveragePercent: { twenty: 1.1, sixty: 2.3 }, rsi14: 54.2 } },
+        { key: 'sp500', name: 'S&P 500', close: 6754.32, change: -12.34, changePercent: -0.18, dataDate: '2026-11-23', technical: { fiveSessionReturn: 0.2, twentySessionReturn: 1.3, sixtySessionReturn: 3.4, closeVsMovingAveragePercent: { twenty: -0.3, sixty: -1.4 }, rsi14: 42.7 } }
       ],
       sources: [
         { title: 'FRED（來源：Nasdaq）', url: 'https://fred.stlouisfed.org/data/NASDAQ100' },
@@ -838,22 +838,29 @@ test('War Room close report includes a US tab that loads the OpenAI-backed sourc
   await expect(usReport).toContainText('NASDAQ-100');
   await expect(usReport).toContainText('S&P 500');
   await expect(usReport).toContainText('2026-11-23');
+  await expect(usReport.locator('.us-close-report-section-title')).toHaveText('主要觀察');
+  await expect(usReport).toContainText('RSI 14 日');
+  await expect(usReport.locator('.us-close-report-tech-grid > div')).toHaveCount(8);
   await expect(usReport.locator('a')).toHaveCount(2);
   expect(actions).toContain('warRoomUsCloseReportGenerate');
   const layout = await usReport.evaluate(el => ({
     gridColumns: getComputedStyle(el.querySelector('.us-close-report-index')).gridTemplateColumns.split(' ').length,
+    technicalColumns: getComputedStyle(el.querySelector('.us-close-report-tech-grid')).gridTemplateColumns.split(' ').length,
     scrollWidth: el.scrollWidth,
     clientWidth: el.clientWidth
   }));
   expect(layout.gridColumns).toBe(1);
+  expect(layout.technicalColumns).toBe(2);
   expect(layout.scrollWidth).toBeLessThanOrEqual(layout.clientWidth);
   await page.setViewportSize({ width: 1280, height: 900 });
   const desktopLayout = await usReport.evaluate(el => ({
     gridColumns: getComputedStyle(el.querySelector('.us-close-report-index')).gridTemplateColumns.split(' ').length,
+    technicalColumns: getComputedStyle(el.querySelector('.us-close-report-tech-grid')).gridTemplateColumns.split(' ').length,
     scrollWidth: el.scrollWidth,
     clientWidth: el.clientWidth
   }));
   expect(desktopLayout.gridColumns).toBe(2);
+  expect(desktopLayout.technicalColumns).toBe(4);
   expect(desktopLayout.scrollWidth).toBeLessThanOrEqual(desktopLayout.clientWidth);
   await reportTabs.nth(0).click();
   await expect(page.locator('.taiwan-close-report')).toBeVisible();
