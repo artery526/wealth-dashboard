@@ -1,0 +1,9 @@
+{
+  "id": "2026-11-24-war-room-us-close-report",
+  "status": "in_progress",
+  "date": null,
+  "area": "帝國晨報",
+  "summary": "新增美股盤後報告頁籤與 OpenAI 摘要 API",
+  "details": "在台股盤後報告區加入美股盤後報告頁籤，使用 FRED 公開指數資料並透過既有 OpenAI Responses API 整理；保留來源與資料日，不新增排程或試算表欄位。",
+  "platforms": ["website", "app-script"]
+}

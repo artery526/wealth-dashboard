@@ -108,6 +108,10 @@ function doGet(e) {
   try {
     var p      = e.parameter;
     var action = (p.action || '').trim();
+    if (action === 'warRoomUsCloseReport') {
+      verifyWriteToken(p);
+      return ok(getWarRoomUsCloseReport_());
+    }
     var ss     = SpreadsheetApp.getActiveSpreadsheet();
 
     // ── 讀取路由（不需要 token）──
@@ -186,6 +190,8 @@ function doPost(e) {
 
     // ★ 所有寫入請求均需通過 token 驗證
     verifyWriteToken(body);
+
+    if (action === 'warRoomUsCloseReportGenerate') return ok(generateWarRoomUsCloseReport_());
 
     var ss = SpreadsheetApp.getActiveSpreadsheet();
 

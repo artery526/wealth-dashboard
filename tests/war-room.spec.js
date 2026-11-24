@@ -797,6 +797,68 @@ test('Imperial Morning Brief shows Taiwan close and listed financing values with
   expect(width.scroll).toBeLessThanOrEqual(width.client);
 });
 
+test('War Room close report includes a US tab that loads the OpenAI-backed sourced report on demand', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.addInitScript(() => {
+    localStorage.setItem('wealth_api_url', 'https://example.test/exec'); localStorage.setItem('wealth_write_token', 'test-write-token');
+    localStorage.setItem('wealth_web_verify_status', 'ok'); localStorage.setItem('wealth_web_verify_checked_at', String(Date.now()));
+    sessionStorage.setItem('wealth_web_session_token', 'same-tab-session');
+  });
+  const actions = [];
+  await page.route('https://example.test/**', async route => {
+    const request = route.request();
+    const action = request.method() === 'POST'
+      ? JSON.parse(request.postData() || '{}').action
+      : new URL(request.url()).searchParams.get('action');
+    actions.push(action);
+    const report = {
+      status: 'published', marketDate: '2026-11-23', generatedAt: '2026-11-24T01:00:00Z',
+      headline: '大型指數收盤分歧', summary: 'NASDAQ-100 與 S&P 500 收盤表現分歧；中短期技術指標僅描述歷史日收盤變化。',
+      observations: ['NASDAQ-100 近 5 日上漲，20 日與 60 日狀態請依卡片觀察。'],
+      mainRisk: '本報整理歷史資料，不是價格預測或投資建議。',
+      indices: [
+        { key: 'nasdaq100', name: 'NASDAQ-100', close: 25123.45, change: 125.67, changePercent: 0.5, dataDate: '2026-11-23', technical: { fiveSessionReturn: 1.25, twentySessionReturn: 2.5, sixtySessionReturn: 4.2, closeVsMovingAveragePercent: { twenty: 1.1 } } },
+        { key: 'sp500', name: 'S&P 500', close: 6754.32, change: -12.34, changePercent: -0.18, dataDate: '2026-11-23', technical: { fiveSessionReturn: 0.2, twentySessionReturn: 1.3, sixtySessionReturn: 3.4, closeVsMovingAveragePercent: { twenty: -0.3 } } }
+      ],
+      sources: [
+        { title: 'FRED（來源：Nasdaq）', url: 'https://fred.stlouisfed.org/data/NASDAQ100' },
+        { title: 'FRED（來源：S&P Dow Jones Indices）', url: 'https://fred.stlouisfed.org/data/SP500' }
+      ]
+    };
+    const data = action === 'warRoomUsCloseReportGenerate' ? { report, status: 'published', stale: false, updated: true } : {};
+    return route.fulfill({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ ok: true, data }) });
+  });
+  await page.goto(`${standaloneUrl}?tab=war-briefing`);
+  const reportTabs = page.getByRole('tab');
+  await expect(reportTabs).toHaveText(['🇹🇼 台股盤後報告', '🇺🇸 美股盤後報告']);
+  await expect(page.locator('.taiwan-close-report')).toBeVisible();
+  expect(actions).not.toContain('warRoomUsCloseReportGenerate');
+  await reportTabs.nth(1).click();
+  const usReport = page.locator('.us-close-report');
+  await expect(usReport).toContainText('NASDAQ-100');
+  await expect(usReport).toContainText('S&P 500');
+  await expect(usReport).toContainText('2026-11-23');
+  await expect(usReport.locator('a')).toHaveCount(2);
+  expect(actions).toContain('warRoomUsCloseReportGenerate');
+  const layout = await usReport.evaluate(el => ({
+    gridColumns: getComputedStyle(el.querySelector('.us-close-report-index')).gridTemplateColumns.split(' ').length,
+    scrollWidth: el.scrollWidth,
+    clientWidth: el.clientWidth
+  }));
+  expect(layout.gridColumns).toBe(1);
+  expect(layout.scrollWidth).toBeLessThanOrEqual(layout.clientWidth);
+  await page.setViewportSize({ width: 1280, height: 900 });
+  const desktopLayout = await usReport.evaluate(el => ({
+    gridColumns: getComputedStyle(el.querySelector('.us-close-report-index')).gridTemplateColumns.split(' ').length,
+    scrollWidth: el.scrollWidth,
+    clientWidth: el.clientWidth
+  }));
+  expect(desktopLayout.gridColumns).toBe(2);
+  expect(desktopLayout.scrollWidth).toBeLessThanOrEqual(desktopLayout.clientWidth);
+  await reportTabs.nth(0).click();
+  await expect(page.locator('.taiwan-close-report')).toBeVisible();
+});
+
 test('standalone page loads only its own package and does not request unrelated homepage data', async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem('wealth_api_url', 'https://example.test/exec'); localStorage.setItem('wealth_write_token', 'test-write-token');
