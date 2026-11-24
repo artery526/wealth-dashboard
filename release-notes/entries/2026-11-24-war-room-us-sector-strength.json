@@ -1,9 +1,9 @@
 {
   "id": "2026-11-24-war-room-us-sector-strength",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-11-24",
   "area": "帝國晨報",
   "summary": "美股盤後報告加入今日產業強弱",
-  "details": "以 11 檔 Select Sector SPDR ETF 的單日收盤漲跌呈現相對領先與落後產業代理；標示資料日、可用檔數與來源限制，資料不足時明確顯示暫缺。",
+  "details": "以 11 檔 Select Sector SPDR ETF 單日收盤漲跌呈現相對領先與落後代理，顯示資料日、可用檔數與 Yahoo Finance 行情連結；日期未對齊或資料不足時明確標示暫缺，不推論持續輪動或資金流向。已部署網站與 Apps Script 美股報告 API，並於正式戰情室確認資料日、11/11 檔行情及產業卡呈現。",
   "platforms": ["website", "app-script"]
 }
