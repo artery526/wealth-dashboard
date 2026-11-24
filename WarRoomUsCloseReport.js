@@ -1,5 +1,6 @@
 var WAR_ROOM_US_CLOSE_REPORT_PROPERTY_ = 'WAR_ROOM_US_CLOSE_REPORT_V1';
 var WAR_ROOM_US_CLOSE_MARKET_CACHE_KEY_ = 'WAR_ROOM_US_CLOSE_MARKET_V1';
+var WAR_ROOM_US_CLOSE_SECTOR_CACHE_PREFIX_ = 'WAR_ROOM_US_CLOSE_SECTORS_V1_';
 
 function getWarRoomUsCloseReport_() {
   var raw = PropertiesService.getScriptProperties().getProperty(WAR_ROOM_US_CLOSE_REPORT_PROPERTY_);
@@ -23,12 +24,25 @@ function generateWarRoomUsCloseReport_() {
   try {
     var market = getWarRoomUsCloseMarketData_();
     var existing = getWarRoomUsCloseReport_();
-    if (existing.report && String(existing.report.marketDate || '') >= market.marketDate) {
-      existing.marketDate = market.marketDate;
+    var existingAnalysis = existing.report && existing.report.analysis || {};
+    var existingSectors = existingAnalysis.sectors;
+    if (existing.report && String(existing.report.marketDate || '') > market.marketDate) {
       existing.stale = false;
       existing.updated = false;
       return existing;
     }
+    if (existing.report && String(existing.report.marketDate || '') === market.marketDate && existingSectors) {
+      var existingGeneratedAt = Date.parse(existing.report.generatedAt || '');
+      var sectorAttemptRecent = isFinite(existingGeneratedAt) && Date.now() - existingGeneratedAt < 15 * 60 * 1000;
+      if (existingSectors.status === 'available' || sectorAttemptRecent) {
+        existing.marketDate = market.marketDate;
+        existing.stale = false;
+        existing.updated = false;
+        return existing;
+      }
+    }
+
+    var sectors = getWarRoomUsCloseSectors_(market.marketDate);
 
     var summary = '';
     var parsed = null;
@@ -40,8 +54,8 @@ function generateWarRoomUsCloseReport_() {
       try {
         var requestBody = {
           model: model,
-          instructions: '你是美股盤後資料編輯，只能根據輸入的 FRED 官方日收盤資料與程式計算的短中長期技術數值寫繁體中文報告。不得自行搜尋或補入行情、新聞、日期、產業表現或漲跌原因。區分單日變化與較長期狀態，不做價格預測、不提供買賣建議。輸出簡潔 JSON，欄位為 headline、summary（2 至 3 句）、observations（最多 3 項）、mainRisk。若資料不足，明確寫資料不足。',
-          input: JSON.stringify({ marketDate: market.marketDate, indices: market.indices, sources: market.sources }),
+          instructions: '你是美股盤後資料編輯，只能根據輸入的 FRED 指數日收盤、程式計算的短中長期技術數值，以及 Yahoo Finance 的 Select Sector SPDR ETF 單日漲跌代理資料撰寫繁體中文報告。不得自行搜尋或補入行情、新聞、日期、產業表現或漲跌原因。產業 ETF 只代表對應產業代理標的的單日表現，不能寫成整體產業資金流向或持續輪動。區分單日變化與較長期狀態，不做價格預測、不提供買賣建議。輸出簡潔 JSON，欄位為 headline、summary（2 至 3 句）、observations（最多 3 項）、mainRisk。若資料不足，明確寫資料不足。',
+          input: JSON.stringify({ marketDate: market.marketDate, indices: market.indices, sectors: sectors, sources: market.sources }),
           max_output_tokens: 420,
           store: false
         };
@@ -82,6 +96,7 @@ function generateWarRoomUsCloseReport_() {
       status: 'published',
       marketDate: market.marketDate,
       indices: market.indices,
+      analysis: { sectors: sectors },
       headline: parsed ? (warRoomUsCloseText_(parsed.headline, 120) || fallback.headline) : fallback.headline,
       summary: parsed ? (warRoomUsCloseText_(parsed.summary, 1000) || fallback.summary) : fallback.summary,
       observations: parsed && Array.isArray(parsed.observations) ? parsed.observations.map(function(item) { return warRoomUsCloseText_(item, 240); }).filter(Boolean).slice(0, 3) : fallback.observations,
@@ -159,6 +174,84 @@ function getWarRoomUsCloseMarketData_() {
   var payload = { marketDate: marketDate, indices: indices, sources: series.map(function(item) { return { title: item.sourceTitle, url: item.sourceUrl }; }) };
   cache.put(WAR_ROOM_US_CLOSE_MARKET_CACHE_KEY_, JSON.stringify(payload), 900);
   return payload;
+}
+
+function getWarRoomUsCloseSectors_(marketDate) {
+  var sectors = [
+    { key: 'communication-services', symbol: 'XLC', name: '通訊服務' },
+    { key: 'consumer-discretionary', symbol: 'XLY', name: '非核心消費' },
+    { key: 'consumer-staples', symbol: 'XLP', name: '必需消費' },
+    { key: 'energy', symbol: 'XLE', name: '能源' },
+    { key: 'financials', symbol: 'XLF', name: '金融' },
+    { key: 'health-care', symbol: 'XLV', name: '醫療保健' },
+    { key: 'industrials', symbol: 'XLI', name: '工業' },
+    { key: 'materials', symbol: 'XLB', name: '原物料' },
+    { key: 'real-estate', symbol: 'XLRE', name: '房地產' },
+    { key: 'information-technology', symbol: 'XLK', name: '資訊科技' },
+    { key: 'utilities', symbol: 'XLU', name: '公用事業' }
+  ];
+  var cache = CacheService.getScriptCache();
+  var cacheKey = WAR_ROOM_US_CLOSE_SECTOR_CACHE_PREFIX_ + marketDate;
+  var cached = cache.get(cacheKey);
+  if (cached) {
+    try { return JSON.parse(cached); } catch (ignore) {}
+  }
+
+  var requests = sectors.map(function(item) {
+    return {
+      url: 'https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(item.symbol) + '?range=7d&interval=1d',
+      muteHttpExceptions: true,
+      followRedirects: true
+    };
+  });
+  var quotes = [];
+  try {
+    var responses = UrlFetchApp.fetchAll(requests);
+    responses.forEach(function(response, index) {
+      var item = sectors[index];
+      try {
+        if (response.getResponseCode() !== 200) return;
+        var payload = JSON.parse(response.getContentText() || '{}');
+        var result = payload.chart && payload.chart.result && payload.chart.result[0];
+        var timestamps = result && result.timestamp || [];
+        var closes = result && result.indicators && result.indicators.quote && result.indicators.quote[0] && result.indicators.quote[0].close || [];
+        var timezone = result && result.meta && result.meta.exchangeTimezoneName || 'America/New_York';
+        var points = [];
+        for (var i = 0; i < timestamps.length; i++) {
+          var close = Number(closes[i]);
+          if (closes[i] == null || !isFinite(close) || close <= 0) continue;
+          points.push({ date: Utilities.formatDate(new Date(Number(timestamps[i]) * 1000), timezone, 'yyyy-MM-dd'), close: close });
+        }
+        var currentIndex = -1;
+        for (var j = 0; j < points.length; j++) if (points[j].date === marketDate) currentIndex = j;
+        if (currentIndex < 1) return;
+        var current = points[currentIndex], previous = points[currentIndex - 1];
+        quotes.push({ key: item.key, symbol: item.symbol, name: item.name, dataDate: current.date, changePercent: (current.close / previous.close - 1) * 100 });
+      } catch (ignore) {}
+    });
+  } catch (error) {
+    return { status: 'unavailable', dataDate: marketDate, advancing: 0, declining: 0, leaders: [], laggards: [], note: 'Yahoo Finance 產業 ETF 行情暫時無法讀取；未以其他日期或估值補值。' };
+  }
+
+  if (!quotes.length) {
+    var unavailable = { status: 'unavailable', dataDate: marketDate, advancing: 0, declining: 0, leaders: [], laggards: [], note: 'Yahoo Finance 尚無符合指數資料日的產業 ETF 收盤行情；未以其他日期或估值補值。' };
+    cache.put(cacheKey, JSON.stringify(unavailable), 900);
+    return unavailable;
+  }
+  quotes.sort(function(a, b) { return b.changePercent - a.changePercent; });
+  var result = {
+    status: quotes.length >= 8 ? 'available' : 'partial',
+    dataDate: marketDate,
+    available: quotes.length,
+    total: sectors.length,
+    advancing: quotes.filter(function(item) { return item.changePercent > 0; }).length,
+    declining: quotes.filter(function(item) { return item.changePercent < 0; }).length,
+    leaders: quotes.slice(0, Math.min(3, quotes.length)),
+    laggards: quotes.slice(Math.max(0, quotes.length - 3)).reverse(),
+    note: '以 Yahoo Finance 的 11 檔 Select Sector SPDR ETF 日收盤漲跌作產業代理比較；可用 ' + quotes.length + '/' + sectors.length + ' 檔。ETF 不等於產業全體，單日強弱不能據此判定持續輪動或資金流向。'
+  };
+  cache.put(cacheKey, JSON.stringify(result), 900);
+  return result;
 }
 
 function warRoomUsCloseTechnical_(points) {

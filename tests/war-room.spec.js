@@ -820,6 +820,12 @@ test('War Room close report includes a US tab that loads the OpenAI-backed sourc
         { key: 'nasdaq100', name: 'NASDAQ-100', close: 25123.45, change: 125.67, changePercent: 0.5, dataDate: '2026-11-23', technical: { fiveSessionReturn: 1.25, twentySessionReturn: 2.5, sixtySessionReturn: 4.2, closeVsMovingAveragePercent: { twenty: 1.1, sixty: 2.3 }, rsi14: 54.2 } },
         { key: 'sp500', name: 'S&P 500', close: 6754.32, change: -12.34, changePercent: -0.18, dataDate: '2026-11-23', technical: { fiveSessionReturn: 0.2, twentySessionReturn: 1.3, sixtySessionReturn: 3.4, closeVsMovingAveragePercent: { twenty: -0.3, sixty: -1.4 }, rsi14: 42.7 } }
       ],
+      analysis: { sectors: {
+        status: 'available', dataDate: '2026-11-23', available: 11, total: 11, advancing: 7, declining: 4,
+        leaders: [{ name: '資訊科技', symbol: 'XLK', changePercent: 1.3 }, { name: '工業', symbol: 'XLI', changePercent: 0.8 }, { name: '金融', symbol: 'XLF', changePercent: 0.5 }],
+        laggards: [{ name: '能源', symbol: 'XLE', changePercent: -1.1 }, { name: '房地產', symbol: 'XLRE', changePercent: -0.7 }, { name: '必需消費', symbol: 'XLP', changePercent: -0.3 }],
+        note: '以 Yahoo Finance 的 11 檔 Select Sector SPDR ETF 日收盤漲跌作產業代理比較；ETF 不等於產業全體。'
+      } },
       sources: [
         { title: 'FRED（來源：Nasdaq）', url: 'https://fred.stlouisfed.org/data/NASDAQ100' },
         { title: 'FRED（來源：S&P Dow Jones Indices）', url: 'https://fred.stlouisfed.org/data/SP500' }
@@ -840,8 +846,13 @@ test('War Room close report includes a US tab that loads the OpenAI-backed sourc
   await expect(usReport).toContainText('2026-11-23');
   await expect(usReport.locator('.us-close-report-section-title')).toHaveText('主要觀察');
   await expect(usReport).toContainText('RSI 14 日');
+  await expect(usReport.locator('.us-close-report-sectors h4')).toContainText('今日產業強弱');
+  await expect(usReport.locator('.us-close-report-sectors')).toContainText('資訊科技');
+  await expect(usReport.locator('.us-close-report-sectors')).toContainText('XLE');
+  await expect(usReport.locator('.us-close-report-sectors')).toContainText('ETF 不等於產業全體');
   await expect(usReport.locator('.us-close-report-tech-grid > div')).toHaveCount(8);
-  await expect(usReport.locator('a')).toHaveCount(2);
+  await expect(usReport.locator('a')).toHaveCount(8);
+  await expect(usReport.locator('.us-close-report-sectors a')).toHaveCount(6);
   expect(actions).toContain('warRoomUsCloseReportGenerate');
   const layout = await usReport.evaluate(el => ({
     gridColumns: getComputedStyle(el.querySelector('.us-close-report-index')).gridTemplateColumns.split(' ').length,
@@ -864,6 +875,31 @@ test('War Room close report includes a US tab that loads the OpenAI-backed sourc
   expect(desktopLayout.scrollWidth).toBeLessThanOrEqual(desktopLayout.clientWidth);
   await reportTabs.nth(0).click();
   await expect(page.locator('.taiwan-close-report')).toBeVisible();
+});
+
+test('US close report labels unavailable sector proxy data without inferring sector strength', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.addInitScript(() => {
+    localStorage.setItem('wealth_api_url', 'https://example.test/exec'); localStorage.setItem('wealth_write_token', 'test-write-token');
+    localStorage.setItem('wealth_web_verify_status', 'ok'); localStorage.setItem('wealth_web_verify_checked_at', String(Date.now()));
+    sessionStorage.setItem('wealth_web_session_token', 'same-tab-session');
+  });
+  await page.route('https://example.test/**', async route => {
+    const request = route.request();
+    const action = request.method() === 'POST' ? JSON.parse(request.postData() || '{}').action : new URL(request.url()).searchParams.get('action');
+    const report = { status: 'published', marketDate: '2026-11-23', generatedAt: '2026-11-24T01:00:00Z', headline: '收盤觀察', summary: '僅依已核對資料整理。', indices: [], analysis: { sectors: { status: 'unavailable', dataDate: '2026-11-23', leaders: [], laggards: [], note: '產業 ETF 行情尚未能以相同資料日核實。' } } };
+    const data = action === 'warRoomUsCloseReportGenerate' ? { report, status: 'published', stale: false } : {};
+    return route.fulfill({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ ok: true, data }) });
+  });
+  await page.route('https://api.ark-os26.cc/**', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ records: [] }) }));
+  await page.goto(`${standaloneUrl}?tab=war-briefing`);
+  await page.getByRole('tab', { name: '🇺🇸 美股盤後報告' }).click();
+  const sectors = page.locator('.us-close-report-sectors');
+  await expect(sectors).toContainText('資料暫缺');
+  await expect(sectors).toContainText('產業 ETF 行情尚未能以相同資料日核實');
+  await expect(sectors.locator('.taiwan-close-report-sector-grid')).toHaveCount(0);
+  const width = await page.locator('html').evaluate(el => ({ scroll: el.scrollWidth, client: el.clientWidth }));
+  expect(width.scroll).toBeLessThanOrEqual(width.client);
 });
 
 test('standalone page loads only its own package and does not request unrelated homepage data', async ({ page }) => {

@@ -206,6 +206,7 @@
     html+='<h3>'+esc(report.headline||'美股收盤與趨勢整理')+'</h3><p>'+esc(report.summary||'資料不足，暫無摘要。')+'</p>';
     if(report.aiNote)html+='<p class="us-close-report-ai-note">'+esc(report.aiNote)+'</p>';
     if(Array.isArray(report.observations)&&report.observations.length)html+='<h4 class="us-close-report-section-title">主要觀察</h4><ul>'+report.observations.slice(0,4).map(function(item){return '<li>'+esc(item)+'</li>';}).join('')+'</ul>';
+    var analysis=report.analysis||{},sectors=analysis.sectors;
     var technical=indices.filter(function(item){return item&&item.technical;});
     if(technical.length){
       function relation(value,period){if(value==null||value===''||!isFinite(Number(value)))return '均線資料不足';return '收盤'+(Number(value)>=0?'高於':'低於')+period+' 日均線 '+number(Math.abs(Number(value)),2)+'%';}
@@ -218,6 +219,13 @@
         html+='<div><small>'+esc(name+' · RSI 14 日')+'</small><strong>'+esc(tech.rsi14==null?'資料不足':number(tech.rsi14,1))+'</strong><span>'+esc(rsiLabel(tech.rsi14))+' · 歷史技術觀察</span></div>';
       });
       html+='</div><p class="taiwan-close-report-analysis-note">技術數值僅描述歷史收盤變化，不代表未來方向。</p></section>';
+    }
+    if(sectors){
+      function sectorList(items){return (Array.isArray(items)?items:[]).map(function(item){var value=Number(item.changePercent),tone=isFinite(value)?(value>0?'up':value<0?'down':''):'';var name=esc(item.name||'產業'),symbol=String(item.symbol||'').replace(/[^A-Z]/g,'').slice(0,5);var symbolMarkup=symbol?' <a href="https://finance.yahoo.com/quote/'+encodeURIComponent(symbol)+'/" target="_blank" rel="noopener noreferrer">'+esc(symbol)+'</a>':'';return '<li><span>'+name+symbolMarkup+'</span><strong class="'+tone+'">'+esc(signed(item.changePercent,2,'%'))+'</strong></li>';}).join('')||'<li>資料暫缺</li>';}
+      var sectorStatus=sectors.status==='available'?'上漲 '+esc(number(sectors.advancing,0))+' · 下跌 '+esc(number(sectors.declining,0))+' · '+esc(sectors.dataDate||report.marketDate||'資料日未提供'):sectors.status==='partial'?'資料不完整 · '+esc(number(sectors.available,0))+'/'+esc(number(sectors.total,0))+' 檔 · '+esc(sectors.dataDate||report.marketDate||'資料日未提供'):'資料暫缺 · '+esc(sectors.dataDate||report.marketDate||'資料日未提供');
+      html+='<section class="taiwan-close-report-analysis us-close-report-sectors"><h4>🏭 今日產業強弱 <small>'+sectorStatus+'</small></h4>';
+      if(sectors.status==='available'||sectors.status==='partial')html+='<div class="taiwan-close-report-sector-grid"><div><strong>相對領先</strong><ul>'+sectorList(sectors.leaders)+'</ul></div><div><strong>相對落後</strong><ul>'+sectorList(sectors.laggards)+'</ul></div></div>';
+      html+='<p class="taiwan-close-report-analysis-note">'+esc(sectors.note||'產業 ETF 僅作單日代理比較，不代表整體產業走勢。')+'</p></section>';
     }
     if(report.mainRisk)html+='<div class="taiwan-close-report-risk"><small>風險與資料限制</small><span>'+esc(report.mainRisk)+'</span></div>';
     if(error)html+='<div class="taiwan-close-report-risk"><small>更新狀態</small><span>'+esc(error)+'</span></div>';
