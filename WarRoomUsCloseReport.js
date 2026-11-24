@@ -203,3 +203,37 @@ function parseWarRoomUsCloseReportJson_(text) {
 function warRoomUsCloseText_(value, limit) {
   return String(value == null ? '' : value).replace(/[\u0000-\u001f<>]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, limit || 600);
 }
+
+function installWarRoomUsCloseReportSchedule_() {
+  var handler = 'runWarRoomUsCloseReportScheduled';
+  ScriptApp.getProjectTriggers().forEach(function(trigger) {
+    if (trigger.getHandlerFunction() === handler) ScriptApp.deleteTrigger(trigger);
+  });
+
+  [
+    ScriptApp.WeekDay.TUESDAY,
+    ScriptApp.WeekDay.WEDNESDAY,
+    ScriptApp.WeekDay.THURSDAY,
+    ScriptApp.WeekDay.FRIDAY,
+    ScriptApp.WeekDay.SATURDAY
+  ].forEach(function(day) {
+    ScriptApp.newTrigger(handler).timeBased().onWeekDay(day).atHour(8).everyWeeks(1).create();
+  });
+
+  return { installed: true, days: ['Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'], hour: 8, timeZone: Session.getScriptTimeZone() };
+}
+
+function installWarRoomUsCloseReportSchedule() {
+  return installWarRoomUsCloseReportSchedule_();
+}
+
+function runWarRoomUsCloseReportScheduled() {
+  var dayOfWeek = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'u');
+  if (dayOfWeek === '1' || dayOfWeek === '7') {
+    console.log('War Room US close report skipped on Sunday or Monday.');
+    return { skipped: true, reason: 'not_scheduled_day' };
+  }
+  var result = generateWarRoomUsCloseReport_();
+  console.log('War Room US close report schedule finished: ' + String(result.status || 'unknown'));
+  return result;
+}
