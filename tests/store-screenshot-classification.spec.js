@@ -67,6 +67,13 @@ test('TaiCang screenshot tab reuses Threads article tags and filename rules', as
   await page.getByRole('button', { name: '上傳至 NAS' }).click();
   await expect(page.locator('#screenshot-upload-status')).toHaveText('已上傳 1 張截圖');
   await expect(page.locator('#screenshot-library-list')).toContainText('Threads-food.png');
+  const screenshotRow = page.locator('[data-screenshot-entry="shot-1-0123456789ab"]');
+  await expect(screenshotRow.locator('.screenshot-card-file')).toContainText('Threads-food.png');
+  await expect(screenshotRow.locator('.screenshot-card-tags')).toContainText('#Threads美食');
+  await expect(screenshotRow.locator('img')).toHaveCount(0);
+  await screenshotRow.locator('.screenshot-card-editor summary').click();
+  await expect(screenshotRow.locator('.screenshot-title-input')).toHaveValue('Threads-food');
+  await expect(screenshotRow.locator('.screenshot-entry-tags-input')).toHaveValue('#Threads美食');
   const requests = await page.evaluate(() => window.screenshotRequests);
   expect(requests).toEqual([
     { kind: 'rules', body: { rules: [{ keyword: 'Threads-food', tag: 'Threads美食' }] } },
