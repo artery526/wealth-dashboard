@@ -1,0 +1,9 @@
+{
+  "id": "2026-11-25-store-screenshot-row-delete",
+  "status": "in_progress",
+  "date": null,
+  "area": "太倉連結便貼",
+  "summary": "截圖清單列新增單張刪除按鈕",
+  "details": "每張截圖可從清單列單獨刪除；操作前會確認檔名，並在 NAS 刪除成功後才更新清單。",
+  "platforms": ["website", "nas"]
+}
