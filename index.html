@@ -4899,7 +4899,8 @@ html[data-theme="deep-blue"] .scene-task-details .home-agenda-global-refresh{bor
 .advisor-brief-inline-details>div,.advisor-brief-inline-details>p{margin:6px 0 0;color:var(--muted);font:10px/1.55 var(--sans);overflow-wrap:anywhere}
 .advisor-brief-inline-details a{color:var(--cyan)}
 @media(max-width:540px){.advisor-brief-light-overview{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.advisor-brief-light-chip{padding:7px}.advisor-brief-details>.advisor-brief-grid{padding:7px}}
-</style>
+.screenshot-folder-select-label,.screenshot-card-folder-label{display:grid;gap:4px;color:#8aa7b6;font:800 11px var(--sans)}.screenshot-folder-select,.screenshot-card-folder,.screenshot-rule-folder{min-width:0;height:38px;box-sizing:border-box;border:1px solid rgba(65,157,194,.42);border-radius:7px;background:#061b2b;color:#dff7ff;padding:0 9px;font:800 12px var(--sans)}.screenshot-rule-row{grid-template-columns:minmax(100px,1fr) minmax(90px,1fr) minmax(130px,1fr) auto}.screenshot-card-folder{width:100%}.screenshot-folder-back{min-height:40px}
+@media(max-width:600px){.screenshot-rule-row{grid-template-columns:1fr 1fr}.screenshot-rule-folder{grid-column:1/-1}.screenshot-rule-row button{grid-column:1/-1;height:36px}.screenshot-folder-select{width:100%}}</style>
 </head>
 <body>
 
@@ -7092,15 +7093,16 @@ function renderStorePanel(initialTab){
       <div class="link-pocket-grid" id="link-pocket-list"><div class="store-empty">連結便貼載入中…</div></div>
     </div>
     <div class="pane" id="pane-store-screenshot-library">
-      <div class="link-pocket-intro"><div class="link-pocket-title">截圖分類</div><div class="link-pocket-sub">沿用太倉 Threads 文章使用的標籤分類；截圖獨立保存於 NAS。檔名規則只補標籤，不分析圖片內容。</div></div>
+      <div class="link-pocket-intro"><div class="link-pocket-title">截圖分類</div><div class="link-pocket-sub">截圖獨立保存於 NAS；先放入主資料夾，再用標籤與關鍵字搜尋。檔名規則只看檔名，不分析圖片內容。</div></div>
       <form class="screenshot-form" id="screenshot-upload-form" onsubmit="uploadScreenshotFiles(event)">
         <div class="screenshot-form-row"><input id="screenshot-upload-files" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,image/avif,image/gif" multiple required aria-label="選擇截圖"><label class="screenshot-auto-option"><input id="screenshot-auto-classify" type="checkbox" checked>套用檔名分類規則 <span>(單張 10 MB，一次最多 10 張)</span></label></div>
+        <label class="screenshot-folder-select-label" for="screenshot-upload-folder">主資料夾</label><select class="screenshot-folder-select" id="screenshot-upload-folder" aria-label="上傳截圖主資料夾"></select>
         <input class="link-pocket-input" id="screenshot-tags-input" type="text" maxlength="400" placeholder="沿用 Threads 文章標籤，例如 #美食 #待研究" aria-label="截圖分類標籤" oninput="renderScreenshotQuickTags()">
         <div class="screenshot-quick-tags" id="screenshot-quick-tags" aria-label="Threads 文章標籤"></div>
         <div class="screenshot-form-row"><button class="store-add-button" id="screenshot-upload-button" type="submit">上傳至 NAS</button><div class="link-pocket-status" id="screenshot-upload-status" role="status" aria-live="polite"></div></div>
       </form>
-      <details class="screenshot-rules" id="screenshot-rules-panel"><summary>檔名自動分類規則</summary><div class="link-pocket-sub">當檔名包含關鍵字時，自動加入對應標籤；不讀取圖片內容。</div><div class="screenshot-rules-list" id="screenshot-rules-list"></div><div class="screenshot-form-row"><button class="store-secondary-button" type="button" onclick="addScreenshotRule()">＋ 新增規則</button><button class="store-secondary-button" type="button" onclick="saveScreenshotRules()">儲存規則</button><div class="link-pocket-status" id="screenshot-rules-status" role="status"></div></div></details>
-      <div class="link-pocket-toolbar"><input class="link-pocket-search" id="screenshot-search" type="search" placeholder="搜尋檔名、標題或標籤" aria-label="搜尋截圖" oninput="storeScreenshotSearch=this.value;renderScreenshotLibrary()"><div class="link-pocket-count" id="screenshot-count"></div></div>
+      <details class="screenshot-rules" id="screenshot-rules-panel"><summary>檔名自動分類規則</summary><div class="link-pocket-sub">檔名含關鍵字時可自動設定資料夾或標籤；手動選擇的資料夾優先，多條規則命中時採用最前面的資料夾規則。不讀取圖片內容。</div><div class="screenshot-rules-list" id="screenshot-rules-list"></div><div class="screenshot-form-row"><button class="store-secondary-button" type="button" onclick="addScreenshotRule()">＋ 新增規則</button><button class="store-secondary-button" type="button" onclick="saveScreenshotRules()">儲存規則</button><div class="link-pocket-status" id="screenshot-rules-status" role="status"></div></div></details>
+      <div class="link-pocket-toolbar"><input class="link-pocket-search" id="screenshot-search" type="search" placeholder="搜尋資料夾、檔名、標題或標籤" aria-label="搜尋截圖" oninput="storeScreenshotSearch=this.value;renderScreenshotLibrary()"><div class="link-pocket-count" id="screenshot-count"></div></div>
       <div class="screenshot-filter-tags" id="screenshot-filter-tags" aria-label="截圖標籤篩選"></div>
       <div class="screenshot-library-status" id="screenshot-library-status" role="status" aria-live="polite">載入截圖分類…</div>
       <div class="screenshot-library-grid" id="screenshot-library-list"></div>
@@ -7418,6 +7420,7 @@ var storeLinkPocketPreviewSequence=0;
 var storeLinkPocketPreviewData=null;
 var storeScreenshotEntries=[];
 var storeScreenshotTags=[];
+var storeScreenshotFolders=['股票梗圖','養生','待整理'];
 var storeScreenshotRules=[];
 var storeScreenshotTag='全部';
 var storeScreenshotFolder='';
@@ -7689,6 +7692,14 @@ function screenshotSuggestedTags(){
   });
 }
 
+function screenshotFolderNames(){return storeScreenshotFolders.slice();}
+
+function screenshotFolderOptions(selected, includeRulesDefault){
+  var options=includeRulesDefault?'<option value="">依檔名規則（未命中放待整理）</option>':'';
+  options+=screenshotFolderNames().map(function(folder){return '<option value="'+esc(folder)+'"'+(folder===selected?' selected':'')+'>'+esc(folder)+'</option>';}).join('');
+  return options;
+}
+
 function bindScreenshotActions(){
   if(storeScreenshotEventsBound)return;
   document.addEventListener('click',function(event){
@@ -7699,7 +7710,7 @@ function bindScreenshotActions(){
     var folder=event.target.closest('[data-screenshot-folder]');
     if(folder){storeScreenshotFolder=folder.dataset.screenshotFolder;renderScreenshotLibrary();return;}
     var back=event.target.closest('[data-screenshot-folders-back]');
-    if(back){storeScreenshotFolder='';renderScreenshotLibrary();return;}
+    if(back){if(!storeScreenshotFolder&&storeScreenshotSearch){storeScreenshotSearch='';var searchInput=document.getElementById('screenshot-search');if(searchInput)searchInput.value='';}storeScreenshotFolder='';renderScreenshotLibrary();return;}
     var removeRule=event.target.closest('[data-screenshot-remove-rule]');
     if(removeRule){storeScreenshotRules=readScreenshotRulesDraft();storeScreenshotRules.splice(Number(removeRule.dataset.screenshotRemoveRule),1);renderScreenshotRules();return;}
     var save=event.target.closest('[data-screenshot-save]');
@@ -7721,7 +7732,7 @@ function renderScreenshotQuickTags(){
 function renderScreenshotRules(){
   var host=document.getElementById('screenshot-rules-list');if(!host)return;
   host.innerHTML=storeScreenshotRules.map(function(rule,index){
-    return '<div class="screenshot-rule-row"><input class="screenshot-rule-keyword" type="text" maxlength="60" value="'+esc(rule.keyword||'')+'" placeholder="檔名包含關鍵字" aria-label="檔名關鍵字"><input class="screenshot-rule-tag" type="text" maxlength="40" value="'+esc(rule.tag||'')+'" placeholder="分類標籤" aria-label="分類標籤"><button type="button" data-screenshot-remove-rule="'+index+'" aria-label="移除分類規則">移除</button></div>';
+    return '<div class="screenshot-rule-row"><input class="screenshot-rule-keyword" type="text" maxlength="60" value="'+esc(rule.keyword||'')+'" placeholder="檔名關鍵字" aria-label="檔名關鍵字"><input class="screenshot-rule-tag" type="text" maxlength="40" value="'+esc(rule.tag||'')+'" placeholder="標籤（選填）" aria-label="分類標籤"><select class="screenshot-rule-folder" aria-label="自動指定資料夾">'+screenshotFolderOptions(rule.folder||'',true)+'</select><button type="button" data-screenshot-remove-rule="'+index+'" aria-label="移除分類規則">移除</button></div>';
   }).join('');
 }
 
@@ -7733,7 +7744,7 @@ function addScreenshotRule(){
 }
 
 function readScreenshotRulesDraft(){
-  return Array.prototype.slice.call(document.querySelectorAll('#screenshot-rules-list .screenshot-rule-row')).map(function(row){return {keyword:row.querySelector('.screenshot-rule-keyword').value.trim(),tag:row.querySelector('.screenshot-rule-tag').value.trim()};});
+  return Array.prototype.slice.call(document.querySelectorAll('#screenshot-rules-list .screenshot-rule-row')).map(function(row){var folder=row.querySelector('.screenshot-rule-folder').value;return {keyword:row.querySelector('.screenshot-rule-keyword').value.trim(),tag:row.querySelector('.screenshot-rule-tag').value.trim(),...(folder?{folder:folder}:{})};});
 }
 
 async function saveScreenshotRules(){
@@ -7753,6 +7764,7 @@ function loadScreenshotLibrary(force){
   storeScreenshotLoading=Promise.all([screenshotRequest('GET','/api/screenshot-library'),linksReady]).then(function(results){
     var data=results[0];
     storeScreenshotEntries=Array.isArray(data.entries)?data.entries:[];
+    if(Array.isArray(data.folders)&&data.folders.length)storeScreenshotFolders=data.folders.map(function(folder){return String(folder||'').trim();}).filter(Boolean);
     storeScreenshotTags=buildLinkPocketTagSummary(storeScreenshotEntries);
     storeScreenshotRules=Array.isArray(data.rules)?data.rules:[];
     storeScreenshotLoaded=true;
@@ -7765,32 +7777,32 @@ function renderScreenshotLibrary(){
   var host=document.getElementById('screenshot-library-list');if(!host)return;
   var query=String(storeScreenshotSearch||'').trim().toLocaleLowerCase();
   var folderHost=document.getElementById('screenshot-filter-tags');
-  var folders=[{tag:'全部',label:'所有截圖'}].concat(screenshotSuggestedTags().map(function(tag){return {tag:tag,label:'#'+tag};}));
+  var folders=screenshotFolderNames().map(function(name){return {tag:name,label:name};});
   var folderEntryCounts={};
-  folders.forEach(function(folder){folderEntryCounts[folder.tag]=folder.tag==='全部'?storeScreenshotEntries.length:storeScreenshotEntries.filter(function(entry){return (entry.tags||[]).indexOf(folder.tag)>=0;}).length;});
-  var untaggedCount=storeScreenshotEntries.filter(function(entry){return !Array.isArray(entry.tags)||!entry.tags.length;}).length;
-  if(untaggedCount&&!folders.some(function(folder){return folder.tag==='待分類';}))folders.push({tag:'待分類',label:'#待分類'}),folderEntryCounts['待分類']=untaggedCount;
-  if(!storeScreenshotFolder){
+  folders.forEach(function(folder){folderEntryCounts[folder.tag]=storeScreenshotEntries.filter(function(entry){return (entry.folder||'待整理')===folder.tag;}).length;});
+  var uploadFolder=document.getElementById('screenshot-upload-folder');if(uploadFolder&&!uploadFolder.options.length)uploadFolder.innerHTML=screenshotFolderOptions('',true);
+  if(!storeScreenshotFolder&&!query){
     if(folderHost)folderHost.innerHTML=folders.map(function(folder){return '<button type="button" class="screenshot-folder" data-screenshot-folder="'+esc(folder.tag)+'"><span class="screenshot-folder-icon" aria-hidden="true">📁</span><span class="screenshot-folder-name">'+esc(folder.label)+'</span><span class="screenshot-folder-count">'+(folderEntryCounts[folder.tag]||0)+' 張</span></button>';}).join('');
     var folderCount=document.getElementById('screenshot-count');if(folderCount)folderCount.textContent='共 '+storeScreenshotEntries.length+' 張截圖';
-    var folderStatus=document.getElementById('screenshot-library-status');if(folderStatus&&storeScreenshotLoaded)folderStatus.textContent=storeScreenshotEntries.length?'選擇資料夾查看分類截圖':'NAS 保存 0 張截圖；上傳後會依標籤建立資料夾。';
+    var folderStatus=document.getElementById('screenshot-library-status');if(folderStatus&&storeScreenshotLoaded)folderStatus.textContent=storeScreenshotEntries.length?'選擇資料夾查看分類截圖':'NAS 保存 0 張截圖；上傳後會放入所選主資料夾。';
     host.innerHTML='';renderScreenshotQuickTags();return;
   }
   var activeFolder=folders.find(function(folder){return folder.tag===storeScreenshotFolder;});
-  if(!activeFolder){storeScreenshotFolder='全部';activeFolder=folders[0];}
+  if(storeScreenshotFolder&&!activeFolder){storeScreenshotFolder='';activeFolder=null;}
+  var globalSearch=!storeScreenshotFolder&&!!query;
   var entries=storeScreenshotEntries.filter(function(entry){
     var tags=Array.isArray(entry.tags)?entry.tags:[];
-    if(storeScreenshotFolder==='全部' ? false : storeScreenshotFolder==='待分類' ? tags.length>0 : tags.indexOf(storeScreenshotFolder)<0)return false;
-    return !query||[entry.title,entry.fileName].concat(tags).join(' ').toLocaleLowerCase().indexOf(query)>=0;
+    if(storeScreenshotFolder&&(entry.folder||'待整理')!==storeScreenshotFolder)return false;
+    return !query||[entry.title,entry.fileName,entry.folder].concat(tags).join(' ').toLocaleLowerCase().indexOf(query)>=0;
   });
-  if(folderHost)folderHost.innerHTML='<button type="button" class="store-secondary-button screenshot-folder-back" data-screenshot-folders-back>← 返回資料夾</button><strong class="screenshot-folder-heading">'+esc(activeFolder.label)+'</strong>';
+  if(folderHost)folderHost.innerHTML='<button type="button" class="store-secondary-button screenshot-folder-back" data-screenshot-folders-back>'+(globalSearch?'清除搜尋並返回資料夾':'← 返回資料夾')+'</button><strong class="screenshot-folder-heading">'+esc(globalSearch?'搜尋結果（'+entries.length+'）':activeFolder.label)+'</strong>';
   var count=document.getElementById('screenshot-count');if(count)count.textContent='顯示 '+entries.length+' / '+storeScreenshotEntries.length+' 張';
   var status=document.getElementById('screenshot-library-status');if(status&&storeScreenshotLoaded)status.textContent=storeScreenshotEntries.length?'NAS 保存 '+storeScreenshotEntries.length+' 張截圖':'還沒有截圖，選擇手機或電腦檔案即可上傳。';
-  if(!entries.length){host.innerHTML='<div class="store-empty">'+(query||storeScreenshotFolder!=='全部'?'這個資料夾目前沒有符合的截圖':'目前沒有截圖')+'</div>';renderScreenshotQuickTags();return;}
+  if(!entries.length){host.innerHTML='<div class="store-empty">'+(query?'找不到符合關鍵字的截圖':'這個資料夾目前沒有截圖')+'</div>';renderScreenshotQuickTags();return;}
   host.innerHTML=entries.map(function(entry){
     var tags=Array.isArray(entry.tags)?entry.tags:[];
     var downloadUrl=arkWallUrl(entry.url||'');downloadUrl+=(downloadUrl.indexOf('?')>=0?'&':'?')+'download=1';
-    return '<article class="screenshot-card" data-screenshot-entry="'+esc(entry.id)+'"><img data-screenshot-open="'+esc(entry.id)+'" src="'+esc(arkWallUrl(entry.url||''))+'" alt="'+esc(entry.title||entry.fileName||'截圖')+'" title="點擊放大" loading="lazy" decoding="async"><small title="'+esc(entry.fileName||'')+'">'+esc(entry.fileName||'截圖')+'</small><a class="store-secondary-button screenshot-download" href="'+esc(downloadUrl)+'" download="'+esc(entry.fileName||'截圖')+'">下載原圖</a><input class="screenshot-title-input" type="text" maxlength="200" value="'+esc(entry.title||'截圖')+'" aria-label="截圖標題"><input class="screenshot-entry-tags-input" type="text" maxlength="400" value="'+esc(tags.map(function(tag){return '#'+tag;}).join(' '))+'" aria-label="截圖標籤"><div class="screenshot-card-tags">'+(tags.length?tags.map(function(tag){return '#'+esc(tag);}).join(' '):'未分類')+'</div><button class="store-secondary-button" type="button" data-screenshot-save="'+esc(entry.id)+'">儲存分類</button></article>';
+    return '<article class="screenshot-card" data-screenshot-entry="'+esc(entry.id)+'"><img data-screenshot-open="'+esc(entry.id)+'" src="'+esc(arkWallUrl(entry.url||''))+'" alt="'+esc(entry.title||entry.fileName||'截圖')+'" title="點擊放大" loading="lazy" decoding="async"><small title="'+esc(entry.fileName||'')+'">'+esc(entry.fileName||'截圖')+'</small><a class="store-secondary-button screenshot-download" href="'+esc(downloadUrl)+'" download="'+esc(entry.fileName||'截圖')+'">下載原圖</a><label class="screenshot-card-folder-label">主資料夾<select class="screenshot-card-folder" aria-label="截圖主資料夾">'+screenshotFolderOptions(entry.folder||'待整理',false)+'</select></label><input class="screenshot-title-input" type="text" maxlength="200" value="'+esc(entry.title||'截圖')+'" aria-label="截圖標題"><input class="screenshot-entry-tags-input" type="text" maxlength="400" value="'+esc(tags.map(function(tag){return '#'+tag;}).join(' '))+'" aria-label="截圖標籤"><div class="screenshot-card-tags">'+(tags.length?tags.map(function(tag){return '#'+esc(tag);}).join(' '):'未分類')+'</div><button class="store-secondary-button" type="button" data-screenshot-save="'+esc(entry.id)+'">儲存分類</button></article>';
   }).join('');
   renderScreenshotQuickTags();
 }
@@ -7802,6 +7814,7 @@ async function uploadScreenshotFiles(event){
   if(!files.length){if(status)status.textContent='請先選擇截圖';return;}
   if(files.length>10){if(status)status.textContent='一次最多上傳 10 張截圖';return;}
   var formData=new FormData();files.forEach(function(file){formData.append('images',file,file.name);});
+  formData.append('folder',document.getElementById('screenshot-upload-folder').value);
   formData.append('tags',JSON.stringify(linkPocketParsedTags(document.getElementById('screenshot-tags-input').value)));
   formData.append('autoClassify',document.getElementById('screenshot-auto-classify').checked?'true':'false');
   if(button)button.disabled=true;if(status)status.textContent='正在上傳 '+files.length+' 張截圖至 NAS…';
@@ -7822,7 +7835,7 @@ async function saveScreenshotEntry(id){
   var card=Array.prototype.slice.call(document.querySelectorAll('[data-screenshot-entry]')).find(function(item){return item.dataset.screenshotEntry===String(id);});if(!entry||!card)return;
   var button=card.querySelector('[data-screenshot-save]');if(button)button.disabled=true;
   try{
-    var data=await screenshotRequest('PUT','/api/admin/screenshot-library/'+encodeURIComponent(id),{title:card.querySelector('.screenshot-title-input').value,tags:linkPocketParsedTags(card.querySelector('.screenshot-entry-tags-input').value)});
+    var data=await screenshotRequest('PUT','/api/admin/screenshot-library/'+encodeURIComponent(id),{title:card.querySelector('.screenshot-title-input').value,folder:card.querySelector('.screenshot-card-folder').value,tags:linkPocketParsedTags(card.querySelector('.screenshot-entry-tags-input').value)});
     var index=storeScreenshotEntries.findIndex(function(item){return String(item.id)===String(id);});if(index>=0)storeScreenshotEntries[index]=data.entry;
     storeScreenshotTags=buildLinkPocketTagSummary(storeScreenshotEntries);
     renderScreenshotLibrary();
