@@ -1073,7 +1073,9 @@ body::after{
 .link-pocket-preview{display:grid;grid-template-columns:112px minmax(0,1fr);gap:10px;align-items:center;padding:8px;border:1px solid rgba(65,157,194,.3);border-radius:8px;background:rgba(3,16,26,.62)}.link-pocket-preview[hidden]{display:none}.link-pocket-preview img{width:112px;height:72px;object-fit:cover;border-radius:6px;background:#061b2b}.link-pocket-preview-copy{min-width:0;color:#8aa7b6;font:800 12px/1.55 var(--sans)}.link-pocket-preview-copy strong{display:block;margin-bottom:3px;color:#bcefff;font-size:13px}.link-pocket-select-tags{display:flex;gap:6px;flex-wrap:wrap}.link-pocket-select-tags button{border:1px solid rgba(65,157,194,.38);border-radius:999px;background:rgba(6,27,43,.7);color:#a9d9e7;padding:5px 9px;font:800 11px var(--sans);cursor:pointer}.link-pocket-select-tags button[aria-pressed="true"]{border-color:#48c9a0;background:rgba(29,158,117,.18);color:#a8f1d6}.link-pocket-hint{color:#8aa7b6;font:700 11px/1.5 var(--sans)}
 .link-pocket-summary{color:#bcefff;font:700 13px/1.7 var(--sans);white-space:pre-wrap;overflow-wrap:anywhere}.link-pocket-url{display:block;max-width:100%;overflow:hidden;color:#6fc9e5;font:700 11px/1.5 var(--sans);text-overflow:ellipsis;white-space:nowrap}.link-pocket-card-tags{display:flex;gap:6px;flex-wrap:wrap}.link-pocket-card-tag{border:1px solid rgba(65,157,194,.32);border-radius:999px;background:rgba(6,27,43,.62);color:#9fd6e8;padding:3px 8px;font:800 10px var(--sans)}
 .link-pocket-card-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;color:#7899a8;font:700 10px var(--sans)}.link-pocket-card-actions{display:flex;gap:6px}.link-pocket-card-actions button{height:28px;border:1px solid rgba(65,157,194,.42);border-radius:7px;background:rgba(6,27,43,.76);color:#aeefff;font:900 10px var(--sans);padding:0 8px;cursor:pointer}.link-pocket-card-actions button.danger{border-color:rgba(216,90,48,.46);color:#ef9a77}
+.screenshot-form{display:grid;gap:9px;margin:0 0 12px;padding:12px;border:1px solid rgba(65,157,194,.28);border-radius:9px;background:rgba(6,27,43,.58)}.screenshot-form-row{display:flex;align-items:center;gap:9px;flex-wrap:wrap}.screenshot-form input[type=file]{max-width:100%;color:#a8c4d0;font:700 12px var(--sans)}.screenshot-auto-option{display:flex;align-items:center;gap:7px;color:#a8c4d0;font:800 12px var(--sans)}.screenshot-quick-tags,.screenshot-filter-tags{display:flex;gap:6px;flex-wrap:wrap}.screenshot-quick-tags button,.screenshot-filter-tags button{border:1px solid rgba(65,157,194,.38);border-radius:999px;background:rgba(6,27,43,.7);color:#a9d9e7;padding:5px 9px;font:800 11px var(--sans);cursor:pointer}.screenshot-quick-tags button[aria-pressed="true"],.screenshot-filter-tags button.active{border-color:#48c9a0;background:rgba(29,158,117,.18);color:#a8f1d6}.screenshot-rules{margin:0 0 12px;padding:10px 12px;border:1px solid rgba(65,157,194,.24);border-radius:9px;background:rgba(3,16,26,.42)}.screenshot-rules summary{color:#bcefff;font:900 13px var(--sans);cursor:pointer}.screenshot-rules-list{display:grid;gap:6px;margin:10px 0}.screenshot-rule-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:6px}.screenshot-rule-row input{min-width:0;height:34px;box-sizing:border-box;border:1px solid rgba(65,157,194,.42);border-radius:7px;background:#061b2b;color:#dff7ff;padding:0 8px;font:700 12px var(--sans)}.screenshot-rule-row button{border:1px solid rgba(216,90,48,.46);border-radius:7px;background:rgba(91,34,24,.25);color:#ef9a77;padding:0 9px;cursor:pointer}.screenshot-library-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.screenshot-card{display:grid;align-content:start;gap:7px;min-width:0;padding:9px;border:1px solid rgba(65,157,194,.3);border-radius:9px;background:linear-gradient(160deg,rgba(8,35,51,.78),rgba(4,14,23,.78))}.screenshot-card img{display:block;width:100%;aspect-ratio:4/3;object-fit:contain;border-radius:6px;background:#03090d}.screenshot-card small{overflow:hidden;color:#7899a8;font:700 10px/1.4 var(--sans);text-overflow:ellipsis;white-space:nowrap}.screenshot-card input{min-width:0;width:100%;height:34px;box-sizing:border-box;border:1px solid rgba(65,157,194,.42);border-radius:7px;background:#061b2b;color:#dff7ff;padding:0 8px;font:700 12px var(--sans)}.screenshot-card-tags{color:#9fd6e8;font:800 11px/1.5 var(--sans);overflow-wrap:anywhere}.screenshot-library-status{margin:8px 0;color:#8aa7b6;font:800 12px/1.5 var(--sans)}
 @media(max-width:650px){.link-pocket-fields,.link-pocket-grid{grid-template-columns:1fr}.link-pocket-fields .full{grid-column:auto}.link-pocket-toolbar{grid-template-columns:1fr}.link-pocket-card{padding:10px}.link-pocket-preview{grid-template-columns:84px minmax(0,1fr)}.link-pocket-preview img{width:84px;height:64px}}
+@media(max-width:760px){.screenshot-library-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:420px){.screenshot-rule-row{grid-template-columns:1fr 1fr}.screenshot-rule-row button{grid-column:1/-1;height:30px}}
 @media(max-width:650px){.store-grid{grid-template-columns:1fr}.store-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.store-form-group.full{grid-column:1/-1}.store-toolbar,.store-date-filters{grid-template-columns:1fr}.store-add-button{width:100%}.store-count-row{flex-wrap:wrap}.store-search-inline{order:3;flex:1 1 100%;width:100%}.store-item-card{padding:10px}.store-item-card-head{align-items:center;padding-right:84px}.store-item-heading{gap:6px}.store-item-name{min-width:0;flex:1;font-size:16px}.store-item-date-button{top:10px;right:43px;font-size:11px}.store-item-menu{top:8px;right:8px}.store-header-date-button{font-size:11px;padding:4px 5px}}
 .market-lord{
   position:absolute;
@@ -7032,6 +7034,7 @@ function switchTab(btn,key){
   else if(key==='council-task')resetRetiredTaskStatus();
   else if(key==='store-chronicle')loadEventChronicle();
   else if(key==='store-link-pocket')loadLinkPocket();
+  else if(key==='store-screenshot-library')loadScreenshotLibrary();
   else if(key==='stars-home')loadZiweiCharts();
   else if(key==='store-list')loadStoreRecords();
 }
@@ -7057,7 +7060,7 @@ function renderStorePanel(initialTab){
   setPanelHead('庫','Store · Warehouse','太倉');
   var panelExtra=document.getElementById('p-extra');
   if(panelExtra)panelExtra.innerHTML='<button class="store-header-date-button" id="store-header-date-button" type="button" title="修改記錄日期" onclick="chooseStoreFormDate(event)">'+formatStoreShortDate(getStoreTodayInputValue())+'</button><input class="store-header-date-input" id="store-record-date" type="date" value="'+getStoreTodayInputValue()+'" required onchange="syncStoreHeaderDate()">';
-  setPanelMenuTabs([{key:'store-link-pocket',label:'連結便貼'},{key:'store-chronicle',label:'事件編年'},{key:'store-list',label:'物品總覽'},{key:'stars-home',label:'命盤總覽'}]);
+  setPanelMenuTabs([{key:'store-link-pocket',label:'連結便貼'},{key:'store-screenshot-library',label:'截圖分類'},{key:'store-chronicle',label:'事件編年'},{key:'store-list',label:'物品總覽'},{key:'stars-home',label:'命盤總覽'}]);
   document.getElementById('p-body').innerHTML=`
     <div class="pane" id="pane-store-list">
       <div class="store-panel-intro"><div class="store-panel-title">Store｜太倉物品</div><div class="store-panel-sub">搜尋物品名稱、所在地點或編號，快速找到收納位置。</div></div>
@@ -7087,6 +7090,20 @@ function renderStorePanel(initialTab){
       <div class="link-pocket-toolbar"><input class="link-pocket-search" id="link-pocket-search" type="search" placeholder="搜尋標題、內文或標籤" aria-label="搜尋連結便貼" oninput="storeLinkPocketSearch=this.value;renderLinkPocket()"><div class="link-pocket-count" id="link-pocket-count"></div></div>
       <div class="link-pocket-tags" id="link-pocket-tags" aria-label="標籤總覽"></div>
       <div class="link-pocket-grid" id="link-pocket-list"><div class="store-empty">連結便貼載入中…</div></div>
+    </div>
+    <div class="pane" id="pane-store-screenshot-library">
+      <div class="link-pocket-intro"><div class="link-pocket-title">截圖分類</div><div class="link-pocket-sub">沿用太倉 Threads 文章使用的標籤分類；截圖獨立保存於 NAS。檔名規則只補標籤，不分析圖片內容。</div></div>
+      <form class="screenshot-form" id="screenshot-upload-form" onsubmit="uploadScreenshotFiles(event)">
+        <div class="screenshot-form-row"><input id="screenshot-upload-files" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,image/avif,image/gif" multiple required aria-label="選擇截圖"><label class="screenshot-auto-option"><input id="screenshot-auto-classify" type="checkbox" checked>套用檔名分類規則 <span>(單張 10 MB，一次最多 10 張)</span></label></div>
+        <input class="link-pocket-input" id="screenshot-tags-input" type="text" maxlength="400" placeholder="沿用 Threads 文章標籤，例如 #美食 #待研究" aria-label="截圖分類標籤" oninput="renderScreenshotQuickTags()">
+        <div class="screenshot-quick-tags" id="screenshot-quick-tags" aria-label="Threads 文章標籤"></div>
+        <div class="screenshot-form-row"><button class="store-add-button" id="screenshot-upload-button" type="submit">上傳至 NAS</button><div class="link-pocket-status" id="screenshot-upload-status" role="status" aria-live="polite"></div></div>
+      </form>
+      <details class="screenshot-rules" id="screenshot-rules-panel"><summary>檔名自動分類規則</summary><div class="link-pocket-sub">當檔名包含關鍵字時，自動加入對應標籤；不讀取圖片內容。</div><div class="screenshot-rules-list" id="screenshot-rules-list"></div><div class="screenshot-form-row"><button class="store-secondary-button" type="button" onclick="addScreenshotRule()">＋ 新增規則</button><button class="store-secondary-button" type="button" onclick="saveScreenshotRules()">儲存規則</button><div class="link-pocket-status" id="screenshot-rules-status" role="status"></div></div></details>
+      <div class="link-pocket-toolbar"><input class="link-pocket-search" id="screenshot-search" type="search" placeholder="搜尋檔名、標題或標籤" aria-label="搜尋截圖" oninput="storeScreenshotSearch=this.value;renderScreenshotLibrary()"><div class="link-pocket-count" id="screenshot-count"></div></div>
+      <div class="screenshot-filter-tags" id="screenshot-filter-tags" aria-label="截圖標籤篩選"></div>
+      <div class="screenshot-library-status" id="screenshot-library-status" role="status" aria-live="polite">載入截圖分類…</div>
+      <div class="screenshot-library-grid" id="screenshot-library-list"></div>
     </div>
     <div class="pane" id="pane-stars-home">
       <div id="stars-freshness">${dataFreshnessHtml()}</div>
@@ -7399,6 +7416,14 @@ var storeLinkPocketEventsBound=false;
 var storeLinkPocketPreviewTimer=null;
 var storeLinkPocketPreviewSequence=0;
 var storeLinkPocketPreviewData=null;
+var storeScreenshotEntries=[];
+var storeScreenshotTags=[];
+var storeScreenshotRules=[];
+var storeScreenshotTag='全部';
+var storeScreenshotSearch='';
+var storeScreenshotLoaded=false;
+var storeScreenshotLoading=null;
+var storeScreenshotEventsBound=false;
 
 function bindLinkPocketActions(){
   if(storeLinkPocketEventsBound)return;
@@ -7441,6 +7466,7 @@ function loadLinkPocket(force){
     storeLinkPocketTags=Array.isArray(data.tags)?data.tags:[];
     storeLinkPocketLoaded=true;
     renderLinkPocket();
+    if(storeScreenshotLoaded)renderScreenshotLibrary();
     return storeLinkPocketEntries;
   }).catch(function(error){
     console.error(error);
@@ -7608,6 +7634,7 @@ async function saveLinkPocketEntry(event){
     resetLinkPocketForm();
     if(status)status.textContent=editing?'已更新便貼':'已儲存便貼';
     renderLinkPocket();
+    if(storeScreenshotLoaded)renderScreenshotLibrary();
   }catch(error){
     console.error(error);
     if(status)status.textContent=error.message||'儲存失敗';
@@ -7631,10 +7658,159 @@ async function deleteLinkPocketEntry(id){
     storeLinkPocketTags=buildLinkPocketTagSummary(storeLinkPocketEntries);
     renderLinkPocket();
     if(status)status.textContent='便貼已刪除';
+    if(storeScreenshotLoaded)renderScreenshotLibrary();
   }catch(error){
     console.error(error);
     if(status)status.textContent=error.message||'刪除失敗';
   }
+}
+
+function screenshotRequest(method,path,payload){
+  var token=arkWallReadToken();
+  if(!token)return Promise.reject(new Error('請先設定太倉／王府 NAS 通行令。'));
+  var isFormData=typeof FormData!=='undefined'&&payload instanceof FormData;
+  var headers=new Headers({'Authorization':'Bearer '+token});
+  var options={method:method,headers:headers,cache:'no-store'};
+  if(payload!==undefined){if(!isFormData)headers.set('Content-Type','application/json');options.body=isFormData?payload:JSON.stringify(payload);}
+  return fetchWithTimeout(ARK_WALL_API_BASE+path,options,method==='POST'?180000:45000).then(function(response){
+    return response.json().catch(function(){return {};}).then(function(result){
+      if(!response.ok)throw new Error(result.error||('截圖分類讀取失敗 '+response.status));
+      return result;
+    });
+  });
+}
+
+function screenshotSuggestedTags(){
+  var seen={};
+  var threadTags=storeLinkPocketEntries.filter(function(entry){return entry&&entry.platform==='threads';}).reduce(function(tags,entry){return tags.concat(Array.isArray(entry.tags)?entry.tags:[]);},[]);
+  return threadTags.concat(storeScreenshotTags).map(function(item){return typeof item==='string'?item:item.tag;}).filter(function(tag){
+    tag=String(tag||'').trim();var key=tag.toLocaleLowerCase();if(!tag||seen[key])return false;seen[key]=true;return true;
+  });
+}
+
+function bindScreenshotActions(){
+  if(storeScreenshotEventsBound)return;
+  document.addEventListener('click',function(event){
+    var pane=document.getElementById('pane-store-screenshot-library');
+    if(!pane||!pane.contains(event.target))return;
+    var pick=event.target.closest('[data-screenshot-pick-tag]');
+    if(pick){var input=document.getElementById('screenshot-tags-input');var tags=linkPocketParsedTags(input.value);var value=pick.dataset.screenshotPickTag;var index=tags.indexOf(value);if(index>=0)tags.splice(index,1);else tags.push(value);input.value=tags.map(function(tag){return '#'+tag;}).join(' ');renderScreenshotQuickTags();return;}
+    var filter=event.target.closest('[data-screenshot-filter]');
+    if(filter){storeScreenshotTag=filter.dataset.screenshotFilter;renderScreenshotLibrary();return;}
+    var removeRule=event.target.closest('[data-screenshot-remove-rule]');
+    if(removeRule){storeScreenshotRules=readScreenshotRulesDraft();storeScreenshotRules.splice(Number(removeRule.dataset.screenshotRemoveRule),1);renderScreenshotRules();return;}
+    var save=event.target.closest('[data-screenshot-save]');
+    if(save)saveScreenshotEntry(save.dataset.screenshotSave);
+    var open=event.target.closest('[data-screenshot-open]');
+    if(open){var entry=storeScreenshotEntries.find(function(item){return item.id===open.dataset.screenshotOpen;});if(entry)openArkWallPhoto(arkWallUrl(entry.url||''),entry.title||entry.fileName||'截圖');}
+  });
+  storeScreenshotEventsBound=true;
+}
+
+function renderScreenshotQuickTags(){
+  var host=document.getElementById('screenshot-quick-tags');
+  var input=document.getElementById('screenshot-tags-input');
+  if(!host||!input)return;
+  var selected=linkPocketParsedTags(input.value);
+  host.innerHTML=screenshotSuggestedTags().map(function(tag){return '<button type="button" aria-pressed="'+(selected.indexOf(tag)>=0?'true':'false')+'" data-screenshot-pick-tag="'+esc(tag)+'">#'+esc(tag)+'</button>';}).join('');
+}
+
+function renderScreenshotRules(){
+  var host=document.getElementById('screenshot-rules-list');if(!host)return;
+  host.innerHTML=storeScreenshotRules.map(function(rule,index){
+    return '<div class="screenshot-rule-row"><input class="screenshot-rule-keyword" type="text" maxlength="60" value="'+esc(rule.keyword||'')+'" placeholder="檔名包含關鍵字" aria-label="檔名關鍵字"><input class="screenshot-rule-tag" type="text" maxlength="40" value="'+esc(rule.tag||'')+'" placeholder="分類標籤" aria-label="分類標籤"><button type="button" data-screenshot-remove-rule="'+index+'" aria-label="移除分類規則">移除</button></div>';
+  }).join('');
+}
+
+function addScreenshotRule(){
+  if(storeScreenshotRules.length>=100)return;
+  storeScreenshotRules=readScreenshotRulesDraft();
+  storeScreenshotRules.push({keyword:'',tag:''});renderScreenshotRules();
+  var fields=document.querySelectorAll('#screenshot-rules-list .screenshot-rule-keyword');if(fields.length)fields[fields.length-1].focus();
+}
+
+function readScreenshotRulesDraft(){
+  return Array.prototype.slice.call(document.querySelectorAll('#screenshot-rules-list .screenshot-rule-row')).map(function(row){return {keyword:row.querySelector('.screenshot-rule-keyword').value.trim(),tag:row.querySelector('.screenshot-rule-tag').value.trim()};});
+}
+
+async function saveScreenshotRules(){
+  var status=document.getElementById('screenshot-rules-status');
+  var rules=readScreenshotRulesDraft().filter(function(rule){return rule.keyword&&rule.tag;});
+  if(status)status.textContent='正在儲存規則…';
+  try{var data=await screenshotRequest('PUT','/api/admin/screenshot-library/rules',{rules:rules});storeScreenshotRules=data.rules||[];renderScreenshotRules();if(status)status.textContent='規則已儲存';}
+  catch(error){if(status)status.textContent=error.message||'規則儲存失敗';}
+}
+
+function loadScreenshotLibrary(force){
+  bindScreenshotActions();
+  if(storeScreenshotLoading)return storeScreenshotLoading;
+  if(storeScreenshotLoaded&&!force){renderScreenshotRules();renderScreenshotLibrary();return Promise.resolve(storeScreenshotEntries);}
+  var status=document.getElementById('screenshot-library-status');if(status)status.textContent='正在讀取截圖分類…';
+  var linksReady=storeLinkPocketLoaded?Promise.resolve():loadLinkPocket();
+  storeScreenshotLoading=Promise.all([screenshotRequest('GET','/api/screenshot-library'),linksReady]).then(function(results){
+    var data=results[0];
+    storeScreenshotEntries=Array.isArray(data.entries)?data.entries:[];
+    storeScreenshotTags=buildLinkPocketTagSummary(storeScreenshotEntries);
+    storeScreenshotRules=Array.isArray(data.rules)?data.rules:[];
+    storeScreenshotLoaded=true;
+    renderScreenshotRules();renderScreenshotLibrary();return storeScreenshotEntries;
+  }).catch(function(error){if(status)status.textContent='讀取截圖分類失敗：'+(error.message||'請稍後再試');return [];}).finally(function(){storeScreenshotLoading=null;});
+  return storeScreenshotLoading;
+}
+
+function renderScreenshotLibrary(){
+  var host=document.getElementById('screenshot-library-list');if(!host)return;
+  var query=String(storeScreenshotSearch||'').trim().toLocaleLowerCase();
+  var entries=storeScreenshotEntries.filter(function(entry){
+    var tags=Array.isArray(entry.tags)?entry.tags:[];
+    if(storeScreenshotTag!=='全部'&&tags.indexOf(storeScreenshotTag)<0)return false;
+    return !query||[entry.title,entry.fileName].concat(tags).join(' ').toLocaleLowerCase().indexOf(query)>=0;
+  });
+  var filters=['全部'].concat(screenshotSuggestedTags());
+  var filterHost=document.getElementById('screenshot-filter-tags');
+  if(filterHost)filterHost.innerHTML=filters.map(function(tag){var count=tag==='全部'?storeScreenshotEntries.length:storeScreenshotEntries.filter(function(entry){return (entry.tags||[]).indexOf(tag)>=0;}).length;return '<button type="button" class="'+(storeScreenshotTag===tag?'active':'')+'" data-screenshot-filter="'+esc(tag)+'">'+(tag==='全部'?'全部':'#'+esc(tag))+' '+count+'</button>';}).join('');
+  var count=document.getElementById('screenshot-count');if(count)count.textContent='顯示 '+entries.length+' / '+storeScreenshotEntries.length+' 張';
+  var status=document.getElementById('screenshot-library-status');if(status&&storeScreenshotLoaded)status.textContent=storeScreenshotEntries.length?'NAS 保存 '+storeScreenshotEntries.length+' 張截圖':'還沒有截圖，選擇手機或電腦檔案即可上傳。';
+  if(!entries.length){host.innerHTML='<div class="store-empty">'+(query||storeScreenshotTag!=='全部'?'找不到符合的截圖':'目前沒有截圖')+'</div>';renderScreenshotQuickTags();return;}
+  host.innerHTML=entries.map(function(entry){
+    var tags=Array.isArray(entry.tags)?entry.tags:[];
+    return '<article class="screenshot-card" data-screenshot-entry="'+esc(entry.id)+'"><img data-screenshot-open="'+esc(entry.id)+'" src="'+esc(arkWallUrl(entry.url||''))+'" alt="'+esc(entry.title||entry.fileName||'截圖')+'" title="點擊放大" loading="lazy" decoding="async"><small title="'+esc(entry.fileName||'')+'">'+esc(entry.fileName||'截圖')+'</small><input class="screenshot-title-input" type="text" maxlength="200" value="'+esc(entry.title||'截圖')+'" aria-label="截圖標題"><input class="screenshot-entry-tags-input" type="text" maxlength="400" value="'+esc(tags.map(function(tag){return '#'+tag;}).join(' '))+'" aria-label="截圖標籤"><div class="screenshot-card-tags">'+(tags.length?tags.map(function(tag){return '#'+esc(tag);}).join(' '):'未分類')+'</div><button class="store-secondary-button" type="button" data-screenshot-save="'+esc(entry.id)+'">儲存分類</button></article>';
+  }).join('');
+  renderScreenshotQuickTags();
+}
+
+async function uploadScreenshotFiles(event){
+  if(event)event.preventDefault();
+  var input=document.getElementById('screenshot-upload-files');var files=input&&input.files?Array.prototype.slice.call(input.files):[];
+  var status=document.getElementById('screenshot-upload-status');var button=document.getElementById('screenshot-upload-button');
+  if(!files.length){if(status)status.textContent='請先選擇截圖';return;}
+  if(files.length>10){if(status)status.textContent='一次最多上傳 10 張截圖';return;}
+  var formData=new FormData();files.forEach(function(file){formData.append('images',file,file.name);});
+  formData.append('tags',JSON.stringify(linkPocketParsedTags(document.getElementById('screenshot-tags-input').value)));
+  formData.append('autoClassify',document.getElementById('screenshot-auto-classify').checked?'true':'false');
+  if(button)button.disabled=true;if(status)status.textContent='正在上傳 '+files.length+' 張截圖至 NAS…';
+  try{
+    var data=await screenshotRequest('POST','/api/admin/screenshot-library',formData);
+    storeScreenshotEntries=(Array.isArray(data.entries)?data.entries:[]).concat(storeScreenshotEntries);
+    storeScreenshotTags=buildLinkPocketTagSummary(storeScreenshotEntries);
+    storeScreenshotLoaded=true;
+    var form=document.getElementById('screenshot-upload-form');if(form)form.reset();
+    if(status)status.textContent='已上傳 '+(data.entries||[]).length+' 張截圖';
+    renderScreenshotLibrary();
+  }catch(error){if(status)status.textContent='上傳失敗：'+(error.message||'請稍後再試');}
+  finally{if(button)button.disabled=false;renderScreenshotQuickTags();}
+}
+
+async function saveScreenshotEntry(id){
+  var entry=storeScreenshotEntries.find(function(item){return String(item.id)===String(id);});
+  var card=Array.prototype.slice.call(document.querySelectorAll('[data-screenshot-entry]')).find(function(item){return item.dataset.screenshotEntry===String(id);});if(!entry||!card)return;
+  var button=card.querySelector('[data-screenshot-save]');if(button)button.disabled=true;
+  try{
+    var data=await screenshotRequest('PUT','/api/admin/screenshot-library/'+encodeURIComponent(id),{title:card.querySelector('.screenshot-title-input').value,tags:linkPocketParsedTags(card.querySelector('.screenshot-entry-tags-input').value)});
+    var index=storeScreenshotEntries.findIndex(function(item){return String(item.id)===String(id);});if(index>=0)storeScreenshotEntries[index]=data.entry;
+    storeScreenshotTags=buildLinkPocketTagSummary(storeScreenshotEntries);
+    renderScreenshotLibrary();
+  }catch(error){var status=document.getElementById('screenshot-library-status');if(status)status.textContent='分類儲存失敗：'+(error.message||'請稍後再試');if(button)button.disabled=false;}
 }
 
 function editStoreRecord(row){

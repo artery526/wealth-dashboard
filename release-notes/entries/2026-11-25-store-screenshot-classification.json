@@ -1,0 +1,9 @@
+{
+  "id": "2026-11-25-store-screenshot-classification",
+  "status": "in_progress",
+  "date": null,
+  "area": "太倉連結便貼",
+  "summary": "太倉連結便貼新增截圖分類頁籤",
+  "details": "支援上傳手機與電腦截圖，分類沿用太倉 Threads 文章的標籤、搜尋與檔名關鍵字規則。截圖只保存於 NAS，不分析既有照片，也不使用 AI 影像辨識。",
+  "platforms": ["website", "nas"]
+}
