@@ -5,6 +5,7 @@ const dashboardUrl = 'file:///' + path.resolve(__dirname, '..', 'index.html').re
 
 test('TaiCang screenshot tab reuses Threads article tags and filename rules', async ({ page }) => {
   await page.goto(dashboardUrl);
+  page.on('dialog', dialog => dialog.accept());
   await page.evaluate(() => {
     const loginOverlay = document.getElementById('web-login-overlay');
     if (loginOverlay) { loginOverlay.classList.remove('open'); loginOverlay.style.display = 'none'; }
@@ -39,6 +40,14 @@ test('TaiCang screenshot tab reuses Threads article tags and filename rules', as
         const body = JSON.parse(options.body);
         window.screenshotRequests.push({ kind: 'update', body });
         return { ok: true, status: 200, json: async () => ({ entry: { id: 'shot-1-0123456789ab', fileName: 'Threads-food.png', title: body.title, folder: body.folder, tags: body.tags, url: '/media/screenshot-library/shot-1-0123456789ab' } }) };
+      }
+      if (url.includes('/api/admin/screenshot-library/') && method === 'DELETE') {
+        window.screenshotRequests.push({ kind: 'delete', id: url.split('/').pop() });
+        return { ok: true, status: 200, json: async () => ({ ok: true, id: url.split('/').pop() }) };
+      }
+      if (url.endsWith('/api/admin/runtime/restart') && method === 'POST') {
+        window.screenshotRequests.push({ kind: 'restart' });
+        return { ok: true, status: 202, json: async () => ({ ok: true, restarting: true }) };
       }
       throw new Error('Unexpected request: ' + url);
     };
@@ -92,11 +101,20 @@ test('TaiCang screenshot tab reuses Threads article tags and filename rules', as
   await expect(page.locator('#screenshot-filter-tags')).toContainText('搜尋結果');
   await expect(page.locator('#screenshot-library-list')).toContainText('Threads-food.png');
   await page.locator('[data-screenshot-folders-back]').click();
+  await page.locator('[data-screenshot-folder="股票梗圖"]').click();
+  await page.locator('.screenshot-delete-button').click();
+  await expect(page.locator('#screenshot-library-status')).toHaveText('截圖與 NAS 原圖已刪除');
+  await expect(page.locator('#screenshot-library-list')).toContainText('這個資料夾目前沒有截圖');
+  await page.locator('[data-screenshot-folders-back]').click();
+  await page.locator('[data-screenshot-restart]').click();
+  await expect(page.locator('#screenshot-restart-status')).toContainText('已送出重啟命令');
   const requests = await page.evaluate(() => window.screenshotRequests);
   expect(requests).toEqual([
     { kind: 'rules', body: { rules: [{ keyword: 'Threads-food', tag: 'Threads美食', folder: '養生' }] } },
     { kind: 'upload', folder: '', tags: [], autoClassify: 'true', names: ['Threads-food.png'] },
-    { kind: 'update', body: { title: 'Threads-food', folder: '股票梗圖', tags: ['Threads美食'] } }
+    { kind: 'update', body: { title: 'Threads-food', folder: '股票梗圖', tags: ['Threads美食'] } },
+    { kind: 'delete', id: 'shot-1-0123456789ab' },
+    { kind: 'restart' }
   ]);
 
   await page.evaluate(() => { closePanel(); openPanel('store'); });

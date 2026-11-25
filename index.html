@@ -4900,7 +4900,8 @@ html[data-theme="deep-blue"] .scene-task-details .home-agenda-global-refresh{bor
 .advisor-brief-inline-details a{color:var(--cyan)}
 @media(max-width:540px){.advisor-brief-light-overview{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.advisor-brief-light-chip{padding:7px}.advisor-brief-details>.advisor-brief-grid{padding:7px}}
 .screenshot-folder-select-label,.screenshot-card-folder-label{display:grid;gap:4px;color:#8aa7b6;font:800 11px var(--sans)}.screenshot-folder-select,.screenshot-card-folder,.screenshot-rule-folder{min-width:0;height:38px;box-sizing:border-box;border:1px solid rgba(65,157,194,.42);border-radius:7px;background:#061b2b;color:#dff7ff;padding:0 9px;font:800 12px var(--sans)}.screenshot-rule-row{grid-template-columns:minmax(100px,1fr) minmax(90px,1fr) minmax(130px,1fr) auto}.screenshot-card-folder{width:100%}.screenshot-folder-back{min-height:40px}
-@media(max-width:600px){.screenshot-rule-row{grid-template-columns:1fr 1fr}.screenshot-rule-folder{grid-column:1/-1}.screenshot-rule-row button{grid-column:1/-1;height:36px}.screenshot-folder-select{width:100%}}</style>
+@media(max-width:600px){.screenshot-rule-row{grid-template-columns:1fr 1fr}.screenshot-rule-folder{grid-column:1/-1}.screenshot-rule-row button{grid-column:1/-1;height:36px}.screenshot-folder-select{width:100%}}.screenshot-api-controls{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:5px 10px;margin:0 0 12px;padding:11px 12px;border:1px solid rgba(65,157,194,.3);border-radius:9px;background:rgba(3,16,26,.42)}.screenshot-api-controls strong{display:block;color:#bcefff;font:900 12px var(--sans)}.screenshot-api-controls small{display:block;margin-top:3px;color:#8aa7b6;font:700 10px/1.5 var(--sans)}.screenshot-api-controls [role=status]{grid-column:1/-1;color:#a8f1d6;font:800 11px/1.5 var(--sans)}.screenshot-card-actions{display:flex;align-items:stretch;gap:7px}.screenshot-card-actions .screenshot-download{flex:1}.screenshot-delete-button{flex:none;width:44px;min-height:42px;border:1px solid rgba(239,110,110,.5);border-radius:8px;background:rgba(110,33,40,.24);color:#ff9c9c;font:900 18px/1 var(--sans);cursor:pointer;touch-action:manipulation}.screenshot-delete-button:disabled{opacity:.5;cursor:wait}
+@media(max-width:600px){.screenshot-api-controls{grid-template-columns:1fr}.screenshot-api-controls button{width:100%;min-height:42px}.screenshot-api-controls [role=status]{grid-column:auto}}</style>
 </head>
 <body>
 
@@ -7094,6 +7095,7 @@ function renderStorePanel(initialTab){
     </div>
     <div class="pane" id="pane-store-screenshot-library">
       <div class="link-pocket-intro"><div class="link-pocket-title">截圖分類</div><div class="link-pocket-sub">截圖獨立保存於 NAS；先放入主資料夾，再用標籤與關鍵字搜尋。檔名規則只看檔名，不分析圖片內容。</div></div>
+      <div class="screenshot-api-controls"><div><strong>NAS API 維護</strong><small>重啟會讓王府、EmilyHome 等共用功能短暫中斷，服務會自動恢復。</small></div><button class="store-secondary-button" type="button" data-screenshot-restart>↻ 重新啟動 NAS API</button><div id="screenshot-restart-status" role="status" aria-live="polite"></div></div>
       <form class="screenshot-form" id="screenshot-upload-form" onsubmit="uploadScreenshotFiles(event)">
         <div class="screenshot-form-row"><input id="screenshot-upload-files" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,image/avif,image/gif" multiple required aria-label="選擇截圖"><label class="screenshot-auto-option"><input id="screenshot-auto-classify" type="checkbox" checked>套用檔名分類規則 <span>(單張 10 MB，一次最多 10 張)</span></label></div>
         <label class="screenshot-folder-select-label" for="screenshot-upload-folder">主資料夾</label><select class="screenshot-folder-select" id="screenshot-upload-folder" aria-label="上傳截圖主資料夾"></select>
@@ -7711,6 +7713,10 @@ function bindScreenshotActions(){
     if(folder){storeScreenshotFolder=folder.dataset.screenshotFolder;renderScreenshotLibrary();return;}
     var back=event.target.closest('[data-screenshot-folders-back]');
     if(back){if(!storeScreenshotFolder&&storeScreenshotSearch){storeScreenshotSearch='';var searchInput=document.getElementById('screenshot-search');if(searchInput)searchInput.value='';}storeScreenshotFolder='';renderScreenshotLibrary();return;}
+    var deleteButton=event.target.closest('[data-screenshot-delete]');
+    if(deleteButton){deleteScreenshotEntry(deleteButton.dataset.screenshotDelete,deleteButton);return;}
+    var restartButton=event.target.closest('[data-screenshot-restart]');
+    if(restartButton){restartScreenshotApi(restartButton);return;}
     var removeRule=event.target.closest('[data-screenshot-remove-rule]');
     if(removeRule){storeScreenshotRules=readScreenshotRulesDraft();storeScreenshotRules.splice(Number(removeRule.dataset.screenshotRemoveRule),1);renderScreenshotRules();return;}
     var save=event.target.closest('[data-screenshot-save]');
@@ -7775,6 +7781,7 @@ function loadScreenshotLibrary(force){
 
 function renderScreenshotLibrary(){
   var host=document.getElementById('screenshot-library-list');if(!host)return;
+  var restartButton=document.querySelector('[data-screenshot-restart]');if(restartButton)restartButton.hidden=!arkWallReadToken();
   var query=String(storeScreenshotSearch||'').trim().toLocaleLowerCase();
   var folderHost=document.getElementById('screenshot-filter-tags');
   var folders=screenshotFolderNames().map(function(name){return {tag:name,label:name};});
@@ -7802,7 +7809,7 @@ function renderScreenshotLibrary(){
   host.innerHTML=entries.map(function(entry){
     var tags=Array.isArray(entry.tags)?entry.tags:[];
     var downloadUrl=arkWallUrl(entry.url||'');downloadUrl+=(downloadUrl.indexOf('?')>=0?'&':'?')+'download=1';
-    return '<article class="screenshot-card" data-screenshot-entry="'+esc(entry.id)+'"><img data-screenshot-open="'+esc(entry.id)+'" src="'+esc(arkWallUrl(entry.url||''))+'" alt="'+esc(entry.title||entry.fileName||'截圖')+'" title="點擊放大" loading="lazy" decoding="async"><small title="'+esc(entry.fileName||'')+'">'+esc(entry.fileName||'截圖')+'</small><a class="store-secondary-button screenshot-download" href="'+esc(downloadUrl)+'" download="'+esc(entry.fileName||'截圖')+'">下載原圖</a><label class="screenshot-card-folder-label">主資料夾<select class="screenshot-card-folder" aria-label="截圖主資料夾">'+screenshotFolderOptions(entry.folder||'待整理',false)+'</select></label><input class="screenshot-title-input" type="text" maxlength="200" value="'+esc(entry.title||'截圖')+'" aria-label="截圖標題"><input class="screenshot-entry-tags-input" type="text" maxlength="400" value="'+esc(tags.map(function(tag){return '#'+tag;}).join(' '))+'" aria-label="截圖標籤"><div class="screenshot-card-tags">'+(tags.length?tags.map(function(tag){return '#'+esc(tag);}).join(' '):'未分類')+'</div><button class="store-secondary-button" type="button" data-screenshot-save="'+esc(entry.id)+'">儲存分類</button></article>';
+    return '<article class="screenshot-card" data-screenshot-entry="'+esc(entry.id)+'"><img data-screenshot-open="'+esc(entry.id)+'" src="'+esc(arkWallUrl(entry.url||''))+'" alt="'+esc(entry.title||entry.fileName||'截圖')+'" title="點擊放大" loading="lazy" decoding="async"><small title="'+esc(entry.fileName||'')+'">'+esc(entry.fileName||'截圖')+'</small><div class="screenshot-card-actions"><a class="store-secondary-button screenshot-download" href="'+esc(downloadUrl)+'" download="'+esc(entry.fileName||'截圖')+'">下載原圖</a><button class="screenshot-delete-button" type="button" data-screenshot-delete="'+esc(entry.id)+'" aria-label="刪除 '+esc(entry.title||entry.fileName||'截圖')+'" title="刪除截圖">✕</button></div><label class="screenshot-card-folder-label">主資料夾<select class="screenshot-card-folder" aria-label="截圖主資料夾">'+screenshotFolderOptions(entry.folder||'待整理',false)+'</select></label><input class="screenshot-title-input" type="text" maxlength="200" value="'+esc(entry.title||'截圖')+'" aria-label="截圖標題"><input class="screenshot-entry-tags-input" type="text" maxlength="400" value="'+esc(tags.map(function(tag){return '#'+tag;}).join(' '))+'" aria-label="截圖標籤"><div class="screenshot-card-tags">'+(tags.length?tags.map(function(tag){return '#'+esc(tag);}).join(' '):'未分類')+'</div><button class="store-secondary-button" type="button" data-screenshot-save="'+esc(entry.id)+'">儲存分類</button></article>';
   }).join('');
   renderScreenshotQuickTags();
 }
@@ -7840,6 +7847,31 @@ async function saveScreenshotEntry(id){
     storeScreenshotTags=buildLinkPocketTagSummary(storeScreenshotEntries);
     renderScreenshotLibrary();
   }catch(error){var status=document.getElementById('screenshot-library-status');if(status)status.textContent='分類儲存失敗：'+(error.message||'請稍後再試');if(button)button.disabled=false;}
+}
+
+async function deleteScreenshotEntry(id,button){
+  var entry=storeScreenshotEntries.find(function(item){return String(item.id)===String(id);});if(!entry)return;
+  var name=entry.title||entry.fileName||'這張截圖';
+  if(!confirm('確定刪除「'+name+'」嗎？NAS 原始圖片也會一併永久刪除，無法復原。'))return;
+  if(button)button.disabled=true;
+  var status=document.getElementById('screenshot-library-status');if(status)status.textContent='正在刪除截圖與 NAS 原圖…';
+  try{
+    await screenshotRequest('DELETE','/api/admin/screenshot-library/'+encodeURIComponent(id));
+    storeScreenshotEntries=storeScreenshotEntries.filter(function(item){return String(item.id)!==String(id);});
+    storeScreenshotTags=buildLinkPocketTagSummary(storeScreenshotEntries);
+    renderScreenshotLibrary();
+    if(status)status.textContent='截圖與 NAS 原圖已刪除';
+  }catch(error){if(status)status.textContent='刪除失敗：'+(error.message||'請稍後再試');if(button)button.disabled=false;}
+}
+
+async function restartScreenshotApi(button){
+  if(!confirm('要重新啟動 NAS API 嗎？王府、EmilyHome 等共用功能會暫時中斷，服務會自動恢復。'))return;
+  var status=document.getElementById('screenshot-restart-status');if(status)status.textContent='正在送出重啟命令…';
+  if(button)button.disabled=true;
+  try{
+    await screenshotRequest('POST','/api/admin/runtime/restart');
+    if(status)status.textContent='已送出重啟命令。NAS API 正在恢復，稍後重新整理頁面。';
+  }catch(error){if(status)status.textContent='重啟未完成：'+(error.message||'請稍後再試');if(button)button.disabled=false;}
 }
 
 function editStoreRecord(row){
