@@ -25,6 +25,11 @@ test('TaiCang screenshot tab reuses Threads article tags and filename rules', as
         window.screenshotRequests.push({ kind: 'rules', body });
         return { ok: true, status: 200, json: async () => ({ rules: body.rules }) };
       }
+      if (url.includes('/api/admin/screenshot-library/') && method === 'DELETE') {
+        const id = url.split('/').pop();
+        window.screenshotRequests.push({ kind: 'delete', id });
+        return { ok: true, status: 200, json: async () => ({ ok: true, id }) };
+      }
       if (url.endsWith('/api/admin/screenshot-library')) {
         const body = options.body;
         window.screenshotRequests.push({ kind: 'upload', tags: JSON.parse(body.get('tags')), autoClassify: body.get('autoClassify'), names: body.getAll('images').map(file => file.name) });
@@ -88,4 +93,10 @@ test('TaiCang screenshot tab reuses Threads article tags and filename rules', as
   });
   await expect(page.locator('#screenshot-library-list')).toContainText('Threads-food.png');
   await expect(page.locator('.screenshot-rule-keyword')).toHaveValue('Threads-food');
+  await expect(screenshotRow.locator('[data-screenshot-delete]')).toHaveAttribute('aria-label', '刪除 Threads-food.png');
+  page.on('dialog', dialog => dialog.accept());
+  await screenshotRow.locator('[data-screenshot-delete]').click();
+  await expect(page.locator('#screenshot-library-list')).not.toContainText('Threads-food.png');
+  await expect(page.locator('#screenshot-library-status')).toHaveText('截圖已從 NAS 刪除');
+  await expect.poll(() => page.evaluate(() => window.screenshotRequests.at(-1))).toEqual({ kind: 'delete', id: 'shot-1-0123456789ab' });
 });
