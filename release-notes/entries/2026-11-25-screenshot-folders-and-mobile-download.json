@@ -1,0 +1,9 @@
+{
+  "id": "2026-11-25-screenshot-folders-and-mobile-download",
+  "status": "in_progress",
+  "date": null,
+  "area": "太倉連結便貼",
+  "summary": "截圖分類新增標籤資料夾與原圖下載",
+  "details": "依 Threads 標籤建立截圖資料夾，點入查看該分類截圖，並提供原圖下載入口。多標籤截圖可出現在多個資料夾。",
+  "platforms": ["website", "nas"]
+}

@@ -66,7 +66,15 @@ test('TaiCang screenshot tab reuses Threads article tags and filename rules', as
   });
   await page.getByRole('button', { name: '上傳至 NAS' }).click();
   await expect(page.locator('#screenshot-upload-status')).toHaveText('已上傳 1 張截圖');
+  await expect(page.locator('[data-screenshot-folder="Threads美食"]')).toBeVisible();
+  await page.locator('[data-screenshot-folder="Threads美食"]').click();
+  await expect(page.locator('#screenshot-filter-tags')).toContainText('#Threads美食');
   await expect(page.locator('#screenshot-library-list')).toContainText('Threads-food.png');
+  const downloadHref = await page.locator('.screenshot-download').getAttribute('href');
+  expect(downloadHref).toContain('/media/screenshot-library/shot-1-0123456789ab');
+  expect(downloadHref).toContain('download=1');
+  await page.locator('[data-screenshot-folders-back]').click();
+  await expect(page.locator('[data-screenshot-folder="Threads美食"]')).toBeVisible();
   const requests = await page.evaluate(() => window.screenshotRequests);
   expect(requests).toEqual([
     { kind: 'rules', body: { rules: [{ keyword: 'Threads-food', tag: 'Threads美食' }] } },
@@ -79,6 +87,6 @@ test('TaiCang screenshot tab reuses Threads article tags and filename rules', as
     document.getElementById('p-zh').click();
     document.querySelector('#panel-title-menu [data-panel-tab="store-screenshot-library"]').click();
   });
-  await expect(page.locator('#screenshot-library-list')).toContainText('Threads-food.png');
+  await expect(page.locator('[data-screenshot-folder="Threads美食"]')).toBeVisible();
   await expect(page.locator('.screenshot-rule-keyword')).toHaveValue('Threads-food');
 });
