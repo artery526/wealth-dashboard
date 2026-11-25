@@ -1,7 +1,7 @@
 {
   "id": "2026-11-25-store-screenshot-list-view",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-11-25",
   "area": "太倉連結便貼",
   "summary": "截圖分類改為檔案清單檢視",
   "details": "截圖以檔名與標籤為主呈現，支援清單搜尋與篩選；預覽和分類編輯仍可從清單操作。",
