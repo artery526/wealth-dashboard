@@ -7092,11 +7092,11 @@ function renderStorePanel(initialTab){
       <div class="link-pocket-grid" id="link-pocket-list"><div class="store-empty">連結便貼載入中…</div></div>
     </div>
     <div class="pane" id="pane-store-screenshot-library">
-      <div class="link-pocket-intro"><div class="link-pocket-title">截圖分類</div><div class="link-pocket-sub">上傳手機或電腦截圖，沿用連結便貼標籤分類並在 NAS 保存。自動分類只比對檔名規則，不分析圖片內容。</div></div>
+      <div class="link-pocket-intro"><div class="link-pocket-title">截圖分類</div><div class="link-pocket-sub">沿用太倉 Threads 文章使用的標籤分類；截圖獨立保存於 NAS。檔名規則只補標籤，不分析圖片內容。</div></div>
       <form class="screenshot-form" id="screenshot-upload-form" onsubmit="uploadScreenshotFiles(event)">
         <div class="screenshot-form-row"><input id="screenshot-upload-files" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,image/avif,image/gif" multiple required aria-label="選擇截圖"><label class="screenshot-auto-option"><input id="screenshot-auto-classify" type="checkbox" checked>套用檔名分類規則 <span>(單張 10 MB，一次最多 10 張)</span></label></div>
-        <input class="link-pocket-input" id="screenshot-tags-input" type="text" maxlength="400" placeholder="手動分類標籤，可多選，例如 #美食 #購物" aria-label="截圖分類標籤" oninput="renderScreenshotQuickTags()">
-        <div class="screenshot-quick-tags" id="screenshot-quick-tags" aria-label="連結便貼標籤"></div>
+        <input class="link-pocket-input" id="screenshot-tags-input" type="text" maxlength="400" placeholder="沿用 Threads 文章標籤，例如 #美食 #待研究" aria-label="截圖分類標籤" oninput="renderScreenshotQuickTags()">
+        <div class="screenshot-quick-tags" id="screenshot-quick-tags" aria-label="Threads 文章標籤"></div>
         <div class="screenshot-form-row"><button class="store-add-button" id="screenshot-upload-button" type="submit">上傳至 NAS</button><div class="link-pocket-status" id="screenshot-upload-status" role="status" aria-live="polite"></div></div>
       </form>
       <details class="screenshot-rules" id="screenshot-rules-panel"><summary>檔名自動分類規則</summary><div class="link-pocket-sub">當檔名包含關鍵字時，自動加入對應標籤；不讀取圖片內容。</div><div class="screenshot-rules-list" id="screenshot-rules-list"></div><div class="screenshot-form-row"><button class="store-secondary-button" type="button" onclick="addScreenshotRule()">＋ 新增規則</button><button class="store-secondary-button" type="button" onclick="saveScreenshotRules()">儲存規則</button><div class="link-pocket-status" id="screenshot-rules-status" role="status"></div></div></details>
@@ -7682,7 +7682,8 @@ function screenshotRequest(method,path,payload){
 
 function screenshotSuggestedTags(){
   var seen={};
-  return storeLinkPocketTags.concat(storeScreenshotTags).map(function(item){return typeof item==='string'?item:item.tag;}).filter(function(tag){
+  var threadTags=storeLinkPocketEntries.filter(function(entry){return entry&&entry.platform==='threads';}).reduce(function(tags,entry){return tags.concat(Array.isArray(entry.tags)?entry.tags:[]);},[]);
+  return threadTags.concat(storeScreenshotTags).map(function(item){return typeof item==='string'?item:item.tag;}).filter(function(tag){
     tag=String(tag||'').trim();var key=tag.toLocaleLowerCase();if(!tag||seen[key])return false;seen[key]=true;return true;
   });
 }
@@ -7749,7 +7750,7 @@ function loadScreenshotLibrary(force){
   storeScreenshotLoading=Promise.all([screenshotRequest('GET','/api/screenshot-library'),linksReady]).then(function(results){
     var data=results[0];
     storeScreenshotEntries=Array.isArray(data.entries)?data.entries:[];
-    storeScreenshotTags=Array.isArray(data.tags)?data.tags:[];
+    storeScreenshotTags=buildLinkPocketTagSummary(storeScreenshotEntries);
     storeScreenshotRules=Array.isArray(data.rules)?data.rules:[];
     storeScreenshotLoaded=true;
     renderScreenshotRules();renderScreenshotLibrary();return storeScreenshotEntries;
@@ -7791,7 +7792,7 @@ async function uploadScreenshotFiles(event){
   try{
     var data=await screenshotRequest('POST','/api/admin/screenshot-library',formData);
     storeScreenshotEntries=(Array.isArray(data.entries)?data.entries:[]).concat(storeScreenshotEntries);
-    storeScreenshotTags=buildLinkPocketTagSummary(storeLinkPocketEntries.concat(storeScreenshotEntries));
+    storeScreenshotTags=buildLinkPocketTagSummary(storeScreenshotEntries);
     storeScreenshotLoaded=true;
     var form=document.getElementById('screenshot-upload-form');if(form)form.reset();
     if(status)status.textContent='已上傳 '+(data.entries||[]).length+' 張截圖';
@@ -7807,7 +7808,7 @@ async function saveScreenshotEntry(id){
   try{
     var data=await screenshotRequest('PUT','/api/admin/screenshot-library/'+encodeURIComponent(id),{title:card.querySelector('.screenshot-title-input').value,tags:linkPocketParsedTags(card.querySelector('.screenshot-entry-tags-input').value)});
     var index=storeScreenshotEntries.findIndex(function(item){return String(item.id)===String(id);});if(index>=0)storeScreenshotEntries[index]=data.entry;
-    storeScreenshotTags=buildLinkPocketTagSummary(storeLinkPocketEntries.concat(storeScreenshotEntries));
+    storeScreenshotTags=buildLinkPocketTagSummary(storeScreenshotEntries);
     renderScreenshotLibrary();
   }catch(error){var status=document.getElementById('screenshot-library-status');if(status)status.textContent='分類儲存失敗：'+(error.message||'請稍後再試');if(button)button.disabled=false;}
 }

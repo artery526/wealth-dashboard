@@ -3,7 +3,7 @@ const path = require('node:path');
 
 const dashboardUrl = 'file:///' + path.resolve(__dirname, '..', 'index.html').replace(/\\/g, '/');
 
-test('TaiCang screenshot tab reuses Link Pocket tags and filename rules', async ({ page }) => {
+test('TaiCang screenshot tab reuses Threads article tags and filename rules', async ({ page }) => {
   await page.goto(dashboardUrl);
   await page.evaluate(() => {
     const loginOverlay = document.getElementById('web-login-overlay');
@@ -15,7 +15,7 @@ test('TaiCang screenshot tab reuses Link Pocket tags and filename rules', async 
     window.fetchWithTimeout = async (url, options = {}) => {
       const method = options.method || 'GET';
       if (url.endsWith('/api/link-pocket')) {
-        return { ok: true, status: 200, json: async () => ({ entries: [], tags: [{ tag: 'Threads美食', count: 1 }] }) };
+        return { ok: true, status: 200, json: async () => ({ entries: [{ platform: 'threads', tags: ['Threads美食'] }, { platform: 'web', tags: ['網頁收藏'] }], tags: [{ tag: 'Threads美食', count: 1 }, { tag: '網頁收藏', count: 1 }] }) };
       }
       if (url.endsWith('/api/screenshot-library') && method === 'GET') {
         return { ok: true, status: 200, json: async () => ({ entries: [], rules: [], tags: [{ tag: 'Threads美食', count: 1 }] }) };
@@ -49,6 +49,7 @@ test('TaiCang screenshot tab reuses Link Pocket tags and filename rules', async 
   expect(settledState).toEqual({ className: 'pane active', currentTab: 'store-screenshot-library' });
   await expect(page.locator('#pane-store-screenshot-library')).toHaveClass(/active/);
   await expect(page.locator('#screenshot-quick-tags')).toContainText('#Threads美食');
+  await expect(page.locator('#screenshot-quick-tags')).not.toContainText('#網頁收藏');
   await expect(page.locator('#screenshot-rules-panel')).toContainText('檔名自動分類規則');
 
   await page.locator('#screenshot-rules-panel summary').click();
