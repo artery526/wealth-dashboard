@@ -111,8 +111,9 @@ function getTissuePriceRecords_(ss) {
   });
 }
 function saveTissuePriceRecord_(ss, p) {
-  var product=String(p.product||'').trim().slice(0,100),store=String(p.store||'').trim().slice(0,100),sheets=Number(p.sheetsPerPack),packs=Number(p.packsPerBag),bags=Number(p.bags),price=Number(p.totalPrice);
-  if(!product||!store)throw new Error('請填寫商品名稱與購買地');
+  var product=String(p.product||'').trim().slice(0,100),store=String(p.store||'').trim().slice(0,500),sheets=Number(p.sheetsPerPack),packs=Number(p.packsPerBag),bags=Number(p.bags),price=Number(p.totalPrice);
+  if(!product||!store)throw new Error('請填寫商品名稱與購買網址');
+  if(!/^https?:\/\/[^\s/?#]+(?:[/?#][^\s]*)?$/i.test(store))throw new Error('購買網址需以 http:// 或 https:// 開頭');
   if(![sheets,packs,bags].every(function(n){return Number.isInteger(n)&&n>0&&n<=100000;}))throw new Error('抽數、包數與袋數需為正整數');
   if(!Number.isFinite(price)||price<=0||price>100000000)throw new Error('價格需為有效正數');
   var total=sheets*packs*bags;if(!Number.isSafeInteger(total)||total<=0)throw new Error('總張數超出可計算範圍');

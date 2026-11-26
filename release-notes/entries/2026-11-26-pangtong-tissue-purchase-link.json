@@ -1,0 +1,9 @@
+{
+  "id": "2026-11-26-pangtong-tissue-purchase-link",
+  "status": "in_progress",
+  "date": null,
+  "area": "龐統軍師",
+  "summary": "衛生紙價格清單新增購買網址按鈕",
+  "details": "新增價格紀錄可填寫商品網址，清單提供安全的新分頁連結；既有店名紀錄仍可顯示。",
+  "platforms": ["website"]
+}
