@@ -45,6 +45,11 @@ jobs:
         with:
           path: .
 
+      # GitHub Actions can briefly return an empty artifact listing immediately
+      # after the Pages artifact is finalized. Allow that listing to propagate.
+      - name: Wait for Pages artifact listing
+        run: sleep 60
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5
