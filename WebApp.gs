@@ -101,6 +101,36 @@ function err(msg) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
+var TISSUE_PRICE_SHEET_NAME_ = '衛生紙單張價格';
+var TISSUE_PRICE_HEADERS_ = ['id', '商品', '購買地', '每包抽數', '每袋包數', '袋數', '總價', '總張數', '每張價格', '記錄時間'];
+function getTissuePriceRecords_(ss) {
+  var sheet = ss.getSheetByName(TISSUE_PRICE_SHEET_NAME_);
+  if (!sheet || sheet.getLastRow() < 2) return [];
+  return sheet.getRange(2, 1, sheet.getLastRow() - 1, TISSUE_PRICE_HEADERS_.length).getValues().filter(function(r) { return String(r[0] || '').trim(); }).map(function(r) {
+    return {id:String(r[0]),product:String(r[1]||''),store:String(r[2]||''),sheetsPerPack:Number(r[3])||0,packsPerBag:Number(r[4])||0,bags:Number(r[5])||0,totalPrice:Number(r[6])||0,totalSheets:Number(r[7])||0,unitPrice:Number(r[8])||0,recordedAt:r[9] instanceof Date?r[9].toISOString():String(r[9]||'')};
+  });
+}
+function saveTissuePriceRecord_(ss, p) {
+  var product=String(p.product||'').trim().slice(0,100),store=String(p.store||'').trim().slice(0,100),sheets=Number(p.sheetsPerPack),packs=Number(p.packsPerBag),bags=Number(p.bags),price=Number(p.totalPrice);
+  if(!product||!store)throw new Error('請填寫商品名稱與購買地');
+  if(![sheets,packs,bags].every(function(n){return Number.isInteger(n)&&n>0&&n<=100000;}))throw new Error('抽數、包數與袋數需為正整數');
+  if(!Number.isFinite(price)||price<=0||price>100000000)throw new Error('價格需為有效正數');
+  var total=sheets*packs*bags;if(!Number.isSafeInteger(total)||total<=0)throw new Error('總張數超出可計算範圍');
+  var lock=LockService.getScriptLock();lock.waitLock(10000);
+  try {
+    var sheet=ss.getSheetByName(TISSUE_PRICE_SHEET_NAME_);
+    if(!sheet){sheet=ss.insertSheet(TISSUE_PRICE_SHEET_NAME_);sheet.getRange(1,1,1,TISSUE_PRICE_HEADERS_.length).setValues([TISSUE_PRICE_HEADERS_]);sheet.setFrozenRows(1);}
+    var id='tissue-'+Utilities.getUuid(),recordedAt=new Date().toISOString(),unitPrice=price/total;
+    sheet.getRange(sheet.getLastRow()+1,1,1,TISSUE_PRICE_HEADERS_.length).setValues([[id,product,store,sheets,packs,bags,price,total,unitPrice,recordedAt]]);
+    return {id:id,product:product,store:store,sheetsPerPack:sheets,packsPerBag:packs,bags:bags,totalPrice:price,totalSheets:total,unitPrice:unitPrice,recordedAt:recordedAt};
+  } finally {lock.releaseLock();}
+}
+function deleteTissuePriceRecord_(ss, p) {
+  var id=String(p.id||'').trim();if(!/^tissue-[\w-]{10,80}$/.test(id))throw new Error('價格紀錄編號無效');
+  var lock=LockService.getScriptLock();lock.waitLock(10000);
+  try {var sheet=ss.getSheetByName(TISSUE_PRICE_SHEET_NAME_);if(!sheet||sheet.getLastRow()<2)return {deleted:false};var match=sheet.getRange(2,1,sheet.getLastRow()-1,1).createTextFinder(id).matchEntireCell(true).findNext();if(!match)return {deleted:false};sheet.deleteRow(match.getRow());return {deleted:true};} finally {lock.releaseLock();}
+}
+
 // ── GET 路由（讀取 + 寫入全部走 GET，避免 CORS preflight 問題）──
 // 讀取：?action=config / monthly / yearly / legacyMonthDetails / history / accounts / holdingsOverview / councilPantry / topStatusBar / tradeOptions / marketDashboard / macroOverview / transactions / accountChanges / dividendCenter
 // 寫入：?action=expense|income|transfer&token=xxx&date=...（其餘參數同下）
@@ -120,6 +150,7 @@ function doGet(e) {
     if (action === 'yearly')       return ok(getYearly(ss, p.year));
     if (action === 'legacyMonthDetails') return ok(getLegacyMonthDetails(p.ym));
     if (action === 'history')      return ok(getHistory(ss));
+    if (action === 'tissuePriceRecords') { verifyWriteToken(p); return ok(getTissuePriceRecords_(ss)); }
     if (action === 'accounts')     return ok(getAccounts(ss));
     if (action === 'holdingsOverview') return ok(getHoldingsOverview(ss));
     if (action === 'councilPantry') return ok(getCouncilPantry(ss));
@@ -159,7 +190,7 @@ function doGet(e) {
     if (action === 'ziweiCharts') return ok(getZiweiCharts());
     if (action === 'eventChronicle') return ok(getEventChronicle(ss));
     // ── 寫入路由（需要 token）──
-    if (action === 'expense' || action === 'income' || action === 'transfer' || action === 'transactionUndo' || action === 'stockTradeVoid' || action === 'dividendEntry' || action === 'dividendDelete' || action === 'holdingTradeEntry' || action === 'holdingTradeDelete' || action === 'macroWebhook' || action === 'travelMemoHide' || action === 'travelMemoAdd' || action === 'verifyWriteToken') {
+    if (action === 'expense' || action === 'income' || action === 'transfer' || action === 'transactionUndo' || action === 'stockTradeVoid' || action === 'dividendEntry' || action === 'dividendDelete' || action === 'holdingTradeEntry' || action === 'holdingTradeDelete' || action === 'macroWebhook' || action === 'travelMemoHide' || action === 'travelMemoAdd' || action === 'tissuePriceSave' || action === 'tissuePriceDelete' || action === 'verifyWriteToken') {
       verifyWriteToken(p);
       if (action === 'verifyWriteToken') return ok({ message: 'WRITE_TOKEN 驗證成功' });
       if (action === 'expense')  return ok(writeExpense(ss, p));
@@ -174,6 +205,8 @@ function doGet(e) {
       if (action === 'macroWebhook') return ok(writeMacroWebhook(getExternalDbSpreadsheet_(), p));
       if (action === 'travelMemoHide') return ok(writeTravelMemoVisibility(p));
       if (action === 'travelMemoAdd') return ok(writeTravelMemoCard(p));
+      if (action === 'tissuePriceSave') return ok(saveTissuePriceRecord_(ss, p));
+      if (action === 'tissuePriceDelete') return ok(deleteTissuePriceRecord_(ss, p));
     }
 
     return err('未知的 action: ' + action);
@@ -208,6 +241,8 @@ function doPost(e) {
     if (action === 'macroWebhook') return ok(writeMacroWebhook(getExternalDbSpreadsheet_(), body));
     if (action === 'travelMemoHide') return ok(writeTravelMemoVisibility(body));
     if (action === 'travelMemoAdd') return ok(writeTravelMemoCard(body));
+    if (action === 'tissuePriceSave') return ok(saveTissuePriceRecord_(ss, body));
+    if (action === 'tissuePriceDelete') return ok(deleteTissuePriceRecord_(ss, body));
     if (action === 'returnComparisonSets') return ok(listReturnComparisonSets_());
     if (action === 'returnComparisonSave') return ok(saveReturnComparisonSet_(body));
     if (action === 'returnComparisonDelete') return ok(deleteReturnComparisonSet_(body));

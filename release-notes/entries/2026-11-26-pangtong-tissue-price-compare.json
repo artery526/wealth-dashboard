@@ -1,0 +1,9 @@
+{
+  "id": "2026-11-26-pangtong-tissue-price-compare",
+  "status": "in_progress",
+  "date": null,
+  "area": "龐統軍師",
+  "summary": "新增衛生紙單張價格計算與跨裝置比較清單",
+  "details": "可記錄商品、購買地、包裝數量與價格，自動計算每張價格並同步至試算表。",
+  "platforms": ["website"]
+}
