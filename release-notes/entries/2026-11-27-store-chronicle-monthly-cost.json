@@ -1,7 +1,7 @@
 {
   "id": "2026-11-27-store-chronicle-monthly-cost",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-11-27",
   "area": "太倉事件編年",
   "summary": "事件編年改以經歷月與每月花費呈現",
   "details": "事件卡片與新增記錄預覽改為顯示經歷月和每月花費，沿用 30.6 日作為一個月的換算基準。",
