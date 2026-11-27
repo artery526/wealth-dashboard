@@ -8323,7 +8323,7 @@ function renderEventChronicle(){
         <label class="chronicle-media-input" for="chronicle-entry-media" title="上傳照片、影片或 PDF"><span class="chronicle-media-upload-button" aria-hidden="true">⬆</span><input id="chronicle-entry-media" type="file" accept="image/*,video/mp4,video/quicktime,video/webm,video/x-m4v,application/pdf,.pdf" multiple></label>
         <label id="chronicle-entry-duration-wrap" class="hidden">耗時日數<input id="chronicle-entry-duration" type="number" min="1" step="1" value="1" oninput="updateChroniclePreview()"></label>
       </div>
-      <div class="chronicle-entry-preview" id="chronicle-entry-preview">請填入價格以預覽日、月與每日成本</div>
+      <div class="chronicle-entry-preview" id="chronicle-entry-preview">請填入價格以預覽經歷月與每月花費</div>
       <div class="chronicle-entry-actions"><button class="cfg-verify-btn" id="chronicle-entry-submit" type="submit">加入記錄</button><button class="chronicle-entry-cancel hidden" id="chronicle-entry-cancel" type="button" onclick="cancelEditEventChronicle()">取消編輯</button><div class="result-msg" id="chronicle-entry-msg"></div></div>
     </form>
     <div class="chronicle-toolbar">
@@ -8353,20 +8353,26 @@ function getChronicleEntryPreview(){
   var days=mode==='單一事件耗時'
     ? (parseInt((document.getElementById('chronicle-entry-duration')||{}).value,10)||0)
     : (date?Math.floor((Date.parse(today()+'T00:00:00Z')-Date.parse(date+'T00:00:00Z'))/86400000)+1:0);
-  return {mode:mode,price:price,days:days,months:days?Math.round(days/30.6*100)/100:0,dailyCost:days&&price?Math.round(price/days*100)/100:0};
+  return {mode:mode,price:price,days:days,months:days?Math.round(days/30.6*100)/100:0,monthlyCost:days&&price?Math.round(price/days*30.6):0};
 }
 
-function formatChronicleDailyCost(value){
+function formatChronicleMonthlyCost(value){
   var text=String(value==null?'':value).trim().replace(/,/g,'');
   var number=Number(text);
   return text&&isFinite(number)?Math.round(number).toLocaleString('zh-TW'):'--';
+}
+
+function getChronicleMonthlyCost(row){
+  var price=Number(row&&row.price);
+  var days=Number(row&&row.days);
+  return price>0&&days>0?formatChronicleMonthlyCost(price/days*30.6):'--';
 }
 
 function updateChroniclePreview(){
   var preview=document.getElementById('chronicle-entry-preview');
   if(!preview)return;
   var v=getChronicleEntryPreview();
-  preview.textContent=v.price>0&&v.days>0?'自動換算：'+v.days+' 日／'+v.months+' 月／每日成本 '+formatChronicleDailyCost(v.dailyCost):v.price>0&&v.days<=0?'尚未開始：日期在今天之後，日／月／每日成本暫不計算':'請填入價格以預覽日、月與每日成本';
+  preview.textContent=v.price>0&&v.days>0?'自動換算：經歷 '+v.months+' 月／每月花費 '+formatChronicleMonthlyCost(v.monthlyCost):v.price>0&&v.days<=0?'尚未開始：日期在今天之後，經歷月／每月花費暫不計算':'請填入價格以預覽經歷月與每月花費';
 }
 
 async function submitEventChronicle(e){
@@ -8560,20 +8566,17 @@ function renderChronicleCard(row){
     return `<div class="chronicle-row is-toggle" role="button" tabindex="0" onclick="toggleChronicleNote(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleChronicleNote(this)}">
       <div class="chronicle-cell chronicle-name" data-label="事件名稱">${esc(row.name||'未命名')}<span class="chronicle-date">${esc(date)}</span></div>
       <div class="chronicle-cell" data-label="經歷月">${esc(String(row.months||'').trim()||'--')}</div>
-      <div class="chronicle-cell" data-label="經歷日">${esc(String(row.days||'').trim()||'--')}</div>
-      <div class="chronicle-cell chronicle-cost-value" data-label="每日成本">${esc(formatChronicleDailyCost(row.dailyCost))}</div>
+      <div class="chronicle-cell chronicle-cost-value" data-label="每月花費">${esc(getChronicleMonthlyCost(row))}</div>
       <div class="chronicle-cell chronicle-note-detail" data-label="備註">${esc(tail)}</div>
       ${chronicleCardActions(row)}
     </div>`;
   }
   var months=String(row.months||'').trim()||'--';
-  var days=String(row.days||'').trim()||'--';
-  var dailyCost=formatChronicleDailyCost(row.dailyCost);
+  var monthlyCost=getChronicleMonthlyCost(row);
   return `<div class="chronicle-row">
     <div class="chronicle-cell chronicle-name" data-label="項目名稱">${esc(row.name||'未命名')}<span class="chronicle-date">${esc(date)}</span></div>
     <div class="chronicle-cell" data-label="經歷月">${esc(months)}</div>
-    <div class="chronicle-cell" data-label="經歷日">${esc(days)}</div>
-    <div class="chronicle-cell chronicle-cost-value" data-label="每日花費">${esc(dailyCost)}</div>
+    <div class="chronicle-cell chronicle-cost-value" data-label="每月花費">${esc(monthlyCost)}</div>
     ${chronicleCardActions(row)}
   </div>`;
 }
