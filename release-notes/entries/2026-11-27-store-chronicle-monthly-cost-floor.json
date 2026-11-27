@@ -1,7 +1,7 @@
 {
   "id": "2026-11-27-store-chronicle-monthly-cost-floor",
-  "status": "in_progress",
-  "date": null,
+  "status": "released",
+  "date": "2026-11-27",
   "area": "太倉事件編年",
   "summary": "事件編年統一成本模式並按記錄日期換算",
   "details": "移除長期成本與單一事件耗時兩種計算模式，改以記錄日期計算經歷月及每月花費；未滿 30.6 天時每月花費不超過原始價格。",
